@@ -26,7 +26,7 @@ export function ProductDirectionSection() {
           className="text-3xl sm:text-4xl md:text-5xl text-white max-w-2xl mb-4"
           style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
         >
-          Un retour sur investissement rapide. Sans engagement contractuel.
+          Accès aux apports d&apos;affaire. Sans engagement contractuel.
         </motion.h2>
 
         <motion.p
@@ -36,8 +36,9 @@ export function ProductDirectionSection() {
           transition={{ delay: 0.15 }}
           className="text-zinc-400 mb-12 max-w-xl"
         >
-          Cinq rendez-vous délivrés, un contrat signé à 4 000 € : pour un investissement de 1 489 €, le retour est
-          positif dès la première signature.
+          Chaque formule ouvre l&apos;accès à des demandes clients qualifiées, attribuées après audit de
+          compatibilité. Un contrat signé à 4 000 € pour 1 489 € d&apos;investissement : retour positif dès la
+          première attribution.
         </motion.p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
@@ -51,10 +52,10 @@ export function ProductDirectionSection() {
             <p className="text-zinc-400 text-sm mb-2">Offre d&apos;entrée</p>
             <p className="text-4xl text-white font-medium mb-2">1 489 €</p>
             <p className="text-zinc-400 text-sm mb-4">
-              Cinq rendez-vous avec prospects qualifiés (300–800 € par lead). En l&apos;absence de signature, cinq
-              nouveaux rendez-vous sont replanifiés.
+              Cinq apports d&apos;affaire avec demandes qualifiées. En l&apos;absence de signature, cinq nouvelles
+              attributions sont replanifiées.
             </p>
-            <p className="text-zinc-500 text-sm">Première signature, risque maîtrisé.</p>
+            <p className="text-zinc-500 text-sm">Première attribution, risque maîtrisé.</p>
           </motion.div>
 
           <motion.div
@@ -69,8 +70,8 @@ export function ProductDirectionSection() {
               2 500 €<span className="text-lg text-zinc-500 font-normal">/mois</span>
             </p>
             <p className="text-zinc-400 text-sm mb-4">
-              Jusqu&apos;à quatre signatures par mois. Hercule prend en charge l&apos;acquisition et les appels
-              commerciaux.
+              Jusqu&apos;à quatre attributions par mois. Hercule assure la réception des demandes et la mise en
+              relation commerciale.
             </p>
             <p className="text-indigo-300 text-sm font-medium">0 % de commission sur vos ventes.</p>
           </motion.div>

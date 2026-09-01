@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type MouseEvent } from "react"
 import { motion } from "framer-motion"
 import { DashboardMockup } from "./dashboard-mockup"
 import { Navbar } from "./navbar"
@@ -11,6 +11,12 @@ import { ProductDirectionSection } from "./product-direction-section"
 import { WorkflowsSection } from "./workflows-section"
 import { CTASection } from "./cta-section"
 import { Footer } from "./footer"
+import { CALENDLY_URL } from "@/lib/constants"
+
+function scrollToMethode(e: MouseEvent<HTMLAnchorElement>) {
+  e.preventDefault()
+  document.getElementById("methode")?.scrollIntoView({ behavior: "smooth", block: "start" })
+}
 
 export function Hero3DStage() {
   const [yOffset, setYOffset] = useState(0)
@@ -63,7 +69,7 @@ export function Hero3DStage() {
                 transition={{ duration: 0.6 }}
                 className="text-4xl md:text-5xl lg:text-[56px] font-medium text-white leading-[1.1] text-balance"
               >
-                Des rendez-vous qualifiés planifiés dans votre agenda, sans effort de prospection
+                Trouvez la bonne agence pour chaque besoin client.
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -71,9 +77,7 @@ export function Hero3DStage() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="mt-6 text-lg text-zinc-400"
               >
-                Hercule identifie, qualifie et achemine des prospects exclusifs vers votre agence web.
-                <br />
-                Besoins et budgets validés par téléphone — rendez-vous intégrés directement à votre calendrier.
+              Hercule reçoit et traite des demandes B2B, puis sélectionne les agences adaptées pour leur attribuer les projets en exclusivité.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -82,13 +86,16 @@ export function Hero3DStage() {
                 className="mt-8 flex flex-wrap items-center gap-6"
               >
                 <a
-                  href="#contact"
+                  href={CALENDLY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 >
-                  Planifier un échange
+                  Demander un apport d&apos;affaire
                 </a>
                 <a
                   href="#methode"
+                  onClick={scrollToMethode}
                   className="text-zinc-300 font-medium hover:text-white transition-colors flex items-center gap-2 text-sm"
                 >
                   Découvrir notre méthode

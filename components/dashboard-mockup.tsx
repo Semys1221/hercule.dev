@@ -1,6 +1,7 @@
 "use client"
 
 import type { ComponentType } from "react"
+import { HerculeMark } from "@/components/hercule-mark"
 import { motion } from "framer-motion"
 import {
   Search,
@@ -8,7 +9,6 @@ import {
   Users,
   Phone,
   Calendar,
-  CirclePower,
   CheckCircle2,
   Clock,
   Radar,
@@ -63,6 +63,29 @@ const timelineSteps = [
   { label: "Livraison effectuée", icon: Send, done: false, current: true },
 ]
 
+const marieConversation = [
+  {
+    sender: "Hercule",
+    text: "Bonjour Marie, nous avons reçu votre demande de refonte Shopify. Pouvez-vous confirmer votre budget et votre calendrier ?",
+    variant: "hercule" as const,
+  },
+  {
+    sender: "Marie Dupont",
+    text: "Budget validé à 2 000 €, livraison souhaitée sous 30 jours.",
+    variant: "client" as const,
+  },
+  {
+    sender: "Hercule",
+    text: "Parfait. Nous recherchons une agence compatible pour vous accompagner.",
+    variant: "hercule" as const,
+  },
+  {
+    sender: "Système",
+    text: "Demande en cours d'attribution — audit de compatibilité agence en cours",
+    variant: "system" as const,
+  },
+]
+
 export function DashboardMockup() {
   const containerVariants = {
     hidden: {},
@@ -97,7 +120,7 @@ export function DashboardMockup() {
         <div className="p-3 border-b border-zinc-800/50">
           <div className="flex items-center gap-2 px-2 py-1.5">
             <div className="w-6 h-6 rounded-md bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center">
-              <CirclePower className="w-3.5 h-3.5 text-white" />
+              <HerculeMark variant="dual" className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="text-white font-semibold text-sm">Hercule</span>
             <ChevronDown className="w-3.5 h-3.5 text-zinc-500 ml-auto" />
@@ -130,11 +153,11 @@ export function DashboardMockup() {
             ))}
           </div>
 
-          <div className="flex-1 min-h-0 rounded-lg border border-zinc-800/50 bg-zinc-900/30 p-3 flex flex-col">
-            <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-3 shrink-0">
+          <div className="flex-1 min-h-0 rounded-lg border border-zinc-800/50 bg-zinc-900/30 p-3 flex flex-col gap-3 overflow-hidden">
+            <p className="text-zinc-500 text-[10px] uppercase tracking-wider shrink-0">
               Historique de conversation — {selected.name}
             </p>
-            <div className="flex items-center gap-1 flex-1 min-w-0">
+            <div className="flex items-center gap-1 shrink-0">
               {timelineSteps.map((step, index) => {
                 const Icon = step.icon
                 const isLast = index === timelineSteps.length - 1
@@ -168,6 +191,11 @@ export function DashboardMockup() {
                   </div>
                 )
               })}
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
+              {marieConversation.map((message) => (
+                <ConversationBubble key={message.text} {...message} />
+              ))}
             </div>
           </div>
         </div>
@@ -270,6 +298,37 @@ function ProspectCard({
         </span>
       </div>
       <p className="text-zinc-500 text-[10px] truncate">{need}</p>
+    </div>
+  )
+}
+
+function ConversationBubble({
+  sender,
+  text,
+  variant,
+}: {
+  sender: string
+  text: string
+  variant: "hercule" | "client" | "system"
+}) {
+  if (variant === "system") {
+    return (
+      <div className="px-2 py-1.5 rounded-md bg-zinc-800/60 border border-zinc-700/50 text-center">
+        <p className="text-[10px] text-zinc-500">{text}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`px-2.5 py-2 rounded-md border ${
+        variant === "hercule"
+          ? "bg-indigo-500/10 border-indigo-500/20 ml-0 mr-4"
+          : "bg-zinc-800/50 border-zinc-700/50 ml-4 mr-0"
+      }`}
+    >
+      <p className="text-[9px] text-zinc-500 mb-0.5">{sender}</p>
+      <p className="text-[10px] text-zinc-300 leading-relaxed">{text}</p>
     </div>
   )
 }

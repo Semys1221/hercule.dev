@@ -6,26 +6,16 @@ export function Footer() {
       { label: "Garanties", href: "#garanties" },
       { label: "Contact", href: "#contact" },
     ],
-    Agence: [
-      { label: "À propos", href: "#contact" },
-      { label: "Contact", href: "#contact" },
-      { label: "Partenaires actifs", href: "#contact" },
-    ],
-    Légal: [
-      { label: "Mentions légales", href: "#" },
-      { label: "CGV", href: "#" },
-      { label: "Confidentialité", href: "#" },
-    ],
   }
 
   return (
     <footer className="border-t border-zinc-800 py-16 px-6" style={{ backgroundColor: "#09090B" }}>
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="col-span-2 md:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div>
             <p className="text-white font-semibold text-lg mb-2">Hercule</p>
             <p className="text-zinc-500 text-sm max-w-xs">
-              Courtage de prospects qualifiés pour agences web — identification, qualification et rendez-vous en exclusivité.
+              Nous trouvons les bonnes agences pour nos demandes clients.
             </p>
           </div>
 

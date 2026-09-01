@@ -1,6 +1,7 @@
 "use client"
 
-import { CirclePower } from "lucide-react"
+import { HerculeMark } from "@/components/hercule-mark"
+import { CALENDLY_URL } from "@/lib/constants"
 
 export function Navbar() {
   return (
@@ -8,7 +9,7 @@ export function Navbar() {
       <div className="w-full flex justify-center px-6 py-4">
         <div className="w-full max-w-4xl flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CirclePower className="w-5 h-5 text-white" />
+            <HerculeMark variant="dual" className="w-5 h-5 text-white" />
             <span className="text-white font-semibold">Hercule</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
@@ -27,10 +28,12 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-4">
             <a
-              href="#contact"
+              href={CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors"
             >
-              Planifier un échange
+              Demander un apport d&apos;affaire
             </a>
           </div>
         </div>

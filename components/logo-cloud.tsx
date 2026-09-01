@@ -23,7 +23,7 @@ export function LogoCloud() {
             transition={{ duration: 0.6 }}
             className="text-lg text-zinc-300 mb-2"
           >
-            À destination des agences web exigeantes.
+            Des agences partenaires reçoivent des apports d&apos;affaire qualifiés.
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -32,7 +32,7 @@ export function LogoCloud() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-zinc-500 mb-16"
           >
-            Référencement, e-commerce, développement sur mesure — panier moyen supérieur à 1 500 €.
+            Référencement, e-commerce, développement sur mesure — budgets projet de 1 500 € à 2 500 €.
           </motion.p>
 
           <motion.div

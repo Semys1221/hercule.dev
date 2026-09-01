@@ -1,26 +1,26 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { TrendingDown, Database, Users } from "lucide-react"
+import { Inbox, Shield, ClipboardCheck } from "lucide-react"
 
-const painCards = [
+const matchingCards = [
   {
-    title: "Volatilité de trésorerie",
+    title: "Demandes actives",
     description:
-      "La prospection reprend lorsque le pipeline est vide, puis s'interrompt dès que la production client reprend.",
-    icon: TrendingDown,
+      "Des clients qualifiés attendent une agence compatible. Les demandes sont disponibles dès aujourd'hui.",
+    icon: Inbox,
   },
   {
-    title: "Leads froids et données peu fiables",
+    title: "Attribution exclusive",
     description:
-      "Les outils traditionnels produisent des fiches incomplètes et des contacts invalides, avec un rendement dégradé.",
-    icon: Database,
+      "Chaque demande est confiée à une seule agence sélectionnée, en fonction de son profil et de sa capacité.",
+    icon: Shield,
   },
   {
-    title: "Absence de force commerciale dédiée",
+    title: "Audit de compatibilité",
     description:
-      "Manque de ressources et de compétences pour structurer une équipe commerciale interne performante.",
-    icon: Users,
+      "Nous vérifions l'adéquation de votre agence — stack, budget, disponibilité — avant toute distribution.",
+    icon: ClipboardCheck,
   },
 ]
 
@@ -36,35 +36,35 @@ export function FeatureCardsSection() {
       />
       <div className="w-full flex justify-center px-6">
         <div className="w-full max-w-5xl">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 mb-16">
+          <div className="flex flex-col gap-6 mb-16 max-w-3xl">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] text-white max-w-lg"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-[56px] text-white"
               style={{
                 letterSpacing: "-0.0325em",
                 fontWeight: 538,
                 lineHeight: 1.1,
               }}
             >
-              Le pipeline commercial des agences web présente des lacunes structurelles
+              Nous recevons des demandes clients. Notre rôle : identifier l&apos;agence la plus adaptée.
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-zinc-400 leading-relaxed max-w-md"
+              className="text-zinc-400 leading-relaxed"
             >
-              SDR externalisés, listes scrapées, absences en rendez-vous : des approches déjà éprouvées sans résultat
-              durable. Hercule assure le courtage de prospects qualifiés et leur intégration directe à votre agenda.
+              Hercule met en relation des demandes qualifiées avec les agences web compatibles. Chaque attribution
+              repose sur un audit préalable et une distribution en exclusivité.
             </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {painCards.map((card, index) => {
+            {matchingCards.map((card, index) => {
               const Icon = card.icon
               return (
                 <motion.div
