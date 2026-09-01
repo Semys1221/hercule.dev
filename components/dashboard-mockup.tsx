@@ -139,6 +139,41 @@ export function DashboardMockup() {
         </div>
       </motion.div>
 
+      {/* Detail panel — après la sidebar */}
+      <motion.div
+        className="w-[240px] h-full bg-zinc-900/60 border-r border-zinc-800/50 flex flex-col shrink-0"
+        variants={panelVariants}
+      >
+        <div className="p-4 border-b border-zinc-800/50">
+          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Identité</p>
+          <p className="text-white font-medium">{selected.name}</p>
+          <p className="text-zinc-400 text-xs mt-0.5">
+            {selected.role} · {selected.company}
+          </p>
+        </div>
+        <div className="p-4 space-y-3 flex-1">
+          <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
+            <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-1">Budget projet</p>
+            <p className="text-white text-xl font-semibold">{selected.budget}</p>
+            <p className="text-zinc-500 text-[10px] mt-1">Fourchette 1 500 € – 2 500 €</p>
+          </div>
+          <DetailRow label="Besoin validé" value={selected.need} />
+          <DetailRow label="Délai" value="< 30 jours" />
+          <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <div className="flex items-center gap-2 text-emerald-400 text-xs">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Qualification téléphonique validée
+            </div>
+          </div>
+        </div>
+        <div className="p-3 border-t border-zinc-800/50">
+          <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <Clock className="w-3.5 h-3.5" />
+            Rendez-vous demain · 10:00
+          </div>
+        </div>
+      </motion.div>
+
       {/* Main — prospect list + timeline */}
       <motion.div className="flex-1 flex flex-col min-w-0" variants={panelVariants}>
         <div className="h-12 border-b border-zinc-800/50 flex items-center px-4 gap-4 shrink-0">
@@ -197,41 +232,6 @@ export function DashboardMockup() {
                 <ConversationBubble key={message.text} {...message} />
               ))}
             </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Detail panel */}
-      <motion.div
-        className="w-[240px] h-full bg-zinc-900/60 border-l border-zinc-800/50 flex flex-col shrink-0"
-        variants={panelVariants}
-      >
-        <div className="p-4 border-b border-zinc-800/50">
-          <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Identité</p>
-          <p className="text-white font-medium">{selected.name}</p>
-          <p className="text-zinc-400 text-xs mt-0.5">
-            {selected.role} · {selected.company}
-          </p>
-        </div>
-        <div className="p-4 space-y-3 flex-1">
-          <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/30">
-            <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-1">Budget projet</p>
-            <p className="text-white text-xl font-semibold">{selected.budget}</p>
-            <p className="text-zinc-500 text-[10px] mt-1">Fourchette 1 500 € – 2 500 €</p>
-          </div>
-          <DetailRow label="Besoin validé" value={selected.need} />
-          <DetailRow label="Délai" value="< 30 jours" />
-          <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-            <div className="flex items-center gap-2 text-emerald-400 text-xs">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Qualification téléphonique validée
-            </div>
-          </div>
-        </div>
-        <div className="p-3 border-t border-zinc-800/50">
-          <div className="flex items-center gap-2 text-xs text-zinc-500">
-            <Clock className="w-3.5 h-3.5" />
-            Rendez-vous demain · 10:00
           </div>
         </div>
       </motion.div>

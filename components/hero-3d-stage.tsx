@@ -15,7 +15,10 @@ import { CALENDLY_URL } from "@/lib/constants"
 
 function scrollToMethode(e: MouseEvent<HTMLAnchorElement>) {
   e.preventDefault()
-  document.getElementById("methode")?.scrollIntoView({ behavior: "smooth", block: "start" })
+  const el = document.getElementById("methode")
+  if (!el) return
+  const top = el.getBoundingClientRect().top + window.scrollY - 80
+  window.scrollTo({ top, behavior: "smooth" })
 }
 
 export function Hero3DStage() {
@@ -61,7 +64,7 @@ export function Hero3DStage() {
         {/* Main content */}
         <div className="relative z-10 pt-28 flex flex-col">
           {/* Hero text - contained and centered */}
-          <div className="w-full flex justify-center px-6 mt-16">
+          <div className="relative z-20 w-full flex justify-center px-6 mt-16">
             <div className="w-full max-w-4xl">
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
@@ -69,7 +72,7 @@ export function Hero3DStage() {
                 transition={{ duration: 0.6 }}
                 className="text-4xl md:text-5xl lg:text-[56px] font-medium text-white leading-[1.1] text-balance"
               >
-                Trouvez la bonne agence pour chaque besoin client.
+                Nous trouvons la bonne agence pour chaque besoin client.
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -107,7 +110,7 @@ export function Hero3DStage() {
 
           {/* 3D Stage - full bleed */}
           <div
-            className="relative mt-16"
+            className="relative mt-16 pointer-events-none [&_*]:pointer-events-none"
             style={{
               width: "100vw",
               marginLeft: "-50vw",
