@@ -178,7 +178,7 @@ export function DashboardMockup() {
       <motion.div className="flex-1 flex flex-col min-w-0" variants={panelVariants}>
         <div className="h-12 border-b border-zinc-800/50 flex items-center px-4 gap-4 shrink-0">
           <span className="text-white font-medium">Plateforme de courtage</span>
-          <span className="text-zinc-500 text-xs">Budgets 1 500 € – 2 500 €</span>
+          <span className="text-zinc-500 text-xs">Budgets 1 500 € – 12 500 €</span>
         </div>
 
         <div className="flex-1 p-4 flex flex-col gap-3 overflow-hidden min-h-0">

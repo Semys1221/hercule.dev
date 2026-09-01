@@ -32,7 +32,7 @@ export function LogoCloud() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-zinc-500 mb-16"
           >
-            Référencement, e-commerce, développement sur mesure — budgets projet de 1 500 € à 2 500 €.
+            Référencement, e-commerce, développement sur mesure — budgets projet de 1 500 € à 12 500 €.
           </motion.p>
 
           <motion.div
