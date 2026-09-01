@@ -19,9 +19,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <head>
+        <GoogleAnalytics />
+      </head>
       <body className="font-sans antialiased">
         {children}
-        <GoogleAnalytics />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
