@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rendez-vous confirmé · Hercule</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
+    <style>
+        :root {
+            --background: #09090B;
+            --foreground: #ffffff;
+            --muted-foreground: #a1a1aa;
+            --accent: #6366f1;
+            --border: #27272a;
+            --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--background);
+            color: var(--foreground);
+            margin: 0;
+            padding: 32px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            max-width: 900px;
+            width: 95%;
+            min-height: 620px;
+            display: flex;
+            flex-direction: row;
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.06);
+            overflow: hidden;
+        }
+
+        .left-col {
+            position: relative;
+            width: 45%;
+            min-height: 620px;
+            border-right: 1px solid var(--border);
+        }
+
+        .left-col img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            min-height: 620px;
+        }
+
+        .left-col::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(9, 9, 11, 0.55);
+            z-index: 1;
+        }
+
+        .left-col-content {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 2;
+        }
+
+        .left-col-content p {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .right-col {
+            width: 55%;
+            padding: 56px 52px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: var(--background);
+        }
+
+        .brand {
+            margin-bottom: 48px;
+        }
+
+        .brand a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.15s ease;
+        }
+
+        .brand a:hover {
+            opacity: 0.8;
+        }
+
+        .brand svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .brand span {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--foreground);
+        }
+
+        .step {
+            animation: strictFadeIn 0.8s ease-out forwards;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 500;
+            margin: 0 0 32px;
+            line-height: 1.35;
+            letter-spacing: -0.02em;
+        }
+
+        .info-card {
+            margin-top: 0;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background-color: rgba(24, 24, 27, 0.3);
+            padding: 36px 40px;
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--foreground);
+            margin: 0 0 20px;
+        }
+
+        .prep-list {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--muted-foreground);
+            font-size: 15px;
+            line-height: 1.85;
+        }
+
+        .prep-list li {
+            margin-bottom: 12px;
+        }
+
+        .prep-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .context-text {
+            color: var(--muted-foreground);
+            margin: 28px 0 0;
+            padding-top: 28px;
+            border-top: 1px solid var(--border);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            margin-top: 48px;
+            padding: 12px 24px;
+            background-color: #ffffff;
+            color: #18181b;
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background-color 0.15s ease;
+        }
+
+        .cta-button:hover {
+            background-color: #f4f4f5;
+        }
+
+        @keyframes strictFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                flex-direction: column;
+                min-height: 100vh;
+                box-shadow: none;
+                border: none;
+                width: 100%;
+            }
+
+            .left-col {
+                width: 100%;
+                min-height: 30vh;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .left-col img {
+                min-height: 30vh;
+            }
+
+            .right-col {
+                width: 100%;
+                padding: 40px 24px 48px;
+                text-align: center;
+            }
+
+            .brand {
+                justify-content: center;
+                margin-bottom: 40px;
+            }
+
+            .brand a {
+                justify-content: center;
+            }
+
+            h2 {
+                margin-bottom: 28px;
+            }
+
+            .info-card {
+                padding: 28px 24px;
+            }
+
+            .cta-button {
+                margin-top: 40px;
+            }
+
+            .prep-list {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-col">
+            <img src="https://grzs6rqzvzupoxv9.public.blob.vercel-storage.com/image%20last-optimized.webp" alt="Evan">
+            <div class="left-col-content">
+                <p>Votre échange se fera avec Evan</p>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="brand">
+                <a href="https://hercule.dev">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hercule">
+                        <path d="M3 5v14l7.5-7L3 5z" fill="#ffffff"/>
+                        <path d="M21 5v14l-7.5-7L21 5z" fill="#a1a1aa"/>
+                    </svg>
+                    <span>Hercule</span>
+                </a>
+            </div>
+
+            <div class="step">
+                <h2>Votre rendez-vous est confirmé</h2>
+
+                <div class="info-card">
+                    <h3>Pour préparer votre entretien, nous recommandons les éléments suivants :</h3>
+                    <ul class="prep-list">
+                        <li>Le détail de vos prestations.</li>
+                        <li>Les projections de résultats pour le client (à 3 mois pour du trafic payant ; à 6 et 12 mois pour de l'organique).</li>
+                        <li>Vos attentes de rémunération pour des contrats de 3, 6 et 12 mois.</li>
+                    </ul>
+                    <p class="context-text">
+                        L'échange portera sur les profils de demandes et vos attentes.
+                    </p>
+                </div>
+
+                <a href="https://hercule.dev" class="cta-button">Retour au site Hercule</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
