@@ -26,7 +26,7 @@ export function ProductDirectionSection() {
           className="text-3xl sm:text-4xl md:text-5xl text-white max-w-2xl mb-4"
           style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
         >
-          Accès aux apports d&apos;affaire. Sans engagement contractuel.
+          Accès aux apports d&apos;affaires. Sans engagement contractuel.
         </motion.h2>
 
         <motion.p
@@ -52,7 +52,7 @@ export function ProductDirectionSection() {
             <p className="text-zinc-400 text-sm mb-2">Offre d&apos;entrée</p>
             <p className="text-4xl text-white font-medium mb-2">1 489 €</p>
             <p className="text-zinc-400 text-sm mb-4">
-              Cinq apports d&apos;affaire avec demandes qualifiées. En l&apos;absence de signature, cinq nouvelles
+              Cinq apports d&apos;affaires avec demandes qualifiées. En l&apos;absence de signature, cinq nouvelles
               attributions sont replanifiées.
             </p>
             <p className="text-zinc-500 text-sm">Première attribution, risque maîtrisé.</p>

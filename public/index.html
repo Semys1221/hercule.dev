@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rendez-vous confirmé · Hercule</title>
+    <title>Réserver un échange · Hercule</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
+    <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
     <style>
         :root {
             --background: #09090B;
@@ -44,11 +45,16 @@
             overflow: hidden;
         }
 
+        .left-col.is-hidden {
+            display: none;
+        }
+
         .left-col {
             position: relative;
             width: 45%;
             min-height: 620px;
             border-right: 1px solid var(--border);
+            flex-shrink: 0;
         }
 
         .left-col img {
@@ -97,11 +103,25 @@
             background-color: var(--background);
         }
 
+        .right-col.is-booking {
+            justify-content: flex-start;
+            padding: 32px 24px 24px;
+            width: 100%;
+        }
+
+        .container.is-booking {
+            max-width: 720px;
+        }
+
         .brand {
             margin-bottom: 48px;
             display: flex;
             justify-content: center;
             width: 100%;
+        }
+
+        .is-booking .brand {
+            margin-bottom: 24px;
         }
 
         .brand a {
@@ -130,6 +150,14 @@
             color: var(--foreground);
         }
 
+        .view {
+            width: 100%;
+        }
+
+        .view.is-hidden {
+            display: none;
+        }
+
         .step {
             animation: strictFadeIn 0.8s ease-out forwards;
             width: 100%;
@@ -141,6 +169,60 @@
             margin: 0 0 32px;
             line-height: 1.35;
             letter-spacing: -0.02em;
+        }
+
+        .booking-intro {
+            font-size: 15px;
+            color: var(--muted-foreground);
+            margin: 0 0 24px;
+            line-height: 1.6;
+        }
+
+        .calendly-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 520px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: rgba(24, 24, 27, 0.3);
+        }
+
+        #calendly-embed {
+            min-height: 520px;
+        }
+
+        .calendly-loader {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            background-color: rgba(9, 9, 11, 0.92);
+            z-index: 2;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .calendly-loader.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loader-spinner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--border);
+            border-top-color: var(--foreground);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loader-text {
+            font-size: 14px;
+            color: var(--muted-foreground);
         }
 
         .info-card {
@@ -208,6 +290,10 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 0;
@@ -238,9 +324,17 @@
                 text-align: center;
             }
 
+            .right-col.is-booking {
+                padding: 24px 16px 16px;
+            }
+
             .brand {
                 justify-content: center;
                 margin-bottom: 40px;
+            }
+
+            .is-booking .brand {
+                margin-bottom: 20px;
             }
 
             .brand a {
@@ -258,19 +352,24 @@
             .cta-button {
                 margin-top: 40px;
             }
+
+            .calendly-wrapper,
+            #calendly-embed {
+                min-height: 580px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="left-col">
+    <div class="container is-booking" id="container">
+        <div class="left-col is-hidden" id="left-col">
             <img src="https://grzs6rqzvzupoxv9.public.blob.vercel-storage.com/image%20last-optimized.webp" alt="Evan">
             <div class="left-col-content">
                 <p>Votre échange se fera avec Evan</p>
             </div>
         </div>
 
-        <div class="right-col">
+        <div class="right-col is-booking" id="right-col">
             <div class="brand">
                 <a href="https://hercule.dev">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hercule">
@@ -281,7 +380,19 @@
                 </a>
             </div>
 
-            <div class="step">
+            <div id="view-booking" class="view">
+                <h2>Planifier votre échange</h2>
+                <p class="booking-intro">Choisissez un créneau pour votre audit de compatibilité avec nos demandes.</p>
+                <div class="calendly-wrapper">
+                    <div class="calendly-loader" id="calendly-loader" aria-live="polite">
+                        <div class="loader-spinner" aria-hidden="true"></div>
+                        <p class="loader-text">Chargement du calendrier…</p>
+                    </div>
+                    <div id="calendly-embed"></div>
+                </div>
+            </div>
+
+            <div id="view-confirmation" class="view is-hidden step">
                 <h2>Votre rendez-vous est confirmé</h2>
 
                 <div class="info-card">
@@ -300,5 +411,79 @@
             </div>
         </div>
     </div>
+
+    <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
+    <script>
+        var CALENDLY_EVENT_URL = 'https://calendly.com/hercule-connect/30min';
+        var loaderHidden = false;
+
+        function isCalendlyEvent(event) {
+            return event.origin === 'https://calendly.com'
+                && event.data
+                && typeof event.data.event === 'string'
+                && event.data.event.indexOf('calendly.') === 0;
+        }
+
+        function hideLoader() {
+            if (loaderHidden) return;
+            loaderHidden = true;
+            document.getElementById('calendly-loader').classList.add('is-hidden');
+        }
+
+        function showConfirmation() {
+            document.getElementById('view-booking').classList.add('is-hidden');
+            document.getElementById('view-confirmation').classList.remove('is-hidden');
+            document.getElementById('right-col').classList.remove('is-booking');
+            document.getElementById('left-col').classList.remove('is-hidden');
+            document.getElementById('container').classList.remove('is-booking');
+            document.title = 'Rendez-vous confirmé · Hercule';
+            history.replaceState(null, '', '?confirmed=1');
+        }
+
+        function showBookingView() {
+            document.getElementById('view-booking').classList.remove('is-hidden');
+            document.getElementById('view-confirmation').classList.add('is-hidden');
+            document.getElementById('right-col').classList.add('is-booking');
+            document.getElementById('left-col').classList.add('is-hidden');
+            document.getElementById('container').classList.add('is-booking');
+            document.title = 'Réserver un échange · Hercule';
+        }
+
+        function initCalendlyWidget() {
+            Calendly.initInlineWidget({
+                url: CALENDLY_EVENT_URL,
+                parentElement: document.getElementById('calendly-embed'),
+                resize: true
+            });
+        }
+
+        window.addEventListener('message', function(event) {
+            if (!isCalendlyEvent(event)) return;
+
+            if (event.data.event === 'calendly.event_type_viewed' || event.data.event === 'calendly.profile_page_viewed') {
+                hideLoader();
+            }
+
+            if (event.data.event === 'calendly.event_scheduled') {
+                hideLoader();
+                showConfirmation();
+            }
+        });
+
+        if (new URLSearchParams(window.location.search).get('confirmed') === '1') {
+            showConfirmation();
+        } else {
+            function bootCalendly() {
+                if (window.Calendly) {
+                    initCalendlyWidget();
+                } else {
+                    window.setTimeout(bootCalendly, 50);
+                }
+            }
+
+            bootCalendly();
+            window.setTimeout(hideLoader, 8000);
+        }
+    </script>
 </body>
 </html>

@@ -74,7 +74,7 @@ export function AISection() {
               <div className="flex items-start gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-white text-sm font-medium">Compatibilité confirmée — apport d&apos;affaire attribué</p>
+                  <p className="text-white text-sm font-medium">Compatibilité confirmée — apports d&apos;affaires attribués</p>
                   <p className="text-zinc-400 text-xs mt-1">Rendez-vous planifié demain · 10:00</p>
                 </div>
               </div>

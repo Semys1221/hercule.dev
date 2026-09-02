@@ -23,7 +23,7 @@ export function LogoCloud() {
             transition={{ duration: 0.6 }}
             className="text-lg text-zinc-300 mb-2"
           >
-            Des agences partenaires reçoivent des apports d&apos;affaire qualifiés.
+            Des agences partenaires reçoivent des apports d&apos;affaires qualifiés.
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}

@@ -24,11 +24,9 @@ export function CTASection() {
             </a>
             <a
               href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
               className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
             >
-              Demander un apport d&apos;affaire
+              Demander des apports d&apos;affaires
             </a>
           </div>
         </div>
