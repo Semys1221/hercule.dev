@@ -92,16 +92,22 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            text-align: center;
             background-color: var(--background);
         }
 
         .brand {
             margin-bottom: 48px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
         }
 
         .brand a {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             text-decoration: none;
             color: inherit;
@@ -126,6 +132,7 @@
 
         .step {
             animation: strictFadeIn 0.8s ease-out forwards;
+            width: 100%;
         }
 
         h2 {
@@ -152,11 +159,13 @@
         }
 
         .prep-list {
-            margin: 0;
-            padding-left: 20px;
+            margin: 0 auto;
+            padding-left: 0;
+            list-style-position: inside;
             color: var(--muted-foreground);
             font-size: 15px;
             line-height: 1.85;
+            max-width: 520px;
         }
 
         .prep-list li {
@@ -248,10 +257,6 @@
 
             .cta-button {
                 margin-top: 40px;
-            }
-
-            .prep-list {
-                text-align: left;
             }
         }
     </style>
