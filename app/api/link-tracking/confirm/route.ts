@@ -9,6 +9,7 @@ import {
   markInstantlyConfirmedSynced,
   markLeadConfirmed,
 } from "@/lib/link-tracking/supabase";
+import { isMeetingBookedStatus } from "@/lib/link-tracking/types";
 
 export async function POST(request: Request) {
   let body: { slug?: string; email?: string; code?: string };
@@ -41,6 +42,20 @@ export async function POST(request: Request) {
         category: lookup.category,
         email: lookup.lead.email,
       });
+    }
+
+    if (lookup.lead.statut === "CANCELLED") {
+      return NextResponse.json(
+        { ok: false, reason: "lead_cancelled" },
+        { status: 409 },
+      );
+    }
+
+    if (!isMeetingBookedStatus(lookup.lead.statut)) {
+      return NextResponse.json(
+        { ok: false, reason: "not_booked_yet" },
+        { status: 409 },
+      );
     }
 
     const confirmed = await markLeadConfirmed(client, lookup);

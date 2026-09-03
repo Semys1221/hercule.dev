@@ -11,6 +11,8 @@
     "apply-agence-entreprise-migration": "tsx --env-file=.env ./scripts/crm/applyAgenceEntrepriseMigration.ts",
     "apply-crm-booking-communication-migration": "tsx --env-file=.env ./scripts/crm/applyCrmBookingCommunicationMigration.ts",
     "configure-calendly-link-tracking-webhook": "tsx --env-file=.env ./scripts/crm/configureCalendlyLinkTrackingWebhook.ts",
+    "repair-confirmed-without-booking-email": "tsx --env-file=.env ./scripts/crm/repairConfirmedWithoutBookingEmail.ts",
+    "smoke-booking-confirm-guard": "tsx --env-file=.env ./scripts/crm/smokeBookingConfirmGuard.ts",
     "crm": "streamlit run crm/admin_tool.py",
     "scrapper": "cd app/scrapper_streamlit && python main.py ui",
     "streamlit-clean": "cd app/streamlit_clean && streamlit run main.py"

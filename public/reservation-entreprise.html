@@ -417,7 +417,6 @@
     <script>
         var CALENDLY_EVENT_URL = 'https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone';
         var loaderHidden = false;
-        var confirmScheduled = false;
 
         var params = new URLSearchParams(window.location.search);
         var pathMatch = window.location.pathname.match(/\/reservation-entreprise\.html\/([^/]+)\/?$/);
@@ -461,19 +460,6 @@
             }
         }
 
-        async function confirmPresence() {
-            if (!shortCode && !prospectEmail) return;
-            try {
-                await fetch('/api/link-tracking/confirm', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ slug: shortCode, email: prospectEmail })
-                });
-            } catch (err) {
-                // non-blocking
-            }
-        }
-
         function showConfirmation() {
             document.getElementById('view-booking').classList.add('is-hidden');
             document.getElementById('view-confirmation').classList.remove('is-hidden');
@@ -483,10 +469,6 @@
             document.title = 'Rendez-vous confirmé · Hercule';
             var query = shortCode ? '?confirmed=1&code=' + encodeURIComponent(shortCode) : '?confirmed=1';
             history.replaceState(null, '', query);
-            if (!confirmScheduled) {
-                confirmScheduled = true;
-                void confirmPresence();
-            }
         }
 
         function showBookingView() {

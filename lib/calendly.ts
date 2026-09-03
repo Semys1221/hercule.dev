@@ -63,6 +63,80 @@ export function extractUuidFromCalendlyUri(uri: string): string {
   return parts[parts.length - 1] || "";
 }
 
+export function parseEventAndInviteeUuids(
+  inviteeUri: string,
+): { eventUuid: string; inviteeUuid: string } | null {
+  const trimmed = inviteeUri.trim().replace(/\/$/, "");
+  const parts = trimmed.split("/");
+  const inviteesIdx = parts.lastIndexOf("invitees");
+  if (inviteesIdx === -1 || inviteesIdx < 1) return null;
+
+  const eventUuid = parts[inviteesIdx - 1] || "";
+  const inviteeUuid = parts[inviteesIdx + 1] || "";
+  if (!eventUuid || !inviteeUuid) return null;
+
+  return { eventUuid, inviteeUuid };
+}
+
+export type ScheduledEventInviteeLinks = {
+  cancelUrl: string;
+  rescheduleUrl: string;
+  startTime: string | null;
+  status: string;
+};
+
+export async function getScheduledEventInvitee(
+  eventUuid: string,
+  inviteeUuid: string,
+): Promise<ScheduledEventInviteeLinks> {
+  const token = getCalendlyApiToken();
+  const response = await fetch(
+    `https://api.calendly.com/scheduled_events/${eventUuid}/invitees/${inviteeUuid}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Calendly invitee HTTP ${response.status}: ${body}`);
+  }
+
+  const data = (await response.json()) as {
+    resource?: Record<string, unknown>;
+  };
+  const resource = data.resource ?? {};
+  const cancelUrl = String(resource.cancel_url ?? "").trim();
+  const rescheduleUrl = String(resource.reschedule_url ?? "").trim();
+  const status = String(resource.status ?? "").trim();
+
+  if (!cancelUrl || !rescheduleUrl) {
+    throw new Error("Calendly invitee response missing cancel or reschedule URL");
+  }
+
+  let startTime: string | null = null;
+  const eventResponse = await fetch(
+    `https://api.calendly.com/scheduled_events/${eventUuid}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (eventResponse.ok) {
+    const eventData = (await eventResponse.json()) as {
+      resource?: Record<string, unknown>;
+    };
+    const eventStart = String(eventData.resource?.start_time ?? "").trim();
+    startTime = eventStart || null;
+  }
+
+  return { cancelUrl, rescheduleUrl, startTime, status };
+}
+
 export function parseInviteeCreatedPayload(
   payload: unknown,
 ): ParsedCalendlyInvitee | null {

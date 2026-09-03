@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Réserver un échange · Hercule</title>
+    <link rel="icon" href="/icon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-icon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
     <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
     <style>
@@ -454,6 +456,58 @@
             margin-bottom: 4px;
         }
 
+        .manage-booking {
+            margin-bottom: 16px;
+        }
+
+        .manage-booking-loading,
+        .manage-booking-fallback,
+        .manage-booking-time {
+            margin: 0 0 12px;
+            color: var(--muted-foreground);
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .manage-booking-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .manage-booking-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--foreground);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .manage-booking-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background-color: rgba(99, 102, 241, 0.08);
+        }
+
+        .manage-booking-btn.is-danger:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+            background-color: rgba(239, 68, 68, 0.08);
+        }
+
+        .is-hidden {
+            display: none !important;
+        }
+
         @keyframes strictFadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -594,7 +648,7 @@
                         </button>
                         <div class="timeline-body">
                             <div class="timeline-body-inner">
-                                <p>Nous vous présenterons les demandes actuellement disponibles et identifierons celles correspondant à votre expertise, votre capacité et vos objectifs.</p>
+                                <p>Nous vous présenterons les demandes actuellement disponibles que nous estimons les plus adaptées au profil et au positionnement de votre agence.</p>
                             </div>
                         </div>
                     </li>
@@ -622,27 +676,20 @@
                             </button>
                             <div class="accordion-panel">
                                 <div class="accordion-panel-inner">
-                                    <p>Hercule détecte en continu des signaux d'intention sur plus de 1 000 sites : recrutements, développements, changements d'activité et autres indicateurs susceptibles de révéler un besoin.</p>
-                                    <p>Les entreprises concernées sont ensuite qualifiées et accompagnées par Hercule afin de préciser leur besoin, leur budget et leurs attentes. Lorsqu'un besoin est confirmé, la demande est intégrée à notre réseau et peut être proposée à l'agence présentant la meilleure compatibilité.</p>
+                                    <p>Hercule détecte en continu des signaux d'intention sur plus de 1 000 sites : recrutements, développements, changements d'activité, etc.</p>
+                                    <p>Les entreprises sont qualifiées par Hercule (besoin, budget, attentes). Une fois confirmé, la demande rejoint notre réseau et est proposée à l'agence la plus compatible.</p>
                                 </div>
                             </div>
                         </li>
                         <li class="accordion-item">
                             <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
-                                <span>Comment Hercule choisit-il l'agence à laquelle attribuer une demande ?</span>
+                                <span>Comment Hercule choisit-il l'agence ?</span>
                                 <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                             </button>
                             <div class="accordion-panel">
                                 <div class="accordion-panel-inner">
-                                    <p>Hercule évalue la compatibilité entre le profil du client et celui de l'agence selon cinq critères :</p>
-                                    <ul>
-                                        <li>Type de prestations proposées</li>
-                                        <li>Branche d'activité dans laquelle l'agence obtient ses meilleurs résultats</li>
-                                        <li>Taille de l'agence</li>
-                                        <li>Tarifs et attentes en matière de rémunération</li>
-                                        <li>Personnalité, approche et positionnement de l'agence</li>
-                                    </ul>
-                                    <p>L'objectif est d'assurer une cohérence entre le client et l'agence, notamment en termes de budget, de niveau de structure et de mode d'accompagnement.</p>
+                                    <p>Hercule évalue la compatibilité client-agence sur cinq critères : prestations, secteur d'excellence, taille, tarifs et positionnement.</p>
+                                    <p>Objectif : aligner budget, structure et mode d'accompagnement.</p>
                                 </div>
                             </div>
                         </li>
@@ -664,20 +711,8 @@
                             </button>
                             <div class="accordion-panel">
                                 <div class="accordion-panel-inner">
-                                    <p>Hercule Starter : 1 489 € pour 5 attributions de demandes clients qualifiées.<br>
-                                    Hercule Growth : 2 500 €/mois pour jusqu'à 4 nouveaux clients signés par mois par Hercule pour votre agence.</p>
-                                    <p>Les deux formules incluent 0 % de commission sur les ventes réalisées par votre agence.</p>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="accordion-item">
-                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
-                                <span>Une demande peut-elle être attribuée à plusieurs agences ?</span>
-                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-                            </button>
-                            <div class="accordion-panel">
-                                <div class="accordion-panel-inner">
-                                    <p>Non. Une demande validée est attribuée à une seule agence, sans mise en concurrence avec d'autres agences au sein du réseau Hercule.</p>
+                                    <p>Starter : 1 489 € pour 5 attributions qualifiées. Growth : 2 500 €/mois pour jusqu'à 4 nouveaux clients signés/mois.</p>
+                                    <p>0 % de commission sur vos ventes.</p>
                                 </div>
                             </div>
                         </li>
@@ -699,7 +734,14 @@
                             </button>
                             <div class="accordion-panel">
                                 <div class="accordion-panel-inner">
-                                    <p>Vous pouvez annuler ou modifier votre rendez-vous à tout moment.</p>
+                                    <div id="manage-booking" class="manage-booking">
+                                        <p class="manage-booking-loading">Chargement des options…</p>
+                                        <p class="manage-booking-time is-hidden" id="manage-booking-time"></p>
+                                        <div class="manage-booking-actions is-hidden" id="manage-booking-actions"></div>
+                                        <p class="manage-booking-fallback is-hidden" id="manage-booking-fallback">
+                                            Utilisez le lien reçu par email Calendly pour annuler ou reporter votre rendez-vous.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </li>
@@ -712,8 +754,10 @@
     <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
     <script>
         var CALENDLY_EVENT_URL = 'https://calendly.com/hercule-connect/30min';
+        var STORAGE_EVENT_URI = 'hercule_calendly_event';
+        var STORAGE_INVITEE_URI = 'hercule_calendly_invitee';
         var loaderHidden = false;
-        var confirmScheduled = false;
+        var manageBookingLoaded = false;
 
         var params = new URLSearchParams(window.location.search);
         var pathMatch = window.location.pathname.match(/\/reservation\.html\/([^/]+)\/?$/);
@@ -783,17 +827,101 @@
             }
         }
 
-        async function confirmPresence() {
-            if (!shortCode && !prospectEmail) return;
+        function showManageBookingFallback() {
+            var loading = document.querySelector('.manage-booking-loading');
+            var actions = document.getElementById('manage-booking-actions');
+            var time = document.getElementById('manage-booking-time');
+            var fallback = document.getElementById('manage-booking-fallback');
+            if (loading) loading.classList.add('is-hidden');
+            if (actions) actions.classList.add('is-hidden');
+            if (time) time.classList.add('is-hidden');
+            if (fallback) fallback.classList.remove('is-hidden');
+        }
+
+        function formatBookingTime(isoString) {
+            if (!isoString) return '';
             try {
-                await fetch('/api/link-tracking/confirm', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ slug: shortCode, email: prospectEmail })
-                });
+                return new Intl.DateTimeFormat('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(new Date(isoString));
             } catch (err) {
-                // non-blocking
+                return '';
             }
+        }
+
+        function renderManageBooking(data) {
+            var loading = document.querySelector('.manage-booking-loading');
+            var actions = document.getElementById('manage-booking-actions');
+            var time = document.getElementById('manage-booking-time');
+            var fallback = document.getElementById('manage-booking-fallback');
+
+            if (loading) loading.classList.add('is-hidden');
+            if (fallback) fallback.classList.add('is-hidden');
+
+            if (!data || !data.cancelUrl || !data.rescheduleUrl) {
+                showManageBookingFallback();
+                return;
+            }
+
+            if (time && data.startTime) {
+                var formatted = formatBookingTime(data.startTime);
+                if (formatted) {
+                    time.textContent = 'Rendez-vous prévu le ' + formatted + '.';
+                    time.classList.remove('is-hidden');
+                }
+            }
+
+            if (actions) {
+                actions.innerHTML =
+                    '<a class="manage-booking-btn" href="' + data.rescheduleUrl + '" target="_blank" rel="noopener noreferrer">Reporter le rendez-vous</a>' +
+                    '<a class="manage-booking-btn is-danger" href="' + data.cancelUrl + '" target="_blank" rel="noopener noreferrer">Annuler le rendez-vous</a>';
+                actions.classList.remove('is-hidden');
+            }
+        }
+
+        function storeCalendlyBooking(payload) {
+            if (!payload) return;
+            var eventUri = payload.event && payload.event.uri ? payload.event.uri : '';
+            var inviteeUri = payload.invitee && payload.invitee.uri ? payload.invitee.uri : '';
+            if (eventUri) sessionStorage.setItem(STORAGE_EVENT_URI, eventUri);
+            if (inviteeUri) sessionStorage.setItem(STORAGE_INVITEE_URI, inviteeUri);
+        }
+
+        async function fetchCalendlyLinks() {
+            if (manageBookingLoaded) return;
+
+            var query = new URLSearchParams();
+            var eventUri = sessionStorage.getItem(STORAGE_EVENT_URI) || '';
+            var inviteeUri = sessionStorage.getItem(STORAGE_INVITEE_URI) || '';
+
+            if (eventUri) query.set('eventUri', eventUri);
+            if (inviteeUri) query.set('inviteeUri', inviteeUri);
+            if (shortCode) query.set('code', shortCode);
+            if (prospectEmail) query.set('email', prospectEmail);
+
+            if (!eventUri && !inviteeUri && !shortCode && !prospectEmail) {
+                showManageBookingFallback();
+                manageBookingLoaded = true;
+                return;
+            }
+
+            try {
+                var response = await fetch('/api/link-tracking/calendly-links?' + query.toString());
+                var data = await response.json();
+                if (!response.ok || !data.ok) {
+                    showManageBookingFallback();
+                } else {
+                    renderManageBooking(data);
+                }
+            } catch (err) {
+                showManageBookingFallback();
+            }
+
+            manageBookingLoaded = true;
         }
 
         function showConfirmation() {
@@ -803,12 +931,11 @@
             document.getElementById('left-col').classList.remove('is-hidden');
             document.getElementById('container').classList.remove('is-booking');
             document.title = 'Rendez-vous confirmé · Hercule';
-            var query = shortCode ? '?confirmed=1&code=' + encodeURIComponent(shortCode) : '?confirmed=1';
-            history.replaceState(null, '', query);
-            if (!confirmScheduled) {
-                confirmScheduled = true;
-                void confirmPresence();
-            }
+            var queryParts = ['confirmed=1'];
+            if (shortCode) queryParts.push('code=' + encodeURIComponent(shortCode));
+            if (prospectEmail) queryParts.push('email=' + encodeURIComponent(prospectEmail));
+            history.replaceState(null, '', '?' + queryParts.join('&'));
+            void fetchCalendlyLinks();
         }
 
         function initCalendlyWidget() {
@@ -828,6 +955,7 @@
 
             if (event.data.event === 'calendly.event_scheduled') {
                 hideLoader();
+                storeCalendlyBooking(event.data.payload);
                 showConfirmation();
             }
         });

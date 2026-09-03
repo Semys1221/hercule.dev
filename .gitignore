@@ -57,3 +57,4 @@ app/streamlit_clean/data/*.json
 
 # scrapper runtime output
 app/scrapper_streamlit/output/
+.env*
