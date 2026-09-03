@@ -70,6 +70,14 @@ CONSEILLERS_FINANCIERS_CONFIG = {
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
     "TARGET_LEADS": 5_000,
     "TARGET_MODE": "instantly_pushed",
+    "SERVICE_DEFAULT": "Gestion de Patrimoine",
+    "SERVICE_RULES": [
+        {"label": "Assurance-Vie", "keywords": ["assurance-vie", "assurance vie", "mandataire d'assurance"]},
+        {"label": "Retraite", "keywords": ["retraite", "PER", "épargne retraite", "conseil retraite"]},
+        {"label": "Transmission", "keywords": ["transmission", "succession", "transmission de patrimoine", "succession patrimoine"]},
+        {"label": "Immobilier Locatif", "keywords": ["immobilier locatif", "SCPI", "défiscalisation"]},
+        {"label": "Investissement Financier", "keywords": ["investissement financier", "private equity", "conseil en investissement"]},
+    ],
     "KEYWORDS": [
         "conseiller en gestion de patrimoine",
         "cabinet de gestion de patrimoine",

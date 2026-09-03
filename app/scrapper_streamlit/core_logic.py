@@ -18,7 +18,7 @@ import pandas as pd
 import urllib3
 
 from category_filter import (
-    detect_service_from_taxonomy,
+    detect_service,
     format_category_display,
     taxonomy_fields,
     taxonomy_text,
@@ -635,6 +635,10 @@ async def _run_enrich_batch(
         soft_excluded=settings["soft_excluded"],
         max_concurrent=settings["concurrency"],
         goto_timeout_ms=settings["timeout_ms"],
+        service_config={
+            "SERVICE_DEFAULT": config.get("SERVICE_DEFAULT", ""),
+            "SERVICE_RULES": list(config.get("SERVICE_RULES") or []),
+        },
         log_cb=log_cb,
     )
     for row in rejected:
@@ -769,7 +773,7 @@ def _process_business(
         return None, audit
 
     tax = taxonomy_text(b)
-    service = detect_service_from_taxonomy(tax)
+    service = detect_service(tax, config)
     fields = taxonomy_fields(b)
     row = {
         "Email": email,

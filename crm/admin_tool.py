@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -13,8 +14,15 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from booking_templates import list_templates, send_test_email, upsert_templates
-from config import env_source_label, settings
-from crm_api import post_json
+from config import (
+    confirm_base_url_for,
+    env_source_label,
+    settings,
+    temporary_base_url_for,
+    tracking_base_url_for,
+)
+from crm_api import post_json, start_role_recovery_sequence
+from calendly_client import list_untracked_bookings
 from instantly_client import (
     count_leads_in_campaign,
     format_resource_label,
@@ -27,21 +35,32 @@ from pipeline import (
     provision_from_instantly_leads,
     rows_to_dataframe,
 )
+from slug import build_confirm_url, build_tracking_url
 from supabase_repo import (
     find_by_email,
     get_client,
     list_all_leads,
     provision_lead,
+    provision_or_update_role_recovery_lead,
     reset_client_cache,
 )
 
 st.set_page_config(page_title="Hercule CRM", layout="wide")
 st.title("Hercule CRM")
 st.caption(
-    "Leads Supabase (agence / entreprise). Tracking agence: "
+    "Leads Supabase (agence / entreprise). Booking agence: "
     f"`{settings.tracking_base_url_agence}/{{slug}}` · entreprise: "
-    f"`{settings.tracking_base_url_entreprise}/{{slug}}` — Instantly `{{{{link}}}}`"
+    f"`{settings.tracking_base_url_entreprise}/{{slug}}` · confirmation: "
+    f"`{settings.confirm_base_url}/{{slug}}?email={{email}}` — Instantly `{{{{link}}}}`"
 )
+
+LEAD_STATUTS = [
+    "NOTBOOKED",
+    "CLICKED",
+    "MEETING_BOOKED",
+    "CONFIRMED",
+    "CANCELLED",
+]
 
 
 def _init_state() -> None:
@@ -53,7 +72,8 @@ def _init_state() -> None:
         "crm_leads": None,
         "selected_lead_id": None,
         "unibox_rows": None,
-        "pending_booked_lead": None,
+        "pending_statut_changes": None,
+        "leads_editor_version": None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -63,6 +83,195 @@ def _init_state() -> None:
 def _reload_leads() -> None:
     st.session_state.crm_leads = list_all_leads()
 
+
+def _lead_urls(lead: dict) -> dict[str, str | None]:
+    slug = (lead.get("link") or "").strip()
+    category = lead.get("category") or "agence"
+    email = (lead.get("email") or "").strip()
+    if not slug:
+        return {"booking_url": None, "confirm_url": None}
+    booking_base = tracking_base_url_for(category)
+    confirm_base = confirm_base_url_for(category)
+    return {
+        "booking_url": build_tracking_url(booking_base, slug),
+        "confirm_url": build_confirm_url(confirm_base, slug, email or None),
+    }
+
+
+def _is_role_recovery_compressed(start_time: str | None) -> bool:
+    if not start_time:
+        return False
+    try:
+        normalized = start_time.replace("Z", "+00:00")
+        start = datetime.fromisoformat(normalized)
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        return start - now < timedelta(hours=48)
+    except ValueError:
+        return False
+
+
+def _fetch_sequence_bookings() -> list[dict]:
+    bookings = list_untracked_bookings()
+    st.session_state.sequence_bookings = bookings
+    return bookings
+
+
+def _is_meeting_booked(statut: str | None) -> bool:
+    return statut in ("MEETING_BOOKED", "BOOKED")
+
+
+def _status_side_effects(old_statut: str, new_statut: str) -> list[str]:
+    if old_statut == new_statut:
+        return []
+    messages: list[str] = []
+    if new_statut == "MEETING_BOOKED" and not _is_meeting_booked(old_statut):
+        messages.append("Déclencher la séquence d'emails Resend (immediate + relances) ?")
+    if old_statut == "MEETING_BOOKED" and new_statut == "CONFIRMED":
+        messages.append("Les relances en attente (h48, h24, h20) seront annulées.")
+    return messages
+
+
+LEADS_EDITOR_COLUMNS = [
+    "category",
+    "first_name",
+    "email",
+    "company",
+    "statut",
+    "link",
+    "scheduled_at",
+    "confirmed_at",
+    "updated_at",
+    "id",
+    "_original_statut",
+]
+
+
+def _build_leads_editor_df(leads: list[dict]) -> pd.DataFrame:
+    rows: list[dict] = []
+    for lead in leads:
+        statut = lead.get("statut") if lead.get("statut") in LEAD_STATUTS else "NOTBOOKED"
+        rows.append(
+            {
+                "category": lead.get("category"),
+                "first_name": lead.get("first_name"),
+                "email": lead.get("email"),
+                "company": lead.get("company"),
+                "statut": statut,
+                "link": lead.get("link"),
+                "scheduled_at": lead.get("scheduled_at"),
+                "confirmed_at": lead.get("confirmed_at"),
+                "updated_at": lead.get("updated_at"),
+                "id": lead.get("id"),
+                "_original_statut": statut,
+            }
+        )
+    return pd.DataFrame(rows, columns=LEADS_EDITOR_COLUMNS)
+
+
+def _detect_statut_changes(edited: pd.DataFrame) -> list[dict]:
+    changes: list[dict] = []
+    for _, row in edited.iterrows():
+        old_statut = str(row.get("_original_statut") or "")
+        new_statut = str(row.get("statut") or "")
+        if old_statut != new_statut:
+            changes.append(
+                {
+                    "id": row.get("id"),
+                    "category": row.get("category"),
+                    "email": row.get("email"),
+                    "old_statut": old_statut,
+                    "new_statut": new_statut,
+                    "side_effects": _status_side_effects(old_statut, new_statut),
+                }
+            )
+    return changes
+
+
+def _apply_statut_change(
+    change: dict,
+    *,
+    resend_mode: str | None = None,
+    scheduled_at: str | None = None,
+) -> None:
+    post_json(
+        "/api/link-tracking/sync-status",
+        {
+            "lead_id": change["id"],
+            "category": change["category"],
+            "statut": change["new_statut"],
+        },
+    )
+    if (
+        change["new_statut"] == "MEETING_BOOKED"
+        and resend_mode
+        and resend_mode != "Do not trigger"
+    ):
+        payload: dict = {
+            "lead_id": change["id"],
+            "category": change["category"],
+            "mode": "scheduled" if resend_mode == "Schedule" else "now",
+        }
+        if resend_mode == "Schedule" and scheduled_at:
+            payload["scheduled_at"] = scheduled_at
+        post_json("/api/booking-communication/trigger", payload)
+
+
+@st.dialog("Confirmer les modifications de statut")
+def _confirm_statut_changes_dialog(changes: list[dict]) -> None:
+    st.markdown("Les changements suivants déclenchent des actions :")
+    for change in changes:
+        st.write(
+            f"- **{change['email']}** : `{change['old_statut']}` → `{change['new_statut']}`"
+        )
+        for msg in change.get("side_effects") or []:
+            st.caption(msg)
+
+    needs_resend = any(
+        c["new_statut"] == "MEETING_BOOKED" and not _is_meeting_booked(c["old_statut"])
+        for c in changes
+    )
+    resend_mode = "Do not trigger"
+    scheduled_at = ""
+    if needs_resend:
+        resend_mode = st.radio(
+            "Séquence Resend (leads passant en MEETING_BOOKED)",
+            ["Trigger now", "Schedule", "Do not trigger"],
+            key="dialog_resend_mode",
+        )
+        if resend_mode == "Schedule":
+            scheduled_at = st.text_input(
+                "Démarrage séquence (ISO, ex. 2026-09-10T09:00:00+02:00)",
+                key="dialog_resend_schedule",
+            )
+
+    col_confirm, col_cancel = st.columns(2)
+    with col_confirm:
+        if st.button("Confirmer", type="primary", key="dialog_confirm_statut"):
+            try:
+                for change in changes:
+                    mode = resend_mode if (
+                        change["new_statut"] == "MEETING_BOOKED"
+                        and not _is_meeting_booked(change["old_statut"])
+                    ) else None
+                    _apply_statut_change(
+                        change,
+                        resend_mode=mode,
+                        scheduled_at=scheduled_at or None,
+                    )
+                st.session_state.pending_statut_changes = None
+                st.session_state.leads_editor_version = None
+                _reload_leads()
+                st.toast(f"{len(changes)} statut(s) mis à jour.")
+                st.rerun()
+            except Exception as exc:
+                st.error(str(exc))
+    with col_cancel:
+        if st.button("Annuler", key="dialog_cancel_statut"):
+            st.session_state.pending_statut_changes = None
+            st.session_state.leads_editor_version = None
+            st.rerun()
 
 def _table_with_bulk_select(
     state_key: str,
@@ -127,7 +336,7 @@ def _preview_email_template(
     sample_heure = "09:00"
     sample_confirm = (
         "https://www.hercule.dev/confirm-reservation.html"
-        "?code=exemple-slug&email=jean@example.com"
+        "/exemple-slug?email=jean@example.com"
     )
     if email_type == "immediate":
         first_name_line = "Bonjour Jean,"
@@ -152,6 +361,8 @@ EMAIL_TYPE_LABELS = {
     "h48_confirm": "Email 2 — 48h avant le RDV",
     "h24_relance": "Email 3 — 24h relance (si non confirmé)",
     "h20_cancel": "Email 4 — H-20 annulation (si non confirmé)",
+    "role_seq_48": "Role recovery — Email 1 (48h avant, 8h Paris)",
+    "role_seq_24": "Role recovery — Email 2 (24h avant, lien consulter)",
 }
 
 EMAIL_TYPE_VARS = {
@@ -159,21 +370,15 @@ EMAIL_TYPE_VARS = {
     "h48_confirm": "{{firstNameLine}}, {{confirmUrl}}",
     "h24_relance": "{{firstNameLine}}, {{confirmUrl}}",
     "h20_cancel": "{{firstNameLine}}, {{date}}, {{heure}}",
+    "role_seq_48": "{{firstNameLine}}",
+    "role_seq_24": "{{firstNameLine}}, {{confirmLink}}",
 }
-
-LEAD_STATUTS = [
-    "NOTBOOKED",
-    "CLICKED",
-    "MEETING_BOOKED",
-    "CONFIRMED",
-    "CANCELLED",
-]
 
 
 _init_state()
 
-tab_leads, tab_add, tab_unibox, tab_provision, tab_emails = st.tabs(
-    ["Leads", "Ajouter", "Unibox Instantly", "Provisioning", "Emails Resend"]
+tab_leads, tab_add, tab_unibox, tab_provision, tab_emails, tab_sequence = st.tabs(
+    ["Leads", "Ajouter", "Unibox Instantly", "Provisioning", "Emails Resend", "Sequence"]
 )
 
 with tab_leads:
@@ -181,12 +386,16 @@ with tab_leads:
     with col_a:
         if st.button("Actualiser", type="primary"):
             try:
+                st.session_state.leads_editor_version = None
                 _reload_leads()
                 st.success("Données rechargées depuis Supabase.")
             except Exception as exc:
                 st.error(str(exc))
     with col_b:
-        st.caption("Recharge Supabase. Instantly est mis à jour uniquement lors d’un changement de statut.")
+        st.caption(
+            "Modifiez la colonne **statut** puis cliquez sur Appliquer. "
+            "Les actions (emails Resend, annulation relances) demandent confirmation."
+        )
 
     if st.session_state.crm_leads is None:
         try:
@@ -199,118 +408,92 @@ with tab_leads:
     if not leads:
         st.info("Aucun lead. Ajoutez-en manuellement, via Unibox, ou via Provisioning.")
     else:
-        display = pd.DataFrame(leads)
-        keep = [
-            c
-            for c in [
-                "category",
-                "first_name",
-                "email",
-                "company",
-                "statut",
-                "link",
-                "scheduled_at",
-                "confirmed_at",
-                "updated_at",
-                "id",
-            ]
-            if c in display.columns
-        ]
-        st.dataframe(display[keep], hide_index=True, use_container_width=True)
-
-        labels = {
-            f"{row.get('email')} · {row.get('category')} · {row.get('statut')}": row
-            for row in leads
-        }
-        selected_label = st.selectbox("Détail / statut", list(labels.keys()))
-        selected = labels[selected_label]
-        st.json(
-            {
-                "id": selected.get("id"),
-                "email": selected.get("email"),
-                "first_name": selected.get("first_name"),
-                "company": selected.get("company"),
-                "statut": selected.get("statut"),
-                "link": selected.get("link"),
-                "scheduled_at": selected.get("scheduled_at"),
-                "confirmed_at": selected.get("confirmed_at"),
-            }
-        )
-
-        new_statut = st.selectbox(
-            "Nouveau statut",
+        statut_filter = st.multiselect(
+            "Filtrer par statut",
             LEAD_STATUTS,
-            index=LEAD_STATUTS.index(
-                selected.get("statut")
-                if selected.get("statut") in LEAD_STATUTS
-                else "NOTBOOKED"
-            ),
+            default=LEAD_STATUTS,
+            key="leads_statut_filter",
         )
+        filtered_leads = [
+            lead
+            for lead in leads
+            if (lead.get("statut") or "NOTBOOKED") in statut_filter
+        ]
+        st.caption(f"{len(filtered_leads)} / {len(leads)} leads affichés")
 
-        if st.button("Enregistrer le statut"):
-            if new_statut == "MEETING_BOOKED" and selected.get("statut") != "MEETING_BOOKED":
-                st.session_state.pending_booked_lead = selected
+        editor_version = f"{len(leads)}:{','.join(statut_filter)}"
+        if st.session_state.leads_editor_version != editor_version:
+            st.session_state.leads_editor_df = _build_leads_editor_df(filtered_leads)
+            st.session_state.leads_editor_version = editor_version
+
+        disabled_cols = [
+            c for c in LEADS_EDITOR_COLUMNS if c not in ("statut",)
+        ]
+        edited = st.data_editor(
+            st.session_state.leads_editor_df,
+            column_config={
+                "statut": st.column_config.SelectboxColumn(
+                    "statut",
+                    options=LEAD_STATUTS,
+                    required=True,
+                ),
+                "id": None,
+                "_original_statut": None,
+            },
+            disabled=disabled_cols,
+            hide_index=True,
+            use_container_width=True,
+            key="leads_main_editor",
+        )
+        st.session_state.leads_editor_df = edited
+
+        if st.button("Appliquer les modifications", type="primary", key="apply_statut_changes"):
+            changes = _detect_statut_changes(edited)
+            if not changes:
+                st.info("Aucune modification de statut détectée.")
+            elif any(c.get("side_effects") for c in changes):
+                st.session_state.pending_statut_changes = changes
                 st.rerun()
             else:
                 try:
-                    post_json(
-                        "/api/link-tracking/sync-status",
-                        {
-                            "lead_id": selected["id"],
-                            "category": selected["category"],
-                            "statut": new_statut,
-                        },
-                    )
+                    for change in changes:
+                        _apply_statut_change(change)
+                    st.session_state.leads_editor_version = None
                     _reload_leads()
-                    st.success("Statut mis à jour (Supabase + Instantly).")
-                except Exception as exc:
-                    st.error(str(exc))
-
-        pending = st.session_state.pending_booked_lead
-        if pending:
-            st.warning(
-                "This lead is being marked as MEETING BOOKED. "
-                "Do you want to trigger the booking communication sequence?"
-            )
-            mode = st.radio(
-                "Séquence Resend",
-                ["Trigger now", "Schedule", "Do not trigger"],
-                key="booked_mode",
-            )
-            scheduled_at = None
-            if mode == "Schedule":
-                scheduled_at = st.text_input(
-                    "Date et heure de démarrage (ISO, ex. 2026-09-10T09:00:00+02:00)",
-                    key="booked_schedule",
-                )
-            if st.button("Confirmer MEETING BOOKED"):
-                try:
-                    post_json(
-                        "/api/link-tracking/sync-status",
-                        {
-                            "lead_id": pending["id"],
-                            "category": pending["category"],
-                            "statut": "MEETING_BOOKED",
-                        },
-                    )
-                    if mode != "Do not trigger":
-                        payload = {
-                            "lead_id": pending["id"],
-                            "category": pending["category"],
-                            "mode": "scheduled" if mode == "Schedule" else "now",
-                        }
-                        if mode == "Schedule":
-                            payload["scheduled_at"] = scheduled_at
-                        post_json("/api/booking-communication/trigger", payload)
-                    st.session_state.pending_booked_lead = None
-                    _reload_leads()
-                    st.success("Lead marqué MEETING_BOOKED.")
+                    st.toast(f"{len(changes)} statut(s) mis à jour.")
                     st.rerun()
                 except Exception as exc:
                     st.error(str(exc))
-            if st.button("Annuler"):
-                st.session_state.pending_booked_lead = None
-                st.rerun()
+
+        if st.session_state.pending_statut_changes:
+            _confirm_statut_changes_dialog(st.session_state.pending_statut_changes)
+
+        with st.expander("Détail d'un lead"):
+            labels = {
+                f"{row.get('email')} · {row.get('category')} · {row.get('statut')}": row
+                for row in leads
+            }
+            selected_label = st.selectbox(
+                "Lead",
+                list(labels.keys()),
+                key="lead_detail_select",
+            )
+            selected = labels[selected_label]
+            urls = _lead_urls(selected)
+            st.json(
+                {
+                    "id": selected.get("id"),
+                    "email": selected.get("email"),
+                    "first_name": selected.get("first_name"),
+                    "company": selected.get("company"),
+                    "statut": selected.get("statut"),
+                    "link": selected.get("link"),
+                    "booking_url": urls["booking_url"],
+                    "confirm_url": urls["confirm_url"],
+                    "scheduled_at": selected.get("scheduled_at"),
+                    "confirmed_at": selected.get("confirmed_at"),
+                }
+            )
 
 with tab_add:
     st.subheader("Ajouter un prospect (sans CSV)")
@@ -358,7 +541,12 @@ with tab_add:
                         statut=statut,  # type: ignore[arg-type]
                         calendly_questions=questions,
                     )
-                    st.success(f"Lead créé · slug `{created.get('link')}`")
+                    urls = _lead_urls({**created, "category": category, "email": email})
+                    st.success(
+                        f"Lead créé · slug `{created.get('link')}`\n\n"
+                        f"Booking: {urls['booking_url']}\n\n"
+                        f"Confirmation: {urls['confirm_url']}"
+                    )
                     if statut == "MEETING_BOOKED" and send_resend != "Do not trigger":
                         payload = {
                             "lead_id": created["id"],
@@ -426,6 +614,8 @@ with tab_unibox:
                     failed += 1
             st.success(f"Créés {created} · déjà présents {skipped} · échecs {failed}")
             _reload_leads()
+            if created:
+                st.toast(f"{created} lead(s) importé(s) — visible dans l'onglet Leads.")
 
 with tab_provision:
     st.subheader("1. Campagne Instantly — injecter `{{link}}`")
@@ -589,6 +779,9 @@ with tab_provision:
                                 for err in result.errors:
                                     st.write(f"- {err}")
                         _reload_leads()
+                        st.toast(
+                            f"{result.created} lead(s) provisionné(s) — visible dans l'onglet Leads."
+                        )
                     except Exception as exc:
                         st.error(f"Provisioning failed: {exc}")
 
@@ -618,6 +811,10 @@ with tab_provision:
                 st.session_state.last_result_rows = result.rows
                 st.success(
                     f"Created: {result.created} · Skipped: {result.skipped} · Failed: {result.failed}"
+                )
+                _reload_leads()
+                st.toast(
+                    f"{result.created} lead(s) provisionné(s) — visible dans l'onglet Leads."
                 )
             except Exception as exc:
                 st.error(str(exc))
@@ -728,6 +925,180 @@ with tab_emails:
                 st.rerun()
             except Exception as exc:
                 st.error(str(exc))
+
+with tab_sequence:
+    st.subheader("Sequence — role recovery")
+    st.caption(
+        "Calendly bookings without slug tracking (`utm_content`). Provision a lead, "
+        f"then send the 2-email role recovery sequence. Confirmation page: "
+        f"`{settings.temporary_base_url}/{{slug}}?email={{email}}`"
+    )
+
+    if "sequence_bookings" not in st.session_state:
+        st.session_state.sequence_bookings = None
+
+    col_load, col_refresh, col_clear = st.columns([1, 1, 3])
+    with col_load:
+        if st.button("Charger Calendly", type="primary", key="load_sequence_bookings"):
+            try:
+                bookings_loaded = _fetch_sequence_bookings()
+                st.success(
+                    f"{len(bookings_loaded)} réservation(s) sans tracking."
+                )
+                st.rerun()
+            except Exception as exc:
+                st.error(str(exc))
+    with col_refresh:
+        if st.button("Actualiser", key="refresh_sequence_bookings"):
+            try:
+                bookings_loaded = _fetch_sequence_bookings()
+                st.toast(
+                    f"{len(bookings_loaded)} réservation(s) rechargée(s) depuis Calendly."
+                )
+                st.rerun()
+            except Exception as exc:
+                st.error(str(exc))
+    with col_clear:
+        if st.button("Vider la liste", key="clear_sequence_bookings"):
+            st.session_state.sequence_bookings = None
+            st.rerun()
+
+    bookings = st.session_state.sequence_bookings
+    if bookings is None:
+        st.info("Cliquez sur « Charger Calendly » pour lister les réservations non trackées.")
+    elif not bookings:
+        st.success("Aucune réservation non trackée sur les 30 prochains jours.")
+    else:
+        temp_base = temporary_base_url_for("agence")
+        display_rows = []
+        for row in bookings:
+            slug = row.get("lead_link") or ""
+            email = row.get("email") or ""
+            temp_url = (
+                build_confirm_url(temp_base, slug, email)
+                if slug
+                else ""
+            )
+            compressed = _is_role_recovery_compressed(row.get("start_time"))
+            display_rows.append(
+                {
+                    "select": False,
+                    "email": email,
+                    "name": row.get("name") or "",
+                    "company": row.get("company") or "",
+                    "start_time": row.get("start_time") or "",
+                    "compressed": "oui (10 min)" if compressed else "non",
+                    "utm_content": row.get("utm_content") or "",
+                    "provisioned": bool(row.get("provisioned")),
+                    "temporary_url": temp_url,
+                    "lead_id": row.get("lead_id") or "",
+                    "invitee_uri": row.get("invitee_uri") or "",
+                }
+            )
+
+        df = pd.DataFrame(display_rows)
+        edited = st.data_editor(
+            df,
+            column_config={
+                "select": st.column_config.CheckboxColumn("Sélection"),
+                "temporary_url": st.column_config.LinkColumn("temporary-reservation"),
+                "lead_id": None,
+                "invitee_uri": None,
+            },
+            disabled=[
+                "email",
+                "name",
+                "company",
+                "start_time",
+                "compressed",
+                "utm_content",
+                "provisioned",
+                "temporary_url",
+                "lead_id",
+                "invitee_uri",
+            ],
+            hide_index=True,
+            use_container_width=True,
+            key="sequence_bookings_editor",
+        )
+
+        selected = edited[edited["select"] == True]  # noqa: E712
+        st.caption(f"{len(selected)} / {len(edited)} sélectionné(s)")
+
+        col_provision, col_send = st.columns(2)
+        with col_provision:
+            if st.button(
+                "Provisionner la sélection",
+                type="primary",
+                key="provision_sequence_selection",
+            ):
+                if selected.empty:
+                    st.warning("Sélectionnez au moins une ligne.")
+                else:
+                    client = get_client()
+                    ok = 0
+                    errors: list[str] = []
+                    booking_by_email = {row["email"]: row for row in bookings}
+                    for _, item in selected.iterrows():
+                        source = booking_by_email.get(item["email"])
+                        if not source:
+                            continue
+                        try:
+                            lead = provision_or_update_role_recovery_lead(
+                                client,
+                                email=source["email"],
+                                first_name=source.get("first_name"),
+                                company=source.get("company"),
+                                scheduled_at=source.get("start_time"),
+                                calendly_invitee_uri=source.get("invitee_uri"),
+                                calendly_payload={
+                                    "invitee_uri": source.get("invitee_uri"),
+                                    "event_uri": source.get("event_uri"),
+                                },
+                                calendly_questions=source.get("questions") or {},
+                            )
+                            source["lead_id"] = lead["id"]
+                            source["lead_link"] = lead["link"]
+                            source["provisioned"] = True
+                            ok += 1
+                        except Exception as exc:
+                            errors.append(f"{item['email']}: {exc}")
+                    st.session_state.sequence_bookings = bookings
+                    if ok:
+                        st.success(f"{ok} lead(s) provisionné(s).")
+                    for err in errors:
+                        st.error(err)
+                    st.rerun()
+
+        with col_send:
+            if st.button("Envoyer la séquence", key="send_sequence_selection"):
+                if selected.empty:
+                    st.warning("Sélectionnez au moins une ligne provisionnée.")
+                else:
+                    ok = 0
+                    errors: list[str] = []
+                    for _, item in selected.iterrows():
+                        if not item.get("lead_id"):
+                            errors.append(f"{item['email']}: lead non provisionné")
+                            continue
+                        try:
+                            result = start_role_recovery_sequence(
+                                lead_id=str(item["lead_id"]),
+                                category="agence",
+                                email=str(item["email"]),
+                            )
+                            if result.get("started"):
+                                ok += 1
+                            else:
+                                errors.append(
+                                    f"{item['email']}: {result.get('reason', 'not_started')}"
+                                )
+                        except Exception as exc:
+                            errors.append(f"{item['email']}: {exc}")
+                    if ok:
+                        st.success(f"Séquence démarrée pour {ok} lead(s).")
+                    for err in errors:
+                        st.error(err)
 
 with st.sidebar:
     st.header("Status")

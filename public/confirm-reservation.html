@@ -91,7 +91,8 @@
 
     <script>
         var params = new URLSearchParams(window.location.search);
-        var slug = params.get('code') || params.get('slug') || '';
+        var pathMatch = window.location.pathname.match(/\/confirm-reservation\.html\/([^/]+)\/?$/);
+        var slug = params.get('code') || params.get('slug') || (pathMatch ? pathMatch[1] : '') || '';
         var email = params.get('email') || '';
         var statusEl = document.getElementById('status');
         var introEl = document.getElementById('intro');

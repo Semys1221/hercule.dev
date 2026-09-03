@@ -54,3 +54,17 @@ def put_json(path: str, payload: dict[str, Any]) -> dict[str, Any]:
         timeout=30,
     )
     return _parse_response(path, response)
+
+
+def start_role_recovery_sequence(
+    *,
+    lead_id: str | None = None,
+    category: str = "agence",
+    email: str | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"category": category}
+    if lead_id:
+        payload["lead_id"] = lead_id
+    if email:
+        payload["email"] = email
+    return post_json("/api/booking-communication/role-sequence/start", payload)

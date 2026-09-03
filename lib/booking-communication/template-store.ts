@@ -7,6 +7,7 @@ import {
   formatMeetingDateTime,
   renderTemplate,
 } from "./templates";
+import { finalizeRenderedEmail } from "./signatures";
 import type { BookingEmailType, RenderedBookingEmail } from "./types";
 
 export type StoredBookingEmailTemplate = {
@@ -21,6 +22,8 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "h48_confirm",
   "h24_relance",
   "h20_cancel",
+  "role_seq_48",
+  "role_seq_24",
 ];
 
 const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = ["immediate"];
@@ -122,20 +125,25 @@ export async function renderEmailFromStore(params: {
     date,
     heure,
     confirmUrl: params.confirmUrl,
+    confirmLink: params.confirmUrl
+      ? `confirmer : ${params.confirmUrl}`
+      : "",
   };
 
-  return {
+  return finalizeRenderedEmail({
     subject: renderTemplate(template.subject, vars),
-    text: renderTemplate(template.body, vars),
-  };
+    body: renderTemplate(template.body, vars),
+    emailType: params.emailType,
+    confirmUrl: params.confirmUrl,
+  });
 }
 
 /** Client-side preview helper (no DB fetch). */
-export function previewTemplate(
+export async function previewTemplate(
   subject: string,
   body: string,
   emailType: BookingEmailType,
-): RenderedBookingEmail {
+): Promise<RenderedBookingEmail> {
   const sampleScheduledAt = "2026-09-10T09:00:00+02:00";
   const { date, heure } = formatMeetingDateTime(sampleScheduledAt);
   const vars: Record<string, string> = {
@@ -143,13 +151,15 @@ export function previewTemplate(
     date,
     heure,
     confirmUrl:
-      "https://www.hercule.dev/confirm-reservation.html?code=exemple-slug&email=jean@example.com",
+      "https://www.hercule.dev/confirm-reservation.html/exemple-slug?email=jean@example.com",
   };
   if (emailType === "immediate") {
     delete vars.confirmUrl;
   }
-  return {
+  return finalizeRenderedEmail({
     subject: renderTemplate(subject, vars),
-    text: renderTemplate(body, vars),
-  };
+    body: renderTemplate(body, vars),
+    emailType,
+    confirmUrl: vars.confirmUrl,
+  });
 }

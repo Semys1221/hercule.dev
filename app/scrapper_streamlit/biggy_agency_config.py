@@ -101,6 +101,14 @@ BIGGY_CONFIG = {
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
     "TARGET_LEADS": 5_000,
     "TARGET_MODE": "instantly_pushed",
+    "SERVICE_DEFAULT": "Marketing Digital",
+    "SERVICE_RULES": [
+        {"label": "SEO", "keywords": ["référencement", "referencement", "référencement naturel", "seo"]},
+        {"label": "Google Ads", "keywords": ["google ads", "sea", "sem", "campagnes publicitaires", "trafic payant"]},
+        {"label": "Facebook Ads", "keywords": ["facebook ads", "meta ads", "social ads", "linkedin ads", "tiktok ads"]},
+        {"label": "Growth Marketing", "keywords": ["growth hacking", "growth marketing", "lead gen", "lead generation", "génération de leads"]},
+        {"label": "Content Marketing", "keywords": ["content marketing", "inbound marketing", "community management"]},
+    ],
     "KEYWORDS": [
         "agence de communication",
         "agence communication",

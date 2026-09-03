@@ -49,6 +49,12 @@ def build_config_fingerprint(config: dict) -> str:
         "|".join(sorted(config.get("ENRICH_INCLUDED_KEYWORDS", []))),
         "|".join(sorted(config.get("ENRICH_HARD_EXCLUDED_KEYWORDS", []))),
         "|".join(sorted(config.get("ENRICH_SOFT_EXCLUDED_KEYWORDS", []))),
+        str(config.get("SERVICE_DEFAULT", "")),
+        "|".join(
+            f"{rule.get('label', '')}:{','.join(sorted(rule.get('keywords') or []))}"
+            for rule in (config.get("SERVICE_RULES") or [])
+            if isinstance(rule, dict)
+        ),
         str(config.get("OUTSCRAPER_BATCH_SIZE", "")),
         target_mode(config),
     ]

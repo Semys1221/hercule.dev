@@ -8,9 +8,9 @@ from typing import Any
 import pandas as pd
 from supabase import Client
 
-from config import tracking_base_url_for
+from config import confirm_base_url_for, tracking_base_url_for
 from instantly_client import InstantlyClient, lead_to_row
-from slug import build_tracking_url
+from slug import build_confirm_url, build_tracking_url
 from supabase_repo import LeadCategory, find_by_email, get_client, provision_lead
 
 EMAIL_ALIASES = ("email", "e-mail", "mail", "courriel", "adresse email")
@@ -45,6 +45,7 @@ def provision_from_instantly_leads(
 ) -> ProvisionResult:
     client = supabase or get_client()
     base_url = tracking_base_url_for(category)
+    confirm_base = confirm_base_url_for(category)
     result = ProvisionResult()
 
     for lead in selected_leads:
@@ -79,12 +80,17 @@ def provision_from_instantly_leads(
 
         slug = db_row["link"]
         tracking_url = build_tracking_url(base_url, slug)
+        confirm_url = build_confirm_url(confirm_base, slug, email)
 
         if patch_instantly and instantly_lead_id:
             try:
                 instantly.patch_lead_custom_variables(
                     instantly_lead_id,
-                    {"link": tracking_url, "statut": "NOTBOOKED"},
+                    {
+                        "link": tracking_url,
+                        "confirm_link": confirm_url,
+                        "statut": "NOTBOOKED",
+                    },
                 )
                 result.patched += 1
             except Exception as exc:
@@ -96,6 +102,7 @@ def provision_from_instantly_leads(
                 **row,
                 "link": slug,
                 "tracking_url": tracking_url,
+                "confirm_url": confirm_url,
                 "statut": "NOTBOOKED",
                 "category": category,
             }
@@ -116,6 +123,7 @@ def provision_from_csv(
 ) -> ProvisionResult:
     client = supabase or get_client()
     base_url = tracking_base_url_for(category)
+    confirm_base = confirm_base_url_for(category)
     result = ProvisionResult()
     instantly_leads_batch: list[dict[str, Any]] = []
 
@@ -144,12 +152,14 @@ def provision_from_csv(
 
         slug = db_row["link"]
         tracking_url = build_tracking_url(base_url, slug)
+        confirm_url = build_confirm_url(confirm_base, slug, email)
         result.created += 1
 
         enriched = {
             "email": email,
             "link": slug,
             "tracking_url": tracking_url,
+            "confirm_url": confirm_url,
             "statut": "NOTBOOKED",
             "category": category,
         }
@@ -161,6 +171,7 @@ def provision_from_csv(
                     "email": email,
                     "custom_variables": {
                         "link": tracking_url,
+                        "confirm_link": confirm_url,
                         "statut": "NOTBOOKED",
                     },
                 }
@@ -184,6 +195,6 @@ def provision_from_csv(
 def rows_to_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
     if not rows:
         return pd.DataFrame(
-            columns=["email", "link", "tracking_url", "statut", "category"]
+            columns=["email", "link", "tracking_url", "confirm_url", "statut", "category"]
         )
     return pd.DataFrame(rows)

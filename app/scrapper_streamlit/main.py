@@ -357,6 +357,10 @@ def enrich_csv_cmd(
             soft_excluded=list(config.get("ENRICH_SOFT_EXCLUDED_KEYWORDS") or []),
             max_concurrent=max(int(config.get("ENRICH_CONCURRENCY", 10)), 1),
             goto_timeout_ms=max(int(config.get("ENRICH_TIMEOUT_MS", 15000)), 1000),
+            service_config={
+                "SERVICE_DEFAULT": config.get("SERVICE_DEFAULT", ""),
+                "SERVICE_RULES": list(config.get("SERVICE_RULES") or []),
+            },
             log_cb=_log,
         )
     )

@@ -70,17 +70,54 @@ def _match_keyword(text: str, keywords: list[str]) -> str | None:
     return None
 
 
-def detect_service_from_taxonomy(text: str) -> str:
+def _service_keyword_matches(text_lower: str, keyword: str) -> bool:
+    kw = str(keyword).lower()
+    if kw == "sea":
+        return bool(re.search(r"(?<![a-z])sea(?![a-z])", text_lower)) and not AUTO_SEA_RE.search(
+            text_lower
+        )
+    return kw in text_lower
+
+
+def _service_rules(config: dict) -> list[dict[str, Any]]:
+    rules = config.get("SERVICE_RULES") or []
+    return [rule for rule in rules if isinstance(rule, dict)]
+
+
+def detect_service_match(text: str, config: dict) -> str | None:
+    """Return the first matching service label, or None if no rule matched."""
     text_lower = str(text).lower()
-    if "référencement" in text_lower or "referencement" in text_lower or "seo" in text_lower:
-        return "SEO"
-    if "google ads" in text_lower or (
-        re.search(r"(?<![a-z])sea(?![a-z])", text_lower) and not AUTO_SEA_RE.search(text_lower)
-    ):
-        return "Google Ads"
-    if "facebook ads" in text_lower or "meta ads" in text_lower:
-        return "Facebook Ads"
-    return "Marketing Digital"
+    for rule in _service_rules(config):
+        label = str(rule.get("label") or "").strip()
+        if not label:
+            continue
+        for keyword in rule.get("keywords") or []:
+            if _service_keyword_matches(text_lower, str(keyword)):
+                return label
+    return None
+
+
+def detect_service(text: str, config: dict) -> str:
+    """Return matched service label, or SERVICE_DEFAULT when no rule matches."""
+    match = detect_service_match(text, config)
+    if match:
+        return match
+    return str(config.get("SERVICE_DEFAULT") or "Marketing Digital")
+
+
+def detect_service_from_taxonomy(text: str) -> str:
+    """Backward-compatible alias for biggy_agency marketing rules."""
+    return detect_service(
+        text,
+        {
+            "SERVICE_DEFAULT": "Marketing Digital",
+            "SERVICE_RULES": [
+                {"label": "SEO", "keywords": ["référencement", "referencement", "seo"]},
+                {"label": "Google Ads", "keywords": ["google ads", "sea"]},
+                {"label": "Facebook Ads", "keywords": ["facebook ads", "meta ads"]},
+            ],
+        },
+    )
 
 
 def classify_agency(business: dict[str, Any], config: dict) -> Verdict:

@@ -40,3 +40,14 @@ def generate_unique_slug(client: Client) -> str:
 
 def build_tracking_url(base_url: str, slug: str) -> str:
     return f"{base_url.rstrip('/')}/{slug}"
+
+
+def build_confirm_url(
+    base_url: str, slug: str, email: str | None = None
+) -> str:
+    url = f"{base_url.rstrip('/')}/{slug}"
+    if email:
+        from urllib.parse import quote
+
+        return f"{url}?email={quote(email.strip().lower())}"
+    return url

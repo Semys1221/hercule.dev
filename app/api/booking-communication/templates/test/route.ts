@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { sendBookingPlainText } from "@/lib/booking-communication/send";
+import { sendBookingEmail } from "@/lib/booking-communication/send";
 import { previewTemplate } from "@/lib/booking-communication/template-store";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 import type { LeadCategory } from "@/lib/link-tracking/types";
@@ -24,7 +24,9 @@ function isEmailType(value: unknown): value is BookingEmailType {
     value === "immediate" ||
     value === "h48_confirm" ||
     value === "h24_relance" ||
-    value === "h20_cancel"
+    value === "h20_cancel" ||
+    value === "role_seq_48" ||
+    value === "role_seq_24"
   );
 }
 
@@ -63,17 +65,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid to address" }, { status: 400 });
   }
 
-  const rendered = previewTemplate(
+  const rendered = await previewTemplate(
     body.subject.trim(),
     body.body,
     body.email_type,
   );
 
   const idempotencyKey = `test:${body.category}:${body.email_type}:${Date.now()}`;
-  const result = await sendBookingPlainText({
+  const result = await sendBookingEmail({
     to,
     subject: `[TEST ${body.category}] ${rendered.subject}`,
     text: rendered.text,
+    html: rendered.html,
     idempotencyKey,
   });
 

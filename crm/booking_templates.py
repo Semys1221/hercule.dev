@@ -13,13 +13,22 @@ from config import _env
 from supabase_repo import get_client
 
 LeadCategory = Literal["agence", "entreprise"]
-EmailType = Literal["immediate", "h48_confirm", "h24_relance", "h20_cancel"]
+EmailType = Literal[
+    "immediate",
+    "h48_confirm",
+    "h24_relance",
+    "h20_cancel",
+    "role_seq_48",
+    "role_seq_24",
+]
 
 AGENCE_TYPES: tuple[EmailType, ...] = (
     "immediate",
     "h48_confirm",
     "h24_relance",
     "h20_cancel",
+    "role_seq_48",
+    "role_seq_24",
 )
 ENTREPRISE_TYPES: tuple[EmailType, ...] = ("immediate",)
 
@@ -30,9 +39,7 @@ DEFAULT_TEMPLATES: dict[EmailType, dict[str, str]] = {
 
 Votre rendez-vous avec Hercule est bien prévu le {{date}} à {{heure}}.
 
-Les informations de connexion vous seront transmises directement par email via Calendly.
-
-Cordialement,""",
+Les informations de connexion vous seront transmises directement par email via Calendly.""",
     },
     "h48_confirm": {
         "subject": "Confirmation requise — Votre rendez-vous avec Hercule",
@@ -43,9 +50,7 @@ Nous avons le plaisir de vous informer que les profils présentés lors de votre
 Afin de maintenir votre créneau, merci de confirmer votre présence :
 {{confirmUrl}}
 
-Sans confirmation sous 24 heures, votre place pourra être réattribué à une autre agence.
-
-Cordialement,""",
+Sans confirmation sous 24 heures, votre place pourra être réattribué à une autre agence.""",
     },
     "h24_relance": {
         "subject": "Confirmation requise — Votre rendez-vous avec Hercule",
@@ -56,9 +61,7 @@ Nous n'avons pas encore reçu votre confirmation de présence.
 Votre créneau sera prochainement libéré dans les heures qui suivent afin de pouvoir être proposé à une autre agence.
 
 Si vous souhaitez maintenir le rendez-vous, merci de nous confirmer votre présence :
-{{confirmUrl}}
-
-Cordialement,""",
+{{confirmUrl}}""",
     },
     "h20_cancel": {
         "subject": "Votre rendez-vous avec Hercule est annulé",
@@ -66,9 +69,27 @@ Cordialement,""",
 
 Faute de confirmation de votre part, votre rendez-vous prévu le {{date}} à {{heure}} a été annulé.
 
-Votre créneau a été libéré et pourra être proposé à une autre agence.
+Votre créneau a été libéré et pourra être proposé à une autre agence.""",
+    },
+    "role_seq_48": {
+        "subject": "Hercule — avant votre rendez-vous",
+        "body": """{{firstNameLine}}
 
-Cordialement,""",
+Le principe d'Hercule tient en quelques mots.
+
+La crainte des entreprises que nous auditons est simple : ne pas savoir si les recommandations d'une agence sont réellement adaptées à leur activité.
+
+C'est précisément là qu'Hercule prend son sens : faire ce tri et orienter chaque entreprise vers ce qui lui correspond réellement.
+
+Nous en parlerons ensemble au rendez-vous.""",
+    },
+    "role_seq_24": {
+        "subject": "Confirmer votre créneau — Hercule",
+        "body": """{{firstNameLine}}
+
+J'ai le plaisir de vous confirmer que les contrats d'agence présentés lors de votre entretien concerneront des cabinets de conseil financier situés en région Aquitaine et PACA.
+
+Un aperçu du déroulé de votre entretien est disponible ici : {{confirmLink}}""",
     },
 }
 
@@ -101,7 +122,11 @@ def preview_template(
         "heure": sample_heure,
         "confirmUrl": (
             "https://www.hercule.dev/confirm-reservation.html"
-            "?code=exemple-slug&email=jean@example.com"
+            "/exemple-slug?email=jean@example.com"
+        ),
+        "confirmLink": (
+            "consulter : https://www.hercule.dev/temporary-reservation.html"
+            "/exemple-slug?email=jean@example.com"
         ),
     }
     return (

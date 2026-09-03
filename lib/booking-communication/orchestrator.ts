@@ -12,22 +12,27 @@ import { syncLeadStatutToInstantly } from "@/lib/link-tracking/instantly";
 import {
   cancelFollowUpJobs,
   cancelJob,
+  getThreadContext,
+  hasRoleRecoverySequenceStarted,
   hasSequenceStarted,
   insertJob,
   listDueJobs,
   markJobFailed,
   markJobSent,
 } from "./jobs";
-import { sendBookingPlainText } from "./send";
-import { h20SendAt, h24SendAt, h48SendAt } from "./schedule";
+import { sendBookingEmail } from "./send";
+import { h20SendAt, h24SendAt, h48SendAt, planRoleRecoverySchedule } from "./schedule";
 import { renderEmailFromStore } from "./template-store";
-import { buildConfirmUrl } from "./templates";
+import { buildConfirmUrl, buildTemporaryConfirmUrl } from "./templates";
+import { buildReplySubject, buildThreadHeaders, isThreadFollowUp, threadTypesForJob } from "./threading";
 import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
+import type { RenderedBookingEmail } from "./types";
 
 const FOLLOW_UP_TYPES: BookingEmailType[] = [
   "h48_confirm",
   "h24_relance",
   "h20_cancel",
+  "role_seq_24",
 ];
 
 function jobKey(
@@ -94,6 +99,48 @@ export async function startBookingSequence(
   return { started: true };
 }
 
+export async function startRoleRecoverySequence(
+  params: StartSequenceParams,
+): Promise<{ started: boolean; reason?: string }> {
+  const { lead, category, triggeredBy } = params;
+
+  if (category !== "agence") {
+    return { started: false, reason: "agence_only" };
+  }
+
+  if (!lead.scheduled_at) {
+    return { started: false, reason: "missing_scheduled_at" };
+  }
+
+  if (await hasRoleRecoverySequenceStarted(lead.id)) {
+    return { started: false, reason: "already_started" };
+  }
+
+  const inviteeUri = lead.calendly_invitee_uri;
+  const schedule = planRoleRecoverySchedule(lead.scheduled_at);
+
+  await insertJob({
+    category,
+    leadId: lead.id,
+    emailType: "role_seq_48",
+    scheduledFor: schedule.roleSeq48,
+    triggeredBy,
+    idempotencyKey: jobKey(lead.id, "role_seq_48", inviteeUri),
+  });
+  await insertJob({
+    category,
+    leadId: lead.id,
+    emailType: "role_seq_24",
+    scheduledFor: schedule.roleSeq24,
+    triggeredBy,
+    idempotencyKey: jobKey(lead.id, "role_seq_24", inviteeUri),
+  });
+
+  await dispatchDueJobsForLead(lead.id);
+
+  return { started: true };
+}
+
 export async function dispatchDueBookingEmails(limit = 50): Promise<{
   processed: number;
   sent: number;
@@ -117,6 +164,66 @@ async function dispatchDueJobsForLead(leadId: string): Promise<void> {
   for (const job of jobs) {
     await processJob(job);
   }
+}
+
+async function prepareThreadedSend(
+  job: BookingEmailJob,
+  rendered: RenderedBookingEmail,
+): Promise<{
+  subject: string;
+  headers?: Record<string, string>;
+  threadSubject: string | null;
+}> {
+  if (!isThreadFollowUp(job.email_type)) {
+    return {
+      subject: rendered.subject,
+      threadSubject: rendered.subject.trim() || null,
+    };
+  }
+
+  const thread = await getThreadContext(
+    job.lead_id,
+    threadTypesForJob(job.email_type),
+  );
+  if (!thread.threadSubject || thread.messageIds.length === 0) {
+    console.warn(
+      `[booking-communication] Missing thread context for ${job.email_type} lead ${job.lead_id}`,
+    );
+    return { subject: rendered.subject, threadSubject: null };
+  }
+
+  return {
+    subject: buildReplySubject(thread.threadSubject),
+    headers: buildThreadHeaders(thread.messageIds),
+    threadSubject: null,
+  };
+}
+
+async function sendAndMarkJob(
+  job: BookingEmailJob,
+  lead: LinkTrackingLead,
+  rendered: RenderedBookingEmail,
+): Promise<boolean> {
+  const threaded = await prepareThreadedSend(job, rendered);
+  const result = await sendBookingEmail({
+    to: lead.email,
+    subject: threaded.subject,
+    text: rendered.text,
+    html: rendered.html,
+    idempotencyKey: job.idempotency_key,
+    headers: threaded.headers,
+  });
+
+  if (!result.ok) {
+    await markJobFailed(job.id, result.error);
+    return false;
+  }
+
+  await markJobSent(job.id, result.id, {
+    messageId: result.messageId,
+    threadSubject: threaded.threadSubject,
+  });
+  return true;
 }
 
 async function processJob(job: BookingEmailJob): Promise<boolean> {
@@ -144,20 +251,7 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
   }
 
   const rendered = await renderJobEmail(job, lead);
-  const result = await sendBookingPlainText({
-    to: lead.email,
-    subject: rendered.subject,
-    text: rendered.text,
-    idempotencyKey: job.idempotency_key,
-  });
-
-  if (!result.ok) {
-    await markJobFailed(job.id, result.error);
-    return false;
-  }
-
-  await markJobSent(job.id, result.id);
-  return true;
+  return sendAndMarkJob(job, lead, rendered);
 }
 
 async function processH20CancelJob(
@@ -170,19 +264,10 @@ async function processH20CancelJob(
   }
 
   const rendered = await renderJobEmail(job, lead);
-  const result = await sendBookingPlainText({
-    to: lead.email,
-    subject: rendered.subject,
-    text: rendered.text,
-    idempotencyKey: job.idempotency_key,
-  });
-
-  if (!result.ok) {
-    await markJobFailed(job.id, result.error);
+  const sent = await sendAndMarkJob(job, lead, rendered);
+  if (!sent) {
     return false;
   }
-
-  await markJobSent(job.id, result.id);
 
   const eventUuid = extractEventUuidFromPayload(lead.calendly_payload);
   if (eventUuid) {
@@ -219,7 +304,10 @@ async function processH20CancelJob(
 }
 
 async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
-  const confirmUrl = buildConfirmUrl(lead.link, lead.email);
+  const confirmUrl =
+    job.email_type === "role_seq_24"
+      ? buildTemporaryConfirmUrl(lead.link, lead.email)
+      : buildConfirmUrl(lead.link, lead.email);
   return renderEmailFromStore({
     category: job.lead_category,
     emailType: job.email_type,

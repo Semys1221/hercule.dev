@@ -63,15 +63,23 @@ export async function listDueJobs(limit = 50): Promise<BookingEmailJob[]> {
 export async function markJobSent(
   jobId: string,
   resendEmailId: string,
+  extras?: { messageId?: string | null; threadSubject?: string | null },
 ): Promise<void> {
   const client = createLinkTrackingClient();
+  const patch: Record<string, string | null> = {
+    status: "sent",
+    resend_email_id: resendEmailId,
+    sent_at: new Date().toISOString(),
+  };
+  if (extras?.messageId) {
+    patch.resend_message_id = extras.messageId;
+  }
+  if (extras?.threadSubject) {
+    patch.thread_subject = extras.threadSubject;
+  }
   const { error } = await client
     .from("booking_email_jobs")
-    .update({
-      status: "sent",
-      resend_email_id: resendEmailId,
-      sent_at: new Date().toISOString(),
-    })
+    .update(patch)
     .eq("id", jobId)
     .eq("status", "pending");
 
@@ -100,6 +108,7 @@ const FOLLOW_UP_EMAIL_TYPES: BookingEmailType[] = [
   "h48_confirm",
   "h24_relance",
   "h20_cancel",
+  "role_seq_24",
 ];
 
 export async function cancelPendingJobsForLead(
@@ -166,4 +175,79 @@ export async function hasSequenceStarted(leadId: string): Promise<boolean> {
   }
 
   return Boolean(data);
+}
+
+const THREAD_TYPES: BookingEmailType[] = [
+  "immediate",
+  "h48_confirm",
+  "h24_relance",
+  "h20_cancel",
+  "role_seq_48",
+  "role_seq_24",
+];
+
+export type EmailThreadContext = {
+  threadSubject: string | null;
+  messageIds: string[];
+};
+
+export async function hasRoleRecoverySequenceStarted(
+  leadId: string,
+): Promise<boolean> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from("booking_email_jobs")
+    .select("id")
+    .eq("lead_id", leadId)
+    .in("email_type", ["role_seq_48", "role_seq_24"])
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to check role recovery sequence: ${error.message}`);
+  }
+
+  return Boolean(data);
+}
+
+export async function getThreadContext(
+  leadId: string,
+  threadTypes: BookingEmailType[] = THREAD_TYPES,
+): Promise<EmailThreadContext> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from("booking_email_jobs")
+    .select("email_type, resend_message_id, thread_subject")
+    .eq("lead_id", leadId)
+    .eq("status", "sent")
+    .in("email_type", threadTypes);
+
+  if (error) {
+    throw new Error(`Failed to load thread context: ${error.message}`);
+  }
+
+  const rows = (data ?? []) as Array<{
+    email_type: BookingEmailType;
+    resend_message_id: string | null;
+    thread_subject: string | null;
+  }>;
+
+  const order = new Map(threadTypes.map((type, index) => [type, index]));
+  rows.sort(
+    (a, b) => (order.get(a.email_type) ?? 99) - (order.get(b.email_type) ?? 99),
+  );
+
+  const messageIds = rows
+    .map((row) => row.resend_message_id?.trim())
+    .filter((value): value is string => Boolean(value));
+
+  const rootType = threadTypes.includes("immediate")
+    ? "immediate"
+    : threadTypes.includes("role_seq_48")
+      ? "role_seq_48"
+      : threadTypes[0];
+  const root = rows.find((row) => row.email_type === rootType);
+  const threadSubject = root?.thread_subject?.trim() || null;
+
+  return { threadSubject, messageIds };
 }

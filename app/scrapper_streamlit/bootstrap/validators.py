@@ -16,6 +16,8 @@ REQUIRED_CONFIG_KEYS = (
     "INSTANTLY_LIST_ID",
     "TARGET_LEADS",
     "TARGET_MODE",
+    "SERVICE_DEFAULT",
+    "SERVICE_RULES",
     "KEYWORDS",
     "LOCATIONS",
     "EXPANSION_KEYWORDS",
@@ -116,6 +118,25 @@ def validate_config_schema(config: dict[str, Any], *, preset_id: str) -> Validat
     target = config.get("TARGET_LEADS")
     if target is not None and int(target) <= 0:
         result.add_error("TARGET_LEADS must be positive")
+
+    service_default = config.get("SERVICE_DEFAULT")
+    if service_default is not None and not str(service_default).strip():
+        result.add_error("SERVICE_DEFAULT must be a non-empty string")
+
+    service_rules = config.get("SERVICE_RULES")
+    if service_rules is not None:
+        if not isinstance(service_rules, list):
+            result.add_error("CONFIG['SERVICE_RULES'] must be a list")
+        else:
+            for idx, rule in enumerate(service_rules):
+                if not isinstance(rule, dict):
+                    result.add_error(f"SERVICE_RULES[{idx}] must be a dict")
+                    continue
+                if not str(rule.get("label") or "").strip():
+                    result.add_error(f"SERVICE_RULES[{idx}] missing non-empty 'label'")
+                keywords = rule.get("keywords")
+                if keywords is None or not isinstance(keywords, list):
+                    result.add_error(f"SERVICE_RULES[{idx}] missing 'keywords' list")
 
     return result
 

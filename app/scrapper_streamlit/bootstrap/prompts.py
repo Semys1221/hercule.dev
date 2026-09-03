@@ -48,6 +48,8 @@ class CreatePresetInput:
     enrich_included: list[str]
     enrich_hard_excluded: list[str]
     enrich_soft_excluded: list[str]
+    service_default: str
+    service_rules: list[dict[str, Any]]
 
 
 def _read_multiline_keywords(prompt: str) -> list[str]:
@@ -167,6 +169,23 @@ def run_create_wizard() -> CreatePresetInput:
     typer.echo("\n--- Website enrich: soft excluded ---")
     enrich_soft = _read_multiline_keywords("Soft exclusions (optional):")
 
+    service_default = "Marketing Digital"
+    service_rules: list[dict[str, Any]] = []
+    if copy_from:
+        from config_loader import load_config
+
+        source = load_config(copy_from, require_keys=False)
+        service_default = str(source.get("SERVICE_DEFAULT") or service_default)
+        service_rules = [
+            dict(rule)
+            for rule in (source.get("SERVICE_RULES") or [])
+            if isinstance(rule, dict)
+        ]
+    else:
+        service_default = typer.prompt("Default Service label", default=service_default).strip()
+        if not service_default:
+            raise typer.BadParameter("SERVICE_DEFAULT cannot be empty.")
+
     return CreatePresetInput(
         preset_id=preset_id,
         label=label,
@@ -179,6 +198,8 @@ def run_create_wizard() -> CreatePresetInput:
         enrich_included=enrich_included,
         enrich_hard_excluded=enrich_hard,
         enrich_soft_excluded=enrich_soft,
+        service_default=service_default,
+        service_rules=service_rules,
     )
 
 
@@ -199,6 +220,8 @@ def write_preset_file(data: CreatePresetInput) -> str:
         enrich_included=data.enrich_included,
         enrich_hard_excluded=data.enrich_hard_excluded,
         enrich_soft_excluded=data.enrich_soft_excluded,
+        service_default=data.service_default,
+        service_rules=data.service_rules,
         tuning=tuning,
     )
 
@@ -229,6 +252,7 @@ def confirm_and_create(data: CreatePresetInput) -> str:
         f"  Enrich:        {len(data.enrich_included)} included, "
         f"{len(data.enrich_hard_excluded)} hard, {len(data.enrich_soft_excluded)} soft"
     )
+    typer.echo(f"  Service:       default={data.service_default!r}, {len(data.service_rules)} rule(s)")
     typer.echo(f"  Output file:   {preset_config_path(data.preset_id)}")
 
     if not typer.confirm("Create this preset?", default=True):

@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     tracking_base_url_entreprise: str = (
         "https://www.hercule.dev/reservation-entreprise.html"
     )
+    confirm_base_url: str = "https://www.hercule.dev/confirm-reservation.html"
+    temporary_base_url: str = "https://www.hercule.dev/temporary-reservation.html"
     crm_backend_url: str = "http://localhost:3000"
     link_tracking_webhook_secret: str = ""
     instantly_campaign_id_agence: str = ""
@@ -76,6 +78,10 @@ class Settings(BaseSettings):
         )
         self.instantly_campaign_id_agence = _env("INSTANTLY_CAMPAIGN_ID_AGENCE")
         self.instantly_campaign_id_entreprise = _env("INSTANTLY_CAMPAIGN_ID_ENTREPRISE")
+        if _env("BOOKING_CONFIRM_BASE_URL"):
+            self.confirm_base_url = _env("BOOKING_CONFIRM_BASE_URL").rstrip("/")
+        if _env("BOOKING_TEMPORARY_BASE_URL"):
+            self.temporary_base_url = _env("BOOKING_TEMPORARY_BASE_URL").rstrip("/")
 
 
 settings = Settings()
@@ -93,6 +99,18 @@ def tracking_base_url_for(category: str) -> str:
     if category == "entreprise":
         return settings.tracking_base_url_entreprise.rstrip("/")
     return settings.tracking_base_url_agence.rstrip("/")
+
+
+def confirm_base_url_for(category: str) -> str:
+    if category == "entreprise":
+        return settings.confirm_base_url.rstrip("/")
+    return settings.confirm_base_url.rstrip("/")
+
+
+def temporary_base_url_for(category: str) -> str:
+    if category == "entreprise":
+        return settings.temporary_base_url.rstrip("/")
+    return settings.temporary_base_url.rstrip("/")
 
 
 def require_supabase() -> tuple[str, str]:

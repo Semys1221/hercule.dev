@@ -24,7 +24,9 @@ function isEmailType(value: unknown): value is BookingEmailType {
     value === "immediate" ||
     value === "h48_confirm" ||
     value === "h24_relance" ||
-    value === "h20_cancel"
+    value === "h20_cancel" ||
+    value === "role_seq_48" ||
+    value === "role_seq_24"
   );
 }
 

@@ -74,6 +74,13 @@ COMPTABLES_CONFIG = {
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
     "TARGET_LEADS": 5_000,
     "TARGET_MODE": "instantly_pushed",
+    "SERVICE_DEFAULT": "Expertise Comptable",
+    "SERVICE_RULES": [
+        {"label": "Audit", "keywords": ["audit", "commissaire aux comptes", "commissariat aux comptes"]},
+        {"label": "Paie & Social", "keywords": ["paie", "bulletins de paie", "social et fiscal", "paie et social", "gestion paie"]},
+        {"label": "Conseil Fiscal", "keywords": ["conseil fiscal", "déclaration fiscale", "liasse fiscale", "conseil juridique fiscal"]},
+        {"label": "Tenue de Comptabilité", "keywords": ["tenue de comptabilité", "comptabilité", "externalisation comptable", "bilan"]},
+    ],
     "KEYWORDS": [
         "expert-comptable",
         "cabinet expert-comptable",

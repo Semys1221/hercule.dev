@@ -4,11 +4,17 @@ export type BookingEmailType =
   | "immediate"
   | "h48_confirm"
   | "h24_relance"
-  | "h20_cancel";
+  | "h20_cancel"
+  | "role_seq_48"
+  | "role_seq_24";
 
 export type BookingJobStatus = "pending" | "sent" | "cancelled" | "failed";
 
-export type SequenceTriggeredBy = "calendly" | "manual" | "retry";
+export type SequenceTriggeredBy =
+  | "calendly"
+  | "manual"
+  | "retry"
+  | "role_recovery";
 
 export type BookingEmailJob = {
   id: string;
@@ -18,6 +24,8 @@ export type BookingEmailJob = {
   scheduled_for: string;
   status: BookingJobStatus;
   resend_email_id: string | null;
+  resend_message_id: string | null;
+  thread_subject: string | null;
   idempotency_key: string;
   triggered_by: SequenceTriggeredBy;
   sent_at: string | null;
@@ -37,4 +45,5 @@ export type StartSequenceParams = {
 export type RenderedBookingEmail = {
   subject: string;
   text: string;
+  html?: string;
 };

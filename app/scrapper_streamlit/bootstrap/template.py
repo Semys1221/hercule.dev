@@ -20,6 +20,21 @@ def _config_var_name(preset_id: str) -> str:
     return f"{preset_id.upper()}_CONFIG"
 
 
+def _format_service_rules(rules: list[dict[str, Any]], indent: int = 8) -> str:
+    if not rules:
+        return "[]"
+    pad = " " * indent
+    inner_pad = " " * (indent + 4)
+    close_pad = " " * max(0, indent - 4)
+    lines: list[str] = ["["]
+    for rule in rules:
+        label = str(rule.get("label") or "").replace('"', '\\"')
+        keywords = _format_string_list(list(rule.get("keywords") or []), indent=indent + 8)
+        lines.append(f"{pad}{{'label': \"{label}\", 'keywords': {keywords}}},")
+    lines.append(f"{close_pad}]")
+    return "\n".join(lines)
+
+
 def render_preset_config(
     *,
     preset_id: str,
@@ -32,6 +47,8 @@ def render_preset_config(
     enrich_included: list[str],
     enrich_hard_excluded: list[str],
     enrich_soft_excluded: list[str],
+    service_default: str,
+    service_rules: list[dict[str, Any]],
     tuning: dict[str, Any],
 ) -> str:
     var_name = _config_var_name(preset_id)
@@ -80,6 +97,8 @@ _LIST_ID = "{list_id}"{campaign_block}
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": {tuning.get("OUTSCRAPER_TOTAL_LIMIT_BUFFER", 8)},
     "TARGET_LEADS": {target_leads:,},
     "TARGET_MODE": "instantly_pushed",
+    "SERVICE_DEFAULT": "{service_default.replace(chr(34), chr(92)+chr(34))}",
+    "SERVICE_RULES": {_format_service_rules(service_rules, indent=4)},
     "KEYWORDS": {_format_string_list(keywords, indent=8)},
     "EXPANSION_KEYWORDS": {_format_string_list(expansion_keywords, indent=8)},
     "LOCATIONS": FRENCH_LOCATIONS,
