@@ -36,7 +36,7 @@ const TYPE_COLORS: Record<LogType, string> = {
 
 const STATS = [
   { label: "Sites surveillés", value: "1 047+" },
-  { label: "Demandes / jour", value: "20" },
+  { label: "Captures / jour", value: "20" },
   { label: "Collecte", value: "24/7" },
 ]
 
