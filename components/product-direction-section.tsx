@@ -26,7 +26,7 @@ export function ProductDirectionSection() {
           className="text-3xl sm:text-4xl md:text-5xl text-white max-w-2xl mb-4"
           style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
         >
-          Accès aux apports d&apos;affaires. Sans engagement contractuel.
+          Accès aux apports d&apos;affaires. Résiliable à tout moment.
         </motion.h2>
 
         <motion.p
