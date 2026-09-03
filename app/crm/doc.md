@@ -1,33 +1,93 @@
-The "Reading Data" Story (When you open the CRM)
+# Hercule CRM
 
+Link tracking, Calendly booking, and Resend confirmation sequence for **agence** / **entreprise** leads.
 
-When you open your browser to look at your 5-column CRM board, this is the sequence of events:
+## Next.js (site + API)
 
+```bash
+pnpm install
+pnpm dev
+```
 
-Step 1. Interaction (Client -> API): Your NiceGUI frontend running in the browser says, "Hey FastAPI backend, the user just opened the page. I need the list of leads!"
+Routes:
 
+- `GET /reservation.html/{slug}` — Calendly embed agence (`utm_content` = slug)
+- `GET /reservation-entreprise.html/{slug}` — Calendly embed entreprise
+- `GET /confirm-reservation.html?code={slug}&email={email}` — presence confirm
+- `POST /api/webhooks/calendly` — `invitee.created`
+- `GET /api/cron/booking-emails` — every 15 minutes
 
-Step 2. Routed Request (API -> Controller): FastAPI acts like a traffic cop. It receives the request and says, "Ah, they want the CRM data. I'll send this to the specific Python function (Controller) built for fetching CRM leads."
+## Streamlit CRM
 
+```bash
+pnpm crm
+```
 
-Step 3. Reads/Writes (Controller <--> Database): Your Python function uses your API key to ask Supabase, "Give me all the leads so I can sort them into the 5 columns." Supabase hands the data back to your Python code.
+Needs Next.js running for status/sequence APIs (`CRM_BACKEND_URL`, default `http://localhost:3000`).
 
+See [crm/README.md](../../crm/README.md) for admin features.
 
-Step 5. UI Update (API -> Client): FastAPI takes that data from Supabase and sends it back to NiceGUI. NiceGUI then draws the cards on your screen.
+## Lead tools
 
-The "Writing Data" Story (When a lead takes action)
+### Scraper (Outscraper → enrich → Instantly)
 
+```bash
+cd app/scrapper_streamlit && pip install -r requirements.txt
+pnpm scrapper
+```
 
-When someone books a call, a slightly different flow happens:
+See [scrapper_streamlit/README.md](../scrapper_streamlit/README.md) for presets and CLI commands.
 
+### Email cleaner (MyEmailVerifier → Instantly)
 
-Webhook Trigger (Booking -> API): The booking software sends an automatic HTTP message behind the scenes directly to your FastAPI backend saying, "Hey, [bob@example.com](mailto:bob@example.com) just booked a meeting!"
+```bash
+cd app/streamlit_clean && pip install -r requirements.txt
+pnpm streamlit-clean
+```
 
+Requires `MYEMAILVERIFIER_API_KEY` and `INSTANTLY_API_KEY` in the repo root `.env`.
 
-Step 2. Routed Request (API -> Controller): FastAPI routes this incoming webhook to a specific Python function meant for handling new bookings.
+## Calendly webhook
 
+```bash
+pnpm configure-calendly-link-tracking-webhook
+```
 
-Step 3. Reads/Writes (Controller <--> Database): Your Python function tells Supabase, "Find [bob@example.com](mailto:bob@example.com) and move his status to 'Booked'."
+Registers `invitee.created` → `https://www.hercule.dev/api/webhooks/calendly`.
 
+## Instantly `{{link}}`
 
-Step 4. Sync (Controller -> HubSpot): Right after saving to Supabase, your Python function tells HubSpot, "Hey, Bob booked a call, update his profile so he stops receiving the automated 'Followup 2' email."
+On the **Provisioning** tab, inject `custom_variables.link` in place. Use `{{link}}` in Instantly templates:
+- Agence: `https://www.hercule.dev/reservation.html/{slug}`
+- Entreprise: `https://www.hercule.dev/reservation-entreprise.html/{slug}`
+
+Copy: [doc/emails_booking](../../doc/emails_booking)
+
+## Booking-email cron
+
+`GET /api/cron/booking-emails` requires `Authorization: Bearer $CRON_SECRET` (or header `x-cron-secret`).
+
+Vercel Hobby only allows daily crons, so use [cron-job.org](https://cron-job.org) (free):
+
+1. Create job → URL `https://www.hercule.dev/api/cron/booking-emails`
+2. Schedule: every 15 minutes (`*/15 * * * *`)
+3. Request method: `GET`
+4. Custom request header: `Authorization: Bearer <CRON_SECRET>`
+
+Expect `200` with `{"ok":true,"processed":…,"sent":…,"failed":…}`. `401` means the header does not match `CRON_SECRET`.
+
+After a Vercel Pro upgrade, you can use Vercel cron instead:
+
+```json
+"crons": [{ "path": "/api/cron/booking-emails", "schedule": "*/15 * * * *" }]
+```
+
+Production deployment checklist: [doc/crm-deployment.md](../../doc/crm-deployment.md)
+
+## Data flow
+
+**Reading (CRM board):** Streamlit → Supabase (list leads, refresh).
+
+**Writing (booking):** Calendly webhook → Next.js API → Supabase (MEETING_BOOKED) → Instantly sync → Resend email sequence.
+
+**Manual status change:** Streamlit → Next.js API (`/api/link-tracking/sync-status`, `/api/booking-communication/trigger`) → Supabase + Instantly + Resend.

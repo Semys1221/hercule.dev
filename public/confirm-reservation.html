@@ -1,85 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de rendez-vous · Hercule</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
+    <style>
+        :root {
+            --background: #09090B;
+            --foreground: #ffffff;
+            --muted-foreground: #a1a1aa;
+            --border: #27272a;
+            --success: #22c55e;
+            --error: #ef4444;
+            --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+        }
 
-1. Votre agence — Nous reviendrons sur votre activité, votre positionnement, vos objectifs et vos attentes en matière de développement.
+        * { box-sizing: border-box; }
 
-2. Vos demandes éligibles — Nous vous présenterons les demandes actuellement disponibles et identifierons celles correspondant à votre expertise, votre capacité et vos objectifs.
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--background);
+            color: var(--foreground);
+            margin: 0;
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
 
-3. Modalités et attribution — Nous détaillerons les critères de qualification, les attentes des clients et le fonctionnement des attributions.
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 48px 24px 64px;
+        }
 
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
 
-FAQ
+        .brand svg {
+            width: 20px;
+            height: 20px;
+        }
 
+        .brand span {
+            font-size: 15px;
+            font-weight: 600;
+        }
 
+        h1 {
+            font-size: 28px;
+            font-weight: 500;
+            margin: 0 0 12px;
+            letter-spacing: -0.02em;
+        }
 
-D’où proviennent les demandes clients ?
+        .intro {
+            margin: 0 0 8px;
+            color: var(--muted-foreground);
+            font-size: 15px;
+        }
 
-Hercule détecte en continu des signaux d’intention sur plus de 1 000 sites : recrutements, développements, changements d’activité et autres indicateurs susceptibles de révéler un besoin.
+        .status {
+            margin-top: 8px;
+            font-size: 15px;
+        }
 
-Les entreprises concernées sont ensuite qualifiées et accompagnées par Hercule afin de préciser leur besoin, leur budget et leurs attentes. Lorsqu’un besoin est confirmé, la demande est intégrée à notre réseau et peut être proposée à l’agence présentant la meilleure compatibilité.
+        .status.ok { color: var(--success); }
+        .status.error { color: var(--error); }
+        .status.pending { color: var(--muted-foreground); }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="brand">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hercule">
+                <path d="M3 5v14l7.5-7L3 5z" fill="#ffffff"/>
+                <path d="M21 5v14l-7.5-7L21 5z" fill="#a1a1aa"/>
+            </svg>
+            <span>Hercule</span>
+        </div>
 
+        <h1>Votre rendez-vous avec Hercule</h1>
+        <p class="intro" id="intro">Confirmation de votre créneau.</p>
+        <p id="status" class="status pending" aria-live="polite">Confirmation en cours…</p>
+    </div>
 
-Comment Hercule choisit-il l’agence à laquelle attribuer une demande ?
+    <script>
+        var params = new URLSearchParams(window.location.search);
+        var slug = params.get('code') || params.get('slug') || '';
+        var email = params.get('email') || '';
+        var statusEl = document.getElementById('status');
+        var introEl = document.getElementById('intro');
 
-Hercule évalue la compatibilité entre le profil du client et celui de l’agence selon cinq critères :
+        async function confirmPresence() {
+            if (!slug && !email) {
+                introEl.textContent = '';
+                statusEl.textContent = 'Lien invalide : identifiant manquant. Ouvrez ce lien depuis l\'email de confirmation.';
+                statusEl.className = 'status error';
+                return;
+            }
 
-* Type de prestations proposées
-* Branche d’activité dans laquelle l’agence obtient ses meilleurs résultats
-* Taille de l’agence
-* Tarifs et attentes en matière de rémunération
-* Personnalité, approche et positionnement de l’agence
+            statusEl.textContent = 'Confirmation en cours…';
+            statusEl.className = 'status pending';
 
-L’objectif est d’assurer une cohérence entre le client et l’agence, notamment en termes de budget, de niveau de structure et de mode d’accompagnement. Un client recherchant une approche très institutionnelle ne sera ainsi pas orienté de la même manière qu’une entreprise privilégiant une relation plus directe et personnalisée.
+            try {
+                var res = await fetch('/api/link-tracking/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug: slug, email: email })
+                });
+                var data = await res.json();
+                if (!res.ok || data.ok === false) {
+                    throw new Error(data.error || data.reason || 'Échec');
+                }
+                introEl.textContent = '';
+                statusEl.textContent = data.alreadyConfirmed
+                    ? 'Votre présence était déjà confirmée. Merci.'
+                    : 'Votre créneau a bien été confirmé. Merci.';
+                statusEl.className = 'status ok';
+            } catch (err) {
+                introEl.textContent = '';
+                statusEl.textContent = err instanceof Error ? err.message : 'Impossible de confirmer.';
+                statusEl.className = 'status error';
+            }
+        }
 
-
-Comment fonctionnent les communications email d’Hercule ?
-
-Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Cette infrastructure permet notamment de gérer les communications automatisées, les relances et les échanges avec les entreprises contactées.
-
-Le domaine principal de la société et de la plateforme est hercule.dev.
-
-
-Comment les demandes clients sont-elles qualifiées ?
-
-Chaque entreprise est qualifiée selon cinq critères :
-
-* Taille de l’entreprise
-* Durée souhaitée de l’accompagnement
-* Horizon de résultat
-* Budget mensuel
-* Historique avec les agences
-
-Ces informations permettent à Hercule d’évaluer le besoin et d’identifier les agences présentant la meilleure compatibilité avec le projet.
-
-
-Combien coûte Hercule ?
-
-Hercule propose deux formules selon le niveau d’accompagnement souhaité.
-
-Hercule Starter : 1 489 € pour 5 attributions de demandes clients qualifiées.
-Hercule Growth : 2 500 €/mois pour jusqu’à 4 nouveaux clients signés par mois par Hercule pour votre agence.
-
-Les deux formules incluent 0 % de commission sur les ventes réalisées par votre agence.
-
-
-Une demande peut-elle être attribuée à plusieurs agences ?
-
-Non. Une demande validée est attribuée à une seule agence.
-
-Cette attribution exclusive permet à l’agence de traiter directement avec le prospect, sans mise en concurrence avec d’autres agences au sein du réseau Hercule.
-
-
-Que se passe-t-il lorsqu’une demande n’aboutit pas ?
-
-Avec la formule Hercule Starter, vous disposez de 5 rendez-vous clients correspondant aux critères définis pour votre agence. Si ces 5 rendez-vous ne permettent pas de générer au minimum 1 500 € de MRR cumulé, Hercule attribue 5 rendez-vous supplémentaires sans frais.
-
-
-Disposez-vous d’un délai de rétractation ?
-
-Oui. Après souscription, vous disposez d’un délai de 4 jours pour vous rétracter.
-
-La réservation d’un créneau permet à Hercule d’organiser et de planifier les échanges avec les entreprises correspondant à votre profil. Vous pouvez néanmoins exercer votre droit de rétractation pendant ces 4 jours.
-
-
-Votre disponibilité a changé ?
-Vous pouvez annuler ou modifier votre rendez-vous à tout moment.
-
-[ Modifier le rendez-vous ]  [ Annuler ]
+        void confirmPresence();
+    </script>
+</body>
+</html>

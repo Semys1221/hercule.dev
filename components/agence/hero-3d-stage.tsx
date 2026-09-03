@@ -1,25 +1,19 @@
 "use client"
 
-import { useState, useEffect, type MouseEvent } from "react"
+import { useState, useEffect } from "react"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { DashboardMockup } from "./dashboard-mockup"
 import { Navbar } from "./navbar"
 import { LogoCloud } from "./logo-cloud"
 import { FeatureCardsSection } from "./feature-cards-section"
+import { DemandesSection } from "./demandes-section"
 import { AISection } from "./ai-section"
 import { ProductDirectionSection } from "./product-direction-section"
 import { WorkflowsSection } from "./workflows-section"
 import { CTASection } from "./cta-section"
 import { Footer } from "./footer"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
-
-function scrollToMethode(e: MouseEvent<HTMLAnchorElement>) {
-  e.preventDefault()
-  const el = document.getElementById("methode")
-  if (!el) return
-  const top = el.getBoundingClientRect().top + window.scrollY - 80
-  window.scrollTo({ top, behavior: "smooth" })
-}
 
 export function Hero3DStage() {
   const [yOffset, setYOffset] = useState(0)
@@ -94,14 +88,14 @@ export function Hero3DStage() {
                 >
                   Demander des apports d&apos;affaires
                 </a>
-                <a
-                  href="#methode"
-                  onClick={scrollToMethode}
+                <Link
+                  href="/entreprise"
                   className="text-zinc-300 font-medium hover:text-white transition-colors flex items-center gap-2 text-sm"
                 >
-                  Découvrir notre méthode
+                  Vous êtes une entreprise ?
                   <span aria-hidden="true">→</span>
-                </a>
+                  Trouver une agence
+                </Link>
               </motion.div>
             </div>
           </div>
@@ -176,6 +170,7 @@ export function Hero3DStage() {
           </div>
 
           <LogoCloud />
+          <DemandesSection />
           <FeatureCardsSection />
           <AISection />
           <ProductDirectionSection />

@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/reservation.html/:slug",
+      "destination": "/reservation.html?code=:slug"
+    },
+    {
+      "source": "/reservation-entreprise.html/:slug",
+      "destination": "/reservation-entreprise.html?code=:slug"
+    }
+  ]
+}

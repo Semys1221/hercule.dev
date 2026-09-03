@@ -417,6 +417,12 @@
     <script>
         var CALENDLY_EVENT_URL = 'https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone';
         var loaderHidden = false;
+        var confirmScheduled = false;
+
+        var params = new URLSearchParams(window.location.search);
+        var pathMatch = window.location.pathname.match(/\/reservation-entreprise\.html\/([^/]+)\/?$/);
+        var shortCode = params.get('code') || params.get('utm_content') || (pathMatch ? pathMatch[1] : '') || '';
+        var prospectEmail = params.get('email') || '';
 
         function isCalendlyEvent(event) {
             return event.origin === 'https://calendly.com'
@@ -431,6 +437,43 @@
             document.getElementById('calendly-loader').classList.add('is-hidden');
         }
 
+        function buildCalendlyUrl(base) {
+            var url = new URL(base);
+            if (prospectEmail) {
+                url.searchParams.set('email', prospectEmail);
+            }
+            if (shortCode) {
+                url.searchParams.set('utm_content', shortCode);
+            }
+            return url.toString();
+        }
+
+        async function trackClick() {
+            if (!shortCode) return;
+            try {
+                await fetch('/api/link-tracking/click', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug: shortCode })
+                });
+            } catch (err) {
+                // non-blocking
+            }
+        }
+
+        async function confirmPresence() {
+            if (!shortCode && !prospectEmail) return;
+            try {
+                await fetch('/api/link-tracking/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug: shortCode, email: prospectEmail })
+                });
+            } catch (err) {
+                // non-blocking
+            }
+        }
+
         function showConfirmation() {
             document.getElementById('view-booking').classList.add('is-hidden');
             document.getElementById('view-confirmation').classList.remove('is-hidden');
@@ -438,7 +481,12 @@
             document.getElementById('left-col').classList.remove('is-hidden');
             document.getElementById('container').classList.remove('is-booking');
             document.title = 'Rendez-vous confirmé · Hercule';
-            history.replaceState(null, '', '?confirmed=1');
+            var query = shortCode ? '?confirmed=1&code=' + encodeURIComponent(shortCode) : '?confirmed=1';
+            history.replaceState(null, '', query);
+            if (!confirmScheduled) {
+                confirmScheduled = true;
+                void confirmPresence();
+            }
         }
 
         function showBookingView() {
@@ -452,7 +500,7 @@
 
         function initCalendlyWidget() {
             Calendly.initInlineWidget({
-                url: CALENDLY_EVENT_URL,
+                url: buildCalendlyUrl(CALENDLY_EVENT_URL),
                 parentElement: document.getElementById('calendly-embed'),
                 resize: true
             });
@@ -474,6 +522,8 @@
         if (new URLSearchParams(window.location.search).get('confirmed') === '1') {
             showConfirmation();
         } else {
+            void trackClick();
+
             function bootCalendly() {
                 if (window.Calendly) {
                     initCalendlyWidget();

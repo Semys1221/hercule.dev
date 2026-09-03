@@ -43,3 +43,17 @@ coverage/
 
 # Misc
 *.pem
+
+# Python
+__pycache__/
+*.pyc
+
+# Streamlit local secrets
+**/.streamlit/secrets.toml
+
+# streamlit_clean pipeline artifacts (lead PII)
+app/streamlit_clean/data/*.csv
+app/streamlit_clean/data/*.json
+
+# scrapper runtime output
+app/scrapper_streamlit/output/
