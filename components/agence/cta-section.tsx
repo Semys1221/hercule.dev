@@ -1,4 +1,4 @@
-import { CALENDLY_URL } from "@/lib/constants"
+import { CALENDLY_AGENCE_URL } from "@/lib/constants"
 
 export function CTASection() {
   return (
@@ -23,7 +23,7 @@ export function CTASection() {
               Consulter la tarification
             </a>
             <a
-              href={CALENDLY_URL}
+              href={CALENDLY_AGENCE_URL}
               className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
             >
               Demander des apports d&apos;affaires

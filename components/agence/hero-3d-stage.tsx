@@ -11,7 +11,7 @@ import { ProductDirectionSection } from "./product-direction-section"
 import { WorkflowsSection } from "./workflows-section"
 import { CTASection } from "./cta-section"
 import { Footer } from "./footer"
-import { CALENDLY_URL } from "@/lib/constants"
+import { CALENDLY_AGENCE_URL } from "@/lib/constants"
 
 function scrollToMethode(e: MouseEvent<HTMLAnchorElement>) {
   e.preventDefault()
@@ -89,7 +89,7 @@ export function Hero3DStage() {
                 className="mt-8 flex flex-wrap items-center gap-6"
               >
                 <a
-                  href={CALENDLY_URL}
+                  href={CALENDLY_AGENCE_URL}
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 >
                   Demander des apports d&apos;affaires

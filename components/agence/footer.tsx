@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 export function Footer() {
   const footerLinks: Record<string, { label: string; href: string }[]> = {
     Offre: [
@@ -6,12 +8,13 @@ export function Footer() {
       { label: "Garanties", href: "#garanties" },
       { label: "Contact", href: "#contact" },
     ],
+    Hercule: [{ label: "Trouver une agence", href: "/entreprise" }],
   }
 
   return (
     <footer className="border-t border-zinc-800 py-16 px-6" style={{ backgroundColor: "#09090B" }}>
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div>
             <p className="text-white font-semibold text-lg mb-2">Hercule</p>
             <p className="text-zinc-500 text-sm max-w-xs">
@@ -25,9 +28,15 @@ export function Footer() {
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link.label}>
-                    <a href={link.href} className="text-zinc-500 hover:text-zinc-300 transition-colors text-sm">
-                      {link.label}
-                    </a>
+                    {link.href.startsWith("#") ? (
+                      <a href={link.href} className="text-zinc-500 hover:text-zinc-300 transition-colors text-sm">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className="text-zinc-500 hover:text-zinc-300 transition-colors text-sm">
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

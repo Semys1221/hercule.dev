@@ -1,0 +1,63 @@
+
+MAIL envoyé immédiatement after booking : Confirmation de votre rendez-vous avec Hercule 
+
+Bonjour,
+
+Votre rendez-vous avec Hercule est bien prévu le {{date}} à {{heure}}.
+
+Les informations de connexion vous seront transmises directement par email via Calendly.
+
+Cordialement,
+
+
+
+MAIL envoyé 48h before the meeting : Confirmation requise — Votre rendez-vous avec Hercule
+(name),
+
+Nous avons le plaisir de vous informer que les profils présentés lors de votre rendez-vous porteront sur des contrats de conseil financier.
+
+Afin de maintenir votre créneau, merci de confirmer votre présence. 
+
+Sans confirmation sous 24 heures, votre place pourra être réattribué à une autre agence.
+
+Cordialement,
+
+
+
+
+
+MAIL envoyé 24h before the meeting if no confirmation
+(name),
+
+Nous n’avons pas encore reçu votre confirmation de présence.
+
+Votre créneau sera prochainement libéré dans les heures qui suivent afin de pouvoir être proposé à une autre agence.
+
+Si vous souhaitez maintenir le rendez-vous, merci de nous confirmer votre présence.
+
+Cordialement,
+
+
+
+SUPABASE + INSTANTLY + CALENDLY
+
+Nous allons créer un lien de confirmation pour les appels. Il va permettre de savoir qui a cliquer sur la réservation de l’appel et qui n’a pas cliqué. 
+
+Action delete the meeting thanks to the webhook calendly if no confirmation 
+
+Il faut ajouter un nouveau statut dans supabase, et dans instantly
+
+Le lien envoyé par mail est aussi liée au slug du prospect, quand il clique il passe de meeting booked à meeting confirmed (custom statut à créer dans instantly). 
+
+
+
+
+
+
+
+Réalise la page sur public/confirm.html (details will be provided)
+
+
+
+PAGE WEB 
+

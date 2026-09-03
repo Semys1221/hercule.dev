@@ -1,4 +1,4 @@
-import { Hero3DStage } from "@/components/hero-3d-stage"
+import { Hero3DStage } from "@/components/agence/hero-3d-stage"
 
 export default function Home() {
   return (
