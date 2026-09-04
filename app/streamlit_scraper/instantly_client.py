@@ -21,7 +21,24 @@ _BULK_BATCH_SIZE = 100
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 WORKSPACE_CACHE_PATH = os.path.join(_LIB_DIR, "output", "workspace_emails.json")
 WORKSPACE_CACHE_TTL_S = 6 * 3600
-CSV_COLUMNS = ["Email", "Company", "Website", "Service", "City", "Type", "Category", "Subtypes"]
+CSV_COLUMNS = [
+    "Email",
+    "Company",
+    "Website",
+    "Service",
+    "City",
+    "Type",
+    "Category",
+    "Subtypes",
+    "Siret",
+    "Siren",
+    "Effectif",
+    "TrancheEffectif",
+    "Naf",
+    "FormeJuridique",
+    "AnneeCreation",
+    "ChiffreAffaires",
+]
 _REQUIRED_CSV_COLUMNS = ["Email", "Company", "Website", "Service", "City"]
 
 
@@ -140,6 +157,103 @@ class InstantlyClient:
             starting_after = next_cursor
 
         return emails
+
+    def list_all_lead_lists(self) -> list[dict[str, Any]]:
+        return self._paginate_collection("/lead-lists")
+
+    def list_all_campaigns(self) -> list[dict[str, Any]]:
+        return self._paginate_collection("/campaigns")
+
+    def create_lead_list(self, name: str) -> dict[str, Any]:
+        data = self._fetch("/lead-lists", method="POST", body={"name": name})
+        if not isinstance(data, dict) or not data.get("id"):
+            raise RuntimeError(f"Instantly create lead list returned no id: {data!r}")
+        return data
+
+    def create_campaign(self, name: str) -> dict[str, Any]:
+        data = self._fetch(
+            "/campaigns",
+            method="POST",
+            body={
+                "name": name,
+                "campaign_schedule": DEFAULT_CAMPAIGN_SCHEDULE,
+            },
+        )
+        if not isinstance(data, dict) or not data.get("id"):
+            raise RuntimeError(f"Instantly create campaign returned no id: {data!r}")
+        return data
+
+    def _paginate_collection(self, base: str) -> list[dict[str, Any]]:
+        items: list[dict[str, Any]] = []
+        starting_after: str | None = None
+        previous: str | None = None
+        for _ in range(200):
+            path = f"{base}?limit={PAGE_SIZE}"
+            if starting_after:
+                path += f"&starting_after={starting_after}"
+            page = self._fetch(path, method="GET")
+            page_items = page.get("items") or [] if isinstance(page, dict) else []
+            items.extend(item for item in page_items if isinstance(item, dict))
+            next_cursor = page.get("next_starting_after") if isinstance(page, dict) else None
+            if not next_cursor and page_items:
+                next_cursor = page_items[-1].get("id")
+            if not next_cursor or len(page_items) < PAGE_SIZE:
+                break
+            next_cursor = str(next_cursor)
+            if next_cursor == previous:
+                break
+            previous = next_cursor
+            starting_after = next_cursor
+        return items
+
+
+DEFAULT_CAMPAIGN_SCHEDULE = {
+    "schedules": [
+        {
+            "name": "Weekdays Paris",
+            "timing": {"from": "09:00", "to": "17:00"},
+            "days": {
+                "0": True,
+                "1": True,
+                "2": True,
+                "3": True,
+                "4": True,
+                "5": False,
+                "6": False,
+            },
+            "timezone": "Africa/Ceuta",
+        }
+    ]
+}
+
+
+def instantly_resource_name(label: str) -> str:
+    clean = (label or "").strip() or "Untitled"
+    return f"Hercule — {clean}"
+
+
+def _match_by_name(items: list[dict[str, Any]], name: str) -> dict[str, Any] | None:
+    needle = name.strip().lower()
+    for item in items:
+        if str(item.get("name") or "").strip().lower() == needle:
+            return item
+    return None
+
+
+def ensure_lead_list(api_key: str, name: str) -> dict[str, Any]:
+    client = InstantlyClient(api_key)
+    existing = _match_by_name(client.list_all_lead_lists(), name)
+    if existing:
+        return existing
+    return client.create_lead_list(name)
+
+
+def ensure_campaign(api_key: str, name: str) -> dict[str, Any]:
+    client = InstantlyClient(api_key)
+    existing = _match_by_name(client.list_all_campaigns(), name)
+    if existing:
+        return existing
+    return client.create_campaign(name)
 
 
 def load_workspace_email_cache(
@@ -409,6 +523,13 @@ def _lead_payload(row: dict[str, str], list_id: str) -> dict[str, Any]:
             "type": row.get("Type") or "",
             "category": row.get("Category") or "",
             "subtypes": row.get("Subtypes") or "",
+            "siret": row.get("Siret") or "",
+            "siren": row.get("Siren") or "",
+            "effectif": row.get("Effectif") or "",
+            "naf": row.get("Naf") or "",
+            "forme_juridique": row.get("FormeJuridique") or "",
+            "annee_creation": row.get("AnneeCreation") or "",
+            "chiffre_affaires": row.get("ChiffreAffaires") or "",
         },
     }
 

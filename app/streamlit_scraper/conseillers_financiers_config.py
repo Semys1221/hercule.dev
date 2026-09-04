@@ -127,6 +127,21 @@ CONSEILLERS_FINANCIERS_CONFIG = {
         "societe.com",
         "pagesjaunes.fr",
     ],
+    "PAPPERS_ENABLED": True,
+    "PAPPERS_MIN_EMPLOYEES": 10,
+    "PAPPERS_ON_UNKNOWN": "reject",
+    "PAPPERS_CONCURRENCY": 5,
+    "PAPPERS_NAF_PREFIXES": [
+        "66.19",
+        "66.22",
+        "66.30",
+        "70.22",
+    ],
+    "NICHE_METADATA": {
+        "angle": "CGP / wealth management / patrimoine.",
+        "valeur_client": "",
+        "effectif_cible": "10+ salariés",
+    },
 }
 
 CONFIG = CONSEILLERS_FINANCIERS_CONFIG

@@ -138,6 +138,29 @@ def validate_config_schema(config: dict[str, Any], *, preset_id: str) -> Validat
                 if keywords is None or not isinstance(keywords, list):
                     result.add_error(f"SERVICE_RULES[{idx}] missing 'keywords' list")
 
+    if "PAPPERS_ENABLED" in config and not isinstance(config.get("PAPPERS_ENABLED"), bool):
+        result.add_error("PAPPERS_ENABLED must be a bool")
+
+    min_emp = config.get("PAPPERS_MIN_EMPLOYEES")
+    if min_emp is not None:
+        try:
+            if int(min_emp) < 0:
+                result.add_error("PAPPERS_MIN_EMPLOYEES must be >= 0")
+        except (TypeError, ValueError):
+            result.add_error("PAPPERS_MIN_EMPLOYEES must be an integer")
+
+    on_unknown = str(config.get("PAPPERS_ON_UNKNOWN") or "reject").strip().lower()
+    if config.get("PAPPERS_ON_UNKNOWN") is not None and on_unknown not in ("reject", "accept"):
+        result.add_error("PAPPERS_ON_UNKNOWN must be 'reject' or 'accept'")
+
+    naf = config.get("PAPPERS_NAF_PREFIXES")
+    if naf is not None and not isinstance(naf, list):
+        result.add_error("PAPPERS_NAF_PREFIXES must be a list")
+
+    metadata = config.get("NICHE_METADATA")
+    if metadata is not None and not isinstance(metadata, dict):
+        result.add_error("NICHE_METADATA must be a dict")
+
     return result
 
 

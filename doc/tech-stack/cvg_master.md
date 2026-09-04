@@ -1,6 +1,6 @@
 # Conditions Générales de Vente — Hercule
 
-> **Version :** 2026-09-04  
+> **Version :** 2026-09-18  
 > **Documents associés :** [cvg_onboarding.md](./cvg_onboarding.md) · [cvg_site-sync.md](./cvg_site-sync.md) · [capacity/03-sla-client.md](./capacity/03-sla-client.md)
 
 ---
@@ -50,6 +50,8 @@ Hercule se réserve le droit de refuser toute commande pour des motifs légitime
 | **Activation** | Date à laquelle Hercule démarre la recherche et la prospection entreprises pour le compte du Client (statut opérationnel « service actif »), après onboarding complet et, le cas échéant, expiration du délai de rétractation. |
 | **Live Qualification** | Appel téléphonique ou échange vocal mené par Hercule (ou prestataire mandaté) pour valider le budget, le besoin et la pertinence du match avant attribution. |
 | **Période de service** | Intervalle entre l'Activation et la fin ou la résiliation du contrat. |
+| **Demande planifiée** | Demande client dont la fenêtre de mise en relation est fixée à l'avance (ex. septembre–novembre). |
+| **Mandat de délégation** | Accord signé par le dirigeant autorisant Hercule à proposer une mise en relation avec une agence compatible pour la période indiquée. |
 
 ---
 
@@ -68,6 +70,23 @@ Hercule met à disposition, ou mettra à disposition, une **page de suivi** perm
 **Hercule n'est pas une agence de vente aux resultats garantis.** Le Client reste seul responsable de la négociation, de la proposition commerciale et de la signature avec l'entreprise rencontrée. Hercule s'engage sur une **obligation de moyens** dans la qualification et l'attribution, aux délais et volumes décrits aux présentes CGV.
 
 Les entreprises mises en relation **ne paient aucune commission à Hercule**.
+
+### 4.1 Demandes visibles et planification anticipée
+
+Une demande **visible** sur hercule.dev correspond à un accord obtenu **à l'instant de sa publication** avec le dirigeant de l'entreprise concernée. Le dirigeant a signé un **mandat de délégation** autorisant Hercule à proposer une mise en relation avec une agence compatible pour une **date cible** (ex. novembre).
+
+Les dirigeants qui anticipent leurs besoins marketing structurent leur acquisition à l'avance ; ils ne gèrent pas leur visibilité digitale au coup par coup.
+
+Les fenêtres calendaires affichées sur chaque demande (`disponibilite`, dates `available_from` / `available_until`) matérialisent cette planification.
+
+### 4.2 Mise en relation post-audit de compatibilité
+
+Ce parcours s'applique après complétion de la **fiche agence** (audit de compatibilité), distinct du service actif post-souscription (article 9) :
+
+1. L'agence complète sa fiche agence lors de l'audit de compatibilité ;
+2. Hercule identifie les dirigeants **éligibles** dont la demande entre dans la **timeframe du mois** affichée ;
+3. Ces dirigeants reçoivent un **email de proposition de mise en relation** ;
+4. **Délai indicatif :** environ **6 jours ouvrés** pour voir le **premier RDV** apparaître dans l'agenda de l'agence, sous réserve des disponibilités respectives.
 
 ---
 
@@ -364,6 +383,7 @@ Pour les contrats récurrents, Hercule informe le Client **30 jours** avant l'en
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-18 | 2026-09-18 | §4.1 planification anticipée · §4.2 mise en relation post-audit (~6 j ouvrés) · définitions Demande planifiée / Mandat de délégation |
 | 2026-09-04 | 2026-09-04 | Création CGV — migration depuis blueprint `doc/sop/contrat.md` ; modèle 1489 € / 2500 € / mois ; SLA capacity |
 
 ---

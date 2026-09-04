@@ -22,6 +22,26 @@ NICHE_OPTIONS = [
     "a-venir",
 ]
 
+ORIGINE_PRESETS = [
+    "Recrutement actif",
+    "Changement de locaux",
+    "Nouveau gérant",
+    "Expansion réseau",
+    "Refonte identité",
+    "Croissance commerciale",
+    "Fusion / acquisition",
+    "Recrutement mandataires",
+    "Recrutement comptable",
+    "Recrutement conseillers",
+    "Recrutement installateurs",
+    "Recrutement commercial",
+    "Campagne commerciale",
+    "Marchés publics remportés",
+    "Migration catalogue digital",
+    "Expansion export",
+    "Autre",
+]
+
 st.set_page_config(page_title="Streamlit Demands", layout="wide")
 st.title("Streamlit Demands")
 st.caption("Édition des cartes affichées sur la homepage agence. Le jeu de cartes est fixé — pas de création.")
@@ -70,6 +90,29 @@ if card["record_type"] == "demande":
                 index=NICHE_OPTIONS.index(card["niche"]) if card["niche"] in NICHE_OPTIONS else 0,
             )
             secteur = st.text_input("Secteur", value=card.get("secteur") or "")
+            current_origine = (card.get("origine") or "").strip()
+            preset_options = [
+                value for value in ORIGINE_PRESETS if value != "Autre"
+            ]
+            if current_origine and current_origine not in preset_options:
+                preset_options = [current_origine, *preset_options, "Autre"]
+            else:
+                preset_options = [*preset_options, "Autre"]
+            origine_preset = st.selectbox(
+                "Origine (preset)",
+                options=preset_options,
+                index=preset_options.index(current_origine)
+                if current_origine in preset_options
+                else preset_options.index("Autre"),
+            )
+            origine_custom = ""
+            if origine_preset == "Autre":
+                origine_custom = st.text_input(
+                    "Origine (saisie libre)",
+                    value=current_origine if current_origine not in ORIGINE_PRESETS else "",
+                    help="Signal public détecté expliquant l'existence du projet (ex. recrutement, changement de locaux).",
+                )
+            origine = origine_custom.strip() if origine_preset == "Autre" else origine_preset
             prestation = st.text_area("Prestation", value=card.get("prestation") or "")
             budget = st.text_input("Budget", value=card.get("budget") or "")
             taille = st.text_input("Taille", value=card.get("taille") or "")
@@ -103,6 +146,7 @@ if card["record_type"] == "demande":
                     {
                         "niche": niche,
                         "secteur": secteur.strip(),
+                        "origine": origine.strip(),
                         "prestation": prestation.strip(),
                         "budget": budget.strip(),
                         "taille": taille.strip(),

@@ -20,7 +20,9 @@ const SENDABLE_FLOWS = new Set<BypassFlow>([
   "interested_email3",
 ]);
 
-async function executeBypassJob(job: BypassJob): Promise<void> {
+async function executeBypassJob(
+  job: BypassJob,
+): Promise<"sent" | "failed" | "skipped" | "rescheduled"> {
   const flow = flowFromJob(job);
   if (!SENDABLE_FLOWS.has(flow)) {
     throw new Error(`Unsupported scheduled flow: ${flow}`);
@@ -28,12 +30,12 @@ async function executeBypassJob(job: BypassJob): Promise<void> {
 
   if (await hasBypassEvent(job.idempotency_key)) {
     await markBypassJobSent(job.id);
-    return;
+    return "skipped";
   }
 
   if (!isWithinSendWindow()) {
     await rescheduleBypassJob(job.id, nextSendSlot());
-    return;
+    return "rescheduled";
   }
 
   const leadEmail = job.lead_email.trim().toLowerCase();
@@ -55,10 +57,16 @@ async function executeBypassJob(job: BypassJob): Promise<void> {
 
   if (!result.ok) {
     await markBypassJobFailed(job.id, result.error);
-    return;
+    return "failed";
+  }
+
+  if (result.skipped) {
+    await markBypassJobSent(job.id);
+    return "skipped";
   }
 
   await markBypassJobSent(job.id);
+  return "sent";
 }
 
 export async function dispatchDueBypassJobs(limit = 50): Promise<{
@@ -88,8 +96,11 @@ export async function dispatchDueBypassJobs(limit = 50): Promise<{
         continue;
       }
 
-      await executeBypassJob(job);
-      sent += 1;
+      const outcome = await executeBypassJob(job);
+      if (outcome === "sent") sent += 1;
+      else if (outcome === "failed") failed += 1;
+      else if (outcome === "rescheduled") rescheduled += 1;
+      else skipped += 1;
     } catch (err) {
       failed += 1;
       const message = err instanceof Error ? err.message : String(err);

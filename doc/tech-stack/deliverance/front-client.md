@@ -94,6 +94,9 @@ Une seule section FAQ sur la page. Contenu **filtré par `category`** (`agence` 
 | A6 | Ai-je un délai de rétractation ? | Oui. Après souscription, vous disposez d'un délai de 4 jours calendaires pour vous rétracter. Détail : [cvg_master.md §8](../cvg_master.md). |
 | A7 | Comment fonctionnent les emails Hercule ? | Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Le domaine principal de la société et de la plateforme est hercule.dev. |
 | A8 | Mon prospect ne s'est pas présenté (no-show) | L'attribution n'est pas consommée. Un rendez-vous de remplacement est planifié sous 14 jours ouvrés. Détail : [cvg_master.md §10](../cvg_master.md). |
+| A9 | Que signifie une demande visible sur hercule.dev ? | Chaque demande affichée correspond à un accord déjà obtenu avec le dirigeant. Un mandat de délégation a été signé pour une date cible (ex. novembre). Les dirigeants qui anticipent planifient leur acquisition marketing à l'avance. Détail : [cvg_master.md §4.1](../cvg_master.md). |
+| A10 | Comment planifier les demandes à l'avance ? | Les demandes sont organisées par fenêtres calendaires (septembre–novembre). Une carte visible indique une intention confirmée pour la période affichée, pas une simple piste non qualifiée. Détail : [cvg_master.md §4.1](../cvg_master.md). |
+| A11 | Comment se passe ma mise en relation ? | Une fois votre fiche agence complétée, les dirigeants éligibles dont la demande entre dans la timeframe du mois reçoivent un email de proposition. Comptez environ 6 jours ouvrés pour voir le premier RDV dans votre agenda. Détail : [cvg_master.md §4.2](../cvg_master.md). |
 
 ### Questions entreprise
 

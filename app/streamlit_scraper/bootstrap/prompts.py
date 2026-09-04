@@ -32,6 +32,12 @@ TUNING_KEYS = (
     "OUTSCRAPER_POLL_TIMEOUT_S",
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER",
     "EXCLUDE_DOMAINS",
+    "PAPPERS_ENABLED",
+    "PAPPERS_MIN_EMPLOYEES",
+    "PAPPERS_ON_UNKNOWN",
+    "PAPPERS_CONCURRENCY",
+    "PAPPERS_NAF_PREFIXES",
+    "NICHE_METADATA",
 )
 
 
@@ -103,6 +109,16 @@ def _default_tuning() -> dict[str, Any]:
             "societe.com",
             "pagesjaunes.fr",
         ],
+        "PAPPERS_ENABLED": True,
+        "PAPPERS_MIN_EMPLOYEES": 10,
+        "PAPPERS_ON_UNKNOWN": "reject",
+        "PAPPERS_CONCURRENCY": 5,
+        "PAPPERS_NAF_PREFIXES": [],
+        "NICHE_METADATA": {
+            "angle": "",
+            "valeur_client": "",
+            "effectif_cible": "10+ salariés",
+        },
     }
 
 

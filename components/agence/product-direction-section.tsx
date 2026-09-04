@@ -34,13 +34,11 @@ const PRICING_PLANS = [
     price: "2 500 €",
     priceSuffix: "/mois",
     tagline: "Nous qualifions et signons nos contrats disponibles pour vous.",
-    summary:
-      "Des demandes déjà qualifiées dans notre pipeline. Vous sélectionnez celles qui vous conviennent — nous réalisons le closing et la signature en interne, à 100 % de vos tarifs.",
-    footer: "Proposée sur votre profil après validation de compatibilité et résultats Starter.",
+    summary: null as string | null,
+    footer: null as string | null,
     featured: false,
     profileOnly: true,
-    highlight:
-      "Pas de prospection. Pas d'appels de vente de votre côté. Nous partons de contrats déjà disponibles chez Hercule, que nous signons pour votre agence.",
+    highlight: null as string | null,
     features: [
       "Éligible sur profil — offre proposée après validation de votre compatibilité.",
       "Contrats déjà disponibles — demandes qualifiées dans notre pipeline, pas un démarrage à froid.",
@@ -83,7 +81,7 @@ function MetallicTitle({ name }: { name: string }) {
 }
 
 function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; index: number }) {
-  const [open, setOpen] = useState(plan.profileOnly)
+  const [open, setOpen] = useState(false)
 
   return (
     <motion.div
@@ -92,12 +90,12 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
       viewport={{ once: true }}
       transition={{ delay: 0.25 + index * 0.05 }}
       className={cn(
-        "rounded-xl p-8 relative overflow-hidden bg-[#0A0A0A]",
+        "rounded-xl relative overflow-hidden bg-[#0A0A0A]",
         plan.featured
-          ? "border border-white/[0.18] ring-1 ring-white/[0.06]"
+          ? "p-8 border border-white/[0.22] ring-1 ring-white/[0.06] shadow-[0_0_48px_rgba(255,255,255,0.04)] md:scale-[1.02] md:z-10"
           : plan.profileOnly
-            ? "border border-white/[0.05] opacity-55 saturate-50 select-none"
-            : "border border-white/[0.08]",
+            ? "p-6 border border-white/[0.04] opacity-45 saturate-50"
+            : "p-8 border border-white/[0.08]",
       )}
     >
       {plan.featured && (
@@ -141,15 +139,17 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
         </p>
         <p
           className={cn(
-            "mb-4",
+            plan.profileOnly ? "mb-6" : "mb-4",
             plan.profileOnly
-              ? "text-lg sm:text-xl text-neutral-300 font-semibold leading-snug"
-              : cn("text-sm", plan.featured ? "text-white font-medium" : "text-neutral-400"),
+              ? "text-base text-neutral-400 font-normal leading-snug"
+              : plan.featured
+                ? "text-base sm:text-lg text-white font-semibold"
+                : "text-sm text-neutral-400",
           )}
         >
           {plan.tagline}
         </p>
-        <p className="text-neutral-400 text-sm mb-4">{plan.summary}</p>
+        {plan.summary && <p className="text-neutral-400 text-sm mb-4">{plan.summary}</p>}
 
         {plan.highlight && (
           <p className="text-neutral-300 text-sm font-medium mb-4 border border-white/[0.06] bg-white/[0.02] rounded-lg p-4">
@@ -157,9 +157,11 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
           </p>
         )}
 
-        <p className={cn("text-sm mb-6", plan.featured ? "text-white font-medium" : "text-neutral-500")}>
-          {plan.footer}
-        </p>
+        {plan.footer && (
+          <p className={cn("text-sm mb-6", plan.featured ? "text-white font-medium" : "text-neutral-500")}>
+            {plan.footer}
+          </p>
+        )}
 
         <Collapsible open={open} onOpenChange={setOpen}>
           <div className="border border-white/10 rounded-md overflow-hidden">
@@ -232,7 +234,7 @@ export function ProductDirectionSection() {
           disponibles pour vous — est proposée sur profil aux agences éligibles.
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr] gap-6 mb-16 items-start">
           {PRICING_PLANS.map((plan, index) => (
             <PricingCard key={plan.name} plan={plan} index={index} />
           ))}

@@ -57,6 +57,10 @@ def build_config_fingerprint(config: dict) -> str:
         ),
         str(config.get("OUTSCRAPER_BATCH_SIZE", "")),
         target_mode(config),
+        str(config.get("PAPPERS_ENABLED", "")),
+        str(config.get("PAPPERS_MIN_EMPLOYEES", "")),
+        str(config.get("PAPPERS_ON_UNKNOWN", "")),
+        "|".join(sorted(str(item) for item in (config.get("PAPPERS_NAF_PREFIXES") or []))),
     ]
     payload = "\n".join(parts)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]

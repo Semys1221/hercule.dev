@@ -106,6 +106,8 @@ def _inject_secrets(config: dict, *, require_keys: bool, preset: str) -> dict:
         config["OUTSCRAPER_API_KEY"] = os.getenv("OUTSCRAPER_API_KEY", "").strip()
         config["INSTANTLY_API_KEY"] = os.getenv("INSTANTLY_API_KEY", "").strip()
 
+    config["PAPPERS_API_KEY"] = os.getenv("PAPPERS_API_KEY", "").strip()
+
     preset_env_key = f"INSTANTLY_LIST_ID_{preset.upper()}"
     preset_list_id = os.getenv(preset_env_key, "").strip()
     global_list_id = os.getenv("INSTANTLY_LIST_ID", "").strip()

@@ -157,6 +157,9 @@ export function DemandeCard({ demande }: { demande: DemandeContrat }) {
           <p className="text-zinc-500 text-xs">
             {demande.zone} · {demande.disponibilite}
           </p>
+          {demande.origine ? (
+            <p className="text-amber-400/90 text-xs font-medium">{demande.origine}</p>
+          ) : null}
         </CardHeader>
 
         <CardContent className="flex flex-1 flex-col gap-4 px-5 py-4">

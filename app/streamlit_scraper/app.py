@@ -9,6 +9,18 @@ from core_logic import clear_local_leads, output_paths, run_scraper_pipeline
 from instantly_client import csv_push_stats, push_csv_to_instantly
 from scrape_state import detect_recoverable_run, load_scrape_state, target_mode
 
+
+def _count_pappers_rejects(audit_path: str) -> int:
+    if not audit_path or not os.path.isfile(audit_path):
+        return 0
+    try:
+        df = pd.read_csv(audit_path)
+        if df.empty or "Enrich_Reason" not in df.columns:
+            return 0
+        return int(df["Enrich_Reason"].astype(str).str.startswith("REJECT_").sum())
+    except (OSError, pd.errors.EmptyDataError, ValueError):
+        return 0
+
 st.set_page_config(page_title="Streamlit Scraper", page_icon="⚡", layout="wide")
 
 PRESET_OPTIONS = ["Manual Setup", *PRESET_LABELS.values()]
@@ -76,6 +88,26 @@ with col1:
             f"{len(config['LOCATIONS'])}+{expansion_loc} locations, "
             f"{len(config['KEYWORDS'])}+{expansion_kw} keywords"
         )
+        metadata = config.get("NICHE_METADATA") or {}
+        if isinstance(metadata, dict) and any(metadata.values()):
+            angle = str(metadata.get("angle") or "").strip()
+            valeur = str(metadata.get("valeur_client") or "").strip()
+            effectif = str(metadata.get("effectif_cible") or "").strip()
+            lines = []
+            if angle:
+                lines.append(f"**Angle:** {angle}")
+            if valeur:
+                lines.append(f"**Val. client:** {valeur}")
+            if effectif:
+                lines.append(f"**Effectif cible:** {effectif}")
+            if lines:
+                st.markdown("\n\n".join(lines))
+        if config.get("PAPPERS_ENABLED"):
+            min_emp = int(config.get("PAPPERS_MIN_EMPLOYEES", 10) or 10)
+            key_state = "key present" if config.get("PAPPERS_API_KEY") else "KEY MISSING"
+            st.info(f"Pappers: {key_state} — min {min_emp} salariés")
+        if config.get("INSTANTLY_CAMPAIGN_ID"):
+            st.caption(f"Instantly campaign: `{config.get('INSTANTLY_CAMPAIGN_ID')}`")
     else:
         preset_id = ""
         paths = None
@@ -129,7 +161,13 @@ with col1:
         disabled=True,
     )
 
-    start_disabled = not is_preset or has_leftover or (mode == "instantly_pushed" and not has_instantly)
+    pappers_blocked = bool(config.get("PAPPERS_ENABLED") and not config.get("PAPPERS_API_KEY") and not dry_run)
+    start_disabled = (
+        not is_preset
+        or has_leftover
+        or (mode == "instantly_pushed" and not has_instantly)
+        or pappers_blocked
+    )
     start_btn = st.button(
         "🚀 Start Engine",
         type="primary",
@@ -149,10 +187,13 @@ with col2:
     metric_enriched = m2.metric("Enriched valid", f"{enriched:,}")
     metric_inst = m3.metric("Instantly pushed / target", f"{pushed:,} / {target:,}")
 
+    pappers_rejected = _count_pappers_rejects(paths.enrich_audit) if paths else 0
     if csv_stats["total"]:
         st.caption(f"{csv_stats['total']} leads in CSV (post scrape gates)")
     else:
         st.caption("No leads in CSV yet.")
+    if is_preset and config.get("PAPPERS_ENABLED"):
+        st.caption(f"Pappers rejected: {pappers_rejected:,}")
 
     continue_btn = False
     recovery_push_btn = False

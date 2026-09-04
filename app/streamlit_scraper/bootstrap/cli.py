@@ -82,6 +82,64 @@ def validate_cmd(
         raise typer.Exit(code=1)
 
 
+@app.command("provision-instantly")
+def provision_instantly_cmd(
+    preset_id: str = typer.Argument(
+        "",
+        help="Preset to provision (default: all configs/ niches)",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show what would be created without calling Instantly",
+    ),
+) -> None:
+    """Create or reuse Instantly list + draft campaign for niche presets."""
+    import os
+
+    from bootstrap.provision import provision_preset, provision_targets
+    from config_loader import load_config
+
+    try:
+        targets = provision_targets(preset_id)
+    except KeyError:
+        typer.secho(f"Unknown preset {preset_id!r}.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    if not targets:
+        typer.secho("No configs/ presets to provision.", fg=typer.colors.YELLOW)
+        raise typer.Exit(code=0)
+
+    api_key = ""
+    if not dry_run:
+        sample = load_config(targets[0], require_keys=False)
+        api_key = str(sample.get("INSTANTLY_API_KEY") or os.getenv("INSTANTLY_API_KEY") or "").strip()
+        if not api_key:
+            typer.secho("INSTANTLY_API_KEY is required (set it in repo .env).", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    failed = False
+    for pid in targets:
+        try:
+            result = provision_preset(pid, api_key=api_key, dry_run=dry_run)
+        except Exception as exc:
+            failed = True
+            typer.secho(f"FAIL {pid}: {exc}", fg=typer.colors.RED)
+            continue
+
+        status = "SKIP" if result.get("skipped") else ("DRY" if dry_run else "OK")
+        color = typer.colors.YELLOW if status != "OK" else typer.colors.GREEN
+        typer.secho(
+            f"{status} {pid} — {result['name']} "
+            f"list={result.get('list_id') or '(pending)'} "
+            f"campaign={result.get('campaign_id') or '(pending)'}",
+            fg=color,
+        )
+
+    if failed:
+        raise typer.Exit(code=1)
+
+
 @app.command("reload")
 def reload_cmd() -> None:
     """Clear preset discovery cache (after manual config edits)."""

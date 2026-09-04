@@ -20,6 +20,22 @@ def _config_var_name(preset_id: str) -> str:
     return f"{preset_id.upper()}_CONFIG"
 
 
+def _format_niche_metadata(meta: dict[str, Any] | None, indent: int = 8) -> str:
+    data = meta or {}
+    pad = " " * indent
+    close_pad = " " * max(0, indent - 4)
+    angle = str(data.get("angle") or "").replace('"', '\\"')
+    valeur = str(data.get("valeur_client") or "").replace('"', '\\"')
+    effectif = str(data.get("effectif_cible") or "").replace('"', '\\"')
+    return (
+        "{\n"
+        f'{pad}"angle": "{angle}",\n'
+        f'{pad}"valeur_client": "{valeur}",\n'
+        f'{pad}"effectif_cible": "{effectif}",\n'
+        f"{close_pad}}}"
+    )
+
+
 def _format_service_rules(rules: list[dict[str, Any]], indent: int = 8) -> str:
     if not rules:
         return "[]"
@@ -104,6 +120,12 @@ _LIST_ID = "{list_id}"{campaign_block}
     "LOCATIONS": FRENCH_LOCATIONS,
     "EXPANSION_LOCATIONS": FRENCH_EXPANSION_LOCATIONS,
     "EXCLUDE_DOMAINS": {_format_string_list(list(tuning.get("EXCLUDE_DOMAINS") or []), indent=8)},
+    "PAPPERS_ENABLED": {tuning.get("PAPPERS_ENABLED", True)!r},
+    "PAPPERS_MIN_EMPLOYEES": {int(tuning.get("PAPPERS_MIN_EMPLOYEES", 10))},
+    "PAPPERS_ON_UNKNOWN": "{str(tuning.get("PAPPERS_ON_UNKNOWN") or "reject")}",
+    "PAPPERS_CONCURRENCY": {int(tuning.get("PAPPERS_CONCURRENCY", 5))},
+    "PAPPERS_NAF_PREFIXES": {_format_string_list(list(tuning.get("PAPPERS_NAF_PREFIXES") or []), indent=8)},
+    "NICHE_METADATA": {_format_niche_metadata(tuning.get("NICHE_METADATA"), indent=8)},
 }}
 
 CONFIG = {var_name}

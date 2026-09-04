@@ -47,7 +47,7 @@ export function DemandesSection({ demandes, teaser, availableCount }: DemandesSe
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-6"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            {availableCount} projets actuellement disponibles
+            +{availableCount} projets actuellement disponibles
           </motion.h2>
 
           <motion.p
@@ -105,8 +105,8 @@ export function DemandesSection({ demandes, teaser, availableCount }: DemandesSe
             transition={{ delay: 0.3 }}
             className="text-zinc-500 text-xs max-w-2xl leading-relaxed"
           >
-            Les demandes affichées correspondent à des demandes validées ou actuellement en cours de
-            qualification. Les informations détaillées de chaque projet sont présentées lors de
+            Les demandes affichées correspondent à des projets validés avec le dirigeant et planifiés
+            à l&apos;avance (mandat de délégation signé). Les détails complets sont présentés lors de
             l&apos;audit de compatibilité.
           </motion.p>
 

@@ -83,7 +83,24 @@ _MAX_RETRIES = 4
 _HTTP_TIMEOUT = httpx.Timeout(10.0, read=60.0)
 _OUTSCRAPER_CLOUD = "https://api.outscraper.cloud"
 _OUTSCRAPER_LEGACY = "https://api.outscraper.com"
-_CSV_COLUMNS = ["Email", "Company", "Website", "Service", "City", "Type", "Category", "Subtypes"]
+_CSV_COLUMNS = [
+    "Email",
+    "Company",
+    "Website",
+    "Service",
+    "City",
+    "Type",
+    "Category",
+    "Subtypes",
+    "Siret",
+    "Siren",
+    "Effectif",
+    "TrancheEffectif",
+    "Naf",
+    "FormeJuridique",
+    "AnneeCreation",
+    "ChiffreAffaires",
+]
 _FILTER_AUDIT_COLUMNS = ["Email", "Company", "Category", "Verdict", "Reason"]
 _ENRICH_AUDIT_COLUMNS = [
     "Email",
@@ -95,6 +112,11 @@ _ENRICH_AUDIT_COLUMNS = [
     "Soft_Exclus_Trouvés",
     "Mots_Exclus_Trouvés",
     "Enrich_Reason",
+    "Siret",
+    "Siren",
+    "Effectif",
+    "Naf",
+    "FormeJuridique",
 ]
 
 
@@ -638,6 +660,12 @@ async def _run_enrich_batch(
         },
         log_cb=log_cb,
     )
+    if bool(config.get("PAPPERS_ENABLED", False)):
+        from pappers_validator import validate_leads
+
+        pappers_valid, pappers_rejected = await validate_leads(valid, config, log_cb=log_cb)
+        valid = pappers_valid
+        rejected = rejected + pappers_rejected
     for row in rejected:
         _append_enrich_audit_row(row)
     return valid, rejected
@@ -683,8 +711,19 @@ async def _maybe_enrich_and_push(
         metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
 
     if not enrich_enabled and pending_scraped:
-        pending_instantly.extend(pending_scraped)
+        to_push = list(pending_scraped)
         pending_scraped.clear()
+        if bool(config.get("PAPPERS_ENABLED", False)):
+            from pappers_validator import validate_leads
+
+            valid, rejected = await validate_leads(to_push, config, log_cb=log_cb)
+            for row in rejected:
+                _append_enrich_audit_row(row)
+            leads_enriched_rejected += len(rejected)
+            leads_enriched_valid += len(valid)
+            to_push = valid
+            metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
+        pending_instantly.extend(to_push)
 
     while instantly_enabled and len(pending_instantly) >= push_every:
         flush_stats = await _flush_instantly_buffer(
@@ -1345,6 +1384,13 @@ async def run_scraper_pipeline(
         )
     else:
         log_cb("Website enrich disabled — scraped leads go directly to Instantly push")
+    if bool(config.get("PAPPERS_ENABLED", False)):
+        log_cb(
+            f"Pappers enabled — min effectif {int(config.get('PAPPERS_MIN_EMPLOYEES', 10) or 10)}, "
+            f"on_unknown={config.get('PAPPERS_ON_UNKNOWN') or 'reject'}"
+        )
+    else:
+        log_cb("Pappers disabled")
 
     for sample in pass0_queries[:3]:
         log_cb(f"  sample query: {sample}")
@@ -1359,6 +1405,8 @@ async def run_scraper_pipeline(
                 log_cb("Instantly push enabled — target metric is instantly_pushed")
             else:
                 log_cb("WARNING: TARGET_MODE=instantly_pushed requires Instantly keys + push")
+        if bool(config.get("PAPPERS_ENABLED", False)) and not str(config.get("PAPPERS_API_KEY") or "").strip():
+            log_cb("WARNING: PAPPERS_ENABLED requires PAPPERS_API_KEY")
         log_cb("Dry-run complete — zero Outscraper requests made.")
         summary["queries_total"] = len(pass0_queries) + len(pass1_queries)
         progress_cb(1.0)
@@ -1375,6 +1423,9 @@ async def run_scraper_pipeline(
             raise SystemExit(
                 "TARGET_MODE=instantly_pushed requires INSTANTLY_API_KEY and INSTANTLY_LIST_ID"
             )
+
+    if bool(config.get("PAPPERS_ENABLED", False)) and not str(config.get("PAPPERS_API_KEY") or "").strip():
+        raise SystemExit("PAPPERS_ENABLED requires PAPPERS_API_KEY (set it in repo .env)")
 
     from scrape_state import detect_recoverable_run
 

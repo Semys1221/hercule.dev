@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 
-import { isDue, RULES } from "@/lib/instantly-bypass/pipeline-advance";
+import {
+  consumesAdvanceBudget,
+  isDue,
+  nextStepAfterFlow,
+  RULES,
+} from "@/lib/instantly-bypass/pipeline-advance";
 
 function hoursAgo(hours: number): string {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
@@ -30,10 +35,48 @@ function testRulesDelays() {
   console.log("OK pipeline advance rules");
 }
 
+function testSkippedDoesNotStarveBatch() {
+  const outcomes = [
+    "skipped",
+    "skipped",
+    "skipped",
+    "sent",
+    "skipped",
+    "closed",
+    "replied",
+    "queued",
+    "failed",
+  ] as const;
+
+  let remaining = 3;
+  for (const outcome of outcomes) {
+    if (remaining <= 0) break;
+    if (consumesAdvanceBudget(outcome)) remaining -= 1;
+  }
+
+  assert.equal(remaining, 0);
+  assert.equal(consumesAdvanceBudget("skipped"), false);
+  assert.equal(consumesAdvanceBudget("sent"), true);
+  assert.equal(consumesAdvanceBudget("queued"), true);
+  assert.equal(consumesAdvanceBudget("closed"), true);
+  assert.equal(consumesAdvanceBudget("replied"), true);
+  assert.equal(consumesAdvanceBudget("failed"), true);
+  console.log("OK skipped outcomes do not starve the action budget");
+}
+
+function testAlreadySentAdvancesStep() {
+  assert.equal(nextStepAfterFlow("interested_email2"), "step_2");
+  assert.equal(nextStepAfterFlow("interested_email3"), "step_3");
+  assert.equal(nextStepAfterFlow("interested_email1"), "step_1");
+  console.log("OK already-sent next flow maps to the following CRM step");
+}
+
 function main() {
   testIsDue24h();
   testIsDue48h();
   testRulesDelays();
+  testSkippedDoesNotStarveBatch();
+  testAlreadySentAdvancesStep();
   console.log("All pipeline advance smoke tests passed.");
 }
 

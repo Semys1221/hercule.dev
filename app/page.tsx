@@ -4,15 +4,18 @@ import {
   fetchDemandeTeaser,
   fetchDemandesForCarousel,
 } from "@/lib/agence/demandes-repo"
+import { getDemandesVisibles } from "@/lib/demandes-data"
 
 export const revalidate = 60
 
 export default async function Home() {
-  const [demandes, teaser, availableCount] = await Promise.all([
+  const [allDemandes, teaser, availableCount] = await Promise.all([
     fetchDemandesForCarousel(),
     fetchDemandeTeaser(),
     countAvailableDemandes(),
   ])
+
+  const demandes = getDemandesVisibles(allDemandes)
 
   return (
     <main>

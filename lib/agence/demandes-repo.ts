@@ -16,6 +16,7 @@ interface AgenceDemandeRow {
   taille: string | null;
   zone: string | null;
   disponibilite: string | null;
+  origine: string | null;
   status: DemandeStatus | null;
   available_from: string | null;
   available_until: string | null;
@@ -37,6 +38,7 @@ function mapDemandeRow(row: AgenceDemandeRow): DemandeContrat {
     taille: row.taille ?? "",
     zone: row.zone ?? "",
     disponibilite: row.disponibilite ?? "",
+    origine: row.origine ?? "",
     status: row.status ?? "available",
     masked: true,
   };

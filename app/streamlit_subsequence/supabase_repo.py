@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from supabase import Client, create_client
 
 from config import supabase_service_role_key, supabase_url
+from default_templates import DEFAULT_E1_BODY_HTML
 
 
 @lru_cache(maxsize=1)
@@ -61,12 +62,13 @@ def seed_empty_templates(
     for key in keys:
         if key in existing:
             continue
+        body_html = DEFAULT_E1_BODY_HTML if key == "interested_email1" else ""
         client.table("instantly_bypass_templates").insert(
             {
                 "campaign_id": campaign_id,
                 "template_key": key,
                 "subject": "",
-                "body_html": "",
+                "body_html": body_html,
             }
         ).execute()
 

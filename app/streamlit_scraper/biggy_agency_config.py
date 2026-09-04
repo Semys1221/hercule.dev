@@ -160,6 +160,21 @@ BIGGY_CONFIG = {
         "societe.com",
         "pagesjaunes.fr",
     ],
+    "PAPPERS_ENABLED": True,
+    "PAPPERS_MIN_EMPLOYEES": 10,
+    "PAPPERS_ON_UNKNOWN": "reject",
+    "PAPPERS_CONCURRENCY": 5,
+    "PAPPERS_NAF_PREFIXES": [
+        "63.11",
+        "70.22",
+        "73.11",
+        "73.12",
+    ],
+    "NICHE_METADATA": {
+        "angle": "Agences marketing digital (SEO, SEA, growth).",
+        "valeur_client": "",
+        "effectif_cible": "10+ salariés",
+    },
 }
 
 CONFIG = BIGGY_CONFIG

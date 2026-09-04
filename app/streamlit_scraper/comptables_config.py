@@ -125,6 +125,18 @@ COMPTABLES_CONFIG = {
         "societe.com",
         "pagesjaunes.fr",
     ],
+    "PAPPERS_ENABLED": True,
+    "PAPPERS_MIN_EMPLOYEES": 10,
+    "PAPPERS_ON_UNKNOWN": "reject",
+    "PAPPERS_CONCURRENCY": 5,
+    "PAPPERS_NAF_PREFIXES": [
+        "69.20",
+    ],
+    "NICHE_METADATA": {
+        "angle": "Cabinets d'expertise comptable et fiduciaires.",
+        "valeur_client": "",
+        "effectif_cible": "10+ salariés",
+    },
 }
 
 CONFIG = COMPTABLES_CONFIG

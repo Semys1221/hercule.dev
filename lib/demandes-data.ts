@@ -11,6 +11,7 @@ export interface DemandeContrat {
   id: string
   niche: DemandeNiche
   secteur: string
+  origine: string
   availableFrom: string
   availableUntil: string
   prestation: string

@@ -46,6 +46,25 @@ export async function findLeadByEmailInCampaign(
   leadEmail: string,
 ): Promise<InstantlyLeadRecord | null> {
   const normalized = leadEmail.trim().toLowerCase();
+
+  const searched = await instantlyFetch<{ items?: InstantlyLeadRecord[] }>(
+    apiKey,
+    "/leads/list",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        campaign: campaignId,
+        search: normalized,
+        limit: 20,
+      }),
+    },
+  );
+  const searchedMatch =
+    searched.items?.find(
+      (item) => (item.email ?? "").trim().toLowerCase() === normalized,
+    ) ?? null;
+  if (searchedMatch) return searchedMatch;
+
   let startingAfter: string | null = null;
 
   while (true) {

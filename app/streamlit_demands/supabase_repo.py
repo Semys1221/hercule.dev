@@ -59,6 +59,7 @@ def update_demande(external_id: str, fields: dict[str, Any]) -> None:
         "taille",
         "zone",
         "disponibilite",
+        "origine",
         "status",
         "available_from",
         "available_until",

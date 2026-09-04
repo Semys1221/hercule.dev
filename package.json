@@ -10,6 +10,8 @@
     "generate:icons": "node scripts/generate-icons.mjs",
     "apply-agence-entreprise-migration": "tsx --env-file=.env ./scripts/crm/applyAgenceEntrepriseMigration.ts",
     "apply-agence-demandes-migration": "tsx --env-file=.env ./scripts/crm/applyAgenceDemandesMigration.ts",
+    "apply-agence-demandes-origine-migration": "tsx --env-file=.env ./scripts/crm/applyAgenceDemandesOrigineMigration.ts",
+    "apply-agence-demandes-expand-34-migration": "tsx --env-file=.env ./scripts/crm/applyAgenceDemandesExpand34Migration.ts",
     "apply-crm-booking-communication-migration": "tsx --env-file=.env ./scripts/crm/applyCrmBookingCommunicationMigration.ts",
     "apply-booking-email-threading-migration": "tsx --env-file=.env ./scripts/crm/applyBookingEmailThreadingMigration.ts",
     "configure-calendly-link-tracking-webhook": "tsx --env-file=.env ./scripts/crm/configureCalendlyLinkTrackingWebhook.ts",
@@ -45,6 +47,7 @@
     "configure-instantly-bypass-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configureBypassCronJob.ts",
     "configure-instantly-pipeline-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configurePipelineCronJob.ts",
     "configure-booking-cron": "tsx --env-file=.env ./scripts/crm/configureBookingCronJob.ts",
+    "audit-crons": "tsx --env-file=.env ./scripts/auditCronJobs.ts",
     "streamlit-scraper": "cd app/streamlit_scraper && python main.py ui",
     "streamlit-clean": "cd app/streamlit_clean && streamlit run app.py"
   },

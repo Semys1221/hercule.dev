@@ -1,6 +1,6 @@
 # CGV Hercule — Version onboarding (checkbox)
 
-> **Version CGV :** 2026-09-04  
+> **Version CGV :** 2026-09-18  
 > **Document complet :** [cvg_master.md](./cvg_master.md)
 
 Document court pour le formulaire d'onboarding agence. Le texte de la checkbox doit pointer vers la version datée des CGV complètes (URL publique future ou lien interne).
@@ -28,6 +28,8 @@ Document court pour le formulaire d'onboarding agence. Le texte de la checkbox d
 9. **Résiliation** — Récurrent **résiliable à tout moment** avec **préavis de 30 jours** · Pas de pénalité de résiliation.
 
 10. **Données** — Traitement conforme **RGPD** · Politique de confidentialité : `[URL À CRÉER]`.
+
+11. **Planification anticipée** — Les demandes visibles sur hercule.dev = accord dirigeant + **mandat de délégation** pour une date cible (ex. novembre). Après fiche agence complétée, proposition par email aux dirigeants éligibles ; ~**6 jours ouvrés** pour le premier RDV en agenda. Détail : CGV §4.1–§4.2.
 
 ---
 
