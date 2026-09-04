@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Literal
 
+from config import is_valid_webhook_target_url, webhook_url_error
 from supabase_repo import (
     get_config,
     list_templates,
@@ -45,8 +46,72 @@ def find_campaign_webhook(
             continue
         campaign = hook.get("campaign") or hook.get("campaign_id")
         if not campaign or str(campaign) == campaign_id:
+            status = hook.get("status")
+            if status is not None and status != 1:
+                continue
             return hook
     return None
+
+
+def explain_webhook_miss(
+    webhooks: list[dict[str, Any]],
+    *,
+    campaign_id: str,
+    target_url: str,
+) -> str | None:
+    if find_campaign_webhook(
+        webhooks, campaign_id=campaign_id, target_url=target_url
+    ):
+        return None
+
+    target = normalize_webhook_url(target_url)
+    interested = [
+        hook
+        for hook in webhooks
+        if str(hook.get("event_type") or "") == "lead_interested"
+    ]
+    if not interested:
+        return "Aucun webhook Instantly de type `lead_interested` enregistré."
+
+    same_url = [
+        hook
+        for hook in interested
+        if normalize_webhook_url(str(hook.get("target_hook_url") or "")) == target
+    ]
+    if not same_url:
+        other_urls = sorted(
+            {
+                normalize_webhook_url(str(hook.get("target_hook_url") or ""))
+                for hook in interested
+                if hook.get("target_hook_url")
+            }
+        )
+        urls = ", ".join(other_urls) if other_urls else "(aucune URL)"
+        return (
+            f"Aucun webhook `lead_interested` sur `{target}`. "
+            f"Webhooks existants : {urls}."
+        )
+
+    for hook in same_url:
+        hook_campaign = hook.get("campaign") or hook.get("campaign_id")
+        if hook_campaign and str(hook_campaign) == campaign_id:
+            status = hook.get("status")
+            if status is not None and status != 1:
+                hook_id = hook.get("id") or "?"
+                return (
+                    f"Webhook trouvé (`{hook_id}`) mais status={status} (inactif)."
+                )
+
+    scoped_campaigns = sorted(
+        {
+            str(hook.get("campaign") or hook.get("campaign_id") or "global")
+            for hook in same_url
+        }
+    )
+    return (
+        f"Webhook `lead_interested` sur la bonne URL mais scopé à d'autres campagnes : "
+        f"{', '.join(scoped_campaigns)}."
+    )
 
 
 def copy_is_complete(templates: list[dict[str, Any]]) -> bool:
@@ -88,6 +153,12 @@ def initialize_campaign(
     target_url: str,
     secret: str,
 ) -> dict[str, Any]:
+    if not is_valid_webhook_target_url(target_url):
+        raise ValueError(
+            webhook_url_error()
+            or "URL webhook invalide — utilisez la prod `https://www.hercule.dev`."
+        )
+
     existing = get_config(campaign_id)
     now = datetime.now(timezone.utc).isoformat()
     row: dict[str, Any] = {

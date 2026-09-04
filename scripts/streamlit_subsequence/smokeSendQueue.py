@@ -26,11 +26,19 @@ from send_queue import (  # noqa: E402
     leads_for_step,
     render_template_html,
     resolve_thread,
+    template_requires_reservation_link,
 )
 from send_window import (  # noqa: E402
     format_paris_slot,
     is_within_send_window,
     next_send_slot,
+)
+
+from onboarding import (  # noqa: E402
+    derive_onboarding_status,
+    explain_webhook_miss,
+    find_campaign_webhook,
+    initialize_campaign,
 )
 
 from unibox_classify import (  # noqa: E402
@@ -68,6 +76,11 @@ def test_dry_run_bulk_dispatch() -> None:
     with (
         patch("send_queue.get_api_key", return_value="fake-api-key"),
         patch("send_queue.has_sent_event", return_value=False),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch(
+            "send_queue._load_template",
+            return_value={"subject": "", "body_html": "hello {{first_name}}"},
+        ),
         patch("send_queue.InstantlyClient") as mock_client_cls,
     ):
         mock_client = MagicMock()
@@ -93,6 +106,7 @@ def test_fetch_defaults_missing_crm_to_step_0() -> None:
     with (
         patch("send_queue.get_api_key", return_value="fake-api-key"),
         patch("send_queue.list_pipeline_for_campaign", return_value=[]),
+        patch("send_queue.campaign_requires_reservation_link", return_value=False),
         patch("send_queue.upsert_pipeline_step") as upsert,
         patch("send_queue.get_last_send_at", return_value=None),
         patch("send_queue.list_sent_flows", return_value=[]),
@@ -124,6 +138,7 @@ def test_fetch_reply_moves_step_1_to_replies() -> None:
                 }
             ],
         ),
+        patch("send_queue.campaign_requires_reservation_link", return_value=False),
         patch("send_queue.upsert_pipeline_step") as upsert,
         patch("send_queue.get_last_send_at", return_value="2026-01-01T00:00:00Z"),
         patch("send_queue.list_sent_flows", return_value=["interested_email1"]),
@@ -161,6 +176,7 @@ def test_fetch_reply_moves_step_3_to_replies() -> None:
                 }
             ],
         ),
+        patch("send_queue.campaign_requires_reservation_link", return_value=False),
         patch("send_queue.upsert_pipeline_step") as upsert,
         patch("send_queue.get_last_send_at", return_value="2026-01-01T00:00:00Z"),
         patch("send_queue.list_sent_flows", return_value=["interested_email3"]),
@@ -184,6 +200,14 @@ def test_missing_link_blocks_send() -> None:
 
     with (
         patch("send_queue.has_sent_event", return_value=False),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch(
+            "send_queue._load_template",
+            return_value={
+                "subject": "",
+                "body_html": "<p>Link: {{reservation_agence_link}}</p>",
+            },
+        ),
         patch("send_queue.record_event") as record,
     ):
         result = dispatch_one(
@@ -200,12 +224,72 @@ def test_missing_link_blocks_send() -> None:
     print("OK missing reservation_agence_link blocks send")
 
 
+def test_missing_link_allowed_when_unused() -> None:
+    mock_client = MagicMock()
+
+    with (
+        patch("send_queue.has_sent_event", return_value=False),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch("send_queue.is_within_send_window", return_value=True),
+        patch(
+            "send_queue._load_template",
+            return_value={"subject": "", "body_html": "<p>Hello {{first_name}}</p>"},
+        ),
+        patch(
+            "send_queue.resolve_thread",
+            return_value={
+                "reply_to_uuid": "uuid-1",
+                "eaccount": "sender@example.com",
+                "subject": "Thread",
+            },
+        ),
+        patch("send_queue.record_event"),
+        patch("send_queue.upsert_pipeline_step"),
+    ):
+        result = dispatch_one(
+            mock_client,
+            flow="interested_email1",
+            campaign_id=FAKE_CAMPAIGN_ID,
+            lead=FAKE_LEAD_NO_LINK,
+            dry_run=False,
+        )
+
+    assert result.get("ok") is True
+    mock_client.reply_to_email.assert_called_once()
+    print("OK missing reservation_agence_link allowed when unused in template")
+
+
+def test_empty_template_blocks_send() -> None:
+    mock_client = MagicMock()
+
+    with (
+        patch("send_queue.has_sent_event", return_value=False),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch("send_queue._load_template", return_value={"subject": "", "body_html": "  "}),
+        patch("send_queue.record_event") as record,
+    ):
+        result = dispatch_one(
+            mock_client,
+            flow="interested_email1",
+            campaign_id=FAKE_CAMPAIGN_ID,
+            lead=FAKE_LEAD_WITH_LINK,
+            dry_run=False,
+        )
+
+    assert result.get("error") == "template_empty"
+    mock_client.reply_to_email.assert_not_called()
+    record.assert_called_once()
+    print("OK empty template blocks send")
+
+
 def test_send_e1_advances_to_step_1() -> None:
     mock_client = MagicMock()
 
     with (
         patch("send_queue.has_sent_event", return_value=False),
         patch("send_queue._load_template", return_value={"subject": "", "body_html": "hi"}),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch("send_queue.is_within_send_window", return_value=True),
         patch(
             "send_queue.resolve_thread",
             return_value={
@@ -240,6 +324,8 @@ def test_final_email_sets_not_interested_and_step_3() -> None:
     with (
         patch("send_queue.has_sent_event", return_value=False),
         patch("send_queue._load_template", return_value={"subject": "", "body_html": "bye"}),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch("send_queue.is_within_send_window", return_value=True),
         patch(
             "send_queue.resolve_thread",
             return_value={
@@ -317,6 +403,7 @@ def test_fetch_on_progress_callback() -> None:
     with (
         patch("send_queue.get_api_key", return_value="fake-api-key"),
         patch("send_queue.list_pipeline_for_campaign", return_value=[]),
+        patch("send_queue.campaign_requires_reservation_link", return_value=False),
         patch("send_queue.upsert_pipeline_step"),
         patch("send_queue.get_last_send_at", return_value=None),
         patch("send_queue.list_sent_flows", return_value=[]),
@@ -426,6 +513,8 @@ def test_dispatch_one_passes_email_account_fallback() -> None:
             "send_queue._load_template",
             return_value={"subject": "", "body_html": "Cordialement,<br/>Béatrice Meyer"},
         ),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch("send_queue.is_within_send_window", return_value=True),
         patch("send_queue.resolve_thread") as resolve,
         patch("send_queue.record_event"),
         patch("send_queue.upsert_pipeline_step"),
@@ -607,6 +696,10 @@ def test_dispatch_one_schedules_outside_window() -> None:
         patch("send_queue.has_pending_job", return_value=False),
         patch("send_queue.is_within_send_window", return_value=False),
         patch("send_queue.next_send_slot", return_value=_paris_utc(2026, 9, 7, 8)),
+        patch(
+            "send_queue._load_template",
+            return_value={"subject": "", "body_html": "hello"},
+        ),
         patch("send_queue.insert_bypass_job") as insert_job,
     ):
         result = dispatch_one(
@@ -696,6 +789,159 @@ def test_classify_thread_e1_variant() -> None:
     print("OK classify thread E1 variant")
 
 
+def test_onboarding_status_and_webhook_match() -> None:
+    assert derive_onboarding_status(
+        has_config=False, has_webhook=False, copy_complete=False
+    ) == "not_initialized"
+    assert derive_onboarding_status(
+        has_config=True, has_webhook=True, copy_complete=False
+    ) == "copy_incomplete"
+    assert derive_onboarding_status(
+        has_config=True, has_webhook=False, copy_complete=True
+    ) == "webhook_incomplete"
+    assert derive_onboarding_status(
+        has_config=True, has_webhook=True, copy_complete=True
+    ) == "ready"
+
+    target = "https://www.hercule.dev/api/webhooks/instantly"
+    webhooks = [
+        {
+            "id": "wh-1",
+            "event_type": "lead_interested",
+            "target_hook_url": target,
+            "campaign": FAKE_CAMPAIGN_ID,
+        },
+        {
+            "id": "wh-other",
+            "event_type": "lead_interested",
+            "target_hook_url": target,
+            "campaign": "other-campaign",
+        },
+    ]
+    match = find_campaign_webhook(
+        webhooks, campaign_id=FAKE_CAMPAIGN_ID, target_url=target + "/"
+    )
+    assert match is not None
+    assert match["id"] == "wh-1"
+    assert (
+        find_campaign_webhook(
+            webhooks, campaign_id="unknown", target_url=target
+        )
+        is None
+    )
+    assert template_requires_reservation_link("<p>{{reservation_agence_link}}</p>")
+    assert not template_requires_reservation_link("<p>Hello {{first_name}}</p>")
+    print("OK onboarding status and webhook match")
+
+
+def test_explain_webhook_miss() -> None:
+    target = "https://www.hercule.dev/api/webhooks/instantly"
+    assert (
+        explain_webhook_miss([], campaign_id=FAKE_CAMPAIGN_ID, target_url=target)
+        == "Aucun webhook Instantly de type `lead_interested` enregistré."
+    )
+
+    url_mismatch = explain_webhook_miss(
+        [
+            {
+                "id": "wh-old",
+                "event_type": "lead_interested",
+                "target_hook_url": "https://henri-fridzi.homes/api/webhooks/instantly",
+            }
+        ],
+        campaign_id=FAKE_CAMPAIGN_ID,
+        target_url=target,
+    )
+    assert url_mismatch is not None
+    assert "henri-fridzi.homes" in url_mismatch
+
+    campaign_mismatch = explain_webhook_miss(
+        [
+            {
+                "id": "wh-other",
+                "event_type": "lead_interested",
+                "target_hook_url": target,
+                "campaign": "other-campaign",
+            }
+        ],
+        campaign_id=FAKE_CAMPAIGN_ID,
+        target_url=target,
+    )
+    assert campaign_mismatch is not None
+    assert "other-campaign" in campaign_mismatch
+
+    inactive = explain_webhook_miss(
+        [
+            {
+                "id": "wh-inactive",
+                "event_type": "lead_interested",
+                "target_hook_url": target,
+                "campaign": FAKE_CAMPAIGN_ID,
+                "status": 0,
+            }
+        ],
+        campaign_id=FAKE_CAMPAIGN_ID,
+        target_url=target,
+    )
+    assert inactive is not None
+    assert "inactif" in inactive
+
+    assert (
+        explain_webhook_miss(
+            [
+                {
+                    "id": "wh-1",
+                    "event_type": "lead_interested",
+                    "target_hook_url": target,
+                    "campaign": FAKE_CAMPAIGN_ID,
+                    "status": 1,
+                }
+            ],
+            campaign_id=FAKE_CAMPAIGN_ID,
+            target_url=target,
+        )
+        is None
+    )
+    print("OK explain_webhook_miss")
+
+
+def test_initialize_campaign_rejects_bad_url() -> None:
+    mock_client = MagicMock()
+    try:
+        initialize_campaign(
+            mock_client,
+            campaign_id=FAKE_CAMPAIGN_ID,
+            campaign_name="Test",
+            target_url="https://henri-fridzi.homes/api/webhooks/instantly",
+            secret="secret",
+        )
+    except ValueError as exc:
+        assert "henri-fridzi" in str(exc).lower() or "hercule.dev" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for invalid webhook URL")
+    mock_client.list_webhooks.assert_not_called()
+    print("OK initialize_campaign rejects bad URL")
+
+
+def test_list_webhooks_pagination() -> None:
+    from shared.instantly_client import InstantlyClient
+
+    client = InstantlyClient("fake-api-key")
+    pages = [
+        {"items": [{"id": f"wh-{index}"} for index in range(100)]},
+        {"items": [{"id": "wh-final"}]},
+    ]
+
+    with patch.object(client, "_fetch", side_effect=pages) as mock_fetch:
+        hooks = client.list_webhooks()
+
+    assert len(hooks) == 101
+    assert hooks[-1]["id"] == "wh-final"
+    assert mock_fetch.call_count == 2
+    assert "starting_after=wh-99" in mock_fetch.call_args_list[1].args[0]
+    print("OK list_webhooks pagination")
+
+
 def main() -> None:
     tests = [
         test_dry_run_bulk_dispatch,
@@ -706,6 +952,8 @@ def main() -> None:
         test_fetch_reply_moves_step_1_to_replies,
         test_fetch_reply_moves_step_3_to_replies,
         test_missing_link_blocks_send,
+        test_missing_link_allowed_when_unused,
+        test_empty_template_blocks_send,
         test_send_e1_advances_to_step_1,
         test_final_email_sets_not_interested_and_step_3,
         test_idempotency_skip,
@@ -722,6 +970,10 @@ def main() -> None:
         test_verify_can_auto_apply_gate,
         test_apply_load_classified_fixture,
         test_classify_thread_e1_variant,
+        test_onboarding_status_and_webhook_match,
+        test_explain_webhook_miss,
+        test_initialize_campaign_rejects_bad_url,
+        test_list_webhooks_pagination,
     ]
     for test in tests:
         test()

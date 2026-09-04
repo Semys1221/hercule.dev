@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       ok: true,
       skipped: "webhook_paused",
       message:
-        "Webhook auto-send is paused. Enable it from Streamlit Setup → Webhook registration.",
+        "Webhook auto-send is paused globally. Re-enable instantly_bypass_settings, then the per-campaign toggle in Streamlit Setup.",
     });
   }
 

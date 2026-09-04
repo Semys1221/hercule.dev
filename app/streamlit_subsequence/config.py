@@ -15,7 +15,11 @@ _LOCAL_ENV = _APP_DIR / ".env"
 
 for env_path in (_ROOT_ENV, _CRM_ENV, _LOCAL_ENV):
     if env_path.is_file():
-        load_dotenv(env_path, override=env_path in (_CRM_ENV, _LOCAL_ENV))
+        load_dotenv(env_path, override=True)
+
+PRODUCTION_APP_URL = "https://www.hercule.dev"
+WEBHOOK_PATH = "/api/webhooks/instantly"
+PRODUCTION_WEBHOOK_URL = f"{PRODUCTION_APP_URL}{WEBHOOK_PATH}"
 
 
 def env(name: str, default: str = "") -> str:
@@ -32,9 +36,42 @@ def require_instantly_api_key() -> str:
     return key
 
 
+def app_base_url() -> str:
+    return env("NEXT_PUBLIC_APP_URL", PRODUCTION_APP_URL).rstrip("/")
+
+
+def normalize_webhook_url(url: str) -> str:
+    return url.strip().rstrip("/")
+
+
+def is_valid_webhook_target_url(target_url: str) -> bool:
+    return normalize_webhook_url(target_url) == normalize_webhook_url(
+        PRODUCTION_WEBHOOK_URL
+    )
+
+
 def webhook_public_url() -> str:
-    base = env("NEXT_PUBLIC_APP_URL", "https://www.hercule.dev").rstrip("/")
-    return f"{base}/api/webhooks/instantly"
+    return f"{app_base_url()}{WEBHOOK_PATH}"
+
+
+def webhook_url_error() -> str | None:
+    base = app_base_url()
+    if is_valid_webhook_target_url(webhook_public_url()):
+        return None
+    if "henri-fridzi.homes" in base:
+        return (
+            "NEXT_PUBLIC_APP_URL pointe vers henri-fridzi.homes (incorrect). "
+            f"Utilisez `{PRODUCTION_APP_URL}`."
+        )
+    if "localhost" in base:
+        return (
+            "NEXT_PUBLIC_APP_URL pointe vers localhost. "
+            f"Utilisez `{PRODUCTION_APP_URL}`."
+        )
+    return (
+        f"NEXT_PUBLIC_APP_URL (`{base}`) ne correspond pas à la prod attendue "
+        f"(`{PRODUCTION_APP_URL}`)."
+    )
 
 
 def webhook_secret() -> str:

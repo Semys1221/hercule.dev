@@ -1,6 +1,15 @@
 # Streamlit Subsequence
 
-Operator dashboard for Instantly Interested follow-ups — CRM steps + Unibox reply sends.
+Operator dashboard for Instantly Interested follow-ups — CRM steps + Unibox reply sends. Multi-campaign: pick an Instantly campaign, **Initialiser** if needed, fill E1–E3, then use the same CRM.
+
+## Onboarding
+
+1. Select an Instantly campaign (top of the app).
+2. If status is **Non initialisé**, click **Initialiser** — this upserts `instantly_bypass_config`, seeds empty E1/E2/E3 templates, and registers a `lead_interested` webhook scoped to that campaign.
+3. Fill Email 1 / 2 / 3 (Setup or Templates) and save.
+4. **Envois** is the same CRM as before. Send is disabled until Email 1 has a body.
+
+Copy and webhook pause are **per campaign**. `instantly_bypass_settings` remains a global emergency kill-switch.
 
 ## CRM pipeline
 
@@ -25,23 +34,25 @@ pnpm streamlit-subsequence
 pnpm smoke-streamlit-subsequence
 ```
 
-1. Apply migrations through `20260912120000_pipeline_crm.sql`
-2. Configure campaign in **Setup**
+1. Apply migrations through `20260914120000_campaign_scoped_templates.sql`
+2. Select campaign → **Initialiser** if needed → fill sequences
 3. **Envois** → Fetch Interested + sync CRM → pick étape → send or move
 
 ## Webhook (Interested Email 1 only)
 
 - URL: `{NEXT_PUBLIC_APP_URL}/api/webhooks/instantly`
-- Places the lead in **étape 0**, sends E1 if auto-send is on, then **étape 1**
-- **Pause / activate** via **Setup → Webhook registration** (Supabase `instantly_bypass_settings`)
+- Skips campaigns that are not initialized or whose per-campaign auto-send is paused
+- Places the lead in **étape 0**, sends that campaign’s E1 if auto-send is on, then **étape 1**
+- **Pause / activate** per campaign via **Setup**
 
 ## Send window (manual sends only)
 
 - **Mon–Fri, 8:00–17:00 Europe/Paris** — outside this window, manual sends from **Envois** are queued in `instantly_bypass_jobs` for the next slot (e.g. click at 06:00 Paris → scheduled for 08:00 same day; Friday 18:00 → Monday 08:00).
 - Webhook E1 auto-send remains **immediate 24/7**.
-- **cron-job.org only** (not Vercel cron): `GET https://www.hercule.dev/api/cron/instantly-bypass-jobs` every 10 minutes with header `Authorization: Bearer $CRON_SECRET` (same secret as Vercel Production and booking-emails cron).
-- Register via dashboard or: `pnpm configure-instantly-bypass-cron` (needs `CRON_JOB_ORG_API_KEY` in `.env`).
+- Cron (same auth as booking emails): `GET /api/cron/instantly-bypass-jobs` every 5–15 minutes with `Authorization: Bearer $CRON_SECRET`.
 
 ## Template variables
 
 `{{reservation_agence_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`
+
+`{{reservation_agence_link}}` is required on send **only if** the template HTML contains that placeholder.

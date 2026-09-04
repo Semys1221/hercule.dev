@@ -1,9 +1,9 @@
-"""Calendly API client for role recovery bookings."""
+"""Calendly API client for booking listings and role recovery."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -11,6 +11,9 @@ from config import _env
 from supabase_repo import find_by_email, get_client, normalize_email
 
 CALENDLY_API = "https://api.calendly.com"
+
+SequenceType = Literal["main", "role_recovery"]
+SequenceStatus = Literal["none", "started", "confirmed", "cancelled"]
 
 
 def require_calendly_token() -> str:
@@ -75,15 +78,84 @@ def _first_name(full_name: str) -> str | None:
     return trimmed.split()[0]
 
 
-def _is_tracked_lead(email: str) -> bool:
-    lookup = find_by_email(get_client(), email)
-    if not lookup:
-        return False
-    statut = str(lookup[1].get("statut") or "")
+def _is_booked_statut(statut: str | None) -> bool:
     return statut in {"MEETING_BOOKED", "CONFIRMED", "BOOKED"}
 
 
-def list_untracked_bookings(*, days_ahead: int = 30) -> list[dict[str, Any]]:
+def _detect_tracked(*, utm_content: str, lead: dict[str, Any] | None) -> bool:
+    return bool(utm_content) and lead is not None
+
+
+def _detect_sequence_type(
+    *,
+    utm_content: str,
+    lead: dict[str, Any] | None,
+) -> SequenceType:
+    slug = str(lead.get("slug") or "").strip() if lead else ""
+    statut = str(lead.get("statut") or "") if lead else ""
+    if utm_content and slug:
+        return "main"
+    if _is_booked_statut(statut) and slug:
+        return "main"
+    return "role_recovery"
+
+
+def _detect_sequence_status(lead: dict[str, Any] | None) -> SequenceStatus:
+    if not lead:
+        return "none"
+    statut = str(lead.get("statut") or "")
+    if statut == "CANCELLED":
+        return "cancelled"
+    if statut == "CONFIRMED":
+        return "confirmed"
+    return "none"
+
+
+def _build_booking_row(
+    *,
+    invitee: dict[str, Any],
+    event_uri: str,
+    event_start: str,
+) -> dict[str, Any]:
+    email = normalize_email(str(invitee.get("email") or ""))
+    tracking = invitee.get("tracking") or {}
+    utm_content = str(tracking.get("utm_content") or "").strip()
+    questions = invitee.get("questions_and_answers") or []
+    if not isinstance(questions, list):
+        questions = []
+    lookup = find_by_email(get_client(), email)
+    lead = lookup[1] if lookup else None
+    tracked = _detect_tracked(utm_content=utm_content, lead=lead)
+    sequence_type = _detect_sequence_type(utm_content=utm_content, lead=lead)
+    sequence_status = _detect_sequence_status(lead)
+
+    return {
+        "email": email,
+        "name": str(invitee.get("name") or "").strip(),
+        "first_name": _first_name(str(invitee.get("name") or "")),
+        "company": _company_from_questions(questions),
+        "start_time": event_start,
+        "invitee_uri": str(invitee.get("uri") or ""),
+        "event_uri": event_uri,
+        "utm_content": utm_content,
+        "questions": {
+            str(item.get("question") or ""): str(item.get("answer") or "")
+            for item in questions
+            if isinstance(item, dict)
+        },
+        "lead_id": lead.get("id") if lead else None,
+        "lead_category": lookup[0] if lookup else None,
+        "lead_link": lead.get("slug") if lead else None,
+        "lead_statut": lead.get("statut") if lead else None,
+        "provisioned": bool(lead and lead.get("slug")),
+        "tracked": tracked,
+        "sequence_type": sequence_type,
+        "sequence_status": sequence_status,
+    }
+
+
+def list_all_bookings(*, days_ahead: int = 30) -> list[dict[str, Any]]:
+    """All active Calendly invitees in the window, with tracking metadata."""
     user_uri = get_current_user_uri()
     now = datetime.now(UTC)
     max_time = now + timedelta(days=days_ahead)
@@ -112,39 +184,23 @@ def list_untracked_bookings(*, days_ahead: int = 30) -> list[dict[str, Any]]:
             email = normalize_email(str(invitee.get("email") or ""))
             if not email:
                 continue
-            tracking = invitee.get("tracking") or {}
-            utm_content = str(tracking.get("utm_content") or "").strip()
-            if utm_content and _is_tracked_lead(email):
-                continue
-            if not utm_content and _is_tracked_lead(email):
-                continue
-
-            questions = invitee.get("questions_and_answers") or []
-            if not isinstance(questions, list):
-                questions = []
-            lookup = find_by_email(get_client(), email)
-            lead = lookup[1] if lookup else None
             rows.append(
-                {
-                    "email": email,
-                    "name": str(invitee.get("name") or "").strip(),
-                    "first_name": _first_name(str(invitee.get("name") or "")),
-                    "company": _company_from_questions(questions),
-                    "start_time": event_start,
-                    "invitee_uri": str(invitee.get("uri") or ""),
-                    "event_uri": event_uri,
-                    "utm_content": utm_content,
-                    "questions": {
-                        str(item.get("question") or ""): str(item.get("answer") or "")
-                        for item in questions
-                        if isinstance(item, dict)
-                    },
-                    "lead_id": lead.get("id") if lead else None,
-                    "lead_category": lookup[0] if lookup else None,
-                    "lead_link": lead.get("slug") if lead else None,
-                    "lead_statut": lead.get("statut") if lead else None,
-                    "provisioned": bool(lead and lead.get("slug")),
-                }
+                _build_booking_row(
+                    invitee=invitee,
+                    event_uri=event_uri,
+                    event_start=event_start,
+                )
             )
     rows.sort(key=lambda row: str(row.get("start_time") or ""))
+    return rows
+
+
+def list_untracked_bookings(*, days_ahead: int = 30) -> list[dict[str, Any]]:
+    """Bookings not yet booked in Supabase — legacy filter for CRM Sequence tab."""
+    rows: list[dict[str, Any]] = []
+    for row in list_all_bookings(days_ahead=days_ahead):
+        statut = str(row.get("lead_statut") or "")
+        if statut in {"MEETING_BOOKED", "CONFIRMED", "BOOKED"}:
+            continue
+        rows.append(row)
     return rows

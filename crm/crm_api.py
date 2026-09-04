@@ -56,6 +56,23 @@ def put_json(path: str, payload: dict[str, Any]) -> dict[str, Any]:
     return _parse_response(path, response)
 
 
+def start_booking_sequence(
+    *,
+    lead_id: str,
+    category: str,
+    mode: str = "now",
+    scheduled_at: str | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "lead_id": lead_id,
+        "category": category,
+        "mode": mode,
+    }
+    if scheduled_at:
+        payload["scheduled_at"] = scheduled_at
+    return post_json("/api/booking-communication/trigger", payload)
+
+
 def start_role_recovery_sequence(
     *,
     lead_id: str | None = None,

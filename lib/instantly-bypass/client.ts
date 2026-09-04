@@ -138,12 +138,30 @@ export type InstantlyWebhookRecord = {
 };
 
 export async function listWebhooks(apiKey: string): Promise<InstantlyWebhookRecord[]> {
-  const page = await instantlyFetch<{ items?: InstantlyWebhookRecord[] }>(
-    apiKey,
-    "/webhooks?limit=100",
-    { method: "GET" },
-  );
-  return page.items ?? [];
+  const items: InstantlyWebhookRecord[] = [];
+  let startingAfter: string | null = null;
+  const pageSize = 100;
+
+  while (true) {
+    const params = new URLSearchParams({ limit: String(pageSize) });
+    if (startingAfter) params.set("starting_after", startingAfter);
+
+    const page = await instantlyFetch<{
+      items?: InstantlyWebhookRecord[];
+      next_starting_after?: string;
+    }>(apiKey, `/webhooks?${params.toString()}`, { method: "GET" });
+
+    const pageItems = page.items ?? [];
+    items.push(...pageItems);
+
+    const next =
+      page.next_starting_after ??
+      (pageItems.length > 0 ? (pageItems[pageItems.length - 1]?.id ?? null) : null);
+    if (!next || pageItems.length < pageSize) break;
+    startingAfter = next;
+  }
+
+  return items;
 }
 
 export type CreateWebhookParams = {

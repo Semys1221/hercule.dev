@@ -8,6 +8,8 @@ cd crm && pip install -r requirements.txt && streamlit run admin_tool.py
 
 Needs the Next.js app for status/sequence APIs (`CRM_BACKEND_URL` or `NEXT_PUBLIC_APP_URL`, default `http://localhost:3000`).
 
+For Calendly bookings + Resend sequences only, use the dedicated tool: `pnpm streamlit-booking-resend` ([app/streamlit_booking_resend](../app/streamlit_booking_resend/README.md)).
+
 - **Leads** — list + Actualiser; change statut. MEETING_BOOKED asks whether to trigger Resend (now / schedule / skip).
 - **Ajouter** — manual form. Duplicate email is rejected.
 - **Unibox Instantly** — import replies (skip duplicates).

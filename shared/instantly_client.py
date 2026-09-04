@@ -501,8 +501,9 @@ class InstantlyClient:
         return self._fetch("/leads/update-interest-status", method="POST", body=body)
 
     def list_webhooks(self) -> list[dict[str, Any]]:
-        page = self._fetch("/webhooks?limit=100", method="GET")
-        return page.get("items") or [] if isinstance(page, dict) else []
+        return self._paginate_items(
+            lambda starting_after: self._build_collection_path("/webhooks", starting_after)
+        )
 
     def create_webhook(
         self,

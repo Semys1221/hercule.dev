@@ -123,7 +123,7 @@ def export_threads(
     threads_dir.mkdir(parents=True, exist_ok=True)
     _empty_classified_files(classified_dir)
 
-    templates = list_templates()
+    templates = list_templates(campaign_id)
     template_ref = {
         row["template_key"]: {
             "subject": row.get("subject") or "",

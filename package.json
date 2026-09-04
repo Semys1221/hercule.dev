@@ -23,6 +23,8 @@
     "crm": "streamlit run crm/admin_tool.py",
     "streamlit-subsequence": "cd app/streamlit_subsequence && streamlit run streamlit_app.py",
     "streamlit-demands": "cd app/streamlit_demands && streamlit run streamlit_app.py",
+    "streamlit-booking-resend": "cd app/streamlit_booking_resend && streamlit run streamlit_app.py",
+    "smoke-streamlit-booking-resend-schedule": "python3 ./scripts/streamlit_booking_resend/smokeSchedule.py",
     "smoke-streamlit-subsequence": "python3 ./scripts/streamlit_subsequence/smokeSendQueue.py",
     "bootstrap-streamlit-subsequence-pipeline": "python3 ./scripts/streamlit_subsequence/bootstrapPipelineFromUnibox.py",
     "verify-streamlit-subsequence-pipeline": "python3 ./scripts/streamlit_subsequence/verifyBootstrapPipeline.py",

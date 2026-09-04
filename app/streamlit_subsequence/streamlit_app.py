@@ -17,14 +17,23 @@ if str(_APP_DIR) not in sys.path:
 
 from config import (
     env,
+    is_valid_webhook_target_url,
     require_instantly_api_key,
     webhook_auto_send_enabled,
     webhook_public_url,
     webhook_secret,
+    webhook_url_error,
+)
+from onboarding import (
+    copy_is_complete,
+    derive_onboarding_status,
+    e1_copy_is_ready,
+    explain_webhook_miss,
+    find_campaign_webhook,
+    initialize_campaign,
 )
 from send_queue import (
     DEFAULT_FLOW_BY_STEP,
-    NO_SHOW_STATUS,
     PIPELINE_STEPS,
     SENDABLE_FLOWS,
     Flow,
@@ -45,20 +54,15 @@ from unibox_thread import (
 from shared.instantly_client import InstantlyClient, format_resource_label, list_all_campaigns
 from supabase_repo import (
     fetch_analytics,
-    list_configs,
+    get_config,
     list_templates,
-    save_config,
     save_template,
-    set_webhook_auto_send_enabled,
+    set_campaign_webhook_auto_send_enabled,
 )
 
 st.set_page_config(page_title="Streamlit Subsequence", layout="wide")
 st.title("Streamlit Subsequence")
 st.caption("CRM étapes 0–3 → Unibox reply → envois contrôlés par l’opérateur.")
-
-TAB_WORKFLOW, TAB_SETUP, TAB_TEMPLATES, TAB_ENVOIS, TAB_ANALYTICS = st.tabs(
-    ["Workflow", "Setup", "Templates", "Envois", "Analytics"]
-)
 
 FLOW_LABELS: dict[Flow, str] = {
     "interested_email1": "Email 1 — Précisions + audit (webhook auto ou manuel)",
@@ -80,12 +84,12 @@ TEMPLATE_KEYS = (
     "interested_email3",
 )
 
-
-def _config_labels(configs: list[dict]) -> dict[str, str]:
-    return {
-        f"{c.get('campaign_name', c['campaign_id'])} ({c['campaign_id'][:8]}…)": c["campaign_id"]
-        for c in configs
-    }
+STATUS_LABELS = {
+    "not_initialized": "Non initialisé",
+    "copy_incomplete": "Copy incomplet",
+    "webhook_incomplete": "Webhook manquant",
+    "ready": "Prêt",
+}
 
 
 def _queue_to_dataframe(queue: list) -> pd.DataFrame:
@@ -104,6 +108,33 @@ def _queue_to_dataframe(queue: list) -> pd.DataFrame:
             }
             for row in queue
         ]
+    )
+
+
+def _render_sequence_form(campaign_id: str, templates: list[dict], *, key_prefix: str) -> None:
+    template_map = {t["template_key"]: t for t in templates}
+    for key in TEMPLATE_KEYS:
+        row = template_map.get(key, {"subject": "", "body_html": ""})
+        st.markdown(f"**{FLOW_LABELS.get(key, key)}**")
+        sub_key = f"{key_prefix}_sub_{campaign_id}_{key}"
+        body_key = f"{key_prefix}_body_{campaign_id}_{key}"
+        if sub_key not in st.session_state:
+            st.session_state[sub_key] = row.get("subject", "")
+        if body_key not in st.session_state:
+            st.session_state[body_key] = row.get("body_html", "")
+        subject = st.text_input(f"Subject ({key})", key=sub_key)
+        body = st.text_area(f"Body HTML ({key})", height=160, key=body_key)
+        if st.button(f"Save {key}", key=f"{key_prefix}_save_{campaign_id}_{key}"):
+            save_template(campaign_id, key, subject, body)
+            for prefix in ("setup", "templates"):
+                st.session_state.pop(f"{prefix}_sub_{campaign_id}_{key}", None)
+                st.session_state.pop(f"{prefix}_body_{campaign_id}_{key}", None)
+            st.success(f"Saved {key}.")
+            st.rerun()
+    st.caption(
+        "Variables: {{reservation_agence_link}}, {{first_name}}, "
+        "{{last_name}}, {{company_name}}. Subject unused — thread subject is kept. "
+        "`reservation_agence_link` n’est exigé à l’envoi que s’il apparaît dans le HTML."
     )
 
 
@@ -162,7 +193,6 @@ def _render_conversation_panel(
         return
 
     interest_status = lead_row.raw.get("lt_interest_status")
-    is_no_show = interest_status == NO_SHOW_STATUS
     derived_step, detected_flows = derive_step_from_thread(
         messages,
         interest_status=int(interest_status) if interest_status is not None else None,
@@ -184,19 +214,7 @@ def _render_conversation_panel(
     st.markdown(render_conversation_html(messages), unsafe_allow_html=True)
 
 
-def _render_pipeline_panel(configs: list[dict]) -> None:
-    if not configs:
-        st.warning("Save at least one campaign config in Setup.")
-        return
-
-    labels = _config_labels(configs)
-    chosen_label = st.selectbox(
-        "Campaign",
-        options=list(labels.keys()),
-        key="campaign_pipeline",
-    )
-    campaign_id = labels[chosen_label]
-
+def _render_pipeline_panel(campaign_id: str, *, send_enabled: bool = True) -> None:
     window_open = is_within_send_window()
     next_slot = next_send_slot()
     next_slot_label = format_paris_slot(next_slot)
@@ -207,6 +225,9 @@ def _render_pipeline_panel(configs: list[dict]) -> None:
             "Fenêtre d'envoi : lun–ven, 8h–17h (Paris) — **Fermée**  \n"
             f"Prochain créneau : **{next_slot_label}**"
         )
+
+    if not send_enabled:
+        st.warning("Remplissez l'email 1 dans Setup ou Templates avant d'envoyer.")
 
     step = st.radio(
         "Étape CRM",
@@ -277,7 +298,7 @@ def _render_pipeline_panel(configs: list[dict]) -> None:
                 if match:
                     preview_lead = match.raw
         try:
-            html = render_template_html(flow, preview_lead)
+            html = render_template_html(flow, preview_lead, campaign_id=campaign_id)
             with st.expander(f"Aperçu — {FLOW_LABELS[flow]}", expanded=True):
                 st.markdown(html, unsafe_allow_html=True)
         except Exception as exc:
@@ -417,7 +438,12 @@ def _render_pipeline_panel(configs: list[dict]) -> None:
                 st.success(f"{selected_count} lead(s) déplacé(s) vers {STEP_LABELS[target_step]}.")
                 st.rerun()
 
-        if flow and st.button("Envoyer aux leads cochés", key=f"send_{step}"):
+        send_clicked = st.button(
+            "Envoyer aux leads cochés",
+            key=f"send_{step}",
+            disabled=not send_enabled or not flow,
+        )
+        if flow and send_clicked:
             selected_leads = [row.raw for row in queue if row.email in selected_emails]
 
             if dry_run:
@@ -486,13 +512,128 @@ def _render_pipeline_panel(configs: list[dict]) -> None:
         )
 
 
+try:
+    api_key = require_instantly_api_key()
+    instantly_client = InstantlyClient(api_key)
+    campaigns = list_all_campaigns()
+except ValueError as exc:
+    st.error(str(exc))
+    st.stop()
+
+campaign_options = {
+    format_resource_label(c.get("name"), str(c.get("id") or "")): str(c.get("id") or "")
+    for c in campaigns
+    if c.get("id")
+}
+
+if not campaign_options:
+    st.warning("No Instantly campaigns found.")
+    st.stop()
+
+default_campaign = env("INSTANTLY_BYPASS_CAMPAIGN_ID")
+default_label = next(
+    (label for label, cid in campaign_options.items() if cid == default_campaign),
+    next(iter(campaign_options.keys()), ""),
+)
+selected_label = st.selectbox(
+    "Campagne Instantly",
+    options=list(campaign_options.keys()),
+    index=list(campaign_options.keys()).index(default_label)
+    if default_label in campaign_options
+    else 0,
+    key="global_campaign",
+)
+selected_campaign_id = campaign_options[selected_label]
+selected_campaign_name = selected_label.split(" (")[0]
+selected_config = get_config(selected_campaign_id)
+templates = list_templates(selected_campaign_id)
+public_url = webhook_public_url()
+webhooks = instantly_client.list_webhooks()
+matched_webhook = find_campaign_webhook(
+    webhooks,
+    campaign_id=selected_campaign_id,
+    target_url=public_url,
+)
+onboarding_status = derive_onboarding_status(
+    has_config=selected_config is not None,
+    has_webhook=matched_webhook is not None,
+    copy_complete=copy_is_complete(templates),
+)
+webhook_miss_reason = (
+    explain_webhook_miss(
+        webhooks,
+        campaign_id=selected_campaign_id,
+        target_url=public_url,
+    )
+    if onboarding_status == "webhook_incomplete"
+    else None
+)
+url_error = webhook_url_error()
+
+status_col, action_col = st.columns([3, 1])
+with status_col:
+    if onboarding_status == "ready":
+        st.success(f"Statut : **{STATUS_LABELS[onboarding_status]}**")
+    elif onboarding_status == "copy_incomplete":
+        st.info(f"Statut : **{STATUS_LABELS[onboarding_status]}** — remplissez Email 1, 2 et 3.")
+    else:
+        st.warning(f"Statut : **{STATUS_LABELS[onboarding_status]}**")
+    if webhook_miss_reason:
+        st.caption(webhook_miss_reason)
+
+if url_error:
+    st.error(url_error)
+
+global_webhook_on = webhook_auto_send_enabled()
+if not global_webhook_on:
+    st.error(
+        "Kill-switch global webhook : **en pause** (`instantly_bypass_settings`). "
+        "Aucun E1 auto ne part, quelle que soit la campagne."
+    )
+
+with action_col:
+    can_init = (
+        onboarding_status in {"not_initialized", "webhook_incomplete"}
+        and is_valid_webhook_target_url(public_url)
+    )
+    if st.button("Initialiser", disabled=not can_init, key="init_campaign"):
+        try:
+            initialize_campaign(
+                instantly_client,
+                campaign_id=selected_campaign_id,
+                campaign_name=selected_campaign_name,
+                target_url=public_url,
+                secret=webhook_secret(),
+            )
+            st.success("Campagne initialisée (config, templates, webhook).")
+            st.rerun()
+        except Exception as exc:
+            st.error(str(exc))
+
+TAB_WORKFLOW, TAB_SETUP, TAB_TEMPLATES, TAB_ENVOIS, TAB_ANALYTICS = st.tabs(
+    ["Workflow", "Setup", "Templates", "Envois", "Analytics"]
+)
+
 with TAB_WORKFLOW:
     st.subheader("CRM pipeline")
-    if webhook_auto_send_enabled():
-        st.success("Webhook auto-send: **Actif** (réglage Supabase — voir Setup)")
-    else:
-        st.warning(
-            "Webhook auto-send: **En pause**. Activez-le dans Setup → Webhook registration."
+    campaign_webhook_on = bool(
+        selected_config and selected_config.get("webhook_auto_send_enabled", True)
+    )
+    if onboarding_status == "webhook_incomplete":
+        st.error(
+            "Webhook Instantly manquant — aucun E1 auto ne partira. "
+            "Cliquez **Initialiser** (après correction de l'URL si nécessaire)."
+        )
+    elif not global_webhook_on:
+        st.warning("Kill-switch global en pause — voir le bandeau en haut de page.")
+    elif not campaign_webhook_on:
+        st.warning("Webhook auto-send (cette campagne) : **En pause**. Activez-le dans Setup.")
+    elif onboarding_status == "ready":
+        st.success("Webhook auto-send (cette campagne) : **Actif**")
+    elif selected_config:
+        st.info(
+            "Webhook auto-send activé en config, mais la campagne n'est pas encore prête "
+            "(copy ou webhook incomplet)."
         )
     st.markdown(
         """
@@ -504,110 +645,75 @@ with TAB_WORKFLOW:
 6. Le tag Instantly **Interested** ne change qu'à l'envoi de E3. L'étape CRM est la seule source de vérité.
         """
     )
-    st.info(f"Production webhook URL: `{webhook_public_url()}`")
+    st.info(f"Production webhook URL: `{public_url}`")
 
 with TAB_SETUP:
-    st.subheader("Campaign configuration")
-
-    try:
-        api_key = require_instantly_api_key()
-        client = InstantlyClient(api_key)
-        campaigns = list_all_campaigns()
-    except ValueError as exc:
-        st.error(str(exc))
-        st.stop()
-
-    campaign_options = {
-        format_resource_label(c.get("name"), str(c.get("id") or "")): str(c.get("id") or "")
-        for c in campaigns
-        if c.get("id")
-    }
-
-    if not campaign_options:
-        st.warning("No Instantly campaigns found.")
-        st.stop()
-
-    existing_configs = {c["campaign_id"]: c for c in list_configs()}
-    default_campaign = env("INSTANTLY_BYPASS_CAMPAIGN_ID")
-    default_label = next(
-        (label for label, cid in campaign_options.items() if cid == default_campaign),
-        next(iter(campaign_options.keys()), ""),
-    )
-
-    selected_label = st.selectbox(
-        "Campaign",
-        options=list(campaign_options.keys()),
-        index=list(campaign_options.keys()).index(default_label)
-        if default_label in campaign_options
-        else 0,
-    )
-    selected_campaign_id = campaign_options[selected_label]
-
-    if st.button("Save campaign config"):
-        save_config(
-            {
-                "campaign_id": selected_campaign_id,
-                "campaign_name": selected_label.split(" (")[0],
-            }
+    st.subheader("Onboarding")
+    if onboarding_status == "not_initialized":
+        st.markdown(
+            "Cette campagne Instantly n’a pas encore de config Hercule. "
+            "**Initialiser** crée la ligne config, des templates E1–E3 vides, "
+            "et enregistre le webhook `lead_interested`."
         )
-        st.success("Config saved.")
+    elif onboarding_status == "copy_incomplete":
+        st.markdown("Config présente — remplissez Email 1, 2 et 3 ci-dessous.")
+    elif onboarding_status == "webhook_incomplete":
+        st.markdown("Config présente mais webhook Instantly manquant — cliquez **Initialiser**.")
+        if webhook_miss_reason:
+            st.warning(webhook_miss_reason)
+    else:
+        st.markdown("Campagne prête. Vous pouvez encore éditer le copy ou mettre le webhook en pause.")
+
+    if selected_config:
+        st.divider()
+        st.subheader("Webhook auto-send (cette campagne)")
+        campaign_enabled = bool(selected_config.get("webhook_auto_send_enabled", True))
+        if onboarding_status == "webhook_incomplete":
+            st.error("Auto-send configuré, mais webhook Instantly absent — E1 auto impossible.")
+        elif campaign_enabled:
+            st.success("Auto-send webhook: **Actif**")
+        else:
+            st.warning("Auto-send webhook: **En pause**")
+        toggle_col1, toggle_col2 = st.columns(2)
+        with toggle_col1:
+            if st.button(
+                "Activer le webhook auto-send",
+                disabled=campaign_enabled,
+                key="webhook_enable",
+            ):
+                set_campaign_webhook_auto_send_enabled(selected_campaign_id, True)
+                st.rerun()
+        with toggle_col2:
+            if st.button(
+                "Mettre en pause",
+                disabled=not campaign_enabled,
+                key="webhook_pause",
+            ):
+                set_campaign_webhook_auto_send_enabled(selected_campaign_id, False)
+                st.rerun()
+        st.caption(
+            "Ce réglage est **par campagne**. Le kill-switch global reste dans "
+            "`instantly_bypass_settings` (pause d’urgence toutes campagnes)."
+        )
+
+        st.code(public_url)
+        if url_error:
+            st.error(url_error)
+
+        st.divider()
+        st.subheader("Séquences emails")
+        _render_sequence_form(selected_campaign_id, templates, key_prefix="setup")
 
     st.divider()
-    st.subheader("Webhook registration")
-
-    webhook_enabled = webhook_auto_send_enabled()
-    if webhook_enabled:
-        st.success("Auto-send webhook: **Actif**")
-    else:
-        st.warning("Auto-send webhook: **En pause**")
-
-    toggle_col1, toggle_col2 = st.columns(2)
-    with toggle_col1:
-        if st.button(
-            "Activer le webhook auto-send",
-            disabled=webhook_enabled,
-            key="webhook_enable",
-        ):
-            set_webhook_auto_send_enabled(True)
-            st.rerun()
-    with toggle_col2:
-        if st.button(
-            "Mettre en pause",
-            disabled=not webhook_enabled,
-            key="webhook_pause",
-        ):
-            set_webhook_auto_send_enabled(False)
-            st.rerun()
-
-    st.caption(
-        "Ce réglage s'applique à la production et au local (même base Supabase). "
-        "Mettre en pause depuis Streamlit local affecte immédiatement le webhook Vercel."
-    )
-
-    st.code(webhook_public_url())
-    public_url = webhook_public_url()
-    if "henri-fridzi.homes" in public_url or "localhost" in public_url:
-        st.error(
-            "NEXT_PUBLIC_APP_URL pointe vers une URL incorrecte. "
-            "Utilisez `https://www.hercule.dev` avant d'enregistrer le webhook."
-        )
-    elif not public_url.startswith("https://www.hercule.dev"):
-        st.warning(
-            f"L'URL webhook affichée ({public_url}) ne correspond pas à la prod attendue "
-            "(`https://www.hercule.dev/api/webhooks/instantly`)."
-        )
-    secret = webhook_secret()
-    if not secret:
-        st.warning("Set INSTANTLY_BYPASS_WEBHOOK_SECRET (or CRON_SECRET) before registering.")
-
-    webhooks = client.list_webhooks()
-    st.write("Existing Instantly webhooks")
+    st.subheader("Webhooks Instantly")
     if webhooks:
         st.dataframe(
             [
                 {
+                    "id": w.get("id"),
                     "name": w.get("name"),
                     "event_type": w.get("event_type"),
+                    "campaign": w.get("campaign") or w.get("campaign_id"),
                     "url": w.get("target_hook_url"),
                     "status": w.get("status"),
                 }
@@ -618,64 +724,36 @@ with TAB_SETUP:
     else:
         st.caption("No webhooks registered.")
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button(
-            "Register lead_interested webhook",
-            disabled=not secret or not webhook_enabled,
-            help="Activez le webhook auto-send avant d'enregistrer chez Instantly.",
-        ):
-            headers = {"Authorization": f"Bearer {secret}"}
-            created = client.create_webhook(
-                target_hook_url=webhook_public_url(),
-                event_type="lead_interested",
-                name="Hercule Interested Bypass",
-                campaign=selected_campaign_id,
-                headers=headers,
-            )
-            st.success(f"Webhook created: {created.get('id', 'ok')}")
-    with col2:
-        to_delete = st.selectbox(
-            "Delete webhook",
-            options=["—"] + [str(w.get("id")) for w in webhooks if w.get("id")],
-        )
-        if st.button("Delete selected webhook", disabled=to_delete == "—"):
-            client.delete_webhook(to_delete)
-            st.success("Webhook deleted.")
+    to_delete = st.selectbox(
+        "Delete webhook",
+        options=["—"] + [str(w.get("id")) for w in webhooks if w.get("id")],
+    )
+    if st.button("Delete selected webhook", disabled=to_delete == "—"):
+        instantly_client.delete_webhook(to_delete)
+        st.success("Webhook deleted.")
+        st.rerun()
 
 with TAB_TEMPLATES:
     st.subheader("Email templates")
-    templates = list_templates()
-    template_map = {t["template_key"]: t for t in templates}
-
-    for key in TEMPLATE_KEYS:
-        row = template_map.get(key, {"subject": "", "body_html": ""})
-        st.markdown(f"**{key}**")
-        subject = st.text_input(f"Subject ({key})", value=row.get("subject", ""), key=f"sub_{key}")
-        body = st.text_area(
-            f"Body HTML ({key})",
-            value=row.get("body_html", ""),
-            height=160,
-            key=f"body_{key}",
-        )
-        if st.button(f"Save {key}", key=f"save_{key}"):
-            save_template(key, subject, body)
-            st.success(f"Saved {key}.")
-
-    st.caption(
-        "Variables: {{reservation_agence_link}}, {{first_name}}, "
-        "{{last_name}}, {{company_name}}. Subject unused — thread subject is kept."
-    )
+    if not selected_config:
+        st.warning("Initialisez la campagne dans Setup avant d’éditer les templates.")
+    else:
+        _render_sequence_form(selected_campaign_id, templates, key_prefix="templates")
 
 with TAB_ENVOIS:
     st.subheader("Envois")
-    configs = list_configs()
-    _render_pipeline_panel(configs)
+    if not selected_config:
+        st.warning("Initialisez cette campagne (bouton **Initialiser**) avant d’ouvrir le CRM.")
+    else:
+        _render_pipeline_panel(
+            selected_campaign_id,
+            send_enabled=e1_copy_is_ready(templates),
+        )
 
 with TAB_ANALYTICS:
     st.subheader("Live analytics")
     try:
-        stats = fetch_analytics()
+        stats = fetch_analytics(selected_campaign_id)
     except ValueError as exc:
         st.error(str(exc))
         st.stop()
@@ -692,4 +770,4 @@ with TAB_ANALYTICS:
         st.subheader("Recent errors")
         st.dataframe(stats["recent_errors"], use_container_width=True)
     else:
-        st.caption("No failed events.")
+        st.caption("No failed events for this campaign.")

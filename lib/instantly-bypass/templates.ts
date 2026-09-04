@@ -134,15 +134,19 @@ export async function loadBypassConfig(campaignId: string): Promise<BypassConfig
 
 export async function saveBypassConfig(config: BypassConfig): Promise<void> {
   const client = createBypassClient();
+  const payload: Record<string, unknown> = {
+    campaign_id: config.campaign_id,
+    updated_at: new Date().toISOString(),
+  };
+  if (config.campaign_name !== undefined) payload.campaign_name = config.campaign_name;
+  if (config.webhook_id !== undefined) payload.webhook_id = config.webhook_id;
+  if (config.webhook_auto_send_enabled !== undefined) {
+    payload.webhook_auto_send_enabled = config.webhook_auto_send_enabled;
+  }
+  if (config.initialized_at !== undefined) payload.initialized_at = config.initialized_at;
+
   const { error } = await client.from("instantly_bypass_config").upsert(
-    {
-      campaign_id: config.campaign_id,
-      campaign_name: config.campaign_name ?? null,
-      webhook_id: config.webhook_id ?? null,
-      webhook_auto_send_enabled: config.webhook_auto_send_enabled ?? true,
-      initialized_at: config.initialized_at ?? null,
-      updated_at: new Date().toISOString(),
-    },
+    payload,
     { onConflict: "campaign_id" },
   );
   if (error) {
