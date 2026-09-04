@@ -80,6 +80,33 @@ function MetallicTitle({ name }: { name: string }) {
   )
 }
 
+function LockedInclusionsPreview() {
+  return (
+    <div
+      aria-hidden
+      tabIndex={-1}
+      className="blur-sm opacity-50 pointer-events-none select-none border border-white/10 rounded-md overflow-hidden"
+    >
+      <div className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-neutral-200 text-sm font-medium">
+        Ce qui est inclus
+        <ChevronDown className="w-4 h-4 text-neutral-500 shrink-0" />
+      </div>
+      <ul className="space-y-3 px-4 pb-4 pt-3 border-t border-white/[0.06]">
+        {[
+          "Contrats déjà disponibles dans notre pipeline qualifié.",
+          "Qualification et signature internes pour votre agence.",
+          "Jusqu'à 4 clients signés par mois.",
+        ].map((feature) => (
+          <li key={feature} className="flex items-start gap-3 text-neutral-400 text-sm">
+            <Check className="w-4 h-4 mt-0.5 shrink-0 text-neutral-400" />
+            {feature}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; index: number }) {
   const [open, setOpen] = useState(false)
 
@@ -93,9 +120,7 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
         "rounded-xl relative overflow-hidden bg-[#0A0A0A]",
         plan.featured
           ? "p-8 border border-white/[0.22] ring-1 ring-white/[0.06] shadow-[0_0_48px_rgba(255,255,255,0.04)] md:scale-[1.02] md:z-10"
-          : plan.profileOnly
-            ? "p-6 border border-white/[0.04] opacity-45 saturate-50"
-            : "p-8 border border-white/[0.08]",
+          : "p-8 border border-white/[0.08]",
       )}
     >
       {plan.featured && (
@@ -125,71 +150,87 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
         )}
 
         {plan.profileOnly && (
-          <span className="absolute top-0 right-0 flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-400 border border-white/10 bg-white/[0.02] rounded-md px-2 py-0.5">
+          <span className="absolute top-0 right-0 z-20 flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-400 border border-white/10 bg-white/[0.02] rounded-md px-2 py-0.5">
             <Check className="w-3 h-3" />
             Éligible sur profil
           </span>
         )}
 
-        <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
-        <MetallicTitle name={plan.name} />
-        <p className="text-4xl text-white font-semibold tracking-[-0.04em] mb-2">
-          {plan.price}
-          {plan.priceSuffix && <span className="text-lg text-neutral-500 font-normal">{plan.priceSuffix}</span>}
-        </p>
-        <p
-          className={cn(
-            plan.profileOnly ? "mb-6" : "mb-4",
-            plan.profileOnly
-              ? "text-base text-neutral-400 font-normal leading-snug"
-              : plan.featured
-                ? "text-base sm:text-lg text-white font-semibold"
-                : "text-sm text-neutral-400",
-          )}
-        >
-          {plan.tagline}
-        </p>
-        {plan.summary && <p className="text-neutral-400 text-sm mb-4">{plan.summary}</p>}
+        {plan.profileOnly ? (
+          <>
+            <div aria-hidden className="blur-sm opacity-50 pointer-events-none select-none">
+              <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
+              <MetallicTitle name={plan.name} />
+            </div>
+            <p className="text-4xl text-white font-semibold tracking-[-0.04em] mb-2">
+              {plan.price}
+              {plan.priceSuffix && <span className="text-lg text-neutral-500 font-normal">{plan.priceSuffix}</span>}
+            </p>
+            <p className="mb-6 text-base text-neutral-400 font-normal leading-snug">{plan.tagline}</p>
+            <LockedInclusionsPreview />
+          </>
+        ) : (
+          <>
+            <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
+            <MetallicTitle name={plan.name} />
+            <p className="text-4xl text-white font-semibold tracking-[-0.04em] mb-2">
+              {plan.price}
+              {plan.priceSuffix && <span className="text-lg text-neutral-500 font-normal">{plan.priceSuffix}</span>}
+            </p>
+            <p
+              className={cn(
+                "mb-4",
+                plan.featured ? "text-base sm:text-lg text-white font-semibold" : "text-sm text-neutral-400",
+              )}
+            >
+              {plan.tagline}
+            </p>
+            {plan.summary && <p className="text-neutral-400 text-sm mb-4">{plan.summary}</p>}
 
-        {plan.highlight && (
-          <p className="text-neutral-300 text-sm font-medium mb-4 border border-white/[0.06] bg-white/[0.02] rounded-lg p-4">
-            {plan.highlight}
-          </p>
-        )}
+            {plan.highlight && (
+              <p className="text-neutral-300 text-sm font-medium mb-4 border border-white/[0.06] bg-white/[0.02] rounded-lg p-4">
+                {plan.highlight}
+              </p>
+            )}
 
-        {plan.footer && (
-          <p className={cn("text-sm mb-6", plan.featured ? "text-white font-medium" : "text-neutral-500")}>
-            {plan.footer}
-          </p>
-        )}
+            {plan.footer && (
+              <p className={cn("text-sm mb-6", plan.featured ? "text-white font-medium" : "text-neutral-500")}>
+                {plan.footer}
+              </p>
+            )}
 
-        <Collapsible open={open} onOpenChange={setOpen}>
-          <div className="border border-white/10 rounded-md overflow-hidden">
-            <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/20">
-              Ce qui est inclus
-              <ChevronDown
-                className={cn("w-4 h-4 text-neutral-500 shrink-0 transition-transform duration-200", open && "rotate-180")}
-              />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr]">
-              <div className="min-h-0 overflow-hidden">
-                <ul className="space-y-3 px-4 pb-4 pt-3 border-t border-white/[0.06]">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-neutral-400 text-sm">
-                      <Check
-                        className={cn(
-                          "w-4 h-4 mt-0.5 shrink-0",
-                          plan.featured ? "text-[#0070F3]" : "text-neutral-400",
-                        )}
-                      />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+            <Collapsible open={open} onOpenChange={setOpen}>
+              <div className="border border-white/10 rounded-md overflow-hidden">
+                <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                  Ce qui est inclus
+                  <ChevronDown
+                    className={cn(
+                      "w-4 h-4 text-neutral-500 shrink-0 transition-transform duration-200",
+                      open && "rotate-180",
+                    )}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr]">
+                  <div className="min-h-0 overflow-hidden">
+                    <ul className="space-y-3 px-4 pb-4 pt-3 border-t border-white/[0.06]">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-3 text-neutral-400 text-sm">
+                          <Check
+                            className={cn(
+                              "w-4 h-4 mt-0.5 shrink-0",
+                              plan.featured ? "text-[#0070F3]" : "text-neutral-400",
+                            )}
+                          />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </CollapsibleContent>
               </div>
-            </CollapsibleContent>
-          </div>
-        </Collapsible>
+            </Collapsible>
+          </>
+        )}
       </div>
     </motion.div>
   )
@@ -230,8 +271,7 @@ export function ProductDirectionSection() {
         >
           Chaque formule ouvre l&apos;accès à des demandes clients qualifiées, attribuées après audit de
           compatibilité. Un contrat signé à 4 000 € pour 1 489 € d&apos;investissement : retour positif dès la
-          première attribution. L&apos;offre récurrente à 2 500 €/mois — nous qualifions et signons nos contrats
-          disponibles pour vous — est proposée sur profil aux agences éligibles.
+          première attribution.
         </motion.p>
 
         <div className="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr] gap-6 mb-16 items-start">
