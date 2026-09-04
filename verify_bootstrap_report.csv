@@ -1,0 +1,7 @@
+email,proposed_step,derived_step,detected_flows,confidence,status,notes
+adtg@adtg.fr,step_0,step_0,,high,MATCH,
+agence@altitude1469.com,step_0,step_0,,high,MATCH,
+alexandra.valentini64@gmail.com,step_0,step_0,,high,MATCH,
+cedric.martin@consultant-geo.paris,step_1,step_1,no_show_email1,high,MATCH,
+contact@light-com.fr,step_1,step_1,interested_email1,high,MATCH,
+contact@mikom.fr,step_1,step_1,no_show_email1,high,MATCH,

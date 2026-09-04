@@ -30,9 +30,35 @@ On Vercel Hobby, use [cron-job.org](https://cron-job.org):
 
 - URL: `https://www.hercule.dev/api/cron/booking-emails`
 - Method: `GET`
+- Schedule: `*/15 * * * *`
 - Header: `Authorization: Bearer <CRON_SECRET>`
 
-## 5. Streamlit admin
+## 5. Instantly bypass cron (every 10 min)
+
+Manual Streamlit sends outside the Paris send window are queued in `instantly_bypass_jobs`. This cron drains due jobs.
+
+Use [cron-job.org](https://cron-job.org) only (no Vercel cron — see `vercel.json`):
+
+- URL: `https://www.hercule.dev/api/cron/instantly-bypass-jobs`
+- Method: `GET`
+- Schedule: `*/10 * * * *`
+- Header: `Authorization: Bearer <CRON_SECRET>` (same value as Vercel Production)
+
+Automated registration (add `CRON_JOB_ORG_API_KEY` to `.env` from cron-job.org Console → Settings):
+
+```bash
+pnpm configure-instantly-bypass-cron
+```
+
+**Deploy first:** production must include the route before the cron returns `200`.
+
+Sync `CRON_SECRET` to Vercel if it differs from local `.env`:
+
+```bash
+vercel env add CRON_SECRET production --force --yes --value "<same as .env>"
+```
+
+## 6. Streamlit admin
 
 Not hosted on Vercel. Run locally:
 
@@ -42,11 +68,12 @@ pnpm crm
 
 Or deploy `crm/` to Streamlit Cloud with the same env vars as root `.env`.
 
-## 6. Post-deploy smoke test
+## 7. Post-deploy smoke test
 
 - [ ] `GET /api/booking/config` returns Calendly URL
 - [ ] `GET /reservation.html/testslug` loads Calendly with tracking
 - [ ] `POST /api/link-tracking/click` with valid slug returns 200
 - [ ] Calendly test booking updates Supabase statut
 - [ ] `GET /api/cron/booking-emails` with Bearer token returns `{ ok: true }`
+- [ ] `GET /api/cron/instantly-bypass-jobs` with Bearer token returns `{ ok: true }`
 - [ ] Email confirm link opens `/confirm-reservation.html?code=…&email=…`

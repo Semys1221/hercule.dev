@@ -11,8 +11,11 @@ import {
 import { resolveThreadForReply } from "./thread-resolver";
 import {
   buildTemplateVariables,
+  isTemplateBodyEmpty,
+  loadBypassConfig,
   loadTemplate,
   renderTemplate,
+  templateRequiresReservationLink,
 } from "./templates";
 
 import { upsertPipelineStep } from "./pipeline";
@@ -45,6 +48,14 @@ export async function handleLeadInterested(
     return { ok: false, error: "missing_campaign_or_lead_email" };
   }
 
+  const config = await loadBypassConfig(campaignId);
+  if (!config) {
+    return { ok: true, skipped: "campaign_not_initialized" };
+  }
+  if (config.webhook_auto_send_enabled === false) {
+    return { ok: true, skipped: "campaign_webhook_paused" };
+  }
+
   const apiKey = getInstantlyApiKey();
   const idempotencyKey = interestedIdempotencyKey(campaignId, leadEmail);
 
@@ -61,8 +72,26 @@ export async function handleLeadInterested(
     await upsertPipelineStep(campaignId, leadEmail, "step_0");
 
     const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
+    const template = await loadTemplate(campaignId, "interested_email1");
 
-    if (!readReservationLink(lead ?? undefined, payload)) {
+    if (isTemplateBodyEmpty(template.body_html)) {
+      await recordBypassEvent({
+        idempotencyKey,
+        flow: "interested_email1",
+        campaignId,
+        leadEmail,
+        leadId: lead?.id,
+        webhookReceivedAt,
+        status: "failed",
+        errorMessage: "Empty interested_email1 template",
+      });
+      return { ok: false, error: "template_empty" };
+    }
+
+    if (
+      templateRequiresReservationLink(template.body_html) &&
+      !readReservationLink(lead ?? undefined, payload)
+    ) {
       await recordBypassEvent({
         idempotencyKey,
         flow: "interested_email1",
@@ -75,8 +104,6 @@ export async function handleLeadInterested(
       });
       return { ok: false, error: "missing_reservation_link" };
     }
-
-    const template = await loadTemplate("interested_email1");
 
     const thread = await resolveThreadForReply(apiKey, {
       leadEmail,

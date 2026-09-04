@@ -57,6 +57,7 @@ export type InstantlyLeadRecord = {
 };
 
 export type BypassTemplate = {
+  campaign_id?: string;
   template_key: BypassTemplateKey;
   subject: string;
   body_html: string;
@@ -65,6 +66,9 @@ export type BypassTemplate = {
 export type BypassConfig = {
   campaign_id: string;
   campaign_name?: string | null;
+  webhook_id?: string | null;
+  webhook_auto_send_enabled?: boolean | null;
+  initialized_at?: string | null;
 };
 
 export type TemplateVariables = Record<string, string>;

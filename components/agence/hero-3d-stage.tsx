@@ -13,9 +13,15 @@ import { ProductDirectionSection } from "./product-direction-section"
 import { WorkflowsSection } from "./workflows-section"
 import { CTASection } from "./cta-section"
 import { Footer } from "./footer"
-import { CALENDLY_AGENCE_URL } from "@/lib/constants"
+import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 
-export function Hero3DStage() {
+interface Hero3DStageProps {
+  demandes: DemandeContrat[]
+  teaser: DemandeTeaser | null
+  availableCount: number
+}
+
+export function Hero3DStage({ demandes, teaser, availableCount }: Hero3DStageProps) {
   const [yOffset, setYOffset] = useState(0)
 
   useEffect(() => {
@@ -83,10 +89,10 @@ export function Hero3DStage() {
                 className="mt-8 flex flex-wrap items-center gap-6"
               >
                 <a
-                  href={CALENDLY_AGENCE_URL}
+                  href="#demandes"
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 >
-                  Demander des apports d&apos;affaires
+                  Voir les projets disponibles
                 </a>
                 <Link
                   href="/entreprise"
@@ -170,7 +176,11 @@ export function Hero3DStage() {
           </div>
 
           <LogoCloud />
-          <DemandesSection />
+          <DemandesSection
+            demandes={demandes}
+            teaser={teaser}
+            availableCount={availableCount}
+          />
           <FeatureCardsSection />
           <AISection />
           <ProductDirectionSection />

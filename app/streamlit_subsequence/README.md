@@ -35,6 +35,13 @@ pnpm smoke-streamlit-subsequence
 - Places the lead in **étape 0**, sends E1 if auto-send is on, then **étape 1**
 - **Pause / activate** via **Setup → Webhook registration** (Supabase `instantly_bypass_settings`)
 
+## Send window (manual sends only)
+
+- **Mon–Fri, 8:00–17:00 Europe/Paris** — outside this window, manual sends from **Envois** are queued in `instantly_bypass_jobs` for the next slot (e.g. click at 06:00 Paris → scheduled for 08:00 same day; Friday 18:00 → Monday 08:00).
+- Webhook E1 auto-send remains **immediate 24/7**.
+- **cron-job.org only** (not Vercel cron): `GET https://www.hercule.dev/api/cron/instantly-bypass-jobs` every 10 minutes with header `Authorization: Bearer $CRON_SECRET` (same secret as Vercel Production and booking-emails cron).
+- Register via dashboard or: `pnpm configure-instantly-bypass-cron` (needs `CRON_JOB_ORG_API_KEY` in `.env`).
+
 ## Template variables
 
 `{{reservation_agence_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`

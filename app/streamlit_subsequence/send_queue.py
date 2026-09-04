@@ -22,12 +22,16 @@ from shared.instantly_client import (
 
 from supabase_repo import (
     get_last_send_at,
+    has_pending_job,
     has_sent_event,
+    insert_bypass_job,
     list_pipeline_for_campaign,
     list_sent_flows,
+    list_templates,
     record_event,
     upsert_pipeline_step,
 )
+from send_window import format_paris_slot, is_within_send_window, next_send_slot
 
 PipelineStep = Literal["step_0", "step_1", "step_2", "step_3", "replies_to_handle"]
 Flow = Literal["interested_email1", "interested_email2", "interested_email3"]
@@ -70,6 +74,18 @@ SENDABLE_FLOWS: list[Flow] = [
 FINAL_FLOWS: set[Flow] = {"interested_email3"}
 
 EMAIL_SIGNATURE = "Béatrice Meyer"
+RESERVATION_LINK_PLACEHOLDER = "{{reservation_agence_link}}"
+
+
+def template_requires_reservation_link(body_html: str) -> bool:
+    return RESERVATION_LINK_PLACEHOLDER in (body_html or "")
+
+
+def campaign_requires_reservation_link(campaign_id: str) -> bool:
+    for row in list_templates(campaign_id):
+        if template_requires_reservation_link(str(row.get("body_html") or "")):
+            return True
+    return False
 
 PREVIEW_LEAD: dict[str, Any] = {
     "first_name": "Jean",
@@ -231,20 +247,21 @@ def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
     }
 
 
-def _load_template(template_key: str) -> dict[str, str]:
+def _load_template(campaign_id: str, template_key: str) -> dict[str, str]:
     from supabase_repo import get_client
 
     resp = (
         get_client()
         .table("instantly_bypass_templates")
         .select("subject, body_html")
+        .eq("campaign_id", campaign_id)
         .eq("template_key", template_key)
         .maybe_single()
         .execute()
     )
     row = resp.data if resp else None
     if not row:
-        raise RuntimeError(f"Template not found: {template_key}")
+        raise RuntimeError(f"Template not found: {template_key} for campaign {campaign_id}")
     return {"subject": row["subject"], "body_html": row["body_html"]}
 
 
@@ -294,13 +311,20 @@ class QueueLead:
 @dataclass
 class BulkSendResult:
     sent: int = 0
+    scheduled: int = 0
     skipped: int = 0
     failed: int = 0
     errors: list[str] = field(default_factory=list)
+    scheduled_slot_label: str | None = None
 
 
-def render_template_html(template_key: str, lead: dict[str, Any] | None = None) -> str:
-    template = _load_template(template_key)
+def render_template_html(
+    template_key: str,
+    lead: dict[str, Any] | None = None,
+    *,
+    campaign_id: str = "",
+) -> str:
+    template = _load_template(campaign_id, template_key)
     vars_map = _template_vars(lead or PREVIEW_LEAD)
     return _render_template(template["body_html"], vars_map)
 
@@ -325,6 +349,7 @@ def fetch_pipeline_leads(
         interest_filter=FILTER_LEAD_INTERESTED,
         max_leads=max_leads,
     )
+    requires_link = campaign_requires_reservation_link(campaign_id)
     instantly_by_email: dict[str, dict[str, Any]] = {}
     for lead in raw_leads:
         email = str(lead.get("email") or "").strip().lower()
@@ -380,7 +405,7 @@ def fetch_pipeline_leads(
                 interest_label=_interest_label(lead),
                 last_sent_at=last_sent_at,
                 replied_since_last_send=replied_since_last_send,
-                missing_reservation_link=_missing_reservation_link(lead),
+                missing_reservation_link=requires_link and _missing_reservation_link(lead),
                 sent_flows=sent_flows,
                 step=step,
                 envoyer=not replied_since_last_send,
@@ -396,6 +421,79 @@ def fetch_pipeline_leads(
 
 def leads_for_step(queue: list[QueueLead], step: PipelineStep) -> list[QueueLead]:
     return [row for row in queue if row.step == step]
+
+
+def _execute_send(
+    client: InstantlyClient,
+    *,
+    flow: Flow,
+    campaign_id: str,
+    lead: dict[str, Any],
+    lead_email: str,
+    lead_id: str,
+    idem: str,
+    started: datetime,
+) -> dict[str, Any]:
+    template = _load_template(campaign_id, flow)
+
+    thread = resolve_thread(
+        client,
+        lead_email=lead_email,
+        campaign_id=campaign_id,
+        fallback_eaccount=lead_custom_var(lead, "email_account"),
+    )
+    if not thread:
+        record_event(
+            {
+                "idempotency_key": idem,
+                "flow": flow,
+                "campaign_id": campaign_id,
+                "lead_email": lead_email,
+                "lead_id": lead_id or None,
+                "status": "failed",
+                "error_message": "Could not resolve Unibox thread",
+            }
+        )
+        return {"ok": False, "error": "thread_not_found", "lead_email": lead_email}
+
+    html = _render_template(template["body_html"], _template_vars(lead))
+    subject = thread["subject"] or template["subject"] or "your message"
+
+    client.reply_to_email(
+        eaccount=thread["eaccount"],
+        reply_to_uuid=thread["reply_to_uuid"],
+        subject=subject,
+        html=html,
+    )
+
+    dispatched = datetime.now(timezone.utc)
+    latency_ms = int((dispatched - started).total_seconds() * 1000)
+
+    if flow in FINAL_FLOWS:
+        client.update_interest_status(
+            lead_email=lead_email,
+            interest_value=NOT_INTERESTED_STATUS,
+            campaign_id=campaign_id,
+        )
+
+    next_step = STEP_AFTER_FLOW.get(flow)
+    if next_step:
+        upsert_pipeline_step(campaign_id, lead_email, next_step)
+
+    record_event(
+        {
+            "idempotency_key": idem,
+            "flow": flow,
+            "campaign_id": campaign_id,
+            "lead_email": lead_email,
+            "lead_id": lead_id or None,
+            "dispatched_at": dispatched.isoformat(),
+            "latency_ms": latency_ms,
+            "status": "sent",
+            "reply_to_uuid": thread["reply_to_uuid"],
+        }
+    )
+    return {"ok": True, "lead_email": lead_email, "latency_ms": latency_ms}
 
 
 def dispatch_one(
@@ -415,7 +513,42 @@ def dispatch_one(
     if has_sent_event(idem):
         return {"ok": True, "skipped": "already_sent"}
 
-    if _missing_reservation_link(lead):
+    if has_pending_job(idem):
+        return {"ok": True, "skipped": "already_scheduled"}
+
+    try:
+        template = _load_template(campaign_id, flow)
+    except RuntimeError:
+        record_event(
+            {
+                "idempotency_key": idem,
+                "flow": flow,
+                "campaign_id": campaign_id,
+                "lead_email": lead_email,
+                "lead_id": lead_id or None,
+                "status": "failed",
+                "error_message": f"Empty or missing template {flow}",
+            }
+        )
+        return {"ok": False, "error": "template_empty", "lead_email": lead_email}
+
+    if not str(template.get("body_html") or "").strip():
+        record_event(
+            {
+                "idempotency_key": idem,
+                "flow": flow,
+                "campaign_id": campaign_id,
+                "lead_email": lead_email,
+                "lead_id": lead_id or None,
+                "status": "failed",
+                "error_message": f"Empty template {flow}",
+            }
+        )
+        return {"ok": False, "error": "template_empty", "lead_email": lead_email}
+
+    if template_requires_reservation_link(template["body_html"]) and _missing_reservation_link(
+        lead
+    ):
         record_event(
             {
                 "idempotency_key": idem,
@@ -430,71 +563,47 @@ def dispatch_one(
         return {"ok": False, "error": "missing_reservation_link", "lead_email": lead_email}
 
     if dry_run:
-        return {"ok": True, "dry_run": True, "lead_email": lead_email}
+        result: dict[str, Any] = {"ok": True, "dry_run": True, "lead_email": lead_email}
+        if not is_within_send_window():
+            slot = next_send_slot()
+            result["would_schedule"] = True
+            result["scheduled_label"] = format_paris_slot(slot)
+        else:
+            result["would_send_now"] = True
+        return result
+
+    if not is_within_send_window():
+        slot = next_send_slot()
+        insert_bypass_job(
+            idempotency_key=idem,
+            campaign_id=campaign_id,
+            lead_email=lead_email,
+            flow=flow,
+            scheduled_for=slot,
+            payload={"lead_id": lead_id, "lead": lead},
+        )
+        label = format_paris_slot(slot)
+        return {
+            "ok": True,
+            "scheduled": True,
+            "scheduled_for": slot.isoformat(),
+            "scheduled_label": label,
+            "lead_email": lead_email,
+        }
 
     started = datetime.now(timezone.utc)
 
     try:
-        template = _load_template(flow)
-
-        thread = resolve_thread(
+        return _execute_send(
             client,
-            lead_email=lead_email,
+            flow=flow,
             campaign_id=campaign_id,
-            fallback_eaccount=lead_custom_var(lead, "email_account"),
+            lead=lead,
+            lead_email=lead_email,
+            lead_id=lead_id,
+            idem=idem,
+            started=started,
         )
-        if not thread:
-            record_event(
-                {
-                    "idempotency_key": idem,
-                    "flow": flow,
-                    "campaign_id": campaign_id,
-                    "lead_email": lead_email,
-                    "lead_id": lead_id or None,
-                    "status": "failed",
-                    "error_message": "Could not resolve Unibox thread",
-                }
-            )
-            return {"ok": False, "error": "thread_not_found", "lead_email": lead_email}
-
-        html = _render_template(template["body_html"], _template_vars(lead))
-        subject = thread["subject"] or template["subject"] or "your message"
-
-        client.reply_to_email(
-            eaccount=thread["eaccount"],
-            reply_to_uuid=thread["reply_to_uuid"],
-            subject=subject,
-            html=html,
-        )
-
-        dispatched = datetime.now(timezone.utc)
-        latency_ms = int((dispatched - started).total_seconds() * 1000)
-
-        if flow in FINAL_FLOWS:
-            client.update_interest_status(
-                lead_email=lead_email,
-                interest_value=NOT_INTERESTED_STATUS,
-                campaign_id=campaign_id,
-            )
-
-        next_step = STEP_AFTER_FLOW.get(flow)
-        if next_step:
-            upsert_pipeline_step(campaign_id, lead_email, next_step)
-
-        record_event(
-            {
-                "idempotency_key": idem,
-                "flow": flow,
-                "campaign_id": campaign_id,
-                "lead_email": lead_email,
-                "lead_id": lead_id or None,
-                "dispatched_at": dispatched.isoformat(),
-                "latency_ms": latency_ms,
-                "status": "sent",
-                "reply_to_uuid": thread["reply_to_uuid"],
-            }
-        )
-        return {"ok": True, "lead_email": lead_email, "latency_ms": latency_ms}
     except Exception as exc:
         record_event(
             {
@@ -540,6 +649,11 @@ def dispatch_bulk(
 
         if dispatch_result.get("skipped"):
             result.skipped += 1
+        elif dispatch_result.get("scheduled") or dispatch_result.get("would_schedule"):
+            result.scheduled += 1
+            label = dispatch_result.get("scheduled_label")
+            if label and not result.scheduled_slot_label:
+                result.scheduled_slot_label = label
         elif dispatch_result.get("ok"):
             result.sent += 1
         else:

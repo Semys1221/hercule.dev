@@ -5,14 +5,12 @@ from __future__ import annotations
 
 import argparse
 import csv
-import re
 import sys
 import time
-import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _APP_DIR = _REPO_ROOT / "app" / "streamlit_subsequence"
@@ -28,13 +26,7 @@ from shared.instantly_client import (  # noqa: E402
     get_api_key,
 )
 
-from send_queue import (  # noqa: E402
-    INTERESTED_STATUS,
-    NO_SHOW_STATUS,
-    idempotency_key,
-    lead_has_replied_since,
-)
-
+from send_queue import idempotency_key, lead_has_replied_since  # noqa: E402
 from supabase_repo import (  # noqa: E402
     get_event_sent_at,
     get_pipeline_step,
@@ -44,158 +36,21 @@ from supabase_repo import (  # noqa: E402
     record_event,
     upsert_pipeline_step,
 )
-
-PipelineStep = Literal[
-    "step_0", "step_1", "step_2", "step_3", "replies_to_handle"
-]
-Flow = Literal[
-    "interested_email1",
-    "interested_email2",
-    "interested_email3",
-    "no_show_email1",
-    "no_show_email2",
-]
-
-INTERESTED_FLOWS: list[Flow] = [
-    "interested_email1",
-    "interested_email2",
-    "interested_email3",
-]
-NO_SHOW_FLOWS: list[Flow] = ["no_show_email1", "no_show_email2"]
-
-FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
-    "interested_email1": [
-        "voici les precisions",
-        "audit de compatibilite",
-        "mon agence est compatible",
-    ],
-    "interested_email2": [
-        "confirmer que votre reservation calendly",
-    ],
-    "interested_email3": [
-        "retirer de notre liste",
-    ],
-    "no_show_email1": [
-        "confirmer si votre reservation calendly",
-        "demandez l'audit",
-    ],
-    "no_show_email2": [
-        "n'ayant recu aucune confirmation",
-        "retirer votre agence",
-    ],
-}
-
-STEP_RANK: dict[PipelineStep, int] = {
-    "step_0": 0,
-    "step_1": 1,
-    "step_2": 2,
-    "step_3": 3,
-    "replies_to_handle": 4,
-}
-
-REPLY_ELIGIBLE_STEPS: set[PipelineStep] = {"step_1", "step_2", "step_3"}
+from unibox_classify import (  # noqa: E402
+    Flow,
+    PipelineStep,
+    STEP_RANK,
+    classify_lead_emails,
+    derive_step_from_flows,
+    flows_from_existing,
+    is_no_show_status,
+    merge_steps,
+)
 
 EMAIL_FETCH_DELAY_S = 0.2
 DEFAULT_REPORT_PATH = Path("bootstrap_pipeline_report.csv")
 
-_HTML_TAG_RE = re.compile(r"<[^>]+>")
-
-
-def _strip_accents(text: str) -> str:
-    normalized = unicodedata.normalize("NFKD", text)
-    return "".join(ch for ch in normalized if not unicodedata.combining(ch))
-
-
-def normalize_email_text(raw: str) -> str:
-    """Lowercase, strip HTML, remove accents for fingerprint matching."""
-    text = _HTML_TAG_RE.sub(" ", raw or "")
-    text = re.sub(r"\s+", " ", text).strip().lower()
-    return _strip_accents(text)
-
-
-def is_hercule_email(text: str) -> bool:
-    normalized = normalize_email_text(text)
-    return "beatrice meyer" in normalized or "hercule.dev" in normalized
-
-
-def match_flows(text: str, *, allowed_flows: list[Flow]) -> set[Flow]:
-    normalized = normalize_email_text(text)
-    if not is_hercule_email(normalized):
-        return set()
-    matched: set[Flow] = set()
-    for flow in allowed_flows:
-        for phrase in FLOW_FINGERPRINTS[flow]:
-            if phrase in normalized:
-                matched.add(flow)
-                break
-    return matched
-
-
-def derive_step_from_flows(flows: set[str], *, is_no_show: bool) -> PipelineStep:
-    if is_no_show:
-        if "no_show_email2" in flows:
-            return "step_3"
-        if "no_show_email1" in flows:
-            return "step_1"
-        return "step_0"
-
-    if "interested_email3" in flows:
-        return "step_3"
-    if "interested_email2" in flows:
-        return "step_2"
-    if "interested_email1" in flows:
-        return "step_1"
-    return "step_0"
-
-
-def merge_steps(
-    proposed: PipelineStep,
-    current: PipelineStep | None,
-    *,
-    overwrite: bool,
-) -> PipelineStep:
-    if current is None:
-        return proposed
-    if overwrite:
-        return proposed
-    if STEP_RANK[proposed] >= STEP_RANK[current]:  # type: ignore[index]
-        return proposed
-    return current  # type: ignore[return-value]
-
-
-def _extract_email_text(item: dict[str, Any]) -> tuple[str, bool]:
-    """Return (text, has_body). has_body=False means subject-only (low confidence)."""
-    body = item.get("body")
-    if isinstance(body, dict):
-        for key in ("html", "text", "plain"):
-            value = body.get(key)
-            if isinstance(value, str) and value.strip():
-                return value, True
-    for key in ("body_html", "html", "text"):
-        value = item.get(key)
-        if isinstance(value, str) and value.strip():
-            return value, True
-    subject = str(item.get("subject") or "")
-    return subject, False
-
-
-def _fetch_email_detail(client: InstantlyClient, email_id: str) -> dict[str, Any] | None:
-    try:
-        data = client._fetch(f"/emails/{email_id.strip()}", method="GET")
-        return data if isinstance(data, dict) else None
-    except Exception:
-        return None
-
-
-def _email_timestamp(item: dict[str, Any]) -> str:
-    return str(item.get("timestamp_email") or item.get("timestamp_created") or "")
-
-
-@dataclass
-class FlowDetection:
-    flow: Flow
-    timestamp: str
-    has_body: bool
+REPLY_ELIGIBLE_STEPS: set[PipelineStep] = {"step_1", "step_2", "step_3"}
 
 
 @dataclass
@@ -214,59 +69,6 @@ class LeadBootstrapRow:
     flow_timestamps: dict[str, str] = field(default_factory=dict)
 
 
-def classify_lead_emails(
-    client: InstantlyClient,
-    *,
-    lead_email: str,
-    campaign_id: str,
-    is_no_show: bool,
-) -> tuple[set[Flow], dict[Flow, str], bool]:
-    """Classify sent Unibox emails. Returns (flows, timestamps, any_low_confidence)."""
-    allowed: list[Flow] = list(NO_SHOW_FLOWS if is_no_show else INTERESTED_FLOWS)
-    detected: set[Flow] = set()
-    timestamps: dict[Flow, str] = {}
-    low_confidence = False
-
-    sent_items = client.list_emails(
-        search=lead_email,
-        campaign_id=campaign_id,
-        email_type="sent",
-        limit=50,
-    )
-
-    for item in sent_items:
-        text, has_body = _extract_email_text(item)
-        if not has_body and item.get("id"):
-            detail = _fetch_email_detail(client, str(item["id"]))
-            if detail:
-                text, has_body = _extract_email_text(detail)
-                item = {**item, **detail}
-
-        if not text.strip():
-            continue
-
-        matched = match_flows(text, allowed_flows=allowed)
-        if not matched:
-            continue
-
-        if not has_body:
-            low_confidence = True
-
-        ts = _email_timestamp(item)
-        for flow in matched:
-            detected.add(flow)
-            prev = timestamps.get(flow, "")
-            if ts and (not prev or ts > prev):
-                timestamps[flow] = ts
-
-    return detected, timestamps, low_confidence
-
-
-def flows_from_existing(existing: list[str], *, is_no_show: bool) -> set[str]:
-    allowed = set(NO_SHOW_FLOWS if is_no_show else INTERESTED_FLOWS)
-    return {flow for flow in existing if flow in allowed}
-
-
 def build_lead_row(
     client: InstantlyClient,
     *,
@@ -277,7 +79,7 @@ def build_lead_row(
     email = str(lead.get("email") or "").strip().lower()
     lead_id = str(lead.get("id") or "")
     status = lead.get("lt_interest_status")
-    is_no_show = status == NO_SHOW_STATUS
+    is_no_show = is_no_show_status(int(status) if status is not None else None)
 
     detected, flow_ts, low_conf = classify_lead_emails(
         client,

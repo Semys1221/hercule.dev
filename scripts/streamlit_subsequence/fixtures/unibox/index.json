@@ -1,0 +1,16 @@
+[
+  {
+    "email": "a@test.com",
+    "lead_id": "lead-a",
+    "interest_status": 1,
+    "thread_file": "threads/a_test.com.json",
+    "message_count": 1
+  },
+  {
+    "email": "b@test.com",
+    "lead_id": "lead-b",
+    "interest_status": 1,
+    "thread_file": "threads/b_test.com.json",
+    "message_count": 1
+  }
+]

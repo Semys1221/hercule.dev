@@ -3,14 +3,25 @@ import { createBypassClient } from "./supabase";
 import type { BypassConfig, BypassTemplate, BypassTemplateKey, TemplateVariables } from "./types";
 
 const EMAIL_SIGNATURE = "Béatrice Meyer";
+const RESERVATION_LINK_PLACEHOLDER = "{{reservation_agence_link}}";
+
+export function templateRequiresReservationLink(bodyHtml: string): boolean {
+  return bodyHtml.includes(RESERVATION_LINK_PLACEHOLDER);
+}
+
+export function isTemplateBodyEmpty(bodyHtml: string | null | undefined): boolean {
+  return !bodyHtml?.trim();
+}
 
 export async function loadTemplate(
+  campaignId: string,
   templateKey: BypassTemplateKey,
 ): Promise<BypassTemplate> {
   const client = createBypassClient();
   const { data, error } = await client
     .from("instantly_bypass_templates")
-    .select("template_key, subject, body_html")
+    .select("campaign_id, template_key, subject, body_html")
+    .eq("campaign_id", campaignId)
     .eq("template_key", templateKey)
     .maybeSingle();
 
@@ -18,13 +29,14 @@ export async function loadTemplate(
     throw new Error(`Failed to load template ${templateKey}: ${error.message}`);
   }
   if (!data) {
-    throw new Error(`Template not found: ${templateKey}`);
+    throw new Error(`Template not found: ${templateKey} for campaign ${campaignId}`);
   }
 
   return data as BypassTemplate;
 }
 
 export async function saveTemplate(
+  campaignId: string,
   templateKey: BypassTemplateKey,
   subject: string,
   bodyHtml: string,
@@ -32,12 +44,13 @@ export async function saveTemplate(
   const client = createBypassClient();
   const { error } = await client.from("instantly_bypass_templates").upsert(
     {
+      campaign_id: campaignId,
       template_key: templateKey,
       subject,
       body_html: bodyHtml,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "template_key" },
+    { onConflict: "campaign_id,template_key" },
   );
 
   if (error) {
@@ -45,11 +58,12 @@ export async function saveTemplate(
   }
 }
 
-export async function listAllTemplates(): Promise<BypassTemplate[]> {
+export async function listAllTemplates(campaignId: string): Promise<BypassTemplate[]> {
   const client = createBypassClient();
   const { data, error } = await client
     .from("instantly_bypass_templates")
-    .select("template_key, subject, body_html")
+    .select("campaign_id, template_key, subject, body_html")
+    .eq("campaign_id", campaignId)
     .order("template_key");
 
   if (error) {
@@ -122,7 +136,11 @@ export async function saveBypassConfig(config: BypassConfig): Promise<void> {
   const client = createBypassClient();
   const { error } = await client.from("instantly_bypass_config").upsert(
     {
-      ...config,
+      campaign_id: config.campaign_id,
+      campaign_name: config.campaign_name ?? null,
+      webhook_id: config.webhook_id ?? null,
+      webhook_auto_send_enabled: config.webhook_auto_send_enabled ?? true,
+      initialized_at: config.initialized_at ?? null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "campaign_id" },

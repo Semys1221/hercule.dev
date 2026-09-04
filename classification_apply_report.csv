@@ -1,0 +1,75 @@
+email,old_step,new_step,detected_flows,flows_backfilled,rationale
+salima.labsi@nr-communication.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+hello@seeyou-agency.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+louish@lbhcom.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+bonjour@halo-halo.fr,step_1,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@affichez-moi-communication.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+spingacontact@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+dksignaletique@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@agencesimple.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+team@arenavs.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+vledig@umane.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@tech-innov.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+thomasquinet@arkostudio.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+ode.digitale@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+marion.puredigitale@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+cha.admin@agencempn.com,step_1,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+laregaladedigitale@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+hello@pixel-club.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact.komdigital@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@mangopop.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@com-alacampagne.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+arnaud.lhermitte@ooh-concept.fr,step_1,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+stephanie.rennard@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+lena@kom1bulle.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+lmdk.office@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+jenouvriera@gmail.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@elid-agency.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+hello@tilille.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+fabrice@agenceadhoc.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@whatifthelightningbold.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+max@studiodem.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+cedfry@gmail.com,step_1,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+ecrire@ponpon-communication.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@guslab.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+aude.codron@reulys.com,step_1,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@af-developpement.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+contact@youzoune.com,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+clement@nucom.fr,step_1,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+y.leclercq@agence-et-voila.fr,step_0,step_0,,,Aucun email Hercule follow-up détecté dans le thread
+mhassemble@gmail.com,step_1,step_1,interested_email1,,msg#4 sent → interested_email1
+redac.expres@gmail.com,step_1,step_1,interested_email1,,msg#4 sent → interested_email1
+mvpimpmycom@gmail.com,step_1,step_1,interested_email1,,msg#4 sent → interested_email1
+duvinlydie@gmail.com,step_1,step_1,interested_email1,,msg#3 sent → interested_email1
+contact@light-com.fr,step_1,step_1,interested_email1,,msg#4 sent → interested_email1
+contact@wemacom.fr,step_1,step_1,interested_email1,,msg#3 sent → interested_email1
+mbaillieu@kamelecom.fr,step_1,step_1,interested_email1,,msg#3 sent → interested_email1
+cedriclegac@lilo.org,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+emouna.agency@gmail.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1; msg#4 sent → interested_email1
+bstudiostoll@gmail.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1; msg#4 sent → interested_email1
+neama.publicite@gmail.com,step_0,step_1,interested_email1,interested_email1,msg#4 sent → interested_email1; msg#5 sent → interested_email1
+contact@oliverlist.com,step_0,step_1,interested_email1,interested_email1,msg#4 sent → interested_email1
+adtg@adtg.fr,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+cedric.martin@consultant-geo.paris,step_1,step_1,"interested_email1,no_show_email1",interested_email1,msg#3 sent → interested_email1; msg#4 sent → no_show_email1
+revelatrice@sabinerainard.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@au2vi.fr,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+agence@altitude1469.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@graw-agency.fr,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@novi-scale.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+rgpd@art2market.org,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contactlidigital@gmail.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+damien.defoucault@adkemix.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@mikom.fr,step_1,step_1,"interested_email1,no_show_email1",interested_email1,msg#3 sent → interested_email1; msg#4 sent → no_show_email1
+contact@websentinel.fr,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@myweb-visibility.net,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1; msg#5 sent → interested_email1
+ezcomm@groupemontus.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+julieberanger.wp@gmail.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+ododographics@gmail.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@roofline.fr,step_1,step_1,"interested_email1,no_show_email1",interested_email1,msg#3 sent → interested_email1; msg#4 sent → no_show_email1
+alexandra.valentini64@gmail.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+hello@flajo-communication.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@agence-spritz.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@idcom-lagence.fr,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@bleudemars.com,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+contact@imaginarium-vichy.fr,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1
+info@pimentrouge.fr,step_0,step_1,interested_email1,interested_email1,msg#3 sent → interested_email1

@@ -66,6 +66,18 @@ def waiting_for_reply_interest_value() -> int | None:
         return None
 
 
+def send_window_tz() -> str:
+    return "Europe/Paris"
+
+
+def send_window_start_hour() -> int:
+    return 8
+
+
+def send_window_end_hour() -> int:
+    return 17
+
+
 def no_reply_email2_delay_days() -> int:
     raw = env("INSTANTLY_NO_REPLY_EMAIL2_DELAY_DAYS", "3")
     try:

@@ -48,7 +48,9 @@ export async function POST(request: Request) {
         { ok: false, error: result.error, skipped: result.skipped },
         {
           status:
-            result.error === "thread_not_found" || result.error === "missing_reservation_link"
+            result.error === "thread_not_found" ||
+            result.error === "missing_reservation_link" ||
+            result.error === "template_empty"
               ? 422
               : 500,
         },

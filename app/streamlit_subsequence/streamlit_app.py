@@ -24,6 +24,7 @@ from config import (
 )
 from send_queue import (
     DEFAULT_FLOW_BY_STEP,
+    NO_SHOW_STATUS,
     PIPELINE_STEPS,
     SENDABLE_FLOWS,
     Flow,
@@ -33,6 +34,13 @@ from send_queue import (
     leads_for_step,
     move_pipeline_leads,
     render_template_html,
+)
+from send_window import format_paris_slot, is_within_send_window, next_send_slot
+from unibox_thread import (
+    derive_step_from_thread,
+    fetch_thread_messages,
+    render_conversation_html,
+    thread_subject,
 )
 from shared.instantly_client import InstantlyClient, format_resource_label, list_all_campaigns
 from supabase_repo import (
@@ -99,6 +107,83 @@ def _queue_to_dataframe(queue: list) -> pd.DataFrame:
     )
 
 
+def _render_conversation_panel(
+    *,
+    campaign_id: str,
+    queue: list,
+    selected_emails: set[str],
+    step: PipelineStep,
+) -> None:
+    st.subheader("Conversation Unibox")
+    if not queue:
+        st.caption("Aucun lead dans cette étape.")
+        return
+
+    email_options = [row.email for row in queue]
+    default_email = email_options[0]
+    if len(selected_emails) == 1:
+        default_email = next(iter(selected_emails))
+
+    default_index = email_options.index(default_email) if default_email in email_options else 0
+    conv_email = st.selectbox(
+        "Lead",
+        options=email_options,
+        index=default_index,
+        format_func=lambda e: next(
+            (f"{r.first_name} — {r.email}" if r.first_name else r.email for r in queue if r.email == e),
+            e,
+        ),
+        key=f"conv_lead_{step}_{campaign_id}",
+    )
+
+    lead_row = next((r for r in queue if r.email == conv_email), None)
+    if not lead_row:
+        return
+
+    load_key = f"thread_{campaign_id}_{conv_email}"
+    if st.button("Charger la conversation", key=f"load_conv_{step}_{conv_email}"):
+        try:
+            client = InstantlyClient(require_instantly_api_key())
+            interest_status = lead_row.raw.get("lt_interest_status")
+            messages = fetch_thread_messages(
+                client,
+                lead_email=conv_email,
+                campaign_id=campaign_id,
+                lead_first_name=lead_row.first_name,
+                interest_status=int(interest_status) if interest_status is not None else None,
+            )
+            st.session_state[load_key] = messages
+        except Exception as exc:
+            st.error(str(exc))
+
+    messages = st.session_state.get(load_key)
+    if not messages:
+        st.info("Cliquez **Charger la conversation** pour afficher le fil Unibox.")
+        return
+
+    interest_status = lead_row.raw.get("lt_interest_status")
+    is_no_show = interest_status == NO_SHOW_STATUS
+    derived_step, detected_flows = derive_step_from_thread(
+        messages,
+        interest_status=int(interest_status) if interest_status is not None else None,
+    )
+
+    st.caption(f"**Sujet :** {thread_subject(messages)}")
+    st.caption(
+        f"**CRM :** {STEP_LABELS[lead_row.step]} · "
+        f"**Détecté :** {STEP_LABELS.get(derived_step, derived_step)} "  # type: ignore[arg-type]
+        f"({', '.join(sorted(detected_flows)) or '—'})"
+    )
+
+    if lead_row.step != derived_step and lead_row.step != "replies_to_handle":
+        st.warning(
+            f"Écart CRM vs Unibox : étape dashboard **{STEP_LABELS[lead_row.step]}**, "
+            f"fingerprints → **{STEP_LABELS.get(derived_step, derived_step)}**."  # type: ignore[arg-type]
+        )
+
+    st.markdown(render_conversation_html(messages), unsafe_allow_html=True)
+
+
 def _render_pipeline_panel(configs: list[dict]) -> None:
     if not configs:
         st.warning("Save at least one campaign config in Setup.")
@@ -111,6 +196,17 @@ def _render_pipeline_panel(configs: list[dict]) -> None:
         key="campaign_pipeline",
     )
     campaign_id = labels[chosen_label]
+
+    window_open = is_within_send_window()
+    next_slot = next_send_slot()
+    next_slot_label = format_paris_slot(next_slot)
+    if window_open:
+        st.success("Fenêtre d'envoi : lun–ven, 8h–17h (Paris) — **Ouverte**")
+    else:
+        st.warning(
+            "Fenêtre d'envoi : lun–ven, 8h–17h (Paris) — **Fermée**  \n"
+            f"Prochain créneau : **{next_slot_label}**"
+        )
 
     step = st.radio(
         "Étape CRM",
@@ -246,105 +342,148 @@ def _render_pipeline_panel(configs: list[dict]) -> None:
     if editor_key not in st.session_state:
         st.session_state[editor_key] = _queue_to_dataframe(queue)
 
-    sel_col1, sel_col2, move_col, _ = st.columns([1, 1, 2, 1])
-    with sel_col1:
-        if st.button("Tout sélectionner", key=f"select_all_{step}"):
-            df_all = st.session_state[editor_key].copy()
-            df_all["Envoyer"] = True
-            st.session_state[editor_key] = df_all
-            st.rerun()
-    with sel_col2:
-        if st.button("Tout désélectionner", key=f"deselect_all_{step}"):
-            df_none = st.session_state[editor_key].copy()
-            df_none["Envoyer"] = False
-            st.session_state[editor_key] = df_none
-            st.rerun()
-    with move_col:
-        target_step = st.selectbox(
-            "Déplacer les cochés vers",
-            options=["—"] + list(PIPELINE_STEPS),
-            format_func=lambda s: "—" if s == "—" else STEP_LABELS[s],
-            key=f"move_target_{step}",
+    left_col, right_col = st.columns([3, 2])
+
+    with left_col:
+        sel_col1, sel_col2, move_col, _ = st.columns([1, 1, 2, 1])
+        with sel_col1:
+            if st.button("Tout sélectionner", key=f"select_all_{step}"):
+                df_all = st.session_state[editor_key].copy()
+                df_all["Envoyer"] = True
+                st.session_state[editor_key] = df_all
+                st.rerun()
+        with sel_col2:
+            if st.button("Tout désélectionner", key=f"deselect_all_{step}"):
+                df_none = st.session_state[editor_key].copy()
+                df_none["Envoyer"] = False
+                st.session_state[editor_key] = df_none
+                st.rerun()
+        with move_col:
+            target_step = st.selectbox(
+                "Déplacer les cochés vers",
+                options=["—"] + list(PIPELINE_STEPS),
+                format_func=lambda s: "—" if s == "—" else STEP_LABELS[s],
+                key=f"move_target_{step}",
+            )
+
+        edited = st.data_editor(
+            st.session_state[editor_key],
+            column_config={
+                "Envoyer": st.column_config.CheckboxColumn("Envoyer", default=True),
+            },
+            disabled=[
+                "Email",
+                "Prénom",
+                "Statut",
+                "Étape",
+                "Répondu depuis envoi Hercule",
+                "Lien OK",
+                "Emails déjà envoyés",
+                "Dernier envoi Hercule",
+            ],
+            hide_index=True,
+            use_container_width=True,
+            key=f"data_editor_{step}_{campaign_id}",
         )
+        st.session_state[editor_key] = edited
 
-    edited = st.data_editor(
-        st.session_state[editor_key],
-        column_config={
-            "Envoyer": st.column_config.CheckboxColumn("Envoyer", default=True),
-        },
-        disabled=[
-            "Email",
-            "Prénom",
-            "Statut",
-            "Étape",
-            "Répondu depuis envoi Hercule",
-            "Lien OK",
-            "Emails déjà envoyés",
-            "Dernier envoi Hercule",
-        ],
-        hide_index=True,
-        use_container_width=True,
-        key=f"data_editor_{step}_{campaign_id}",
-    )
-    st.session_state[editor_key] = edited
-
-    selected_emails = {
-        str(row["Email"]).strip().lower()
-        for _, row in edited.iterrows()
-        if row["Envoyer"]
-    }
-    selected_count = len(selected_emails)
-    if flow:
-        st.write(f"**{selected_count}** lead(s) selected → **{FLOW_LABELS[flow]}**")
-    else:
-        st.write(f"**{selected_count}** lead(s) selected")
-
-    if st.button("Déplacer les leads cochés", key=f"move_{step}"):
-        if target_step == "—" or not selected_emails:
-            st.warning("Cochez des leads et choisissez une étape cible.")
+        selected_emails = {
+            str(row["Email"]).strip().lower()
+            for _, row in edited.iterrows()
+            if row["Envoyer"]
+        }
+        selected_count = len(selected_emails)
+        if flow:
+            st.write(f"**{selected_count}** lead(s) selected → **{FLOW_LABELS[flow]}**")
+            if selected_count > 0:
+                if window_open:
+                    st.caption(f"{selected_count} lead(s) → envoi **immédiat**")
+                else:
+                    st.caption(
+                        f"{selected_count} lead(s) → programmés pour **{next_slot_label}**"
+                    )
         else:
-            move_pipeline_leads(campaign_id, list(selected_emails), target_step)
-            for row in all_queue:
-                if row.email in selected_emails:
-                    row.step = target_step
-            st.session_state[cache_key] = all_queue
-            st.success(f"{selected_count} lead(s) déplacé(s) vers {STEP_LABELS[target_step]}.")
-            st.rerun()
+            st.write(f"**{selected_count}** lead(s) selected")
 
-    if flow and st.button("Envoyer aux leads cochés", key=f"send_{step}"):
-        selected_leads = [row.raw for row in queue if row.email in selected_emails]
+        if st.button("Déplacer les leads cochés", key=f"move_{step}"):
+            if target_step == "—" or not selected_emails:
+                st.warning("Cochez des leads et choisissez une étape cible.")
+            else:
+                move_pipeline_leads(campaign_id, list(selected_emails), target_step)
+                for row in all_queue:
+                    if row.email in selected_emails:
+                        row.step = target_step
+                st.session_state[cache_key] = all_queue
+                st.success(f"{selected_count} lead(s) déplacé(s) vers {STEP_LABELS[target_step]}.")
+                st.rerun()
 
-        if dry_run:
-            st.info(
-                f"Mode test : enverrait `{flow}` à **{len(selected_leads)}** lead(s). "
-                "Aucun email Instantly, aucun event Supabase, aucun changement d'étape."
-            )
-            return
+        if flow and st.button("Envoyer aux leads cochés", key=f"send_{step}"):
+            selected_leads = [row.raw for row in queue if row.email in selected_emails]
 
-        log_box = st.empty()
-        logs: list[str] = []
-        progress = st.progress(0.0)
+            if dry_run:
+                preview = dispatch_bulk(
+                    campaign_id=campaign_id,
+                    flow=flow,
+                    leads=selected_leads,
+                    dry_run=True,
+                )
+                if window_open:
+                    st.info(
+                        f"Mode test : **{preview.sent}** lead(s) seraient envoyés "
+                        f"**maintenant**, **{preview.scheduled}** programmé(s), "
+                        f"**{preview.skipped}** ignoré(s)."
+                    )
+                else:
+                    slot_text = preview.scheduled_slot_label or next_slot_label
+                    st.info(
+                        f"Mode test : **{preview.scheduled}** lead(s) seraient "
+                        f"programmés pour **{slot_text}**, "
+                        f"**{preview.skipped}** ignoré(s)."
+                    )
+            else:
+                log_box = st.empty()
+                logs: list[str] = []
+                progress = st.progress(0.0)
 
-        def on_progress(email: str) -> None:
-            logs.append(email)
-            log_box.text("\n".join(logs[-12:]))
-            progress.progress(min(len(logs) / max(len(selected_leads), 1), 1.0))
+                def on_progress(email: str) -> None:
+                    logs.append(email)
+                    log_box.text("\n".join(logs[-12:]))
+                    progress.progress(min(len(logs) / max(len(selected_leads), 1), 1.0))
 
-        with st.spinner("Sending…"):
-            result = dispatch_bulk(
-                campaign_id=campaign_id,
-                flow=flow,
-                leads=selected_leads,
-                dry_run=False,
-                on_progress=on_progress,
-            )
+                with st.spinner("Sending…"):
+                    result = dispatch_bulk(
+                        campaign_id=campaign_id,
+                        flow=flow,
+                        leads=selected_leads,
+                        dry_run=False,
+                        on_progress=on_progress,
+                    )
 
-        st.session_state.pop(cache_key, None)
-        st.metric("Sent", result.sent)
-        st.metric("Skipped", result.skipped)
-        st.metric("Failed", result.failed)
-        if result.errors:
-            st.error("\n".join(result.errors[:10]))
+                if result.sent > 0:
+                    st.toast(f"{result.sent} email(s) envoyé(s) maintenant", icon="✅")
+                if result.scheduled > 0:
+                    slot_text = result.scheduled_slot_label or next_slot_label
+                    st.toast(
+                        f"{result.scheduled} email(s) programmé(s) pour {slot_text}",
+                        icon="🕐",
+                    )
+
+                st.session_state.pop(cache_key, None)
+                m1, m2, m3, m4 = st.columns(4)
+                m1.metric("Envoyés", result.sent)
+                m2.metric("Programmés", result.scheduled)
+                m3.metric("Ignorés", result.skipped)
+                m4.metric("Échecs", result.failed)
+                if result.errors:
+                    st.error("\n".join(result.errors[:10]))
+
+    with right_col:
+        _render_conversation_panel(
+            campaign_id=campaign_id,
+            queue=queue,
+            selected_emails=selected_emails,
+            step=step,
+        )
 
 
 with TAB_WORKFLOW:
@@ -446,6 +585,17 @@ with TAB_SETUP:
     )
 
     st.code(webhook_public_url())
+    public_url = webhook_public_url()
+    if "henri-fridzi.homes" in public_url or "localhost" in public_url:
+        st.error(
+            "NEXT_PUBLIC_APP_URL pointe vers une URL incorrecte. "
+            "Utilisez `https://www.hercule.dev` avant d'enregistrer le webhook."
+        )
+    elif not public_url.startswith("https://www.hercule.dev"):
+        st.warning(
+            f"L'URL webhook affichée ({public_url}) ne correspond pas à la prod attendue "
+            "(`https://www.hercule.dev/api/webhooks/instantly`)."
+        )
     secret = webhook_secret()
     if not secret:
         st.warning("Set INSTANTLY_BYPASS_WEBHOOK_SECRET (or CRON_SECRET) before registering.")

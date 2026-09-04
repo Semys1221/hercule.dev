@@ -46,22 +46,37 @@ export async function findLeadByEmailInCampaign(
   leadEmail: string,
 ): Promise<InstantlyLeadRecord | null> {
   const normalized = leadEmail.trim().toLowerCase();
-  const page = await instantlyFetch<{ items?: InstantlyLeadRecord[] }>(
-    apiKey,
-    "/leads/list",
-    {
+  let startingAfter: string | null = null;
+
+  while (true) {
+    const body: Record<string, unknown> = {
+      campaign: campaignId,
+      limit: 100,
+    };
+    if (startingAfter) body.starting_after = startingAfter;
+
+    const page = await instantlyFetch<{
+      items?: InstantlyLeadRecord[];
+      next_starting_after?: string;
+    }>(apiKey, "/leads/list", {
       method: "POST",
-      body: JSON.stringify({
-        campaign: campaignId,
-        limit: 100,
-      }),
-    },
-  );
-  const items = page.items ?? [];
-  return (
-    items.find((item) => (item.email ?? "").trim().toLowerCase() === normalized) ??
-    null
-  );
+      body: JSON.stringify(body),
+    });
+
+    const items = page.items ?? [];
+    const match =
+      items.find((item) => (item.email ?? "").trim().toLowerCase() === normalized) ??
+      null;
+    if (match) return match;
+
+    const next =
+      page.next_starting_after ??
+      (items.length > 0 ? (items[items.length - 1]?.id ?? null) : null);
+    if (!next || items.length < 100) break;
+    startingAfter = next;
+  }
+
+  return null;
 }
 
 export async function removeLeadFromSubsequence(

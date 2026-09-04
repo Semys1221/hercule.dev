@@ -1,21 +1,24 @@
 "use client"
 
-import { useMemo } from "react"
 import { motion } from "framer-motion"
 import { ChevronRight } from "lucide-react"
 import { DemandeCard, DemandeTeaserCard } from "@/components/agence/demande-card"
 import { Marquee } from "@/components/ui/marquee"
 import { cn } from "@/lib/utils"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
-import { DEMANDE_TEASER, getDemandesCarousel } from "@/lib/demandes-data"
+import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 
 const CARD_WIDTH = "w-[300px] sm:w-[320px]"
 
-export function DemandesSection() {
-  const demandes = useMemo(() => getDemandesCarousel(), [])
+interface DemandesSectionProps {
+  demandes: DemandeContrat[]
+  teaser: DemandeTeaser | null
+  availableCount: number
+}
 
+export function DemandesSection({ demandes, teaser, availableCount }: DemandesSectionProps) {
   return (
-    <div className="relative z-20 py-40" style={{ backgroundColor: "#09090B" }}>
+    <div id="demandes" className="relative z-20 py-40 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div
         className="absolute top-0 left-0 right-0 pointer-events-none"
         style={{
@@ -44,7 +47,7 @@ export function DemandesSection() {
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-6"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            +25 projets actuellement disponibles
+            {availableCount} projets actuellement disponibles
           </motion.h2>
 
           <motion.p
@@ -83,9 +86,11 @@ export function DemandesSection() {
               <DemandeCard demande={demande} />
             </div>
           ))}
-          <div className={cn(CARD_WIDTH, "shrink-0")}>
-            <DemandeTeaserCard teaser={DEMANDE_TEASER} />
-          </div>
+          {teaser ? (
+            <div className={cn(CARD_WIDTH, "shrink-0")}>
+              <DemandeTeaserCard teaser={teaser} />
+            </div>
+          ) : null}
         </Marquee>
         <div className="pointer-events-none absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-[#09090B] to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-1/6 bg-gradient-to-l from-[#09090B] to-transparent" />

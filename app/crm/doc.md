@@ -80,7 +80,18 @@ Vercel Hobby only allows daily crons, so use [cron-job.org](https://cron-job.org
 3. Request method: `GET`
 4. Custom request header: `Authorization: Bearer <CRON_SECRET>`
 
-Expect `200` with `{"ok":true,"processed":…,"sent":…,"failed":…}`. `401` means the header does not match `CRON_SECRET`.
+## Instantly bypass cron
+
+`GET /api/cron/instantly-bypass-jobs` — same auth as booking-emails. Drains `instantly_bypass_jobs` (manual sends scheduled outside 8h–17h Paris).
+
+1. Create job → URL `https://www.hercule.dev/api/cron/instantly-bypass-jobs`
+2. Schedule: every 10 minutes (`*/10 * * * *`)
+3. Request method: `GET`
+4. Custom request header: `Authorization: Bearer <CRON_SECRET>`
+
+Or run `pnpm configure-instantly-bypass-cron` after adding `CRON_JOB_ORG_API_KEY` to `.env`.
+
+Expect `200` with `{"ok":true,"processed":…}`. `401` means the header does not match Vercel `CRON_SECRET`. `404` means the route is not deployed yet.
 
 After a Vercel Pro upgrade, you can use Vercel cron instead:
 
