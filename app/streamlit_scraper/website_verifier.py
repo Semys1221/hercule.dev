@@ -219,6 +219,42 @@ async def fetch_and_check(
             return "Non Valide", "Erreur/Timeout", "", str(e).split("\n")[0], ""
 
 
+async def _fetch_and_qualify(
+    row: dict[str, str],
+    url: str,
+    included: list[str],
+    hard_excluded: list[str],
+    soft_excluded: list[str],
+    client: httpx.AsyncClient,
+    website_sema: asyncio.Semaphore,
+    goto_timeout_ms: int,
+    siret_validator: Any | None,
+    siret_sema: asyncio.Semaphore | None,
+) -> dict[str, str]:
+    status, inc, hard, soft, html_text = await fetch_and_check(
+        url, included, hard_excluded, soft_excluded, client, website_sema, goto_timeout_ms
+    )
+    record = {
+        **row,
+        "Statut_Lead": status,
+        "Mots_Inclus_Trouvés": inc,
+        "Hard_Exclus_Trouvés": hard,
+        "Soft_Exclus_Trouvés": soft,
+        "Mots_Exclus_Trouvés": ", ".join(filter(None, [hard, soft])),
+        "_website_text": html_text,
+    }
+    if status != "Valide" or siret_validator is None:
+        return record
+    assert siret_sema is not None
+    async with siret_sema:
+        verdict = await siret_validator.validate_lead(record, client)
+    record.update(verdict.company.as_lead_fields())
+    if not verdict.accepted:
+        record["Statut_Lead"] = "Non Valide"
+        record["Enrich_Reason"] = verdict.reason
+    return record
+
+
 async def run_website_scraping(
     df: pd.DataFrame,
     url_column: str,
@@ -285,6 +321,7 @@ async def enrich_leads(
     max_concurrent: int = 10,
     goto_timeout_ms: int = PAGE_GOTO_TIMEOUT_MS,
     service_config: dict[str, Any] | None = None,
+    siret_config: dict[str, Any] | None = None,
     log_cb: Callable[[str], None] | None = None,
 ) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
     """Verify lead websites; return (valid_rows, rejected_rows) with enrich audit fields."""
@@ -301,8 +338,7 @@ async def enrich_leads(
     if log_cb:
         log_cb(f"Website enrich — checking {len(rows)} site(s) @ concurrency {max_concurrent}")
 
-    df = pd.DataFrame(rows)
-    if url_column not in df.columns:
+    if url_column not in rows[0]:
         rejected = [
             {
                 **row,
@@ -317,39 +353,77 @@ async def enrich_leads(
         ]
         return [], rejected
 
-    result_df = await run_website_scraping(
-        df,
-        url_column,
-        included,
-        hard,
-        soft,
-        max_concurrent,
-        goto_timeout_ms,
-    )
+    siret_validator = None
+    siret_sema = None
+    siret_timeout = 5.0
+    if siret_config and bool(siret_config.get("PAPPERS_ENABLED", False)):
+        from pappers_validator import build_validator, pappers_settings
+
+        settings = pappers_settings(siret_config)
+        siret_validator = build_validator(siret_config)
+        siret_sema = asyncio.Semaphore(settings["concurrency"])
+        siret_timeout = settings["timeout_s"]
+        if log_cb:
+            log_cb(
+                f"SIRET enrich overlapped — min effectif {settings['min_employees']}, "
+                f"concurrency {settings['concurrency']}"
+            )
+
+    website_sema = asyncio.Semaphore(max_concurrent)
+    timeout = httpx.Timeout(max(goto_timeout_ms / 1000.0, siret_timeout))
+    async with httpx.AsyncClient(
+        headers={"User-Agent": USER_AGENT},
+        follow_redirects=True,
+        timeout=timeout,
+    ) as client:
+        qualified = await asyncio.gather(
+            *[
+                _fetch_and_qualify(
+                    row,
+                    str(row.get(url_column) or ""),
+                    included,
+                    hard,
+                    soft,
+                    client,
+                    website_sema,
+                    goto_timeout_ms,
+                    siret_validator,
+                    siret_sema,
+                )
+                for row in rows
+            ]
+        )
 
     valid: list[dict[str, str]] = []
     rejected: list[dict[str, str]] = []
-    for _, row in result_df.iterrows():
-        record = {str(k): ("" if pd.isna(v) else str(v)) for k, v in row.items()}
-        html_text = record.pop("_html_text", "")
+    siret_rejected = 0
+    for record in qualified:
+        html_text = record.pop("_website_text", "")
         status = record.get("Statut_Lead", "Non Valide")
         if status == "Valide":
             _apply_service_from_html(record, html_text, service_config)
             valid.append(record)
-        else:
-            error_detail = record.get("Soft_Exclus_Trouvés", "")
-            if record.get("Mots_Inclus_Trouvés") == "Erreur/Timeout":
-                error_detail = error_detail or record.get("Mots_Exclus_Trouvés", "")
-            record["Enrich_Reason"] = _enrich_reject_reason(
-                status=status,
-                included_found=record.get("Mots_Inclus_Trouvés", ""),
-                hard_found=record.get("Hard_Exclus_Trouvés", ""),
-                soft_found=record.get("Soft_Exclus_Trouvés", ""),
-                error_detail=error_detail,
-            )
+            continue
+        if str(record.get("Enrich_Reason") or "").startswith("REJECT_"):
+            siret_rejected += 1
             rejected.append(record)
+            continue
+        error_detail = record.get("Soft_Exclus_Trouvés", "")
+        if record.get("Mots_Inclus_Trouvés") == "Erreur/Timeout":
+            error_detail = error_detail or record.get("Mots_Exclus_Trouvés", "")
+        record["Enrich_Reason"] = _enrich_reject_reason(
+            status=status,
+            included_found=record.get("Mots_Inclus_Trouvés", ""),
+            hard_found=record.get("Hard_Exclus_Trouvés", ""),
+            soft_found=record.get("Soft_Exclus_Trouvés", ""),
+            error_detail=error_detail,
+        )
+        rejected.append(record)
 
     if log_cb:
-        log_cb(f"Website enrich done — {len(valid)} valid, {len(rejected)} rejected")
+        log_cb(
+            f"Website enrich done — {len(valid)} valid, {len(rejected)} rejected"
+            + (f" (SIRET rejected {siret_rejected})" if siret_validator else "")
+        )
 
     return valid, rejected

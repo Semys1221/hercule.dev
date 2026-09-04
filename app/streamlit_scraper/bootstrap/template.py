@@ -123,7 +123,7 @@ _LIST_ID = "{list_id}"{campaign_block}
     "PAPPERS_ENABLED": {tuning.get("PAPPERS_ENABLED", True)!r},
     "PAPPERS_MIN_EMPLOYEES": {int(tuning.get("PAPPERS_MIN_EMPLOYEES", 10))},
     "PAPPERS_ON_UNKNOWN": "{str(tuning.get("PAPPERS_ON_UNKNOWN") or "reject")}",
-    "PAPPERS_CONCURRENCY": {int(tuning.get("PAPPERS_CONCURRENCY", 5))},
+    "PAPPERS_CONCURRENCY": {int(tuning.get("PAPPERS_CONCURRENCY", 20))},
     "PAPPERS_NAF_PREFIXES": {_format_string_list(list(tuning.get("PAPPERS_NAF_PREFIXES") or []), indent=8)},
     "NICHE_METADATA": {_format_niche_metadata(tuning.get("NICHE_METADATA"), indent=8)},
 }}

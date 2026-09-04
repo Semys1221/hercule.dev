@@ -112,7 +112,7 @@ def _default_tuning() -> dict[str, Any]:
         "PAPPERS_ENABLED": True,
         "PAPPERS_MIN_EMPLOYEES": 10,
         "PAPPERS_ON_UNKNOWN": "reject",
-        "PAPPERS_CONCURRENCY": 5,
+        "PAPPERS_CONCURRENCY": 20,
         "PAPPERS_NAF_PREFIXES": [],
         "NICHE_METADATA": {
             "angle": "",

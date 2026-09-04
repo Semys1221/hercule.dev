@@ -357,6 +357,7 @@ def enrich_csv_cmd(
                 "SERVICE_DEFAULT": config.get("SERVICE_DEFAULT", ""),
                 "SERVICE_RULES": list(config.get("SERVICE_RULES") or []),
             },
+            siret_config=config if bool(config.get("PAPPERS_ENABLED", False)) else None,
             log_cb=_log,
         )
     )

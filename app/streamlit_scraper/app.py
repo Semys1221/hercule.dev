@@ -104,8 +104,7 @@ with col1:
                 st.markdown("\n\n".join(lines))
         if config.get("PAPPERS_ENABLED"):
             min_emp = int(config.get("PAPPERS_MIN_EMPLOYEES", 10) or 10)
-            key_state = "key present" if config.get("PAPPERS_API_KEY") else "KEY MISSING"
-            st.info(f"Pappers: {key_state} — min {min_emp} salariés")
+            st.info(f"SIRET via site + Annuaire (BeautifulSoup) — min {min_emp} salariés")
         if config.get("INSTANTLY_CAMPAIGN_ID"):
             st.caption(f"Instantly campaign: `{config.get('INSTANTLY_CAMPAIGN_ID')}`")
     else:
@@ -161,12 +160,10 @@ with col1:
         disabled=True,
     )
 
-    pappers_blocked = bool(config.get("PAPPERS_ENABLED") and not config.get("PAPPERS_API_KEY") and not dry_run)
     start_disabled = (
         not is_preset
         or has_leftover
         or (mode == "instantly_pushed" and not has_instantly)
-        or pappers_blocked
     )
     start_btn = st.button(
         "🚀 Start Engine",

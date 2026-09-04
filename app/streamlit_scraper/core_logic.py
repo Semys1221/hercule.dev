@@ -658,14 +658,9 @@ async def _run_enrich_batch(
             "SERVICE_DEFAULT": config.get("SERVICE_DEFAULT", ""),
             "SERVICE_RULES": list(config.get("SERVICE_RULES") or []),
         },
+        siret_config=config if bool(config.get("PAPPERS_ENABLED", False)) else None,
         log_cb=log_cb,
     )
-    if bool(config.get("PAPPERS_ENABLED", False)):
-        from pappers_validator import validate_leads
-
-        pappers_valid, pappers_rejected = await validate_leads(valid, config, log_cb=log_cb)
-        valid = pappers_valid
-        rejected = rejected + pappers_rejected
     for row in rejected:
         _append_enrich_audit_row(row)
     return valid, rejected
@@ -1386,11 +1381,12 @@ async def run_scraper_pipeline(
         log_cb("Website enrich disabled — scraped leads go directly to Instantly push")
     if bool(config.get("PAPPERS_ENABLED", False)):
         log_cb(
-            f"Pappers enabled — min effectif {int(config.get('PAPPERS_MIN_EMPLOYEES', 10) or 10)}, "
+            f"SIRET lookup enabled — site + Annuaire, min effectif "
+            f"{int(config.get('PAPPERS_MIN_EMPLOYEES', 10) or 10)}, "
             f"on_unknown={config.get('PAPPERS_ON_UNKNOWN') or 'reject'}"
         )
     else:
-        log_cb("Pappers disabled")
+        log_cb("SIRET lookup disabled")
 
     for sample in pass0_queries[:3]:
         log_cb(f"  sample query: {sample}")
@@ -1405,8 +1401,6 @@ async def run_scraper_pipeline(
                 log_cb("Instantly push enabled — target metric is instantly_pushed")
             else:
                 log_cb("WARNING: TARGET_MODE=instantly_pushed requires Instantly keys + push")
-        if bool(config.get("PAPPERS_ENABLED", False)) and not str(config.get("PAPPERS_API_KEY") or "").strip():
-            log_cb("WARNING: PAPPERS_ENABLED requires PAPPERS_API_KEY")
         log_cb("Dry-run complete — zero Outscraper requests made.")
         summary["queries_total"] = len(pass0_queries) + len(pass1_queries)
         progress_cb(1.0)
@@ -1423,9 +1417,6 @@ async def run_scraper_pipeline(
             raise SystemExit(
                 "TARGET_MODE=instantly_pushed requires INSTANTLY_API_KEY and INSTANTLY_LIST_ID"
             )
-
-    if bool(config.get("PAPPERS_ENABLED", False)) and not str(config.get("PAPPERS_API_KEY") or "").strip():
-        raise SystemExit("PAPPERS_ENABLED requires PAPPERS_API_KEY (set it in repo .env)")
 
     from scrape_state import detect_recoverable_run
 

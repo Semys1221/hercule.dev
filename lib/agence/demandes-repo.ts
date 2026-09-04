@@ -55,12 +55,23 @@ function mapTeaserRow(row: AgenceDemandeRow): DemandeTeaser {
   };
 }
 
+function todayIsoDate(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export async function fetchDemandesForCarousel(): Promise<DemandeContrat[]> {
   const client = createLinkTrackingClient();
+  const today = todayIsoDate();
   const { data, error } = await client
     .from("agence_demandes")
     .select("*")
     .eq("record_type", "demande")
+    .lte("available_from", today)
+    .gte("available_until", today)
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -90,11 +101,14 @@ export async function fetchDemandeTeaser(): Promise<DemandeTeaser | null> {
 
 export async function countAvailableDemandes(): Promise<number> {
   const client = createLinkTrackingClient();
+  const today = todayIsoDate();
   const { count, error } = await client
     .from("agence_demandes")
     .select("*", { count: "exact", head: true })
     .eq("record_type", "demande")
-    .eq("status", "available");
+    .eq("status", "available")
+    .lte("available_from", today)
+    .gte("available_until", today);
 
   if (error) {
     throw new Error(`Failed to count available demandes: ${error.message}`);

@@ -31,7 +31,6 @@ Required in repo root [`.env`](../../.env):
 | `INSTANTLY_LIST_ID` | Optional override for **biggy_agency** preset only |
 | `INSTANTLY_LIST_ID_CONSEILLERS_FINANCIERS` | Optional override for conseillers_financiers preset |
 | `INSTANTLY_LIST_ID_COMPTABLES` | Optional override for comptables preset |
-| `PAPPERS_API_KEY` | Pappers API token (required when `PAPPERS_ENABLED`) |
 
 ## Presets
 
@@ -122,12 +121,10 @@ Campaigns are created as **drafts** (not activated, no sequences). Copy is out o
 
 1. **Scrape (Outscraper)** — minimal gates: valid email, website present, dedup, exclude domains
 2. **Enrich (HTTP + BeautifulSoup)** — inline batches of 50; keyword include/exclude on fetched website HTML text. Hard exclusions always reject; soft exclusions only reject when no included keyword matches.
-3. **Pappers (SIRET / effectif)** — after website enrich; reject `REJECT_EMPLOYEE_COUNT` when official tranche is under 10 salariés (or EI without staff). Also persist SIREN/SIRET, NAF, CA, year, forme juridique.
-4. **Push (Instantly)** — only leads marked **Valide** post-enrich + Pappers; target **5,000 pushed**
+3. **SIRET / effectif** — overlapped with website enrich (no extra homepage fetch). BeautifulSoup extracts SIRET from the site; official no-key JSON (`recherche-entreprises.api.gouv.fr`) returns tranche d'effectif. Annuaire HTML is fallback only. Reject `REJECT_EMPLOYEE_COUNT` when tranche is under 10 salariés (or EI without staff).
+4. **Push (Instantly)** — only leads marked **Valide** post-enrich + SIRET; target **5,000 pushed**
 
-Set `ENRICH_ENABLED=false` in config to skip website enrich. Pappers still runs when `PAPPERS_ENABLED=true`.
-
-If `PAPPERS_ENABLED` is true and `PAPPERS_API_KEY` is missing, the pipeline fail-closes (no Instantly push).
+Set `ENRICH_ENABLED=false` in config to skip website enrich. SIRET lookup still runs when `PAPPERS_ENABLED=true`. No Pappers API key is required.
 
 ## Commands
 
@@ -190,11 +187,11 @@ CSV columns: `Email`, `Company`, `Website`, `Service`, `City`, `Type`, `Category
 | `ENRICH_INCLUDED_KEYWORDS` | preset-specific | Must match on website |
 | `ENRICH_HARD_EXCLUDED_KEYWORDS` | preset-specific | Always reject if matched |
 | `ENRICH_SOFT_EXCLUDED_KEYWORDS` | preset-specific | Reject only when no included match |
-| `PAPPERS_ENABLED` | `true` | Official SIRET / effectif check via Pappers |
+| `PAPPERS_ENABLED` | `true` | SIRET / effectif via site + Annuaire (no API key) |
 | `PAPPERS_MIN_EMPLOYEES` | 10 | Hard floor (INSEE tranche 11+) |
 | `PAPPERS_ON_UNKNOWN` | `reject` | Fail closed when effectif is missing |
 | `PAPPERS_NAF_PREFIXES` | preset-specific | Optional APE prefix filter |
-| `PAPPERS_CONCURRENCY` | 5 | Parallel Pappers requests |
+| `PAPPERS_CONCURRENCY` | 20 | Parallel SIRET lookups |
 
 Pappers reject reasons in `enrich_audit.csv`: `REJECT_EMPLOYEE_COUNT`, `REJECT_NAF`, `REJECT_PAPPERS_NOT_FOUND`, `REJECT_UNKNOWN_EFFECTIF`, `REJECT_PAPPERS_UNAVAILABLE`.
 
