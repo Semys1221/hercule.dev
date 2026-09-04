@@ -20,12 +20,16 @@ if str(_SCRIPTS_SUBSEQ_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_SUBSEQ_DIR))
 
 from send_queue import (  # noqa: E402
+    QueueLead,
     dispatch_bulk,
+    dispatch_conversation_reply,
     dispatch_one,
     fetch_pipeline_leads,
+    is_awaiting_reply_over_24h,
     leads_for_step,
     render_template_html,
     resolve_thread,
+    suggest_flow_for_lead,
     template_requires_reservation_link,
 )
 from send_window import (  # noqa: E402
@@ -1136,6 +1140,63 @@ def test_mandataires_duplicate_heuristic() -> None:
     print("OK mandataires duplicate heuristic")
 
 
+def test_is_awaiting_reply_over_24h() -> None:
+    old = "2020-01-01T00:00:00+00:00"
+    recent = datetime.now(timezone.utc).isoformat()
+    assert is_awaiting_reply_over_24h(old, "2019-01-01T00:00:00+00:00") is True
+    assert is_awaiting_reply_over_24h(old, old) is False
+    assert is_awaiting_reply_over_24h(recent, None) is False
+    assert is_awaiting_reply_over_24h(None, None) is False
+    print("OK is_awaiting_reply_over_24h")
+
+
+def test_suggest_flow_for_lead() -> None:
+    lead = QueueLead(
+        lead_id="1",
+        email="a@example.com",
+        first_name="A",
+        interest_label="Intéressé",
+        last_sent_at=None,
+        replied_since_last_send=True,
+        missing_reservation_link=False,
+        sent_flows=["interested_email1"],
+        step="replies_to_handle",
+        envoyer=False,
+    )
+    assert suggest_flow_for_lead(lead) == "interested_email2"
+    lead.sent_flows = ["interested_email1", "interested_email2"]
+    assert suggest_flow_for_lead(lead) == "interested_email3"
+    lead.sent_flows = ["interested_email3"]
+    assert suggest_flow_for_lead(lead) is None
+    lead.step = "step_1"
+    assert suggest_flow_for_lead(lead) == "interested_email2"
+    print("OK suggest_flow_for_lead")
+
+
+def test_dispatch_conversation_reply_dry_run() -> None:
+    mock_client = MagicMock()
+    with (
+        patch("send_queue.has_sent_event", return_value=False),
+        patch("send_queue.has_pending_job", return_value=False),
+        patch(
+            "send_queue._load_template",
+            return_value={"subject": "Re:", "body_html": "<p>Hi</p>"},
+        ),
+        patch("send_queue.is_within_send_window", return_value=True),
+    ):
+        result = dispatch_conversation_reply(
+            mock_client,
+            flow="interested_email2",
+            campaign_id=FAKE_CAMPAIGN_ID,
+            lead=FAKE_LEAD_WITH_LINK,
+            body_html="<p>Custom body</p>",
+            dry_run=True,
+        )
+    assert result.get("would_send_now") is True
+    mock_client.reply_to_email.assert_not_called()
+    print("OK dispatch_conversation_reply dry run")
+
+
 def main() -> None:
     tests = [
         test_dry_run_bulk_dispatch,
@@ -1176,6 +1237,9 @@ def main() -> None:
         test_initialize_campaign_resumes_inactive_webhook,
         test_list_webhooks_pagination,
         test_mandataires_duplicate_heuristic,
+        test_is_awaiting_reply_over_24h,
+        test_suggest_flow_for_lead,
+        test_dispatch_conversation_reply_dry_run,
     ]
     for test in tests:
         test()

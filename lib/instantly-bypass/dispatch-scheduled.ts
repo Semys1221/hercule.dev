@@ -87,6 +87,10 @@ async function executeBypassJob(job: BypassJob): Promise<void> {
     (await findLeadByEmailInCampaign(apiKey, job.campaign_id, leadEmail));
 
   const template = await loadTemplate(job.campaign_id, flow);
+  const customBodyHtml =
+    typeof job.payload?.body_html === "string" && job.payload.body_html.trim()
+      ? job.payload.body_html
+      : null;
   if (isTemplateBodyEmpty(template.body_html)) {
     await recordBypassEvent({
       idempotencyKey: job.idempotency_key,
@@ -102,7 +106,7 @@ async function executeBypassJob(job: BypassJob): Promise<void> {
   }
 
   if (
-    templateRequiresReservationLink(template.body_html) &&
+    templateRequiresReservationLink(customBodyHtml ?? template.body_html) &&
     !readReservationLink(lead ?? undefined)
   ) {
     await recordBypassEvent({
@@ -139,6 +143,7 @@ async function executeBypassJob(job: BypassJob): Promise<void> {
   }
   const vars = buildTemplateVariables({}, lead ?? undefined);
   const rendered = renderTemplate(template, vars);
+  const html = customBodyHtml ?? rendered.html;
   const subject = thread.subject?.trim() || rendered.subject || "your message";
   const started = Date.now();
 
@@ -146,7 +151,7 @@ async function executeBypassJob(job: BypassJob): Promise<void> {
     eaccount: thread.eaccount,
     replyToUuid: thread.replyToUuid,
     subject,
-    html: rendered.html,
+    html,
   });
 
   const dispatchedAt = new Date();

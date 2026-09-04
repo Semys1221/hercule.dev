@@ -40,10 +40,13 @@ from send_queue import (
     Flow,
     PipelineStep,
     dispatch_bulk,
+    dispatch_conversation_reply,
     fetch_pipeline_leads,
+    format_last_reply_label,
     leads_for_step,
     move_pipeline_leads,
     render_template_html,
+    suggest_flow_for_lead,
 )
 from send_window import format_paris_slot, is_within_send_window, next_send_slot
 from unibox_classify import derive_step_from_flows, is_no_show_status
@@ -93,17 +96,54 @@ STATUS_LABELS = {
     "ready": "Prêt",
 }
 
+URGENT_BLINK_CSS = """
+<style>
+@keyframes subseq-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.subseq-urgent {
+  animation: subseq-blink 1.2s ease-in-out infinite;
+  color: #c0392b;
+  font-weight: 600;
+}
+</style>
+"""
+
+
+def _inject_urgent_css() -> None:
+    if st.session_state.get("_subseq_urgent_css"):
+        return
+    st.markdown(URGENT_BLINK_CSS, unsafe_allow_html=True)
+    st.session_state["_subseq_urgent_css"] = True
+
+
+def _step_radio_label(step: PipelineStep, all_queue: list | None) -> str:
+    base = STEP_LABELS[step]
+    if step != "replies_to_handle" or not all_queue:
+        return base.split(" — ")[0] if step != "replies_to_handle" else base
+    replies = leads_for_step(all_queue, "replies_to_handle")
+    urgent_count = sum(1 for row in replies if row.awaiting_reply_over_24h)
+    short = base.split(" — ")[0]
+    if urgent_count:
+        return f"{short} ({len(replies)} · {urgent_count} urgents)"
+    if replies:
+        return f"{short} ({len(replies)})"
+    return short
+
 
 def _queue_to_dataframe(queue: list) -> pd.DataFrame:
     return pd.DataFrame(
         [
             {
                 "Envoyer": row.envoyer,
+                "Alerte": "🔴 24h+" if row.awaiting_reply_over_24h else "—",
                 "Email": row.email,
                 "Prénom": row.first_name,
                 "Statut": row.interest_label,
                 "Étape": STEP_LABELS[row.step],
                 "Répondu depuis envoi Hercule": "Oui" if row.replied_since_last_send else "Non",
+                "Dernière réponse prospect": format_last_reply_label(row.last_reply_at),
                 "Lien OK": "Non" if row.missing_reservation_link else "Oui",
                 "Emails déjà envoyés": ", ".join(row.sent_flows) if row.sent_flows else "—",
                 "Dernier envoi Hercule": row.last_sent_at or "—",
@@ -146,11 +186,19 @@ def _render_conversation_panel(
     queue: list,
     selected_emails: set[str],
     step: PipelineStep,
+    cache_key: str,
+    send_enabled: bool,
 ) -> None:
+    _inject_urgent_css()
     st.subheader("Conversation Unibox")
     if not queue:
         st.caption("Aucun lead dans cette étape.")
         return
+
+    def _lead_option_label(row) -> str:
+        prefix = "🔴 " if row.awaiting_reply_over_24h else ""
+        name = f"{row.first_name} — {row.email}" if row.first_name else row.email
+        return f"{prefix}{name}"
 
     email_options = [row.email for row in queue]
     default_email = email_options[0]
@@ -163,7 +211,7 @@ def _render_conversation_panel(
         options=email_options,
         index=default_index,
         format_func=lambda e: next(
-            (f"{r.first_name} — {r.email}" if r.first_name else r.email for r in queue if r.email == e),
+            (_lead_option_label(r) for r in queue if r.email == e),
             e,
         ),
         key=f"conv_lead_{step}_{campaign_id}",
@@ -173,22 +221,37 @@ def _render_conversation_panel(
     if not lead_row:
         return
 
+    if lead_row.awaiting_reply_over_24h:
+        st.markdown(
+            '<p class="subseq-urgent">Dernière réponse prospect il y a 24h+ — réponse Hercule en attente.</p>',
+            unsafe_allow_html=True,
+        )
+
     load_key = f"thread_{campaign_id}_{conv_email}"
-    if st.button("Charger la dernière réponse", key=f"load_conv_{step}_{conv_email}"):
+    loaded_for_key = f"thread_loaded_for_{campaign_id}_{step}"
+
+    reload_col, _ = st.columns([1, 3])
+    with reload_col:
+        force_reload = st.button("Recharger", key=f"reload_conv_{step}_{conv_email}")
+
+    should_load = force_reload or st.session_state.get(loaded_for_key) != conv_email
+    if should_load:
         try:
-            client = InstantlyClient(require_instantly_api_key())
-            messages = fetch_latest_reply(
-                client,
-                lead_email=conv_email,
-                campaign_id=campaign_id,
-                lead_first_name=lead_row.first_name,
-            )
-            st.session_state[load_key] = messages
+            with st.spinner("Chargement…"):
+                client = InstantlyClient(require_instantly_api_key())
+                messages = fetch_latest_reply(
+                    client,
+                    lead_email=conv_email,
+                    campaign_id=campaign_id,
+                    lead_first_name=lead_row.first_name,
+                )
+                st.session_state[load_key] = messages
+                st.session_state[loaded_for_key] = conv_email
         except Exception as exc:
             st.error(str(exc))
 
     if load_key not in st.session_state:
-        st.info("Cliquez **Charger la dernière réponse** pour afficher la dernière réponse du lead.")
+        st.info("Chargement de la conversation…")
         return
 
     messages = st.session_state[load_key]
@@ -213,14 +276,111 @@ def _render_conversation_panel(
             f"fingerprints → **{STEP_LABELS.get(derived_step, derived_step)}**."  # type: ignore[arg-type]
         )
 
-    if not messages:
+    if messages:
+        st.markdown(render_conversation_html(messages), unsafe_allow_html=True)
+    else:
         st.info("Aucune réponse reçue pour ce lead.")
+
+    st.divider()
+    st.subheader("Répondre")
+
+    suggested_flow = suggest_flow_for_lead(lead_row)
+    if suggested_flow is None:
+        st.caption("Aucun email séquence suggéré pour ce lead — déplacez-le vers une autre étape.")
         return
 
-    st.markdown(render_conversation_html(messages), unsafe_allow_html=True)
+    flow_labels = [FLOW_LABELS[f] for f in SENDABLE_FLOWS]
+    default_flow_index = SENDABLE_FLOWS.index(suggested_flow)
+    chosen_flow_label = st.selectbox(
+        "Email à envoyer",
+        options=flow_labels,
+        index=default_flow_index,
+        key=f"conv_flow_{campaign_id}_{step}_{conv_email}",
+    )
+    conv_flow: Flow = SENDABLE_FLOWS[flow_labels.index(chosen_flow_label)]
+
+    body_state_key = f"conv_body_{campaign_id}_{conv_email}_{conv_flow}"
+    template_seed_key = f"conv_body_seed_{campaign_id}_{conv_email}_{conv_flow}"
+    if template_seed_key not in st.session_state:
+        try:
+            st.session_state[body_state_key] = render_template_html(
+                conv_flow,
+                lead_row.raw,
+                campaign_id=campaign_id,
+            )
+            st.session_state[template_seed_key] = True
+        except Exception as exc:
+            st.error(f"Impossible de charger le template : {exc}")
+            return
+
+    body_html = st.text_area(
+        "Corps HTML (éditable)",
+        height=180,
+        key=body_state_key,
+    )
+
+    with st.expander("Aperçu rendu", expanded=False):
+        st.markdown(body_html or "", unsafe_allow_html=True)
+
+    dry_conv = st.checkbox(
+        "Mode test (dry run)",
+        value=True,
+        key=f"dry_conv_{campaign_id}_{step}",
+        help="Aucun email Instantly ni event Supabase en mode test.",
+    )
+
+    send_disabled = not send_enabled or not str(body_html or "").strip()
+    if st.button(
+        "Envoyer la réponse",
+        key=f"send_conv_{campaign_id}_{step}_{conv_email}",
+        disabled=send_disabled,
+    ):
+        try:
+            client = InstantlyClient(require_instantly_api_key())
+            result = dispatch_conversation_reply(
+                client,
+                flow=conv_flow,
+                campaign_id=campaign_id,
+                lead=lead_row.raw,
+                body_html=body_html,
+                dry_run=dry_conv,
+            )
+        except Exception as exc:
+            st.error(str(exc))
+            return
+
+        if result.get("skipped"):
+            st.warning(f"Déjà traité : {result.get('skipped')}")
+        elif dry_run:
+            if result.get("would_send_now"):
+                st.info("Mode test : envoi **immédiat** si vous décochez le dry run.")
+            elif result.get("would_schedule"):
+                slot = result.get("scheduled_label") or format_paris_slot(next_send_slot())
+                st.info(f"Mode test : programmé pour **{slot}**.")
+        elif result.get("scheduled"):
+            slot = result.get("scheduled_label") or format_paris_slot(next_send_slot())
+            st.toast(f"Réponse programmée pour {slot}", icon="🕐")
+            st.success(f"Réponse programmée pour **{slot}**.")
+            st.session_state.pop(cache_key, None)
+            st.session_state.pop(load_key, None)
+            st.session_state.pop(loaded_for_key, None)
+        elif result.get("ok"):
+            st.toast("Réponse envoyée", icon="✅")
+            st.success("Réponse envoyée via Unibox.")
+            st.session_state.pop(cache_key, None)
+            st.session_state.pop(load_key, None)
+            st.session_state.pop(loaded_for_key, None)
+            for key in list(st.session_state.keys()):
+                if str(key).startswith(f"conv_body_{campaign_id}_{conv_email}_"):
+                    st.session_state.pop(key, None)
+                if str(key).startswith(f"conv_body_seed_{campaign_id}_{conv_email}_"):
+                    st.session_state.pop(key, None)
+        else:
+            st.error(result.get("error", "Échec d'envoi"))
 
 
 def _render_pipeline_panel(campaign_id: str, *, send_enabled: bool = True) -> None:
+    _inject_urgent_css()
     window_open = is_within_send_window()
     next_slot = next_send_slot()
     next_slot_label = format_paris_slot(next_slot)
@@ -235,10 +395,13 @@ def _render_pipeline_panel(campaign_id: str, *, send_enabled: bool = True) -> No
     if not send_enabled:
         st.warning("Remplissez l'email 1 dans Setup ou Templates avant d'envoyer.")
 
+    cache_key = f"pipeline_{campaign_id}"
+    all_queue_cached = st.session_state.get(cache_key)
+
     step = st.radio(
         "Étape CRM",
         options=PIPELINE_STEPS,
-        format_func=lambda s: STEP_LABELS[s],
+        format_func=lambda s: _step_radio_label(s, all_queue_cached),
         horizontal=True,
         key="envois_step",
     )
@@ -362,6 +525,17 @@ def _render_pipeline_panel(campaign_id: str, *, send_enabled: bool = True) -> No
         st.warning("Aucun lead dans cette étape.")
         return
 
+    urgent_leads = [row for row in queue if row.awaiting_reply_over_24h]
+    if step == "replies_to_handle" and urgent_leads:
+        urgent_items = ", ".join(
+            f"{row.first_name or row.email} ({row.email})" for row in urgent_leads
+        )
+        st.markdown(
+            f'<p class="subseq-urgent"><strong>{len(urgent_leads)} lead(s) sans réponse depuis 24h+</strong>'
+            f" — {urgent_items}</p>",
+            unsafe_allow_html=True,
+        )
+
     missing_links = sum(1 for row in queue if row.missing_reservation_link)
     if missing_links:
         st.warning(f"{missing_links} lead(s) missing `reservation_agence_link` — they will fail on send.")
@@ -399,11 +573,13 @@ def _render_pipeline_panel(campaign_id: str, *, send_enabled: bool = True) -> No
                 "Envoyer": st.column_config.CheckboxColumn("Envoyer", default=True),
             },
             disabled=[
+                "Alerte",
                 "Email",
                 "Prénom",
                 "Statut",
                 "Étape",
                 "Répondu depuis envoi Hercule",
+                "Dernière réponse prospect",
                 "Lien OK",
                 "Emails déjà envoyés",
                 "Dernier envoi Hercule",
@@ -515,6 +691,8 @@ def _render_pipeline_panel(campaign_id: str, *, send_enabled: bool = True) -> No
             queue=queue,
             selected_emails=selected_emails,
             step=step,
+            cache_key=cache_key,
+            send_enabled=send_enabled,
         )
 
 

@@ -19,10 +19,12 @@ Copy and webhook pause are **per campaign**. `instantly_bypass_settings` remains
 | **1** | E1 envoyé | E2 confirmation |
 | **2** | E2 envoyé | E3 clôture → Not Interested (-1) |
 | **3** | Séquence terminée | — |
-| **Réponses à traiter** | A répondu en étape 1, 2 ou 3 | Déplacer manuellement puis envoyer |
+| **Réponses à traiter** | A répondu en étape 1, 2 ou 3 | Email suggéré (E1/E2/E3) + envoi depuis Conversation |
 
 - Fetch Instantly **Interested** only. Missing CRM row → **étape 0**.
 - Reply detection (Unibox, since last Hercule send) on fetch for steps 1/2/3 → **Réponses à traiter**.
+- Leads en **Réponses à traiter** sans réponse Hercule depuis **24h+** sont signalés (🔴 clignotant dans le tableau, le selectbox Conversation et le bandeau d’urgence).
+- **Conversation** : chargement auto à la sélection du lead ; bloc **Répondre** avec template E1/E2/E3 pré-rempli (éditable) et envoi direct (même fenêtre d’envoi que les envois bulk).
 - Auto-advance only after Streamlit or webhook sends. Manual **Déplacer** always available.
 - Instantly **Interested** tag is unchanged until E3.
 - All sends are **Unibox replies** in the existing thread.

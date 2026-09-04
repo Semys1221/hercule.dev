@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal
 from zoneinfo import ZoneInfo
@@ -226,6 +226,68 @@ def lead_has_replied_since(
     return False
 
 
+def get_last_received_at(
+    client: InstantlyClient,
+    lead_email: str,
+    campaign_id: str,
+) -> str | None:
+    items = client.list_emails(
+        search=lead_email,
+        campaign_id=campaign_id,
+        email_type="received",
+        latest_of_thread=True,
+        limit=10,
+    )
+    if not isinstance(items, list) or not items:
+        return None
+    pick = _pick_latest_email(items)
+    if not pick:
+        return None
+    ts = email_timestamp(pick)
+    return ts or None
+
+
+def _parse_iso_datetime(value: str) -> datetime | None:
+    raw = value.strip()
+    if not raw:
+        return None
+    if raw.endswith("Z"):
+        raw = f"{raw[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def is_awaiting_reply_over_24h(
+    last_received_at: str | None,
+    last_sent_at: str | None,
+) -> bool:
+    received_dt = _parse_iso_datetime(last_received_at or "")
+    if received_dt is None:
+        return False
+    if datetime.now(timezone.utc) - received_dt < timedelta(hours=24):
+        return False
+    if not last_sent_at:
+        return True
+    sent_dt = _parse_iso_datetime(last_sent_at)
+    if sent_dt is None:
+        return True
+    return sent_dt < received_dt
+
+
+def format_last_reply_label(last_reply_at: str | None) -> str:
+    if not last_reply_at:
+        return "—"
+    parsed = _parse_iso_datetime(last_reply_at)
+    if parsed is None:
+        return last_reply_at[:16]
+    return format_paris_slot(parsed)
+
+
 def _render_template(body_html: str, vars_map: dict[str, str]) -> str:
     out_body = body_html
     for key, value in vars_map.items():
@@ -353,7 +415,22 @@ class QueueLead:
     sent_flows: list[str]
     step: PipelineStep
     envoyer: bool
+    last_reply_at: str | None = None
+    awaiting_reply_over_24h: bool = False
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
+
+
+def suggest_flow_for_lead(lead: QueueLead) -> Flow | None:
+    if lead.step == "replies_to_handle":
+        sent = set(lead.sent_flows)
+        if "interested_email3" in sent:
+            return None
+        if "interested_email2" in sent:
+            return "interested_email3"
+        if "interested_email1" in sent:
+            return "interested_email2"
+        return "interested_email1"
+    return DEFAULT_FLOW_BY_STEP.get(lead.step)
 
 
 @dataclass
@@ -445,6 +522,13 @@ def fetch_pipeline_leads(
                 step = "replies_to_handle"
 
         sent_flows = list_sent_flows(campaign_id, lead_email)
+        last_reply_at: str | None = None
+        awaiting_reply_over_24h = False
+        if step == "replies_to_handle" or replied_since_last_send:
+            last_reply_at = get_last_received_at(instantly, lead_email, campaign_id)
+            time.sleep(0.15)
+            awaiting_reply_over_24h = is_awaiting_reply_over_24h(last_reply_at, last_sent_at)
+
         rows.append(
             QueueLead(
                 lead_id=str(lead.get("id") or ""),
@@ -457,6 +541,8 @@ def fetch_pipeline_leads(
                 sent_flows=sent_flows,
                 step=step,
                 envoyer=not replied_since_last_send,
+                last_reply_at=last_reply_at,
+                awaiting_reply_over_24h=awaiting_reply_over_24h,
                 raw=lead,
             )
         )
@@ -481,6 +567,7 @@ def _execute_send(
     lead_id: str,
     idem: str,
     started: datetime,
+    html_override: str | None = None,
 ) -> dict[str, Any]:
     template = _load_template(campaign_id, flow)
 
@@ -504,7 +591,9 @@ def _execute_send(
         )
         return {"ok": False, "error": "thread_not_found", "lead_email": lead_email}
 
-    html = _render_template(template["body_html"], _template_vars(lead))
+    html = html_override if html_override is not None else _render_template(
+        template["body_html"], _template_vars(lead)
+    )
     subject = thread["subject"] or template["subject"] or "your message"
 
     client.reply_to_email(
@@ -652,6 +741,95 @@ def dispatch_one(
             lead_id=lead_id,
             idem=idem,
             started=started,
+        )
+    except Exception as exc:
+        record_event(
+            {
+                "idempotency_key": idem,
+                "flow": flow,
+                "campaign_id": campaign_id,
+                "lead_email": lead_email,
+                "lead_id": lead_id or None,
+                "status": "failed",
+                "error_message": str(exc),
+            }
+        )
+        return {"ok": False, "error": str(exc), "lead_email": lead_email}
+
+
+def dispatch_conversation_reply(
+    client: InstantlyClient,
+    *,
+    flow: Flow,
+    campaign_id: str,
+    lead: dict[str, Any],
+    body_html: str,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    lead_email = str(lead.get("email") or "").strip().lower()
+    lead_id = str(lead.get("id") or "")
+    if not lead_email:
+        return {"ok": False, "error": "missing_lead_email"}
+
+    idem = idempotency_key(flow, campaign_id, lead_email)
+    if has_sent_event(idem):
+        return {"ok": True, "skipped": "already_sent"}
+
+    if has_pending_job(idem):
+        return {"ok": True, "skipped": "already_scheduled"}
+
+    if not str(body_html or "").strip():
+        return {"ok": False, "error": "empty_body", "lead_email": lead_email}
+
+    try:
+        _load_template(campaign_id, flow)
+    except RuntimeError:
+        return {"ok": False, "error": "template_empty", "lead_email": lead_email}
+
+    if template_requires_reservation_link(body_html) and _missing_reservation_link(lead):
+        return {"ok": False, "error": "missing_reservation_link", "lead_email": lead_email}
+
+    if dry_run:
+        result: dict[str, Any] = {"ok": True, "dry_run": True, "lead_email": lead_email}
+        if is_within_send_window():
+            result["would_send_now"] = True
+        else:
+            slot = next_send_slot()
+            result["would_schedule"] = True
+            result["scheduled_label"] = format_paris_slot(slot)
+        return result
+
+    if not is_within_send_window():
+        slot = next_send_slot()
+        insert_bypass_job(
+            idempotency_key=idem,
+            campaign_id=campaign_id,
+            lead_email=lead_email,
+            flow=flow,
+            scheduled_for=slot,
+            payload={"lead_id": lead_id, "lead": lead, "body_html": body_html},
+        )
+        label = format_paris_slot(slot)
+        return {
+            "ok": True,
+            "scheduled": True,
+            "scheduled_for": slot.isoformat(),
+            "scheduled_label": label,
+            "lead_email": lead_email,
+        }
+
+    started = datetime.now(timezone.utc)
+    try:
+        return _execute_send(
+            client,
+            flow=flow,
+            campaign_id=campaign_id,
+            lead=lead,
+            lead_email=lead_email,
+            lead_id=lead_id,
+            idem=idem,
+            started=started,
+            html_override=body_html,
         )
     except Exception as exc:
         record_event(
