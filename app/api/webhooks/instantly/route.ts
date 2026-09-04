@@ -32,12 +32,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: eventType ?? "unknown" });
   }
 
-  if (!isWebhookBypassEnabled()) {
+  if (!(await isWebhookBypassEnabled())) {
     return NextResponse.json({
       ok: true,
       skipped: "webhook_paused",
       message:
-        "Webhook auto-send is paused. Set INSTANTLY_BYPASS_WEBHOOK_ENABLED=true when ready.",
+        "Webhook auto-send is paused. Enable it from Streamlit Setup → Webhook registration.",
     });
   }
 

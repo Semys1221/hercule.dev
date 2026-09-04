@@ -2,6 +2,8 @@ import { createBypassClient } from "./supabase";
 
 import type { BypassConfig, BypassTemplate, BypassTemplateKey, TemplateVariables } from "./types";
 
+const EMAIL_SIGNATURE = "Béatrice Meyer";
+
 export async function loadTemplate(
   templateKey: BypassTemplateKey,
 ): Promise<BypassTemplate> {
@@ -61,7 +63,7 @@ function replaceVariables(text: string, vars: TemplateVariables): string {
   for (const [key, value] of Object.entries(vars)) {
     out = out.replaceAll(`{{${key}}}`, value);
   }
-  return out;
+  return out.replaceAll("{{accountSignature}}", EMAIL_SIGNATURE);
 }
 
 export function renderTemplate(
@@ -99,7 +101,6 @@ export function buildTemplateVariables(
     company_name: read("company_name", "companyName"),
     subject: read("subject", "reply_subject") || "your message",
     reservation_agence_link: read("reservation_agence_link"),
-    accountSignature: read("accountSignature"),
   };
 }
 

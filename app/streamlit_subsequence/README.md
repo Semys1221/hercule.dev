@@ -1,19 +1,22 @@
 # Streamlit Subsequence
 
-Operator dashboard for Instantly interest-status sequences — Unibox reply sends.
+Operator dashboard for Instantly Interested follow-ups — CRM steps + Unibox reply sends.
 
-## Model
+## CRM pipeline
 
-| Sequence | Fetch filter | Email 1 | Email 2 | Email 3 |
-|----------|--------------|---------|---------|---------|
-| **Interested** | `FILTER_LEAD_INTERESTED` | Auto webhook + manual | Manual | Manual → Not Interested |
-| **No Show** | `FILTER_LEAD_NO_SHOW` | Manual | Manual → Not Interested | — |
+| Étape | Signification | Prochain email |
+|-------|---------------|----------------|
+| **0** | Interested, pas encore de suivi Hercule | E1 précisions (webhook ou manuel) |
+| **1** | E1 envoyé | E2 confirmation |
+| **2** | E2 envoyé | E3 clôture → Not Interested (-1) |
+| **3** | Séquence terminée | — |
+| **Réponses à traiter** | A répondu en étape 1, 2 ou 3 | Déplacer manuellement puis envoyer |
 
-- **One fetch per sequence** — operator picks which email to send.
-- **Reply detection** — unchecked if lead replied since any Hercule send.
-- **Missing `reservation_agence_link`** — warning in UI, send blocked.
-- **Final emails** (Interested E3, No Show E2) set Instantly status to **Not Interested (-1)**.
-- All sends are **Unibox replies** in the existing thread (thread subject kept).
+- Fetch Instantly **Interested** only. Missing CRM row → **étape 0**.
+- Reply detection (Unibox, since last Hercule send) on fetch for steps 1/2/3 → **Réponses à traiter**.
+- Auto-advance only after Streamlit or webhook sends. Manual **Déplacer** always available.
+- Instantly **Interested** tag is unchanged until E3.
+- All sends are **Unibox replies** in the existing thread.
 
 ## Quick start
 
@@ -22,15 +25,16 @@ pnpm streamlit-subsequence
 pnpm smoke-streamlit-subsequence
 ```
 
-1. Apply migrations through `20260910120000_subsequence_v2.sql`
+1. Apply migrations through `20260912120000_pipeline_crm.sql`
 2. Configure campaign in **Setup**
-3. **Envois** → fetch leads by interest status → pick email → send
+3. **Envois** → Fetch Interested + sync CRM → pick étape → send or move
 
 ## Webhook (Interested Email 1 only)
 
 - URL: `{NEXT_PUBLIC_APP_URL}/api/webhooks/instantly`
-- Kill switch: `INSTANTLY_BYPASS_WEBHOOK_ENABLED=true` required to auto-send
+- Places the lead in **étape 0**, sends E1 if auto-send is on, then **étape 1**
+- **Pause / activate** via **Setup → Webhook registration** (Supabase `instantly_bypass_settings`)
 
 ## Template variables
 
-`{{reservation_agence_link}}`, `{{accountSignature}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`
+`{{reservation_agence_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`

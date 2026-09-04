@@ -22,6 +22,7 @@
     "crm": "streamlit run crm/admin_tool.py",
     "streamlit-subsequence": "cd app/streamlit_subsequence && streamlit run streamlit_app.py",
     "smoke-streamlit-subsequence": "python3 ./scripts/streamlit_subsequence/smokeSendQueue.py",
+    "bootstrap-streamlit-subsequence-pipeline": "python3 ./scripts/streamlit_subsequence/bootstrapPipelineFromUnibox.py",
     "smoke-instantly-bypass-webhook": "tsx --env-file=.env ./scripts/instantly-bypass/smokeInterestedWebhook.ts",
     "scrapper": "cd app/scrapper_streamlit && python main.py ui",
     "streamlit-clean": "cd app/streamlit_clean && streamlit run main.py"

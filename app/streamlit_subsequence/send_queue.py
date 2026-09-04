@@ -1,4 +1,4 @@
-"""Dashboard send queues — interest-status fetch, Unibox reply sends."""
+"""Dashboard send queues — CRM pipeline fetch, Unibox reply sends."""
 
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ if str(_REPO_ROOT) not in sys.path:
 
 from shared.instantly_client import (
     FILTER_LEAD_INTERESTED,
-    FILTER_LEAD_NO_SHOW,
     InstantlyClient,
     get_api_key,
     lead_custom_var,
@@ -24,35 +23,61 @@ from shared.instantly_client import (
 from supabase_repo import (
     get_last_send_at,
     has_sent_event,
+    list_pipeline_for_campaign,
     list_sent_flows,
     record_event,
+    upsert_pipeline_step,
 )
 
-Sequence = Literal["interested", "no_show"]
-Flow = Literal[
-    "interested_email1",
-    "interested_email2",
-    "interested_email3",
-    "no_show_email1",
-    "no_show_email2",
-]
+PipelineStep = Literal["step_0", "step_1", "step_2", "step_3", "replies_to_handle"]
+Flow = Literal["interested_email1", "interested_email2", "interested_email3"]
 
 INTERESTED_STATUS = 1
 NO_SHOW_STATUS = -4
 NOT_INTERESTED_STATUS = -1
 EMAIL_SEND_DELAY_S = 3.2
 
-SEQUENCE_FILTER: dict[Sequence, str] = {
-    "interested": FILTER_LEAD_INTERESTED,
-    "no_show": FILTER_LEAD_NO_SHOW,
+PIPELINE_STEPS: list[PipelineStep] = [
+    "step_0",
+    "step_1",
+    "step_2",
+    "step_3",
+    "replies_to_handle",
+]
+
+REPLY_MOVE_STEPS: set[PipelineStep] = {"step_1", "step_2", "step_3"}
+
+STEP_AFTER_FLOW: dict[Flow, PipelineStep] = {
+    "interested_email1": "step_1",
+    "interested_email2": "step_2",
+    "interested_email3": "step_3",
 }
 
-SEQUENCE_FLOWS: dict[Sequence, list[Flow]] = {
-    "interested": ["interested_email1", "interested_email2", "interested_email3"],
-    "no_show": ["no_show_email1", "no_show_email2"],
+DEFAULT_FLOW_BY_STEP: dict[PipelineStep, Flow | None] = {
+    "step_0": "interested_email1",
+    "step_1": "interested_email2",
+    "step_2": "interested_email3",
+    "step_3": None,
+    "replies_to_handle": None,
 }
 
-FINAL_FLOWS: set[Flow] = {"interested_email3", "no_show_email2"}
+SENDABLE_FLOWS: list[Flow] = [
+    "interested_email1",
+    "interested_email2",
+    "interested_email3",
+]
+
+FINAL_FLOWS: set[Flow] = {"interested_email3"}
+
+EMAIL_SIGNATURE = "Béatrice Meyer"
+
+PREVIEW_LEAD: dict[str, Any] = {
+    "first_name": "Jean",
+    "last_name": "Dupont",
+    "payload": {
+        "reservation_agence_link": "https://www.hercule.dev/reservation.html/preview",
+    },
+}
 
 
 def idempotency_key(flow: str, campaign_id: str, lead_email: str) -> str:
@@ -69,12 +94,42 @@ def _pick_latest_email(items: list[dict[str, Any]]) -> dict[str, Any] | None:
     return sorted(items, key=ts, reverse=True)[0]
 
 
-def resolve_thread(
+def _pick_earliest_email(items: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not items:
+        return None
+
+    def ts(item: dict[str, Any]) -> str:
+        return str(item.get("timestamp_email") or item.get("timestamp_created") or "")
+
+    return sorted(items, key=ts)[0]
+
+
+def _resolve_initial_eaccount(
     client: InstantlyClient,
     *,
     lead_email: str,
     campaign_id: str,
     fallback_eaccount: str | None = None,
+) -> str | None:
+    sent_items = client.list_emails(
+        search=lead_email,
+        campaign_id=campaign_id,
+        email_type="sent",
+        limit=50,
+    )
+    earliest = _pick_earliest_email(sent_items)
+    if earliest and earliest.get("eaccount"):
+        return str(earliest["eaccount"])
+    if fallback_eaccount and fallback_eaccount.strip():
+        return fallback_eaccount.strip()
+    return None
+
+
+def _resolve_reply_anchor(
+    client: InstantlyClient,
+    *,
+    lead_email: str,
+    campaign_id: str,
 ) -> dict[str, str] | None:
     for attempt in range(3):
         for email_type in ("received", "sent"):
@@ -86,25 +141,53 @@ def resolve_thread(
                 limit=10,
             )
             pick = _pick_latest_email(items)
-            if pick and pick.get("id") and pick.get("eaccount"):
+            if pick and pick.get("id"):
                 return {
                     "reply_to_uuid": str(pick["id"]),
-                    "eaccount": str(pick["eaccount"]),
                     "subject": str(pick.get("subject") or ""),
                 }
         if attempt < 2:
             time.sleep(3)
 
-    if fallback_eaccount:
-        items = client.list_emails(search=lead_email, campaign_id=campaign_id, limit=5)
-        pick = _pick_latest_email(items)
-        if pick and pick.get("id"):
-            return {
-                "reply_to_uuid": str(pick["id"]),
-                "eaccount": str(pick.get("eaccount") or fallback_eaccount),
-                "subject": str(pick.get("subject") or ""),
-            }
+    items = client.list_emails(search=lead_email, campaign_id=campaign_id, limit=5)
+    pick = _pick_latest_email(items)
+    if pick and pick.get("id"):
+        return {
+            "reply_to_uuid": str(pick["id"]),
+            "subject": str(pick.get("subject") or ""),
+        }
     return None
+
+
+def resolve_thread(
+    client: InstantlyClient,
+    *,
+    lead_email: str,
+    campaign_id: str,
+    fallback_eaccount: str | None = None,
+) -> dict[str, str] | None:
+    reply = _resolve_reply_anchor(
+        client,
+        lead_email=lead_email,
+        campaign_id=campaign_id,
+    )
+    if not reply:
+        return None
+
+    eaccount = _resolve_initial_eaccount(
+        client,
+        lead_email=lead_email,
+        campaign_id=campaign_id,
+        fallback_eaccount=fallback_eaccount,
+    )
+    if not eaccount:
+        return None
+
+    return {
+        "reply_to_uuid": reply["reply_to_uuid"],
+        "eaccount": eaccount,
+        "subject": reply["subject"],
+    }
 
 
 def lead_has_replied_since(
@@ -128,13 +211,12 @@ def _render_template(body_html: str, vars_map: dict[str, str]) -> str:
     out_body = body_html
     for key, value in vars_map.items():
         out_body = out_body.replace(f"{{{{{key}}}}}", value)
-    return out_body
+    return out_body.replace("{{accountSignature}}", EMAIL_SIGNATURE)
 
 
 def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
     payload = lead.get("payload") if isinstance(lead.get("payload"), dict) else {}
     reservation_link = lead_custom_var(lead, "reservation_agence_link") or ""
-    signature = lead_custom_var(lead, "accountSignature") or ""
     first = str(
         lead.get("first_name") or payload.get("firstName") or payload.get("first_name") or ""
     )
@@ -146,7 +228,6 @@ def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
         "last_name": str(lead.get("last_name") or payload.get("lastName") or ""),
         "company_name": company,
         "reservation_agence_link": reservation_link,
-        "accountSignature": signature,
     }
 
 
@@ -161,7 +242,7 @@ def _load_template(template_key: str) -> dict[str, str]:
         .maybe_single()
         .execute()
     )
-    row = resp.data
+    row = resp.data if resp else None
     if not row:
         raise RuntimeError(f"Template not found: {template_key}")
     return {"subject": row["subject"], "body_html": row["body_html"]}
@@ -173,6 +254,8 @@ def _interest_label(lead: dict[str, Any]) -> str:
         return "Intéressé"
     if status == NO_SHOW_STATUS:
         return "No Show"
+    if status == NOT_INTERESTED_STATUS:
+        return "Plus intéressé"
     if status is None:
         return "—"
     return str(status)
@@ -180,6 +263,17 @@ def _interest_label(lead: dict[str, Any]) -> str:
 
 def _missing_reservation_link(lead: dict[str, Any]) -> bool:
     return not bool(lead_custom_var(lead, "reservation_agence_link"))
+
+
+def _coerce_step(value: str | None) -> PipelineStep:
+    if value in PIPELINE_STEPS:
+        return value  # type: ignore[return-value]
+    return "step_0"
+
+
+def move_pipeline_leads(campaign_id: str, emails: list[str], step: PipelineStep) -> None:
+    for email in emails:
+        upsert_pipeline_step(campaign_id, email, step)
 
 
 @dataclass
@@ -192,6 +286,7 @@ class QueueLead:
     replied_since_last_send: bool
     missing_reservation_link: bool
     sent_flows: list[str]
+    step: PipelineStep
     envoyer: bool
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
@@ -204,38 +299,79 @@ class BulkSendResult:
     errors: list[str] = field(default_factory=list)
 
 
-def fetch_sequence_leads(
+def render_template_html(template_key: str, lead: dict[str, Any] | None = None) -> str:
+    template = _load_template(template_key)
+    vars_map = _template_vars(lead or PREVIEW_LEAD)
+    return _render_template(template["body_html"], vars_map)
+
+
+def fetch_pipeline_leads(
     *,
     campaign_id: str,
-    sequence: Sequence,
     max_leads: int = 500,
     client: InstantlyClient | None = None,
+    on_progress: Callable[[int, int, str], None] | None = None,
 ) -> list[QueueLead]:
     api_key = get_api_key()
     if not api_key:
         raise ValueError("INSTANTLY_API_KEY is not set")
     instantly = client or InstantlyClient(api_key)
 
+    if on_progress:
+        on_progress(0, 1, "Chargement des leads Instantly…")
+
     raw_leads = instantly.list_leads_by_interest_filter(
         campaign_id=campaign_id,
-        interest_filter=SEQUENCE_FILTER[sequence],
+        interest_filter=FILTER_LEAD_INTERESTED,
         max_leads=max_leads,
     )
-
-    rows: list[QueueLead] = []
+    instantly_by_email: dict[str, dict[str, Any]] = {}
     for lead in raw_leads:
-        lead_email = str(lead.get("email") or "").strip().lower()
-        if not lead_email:
-            continue
+        email = str(lead.get("email") or "").strip().lower()
+        if email:
+            instantly_by_email[email] = lead
 
+    pipeline_rows = list_pipeline_for_campaign(campaign_id)
+    step_by_email: dict[str, PipelineStep] = {
+        str(row["lead_email"]).strip().lower(): _coerce_step(str(row.get("step") or ""))
+        for row in pipeline_rows
+        if row.get("lead_email")
+    }
+
+    for email in instantly_by_email:
+        if email not in step_by_email:
+            upsert_pipeline_step(campaign_id, email, "step_0")
+            step_by_email[email] = "step_0"
+
+    all_emails = sorted(set(instantly_by_email) | set(step_by_email))
+    total = len(all_emails)
+    rows: list[QueueLead] = []
+
+    for index, lead_email in enumerate(all_emails, start=1):
+        if on_progress:
+            on_progress(
+                index,
+                total,
+                f"{index}/{total} — {lead_email} — sync CRM / Unibox…",
+            )
+
+        lead = instantly_by_email.get(lead_email) or {
+            "id": "",
+            "email": lead_email,
+            "first_name": "",
+            "payload": {},
+        }
+        step = step_by_email.get(lead_email, "step_0")
         last_sent_at = get_last_send_at(campaign_id, lead_email)
         replied_since_last_send = False
-        if last_sent_at:
+        if last_sent_at and step in REPLY_MOVE_STEPS:
             replied_since_last_send = lead_has_replied_since(instantly, lead_email, last_sent_at)
             time.sleep(0.15)
+            if replied_since_last_send:
+                upsert_pipeline_step(campaign_id, lead_email, "replies_to_handle")
+                step = "replies_to_handle"
 
         sent_flows = list_sent_flows(campaign_id, lead_email)
-
         rows.append(
             QueueLead(
                 lead_id=str(lead.get("id") or ""),
@@ -246,12 +382,20 @@ def fetch_sequence_leads(
                 replied_since_last_send=replied_since_last_send,
                 missing_reservation_link=_missing_reservation_link(lead),
                 sent_flows=sent_flows,
+                step=step,
                 envoyer=not replied_since_last_send,
                 raw=lead,
             )
         )
 
+    if on_progress:
+        on_progress(total, total, f"{total} lead(s) chargé(s).")
+
     return rows
+
+
+def leads_for_step(queue: list[QueueLead], step: PipelineStep) -> list[QueueLead]:
+    return [row for row in queue if row.step == step]
 
 
 def dispatch_one(
@@ -293,7 +437,12 @@ def dispatch_one(
     try:
         template = _load_template(flow)
 
-        thread = resolve_thread(client, lead_email=lead_email, campaign_id=campaign_id)
+        thread = resolve_thread(
+            client,
+            lead_email=lead_email,
+            campaign_id=campaign_id,
+            fallback_eaccount=lead_custom_var(lead, "email_account"),
+        )
         if not thread:
             record_event(
                 {
@@ -327,6 +476,10 @@ def dispatch_one(
                 interest_value=NOT_INTERESTED_STATUS,
                 campaign_id=campaign_id,
             )
+
+        next_step = STEP_AFTER_FLOW.get(flow)
+        if next_step:
+            upsert_pipeline_step(campaign_id, lead_email, next_step)
 
         record_event(
             {

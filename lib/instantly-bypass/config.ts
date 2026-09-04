@@ -1,4 +1,11 @@
-/** Production webhook auto-send is opt-in until explicitly enabled. */
-export function isWebhookBypassEnabled(): boolean {
-  return process.env.INSTANTLY_BYPASS_WEBHOOK_ENABLED?.trim() === "true";
+import { getWebhookAutoSendEnabled } from "./settings";
+
+/** Webhook auto-send is controlled via Supabase (Streamlit Setup toggle). */
+export async function isWebhookBypassEnabled(): Promise<boolean> {
+  try {
+    return await getWebhookAutoSendEnabled();
+  } catch (err) {
+    console.error("[instantly-bypass] Failed to read webhook settings:", err);
+    return false;
+  }
 }

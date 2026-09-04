@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dry-run + fake-lead smoke tests for streamlit_subsequence send queue v2."""
+"""Dry-run + fake-lead smoke tests for streamlit_subsequence CRM pipeline."""
 
 from __future__ import annotations
 
@@ -17,7 +17,17 @@ if str(_APP_DIR) not in sys.path:
 from send_queue import (  # noqa: E402
     dispatch_bulk,
     dispatch_one,
-    fetch_sequence_leads,
+    fetch_pipeline_leads,
+    leads_for_step,
+    render_template_html,
+    resolve_thread,
+)
+
+from bootstrapPipelineFromUnibox import (  # noqa: E402
+    derive_step_from_flows,
+    match_flows,
+    merge_steps,
+    normalize_email_text,
 )
 
 FAKE_CAMPAIGN_ID = "fake-campaign-id"
@@ -29,7 +39,6 @@ FAKE_LEAD_WITH_LINK = {
     "lt_interest_status": 1,
     "payload": {
         "reservation_agence_link": "https://www.hercule.dev/reservation.html/abc123",
-        "accountSignature": "Marie — Hercule",
     },
 }
 
@@ -64,50 +73,97 @@ def test_dry_run_bulk_dispatch() -> None:
         print("OK dry-run bulk dispatch")
 
 
-def test_fetch_interested_leads() -> None:
+def test_fetch_defaults_missing_crm_to_step_0() -> None:
     mock_client = MagicMock()
     mock_client.list_leads_by_interest_filter.return_value = [FAKE_LEAD_WITH_LINK]
 
     with (
         patch("send_queue.get_api_key", return_value="fake-api-key"),
+        patch("send_queue.list_pipeline_for_campaign", return_value=[]),
+        patch("send_queue.upsert_pipeline_step") as upsert,
         patch("send_queue.get_last_send_at", return_value=None),
         patch("send_queue.list_sent_flows", return_value=[]),
     ):
-        rows = fetch_sequence_leads(
+        rows = fetch_pipeline_leads(
             campaign_id=FAKE_CAMPAIGN_ID,
-            sequence="interested",
             max_leads=10,
             client=mock_client,
         )
 
     assert len(rows) == 1
-    assert rows[0].envoyer is True
-    assert rows[0].missing_reservation_link is False
-    mock_client.list_leads_by_interest_filter.assert_called_once()
-    print("OK fetch interested leads")
+    assert rows[0].step == "step_0"
+    upsert.assert_called_once_with(FAKE_CAMPAIGN_ID, FAKE_LEAD_WITH_LINK["email"], "step_0")
+    print("OK fetch defaults missing CRM to step_0")
 
 
-def test_reply_since_any_send_unchecked() -> None:
+def test_fetch_reply_moves_step_1_to_replies() -> None:
     mock_client = MagicMock()
     mock_client.list_leads_by_interest_filter.return_value = [FAKE_LEAD_WITH_LINK]
 
     with (
         patch("send_queue.get_api_key", return_value="fake-api-key"),
+        patch(
+            "send_queue.list_pipeline_for_campaign",
+            return_value=[
+                {
+                    "lead_email": FAKE_LEAD_WITH_LINK["email"],
+                    "step": "step_1",
+                }
+            ],
+        ),
+        patch("send_queue.upsert_pipeline_step") as upsert,
         patch("send_queue.get_last_send_at", return_value="2026-01-01T00:00:00Z"),
         patch("send_queue.list_sent_flows", return_value=["interested_email1"]),
         patch("send_queue.lead_has_replied_since", return_value=True),
         patch("send_queue.time.sleep"),
     ):
-        rows = fetch_sequence_leads(
+        rows = fetch_pipeline_leads(
             campaign_id=FAKE_CAMPAIGN_ID,
-            sequence="interested",
             client=mock_client,
         )
 
     assert len(rows) == 1
-    assert rows[0].replied_since_last_send is True
-    assert rows[0].envoyer is False
-    print("OK reply since any Hercule send → unchecked")
+    assert rows[0].step == "replies_to_handle"
+    upsert.assert_called_with(
+        FAKE_CAMPAIGN_ID,
+        FAKE_LEAD_WITH_LINK["email"],
+        "replies_to_handle",
+    )
+    assert leads_for_step(rows, "replies_to_handle") == rows
+    print("OK fetch reply on step 1 → replies_to_handle")
+
+
+def test_fetch_reply_moves_step_3_to_replies() -> None:
+    mock_client = MagicMock()
+    mock_client.list_leads_by_interest_filter.return_value = []
+
+    with (
+        patch("send_queue.get_api_key", return_value="fake-api-key"),
+        patch(
+            "send_queue.list_pipeline_for_campaign",
+            return_value=[
+                {
+                    "lead_email": "closed@example.com",
+                    "step": "step_3",
+                }
+            ],
+        ),
+        patch("send_queue.upsert_pipeline_step") as upsert,
+        patch("send_queue.get_last_send_at", return_value="2026-01-01T00:00:00Z"),
+        patch("send_queue.list_sent_flows", return_value=["interested_email3"]),
+        patch("send_queue.lead_has_replied_since", return_value=True),
+        patch("send_queue.time.sleep"),
+    ):
+        rows = fetch_pipeline_leads(
+            campaign_id=FAKE_CAMPAIGN_ID,
+            client=mock_client,
+        )
+
+    assert len(rows) == 1
+    assert rows[0].email == "closed@example.com"
+    assert rows[0].step == "replies_to_handle"
+    upsert.assert_called_with(FAKE_CAMPAIGN_ID, "closed@example.com", "replies_to_handle")
+    print("OK fetch reply on step 3 → replies_to_handle")
 
 
 def test_missing_link_blocks_send() -> None:
@@ -131,7 +187,41 @@ def test_missing_link_blocks_send() -> None:
     print("OK missing reservation_agence_link blocks send")
 
 
-def test_final_email_sets_not_interested() -> None:
+def test_send_e1_advances_to_step_1() -> None:
+    mock_client = MagicMock()
+
+    with (
+        patch("send_queue.has_sent_event", return_value=False),
+        patch("send_queue._load_template", return_value={"subject": "", "body_html": "hi"}),
+        patch(
+            "send_queue.resolve_thread",
+            return_value={
+                "reply_to_uuid": "uuid-1",
+                "eaccount": "sender@example.com",
+                "subject": "Thread",
+            },
+        ),
+        patch("send_queue.record_event"),
+        patch("send_queue.upsert_pipeline_step") as upsert,
+    ):
+        result = dispatch_one(
+            mock_client,
+            flow="interested_email1",
+            campaign_id=FAKE_CAMPAIGN_ID,
+            lead=FAKE_LEAD_WITH_LINK,
+            dry_run=False,
+        )
+
+    assert result.get("ok") is True
+    upsert.assert_called_once_with(
+        FAKE_CAMPAIGN_ID,
+        FAKE_LEAD_WITH_LINK["email"],
+        "step_1",
+    )
+    print("OK send E1 advances to step_1")
+
+
+def test_final_email_sets_not_interested_and_step_3() -> None:
     mock_client = MagicMock()
 
     with (
@@ -146,6 +236,7 @@ def test_final_email_sets_not_interested() -> None:
             },
         ),
         patch("send_queue.record_event"),
+        patch("send_queue.upsert_pipeline_step") as upsert,
     ):
         result = dispatch_one(
             mock_client,
@@ -161,7 +252,12 @@ def test_final_email_sets_not_interested() -> None:
         interest_value=-1,
         campaign_id=FAKE_CAMPAIGN_ID,
     )
-    print("OK final email sets Not Interested (-1)")
+    upsert.assert_called_once_with(
+        FAKE_CAMPAIGN_ID,
+        FAKE_LEAD_WITH_LINK["email"],
+        "step_3",
+    )
+    print("OK final email sets Not Interested (-1) and step_3")
 
 
 def test_idempotency_skip() -> None:
@@ -181,14 +277,187 @@ def test_idempotency_skip() -> None:
     print("OK idempotency skip")
 
 
+def test_render_template_html() -> None:
+    with patch(
+        "send_queue._load_template",
+        return_value={
+            "subject": "",
+            "body_html": "<p>Link: {{reservation_agence_link}}</p><p>Cordialement,<br/>{{accountSignature}}</p>",
+        },
+    ):
+        html = render_template_html("interested_email1", FAKE_LEAD_WITH_LINK)
+
+    assert "abc123" in html
+    assert "Béatrice Meyer" in html
+    assert "{{accountSignature}}" not in html
+    print("OK render_template_html replaces legacy accountSignature placeholder")
+
+
+def test_fetch_on_progress_callback() -> None:
+    mock_client = MagicMock()
+    mock_client.list_leads_by_interest_filter.return_value = [FAKE_LEAD_WITH_LINK]
+    progress_calls: list[tuple[int, int, str]] = []
+
+    def on_progress(current: int, total: int, message: str) -> None:
+        progress_calls.append((current, total, message))
+
+    with (
+        patch("send_queue.get_api_key", return_value="fake-api-key"),
+        patch("send_queue.list_pipeline_for_campaign", return_value=[]),
+        patch("send_queue.upsert_pipeline_step"),
+        patch("send_queue.get_last_send_at", return_value=None),
+        patch("send_queue.list_sent_flows", return_value=[]),
+    ):
+        fetch_pipeline_leads(
+            campaign_id=FAKE_CAMPAIGN_ID,
+            client=mock_client,
+            on_progress=on_progress,
+        )
+
+    assert progress_calls
+    assert progress_calls[-1][0] == progress_calls[-1][1] == 1
+    print("OK fetch on_progress callback")
+
+
+def test_resolve_thread_uses_initial_sent_eaccount() -> None:
+    mock_client = MagicMock()
+
+    def list_emails_side_effect(**kwargs):
+        email_type = kwargs.get("email_type")
+        latest_of_thread = kwargs.get("latest_of_thread")
+        if email_type == "sent" and not latest_of_thread:
+            return [
+                {
+                    "id": "sent-early",
+                    "eaccount": "initial@example.com",
+                    "timestamp_email": "2026-01-01T10:00:00Z",
+                },
+                {
+                    "id": "sent-late",
+                    "eaccount": "other@example.com",
+                    "timestamp_email": "2026-01-02T10:00:00Z",
+                },
+            ]
+        if email_type == "received" and latest_of_thread:
+            return [
+                {
+                    "id": "recv-latest",
+                    "eaccount": "other@example.com",
+                    "subject": "Re: hello",
+                    "timestamp_email": "2026-01-03T10:00:00Z",
+                },
+            ]
+        return []
+
+    mock_client.list_emails.side_effect = list_emails_side_effect
+
+    thread = resolve_thread(
+        mock_client,
+        lead_email="lead@example.com",
+        campaign_id=FAKE_CAMPAIGN_ID,
+    )
+
+    assert thread is not None
+    assert thread["eaccount"] == "initial@example.com"
+    assert thread["reply_to_uuid"] == "recv-latest"
+    assert thread["subject"] == "Re: hello"
+    print("OK resolve_thread uses initial sent eaccount")
+
+
+def test_resolve_thread_email_account_fallback() -> None:
+    mock_client = MagicMock()
+
+    def list_emails_side_effect(**kwargs):
+        email_type = kwargs.get("email_type")
+        latest_of_thread = kwargs.get("latest_of_thread")
+        if email_type == "sent" and not latest_of_thread:
+            return []
+        if latest_of_thread:
+            return [
+                {
+                    "id": "anchor-1",
+                    "subject": "Thread",
+                    "timestamp_email": "2026-01-03T10:00:00Z",
+                },
+            ]
+        return []
+
+    mock_client.list_emails.side_effect = list_emails_side_effect
+
+    thread = resolve_thread(
+        mock_client,
+        lead_email="lead@example.com",
+        campaign_id=FAKE_CAMPAIGN_ID,
+        fallback_eaccount="fallback@example.com",
+    )
+
+    assert thread is not None
+    assert thread["eaccount"] == "fallback@example.com"
+    assert thread["reply_to_uuid"] == "anchor-1"
+    print("OK resolve_thread email_account fallback")
+
+
+def test_dispatch_one_passes_email_account_fallback() -> None:
+    mock_client = MagicMock()
+    lead = {
+        **FAKE_LEAD_WITH_LINK,
+        "payload": {
+            **FAKE_LEAD_WITH_LINK["payload"],
+            "email_account": "sender@example.com",
+        },
+    }
+
+    with (
+        patch("send_queue.has_sent_event", return_value=False),
+        patch(
+            "send_queue._load_template",
+            return_value={"subject": "", "body_html": "Cordialement,<br/>Béatrice Meyer"},
+        ),
+        patch("send_queue.resolve_thread") as resolve,
+        patch("send_queue.record_event"),
+        patch("send_queue.upsert_pipeline_step"),
+    ):
+        resolve.return_value = {
+            "reply_to_uuid": "uuid-1",
+            "eaccount": "sender@example.com",
+            "subject": "Thread",
+        }
+        result = dispatch_one(
+            mock_client,
+            flow="interested_email1",
+            campaign_id=FAKE_CAMPAIGN_ID,
+            lead=lead,
+            dry_run=False,
+        )
+
+    assert result.get("ok") is True
+    resolve.assert_called_once_with(
+        mock_client,
+        lead_email=lead["email"],
+        campaign_id=FAKE_CAMPAIGN_ID,
+        fallback_eaccount="sender@example.com",
+    )
+    mock_client.reply_to_email.assert_called_once()
+    html = mock_client.reply_to_email.call_args.kwargs["html"]
+    assert "Béatrice Meyer" in html
+    print("OK dispatch_one passes email_account fallback with hardcoded signature")
+
+
 def main() -> None:
     tests = [
         test_dry_run_bulk_dispatch,
-        test_fetch_interested_leads,
-        test_reply_since_any_send_unchecked,
+        test_fetch_defaults_missing_crm_to_step_0,
+        test_fetch_reply_moves_step_1_to_replies,
+        test_fetch_reply_moves_step_3_to_replies,
         test_missing_link_blocks_send,
-        test_final_email_sets_not_interested,
+        test_send_e1_advances_to_step_1,
+        test_final_email_sets_not_interested_and_step_3,
         test_idempotency_skip,
+        test_render_template_html,
+        test_fetch_on_progress_callback,
+        test_resolve_thread_uses_initial_sent_eaccount,
+        test_resolve_thread_email_account_fallback,
+        test_dispatch_one_passes_email_account_fallback,
     ]
     for test in tests:
         test()

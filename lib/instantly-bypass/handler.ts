@@ -15,6 +15,8 @@ import {
   renderTemplate,
 } from "./templates";
 
+import { upsertPipelineStep } from "./pipeline";
+
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
 
 function readReservationLink(
@@ -47,6 +49,7 @@ export async function handleLeadInterested(
   const idempotencyKey = interestedIdempotencyKey(campaignId, leadEmail);
 
   if (await hasBypassEvent(idempotencyKey)) {
+    await upsertPipelineStep(campaignId, leadEmail, "step_1");
     return { ok: true, skipped: "already_sent" };
   }
 
@@ -55,6 +58,8 @@ export async function handleLeadInterested(
     : new Date();
 
   try {
+    await upsertPipelineStep(campaignId, leadEmail, "step_0");
+
     const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
 
     if (!readReservationLink(lead ?? undefined, payload)) {
@@ -120,6 +125,8 @@ export async function handleLeadInterested(
       status: "sent",
       replyToUuid: thread.replyToUuid,
     });
+
+    await upsertPipelineStep(campaignId, leadEmail, "step_1");
 
     return {
       ok: true,

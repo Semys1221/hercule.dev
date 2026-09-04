@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Any
+from datetime import datetime, timezone
 
 from supabase import Client, create_client
 
@@ -69,7 +70,7 @@ def has_sent_event(idempotency_key: str) -> bool:
         .maybe_single()
         .execute()
     )
-    return bool(resp.data)
+    return bool(resp and resp.data)
 
 
 def record_event(row: dict[str, Any]) -> None:
@@ -122,9 +123,72 @@ def get_event_sent_at(campaign_id: str, lead_email: str, flow: str) -> str | Non
         .maybe_single()
         .execute()
     )
-    if not resp.data:
+    if not resp or not resp.data:
         return None
     return resp.data.get("dispatched_at")
+
+
+def get_webhook_auto_send_enabled() -> bool:
+    resp = (
+        get_client()
+        .table("instantly_bypass_settings")
+        .select("webhook_auto_send_enabled")
+        .eq("id", 1)
+        .maybe_single()
+        .execute()
+    )
+    if not resp or not resp.data:
+        return False
+    return bool(resp.data.get("webhook_auto_send_enabled"))
+
+
+def set_webhook_auto_send_enabled(enabled: bool) -> None:
+    get_client().table("instantly_bypass_settings").upsert(
+        {
+            "id": 1,
+            "webhook_auto_send_enabled": enabled,
+        },
+        on_conflict="id",
+    ).execute()
+
+
+def get_pipeline_step(campaign_id: str, lead_email: str) -> str | None:
+    resp = (
+        get_client()
+        .table("instantly_bypass_pipeline")
+        .select("step")
+        .eq("campaign_id", campaign_id)
+        .eq("lead_email", lead_email.strip().lower())
+        .maybe_single()
+        .execute()
+    )
+    if not resp or not resp.data:
+        return None
+    step = resp.data.get("step")
+    return str(step) if step else None
+
+
+def upsert_pipeline_step(campaign_id: str, lead_email: str, step: str) -> None:
+    get_client().table("instantly_bypass_pipeline").upsert(
+        {
+            "campaign_id": campaign_id,
+            "lead_email": lead_email.strip().lower(),
+            "step": step,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        },
+        on_conflict="campaign_id,lead_email",
+    ).execute()
+
+
+def list_pipeline_for_campaign(campaign_id: str) -> list[dict[str, Any]]:
+    resp = (
+        get_client()
+        .table("instantly_bypass_pipeline")
+        .select("campaign_id, lead_email, step, updated_at")
+        .eq("campaign_id", campaign_id)
+        .execute()
+    )
+    return resp.data or []
 
 
 def fetch_analytics() -> dict[str, Any]:

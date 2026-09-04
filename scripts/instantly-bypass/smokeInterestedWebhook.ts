@@ -5,7 +5,7 @@
  *   pnpm smoke-instantly-bypass-webhook
  *   WEBHOOK_BASE_URL=http://localhost:3000 pnpm smoke-instantly-bypass-webhook
  *
- * With INSTANTLY_BYPASS_WEBHOOK_ENABLED unset/false, expect skipped: "webhook_paused".
+ * With webhook paused in Streamlit Setup (Supabase instantly_bypass_settings), expect skipped: "webhook_paused".
  */
 
 const baseUrl = (

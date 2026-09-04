@@ -42,8 +42,10 @@ def webhook_secret() -> str:
 
 
 def webhook_auto_send_enabled() -> bool:
-    """Production webhook auto-send is opt-in via INSTANTLY_BYPASS_WEBHOOK_ENABLED=true."""
-    return env("INSTANTLY_BYPASS_WEBHOOK_ENABLED").lower() == "true"
+    """Webhook auto-send toggle stored in Supabase (Setup tab)."""
+    from supabase_repo import get_webhook_auto_send_enabled
+
+    return get_webhook_auto_send_enabled()
 
 
 def supabase_url() -> str:
