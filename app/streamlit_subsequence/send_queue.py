@@ -36,7 +36,7 @@ from config import send_window_tz
 from send_window import format_paris_slot, is_within_send_window, next_send_slot
 from unibox_classify import email_timestamp, extract_email_text, is_hercule_email
 
-PipelineStep = Literal["step_0", "step_1", "step_2", "step_3", "replies_to_handle"]
+PipelineStep = Literal["step_0", "step_1", "step_2", "step_3", "step_4", "replies_to_handle"]
 Flow = Literal["interested_email1", "interested_email2", "interested_email3"]
 
 INTERESTED_STATUS = 1
@@ -49,6 +49,7 @@ PIPELINE_STEPS: list[PipelineStep] = [
     "step_1",
     "step_2",
     "step_3",
+    "step_4",
     "replies_to_handle",
 ]
 
@@ -65,6 +66,7 @@ DEFAULT_FLOW_BY_STEP: dict[PipelineStep, Flow | None] = {
     "step_1": "interested_email2",
     "step_2": "interested_email3",
     "step_3": None,
+    "step_4": None,
     "replies_to_handle": None,
 }
 
@@ -73,8 +75,6 @@ SENDABLE_FLOWS: list[Flow] = [
     "interested_email2",
     "interested_email3",
 ]
-
-FINAL_FLOWS: set[Flow] = {"interested_email3"}
 
 EMAIL_SIGNATURE = "Béatrice Meyer"
 RESERVATION_LINK_PLACEHOLDER = "{{reservation_agence_link}}"
@@ -605,13 +605,6 @@ def _execute_send(
 
     dispatched = datetime.now(timezone.utc)
     latency_ms = int((dispatched - started).total_seconds() * 1000)
-
-    if flow in FINAL_FLOWS:
-        client.update_interest_status(
-            lead_email=lead_email,
-            interest_value=NOT_INTERESTED_STATUS,
-            campaign_id=campaign_id,
-        )
 
     next_step = STEP_AFTER_FLOW.get(flow)
     if next_step:

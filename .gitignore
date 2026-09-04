@@ -55,8 +55,8 @@ __pycache__/
 app/streamlit_clean/data/*.csv
 app/streamlit_clean/data/*.json
 
-# scrapper runtime output
-app/scrapper_streamlit/output/
+# streamlit_scraper runtime output
+app/streamlit_scraper/output/
 
 # Unibox export for CRM classification (PII)
 tmp/unibox_export/

@@ -87,6 +87,7 @@ def test_dry_run_bulk_dispatch() -> None:
         patch("send_queue.get_api_key", return_value="fake-api-key"),
         patch("send_queue.has_sent_event", return_value=False),
         patch("send_queue.has_pending_job", return_value=False),
+        patch("send_queue.is_within_send_window", return_value=True),
         patch(
             "send_queue._load_template",
             return_value={"subject": "", "body_html": "hello {{first_name}}"},
@@ -328,7 +329,7 @@ def test_send_e1_advances_to_step_1() -> None:
     print("OK send E1 advances to step_1")
 
 
-def test_final_email_sets_not_interested_and_step_3() -> None:
+def test_final_email_advances_to_step_3_without_not_interested() -> None:
     mock_client = MagicMock()
 
     with (
@@ -356,17 +357,13 @@ def test_final_email_sets_not_interested_and_step_3() -> None:
         )
 
     assert result.get("ok") is True
-    mock_client.update_interest_status.assert_called_once_with(
-        lead_email=FAKE_LEAD_WITH_LINK["email"],
-        interest_value=-1,
-        campaign_id=FAKE_CAMPAIGN_ID,
-    )
+    mock_client.update_interest_status.assert_not_called()
     upsert.assert_called_once_with(
         FAKE_CAMPAIGN_ID,
         FAKE_LEAD_WITH_LINK["email"],
         "step_3",
     )
-    print("OK final email sets Not Interested (-1) and step_3")
+    print("OK final email advances to step_3 without Not Interested tag")
 
 
 def test_idempotency_skip() -> None:
@@ -1210,7 +1207,7 @@ def main() -> None:
         test_missing_link_allowed_when_unused,
         test_empty_template_blocks_send,
         test_send_e1_advances_to_step_1,
-        test_final_email_sets_not_interested_and_step_3,
+        test_final_email_advances_to_step_3_without_not_interested,
         test_idempotency_skip,
         test_render_template_html,
         test_fetch_on_progress_callback,

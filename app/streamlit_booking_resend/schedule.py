@@ -7,13 +7,20 @@ from typing import TypedDict
 from zoneinfo import ZoneInfo
 
 PARIS_TZ = ZoneInfo("Europe/Paris")
-ROLE_RECOVERY_COMPRESSED_GAP = timedelta(minutes=10)
+ROLE_RECOVERY_COMPRESSED_GAP = timedelta(minutes=5)
+ROLE_RECOVERY_MONDAY_GAP = timedelta(minutes=5)
 
 
 class RoleRecoverySchedule(TypedDict):
     role_seq_48: datetime
     role_seq_24: datetime
     compressed: bool
+
+
+class RecoveryWeekdaySchedule(TypedDict):
+    role_seq_48: datetime
+    role_seq_24: datetime
+    variant: str
 
 
 class MainSchedule(TypedDict):
@@ -62,6 +69,63 @@ def _paris_date_key(instant: datetime) -> str:
 
 def _paris_weekday(instant: datetime) -> str:
     return instant.astimezone(PARIS_TZ).strftime("%a")
+
+
+def meeting_weekday_paris(scheduled_at_iso: str) -> str:
+    return _paris_weekday(_parse_iso(scheduled_at_iso))
+
+
+def previous_weekday_8am_paris(target_weekday: str, before: datetime) -> datetime:
+    if before.tzinfo is None:
+        before = before.replace(tzinfo=UTC)
+    date_key = _paris_date_key(before)
+
+    for _ in range(14):
+        candidate = paris_at_8am(date_key)
+        weekday = _paris_weekday(candidate)
+        if weekday == target_weekday and candidate.timestamp() <= before.timestamp():
+            return candidate
+        date_key = _add_paris_calendar_days(date_key, -1)
+
+    raise ValueError(
+        f"No {target_weekday} 08:00 Paris on or before {before.isoformat()}",
+    )
+
+
+def previous_saturday_8am_paris(before: datetime) -> datetime:
+    return previous_weekday_8am_paris("Sat", before)
+
+
+def plan_recovery_by_meeting_weekday(scheduled_at_iso: str) -> RecoveryWeekdaySchedule:
+    meeting = _parse_iso(scheduled_at_iso)
+    weekday = meeting_weekday_paris(scheduled_at_iso)
+
+    if weekday == "Mon":
+        role_seq_48 = previous_saturday_8am_paris(meeting)
+        role_seq_24 = role_seq_48 + ROLE_RECOVERY_MONDAY_GAP
+        return {
+            "role_seq_48": role_seq_48,
+            "role_seq_24": role_seq_24,
+            "variant": "monday_meeting",
+        }
+
+    if weekday == "Tue":
+        return {
+            "role_seq_48": previous_saturday_8am_paris(meeting),
+            "role_seq_24": previous_weekday_8am_paris("Mon", meeting),
+            "variant": "tuesday_meeting",
+        }
+
+    if weekday == "Wed":
+        return {
+            "role_seq_48": previous_weekday_8am_paris("Mon", meeting),
+            "role_seq_24": previous_weekday_8am_paris("Tue", meeting),
+            "variant": "wednesday_meeting",
+        }
+
+    raise ValueError(
+        f"plan_recovery_by_meeting_weekday: unsupported meeting weekday {weekday}",
+    )
 
 
 def _is_weekend_weekday(weekday: str) -> bool:

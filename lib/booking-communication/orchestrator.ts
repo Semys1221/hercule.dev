@@ -180,7 +180,12 @@ export async function startRoleRecoverySequence(
   }
 
   const inviteeUri = lead.calendly_invitee_uri;
-  const schedule = planRoleRecoverySchedule(lead.scheduled_at);
+  const schedule = params.recoverySchedule
+    ? {
+        roleSeq48: params.recoverySchedule.roleSeq48,
+        roleSeq24: params.recoverySchedule.roleSeq24,
+      }
+    : planRoleRecoverySchedule(lead.scheduled_at);
   const scheduleByType: Record<"role_seq_48" | "role_seq_24", Date> = {
     role_seq_48: schedule.roleSeq48,
     role_seq_24: schedule.roleSeq24,

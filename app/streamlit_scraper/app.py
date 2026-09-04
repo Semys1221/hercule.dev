@@ -9,7 +9,7 @@ from core_logic import clear_local_leads, output_paths, run_scraper_pipeline
 from instantly_client import csv_push_stats, push_csv_to_instantly
 from scrape_state import detect_recoverable_run, load_scrape_state, target_mode
 
-st.set_page_config(page_title="Agency Scraper", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Streamlit Scraper", page_icon="⚡", layout="wide")
 
 PRESET_OPTIONS = ["Manual Setup", *PRESET_LABELS.values()]
 LABEL_TO_PRESET = {label: preset_id for preset_id, label in PRESET_LABELS.items()}

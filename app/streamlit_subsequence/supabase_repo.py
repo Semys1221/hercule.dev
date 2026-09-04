@@ -122,6 +122,15 @@ def set_campaign_webhook_auto_send_enabled(campaign_id: str, enabled: bool) -> N
     )
 
 
+def set_campaign_pipeline_auto_advance_enabled(campaign_id: str, enabled: bool) -> None:
+    save_config(
+        {
+            "campaign_id": campaign_id,
+            "pipeline_auto_advance_enabled": enabled,
+        }
+    )
+
+
 def has_sent_event(idempotency_key: str) -> bool:
     resp = (
         get_client()

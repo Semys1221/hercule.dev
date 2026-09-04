@@ -1,23 +1,12 @@
-import {
-  findLeadByEmailInCampaign,
-  getInstantlyApiKey,
-  replyToEmail,
-} from "./client";
+import { findLeadByEmailInCampaign, getInstantlyApiKey } from "./client";
 import { threadAlreadyHasE1 } from "./e1-thread-guard";
 import {
   hasBypassEvent,
   interestedIdempotencyKey,
   recordBypassEvent,
 } from "./jobs";
-import { resolveThreadForReply } from "./thread-resolver";
-import {
-  buildTemplateVariables,
-  isTemplateBodyEmpty,
-  loadBypassConfig,
-  loadTemplate,
-  renderTemplate,
-  templateRequiresReservationLink,
-} from "./templates";
+import { executeBypassFlow } from "./send-flow";
+import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate, templateRequiresReservationLink } from "./templates";
 
 import { upsertPipelineStep } from "./pipeline";
 
@@ -57,7 +46,6 @@ export async function handleLeadInterested(
     return { ok: true, skipped: "campaign_webhook_paused" };
   }
 
-  const apiKey = getInstantlyApiKey();
   const idempotencyKey = interestedIdempotencyKey(campaignId, leadEmail);
 
   if (await hasBypassEvent(idempotencyKey)) {
@@ -72,7 +60,6 @@ export async function handleLeadInterested(
   try {
     await upsertPipelineStep(campaignId, leadEmail, "step_0");
 
-    const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
     const template = await loadTemplate(campaignId, "interested_email1");
 
     if (isTemplateBodyEmpty(template.body_html)) {
@@ -81,13 +68,15 @@ export async function handleLeadInterested(
         flow: "interested_email1",
         campaignId,
         leadEmail,
-        leadId: lead?.id,
         webhookReceivedAt,
         status: "failed",
         errorMessage: "Empty interested_email1 template",
       });
       return { ok: false, error: "template_empty" };
     }
+
+    const apiKey = getInstantlyApiKey();
+    const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
 
     if (
       templateRequiresReservationLink(template.body_html) &&
@@ -121,60 +110,27 @@ export async function handleLeadInterested(
       return { ok: true, skipped: "e1_already_in_thread" };
     }
 
-    const thread = await resolveThreadForReply(apiKey, {
-      leadEmail,
-      campaignId,
-      fallbackEaccount: payload.email_account as string | undefined,
-      preferredEmailId: payload.email_id as string | undefined,
-    });
-
-    if (!thread) {
-      await recordBypassEvent({
-        idempotencyKey,
-        flow: "interested_email1",
-        campaignId,
-        leadEmail,
-        leadId: lead?.id,
-        webhookReceivedAt,
-        status: "failed",
-        errorMessage: "Could not resolve Unibox thread for inline reply",
-      });
-      return { ok: false, error: "thread_not_found" };
-    }
-
-    const vars = buildTemplateVariables(payload, lead ?? undefined);
-    const rendered = renderTemplate(template, vars);
-    const subject = thread.subject?.trim() || rendered.subject || "your message";
-
-    await replyToEmail(apiKey, {
-      eaccount: thread.eaccount,
-      replyToUuid: thread.replyToUuid,
-      subject,
-      html: rendered.html,
-    });
-
-    const dispatchedAt = new Date();
-    const latencyMs = dispatchedAt.getTime() - webhookReceivedAt.getTime();
-
-    await recordBypassEvent({
-      idempotencyKey,
+    const result = await executeBypassFlow({
       flow: "interested_email1",
       campaignId,
       leadEmail,
+      lead,
       leadId: lead?.id,
+      idempotencyKey,
+      webhookPayload: payload,
       webhookReceivedAt,
-      dispatchedAt,
-      latencyMs,
-      status: "sent",
-      replyToUuid: thread.replyToUuid,
+      preferredEmailId: payload.email_id as string | undefined,
+      fallbackEaccount: payload.email_account as string | undefined,
     });
 
-    await upsertPipelineStep(campaignId, leadEmail, "step_1");
+    if (!result.ok) {
+      return { ok: false, error: result.error };
+    }
 
     return {
       ok: true,
-      latencyMs,
-      replyToUuid: thread.replyToUuid,
+      latencyMs: result.latencyMs,
+      replyToUuid: result.replyToUuid,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

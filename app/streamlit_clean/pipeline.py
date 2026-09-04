@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Callable
@@ -19,15 +18,11 @@ from checkpoint import (
 )
 
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
-_APP_DIR = os.path.join(_LIB_DIR, "..")
 _DATA_DIR = os.path.join(_LIB_DIR, "data")
 
-if _APP_DIR not in sys.path:
-    sys.path.insert(0, _APP_DIR)
+from quick_verifier import quick_verify_dataframe
 
-from quick_verifier.verifier import quick_verify_dataframe  # noqa: E402
-
-from instantly_client import push_leads_to_campaign, purge_leads_from_list  # noqa: E402
+from instantly_client import push_leads_to_campaign, purge_leads_from_list
 
 os.makedirs(_DATA_DIR, exist_ok=True)
 

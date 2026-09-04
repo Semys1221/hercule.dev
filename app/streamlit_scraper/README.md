@@ -1,4 +1,4 @@
-# Lead Scraper (Streamlit)
+# Streamlit Scraper
 
 Config-driven Outscraper pipeline for French B2B leads. Supports multiple bootstrap presets with isolated output directories.
 
@@ -18,7 +18,7 @@ repo .env  →  config_loader.py  →  *_config.py (preset)
 ## Setup
 
 ```bash
-cd app/scrapper_streamlit
+cd app/streamlit_scraper
 pip install -r requirements.txt
 ```
 
@@ -49,7 +49,7 @@ Presets are auto-discovered from `*_config.py` files (each must export `PRESET_I
 Interactive wizard (recommended):
 
 ```bash
-cd app/scrapper_streamlit
+cd app/streamlit_scraper
 python -m bootstrap create      # step-by-step prompts
 python -m bootstrap list          # show discovered presets
 python -m bootstrap validate      # schema + load check on all presets

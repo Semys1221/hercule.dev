@@ -175,6 +175,7 @@ def initialize_campaign(
         "campaign_id": campaign_id,
         "campaign_name": campaign_name,
         "webhook_auto_send_enabled": True,
+        "pipeline_auto_advance_enabled": True,
         "initialized_at": (existing or {}).get("initialized_at") or now,
     }
     save_config(row)

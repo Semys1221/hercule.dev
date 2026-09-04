@@ -131,3 +131,30 @@ export function leadIdFromJob(job: BypassJob): string | null {
   }
   return null;
 }
+
+export async function insertBypassJob(params: {
+  idempotencyKey: string;
+  campaignId: string;
+  leadEmail: string;
+  templateKey: BypassTemplateKey;
+  scheduledFor: Date;
+  payload?: Record<string, unknown>;
+}): Promise<void> {
+  const client = createBypassClient();
+  const { error } = await client.from("instantly_bypass_jobs").upsert(
+    {
+      idempotency_key: params.idempotencyKey,
+      campaign_id: params.campaignId,
+      lead_email: params.leadEmail.trim().toLowerCase(),
+      template_key: params.templateKey,
+      scheduled_for: params.scheduledFor.toISOString(),
+      status: "pending",
+      payload: params.payload ?? {},
+    },
+    { onConflict: "idempotency_key" },
+  );
+
+  if (error) {
+    throw new Error(`Failed to insert bypass job: ${error.message}`);
+  }
+}

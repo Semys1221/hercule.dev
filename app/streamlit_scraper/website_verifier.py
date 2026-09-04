@@ -1,11 +1,9 @@
-"""HTTP + BeautifulSoup website keyword verification — shared by Streamlit UI and scrapper pipeline."""
+"""HTTP + BeautifulSoup website keyword verification for the Streamlit Scraper pipeline."""
 
 from __future__ import annotations
 
 import asyncio
-import os
 import re
-import sys
 from typing import Any, Callable
 from urllib.parse import unquote
 
@@ -100,7 +98,6 @@ USER_AGENT = (
 )
 PAGE_GOTO_TIMEOUT_MS = 15000
 MIN_THROUGHPUT_LEADS_PER_SEC = 0.25
-_SCRAPPER_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scrapper_streamlit"))
 
 
 def _normalize_fetch_url(raw: str) -> str:
@@ -185,8 +182,6 @@ def _apply_service_from_html(
 ) -> None:
     if not service_config or not service_config.get("SERVICE_RULES"):
         return
-    if _SCRAPPER_DIR not in sys.path:
-        sys.path.insert(0, _SCRAPPER_DIR)
     from category_filter import detect_service_match
 
     combined = f"{html_text} {record.get('Mots_Inclus_Trouvés', '')}".strip().lower()

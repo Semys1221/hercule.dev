@@ -1,5 +1,5 @@
 import { isLegacyAgenceLead } from "@/lib/booking-communication/legacy";
-import { startBookingSequence } from "@/lib/booking-communication/orchestrator";
+import { startSequenceForBookedLead } from "@/lib/booking-communication/route-sequence";
 
 import {
   createLinkTrackingClient,
@@ -50,7 +50,7 @@ async function syncAndStartSequence(lookup: LeadLookup): Promise<{
     return { instantlySynced, sequenceStarted };
   }
   try {
-    const seq = await startBookingSequence({
+    const seq = await startSequenceForBookedLead({
       category: lookup.category,
       lead: lookup.lead,
       triggeredBy: "calendly",

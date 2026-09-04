@@ -1,6 +1,6 @@
 import { createBypassClient } from "./supabase";
 
-import type { BypassEventStatus, BypassFlow } from "./types";
+import type { BypassAuditFlow, BypassEventStatus, BypassFlow } from "./types";
 
 export function interestedIdempotencyKey(campaignId: string, leadEmail: string): string {
   return `interested_email1:${campaignId}:${leadEmail.trim().toLowerCase()}`;
@@ -8,6 +8,10 @@ export function interestedIdempotencyKey(campaignId: string, leadEmail: string):
 
 export function flowIdempotencyKey(flow: BypassFlow, campaignId: string, leadEmail: string): string {
   return `${flow}:${campaignId}:${leadEmail.trim().toLowerCase()}`;
+}
+
+export function pipelineCloseIdempotencyKey(campaignId: string, leadEmail: string): string {
+  return `pipeline_close:${campaignId}:${leadEmail.trim().toLowerCase()}`;
 }
 
 export function noShowEmail1Key(campaignId: string, leadEmail: string): string {
@@ -35,7 +39,7 @@ export async function hasBypassEvent(idempotencyKey: string): Promise<boolean> {
 
 export async function recordBypassEvent(params: {
   idempotencyKey: string;
-  flow: BypassFlow;
+  flow: BypassAuditFlow;
   campaignId: string;
   leadEmail: string;
   leadId?: string | null;

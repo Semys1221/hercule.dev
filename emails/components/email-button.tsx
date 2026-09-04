@@ -13,9 +13,9 @@ export function EmailButton({ href, label }: EmailButtonProps) {
       href={href}
       style={{
         display: "inline-block",
-        marginTop: "8px",
-        marginBottom: "8px",
-        padding: "12px 24px",
+        marginTop: "12px",
+        marginBottom: "4px",
+        padding: "8px 16px",
         backgroundColor: EMAIL_COLORS.ctaBackground,
         color: EMAIL_COLORS.ctaText,
         fontFamily: EMAIL_FONT_FAMILY,
@@ -23,7 +23,7 @@ export function EmailButton({ href, label }: EmailButtonProps) {
         fontWeight: 500,
         lineHeight: "1.4",
         textDecoration: "none",
-        borderRadius: "8px",
+        borderRadius: EMAIL_COLORS.ctaBorderRadius,
       }}
     >
       {label}

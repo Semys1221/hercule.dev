@@ -61,13 +61,14 @@ from supabase_repo import (
     get_config,
     list_templates,
     save_template,
+    set_campaign_pipeline_auto_advance_enabled,
     set_campaign_webhook_auto_send_enabled,
     sync_webhook_id,
 )
 
 st.set_page_config(page_title="Streamlit Subsequence", layout="wide")
 st.title("Streamlit Subsequence")
-st.caption("CRM étapes 0–3 → Unibox reply → envois contrôlés par l’opérateur.")
+st.caption("CRM étapes 0–4 → Unibox reply → E1 webhook auto, E2/E3/step_4 via cron 15 min.")
 
 FLOW_LABELS: dict[Flow, str] = {
     "interested_email1": "Email 1 — Précisions + audit (webhook auto ou manuel)",
@@ -79,7 +80,8 @@ STEP_LABELS: dict[PipelineStep, str] = {
     "step_0": "Étape 0 — En attente E1",
     "step_1": "Étape 1 — E1 envoyé",
     "step_2": "Étape 2 — E2 envoyé",
-    "step_3": "Étape 3 — Terminé",
+    "step_3": "Étape 3 — E3 envoyé",
+    "step_4": "Étape 4 — Clôturé (Not Interested)",
     "replies_to_handle": "Réponses à traiter",
 }
 
@@ -922,6 +924,36 @@ with TAB_SETUP:
         st.caption(
             "Ce réglage est **par campagne**. Le kill-switch global reste dans "
             "`instantly_bypass_settings` (pause d’urgence toutes campagnes)."
+        )
+
+        st.subheader("Pipeline auto-advance (cette campagne)")
+        pipeline_enabled = bool(
+            selected_config.get("pipeline_auto_advance_enabled", True)
+        )
+        if pipeline_enabled:
+            st.success("Auto-advance cron: **Actif** (E2 +24h, E3 +48h, clôture +48h)")
+        else:
+            st.warning("Auto-advance cron: **En pause**")
+        pipeline_col1, pipeline_col2 = st.columns(2)
+        with pipeline_col1:
+            if st.button(
+                "Activer l'auto-advance",
+                disabled=pipeline_enabled,
+                key="pipeline_enable",
+            ):
+                set_campaign_pipeline_auto_advance_enabled(selected_campaign_id, True)
+                st.rerun()
+        with pipeline_col2:
+            if st.button(
+                "Mettre en pause",
+                disabled=not pipeline_enabled,
+                key="pipeline_pause",
+            ):
+                set_campaign_pipeline_auto_advance_enabled(selected_campaign_id, False)
+                st.rerun()
+        st.caption(
+            "Cron `/api/cron/instantly-bypass-pipeline` toutes les 15 min "
+            "(cron-job.org). Respecte la fenêtre d'envoi 8h–17h pour E2/E3."
         )
 
         st.code(public_url)

@@ -26,7 +26,7 @@ from core_logic import (
 )
 from scrape_state import detect_recoverable_run
 
-app = typer.Typer(help="Lead Scraper CLI")
+app = typer.Typer(help="Streamlit Scraper CLI")
 
 from bootstrap.cli import app as bootstrap_app  # noqa: E402
 
@@ -334,10 +334,6 @@ def enrich_csv_cmd(
     paths = output_paths(preset)
     resolved_csv = csv_path or paths.csv
 
-    enrich_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "streamlit_enrich")
-    enrich_dir = os.path.normpath(enrich_dir)
-    if enrich_dir not in sys.path:
-        sys.path.insert(0, enrich_dir)
     from website_verifier import enrich_leads
 
     if not os.path.isfile(resolved_csv):

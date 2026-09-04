@@ -60,11 +60,16 @@ def _editor_block(
                 height=220,
                 key=f"{key_prefix}_body_{email_type}",
             )
-            use_html = st.checkbox(
-                "Signature React (HTML)",
-                value=default_use_html(email_type),
-                key=f"{key_prefix}_template_react_{email_type}",
-            )
+            plain_text_only = email_type in ("immediate", "role_seq_48")
+            if plain_text_only:
+                st.caption("Mail 1 — toujours plain text + signature plain text")
+                use_html = False
+            else:
+                use_html = st.checkbox(
+                    "Signature React (HTML)",
+                    value=default_use_html(email_type),
+                    key=f"{key_prefix}_template_react_{email_type}",
+                )
             col_preview, col_test = st.columns(2)
             with col_preview:
                 if st.button("Aperçu", key=f"{key_prefix}_preview_{email_type}"):

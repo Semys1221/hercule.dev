@@ -18,6 +18,7 @@
     "smoke-link-provisioning-e2e": "tsx --env-file=.env ./scripts/crm/smokeLinkProvisioningE2e.ts",
     "smoke-booking-email-threading": "tsx ./scripts/crm/smokeBookingEmailThreading.ts",
     "smoke-booking-schedule": "tsx ./scripts/crm/smokeBookingSchedule.ts",
+    "rebalance-recovery-weekday": "tsx --env-file=.env ./scripts/crm/rebalanceRecoveryByWeekday.ts",
     "apply-role-recovery-migration": "tsx --env-file=.env ./scripts/crm/applyRoleRecoveryMigration.ts",
     "provision-role-recovery-leads": "python3 ./scripts/crm/provisionRoleRecoveryLeads.py",
     "crm": "streamlit run crm/admin_tool.py",
@@ -40,9 +41,11 @@
     "audit-streamlit-duplicate-e1": "python3 ./scripts/streamlit_subsequence/auditDuplicateE1.py --campaign-id 2cd03978-93b3-4462-ad88-f0fb0f35d59c",
     "smoke-instantly-bypass-send-window": "tsx ./scripts/instantly-bypass/smokeSendWindow.ts",
     "smoke-instantly-bypass-e1-thread-guard": "tsx ./scripts/instantly-bypass/smokeE1ThreadGuard.ts",
+    "smoke-instantly-pipeline-advance": "tsx ./scripts/instantly-bypass/smokePipelineAdvance.ts",
     "configure-instantly-bypass-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configureBypassCronJob.ts",
+    "configure-instantly-pipeline-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configurePipelineCronJob.ts",
     "configure-booking-cron": "tsx --env-file=.env ./scripts/crm/configureBookingCronJob.ts",
-    "scrapper": "cd app/scrapper_streamlit && python main.py ui",
+    "streamlit-scraper": "cd app/streamlit_scraper && python main.py ui",
     "streamlit-clean": "cd app/streamlit_clean && streamlit run app.py"
   },
   "dependencies": {

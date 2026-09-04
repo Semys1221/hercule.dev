@@ -16,6 +16,7 @@ from schedule import (  # noqa: E402
     clamp_to_now,
     is_role_recovery_compressed,
     paris_at_8am,
+    plan_recovery_by_meeting_weekday,
     plan_role_recovery_schedule,
     role_seq_24_send_at,
     role_seq_48_send_at,
@@ -64,8 +65,50 @@ def main() -> None:
     if not compressed["compressed"]:
         raise AssertionError("Meeting in 24h should use compressed schedule")
     gap = compressed["role_seq_24"] - compressed["role_seq_48"]
-    if gap != timedelta(minutes=10):
-        raise AssertionError(f"Compressed gap should be 10 minutes, got {gap}")
+    if gap != timedelta(minutes=5):
+        raise AssertionError(f"Compressed gap should be 5 minutes, got {gap}")
+
+    monday_meeting = "2027-09-06T08:00:00.000Z"
+    monday_schedule = plan_recovery_by_meeting_weekday(monday_meeting)
+    assert monday_schedule["variant"] == "monday_meeting"
+    assert_equal(
+        monday_schedule["role_seq_48"],
+        "2027-09-04T06:00:00.000Z",
+        "Monday meeting role_seq_48",
+    )
+    assert_equal(
+        monday_schedule["role_seq_24"],
+        "2027-09-04T06:05:00.000Z",
+        "Monday meeting role_seq_24",
+    )
+
+    tuesday_meeting = "2027-09-07T08:00:00.000Z"
+    tuesday_schedule = plan_recovery_by_meeting_weekday(tuesday_meeting)
+    assert tuesday_schedule["variant"] == "tuesday_meeting"
+    assert_equal(
+        tuesday_schedule["role_seq_48"],
+        "2027-09-04T06:00:00.000Z",
+        "Tuesday meeting role_seq_48",
+    )
+    assert_equal(
+        tuesday_schedule["role_seq_24"],
+        "2027-09-06T06:00:00.000Z",
+        "Tuesday meeting role_seq_24",
+    )
+
+    wednesday_meeting = "2027-09-08T08:00:00.000Z"
+    wednesday_schedule = plan_recovery_by_meeting_weekday(wednesday_meeting)
+    assert wednesday_schedule["variant"] == "wednesday_meeting"
+    assert_equal(
+        wednesday_schedule["role_seq_48"],
+        "2027-09-06T06:00:00.000Z",
+        "Wednesday meeting role_seq_48",
+    )
+    assert_equal(
+        wednesday_schedule["role_seq_24"],
+        "2027-09-07T06:00:00.000Z",
+        "Wednesday meeting role_seq_24",
+    )
 
     ts_script = _REPO_ROOT / "scripts" / "crm" / "smokeBookingSchedule.ts"
     if ts_script.is_file():

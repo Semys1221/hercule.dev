@@ -32,11 +32,11 @@ See [crm/README.md](../../crm/README.md) for admin features.
 ### Scraper (Outscraper → enrich → Instantly)
 
 ```bash
-cd app/scrapper_streamlit && pip install -r requirements.txt
-pnpm scrapper
+cd app/streamlit_scraper && pip install -r requirements.txt
+pnpm streamlit-scraper
 ```
 
-See [scrapper_streamlit/README.md](../scrapper_streamlit/README.md) for presets and CLI commands.
+See [streamlit_scraper/README.md](../streamlit_scraper/README.md) for presets and CLI commands.
 
 ### Email cleaner (MyEmailVerifier → Instantly)
 

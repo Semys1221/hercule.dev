@@ -52,6 +52,11 @@ export type StartSequenceParams = {
   partial?: boolean;
   /** Per-type HTML override; null on job = defaultUseHtml(email_type). */
   htmlByType?: Partial<Record<BookingEmailType, boolean>>;
+  /** Override role recovery send times (weekday routing or rebalance). */
+  recoverySchedule?: {
+    roleSeq48: Date;
+    roleSeq24: Date;
+  };
 };
 
 export type RenderedBookingEmail = {

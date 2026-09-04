@@ -29,7 +29,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logger = logging.getLogger(__name__)
 
 LIB_DIR = os.path.dirname(os.path.abspath(__file__))
-ENRICH_DIR = os.path.join(os.path.dirname(LIB_DIR), "streamlit_enrich")
 
 
 @dataclass(frozen=True)
@@ -619,8 +618,6 @@ async def _run_enrich_batch(
     *,
     log_cb: Callable[[str], None],
 ) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
-    if ENRICH_DIR not in sys.path:
-        sys.path.insert(0, ENRICH_DIR)
     from website_verifier import enrich_leads
 
     settings = _enrich_settings(config)

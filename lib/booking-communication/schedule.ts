@@ -109,7 +109,94 @@ export function roleSeq24SendAt(scheduledAtIso: string): Date {
   return clampToNow(snapToPreviousWeekday8amParis(hoursBefore(scheduledAtIso, 24)));
 }
 
-const ROLE_RECOVERY_COMPRESSED_GAP_MS = 10 * 60 * 1000;
+const ROLE_RECOVERY_COMPRESSED_GAP_MS = 5 * 60 * 1000;
+const ROLE_RECOVERY_MONDAY_GAP_MS = 5 * 60 * 1000;
+
+export type ParisWeekdayShort =
+  | "Mon"
+  | "Tue"
+  | "Wed"
+  | "Thu"
+  | "Fri"
+  | "Sat"
+  | "Sun";
+
+export type RecoveryWeekdayVariant =
+  | "monday_meeting"
+  | "tuesday_meeting"
+  | "wednesday_meeting";
+
+/** Weekday of the meeting in Europe/Paris (Mon–Sun). */
+export function meetingWeekdayParis(scheduledAtIso: string): ParisWeekdayShort {
+  return getParisDateParts(new Date(scheduledAtIso)).weekday as ParisWeekdayShort;
+}
+
+/** Latest occurrence of `targetWeekday` at 08:00 Paris on or before `before`. */
+export function previousWeekday8amParis(
+  targetWeekday: ParisWeekdayShort,
+  before: Date,
+): Date {
+  let dateKey = parisDateKey(getParisDateParts(before));
+
+  for (let i = 0; i < 14; i++) {
+    const candidate = parisAt8am(dateKey);
+    const weekday = getParisDateParts(candidate).weekday;
+    if (weekday === targetWeekday && candidate.getTime() <= before.getTime()) {
+      return candidate;
+    }
+    dateKey = addParisCalendarDays(dateKey, -1);
+  }
+
+  throw new Error(
+    `No ${targetWeekday} 08:00 Paris on or before ${before.toISOString()}`,
+  );
+}
+
+/** Latest Saturday 08:00 Paris on or before `before`. */
+export function previousSaturday8amParis(before: Date): Date {
+  return previousWeekday8amParis("Sat", before);
+}
+
+/**
+ * Recovery schedule for Mon/Tue/Wed meetings (Europe/Paris weekday).
+ * Does not clamp to now — cron sends when scheduled_for is due.
+ */
+export function planRecoveryByMeetingWeekday(
+  scheduledAtIso: string,
+): {
+  roleSeq48: Date;
+  roleSeq24: Date;
+  variant: RecoveryWeekdayVariant;
+} {
+  const meeting = new Date(scheduledAtIso);
+  const weekday = meetingWeekdayParis(scheduledAtIso);
+
+  if (weekday === "Mon") {
+    const roleSeq48 = previousSaturday8amParis(meeting);
+    const roleSeq24 = new Date(roleSeq48.getTime() + ROLE_RECOVERY_MONDAY_GAP_MS);
+    return { roleSeq48, roleSeq24, variant: "monday_meeting" };
+  }
+
+  if (weekday === "Tue") {
+    return {
+      roleSeq48: previousSaturday8amParis(meeting),
+      roleSeq24: previousWeekday8amParis("Mon", meeting),
+      variant: "tuesday_meeting",
+    };
+  }
+
+  if (weekday === "Wed") {
+    return {
+      roleSeq48: previousWeekday8amParis("Mon", meeting),
+      roleSeq24: previousWeekday8amParis("Tue", meeting),
+      variant: "wednesday_meeting",
+    };
+  }
+
+  throw new Error(
+    `planRecoveryByMeetingWeekday: unsupported meeting weekday ${weekday}`,
+  );
+}
 
 /** True when the meeting is less than 48h away (normal snap window missed). */
 export function isRoleRecoveryCompressed(scheduledAtIso: string): boolean {

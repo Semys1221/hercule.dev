@@ -7,6 +7,8 @@ export type BypassTemplateKey =
 
 export type BypassFlow = BypassTemplateKey;
 
+export type BypassAuditFlow = BypassFlow | "pipeline_close";
+
 export type BypassEventStatus = "sent" | "skipped" | "failed";
 
 export type InstantlyWebhookPayload = {
@@ -68,6 +70,7 @@ export type BypassConfig = {
   campaign_name?: string | null;
   webhook_id?: string | null;
   webhook_auto_send_enabled?: boolean | null;
+  pipeline_auto_advance_enabled?: boolean | null;
   initialized_at?: string | null;
 };
 

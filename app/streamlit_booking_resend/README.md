@@ -68,7 +68,8 @@ pnpm smoke-booking-email-render
 
 ```
 Calendly webhook → skip sequence si agence legacy
-                 → startBookingSequence sinon → booking_email_jobs → cron
+                 → lun–mer recovery (role_seq_48/24) / jeu–sam séquence complète
+                 → startSequenceForBookedLead → booking_email_jobs → cron
 Streamlit Legacy → /api/booking-communication/send-once (email_type)
 Streamlit Séquences → templates Supabase
 ```

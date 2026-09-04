@@ -9,7 +9,7 @@ from typing import Any, Literal
 from shared.instantly_client import InstantlyClient
 
 PipelineStep = Literal[
-    "step_0", "step_1", "step_2", "step_3", "replies_to_handle"
+    "step_0", "step_1", "step_2", "step_3", "step_4", "replies_to_handle"
 ]
 Flow = Literal[
     "interested_email1",
@@ -67,7 +67,8 @@ STEP_RANK: dict[PipelineStep, int] = {
     "step_1": 1,
     "step_2": 2,
     "step_3": 3,
-    "replies_to_handle": 4,
+    "step_4": 4,
+    "replies_to_handle": 5,
 }
 
 NO_SHOW_STATUS = -4

@@ -15,9 +15,11 @@ export const PLAIN_SIGNATURE = [
   HERCULE_CONTACT_EMAIL,
 ].join("\n");
 
+const PLAIN_TEXT_ONLY: BookingEmailType[] = ["immediate", "role_seq_48"];
+
 /** First email in each sequence uses plain text only; follow-ups use React HTML. */
 export function defaultUseHtml(emailType: BookingEmailType): boolean {
-  return emailType !== "immediate" && emailType !== "role_seq_48";
+  return !PLAIN_TEXT_ONLY.includes(emailType);
 }
 
 const LEGACY_CLOSING_PATTERN = /\n*Cordialement,?\s*$/i;
@@ -39,11 +41,51 @@ export function buildConfirmLinkPlainText(confirmUrl: string): string {
   return `consulter : ${confirmUrl}`;
 }
 
+export function buildConfirmationAgencePlainText(confirmUrl: string): string {
+  return `Confirmer ma présence : ${confirmUrl}`;
+}
+
+function confirmButtonLabel(emailType: BookingEmailType): string {
+  return emailType === "role_seq_24" ? "Consulter" : "Confirmer ma présence";
+}
+
+function enhanceConfirmLinksInText(
+  textBody: string,
+  confirmUrl: string,
+  emailType: BookingEmailType,
+): string {
+  if (!confirmUrl) {
+    return textBody;
+  }
+
+  if (textBody.includes("{{confirmLink}}")) {
+    return textBody.replace(
+      /\{\{confirmLink\}\}/g,
+      buildConfirmLinkPlainText(confirmUrl),
+    );
+  }
+
+  const enhancedLine =
+    emailType === "role_seq_24"
+      ? buildConfirmLinkPlainText(confirmUrl)
+      : buildConfirmationAgencePlainText(confirmUrl);
+
+  const escapedUrl = confirmUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return textBody.replace(new RegExp(`^${escapedUrl}$`, "m"), enhancedLine);
+}
+
 export async function renderBookingHtml(
   bodyText: string,
   confirmUrl?: string,
+  confirmButtonLabel?: string,
 ): Promise<string> {
-  return render(<BookingHtmlEmail bodyText={bodyText} confirmUrl={confirmUrl} />);
+  return render(
+    <BookingHtmlEmail
+      bodyText={bodyText}
+      confirmUrl={confirmUrl}
+      confirmButtonLabel={confirmButtonLabel}
+    />,
+  );
 }
 
 export async function finalizeRenderedEmail(params: {
@@ -55,21 +97,25 @@ export async function finalizeRenderedEmail(params: {
 }): Promise<{ subject: string; text: string; html?: string }> {
   const cleanedBody = stripLegacyClosing(params.body);
   const confirmUrl = params.confirmUrl?.trim() || "";
-  const useHtml = params.useHtml ?? defaultUseHtml(params.emailType);
+  const useHtml = PLAIN_TEXT_ONLY.includes(params.emailType)
+    ? false
+    : (params.useHtml ?? defaultUseHtml(params.emailType));
 
-  let textBody = cleanedBody;
-  if (textBody.includes("{{confirmLink}}")) {
-    textBody = textBody.replace(
-      /\{\{confirmLink\}\}/g,
-      confirmUrl ? buildConfirmLinkPlainText(confirmUrl) : "consulter",
-    );
-  }
+  const textBody = enhanceConfirmLinksInText(
+    cleanedBody,
+    confirmUrl,
+    params.emailType,
+  );
 
   if (useHtml) {
     return {
       subject: params.subject,
       text: appendPlainSignature(textBody),
-      html: await renderBookingHtml(cleanedBody, confirmUrl || undefined),
+      html: await renderBookingHtml(
+        cleanedBody,
+        confirmUrl || undefined,
+        confirmButtonLabel(params.emailType),
+      ),
     };
   }
 
