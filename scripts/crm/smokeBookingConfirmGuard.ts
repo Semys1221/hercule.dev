@@ -39,12 +39,12 @@ async function assertConfirmGuardLive(): Promise<void> {
   const client = createLinkTrackingClient();
   const { data, error } = await client
     .from("agence")
-    .select("link, email")
+    .select("slug, email")
     .eq("statut", "NOTBOOKED")
     .limit(1)
     .maybeSingle();
 
-  if (error || !data?.link) {
+  if (error || !data?.slug) {
     console.log("SKIP live confirm guard: no NOTBOOKED agence lead in Supabase");
     return;
   }
@@ -52,7 +52,7 @@ async function assertConfirmGuardLive(): Promise<void> {
   const response = await fetch(`${baseUrl.replace(/\/$/, "")}/api/link-tracking/confirm`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ slug: data.link, email: data.email }),
+    body: JSON.stringify({ slug: data.slug, email: data.email }),
   });
 
   const body = (await response.json()) as { reason?: string };

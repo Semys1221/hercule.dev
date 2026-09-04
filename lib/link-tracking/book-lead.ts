@@ -27,7 +27,7 @@ export type BookLeadFromCalendlyResult = {
   reason?: string;
   category?: string;
   email?: string;
-  link?: string;
+  slug?: string;
 };
 
 async function syncAndStartSequence(lookup: LeadLookup): Promise<{
@@ -96,7 +96,7 @@ export async function bookLeadFromCalendly(
         reason: "instantly_sync_retry",
         category: result.lookup.category,
         email: result.lookup.lead.email,
-        link: result.lookup.lead.link,
+        slug: result.lookup.lead.slug,
       };
     }
 
@@ -107,7 +107,7 @@ export async function bookLeadFromCalendly(
       reason: result.reason,
       category: result.lookup.category,
       email: result.lookup.lead.email,
-      link: result.lookup.lead.link,
+      slug: result.lookup.lead.slug,
     };
   }
 
@@ -120,7 +120,7 @@ export async function bookLeadFromCalendly(
     sequenceStarted: extra.sequenceStarted,
     category: result.lookup.category,
     email: result.lookup.lead.email,
-    link: result.lookup.lead.link,
+    slug: result.lookup.lead.slug,
   };
 }
 

@@ -23,7 +23,8 @@ import {
 import { sendBookingEmail } from "./send";
 import { h20SendAt, h24SendAt, h48SendAt, planRoleRecoverySchedule } from "./schedule";
 import { renderEmailFromStore } from "./template-store";
-import { buildConfirmUrl, buildTemporaryConfirmUrl } from "./templates";
+import { buildTemporaryConfirmUrl } from "./templates";
+import { confirmationAgenceLinkFor } from "@/lib/link-tracking/urls";
 import { buildReplySubject, buildThreadHeaders, isThreadFollowUp, threadTypesForJob } from "./threading";
 import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
 import type { RenderedBookingEmail } from "./types";
@@ -306,8 +307,8 @@ async function processH20CancelJob(
 async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
   const confirmUrl =
     job.email_type === "role_seq_24"
-      ? buildTemporaryConfirmUrl(lead.link, lead.email)
-      : buildConfirmUrl(lead.link, lead.email);
+      ? buildTemporaryConfirmUrl(lead.slug, lead.email)
+      : confirmationAgenceLinkFor(lead);
   return renderEmailFromStore({
     category: job.lead_category,
     emailType: job.email_type,

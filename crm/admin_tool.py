@@ -15,11 +15,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from booking_templates import list_templates, send_test_email, upsert_templates
 from config import (
-    confirm_base_url_for,
     env_source_label,
+    instantly_patch_concurrency,
     settings,
     temporary_base_url_for,
-    tracking_base_url_for,
 )
 from crm_api import post_json, start_role_recovery_sequence
 from calendly_client import list_untracked_bookings
@@ -35,7 +34,7 @@ from pipeline import (
     provision_from_instantly_leads,
     rows_to_dataframe,
 )
-from slug import build_confirm_url, build_tracking_url
+from slug import build_confirm_url, build_lead_urls
 from supabase_repo import (
     find_by_email,
     get_client,
@@ -51,7 +50,9 @@ st.caption(
     "Leads Supabase (agence / entreprise). Booking agence: "
     f"`{settings.tracking_base_url_agence}/{{slug}}` · entreprise: "
     f"`{settings.tracking_base_url_entreprise}/{{slug}}` · confirmation: "
-    f"`{settings.confirm_base_url}/{{slug}}?email={{email}}` — Instantly `{{{{link}}}}`"
+    f"`{settings.confirm_base_url}/{{slug}}?email={{email}}` — Instantly "
+    "`{{reservation_agence_link}}` / `{{reservation_entreprise_link}}` / "
+    "`{{confirmation_agence_link}}`"
 )
 
 LEAD_STATUTS = [
@@ -67,6 +68,7 @@ def _init_state() -> None:
     defaults = {
         "campaign_id": None,
         "campaign_name": None,
+        "instantly_campaigns": None,
         "campaign_leads_df": None,
         "last_result_rows": None,
         "crm_leads": None,
@@ -85,16 +87,30 @@ def _reload_leads() -> None:
 
 
 def _lead_urls(lead: dict) -> dict[str, str | None]:
-    slug = (lead.get("link") or "").strip()
-    category = lead.get("category") or "agence"
+    slug = (lead.get("slug") or "").strip()
     email = (lead.get("email") or "").strip()
+    stored = {
+        "reservation_agence_link": (lead.get("reservation_agence_link") or "").strip() or None,
+        "reservation_entreprise_link": (
+            (lead.get("reservation_entreprise_link") or "").strip() or None
+        ),
+        "confirmation_agence_link": (
+            (lead.get("confirmation_agence_link") or "").strip() or None
+        ),
+    }
+    if stored["reservation_agence_link"] and stored["reservation_entreprise_link"]:
+        if stored["confirmation_agence_link"]:
+            return stored
     if not slug:
-        return {"booking_url": None, "confirm_url": None}
-    booking_base = tracking_base_url_for(category)
-    confirm_base = confirm_base_url_for(category)
+        return stored
+    computed = build_lead_urls(slug, email)
     return {
-        "booking_url": build_tracking_url(booking_base, slug),
-        "confirm_url": build_confirm_url(confirm_base, slug, email or None),
+        "reservation_agence_link": stored["reservation_agence_link"]
+        or computed["reservation_agence_link"],
+        "reservation_entreprise_link": stored["reservation_entreprise_link"]
+        or computed["reservation_entreprise_link"],
+        "confirmation_agence_link": stored["confirmation_agence_link"]
+        or computed["confirmation_agence_link"],
     }
 
 
@@ -139,7 +155,10 @@ LEADS_EDITOR_COLUMNS = [
     "email",
     "company",
     "statut",
-    "link",
+    "slug",
+    "reservation_agence_link",
+    "reservation_entreprise_link",
+    "confirmation_agence_link",
     "scheduled_at",
     "confirmed_at",
     "updated_at",
@@ -159,7 +178,10 @@ def _build_leads_editor_df(leads: list[dict]) -> pd.DataFrame:
                 "email": lead.get("email"),
                 "company": lead.get("company"),
                 "statut": statut,
-                "link": lead.get("link"),
+                "slug": lead.get("slug"),
+                "reservation_agence_link": lead.get("reservation_agence_link"),
+                "reservation_entreprise_link": lead.get("reservation_entreprise_link"),
+                "confirmation_agence_link": lead.get("confirmation_agence_link"),
                 "scheduled_at": lead.get("scheduled_at"),
                 "confirmed_at": lead.get("confirmed_at"),
                 "updated_at": lead.get("updated_at"),
@@ -349,6 +371,7 @@ def _preview_email_template(
         "date": sample_date,
         "heure": sample_heure,
         "confirmUrl": sample_confirm,
+        "confirmation_agence_link": sample_confirm,
     }
     return (
         _render_template(subject, vars_map),
@@ -367,8 +390,8 @@ EMAIL_TYPE_LABELS = {
 
 EMAIL_TYPE_VARS = {
     "immediate": "{{firstNameLine}}, {{date}}, {{heure}}",
-    "h48_confirm": "{{firstNameLine}}, {{confirmUrl}}",
-    "h24_relance": "{{firstNameLine}}, {{confirmUrl}}",
+    "h48_confirm": "{{firstNameLine}}, {{confirmation_agence_link}} (alias {{confirmUrl}})",
+    "h24_relance": "{{firstNameLine}}, {{confirmation_agence_link}} (alias {{confirmUrl}})",
     "h20_cancel": "{{firstNameLine}}, {{date}}, {{heure}}",
     "role_seq_48": "{{firstNameLine}}",
     "role_seq_24": "{{firstNameLine}}, {{confirmLink}}",
@@ -437,6 +460,15 @@ with tab_leads:
                     options=LEAD_STATUTS,
                     required=True,
                 ),
+                "reservation_agence_link": st.column_config.LinkColumn(
+                    "reservation_agence_link"
+                ),
+                "reservation_entreprise_link": st.column_config.LinkColumn(
+                    "reservation_entreprise_link"
+                ),
+                "confirmation_agence_link": st.column_config.LinkColumn(
+                    "confirmation_agence_link"
+                ),
                 "id": None,
                 "_original_statut": None,
             },
@@ -487,9 +519,10 @@ with tab_leads:
                     "first_name": selected.get("first_name"),
                     "company": selected.get("company"),
                     "statut": selected.get("statut"),
-                    "link": selected.get("link"),
-                    "booking_url": urls["booking_url"],
-                    "confirm_url": urls["confirm_url"],
+                    "slug": selected.get("slug"),
+                    "reservation_agence_link": urls["reservation_agence_link"],
+                    "reservation_entreprise_link": urls["reservation_entreprise_link"],
+                    "confirmation_agence_link": urls["confirmation_agence_link"],
                     "scheduled_at": selected.get("scheduled_at"),
                     "confirmed_at": selected.get("confirmed_at"),
                 }
@@ -543,9 +576,10 @@ with tab_add:
                     )
                     urls = _lead_urls({**created, "category": category, "email": email})
                     st.success(
-                        f"Lead créé · slug `{created.get('link')}`\n\n"
-                        f"Booking: {urls['booking_url']}\n\n"
-                        f"Confirmation: {urls['confirm_url']}"
+                        f"Lead créé · slug `{created.get('slug')}`\n\n"
+                        f"Agence: {urls['reservation_agence_link']}\n\n"
+                        f"Entreprise: {urls['reservation_entreprise_link']}\n\n"
+                        f"Confirmation: {urls['confirmation_agence_link']}"
                     )
                     if statut == "MEETING_BOOKED" and send_resend != "Do not trigger":
                         payload = {
@@ -618,19 +652,35 @@ with tab_unibox:
                 st.toast(f"{created} lead(s) importé(s) — visible dans l'onglet Leads.")
 
 with tab_provision:
-    st.subheader("1. Campagne Instantly — injecter `{{link}}`")
+    st.subheader("1. Campagne Instantly — REPLACE des variables de lien")
     st.caption(
-        "Les leads restent dans la campagne. PATCH custom_variables.link "
-        "pour les templates Instantly."
+        "Les leads restent dans la campagne. Chaque provision **remplace** "
+        "`custom_variables` par uniquement "
+        "`reservation_agence_link`, `reservation_entreprise_link`, "
+        "`confirmation_agence_link` et `statut` — les anciennes colonnes "
+        "`link` / `confirm_link` sont rayées."
     )
 
+    instantly = None
     try:
         instantly = get_instantly_client()
-        campaigns = instantly.list_all_campaigns()
+        if st.session_state.instantly_campaigns is None:
+            with st.spinner("Chargement des campagnes Instantly…"):
+                st.session_state.instantly_campaigns = instantly.list_all_campaigns()
     except Exception as exc:
         st.error(f"Instantly connection failed: {exc}")
-        campaigns = []
-        instantly = None
+        st.session_state.instantly_campaigns = st.session_state.instantly_campaigns or []
+
+    if st.button("Rafraîchir les campagnes"):
+        try:
+            instantly = instantly or get_instantly_client()
+            with st.spinner("Chargement des campagnes Instantly…"):
+                st.session_state.instantly_campaigns = instantly.list_all_campaigns()
+            st.rerun()
+        except Exception as exc:
+            st.error(str(exc))
+
+    campaigns = st.session_state.instantly_campaigns or []
 
     if campaigns:
         labels = {
@@ -741,10 +791,25 @@ with tab_provision:
             key="prov_cat",
         )
         patch_vars = st.checkbox(
-            "Patch Instantly custom_variables (link + statut)",
+            "REPLACE Instantly custom_variables (3 liens + statut, wipe des anciennes)",
             value=True,
         )
-        if st.button("Provision selected leads", type="primary"):
+        instantly_only = st.checkbox(
+            "Instantly only (re-sync)",
+            value=False,
+            help="Skip Supabase writes for existing leads; PATCH Instantly only.",
+        )
+        if "instantly_patch_workers" not in st.session_state:
+            st.session_state.instantly_patch_workers = instantly_patch_concurrency()
+        instantly_workers = st.slider(
+            "Instantly concurrency",
+            min_value=1,
+            max_value=16,
+            value=st.session_state.instantly_patch_workers,
+            key="instantly_patch_workers",
+            help="Parallel PATCH workers (default from INSTANTLY_PATCH_CONCURRENCY).",
+        )
+        if st.button("Provision / re-sync selected leads", type="primary"):
             if instantly is None:
                 st.error("Instantly client unavailable.")
             elif selected.empty:
@@ -760,30 +825,89 @@ with tab_provision:
                     }
                     for _, row in selected.iterrows()
                 ]
-                with st.spinner("Provisioning…"):
-                    try:
-                        result = provision_from_instantly_leads(
-                            category=category,  # type: ignore[arg-type]
-                            campaign_id=st.session_state.campaign_id or "",
-                            selected_leads=selected_leads,
-                            instantly=instantly,
-                            patch_instantly=patch_vars,
+                progress = st.progress(0.0, text="Provisioning…")
+                try:
+                    _PHASE_WEIGHT = {"prepare": 0.05, "supabase": 0.25, "instantly": 0.70}
+                    _PHASE_ORDER = ("prepare", "supabase", "instantly")
+                    _PHASE_LABELS = {
+                        "prepare": "Préparation",
+                        "supabase": "Supabase",
+                        "instantly": "Instantly",
+                    }
+
+                    def _provision_progress(
+                        phase: str, done: int, total: int, label: str
+                    ) -> None:
+                        idx = (
+                            _PHASE_ORDER.index(phase)
+                            if phase in _PHASE_ORDER
+                            else 0
                         )
-                        st.session_state.last_result_rows = result.rows
-                        st.success(
-                            f"Created: {result.created} · Patched: {result.patched} · "
-                            f"Skipped: {result.skipped} · Failed: {result.failed}"
+                        phase_frac = done / total if total else 1.0
+                        base = sum(_PHASE_WEIGHT[p] for p in _PHASE_ORDER[:idx])
+                        weight = _PHASE_WEIGHT.get(phase, 0.33)
+                        overall = min(base + phase_frac * weight, 1.0)
+                        phase_name = _PHASE_LABELS.get(phase, phase)
+                        detail = f"{phase_name} {done}/{total}"
+                        if label:
+                            detail += f" — {label}"
+                        progress.progress(overall, text=detail)
+
+                    result = provision_from_instantly_leads(
+                        category=category,  # type: ignore[arg-type]
+                        campaign_id=st.session_state.campaign_id or "",
+                        selected_leads=selected_leads,
+                        instantly=instantly,
+                        patch_instantly=patch_vars,
+                        instantly_only=instantly_only,
+                        instantly_workers=instantly_workers,
+                        on_progress=_provision_progress,
+                    )
+                    progress.progress(1.0, text="Terminé")
+                    st.session_state.last_result_rows = result.rows
+                    skipped_part = (
+                        f" · Skipped SB: {result.skipped}" if result.skipped else ""
+                    )
+                    if result.partial_supabase and result.patched:
+                        st.warning(
+                            f"Partial Supabase write: {result.created} created, "
+                            f"{result.updated} updated, "
+                            f"{result.insert_failed} insert failed, "
+                            f"{result.update_failed} update failed — "
+                            f"Instantly patched {result.patched}. Re-run Provision to resume."
                         )
-                        if result.errors:
-                            with st.expander("Warnings / errors"):
-                                for err in result.errors:
-                                    st.write(f"- {err}")
-                        _reload_leads()
-                        st.toast(
-                            f"{result.created} lead(s) provisionné(s) — visible dans l'onglet Leads."
+                    elif result.partial_supabase:
+                        failed_parts = []
+                        if result.insert_failed:
+                            failed_parts.append(f"{result.insert_failed} insert failed")
+                        if result.update_failed:
+                            failed_parts.append(f"{result.update_failed} update failed")
+                        failed_text = ", ".join(failed_parts) or "some writes failed"
+                        st.warning(
+                            f"Partial Supabase write: {result.created} created, "
+                            f"{result.updated} updated, {failed_text}. "
+                            "Re-run Provision to resume."
                         )
-                    except Exception as exc:
-                        st.error(f"Provisioning failed: {exc}")
+                    st.success(
+                        f"Created: {result.created} · Updated: {result.updated} · "
+                        f"Patched: {result.patched}{skipped_part} · Failed: {result.failed}"
+                    )
+                    if result.errors:
+                        with st.expander("Warnings / errors"):
+                            if result.partial_supabase:
+                                st.info(
+                                    "Some rows were saved before the error. "
+                                    "Re-select the same leads and click Provision again to finish."
+                                )
+                            for err in result.errors:
+                                st.write(f"- {err}")
+                    _reload_leads()
+                    st.toast(
+                        f"{result.created + result.updated} lead(s) "
+                        "provisionné(s) — visible dans l'onglet Leads."
+                    )
+                except Exception as exc:
+                    st.error(f"Provisioning failed: {exc}")
 
     st.divider()
     st.subheader("CSV optionnel (export / push)")
@@ -822,7 +946,7 @@ with tab_provision:
     if st.session_state.last_result_rows:
         export_df = rows_to_dataframe(st.session_state.last_result_rows)
         st.download_button(
-            "Download CSV with link column",
+            "Download CSV with slug + full links",
             data=export_df.to_csv(index=False).encode("utf-8-sig"),
             file_name="link_tracking_leads.csv",
             mime="text/csv",
@@ -1058,7 +1182,7 @@ with tab_sequence:
                                 calendly_questions=source.get("questions") or {},
                             )
                             source["lead_id"] = lead["id"]
-                            source["lead_link"] = lead["link"]
+                            source["lead_link"] = lead.get("slug")
                             source["provisioned"] = True
                             ok += 1
                         except Exception as exc:
@@ -1131,4 +1255,7 @@ with st.sidebar:
             "Next.js backend offline — l'onglet Emails Resend fonctionne via Supabase/Resend. "
             "Lancez `pnpm run dev` pour les changements de statut et séquences."
         )
-    st.caption("Templates Instantly: utilisez `{{link}}`")
+    st.caption(
+        "Templates Instantly: `{{reservation_agence_link}}` · "
+        "`{{reservation_entreprise_link}}` · `{{confirmation_agence_link}}`"
+    )

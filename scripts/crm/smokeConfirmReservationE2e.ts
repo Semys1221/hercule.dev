@@ -7,6 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
+import { buildLeadUrls } from "@/lib/link-tracking/urls";
 
 const ROOT = process.cwd();
 
@@ -92,13 +93,14 @@ async function main(): Promise<void> {
       .from("agence")
       .insert({
         email: bookedEmail,
-        link: bookedSlug,
+        slug: bookedSlug,
         statut: "MEETING_BOOKED",
         scheduled_at: scheduledAt,
         first_name: "Smoke",
         company: "E2E Test",
+        ...buildLeadUrls(bookedSlug, bookedEmail),
       })
-      .select("id, link, email, statut")
+      .select("id, slug, email, statut")
       .single();
 
     if (bookedInsertError || !bookedLead) {
@@ -110,10 +112,11 @@ async function main(): Promise<void> {
       .from("agence")
       .insert({
         email: guardEmail,
-        link: guardSlug,
+        slug: guardSlug,
         statut: "NOTBOOKED",
         first_name: "Smoke",
         company: "E2E Guard",
+        ...buildLeadUrls(guardSlug, guardEmail),
       })
       .select("id")
       .single();

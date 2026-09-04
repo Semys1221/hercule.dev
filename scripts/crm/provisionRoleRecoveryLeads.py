@@ -40,11 +40,11 @@ def main() -> None:
             },
             calendly_questions=booking.get("questions") or {},
         )
-        temp_url = build_confirm_url(temp_base, lead["link"], booking["email"])
+        temp_url = build_confirm_url(temp_base, lead["slug"], booking["email"])
         output.append(
             {
                 "email": booking["email"],
-                "slug": lead["link"],
+                "slug": lead["slug"],
                 "temporary_url": temp_url,
                 "lead_id": lead["id"],
             }

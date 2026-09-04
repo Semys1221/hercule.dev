@@ -1,0 +1,17 @@
+[
+    {
+        "id": "d5f22688-e53b-43c2-9157-1970d6b8ef2c",
+        "date": "2026-09-04 16:10:22",
+        "total_sent": 8000,
+        "opportunity": 82,
+        "booked": 16,
+        "reply_rate": 1.03,
+        "booking_rate": 19.51,
+        "email_1": "Bonjour,\nJ\u2019ai actuellement plusieurs personnes ayant manifest\u00e9 leur int\u00e9r\u00eat pour du {{service}} dans votre secteur.\n J'ai configur\u00e9 notre syst\u00e8me pour qu'il r\u00e9serve les prochaines demandes clients pour votre activit\u00e9.\n Souhaitez-vous recevoir un aper\u00e7u des clients actuels ?\n R\u00e9pondez \u00ab non \u00bb si vous pr\u00e9f\u00e9rez que je les propose \u00e0 une autre entreprise.\n {{accountSignature}}",
+        "email_2": "Bonjour,\n\nJ\u2019ai actuellement plusieurs personnes ayant manifest\u00e9 leur int\u00e9r\u00eat pour du {{service}} dans votre secteur.\n\nVotre agence est-elle en mesure d\u2019assurer ce type de prestation ?\n\nR\u00e9pondez moi simplement \"oui\" et je vous enverrai un aper\u00e7u des clients actuels.\n\n{{accountSignature}}",
+        "email_3": "Je n'ai pas re\u00e7u de r\u00e9ponse.\n\nVotre agence est-elle en mesure d\u2019assurer ce type de prestation ?\n\nR\u00e9pondez-moi simplement \"oui\" ou \"non\" afin que je sache si je dois vous envoyer un aper\u00e7u des clients actuels.\n\nCordialement,\n{{accountSignature}}",
+        "email_4": "Voici les pr\u00e9cisions.\n\nL\u2019un des groupes de clients que nous avons actuellement est constitu\u00e9 de cabinets comptables de 3 \u00e0 12 mandataires, disposant d\u2019un budget mensuel d\u00e9di\u00e9 au d\u00e9veloppement marketing.\n\nL\u2019expertise recherch\u00e9e porte sur l\u2019acquisition organique et/ou payante.\n\nLes premiers \u00e9changes entre cabinets et agences marketing sont disponibles du 8 au 27 septembre.\n\nPour r\u00e9aliser l\u2019audit de compatibilit\u00e9 de votre agence, cliquez ici :\nMon agence est compatible\n\nPour comprendre nos modalit\u00e9s et la qualification des demandes : hercule.dev\n\nCordialement,\n{{accountSignature}",
+        "website_version": "Je n'avais poas de site. La nouvelle version est finalis\u00e9 pour seulement les leads finaux. Avec un ajoute d'une section \"demandes\". ",
+        "improvement": "Le point de friction \u00e9taient le passage entre positive replies & booking. J'ai am\u00e9lior\u00e9 en utilisant un site avec une section. \"demande\" bien visible. Je dois \u00e9galement coder un outil d'envoie de reply auto imm\u00e9diatement. "
+    }
+]

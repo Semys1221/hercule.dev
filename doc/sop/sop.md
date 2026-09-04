@@ -1,6 +1,6 @@
 # SOP Agence Hercule — Version brouillon (Parcours A)
 
-> **Statut :** Sections 1–5 depuis [contrat.md](contrat.md). Sections 6–8 en attente des réponses [sop-validation.md](sop-validation.md) (Bloc B expansion).  
+> **Statut :** Sections 1–5 depuis blueprint historique ([contrat.md](contrat.md) → stub). **CGV & tarifs actuels :** [cvg_master.md](../tech-stack/cvg_master.md). Sections 6–8 en attente des réponses [sop-validation.md](sop-validation.md) (Bloc B expansion).  
 > **Commercial & landing :** voir [sop-commercial.md](sop-commercial.md).
 
 ---

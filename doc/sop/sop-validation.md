@@ -1,6 +1,7 @@
 # SOP Hercule — Questions de validation (Parcours A — SOP complet)
 
-> **Sources :** [contrat.md](contrat.md) | [pricing.md](pricing.md) | [sop-commercial.md](sop-commercial.md) | Landing `components/` — état au 2026-09-01  
+> **Sources :** [cvg_master.md](../tech-stack/cvg_master.md) (CGV & tarifs actuels) · [contrat.md](contrat.md) (stub — blueprint obsolète) · [pricing.md](pricing.md) · [sop-commercial.md](sop-commercial.md) · Landing `components/` — état au 2026-09-01  
+> **Obsolète :** sections référençant **250 € + 149 €/RDV**, beta **9/15 places**, promesse **3–5 RDV/mois** — voir CGV § 5 et § 9 + [cvg_site-sync.md](../tech-stack/cvg_site-sync.md).  
 > **Instructions :** cocher `[x]` **UNE** réponse par question (sauf mention « multi »).  
 > **Types :** `[Validation]` = vérifier si ce qui est écrit reste exact · `[Expansion]` = choisir une règle opérationnelle encore non documentée.
 
@@ -10,13 +11,13 @@
 
 | Zone | Ce que nous avons aujourd'hui |
 |------|-------------------------------|
-| **Blueprint commercial** | [contrat.md](contrat.md) — 6 sections marquées « validées » (ICP, promesse 3–5 RDV, méthodo Capture/Filter/Deliver, pricing 250 € + 149 €/RDV, garantie no-show, preuve démo Django) |
+| **Blueprint commercial (obsolète)** | [contrat.md](contrat.md) → stub · **CGV actuelles :** [cvg_master.md](../tech-stack/cvg_master.md) — Starter 1 489 €, Hercule 2 500 €/mois, SLA capacity |
 | **Pricing alternatif** | [pricing.md](pricing.md) — note isolée : 250 €/mois + 750 €/mois « full closing » (non intégrée au contrat) |
 | **SOP générés** | [sop-commercial.md](sop-commercial.md) et [sop.md](sop.md) — brouillons dérivés du contrat ; sections opérationnelles (§6–8) vides |
-| **Landing** | Rebrand **Hercule** ; hero « Infrastructure Django » ; mockup pipeline ; pricing 250 + 149 affiché ; beta « 9/15 places » ; garantie no-show intégrée au pricing |
-| **Opérationnel interne** | Non documenté : onboarding, SLA, facturation, support, légal détaillé, KPIs |
+| **Landing** | Rebrand **Hercule** ; pricing **1 489 € Starter / 2 500 €/mois** ; garanties MRR + no-show (audit : [cvg_site-sync.md](../tech-stack/cvg_site-sync.md)) |
+| **Opérationnel interne** | CGV : [cvg_master.md](../tech-stack/cvg_master.md) · Capacity SLA · onboarding checkbox à implémenter |
 
-**Conflits connus à trancher :** pricing 149 €/RDV vs 750 € closing · chiffres beta 6/15 · tier 750 € actif ou non.
+**Conflits connus à trancher :** voir [cvg_site-sync.md](../tech-stack/cvg_site-sync.md) (no-show 14j, garanties MRR, pack 5 vs 3–4/mois) · HT vs TTC · placeholders légaux.
 
 ---
 

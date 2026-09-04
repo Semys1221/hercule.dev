@@ -141,9 +141,9 @@ def list_untracked_bookings(*, days_ahead: int = 30) -> list[dict[str, Any]]:
                     },
                     "lead_id": lead.get("id") if lead else None,
                     "lead_category": lookup[0] if lookup else None,
-                    "lead_link": lead.get("link") if lead else None,
+                    "lead_link": lead.get("slug") if lead else None,
                     "lead_statut": lead.get("statut") if lead else None,
-                    "provisioned": bool(lead and lead.get("link")),
+                    "provisioned": bool(lead and lead.get("slug")),
                 }
             )
     rows.sort(key=lambda row: str(row.get("start_time") or ""))

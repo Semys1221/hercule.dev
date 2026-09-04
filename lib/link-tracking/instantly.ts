@@ -4,7 +4,7 @@ import {
 } from "@/lib/instantly";
 
 import type { LeadCategory, LeadStatut, LinkTrackingLead } from "./types";
-import { buildTrackingUrl } from "./urls";
+import { buildInstantlyCustomVariables, leadSlug } from "./urls";
 
 const MEETING_BOOKED_INTEREST = 2;
 
@@ -25,17 +25,19 @@ function confirmedInterestValue(): number | null {
 
 async function patchStatutVariable(
   lead: LinkTrackingLead,
-  category: LeadCategory,
+  _category: LeadCategory,
   statut: string,
 ): Promise<void> {
   if (!lead.instantly_lead_id) return;
   const apiKey = getInstantlyApiKey();
-  const trackingUrl = buildTrackingUrl(lead.link, category);
+  const slug = leadSlug(lead);
+  if (!slug) return;
   try {
-    await patchLeadCustomVariables(apiKey, lead.instantly_lead_id, {
-      link: trackingUrl,
-      statut,
-    });
+    await patchLeadCustomVariables(
+      apiKey,
+      lead.instantly_lead_id,
+      buildInstantlyCustomVariables(slug, lead.email, statut),
+    );
   } catch (err) {
     console.warn(
       `[link-tracking] Instantly custom_variables PATCH failed for ${lead.email}:`,

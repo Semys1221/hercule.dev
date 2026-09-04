@@ -125,6 +125,7 @@ export async function renderEmailFromStore(params: {
     date,
     heure,
     confirmUrl: params.confirmUrl,
+    confirmation_agence_link: params.confirmUrl,
     confirmLink: params.confirmUrl
       ? `confirmer : ${params.confirmUrl}`
       : "",
@@ -152,9 +153,12 @@ export async function previewTemplate(
     heure,
     confirmUrl:
       "https://www.hercule.dev/confirm-reservation.html/exemple-slug?email=jean@example.com",
+    confirmation_agence_link:
+      "https://www.hercule.dev/confirm-reservation.html/exemple-slug?email=jean@example.com",
   };
   if (emailType === "immediate") {
     delete vars.confirmUrl;
+    delete vars.confirmation_agence_link;
   }
   return finalizeRenderedEmail({
     subject: renderTemplate(subject, vars),

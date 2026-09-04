@@ -271,6 +271,21 @@ class InstantlyClient:
             on_progress=_progress if on_progress else None,
         )
 
+    def get_lead(self, lead_id: str) -> dict[str, Any]:
+        data = self._fetch(f"/leads/{lead_id.strip()}")
+        return data if isinstance(data, dict) else {}
+
+    @staticmethod
+    def lead_custom_variables(lead: dict[str, Any]) -> dict[str, Any]:
+        merged: dict[str, Any] = {}
+        payload = lead.get("payload")
+        if isinstance(payload, dict):
+            merged.update(payload)
+        custom = lead.get("custom_variables")
+        if isinstance(custom, dict):
+            merged.update(custom)
+        return merged
+
     def patch_lead_custom_variables(
         self,
         lead_id: str,
@@ -281,6 +296,65 @@ class InstantlyClient:
             method="PATCH",
             body={"custom_variables": custom_variables},
         )
+
+    def replace_lead_custom_variables(
+        self,
+        lead_id: str,
+        custom_variables: dict[str, str],
+    ) -> None:
+        """Replace Instantly custom_variables with the canonical set only.
+
+        Instantly PATCH overwrites the whole map, which drops legacy keys
+        such as `link` and `confirm_link`.
+        """
+        self.patch_lead_custom_variables(lead_id, custom_variables)
+
+    def patch_leads_custom_variables_parallel(
+        self,
+        items: list[tuple[str, dict[str, str]]],
+        *,
+        max_workers: int = 8,
+        on_progress: Callable[[int, int], None] | None = None,
+    ) -> dict[str, Any]:
+        """PATCH custom_variables for many leads concurrently (1 HTTP call each)."""
+        if not items:
+            return {"patched": 0, "failed": 0, "errors": []}
+
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import threading
+
+        api_key = self.api_key
+        workers = max(1, min(max_workers, len(items), 16))
+        patched = 0
+        failed = 0
+        errors: list[str] = []
+        lock = threading.Lock()
+        completed = 0
+        total = len(items)
+
+        def _patch_one(item: tuple[str, dict[str, str]]) -> None:
+            lead_id, custom_variables = item
+            worker = InstantlyClient(api_key)
+            worker.replace_lead_custom_variables(lead_id, custom_variables)
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {pool.submit(_patch_one, item): item for item in items}
+            for future in as_completed(futures):
+                lead_id, _ = futures[future]
+                try:
+                    future.result()
+                    with lock:
+                        patched += 1
+                except Exception as exc:
+                    with lock:
+                        failed += 1
+                        errors.append(f"Instantly PATCH failed for {lead_id}: {exc}")
+                with lock:
+                    completed += 1
+                    if on_progress:
+                        on_progress(completed, total)
+
+        return {"patched": patched, "failed": failed, "errors": errors}
 
     def push_leads_batch(
         self,
@@ -359,6 +433,106 @@ class InstantlyClient:
             starting_after = str(next_cursor)
 
         return items
+
+
+    def list_emails(
+        self,
+        *,
+        search: str | None = None,
+        campaign_id: str | None = None,
+        email_type: str | None = None,
+        latest_of_thread: bool = False,
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        params = [f"limit={limit}"]
+        if search:
+            params.append(f"search={search}")
+        if campaign_id:
+            params.append(f"campaign_id={campaign_id.strip()}")
+        if email_type:
+            params.append(f"email_type={email_type}")
+        if latest_of_thread:
+            params.append("latest_of_thread=true")
+        page = self._fetch(f"/emails?{'&'.join(params)}", method="GET")
+        return page.get("items") or [] if isinstance(page, dict) else []
+
+    def reply_to_email(
+        self,
+        *,
+        eaccount: str,
+        reply_to_uuid: str,
+        subject: str,
+        html: str,
+    ) -> Any:
+        return self._fetch(
+            "/emails/reply",
+            method="POST",
+            body={
+                "eaccount": eaccount.strip(),
+                "reply_to_uuid": reply_to_uuid.strip(),
+                "subject": subject,
+                "body": {"html": html},
+            },
+        )
+
+    def remove_lead_from_subsequence(self, lead_id: str) -> Any:
+        return self._fetch(
+            "/leads/subsequence/remove",
+            method="POST",
+            body={"id": lead_id.strip()},
+        )
+
+    def update_interest_status(
+        self,
+        *,
+        lead_email: str,
+        interest_value: int | None,
+        campaign_id: str | None = None,
+        disable_auto_interest: bool = False,
+    ) -> Any:
+        body: dict[str, Any] = {
+            "lead_email": lead_email.strip(),
+            "interest_value": interest_value,
+        }
+        if campaign_id:
+            body["campaign_id"] = campaign_id.strip()
+        if disable_auto_interest:
+            body["disable_auto_interest"] = True
+        return self._fetch("/leads/update-interest-status", method="POST", body=body)
+
+    def list_webhooks(self) -> list[dict[str, Any]]:
+        page = self._fetch("/webhooks?limit=100", method="GET")
+        return page.get("items") or [] if isinstance(page, dict) else []
+
+    def create_webhook(
+        self,
+        *,
+        target_hook_url: str,
+        event_type: str,
+        name: str | None = None,
+        campaign: str | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {
+            "target_hook_url": target_hook_url.strip(),
+            "event_type": event_type,
+        }
+        if name:
+            body["name"] = name
+        if campaign:
+            body["campaign"] = campaign.strip()
+        if headers:
+            body["headers"] = headers
+        data = self._fetch("/webhooks", method="POST", body=body)
+        return data if isinstance(data, dict) else {}
+
+    def delete_webhook(self, webhook_id: str) -> None:
+        self._fetch(f"/webhooks/{webhook_id.strip()}", method="DELETE")
+
+    def list_subsequences(self, campaign_id: str | None = None) -> list[dict[str, Any]]:
+        suffix = f"?parent_campaign={campaign_id.strip()}&limit=100" if campaign_id else "?limit=100"
+        page = self._fetch(f"/subsequences{suffix}", method="GET")
+        return page.get("items") or [] if isinstance(page, dict) else []
 
 
 _client: InstantlyClient | None = None

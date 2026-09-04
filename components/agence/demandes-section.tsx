@@ -44,7 +44,7 @@ export function DemandesSection() {
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-6"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            Des demandes actuellement disponibles
+            +25 projets actuellement disponibles
           </motion.h2>
 
           <motion.p

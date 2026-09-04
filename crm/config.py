@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     link_tracking_webhook_secret: str = ""
     instantly_campaign_id_agence: str = ""
     instantly_campaign_id_entreprise: str = ""
+    instantly_patch_concurrency: int = 8
+    supabase_insert_batch_size: int = 100
+    supabase_batch_max_retries: int = 4
 
     def model_post_init(self, __context: object) -> None:
         if not self.supabase_url:
@@ -82,6 +85,25 @@ class Settings(BaseSettings):
             self.confirm_base_url = _env("BOOKING_CONFIRM_BASE_URL").rstrip("/")
         if _env("BOOKING_TEMPORARY_BASE_URL"):
             self.temporary_base_url = _env("BOOKING_TEMPORARY_BASE_URL").rstrip("/")
+        raw_concurrency = _env("INSTANTLY_PATCH_CONCURRENCY")
+        if raw_concurrency:
+            try:
+                parsed = int(raw_concurrency)
+                self.instantly_patch_concurrency = max(1, min(parsed, 16))
+            except ValueError:
+                pass
+        raw_batch_size = _env("SUPABASE_INSERT_BATCH_SIZE")
+        if raw_batch_size:
+            try:
+                self.supabase_insert_batch_size = max(1, min(int(raw_batch_size), 200))
+            except ValueError:
+                pass
+        raw_retries = _env("SUPABASE_BATCH_MAX_RETRIES")
+        if raw_retries:
+            try:
+                self.supabase_batch_max_retries = max(1, min(int(raw_retries), 10))
+            except ValueError:
+                pass
 
 
 settings = Settings()
@@ -129,6 +151,21 @@ def require_instantly_key() -> str:
     if not key:
         raise RuntimeError(f"Set INSTANTLY_API_KEY in {env_source_label()}")
     return key
+
+
+def instantly_patch_concurrency() -> int:
+    return max(1, min(settings.instantly_patch_concurrency, 16))
+
+
+def supabase_insert_batch_size(row_count: int) -> int:
+    configured = max(1, min(settings.supabase_insert_batch_size, 200))
+    if row_count > 1000 and configured > 50:
+        return 50
+    return configured
+
+
+def supabase_batch_max_retries() -> int:
+    return max(1, min(settings.supabase_batch_max_retries, 10))
 
 
 def crm_backend_headers() -> dict[str, str]:

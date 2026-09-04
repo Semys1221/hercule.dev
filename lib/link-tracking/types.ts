@@ -12,7 +12,10 @@ export type LinkTrackingLead = {
   id: string;
   email: string;
   statut: LeadStatut;
-  link: string;
+  slug: string;
+  reservation_agence_link: string;
+  reservation_entreprise_link: string;
+  confirmation_agence_link: string;
   instantly_lead_id: string | null;
   instantly_campaign_id: string | null;
   calendly_invitee_uri: string | null;

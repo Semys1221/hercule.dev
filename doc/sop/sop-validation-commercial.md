@@ -1,6 +1,6 @@
 # SOP Validation Commercial — Hercule.dev
 
-**Source de référence :** `~/dev/hercule-agency/contrat.md`  
+**Source de référence :** [cvg_master.md](../tech-stack/cvg_master.md) (CGV actuelles) · blueprint historique : [contrat.md](contrat.md) (stub)  
 **Document de travail :** validation et expansion du SOP commercial  
 **Étape suivante :** après validation complète → générer `sop-landing-plan.md`
 

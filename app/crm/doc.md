@@ -55,11 +55,17 @@ pnpm configure-calendly-link-tracking-webhook
 
 Registers `invitee.created` → `https://www.hercule.dev/api/webhooks/calendly`.
 
-## Instantly `{{link}}`
+## Instantly variables
 
-On the **Provisioning** tab, inject `custom_variables.link` in place. Use `{{link}}` in Instantly templates:
-- Agence: `https://www.hercule.dev/reservation.html/{slug}`
-- Entreprise: `https://www.hercule.dev/reservation-entreprise.html/{slug}`
+On the **Provisioning** tab, REPLACE Instantly `custom_variables` with:
+- `{{reservation_agence_link}}` — `https://www.hercule.dev/reservation.html/{slug}`
+- `{{reservation_entreprise_link}}` — `https://www.hercule.dev/reservation-entreprise.html/{slug}`
+- `{{confirmation_agence_link}}` — `https://www.hercule.dev/confirm-reservation.html/{slug}?email=`
+- `statut`
+
+Legacy `{{link}}` / `{{confirm_link}}` are wiped. Update Instantly sequence copy to the new names.
+
+Resend email 2 (`h48_confirm`) interpolates `{{confirmation_agence_link}}` (alias `{{confirmUrl}}`).
 
 Copy: [doc/emails_booking](../../doc/emails_booking)
 

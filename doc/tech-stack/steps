@@ -1,0 +1,11 @@
+Step 0 — Capacity & SLA (doc/tech-stack/capacity/)
+  Apply Supabase capacity migrations (capacity_status, inbox_pool)
+  Create Streamlit Capacity tab (pool, queue, jalons U4, alertes)
+
+Apply all the supabase migrations - create a streamlit tool of visibility
+
+Apply all the resend communication migrations - create a streamlit tool of viibility of all my emails com. 
+
+Apply the frontend for users
+
+Apply the front end for me. 

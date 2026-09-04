@@ -1,8 +1,8 @@
 # SOP Commercial Hercule — Version brouillon
 
-> **Statut :** Généré depuis [contrat.md](contrat.md) (blueprint marqué validé).  
+> **Statut :** ICP/méthodo depuis blueprint historique ; **pricing & CGV** → [cvg_master.md](../tech-stack/cvg_master.md) (2026-09-04).  
 > **À confirmer :** cocher [sop-validation-commercial.md](sop-validation-commercial.md) puis regénérer.  
-> **Réponses non cochées :** valeurs contrat.md appliquées par défaut.
+> **Obsolète :** modèle 250 €/mois + 149 €/RDV — remplacé par Starter **1 489 €** / Hercule **2 500 €/mois**.
 
 ---
 
@@ -49,29 +49,33 @@
 
 ## 3. Pricing & Beta
 
-**Modèle par défaut (contrat.md) :** Hybride — **250 €/mois** (structure serveurs/scripts) + **149 €/RDV qualifié honoré**.
+> **Tarifs actuels (CGV) :** [cvg_master.md](../tech-stack/cvg_master.md) § 5 — **Hercule Starter 1 489 €** (5 attributions) · **Hercule 2 500 €/mois** (jusqu'à 4 attributions/mois) · Renouvellement **1 489 €** · Offre survey **898 €** (3 attributions).
+
+**Modèle obsolète (contrat.md) :** ~~250 €/mois + 149 €/RDV~~ — ne plus utiliser.
 
 **Modèle alternatif (pricing.md) :** **750 €/mois** full closing — statut à confirmer via V4.1.
 
-**ROI exemple :** 4 RDV/mois, 1 signé à 4 000 € → coût 846 € → ROI ×5.
+**ROI exemple (legacy) :** 4 RDV/mois, 1 signé à 4 000 € → coût 846 € → ROI ×5.
 
 **Panier moyen agence :** 2 500 € – 8 000 €/projet + 150 € – 500 €/mois maintenance.
 
-**Beta :** 15 partenaires max, 6 actifs, 9 places restantes, tarif bloqué à vie.
+**Beta (legacy) :** ~~15 partenaires, 9 places~~ — voir landing actuelle.
 
-*Sources : V4.1–V4.7 (contrat.md §4)*
+*Sources : V4.1–V4.7 (contrat.md §4 — obsolète) · CGV § 5*
 
 ---
 
 ## 4. Garanties & Risk Reversal
 
-**No-show :** Prospect qualifié absent en visio (malgré relance H-24) → RDV non comptabilisé → remplacement recrédité immédiatement.
+> **CGV actuelles :** [cvg_master.md](../tech-stack/cvg_master.md) § 10 — no-show remplacement sous **14 jours ouvrés** ; garanties MRR Starter (1 500 €) et récurrent (3 000 €).
 
-**Principe :** L'agence ne paie que pour les décideurs réels assis en face d'elle.
+**No-show (CGV) :** Prospect qualifié absent en visio (malgré relance H-24) → attribution non consommée → remplacement sous **14 jours ouvrés**.
 
-**Framing :** Alignement d'intérêts via limitation 15 places et revenu sur RDV à 149 €.
+**Principe :** RDV honoré = décideur présent en visio ≥ 15 min.
 
-*Sources : V5.1–V5.3 (contrat.md §5)*
+**Framing legacy :** ~~Alignement via 15 places et 149 €/RDV~~ — voir CGV § 10.
+
+*Sources : V5.1–V5.3 (contrat.md §5 — obsolète) · CGV § 10*
 
 ---
 

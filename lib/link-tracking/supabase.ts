@@ -44,7 +44,7 @@ export async function findLeadByLink(
     const { data, error } = await client
       .from(category)
       .select("*")
-      .eq("link", slug)
+      .eq("slug", slug)
       .maybeSingle();
 
     if (error) {
@@ -146,7 +146,7 @@ export async function markLeadBooked(
   const { data, error } = await client
     .from(lookup.category)
     .update(patch)
-    .eq("link", lookup.lead.link)
+    .eq("slug", lookup.lead.slug)
     .in("statut", ["NOTBOOKED", "CLICKED"])
     .select("*")
     .maybeSingle();
@@ -156,7 +156,7 @@ export async function markLeadBooked(
   }
 
   if (!data) {
-    const refreshed = await findLeadByLink(client, lookup.lead.link);
+    const refreshed = await findLeadByLink(client, lookup.lead.slug);
     if (refreshed && isMeetingBookedStatus(refreshed.lead.statut)) {
       return { updated: false, lookup: refreshed, reason: "already_booked" };
     }

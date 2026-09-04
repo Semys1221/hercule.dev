@@ -1,8 +1,9 @@
 # Plan Landing Hercule — Options texte & composants
 
-> **Source :** [sop-commercial.md](sop-commercial.md) (brouillon contrat.md)  
+> **Source historique :** [sop-commercial.md](sop-commercial.md) (blueprint contrat.md)  
+> **Pricing & CGV actuels :** [cvg_master.md](../tech-stack/cvg_master.md) · audit site : [cvg_site-sync.md](../tech-stack/cvg_site-sync.md)  
 > **Instructions :** cocher `[x]` une option texte + une option composant par section.  
-> **Recommandation ★ :** options alignées contrat.md — utilisées pour l'implémentation brouillon initiale.
+> **Recommandation ★ :** options alignées contrat.md — utilisées pour l'implémentation brouillon initiale (2026-09-01).
 
 ---
 

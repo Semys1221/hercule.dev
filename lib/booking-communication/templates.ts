@@ -37,7 +37,7 @@ Les informations de connexion vous seront transmises directement par email via C
 Nous avons le plaisir de vous informer que les profils présentés lors de votre rendez-vous porteront sur des contrats de conseil financier.
 
 Afin de maintenir votre créneau, merci de confirmer votre présence :
-{{confirmUrl}}
+{{confirmation_agence_link}}
 
 Sans confirmation sous 24 heures, votre place pourra être réattribué à une autre agence.`,
   },
@@ -50,7 +50,7 @@ Nous n'avons pas encore reçu votre confirmation de présence.
 Votre créneau sera prochainement libéré dans les heures qui suivent afin de pouvoir être proposé à une autre agence.
 
 Si vous souhaitez maintenir le rendez-vous, merci de nous confirmer votre présence :
-{{confirmUrl}}`,
+{{confirmation_agence_link}}`,
   },
   h20_cancel: {
     subject: "Votre rendez-vous avec Hercule est annulé",
@@ -187,6 +187,7 @@ export function renderH48ConfirmEmail(params: {
   const vars = {
     firstNameLine: buildFirstNameLine(params.firstName, "h48_confirm"),
     confirmUrl: params.confirmUrl,
+    confirmation_agence_link: params.confirmUrl,
   };
   return {
     subject: defaults.subject,
@@ -203,6 +204,7 @@ export function renderH24RelanceEmail(params: {
   const vars = {
     firstNameLine: buildFirstNameLine(params.firstName, "h48_confirm"),
     confirmUrl: params.confirmUrl,
+    confirmation_agence_link: params.confirmUrl,
   };
   return {
     subject: defaults.subject,
