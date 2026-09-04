@@ -1,4 +1,4 @@
-"""Dashboard send queues for Instantly subsequence bypass."""
+"""Dashboard send queues — interest-status fetch, Unibox reply sends."""
 
 from __future__ import annotations
 
@@ -13,22 +13,46 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from shared.instantly_client import InstantlyClient, get_api_key
+from shared.instantly_client import (
+    FILTER_LEAD_INTERESTED,
+    FILTER_LEAD_NO_SHOW,
+    InstantlyClient,
+    get_api_key,
+    lead_custom_var,
+)
 
-from config import waiting_for_reply_interest_value
-from supabase_repo import get_event_sent_at, has_sent_event, record_event
+from supabase_repo import (
+    get_last_send_at,
+    has_sent_event,
+    list_sent_flows,
+    record_event,
+)
 
-Sequence = Literal["positive", "no_reply"]
-Step = Literal[
+Sequence = Literal["interested", "no_show"]
+Flow = Literal[
     "interested_email1",
     "interested_email2",
     "interested_email3",
-    "no_reply_email1",
-    "no_reply_email2",
+    "no_show_email1",
+    "no_show_email2",
 ]
 
 INTERESTED_STATUS = 1
+NO_SHOW_STATUS = -4
+NOT_INTERESTED_STATUS = -1
 EMAIL_SEND_DELAY_S = 3.2
+
+SEQUENCE_FILTER: dict[Sequence, str] = {
+    "interested": FILTER_LEAD_INTERESTED,
+    "no_show": FILTER_LEAD_NO_SHOW,
+}
+
+SEQUENCE_FLOWS: dict[Sequence, list[Flow]] = {
+    "interested": ["interested_email1", "interested_email2", "interested_email3"],
+    "no_show": ["no_show_email1", "no_show_email2"],
+}
+
+FINAL_FLOWS: set[Flow] = {"interested_email3", "no_show_email2"}
 
 
 def idempotency_key(flow: str, campaign_id: str, lead_email: str) -> str:
@@ -100,29 +124,19 @@ def lead_has_replied_since(
     return False
 
 
-def _subseq_email1_not_sent(lead: dict[str, Any]) -> bool:
-    summary = lead.get("status_summary_subseq")
-    if not isinstance(summary, dict):
-        return True
-    executed = summary.get("timestampExecuted") or summary.get("timestamp_executed")
-    return not executed
-
-
-def _render_template(subject: str, body_html: str, vars_map: dict[str, str]) -> tuple[str, str]:
-    out_subject = subject
+def _render_template(body_html: str, vars_map: dict[str, str]) -> str:
     out_body = body_html
     for key, value in vars_map.items():
-        out_subject = out_subject.replace(f"{{{{{key}}}}}", value)
         out_body = out_body.replace(f"{{{{{key}}}}}", value)
-    if not out_subject.lower().startswith("re:"):
-        out_subject = f"Re: {out_subject.removeprefix('Re: ').removeprefix('re: ')}"
-    return out_subject, out_body
+    return out_body
 
 
-def _template_vars(lead: dict[str, Any], subject: str = "") -> dict[str, str]:
+def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
     payload = lead.get("payload") if isinstance(lead.get("payload"), dict) else {}
+    reservation_link = lead_custom_var(lead, "reservation_agence_link") or ""
+    signature = lead_custom_var(lead, "accountSignature") or ""
     first = str(
-        lead.get("first_name") or payload.get("firstName") or payload.get("first_name") or "there"
+        lead.get("first_name") or payload.get("firstName") or payload.get("first_name") or ""
     )
     company = str(
         lead.get("company_name") or payload.get("companyName") or payload.get("company_name") or ""
@@ -131,7 +145,8 @@ def _template_vars(lead: dict[str, Any], subject: str = "") -> dict[str, str]:
         "first_name": first,
         "last_name": str(lead.get("last_name") or payload.get("lastName") or ""),
         "company_name": company,
-        "subject": subject or "your message",
+        "reservation_agence_link": reservation_link,
+        "accountSignature": signature,
     }
 
 
@@ -152,31 +167,19 @@ def _load_template(template_key: str) -> dict[str, str]:
     return {"subject": row["subject"], "body_html": row["body_html"]}
 
 
-def is_positive_interested(lead: dict[str, Any], config: dict[str, Any]) -> bool:
+def _interest_label(lead: dict[str, Any]) -> str:
     status = lead.get("lt_interest_status")
     if status == INTERESTED_STATUS:
-        return True
-    waiting = config.get("waiting_for_reply_interest_value")
-    if waiting is not None and status == waiting:
-        return True
-    env_waiting = waiting_for_reply_interest_value()
-    if env_waiting is not None and status == env_waiting:
-        return True
-    return False
+        return "Intéressé"
+    if status == NO_SHOW_STATUS:
+        return "No Show"
+    if status is None:
+        return "—"
+    return str(status)
 
 
-def _previous_flow(step: Step) -> Step | None:
-    return {
-        "interested_email2": "interested_email1",
-        "interested_email3": "interested_email2",
-        "no_reply_email2": "no_reply_email1",
-    }.get(step)  # type: ignore[arg-type]
-
-
-def _default_checked(step: Step, replied_since_last: bool) -> bool:
-    if step in ("interested_email2", "interested_email3", "no_reply_email2"):
-        return not replied_since_last
-    return True
+def _missing_reservation_link(lead: dict[str, Any]) -> bool:
+    return not bool(lead_custom_var(lead, "reservation_agence_link"))
 
 
 @dataclass
@@ -186,9 +189,10 @@ class QueueLead:
     first_name: str
     interest_label: str
     last_sent_at: str | None
-    replied_since_last: bool
+    replied_since_last_send: bool
+    missing_reservation_link: bool
+    sent_flows: list[str]
     envoyer: bool
-    subsequence_id: str | None = None
     raw: dict[str, Any] = field(default_factory=dict, repr=False)
 
 
@@ -200,66 +204,10 @@ class BulkSendResult:
     errors: list[str] = field(default_factory=list)
 
 
-def _interest_label(lead: dict[str, Any]) -> str:
-    status = lead.get("lt_interest_status")
-    if status == INTERESTED_STATUS:
-        return "Intéressé"
-    if status is None:
-        return "—"
-    return str(status)
-
-
-def _is_eligible(
-    *,
-    step: Step,
-    sequence: Sequence,
-    lead: dict[str, Any],
-    campaign_id: str,
-    config: dict[str, Any],
-) -> bool:
-    lead_email = str(lead.get("email") or "").strip().lower()
-    if not lead_email:
-        return False
-
-    if has_sent_event(idempotency_key(step, campaign_id, lead_email)):
-        return False
-
-    interested_sub = str(config.get("interested_subsequence_id") or "")
-    no_reply_sub = str(config.get("no_reply_subsequence_id") or "")
-    subseq = str(lead.get("subsequence_id") or "")
-
-    if sequence == "positive":
-        if not is_positive_interested(lead, config):
-            return False
-
-        if step == "interested_email1":
-            return is_positive_interested(lead, config)
-
-        prev = _previous_flow(step)
-        if not prev:
-            return False
-        prev_sent = get_event_sent_at(campaign_id, lead_email, prev)
-        return bool(prev_sent)
-
-    # no_reply
-    if lead.get("lt_interest_status") == INTERESTED_STATUS:
-        return False
-
-    if step == "no_reply_email1":
-        return bool(no_reply_sub and subseq == no_reply_sub and _subseq_email1_not_sent(lead))
-
-    prev = _previous_flow(step)
-    if not prev:
-        return False
-    return bool(get_event_sent_at(campaign_id, lead_email, prev))
-
-
-def fetch_queue(
+def fetch_sequence_leads(
     *,
     campaign_id: str,
-    step: Step,
     sequence: Sequence,
-    config: dict[str, Any],
     max_leads: int = 500,
     client: InstantlyClient | None = None,
 ) -> list[QueueLead]:
@@ -268,61 +216,40 @@ def fetch_queue(
         raise ValueError("INSTANTLY_API_KEY is not set")
     instantly = client or InstantlyClient(api_key)
 
+    raw_leads = instantly.list_leads_by_interest_filter(
+        campaign_id=campaign_id,
+        interest_filter=SEQUENCE_FILTER[sequence],
+        max_leads=max_leads,
+    )
+
     rows: list[QueueLead] = []
-    starting_after: str | None = None
+    for lead in raw_leads:
+        lead_email = str(lead.get("email") or "").strip().lower()
+        if not lead_email:
+            continue
 
-    while len(rows) < max_leads:
-        body: dict[str, Any] = {"campaign": campaign_id, "limit": 100}
-        if starting_after:
-            body["starting_after"] = starting_after
-        page = instantly._fetch("/leads/list", method="POST", body=body)
-        items = page.get("items") or [] if isinstance(page, dict) else []
-        if not items:
-            break
+        last_sent_at = get_last_send_at(campaign_id, lead_email)
+        replied_since_last_send = False
+        if last_sent_at:
+            replied_since_last_send = lead_has_replied_since(instantly, lead_email, last_sent_at)
+            time.sleep(0.15)
 
-        for lead in items:
-            if not _is_eligible(
-                step=step,
-                sequence=sequence,
-                lead=lead,
-                campaign_id=campaign_id,
-                config=config,
-            ):
-                continue
+        sent_flows = list_sent_flows(campaign_id, lead_email)
 
-            lead_email = str(lead.get("email") or "").strip().lower()
-            prev = _previous_flow(step)
-            last_sent_at: str | None = None
-            replied_since_last = False
-
-            if prev:
-                last_sent_at = get_event_sent_at(campaign_id, lead_email, prev)
-                if last_sent_at:
-                    replied_since_last = lead_has_replied_since(instantly, lead_email, last_sent_at)
-                    time.sleep(0.15)
-
-            rows.append(
-                QueueLead(
-                    lead_id=str(lead.get("id") or ""),
-                    email=lead_email,
-                    first_name=str(lead.get("first_name") or ""),
-                    interest_label=_interest_label(lead),
-                    last_sent_at=last_sent_at,
-                    replied_since_last=replied_since_last,
-                    envoyer=_default_checked(step, replied_since_last),
-                    subsequence_id=str(lead.get("subsequence_id") or "") or None,
-                    raw=lead,
-                )
+        rows.append(
+            QueueLead(
+                lead_id=str(lead.get("id") or ""),
+                email=lead_email,
+                first_name=str(lead.get("first_name") or ""),
+                interest_label=_interest_label(lead),
+                last_sent_at=last_sent_at,
+                replied_since_last_send=replied_since_last_send,
+                missing_reservation_link=_missing_reservation_link(lead),
+                sent_flows=sent_flows,
+                envoyer=not replied_since_last_send,
+                raw=lead,
             )
-            if len(rows) >= max_leads:
-                break
-
-        next_cursor = page.get("next_starting_after") if isinstance(page, dict) else None
-        if not next_cursor and items:
-            next_cursor = items[-1].get("id")
-        if not next_cursor or len(items) < 100:
-            break
-        starting_after = str(next_cursor)
+        )
 
     return rows
 
@@ -330,13 +257,10 @@ def fetch_queue(
 def dispatch_one(
     client: InstantlyClient,
     *,
-    flow: Step,
-    template_key: Step,
+    flow: Flow,
     campaign_id: str,
     lead: dict[str, Any],
-    update_waiting_status: bool = False,
     dry_run: bool = False,
-    config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     lead_email = str(lead.get("email") or "").strip().lower()
     lead_id = str(lead.get("id") or "")
@@ -347,16 +271,27 @@ def dispatch_one(
     if has_sent_event(idem):
         return {"ok": True, "skipped": "already_sent"}
 
+    if _missing_reservation_link(lead):
+        record_event(
+            {
+                "idempotency_key": idem,
+                "flow": flow,
+                "campaign_id": campaign_id,
+                "lead_email": lead_email,
+                "lead_id": lead_id or None,
+                "status": "failed",
+                "error_message": "Missing reservation_agence_link on lead",
+            }
+        )
+        return {"ok": False, "error": "missing_reservation_link", "lead_email": lead_email}
+
     if dry_run:
         return {"ok": True, "dry_run": True, "lead_email": lead_email}
 
     started = datetime.now(timezone.utc)
 
     try:
-        template = _load_template(template_key)
-
-        if lead_id and lead.get("subsequence_id") and flow in ("interested_email1", "no_reply_email1"):
-            client.remove_lead_from_subsequence(lead_id)
+        template = _load_template(flow)
 
         thread = resolve_thread(client, lead_email=lead_email, campaign_id=campaign_id)
         if not thread:
@@ -373,11 +308,8 @@ def dispatch_one(
             )
             return {"ok": False, "error": "thread_not_found", "lead_email": lead_email}
 
-        subject, html = _render_template(
-            template["subject"],
-            template["body_html"],
-            _template_vars(lead, thread.get("subject", "")),
-        )
+        html = _render_template(template["body_html"], _template_vars(lead))
+        subject = thread["subject"] or template["subject"] or "your message"
 
         client.reply_to_email(
             eaccount=thread["eaccount"],
@@ -389,19 +321,12 @@ def dispatch_one(
         dispatched = datetime.now(timezone.utc)
         latency_ms = int((dispatched - started).total_seconds() * 1000)
 
-        if update_waiting_status:
-            interest = None
-            if config and config.get("waiting_for_reply_interest_value") is not None:
-                interest = int(config["waiting_for_reply_interest_value"])
-            else:
-                interest = waiting_for_reply_interest_value()
-            if interest is not None:
-                client.update_interest_status(
-                    lead_email=lead_email,
-                    interest_value=interest,
-                    campaign_id=campaign_id,
-                    disable_auto_interest=True,
-                )
+        if flow in FINAL_FLOWS:
+            client.update_interest_status(
+                lead_email=lead_email,
+                interest_value=NOT_INTERESTED_STATUS,
+                campaign_id=campaign_id,
+            )
 
         record_event(
             {
@@ -435,10 +360,9 @@ def dispatch_one(
 def dispatch_bulk(
     *,
     campaign_id: str,
-    step: Step,
+    flow: Flow,
     leads: list[dict[str, Any]],
     dry_run: bool = False,
-    config: dict[str, Any] | None = None,
     on_progress: Callable[[str], None] | None = None,
 ) -> BulkSendResult:
     api_key = get_api_key()
@@ -447,7 +371,6 @@ def dispatch_bulk(
 
     client = InstantlyClient(api_key)
     result = BulkSendResult()
-    update_waiting = step == "interested_email1"
 
     for lead in leads:
         lead_email = str(lead.get("email") or "")
@@ -456,13 +379,10 @@ def dispatch_bulk(
 
         dispatch_result = dispatch_one(
             client,
-            flow=step,
-            template_key=step,
+            flow=flow,
             campaign_id=campaign_id,
             lead=lead,
-            update_waiting_status=update_waiting,
             dry_run=dry_run,
-            config=config,
         )
 
         if dispatch_result.get("skipped"):

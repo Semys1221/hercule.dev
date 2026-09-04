@@ -10,12 +10,12 @@ export function flowIdempotencyKey(flow: BypassFlow, campaignId: string, leadEma
   return `${flow}:${campaignId}:${leadEmail.trim().toLowerCase()}`;
 }
 
-export function noReplyEmail1Key(campaignId: string, leadEmail: string): string {
-  return flowIdempotencyKey("no_reply_email1", campaignId, leadEmail);
+export function noShowEmail1Key(campaignId: string, leadEmail: string): string {
+  return flowIdempotencyKey("no_show_email1", campaignId, leadEmail);
 }
 
-export function noReplyEmail2Key(campaignId: string, leadEmail: string): string {
-  return flowIdempotencyKey("no_reply_email2", campaignId, leadEmail);
+export function noShowEmail2Key(campaignId: string, leadEmail: string): string {
+  return flowIdempotencyKey("no_show_email2", campaignId, leadEmail);
 }
 
 export async function hasBypassEvent(idempotencyKey: string): Promise<boolean> {

@@ -79,6 +79,37 @@ def record_event(row: dict[str, Any]) -> None:
     ).execute()
 
 
+def get_last_send_at(campaign_id: str, lead_email: str) -> str | None:
+    resp = (
+        get_client()
+        .table("instantly_bypass_events")
+        .select("dispatched_at")
+        .eq("campaign_id", campaign_id)
+        .eq("lead_email", lead_email.strip().lower())
+        .eq("status", "sent")
+        .order("dispatched_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    rows = resp.data or []
+    if not rows:
+        return None
+    return rows[0].get("dispatched_at")
+
+
+def list_sent_flows(campaign_id: str, lead_email: str) -> list[str]:
+    resp = (
+        get_client()
+        .table("instantly_bypass_events")
+        .select("flow")
+        .eq("campaign_id", campaign_id)
+        .eq("lead_email", lead_email.strip().lower())
+        .eq("status", "sent")
+        .execute()
+    )
+    return [str(row["flow"]) for row in (resp.data or []) if row.get("flow")]
+
+
 def get_event_sent_at(campaign_id: str, lead_email: str, flow: str) -> str | None:
     resp = (
         get_client()

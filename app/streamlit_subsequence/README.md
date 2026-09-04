@@ -1,47 +1,36 @@
 # Streamlit Subsequence
 
-Bypass Instantly native subsequence delays by sending follow-ups via the Unibox Reply API.
-
-## Components
-
-| Component | Path |
-|-----------|------|
-| Webhook (production, Positive Email 1 only) | `app/api/webhooks/instantly/route.ts` |
-| Core logic (TS) | `lib/instantly-bypass/` |
-| Streamlit dashboard | `app/streamlit_subsequence/streamlit_app.py` |
-| Send queues (Python) | `app/streamlit_subsequence/send_queue.py` |
+Operator dashboard for Instantly interest-status sequences — Unibox reply sends.
 
 ## Model
 
-| Sequence | Email 1 | Email 2 | Email 3 |
-|----------|---------|---------|---------|
-| **Positive Reply** | Auto via webhook (prod) + manual backlog in **Envois** | Dashboard bulk | Dashboard bulk |
-| **No Reply** | Dashboard manual only | Dashboard bulk | — |
+| Sequence | Fetch filter | Email 1 | Email 2 | Email 3 |
+|----------|--------------|---------|---------|---------|
+| **Interested** | `FILTER_LEAD_INTERESTED` | Auto webhook + manual | Manual | Manual → Not Interested |
+| **No Show** | `FILTER_LEAD_NO_SHOW` | Manual | Manual → Not Interested | — |
 
-- **No cron jobs** — all follow-ups except webhook Email 1 are operator-triggered from Streamlit.
-- **Reply detection:** leads who replied since the previous step are unchecked by default.
-- **Positive Reply queues:** non-Interested leads are hidden.
+- **One fetch per sequence** — operator picks which email to send.
+- **Reply detection** — unchecked if lead replied since any Hercule send.
+- **Missing `reservation_agence_link`** — warning in UI, send blocked.
+- **Final emails** (Interested E3, No Show E2) set Instantly status to **Not Interested (-1)**.
+- All sends are **Unibox replies** in the existing thread (thread subject kept).
 
 ## Quick start
 
-1. Apply migrations:
-   - `supabase/migrations/20260909120000_instantly_bypass.sql`
-   - `supabase/migrations/20260909130000_instantly_bypass_followups.sql`
-2. Copy `app/streamlit_subsequence/.env.example` values into repo `.env` or `crm/.env`
-3. Run Streamlit: `pnpm streamlit-subsequence` (from repo root)
-4. In **Setup** tab: save campaign config, register `lead_interested` webhook
-5. Use **Envois** tab for manual/backlog and follow-up sends
-6. Smoke test (mocked, no Instantly): `pnpm smoke-streamlit-subsequence`
-7. Smoke test webhook: `pnpm smoke-instantly-bypass-webhook`
+```bash
+pnpm streamlit-subsequence
+pnpm smoke-streamlit-subsequence
+```
 
-## Webhook
+1. Apply migrations through `20260910120000_subsequence_v2.sql`
+2. Configure campaign in **Setup**
+3. **Envois** → fetch leads by interest status → pick email → send
 
-- Event: `lead_interested`
+## Webhook (Interested Email 1 only)
+
 - URL: `{NEXT_PUBLIC_APP_URL}/api/webhooks/instantly`
-- Auth: `Authorization: Bearer {INSTANTLY_BYPASS_WEBHOOK_SECRET}`
+- Kill switch: `INSTANTLY_BYPASS_WEBHOOK_ENABLED=true` required to auto-send
 
-Requires Instantly Hypergrowth+ plan for webhooks. Webhook only handles **Positive Reply Email 1**; everything else runs from the dashboard (local or prod).
+## Template variables
 
-## Rate limits
-
-Bulk sends throttle to ~3 s between Instantly `/emails` calls (~20 req/min).
+`{{reservation_agence_link}}`, `{{accountSignature}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`

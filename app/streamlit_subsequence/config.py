@@ -41,6 +41,11 @@ def webhook_secret() -> str:
     return env("INSTANTLY_BYPASS_WEBHOOK_SECRET") or env("CRON_SECRET")
 
 
+def webhook_auto_send_enabled() -> bool:
+    """Production webhook auto-send is opt-in via INSTANTLY_BYPASS_WEBHOOK_ENABLED=true."""
+    return env("INSTANTLY_BYPASS_WEBHOOK_ENABLED").lower() == "true"
+
+
 def supabase_url() -> str:
     return env("SUPABASE_URL") or env("NEXT_PUBLIC_SUPABASE_URL")
 

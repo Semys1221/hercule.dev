@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isWebhookBypassEnabled } from "@/lib/instantly-bypass/config";
 import { handleLeadInterested } from "@/lib/instantly-bypass/handler";
 
 import type { InstantlyWebhookPayload } from "@/lib/instantly-bypass/types";
@@ -31,12 +32,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: eventType ?? "unknown" });
   }
 
+  if (!isWebhookBypassEnabled()) {
+    return NextResponse.json({
+      ok: true,
+      skipped: "webhook_paused",
+      message:
+        "Webhook auto-send is paused. Set INSTANTLY_BYPASS_WEBHOOK_ENABLED=true when ready.",
+    });
+  }
+
   try {
     const result = await handleLeadInterested(payload);
     if (!result.ok) {
       return NextResponse.json(
         { ok: false, error: result.error, skipped: result.skipped },
-        { status: result.error === "thread_not_found" ? 422 : 500 },
+        {
+          status:
+            result.error === "thread_not_found" || result.error === "missing_reservation_link"
+              ? 422
+              : 500,
+        },
       );
     }
     return NextResponse.json({

@@ -1,4 +1,4 @@
-"""Instantly subsequence bypass — Streamlit operations dashboard."""
+"""Instantly subsequence — Streamlit operations dashboard."""
 
 from __future__ import annotations
 
@@ -18,56 +18,42 @@ if str(_APP_DIR) not in sys.path:
 from config import (
     env,
     require_instantly_api_key,
+    webhook_auto_send_enabled,
     webhook_public_url,
     webhook_secret,
 )
-from send_queue import Step, dispatch_bulk, fetch_queue
+from send_queue import (
+    SEQUENCE_FLOWS,
+    Flow,
+    Sequence,
+    dispatch_bulk,
+    fetch_sequence_leads,
+)
 from shared.instantly_client import InstantlyClient, format_resource_label, list_all_campaigns
 from supabase_repo import fetch_analytics, list_configs, list_templates, save_config, save_template
 
 st.set_page_config(page_title="Streamlit Subsequence", layout="wide")
 st.title("Streamlit Subsequence")
-st.caption("Webhook → Unibox Reply API → dashboard bulk sends. No cron.")
+st.caption("Interest-status fetch → Unibox reply → operator-controlled sends.")
 
 TAB_WORKFLOW, TAB_SETUP, TAB_TEMPLATES, TAB_ENVOIS, TAB_ANALYTICS = st.tabs(
     ["Workflow", "Setup", "Templates", "Envois", "Analytics"]
 )
 
-WORKFLOW_MERMAID = """
-flowchart TB
-  subgraph prodOnly [Production only]
-    WH[lead_interested webhook]
-    NextJS["/api/webhooks/instantly"]
-    E1Auto[Positive Email 1 auto]
-    WH --> NextJS --> E1Auto
-  end
-
-  subgraph dashboard [Streamlit dashboard local or prod]
-    Queue[Lead queue with checkboxes]
-    ReplyCheck[Unibox reply since last send]
-    StatusFilter[Hide non-Interested Positive queues]
-    BulkSend[Bulk send button]
-    Queue --> ReplyCheck --> StatusFilter --> BulkSend
-  end
-"""
-
-POSITIVE_STEPS: list[tuple[Step, str]] = [
-    ("interested_email1", "Email 1 — Rattrapage manuel"),
-    ("interested_email2", "Email 2"),
-    ("interested_email3", "Email 3"),
-]
-
-NO_REPLY_STEPS: list[tuple[Step, str]] = [
-    ("no_reply_email1", "Email 1 — Envoi manuel"),
-    ("no_reply_email2", "Email 2"),
-]
+FLOW_LABELS: dict[Flow, str] = {
+    "interested_email1": "Email 1 — Précisions + audit (webhook auto ou manuel)",
+    "interested_email2": "Email 2 — Confirmation Calendly",
+    "interested_email3": "Email 3 — Retrait de liste",
+    "no_show_email1": "Email 1 — Confirmation Calendly",
+    "no_show_email2": "Email 2 — Retrait agence",
+}
 
 TEMPLATE_KEYS = (
     "interested_email1",
     "interested_email2",
     "interested_email3",
-    "no_reply_email1",
-    "no_reply_email2",
+    "no_show_email1",
+    "no_show_email2",
 )
 
 
@@ -78,15 +64,12 @@ def _config_labels(configs: list[dict]) -> dict[str, str]:
     }
 
 
-def _render_send_section(
+def _render_sequence_panel(
     *,
-    step: Step,
-    title: str,
-    sequence: str,
+    sequence: Sequence,
+    fetch_label: str,
     configs: list[dict],
-    config_by_id: dict[str, dict],
 ) -> None:
-    st.markdown(f"**{title}**")
     if not configs:
         st.warning("Save at least one campaign config in Setup.")
         return
@@ -95,35 +78,41 @@ def _render_send_section(
     chosen_label = st.selectbox(
         "Campaign",
         options=list(labels.keys()),
-        key=f"campaign_{step}",
+        key=f"campaign_{sequence}",
     )
     campaign_id = labels[chosen_label]
-    config = config_by_id[campaign_id]
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         max_leads = st.number_input(
             "Max leads",
             min_value=1,
             max_value=500,
             value=100,
-            key=f"max_{step}",
+            key=f"max_{sequence}",
         )
     with col2:
-        dry_run = st.checkbox("Dry run", value=True, key=f"dry_{step}")
+        dry_run = st.checkbox("Dry run", value=True, key=f"dry_{sequence}")
     with col3:
-        refresh = st.button("Refresh leads", key=f"refresh_{step}")
+        flow_options = SEQUENCE_FLOWS[sequence]
+        flow_labels = [FLOW_LABELS[f] for f in flow_options]
+        chosen_flow_label = st.selectbox(
+            "Email to send",
+            options=flow_labels,
+            key=f"flow_{sequence}",
+        )
+        flow = flow_options[flow_labels.index(chosen_flow_label)]
+    with col4:
+        refresh = st.button(fetch_label, key=f"fetch_{sequence}")
 
-    cache_key = f"queue_{step}_{campaign_id}"
+    cache_key = f"sequence_{sequence}_{campaign_id}"
     if refresh or cache_key not in st.session_state:
-        with st.spinner("Loading queue…"):
+        with st.spinner("Fetching leads…"):
             try:
                 client = InstantlyClient(require_instantly_api_key())
-                st.session_state[cache_key] = fetch_queue(
+                st.session_state[cache_key] = fetch_sequence_leads(
                     campaign_id=campaign_id,
-                    step=step,
-                    sequence=sequence,  # type: ignore[arg-type]
-                    config=config,
+                    sequence=sequence,
                     max_leads=int(max_leads),
                     client=client,
                 )
@@ -132,10 +121,14 @@ def _render_send_section(
                 return
 
     queue = st.session_state.get(cache_key, [])
-    st.caption(f"{len(queue)} eligible lead(s)")
+    st.caption(f"{len(queue)} lead(s) with matching interest status")
 
     if not queue:
         return
+
+    missing_links = sum(1 for row in queue if row.missing_reservation_link)
+    if missing_links:
+        st.warning(f"{missing_links} lead(s) missing `reservation_agence_link` — they will fail on send.")
 
     df = pd.DataFrame(
         [
@@ -144,8 +137,10 @@ def _render_send_section(
                 "Email": row.email,
                 "Prénom": row.first_name,
                 "Statut": row.interest_label,
-                "Répondu depuis dernier envoi": "Oui" if row.replied_since_last else "Non",
-                "Dernier envoi": row.last_sent_at or "—",
+                "Répondu depuis envoi Hercule": "Oui" if row.replied_since_last_send else "Non",
+                "Lien OK": "Non" if row.missing_reservation_link else "Oui",
+                "Emails déjà envoyés": ", ".join(row.sent_flows) if row.sent_flows else "—",
+                "Dernier envoi Hercule": row.last_sent_at or "—",
             }
             for row in queue
         ]
@@ -156,16 +151,24 @@ def _render_send_section(
         column_config={
             "Envoyer": st.column_config.CheckboxColumn("Envoyer", default=True),
         },
-        disabled=["Email", "Prénom", "Statut", "Répondu depuis dernier envoi", "Dernier envoi"],
+        disabled=[
+            "Email",
+            "Prénom",
+            "Statut",
+            "Répondu depuis envoi Hercule",
+            "Lien OK",
+            "Emails déjà envoyés",
+            "Dernier envoi Hercule",
+        ],
         hide_index=True,
         use_container_width=True,
-        key=f"editor_{step}",
+        key=f"editor_{sequence}",
     )
 
     selected_count = int(edited["Envoyer"].sum())
-    st.write(f"**{selected_count}** lead(s) selected")
+    st.write(f"**{selected_count}** lead(s) selected → **{FLOW_LABELS[flow]}**")
 
-    if st.button(f"Envoyer {title} aux leads cochés", key=f"send_{step}"):
+    if st.button(f"Envoyer aux leads cochés", key=f"send_{sequence}"):
         selected_emails = {
             str(row["Email"]).strip().lower()
             for _, row in edited.iterrows()
@@ -174,7 +177,7 @@ def _render_send_section(
         selected_leads = [row.raw for row in queue if row.email in selected_emails]
 
         if dry_run:
-            st.info(f"Dry run: would send to {len(selected_leads)} lead(s).")
+            st.info(f"Dry run: would send `{flow}` to {len(selected_leads)} lead(s).")
             return
 
         log_box = st.empty()
@@ -189,10 +192,9 @@ def _render_send_section(
         with st.spinner("Sending…"):
             result = dispatch_bulk(
                 campaign_id=campaign_id,
-                step=step,
+                flow=flow,
                 leads=selected_leads,
                 dry_run=False,
-                config=config,
                 on_progress=on_progress,
             )
 
@@ -205,22 +207,23 @@ def _render_send_section(
 
 
 with TAB_WORKFLOW:
-    st.subheader("Dashboard-first model")
+    st.subheader("Interest-status model")
+    if webhook_auto_send_enabled():
+        st.success("Webhook auto-send: **ENABLED** (`INSTANTLY_BYPASS_WEBHOOK_ENABLED=true`)")
+    else:
+        st.warning(
+            "Webhook auto-send: **PAUSED**. Set `INSTANTLY_BYPASS_WEBHOOK_ENABLED=true` on Vercel when ready."
+        )
     st.markdown(
         """
-1. **Production webhook only:** Instantly fires `lead_interested` → Next.js sends **Positive Reply Email 1** instantly.
-2. **Everything else from this dashboard** (works locally and in prod via Instantly API):
-   - Positive Reply Email 1 backlog (manual catch-up)
-   - Positive Reply Email 2 & 3 (bulk, checkbox-gated)
-   - No Reply Email 1 & 2 (bulk, checkbox-gated)
-3. **Reply detection:** leads who replied since the previous step are **unchecked by default**.
-4. **Positive Reply queues:** leads no longer Interested are hidden.
-5. **No cron jobs** — all follow-ups are operator-triggered from **Envois**.
-
-Rate limit: ~3 s between sends (Instantly `/emails` ≈ 20 req/min).
+1. **Sequence Interested** — fetch `FILTER_LEAD_INTERESTED`; Email 1 auto via webhook (+ manual catch-up).
+2. **Sequence No Show** — fetch `FILTER_LEAD_NO_SHOW`; all emails manual.
+3. **One fetch per sequence** — operator picks which email to send.
+4. **Reply detection** — unchecked by default if lead replied since any Hercule send.
+5. **Final emails** (Interested E3, No Show E2) → Instantly status **Not Interested (-1)**.
+6. All sends are **Unibox replies** in the existing thread (no custom subject).
         """
     )
-    st.markdown("```mermaid\n" + WORKFLOW_MERMAID.strip() + "\n```")
     st.info(f"Production webhook URL: `{webhook_public_url()}`")
 
 with TAB_SETUP:
@@ -259,61 +262,24 @@ with TAB_SETUP:
         else 0,
     )
     selected_campaign_id = campaign_options[selected_label]
-    existing = existing_configs.get(selected_campaign_id, {})
-
-    subsequences = client.list_subsequences(selected_campaign_id)
-    subseq_options = {
-        format_resource_label(s.get("name"), str(s.get("id") or "")): str(s.get("id") or "")
-        for s in subsequences
-        if s.get("id")
-    }
-    subseq_labels = ["— none —", *list(subseq_options.keys())]
-
-    def _default_subseq_label(stored_id: str | None) -> int:
-        if not stored_id:
-            return 0
-        for idx, label in enumerate(subseq_labels):
-            if label != "— none —" and subseq_options.get(label) == stored_id:
-                return idx
-        return 0
-
-    interested_label = st.selectbox(
-        "Interested subsequence (native, to bypass)",
-        options=subseq_labels,
-        index=_default_subseq_label(existing.get("interested_subsequence_id")),
-    )
-    no_reply_label = st.selectbox(
-        "No Reply subsequence (native, to bypass)",
-        options=subseq_labels,
-        index=_default_subseq_label(existing.get("no_reply_subsequence_id")),
-    )
-
-    waiting_value = st.number_input(
-        "Waiting for reply — Instantly interest_value (custom label)",
-        min_value=-30000,
-        max_value=30000,
-        value=int(existing.get("waiting_for_reply_interest_value") or 0),
-        help="Numeric value from Instantly Lead Labels for your custom status.",
-    )
 
     if st.button("Save campaign config"):
         save_config(
             {
                 "campaign_id": selected_campaign_id,
                 "campaign_name": selected_label.split(" (")[0],
-                "interested_subsequence_id": subseq_options.get(interested_label)
-                if interested_label != "— none —"
-                else None,
-                "no_reply_subsequence_id": subseq_options.get(no_reply_label)
-                if no_reply_label != "— none —"
-                else None,
-                "waiting_for_reply_interest_value": int(waiting_value),
             }
         )
         st.success("Config saved.")
 
     st.divider()
     st.subheader("Webhook registration")
+
+    if not webhook_auto_send_enabled():
+        st.warning(
+            "Auto-send is paused — do not register the Instantly webhook until "
+            "`INSTANTLY_BYPASS_WEBHOOK_ENABLED=true` is set in production."
+        )
 
     st.code(webhook_public_url())
     secret = webhook_secret()
@@ -340,7 +306,11 @@ with TAB_SETUP:
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Register lead_interested webhook", disabled=not secret):
+        if st.button(
+            "Register lead_interested webhook",
+            disabled=not secret or not webhook_auto_send_enabled(),
+            help="Enable INSTANTLY_BYPASS_WEBHOOK_ENABLED=true before registering.",
+        ):
             headers = {"Authorization": f"Bearer {secret}"}
             created = client.create_webhook(
                 target_hook_url=webhook_public_url(),
@@ -378,36 +348,30 @@ with TAB_TEMPLATES:
             save_template(key, subject, body)
             st.success(f"Saved {key}.")
 
-    st.caption("Variables: {{first_name}}, {{last_name}}, {{company_name}}, {{subject}}")
+    st.caption(
+        "Variables: {{reservation_agence_link}}, {{accountSignature}}, {{first_name}}, "
+        "{{last_name}}, {{company_name}}. Subject unused — thread subject is kept."
+    )
 
 with TAB_ENVOIS:
     st.subheader("Envois")
     configs = list_configs()
-    config_by_id = {c["campaign_id"]: c for c in configs}
 
-    pos_tab, nr_tab = st.tabs(["Positive Reply", "No Reply"])
+    seq1_tab, seq2_tab = st.tabs(["Sequence Interested", "Sequence No Show"])
 
-    with pos_tab:
-        for step, title in POSITIVE_STEPS:
-            _render_send_section(
-                step=step,
-                title=title,
-                sequence="positive",
-                configs=configs,
-                config_by_id=config_by_id,
-            )
-            st.divider()
+    with seq1_tab:
+        _render_sequence_panel(
+            sequence="interested",
+            fetch_label="Fetch interested leads",
+            configs=configs,
+        )
 
-    with nr_tab:
-        for step, title in NO_REPLY_STEPS:
-            _render_send_section(
-                step=step,
-                title=title,
-                sequence="no_reply",
-                configs=configs,
-                config_by_id=config_by_id,
-            )
-            st.divider()
+    with seq2_tab:
+        _render_sequence_panel(
+            sequence="no_show",
+            fetch_label="Fetch no-show leads",
+            configs=configs,
+        )
 
 with TAB_ANALYTICS:
     st.subheader("Live analytics")

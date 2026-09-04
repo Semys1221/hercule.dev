@@ -2,8 +2,8 @@ export type BypassTemplateKey =
   | "interested_email1"
   | "interested_email2"
   | "interested_email3"
-  | "no_reply_email1"
-  | "no_reply_email2";
+  | "no_show_email1"
+  | "no_show_email2";
 
 export type BypassFlow = BypassTemplateKey;
 
@@ -65,9 +65,6 @@ export type BypassTemplate = {
 export type BypassConfig = {
   campaign_id: string;
   campaign_name?: string | null;
-  interested_subsequence_id?: string | null;
-  no_reply_subsequence_id?: string | null;
-  waiting_for_reply_interest_value?: number | null;
 };
 
 export type TemplateVariables = Record<string, string>;

@@ -534,6 +534,67 @@ class InstantlyClient:
         page = self._fetch(f"/subsequences{suffix}", method="GET")
         return page.get("items") or [] if isinstance(page, dict) else []
 
+    def list_leads_by_interest_filter(
+        self,
+        *,
+        campaign_id: str,
+        interest_filter: str,
+        max_leads: int = 500,
+    ) -> list[dict[str, Any]]:
+        leads: list[dict[str, Any]] = []
+        starting_after: str | None = None
+
+        while len(leads) < max_leads:
+            body: dict[str, Any] = {
+                "campaign": campaign_id.strip(),
+                "filter": interest_filter,
+                "limit": min(100, max_leads - len(leads)),
+            }
+            if starting_after:
+                body["starting_after"] = starting_after
+
+            page = self._fetch("/leads/list", method="POST", body=body)
+            items = page.get("items") or [] if isinstance(page, dict) else []
+            if not items:
+                break
+
+            leads.extend(items)
+            if len(leads) >= max_leads:
+                break
+
+            next_cursor = page.get("next_starting_after") if isinstance(page, dict) else None
+            if not next_cursor and items:
+                next_cursor = items[-1].get("id")
+            if not next_cursor or len(items) < body["limit"]:
+                break
+            starting_after = str(next_cursor)
+
+        return leads[:max_leads]
+
+
+def lead_custom_var(lead: dict[str, Any], key: str) -> str | None:
+    """Read Instantly lead custom variable from payload or top-level fields."""
+    candidates: list[dict[str, Any]] = []
+    payload = lead.get("payload")
+    if isinstance(payload, dict):
+        candidates.append(payload)
+    custom = lead.get("custom_variables")
+    if isinstance(custom, dict):
+        candidates.append(custom)
+
+    for source in candidates:
+        value = source.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+
+    top = lead.get(key)
+    if isinstance(top, str) and top.strip():
+        return top.strip()
+    return None
+
+
+FILTER_LEAD_INTERESTED = "FILTER_LEAD_INTERESTED"
+FILTER_LEAD_NO_SHOW = "FILTER_LEAD_NO_SHOW"
 
 _client: InstantlyClient | None = None
 

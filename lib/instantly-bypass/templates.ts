@@ -76,7 +76,11 @@ export function renderTemplate(
 
 export function buildTemplateVariables(
   payload: Record<string, unknown>,
-  lead?: { first_name?: string | null; company_name?: string | null; payload?: Record<string, unknown> | null },
+  lead?: {
+    first_name?: string | null;
+    company_name?: string | null;
+    payload?: Record<string, unknown> | null;
+  },
 ): TemplateVariables {
   const leadPayload = lead?.payload ?? {};
   const read = (key: string, alt?: string): string => {
@@ -94,6 +98,8 @@ export function buildTemplateVariables(
     last_name: read("last_name", "lastName"),
     company_name: read("company_name", "companyName"),
     subject: read("subject", "reply_subject") || "your message",
+    reservation_agence_link: read("reservation_agence_link"),
+    accountSignature: read("accountSignature"),
   };
 }
 

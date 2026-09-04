@@ -1,9 +1,7 @@
 import {
   findLeadByEmailInCampaign,
   getInstantlyApiKey,
-  removeLeadFromSubsequence,
   replyToEmail,
-  updateLeadInterestStatusBypass,
 } from "./client";
 import {
   hasBypassEvent,
@@ -13,13 +11,27 @@ import {
 import { resolveThreadForReply } from "./thread-resolver";
 import {
   buildTemplateVariables,
-  loadBypassConfig,
   loadTemplate,
   renderTemplate,
-  waitingForReplyInterestValue,
 } from "./templates";
 
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
+
+function readReservationLink(
+  lead?: { payload?: Record<string, unknown> | null },
+  payload?: Record<string, unknown>,
+): string | null {
+  const fromPayload = payload?.reservation_agence_link;
+  if (typeof fromPayload === "string" && fromPayload.trim()) {
+    return fromPayload.trim();
+  }
+  const leadPayload = lead?.payload ?? {};
+  const fromLead = leadPayload.reservation_agence_link;
+  if (typeof fromLead === "string" && fromLead.trim()) {
+    return fromLead.trim();
+  }
+  return null;
+}
 
 export async function handleLeadInterested(
   payload: InstantlyWebhookPayload,
@@ -43,12 +55,23 @@ export async function handleLeadInterested(
     : new Date();
 
   try {
-    const template = await loadTemplate("interested_email1");
     const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
 
-    if (lead?.id && lead.subsequence_id) {
-      await removeLeadFromSubsequence(apiKey, lead.id);
+    if (!readReservationLink(lead ?? undefined, payload)) {
+      await recordBypassEvent({
+        idempotencyKey,
+        flow: "interested_email1",
+        campaignId,
+        leadEmail,
+        leadId: lead?.id,
+        webhookReceivedAt,
+        status: "failed",
+        errorMessage: "Missing reservation_agence_link on lead",
+      });
+      return { ok: false, error: "missing_reservation_link" };
     }
+
+    const template = await loadTemplate("interested_email1");
 
     const thread = await resolveThreadForReply(apiKey, {
       leadEmail,
@@ -71,19 +94,9 @@ export async function handleLeadInterested(
       return { ok: false, error: "thread_not_found" };
     }
 
-    const vars = buildTemplateVariables(
-      {
-        ...payload,
-        subject: thread.subject ?? payload.reply_subject,
-        reply_subject: payload.reply_subject,
-      },
-      lead ?? undefined,
-    );
-
+    const vars = buildTemplateVariables(payload, lead ?? undefined);
     const rendered = renderTemplate(template, vars);
-    const subject = rendered.subject.startsWith("Re:")
-      ? rendered.subject
-      : `Re: ${rendered.subject.replace(/^Re:\s*/i, "")}`;
+    const subject = thread.subject?.trim() || rendered.subject || "your message";
 
     await replyToEmail(apiKey, {
       eaccount: thread.eaccount,
@@ -94,18 +107,6 @@ export async function handleLeadInterested(
 
     const dispatchedAt = new Date();
     const latencyMs = dispatchedAt.getTime() - webhookReceivedAt.getTime();
-
-    const config = await loadBypassConfig(campaignId);
-    const interestValue =
-      config?.waiting_for_reply_interest_value ?? waitingForReplyInterestValue();
-    if (interestValue !== null) {
-      await updateLeadInterestStatusBypass(apiKey, {
-        lead_email: leadEmail,
-        campaign_id: campaignId,
-        interest_value: interestValue,
-        disable_auto_interest: true,
-      });
-    }
 
     await recordBypassEvent({
       idempotencyKey,
