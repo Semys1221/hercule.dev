@@ -67,7 +67,7 @@ def ui() -> None:
     """Launch the Streamlit web interface."""
     typer.secho("Launching web dashboard...", fg=typer.colors.GREEN)
     subprocess.run(
-        [sys.executable, "-m", "streamlit", "run", "app_ui.py"],
+        [sys.executable, "-m", "streamlit", "run", "app.py"],
         cwd=os.path.dirname(os.path.abspath(__file__)),
         check=False,
     )

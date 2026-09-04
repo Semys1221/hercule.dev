@@ -40,6 +40,10 @@ export type StartSequenceParams = {
   triggeredBy: SequenceTriggeredBy;
   /** When set, delays the immediate email until this instant. */
   sequenceStartsAt?: Date;
+  /** When set, only schedule these email types (validated per category). */
+  emailTypes?: BookingEmailType[];
+  /** Skip hasSequenceStarted guard — rely on per-job idempotency. */
+  partial?: boolean;
 };
 
 export type RenderedBookingEmail = {

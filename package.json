@@ -21,10 +21,11 @@
     "apply-role-recovery-migration": "tsx --env-file=.env ./scripts/crm/applyRoleRecoveryMigration.ts",
     "provision-role-recovery-leads": "python3 ./scripts/crm/provisionRoleRecoveryLeads.py",
     "crm": "streamlit run crm/admin_tool.py",
-    "streamlit-subsequence": "cd app/streamlit_subsequence && streamlit run streamlit_app.py",
-    "streamlit-demands": "cd app/streamlit_demands && streamlit run streamlit_app.py",
-    "streamlit-booking-resend": "cd app/streamlit_booking_resend && streamlit run streamlit_app.py",
+    "streamlit-subsequence": "cd app/streamlit_subsequence && streamlit run app.py",
+    "streamlit-demands": "cd app/streamlit_demands && streamlit run app.py",
+    "streamlit-booking-resend": "cd app/streamlit_booking_resend && streamlit run app.py",
     "smoke-streamlit-booking-resend-schedule": "python3 ./scripts/streamlit_booking_resend/smokeSchedule.py",
+    "smoke-booking-partial-trigger": "tsx --env-file=.env ./scripts/crm/smokeBookingPartialTrigger.ts",
     "smoke-streamlit-subsequence": "python3 ./scripts/streamlit_subsequence/smokeSendQueue.py",
     "bootstrap-streamlit-subsequence-pipeline": "python3 ./scripts/streamlit_subsequence/bootstrapPipelineFromUnibox.py",
     "verify-streamlit-subsequence-pipeline": "python3 ./scripts/streamlit_subsequence/verifyBootstrapPipeline.py",
@@ -37,7 +38,7 @@
     "smoke-instantly-bypass-send-window": "tsx ./scripts/instantly-bypass/smokeSendWindow.ts",
     "configure-instantly-bypass-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configureBypassCronJob.ts",
     "scrapper": "cd app/scrapper_streamlit && python main.py ui",
-    "streamlit-clean": "cd app/streamlit_clean && streamlit run main.py"
+    "streamlit-clean": "cd app/streamlit_clean && streamlit run app.py"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

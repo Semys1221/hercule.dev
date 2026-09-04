@@ -66,6 +66,16 @@ def enrich_sequence_status(row: dict[str, Any]) -> str:
     return str(row.get("sequence_status") or "none")
 
 
+def job_status_by_type(lead_id: str) -> dict[str, str]:
+    """Map email_type → job status (pending/sent/cancelled/failed)."""
+    jobs = list_jobs_for_lead(lead_id)
+    return {
+        str(job["email_type"]): str(job.get("status") or "")
+        for job in jobs
+        if job.get("email_type")
+    }
+
+
 def scheduled_times_from_jobs(lead_id: str) -> dict[str, str]:
     """Map email_type → scheduled_for ISO from DB (overrides preview)."""
     jobs = list_jobs_for_lead(lead_id)

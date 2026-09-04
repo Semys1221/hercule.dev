@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     instantly_patch_concurrency: int = 8
     supabase_insert_batch_size: int = 100
     supabase_batch_max_retries: int = 4
+    supabase_ssl_verify: bool = True
 
     def model_post_init(self, __context: object) -> None:
         if not self.supabase_url:
@@ -104,6 +105,14 @@ class Settings(BaseSettings):
                 self.supabase_batch_max_retries = max(1, min(int(raw_retries), 10))
             except ValueError:
                 pass
+        raw_ssl_verify = _env("SUPABASE_SSL_VERIFY")
+        if raw_ssl_verify:
+            self.supabase_ssl_verify = raw_ssl_verify.lower() not in (
+                "0",
+                "false",
+                "no",
+                "off",
+            )
 
 
 settings = Settings()

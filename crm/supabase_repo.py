@@ -6,10 +6,14 @@ import time
 from functools import lru_cache
 from typing import Any, Callable, Literal
 
+import certifi
+import httpx
 from supabase import Client, create_client
+from supabase.lib.client_options import SyncClientOptions
 
 from config import (
     require_supabase,
+    settings,
     supabase_batch_max_retries,
     supabase_insert_batch_size,
 )
@@ -101,10 +105,18 @@ def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
+def _supabase_httpx_client() -> httpx.Client:
+    verify: bool | str = certifi.where()
+    if not settings.supabase_ssl_verify:
+        verify = False
+    return httpx.Client(verify=verify, timeout=30.0)
+
+
 @lru_cache(maxsize=1)
 def get_client() -> Client:
     url, key = require_supabase()
-    return create_client(url, key)
+    options = SyncClientOptions(httpx_client=_supabase_httpx_client())
+    return create_client(url, key, options)
 
 
 def reset_client_cache() -> None:

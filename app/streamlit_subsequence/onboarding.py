@@ -167,8 +167,6 @@ def initialize_campaign(
         "webhook_auto_send_enabled": True,
         "initialized_at": (existing or {}).get("initialized_at") or now,
     }
-    if existing and existing.get("webhook_id"):
-        row["webhook_id"] = existing["webhook_id"]
     save_config(row)
     seed_empty_templates(campaign_id)
 

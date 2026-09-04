@@ -36,6 +36,72 @@ const FOLLOW_UP_TYPES: BookingEmailType[] = [
   "role_seq_24",
 ];
 
+const MAIN_AGENCE_TYPES: BookingEmailType[] = [
+  "immediate",
+  "h48_confirm",
+  "h24_relance",
+  "h20_cancel",
+];
+
+const ENTREPRISE_TYPES: BookingEmailType[] = ["immediate"];
+
+const ROLE_RECOVERY_TYPES: BookingEmailType[] = ["role_seq_48", "role_seq_24"];
+
+function allowedMainTypes(category: StartSequenceParams["category"]): BookingEmailType[] {
+  return category === "entreprise" ? ENTREPRISE_TYPES : MAIN_AGENCE_TYPES;
+}
+
+function resolveMainEmailTypes(
+  category: StartSequenceParams["category"],
+  emailTypes?: BookingEmailType[],
+): BookingEmailType[] | { error: string } {
+  const allowed = allowedMainTypes(category);
+  if (!emailTypes?.length) {
+    return allowed;
+  }
+  const invalid = emailTypes.filter((type) => !allowed.includes(type));
+  if (invalid.length > 0) {
+    return { error: `invalid_email_types:${invalid.join(",")}` };
+  }
+  return emailTypes;
+}
+
+function resolveRoleRecoveryEmailTypes(
+  emailTypes?: BookingEmailType[],
+): BookingEmailType[] | { error: string } {
+  if (!emailTypes?.length) {
+    return ROLE_RECOVERY_TYPES;
+  }
+  const invalid = emailTypes.filter((type) => !ROLE_RECOVERY_TYPES.includes(type));
+  if (invalid.length > 0) {
+    return { error: `invalid_email_types:${invalid.join(",")}` };
+  }
+  return emailTypes;
+}
+
+function scheduledForMainType(
+  emailType: BookingEmailType,
+  params: StartSequenceParams,
+): Date | null {
+  const { lead, sequenceStartsAt } = params;
+  if (emailType === "immediate") {
+    return sequenceStartsAt ?? new Date();
+  }
+  if (!lead.scheduled_at) {
+    return null;
+  }
+  if (emailType === "h48_confirm") {
+    return h48SendAt(lead.scheduled_at);
+  }
+  if (emailType === "h24_relance") {
+    return h24SendAt(lead.scheduled_at);
+  }
+  if (emailType === "h20_cancel") {
+    return h20SendAt(lead.scheduled_at);
+  }
+  return null;
+}
+
 function jobKey(
   leadId: string,
   emailType: string,
@@ -50,52 +116,41 @@ export async function startBookingSequence(
 ): Promise<{ started: boolean; reason?: string }> {
   const { lead, category, triggeredBy } = params;
 
-  if (await hasSequenceStarted(lead.id)) {
+  if (!params.partial && (await hasSequenceStarted(lead.id))) {
     return { started: false, reason: "already_started" };
   }
 
+  const resolved = resolveMainEmailTypes(category, params.emailTypes);
+  if ("error" in resolved) {
+    return { started: false, reason: resolved.error };
+  }
+
   const inviteeUri = lead.calendly_invitee_uri;
-  const immediateAt = params.sequenceStartsAt ?? new Date();
+  let inserted = 0;
 
-  await insertJob({
-    category,
-    leadId: lead.id,
-    emailType: "immediate",
-    scheduledFor: immediateAt,
-    triggeredBy,
-    idempotencyKey: jobKey(lead.id, "immediate", inviteeUri),
-  });
-
-  if (category === "agence" && lead.scheduled_at) {
-    await insertJob({
+  for (const emailType of resolved) {
+    const scheduledFor = scheduledForMainType(emailType, params);
+    if (!scheduledFor) {
+      continue;
+    }
+    const job = await insertJob({
       category,
       leadId: lead.id,
-      emailType: "h48_confirm",
-      scheduledFor: h48SendAt(lead.scheduled_at),
+      emailType,
+      scheduledFor,
       triggeredBy,
-      idempotencyKey: jobKey(lead.id, "h48_confirm", inviteeUri),
+      idempotencyKey: jobKey(lead.id, emailType, inviteeUri),
     });
-    await insertJob({
-      category,
-      leadId: lead.id,
-      emailType: "h24_relance",
-      scheduledFor: h24SendAt(lead.scheduled_at),
-      triggeredBy,
-      idempotencyKey: jobKey(lead.id, "h24_relance", inviteeUri),
-    });
-    await insertJob({
-      category,
-      leadId: lead.id,
-      emailType: "h20_cancel",
-      scheduledFor: h20SendAt(lead.scheduled_at),
-      triggeredBy,
-      idempotencyKey: jobKey(lead.id, "h20_cancel", inviteeUri),
-    });
+    if (job) {
+      inserted += 1;
+    }
   }
 
-  if (!params.sequenceStartsAt || params.sequenceStartsAt.getTime() <= Date.now()) {
-    await dispatchDueJobsForLead(lead.id);
+  if (inserted === 0) {
+    return { started: false, reason: "no_jobs_inserted" };
   }
+
+  await dispatchDueJobsForLead(lead.id);
 
   return { started: true };
 }
@@ -113,29 +168,43 @@ export async function startRoleRecoverySequence(
     return { started: false, reason: "missing_scheduled_at" };
   }
 
-  if (await hasRoleRecoverySequenceStarted(lead.id)) {
+  if (!params.partial && (await hasRoleRecoverySequenceStarted(lead.id))) {
     return { started: false, reason: "already_started" };
+  }
+
+  const resolved = resolveRoleRecoveryEmailTypes(params.emailTypes);
+  if ("error" in resolved) {
+    return { started: false, reason: resolved.error };
   }
 
   const inviteeUri = lead.calendly_invitee_uri;
   const schedule = planRoleRecoverySchedule(lead.scheduled_at);
+  const scheduleByType: Record<"role_seq_48" | "role_seq_24", Date> = {
+    role_seq_48: schedule.roleSeq48,
+    role_seq_24: schedule.roleSeq24,
+  };
 
-  await insertJob({
-    category,
-    leadId: lead.id,
-    emailType: "role_seq_48",
-    scheduledFor: schedule.roleSeq48,
-    triggeredBy,
-    idempotencyKey: jobKey(lead.id, "role_seq_48", inviteeUri),
-  });
-  await insertJob({
-    category,
-    leadId: lead.id,
-    emailType: "role_seq_24",
-    scheduledFor: schedule.roleSeq24,
-    triggeredBy,
-    idempotencyKey: jobKey(lead.id, "role_seq_24", inviteeUri),
-  });
+  let inserted = 0;
+  for (const emailType of resolved) {
+    if (emailType !== "role_seq_48" && emailType !== "role_seq_24") {
+      continue;
+    }
+    const job = await insertJob({
+      category,
+      leadId: lead.id,
+      emailType,
+      scheduledFor: scheduleByType[emailType],
+      triggeredBy,
+      idempotencyKey: jobKey(lead.id, emailType, inviteeUri),
+    });
+    if (job) {
+      inserted += 1;
+    }
+  }
+
+  if (inserted === 0) {
+    return { started: false, reason: "no_jobs_inserted" };
+  }
 
   await dispatchDueJobsForLead(lead.id);
 

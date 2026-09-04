@@ -7,7 +7,7 @@ repo .env  →  config_loader.py  →  *_config.py (preset)
                                         ↓
                                    core_logic.py
                                     ↙         ↘
-                              main.py      app_ui.py
+                              main.py      app.py
                              (Typer CLI)   (Streamlit)
                                         ↓
                           output/{preset}/outscraper_leads.csv
@@ -109,6 +109,7 @@ Set `ENRICH_ENABLED=false` in config to skip website enrich and push scraped lea
 
 ```bash
 python main.py ui                          # Streamlit dashboard
+streamlit run app.py                       # same UI directly
 python main.py dry-run --preset conseillers_financiers
 python main.py scrape --preset conseillers_financiers --target 5000 --push-instantly
 python main.py scrape --preset biggy_agency --target 100 --reset

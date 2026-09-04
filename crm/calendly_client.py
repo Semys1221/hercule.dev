@@ -8,9 +8,11 @@ from typing import Any, Literal
 import httpx
 
 from config import _env
-from supabase_repo import find_by_email, get_client, normalize_email
+from supabase_repo import find_by_email, find_by_slug, get_client, normalize_email
 
 CALENDLY_API = "https://api.calendly.com"
+
+BookingCategory = Literal["agence", "entreprise"]
 
 SequenceType = Literal["main", "role_recovery"]
 SequenceStatus = Literal["none", "started", "confirmed", "cancelled"]
@@ -111,6 +113,20 @@ def _detect_sequence_status(lead: dict[str, Any] | None) -> SequenceStatus:
     return "none"
 
 
+def _resolve_booking_category(
+    *,
+    utm_content: str,
+    lookup: tuple[BookingCategory, dict[str, Any]] | None,
+) -> BookingCategory:
+    if lookup:
+        return lookup[0]
+    if utm_content:
+        slug_lookup = find_by_slug(get_client(), utm_content)
+        if slug_lookup:
+            return slug_lookup[0]
+    return "agence"
+
+
 def _build_booking_row(
     *,
     invitee: dict[str, Any],
@@ -125,6 +141,7 @@ def _build_booking_row(
         questions = []
     lookup = find_by_email(get_client(), email)
     lead = lookup[1] if lookup else None
+    booking_category = _resolve_booking_category(utm_content=utm_content, lookup=lookup)
     tracked = _detect_tracked(utm_content=utm_content, lead=lead)
     sequence_type = _detect_sequence_type(utm_content=utm_content, lead=lead)
     sequence_status = _detect_sequence_status(lead)
@@ -145,6 +162,7 @@ def _build_booking_row(
         },
         "lead_id": lead.get("id") if lead else None,
         "lead_category": lookup[0] if lookup else None,
+        "booking_category": booking_category,
         "lead_link": lead.get("slug") if lead else None,
         "lead_statut": lead.get("statut") if lead else None,
         "provisioned": bool(lead and lead.get("slug")),

@@ -104,6 +104,15 @@ def save_config(row: dict[str, Any]) -> None:
     ).execute()
 
 
+def sync_webhook_id(campaign_id: str, webhook_id: str) -> None:
+    save_config(
+        {
+            "campaign_id": campaign_id,
+            "webhook_id": webhook_id,
+        }
+    )
+
+
 def set_campaign_webhook_auto_send_enabled(campaign_id: str, enabled: bool) -> None:
     save_config(
         {

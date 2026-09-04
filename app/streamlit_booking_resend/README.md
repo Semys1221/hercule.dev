@@ -1,36 +1,41 @@
 # Booking Resend (Streamlit)
 
-Outil dédié aux réservations Calendly et aux séquences email Resend (booking confirmation).
+Outil dédié aux réservations Calendly et aux séquences email Resend, séparé par booking link **agence** et **entreprise**.
 
 ```bash
 pnpm streamlit-booking-resend
 # or:
-cd app/streamlit_booking_resend && pip install -r requirements.txt && streamlit run streamlit_app.py
+cd app/streamlit_booking_resend && pip install -r requirements.txt && streamlit run app.py
 ```
 
 ## Prérequis
 
 - Next.js en local pour déclencher les séquences : `pnpm dev`
-- Variables dans `crm/.env` ou `.env` à la racine (voir ci-dessous)
+- Variables dans `crm/.env` ou `.env` à la racine
 
 ## Onglets
 
-### Réservations Calendly
+### Réservations Agence
 
-1. **Charger Calendly** — liste les RDV actifs sur 30 jours
-2. Filtrer : toutes / trackées / non trackées
-3. Colonnes d'horaires d'envoi (Europe/Paris) : email 1–4 selon le type de séquence
-4. Cocher/décocher les prospects à inclure
-5. **Provisionner** — crée ou met à jour le lead Supabase (role recovery)
-6. **Envoyer la séquence** — détection auto :
-   - **Principale** (trackée) : immédiat + H-48 + H-24 + H-20
-   - **Role recovery** (non trackée) : 2 emails H-48 / H-24 (8h Paris)
+- Fetch Calendly (30 jours), filtré `booking_category=agence`
+- Booking link : `/reservation.html/{slug}`
+- Séquence principale (trackée) : immediate + H-48 + H-24 + H-20
+- Role recovery (non trackée) : 2 emails + provision
+- Modèles email inline (6 types)
 
-Les horaires planifiés en base (`booking_email_jobs`) priment sur l'estimation affichée.
+### Réservations Entreprise
 
-### Modèles email
+- Fetch Calendly filtré `booking_category=entreprise`
+- Booking link : `/reservation-entreprise.html/{slug}`
+- 1 email : confirmation immédiate
+- Modèles email inline (immediate uniquement)
 
-Édition des templates Supabase (`booking_email_templates`), aperçu, envoi test Resend, enregistrement.
+### Envoi granulaire (les deux onglets)
+
+- **Séquence complète** — tous les emails applicables à la catégorie / type de séquence
+- **Emails sélectionnés** — un ou plusieurs emails (`partial: true` côté API)
+
+Colonnes `job_email_*` : statut des jobs en base (`pending`, `sent`, etc.).
 
 ## Variables d'environnement
 
@@ -41,25 +46,21 @@ Les horaires planifiés en base (`booking_email_jobs`) priment sur l'estimation 
 | `SUPABASE_SERVICE_ROLE_KEY` | Accès service role |
 | `RESEND_API_KEY` | Envoi test des modèles |
 | `BOOKING_RESEND_FROM` / `RESEND_FROM` | Adresse expéditeur |
-| `CRM_BACKEND_URL` / `NEXT_PUBLIC_APP_URL` | Backend Next.js (défaut `http://localhost:3000`) |
+| `CRM_BACKEND_URL` / `NEXT_PUBLIC_APP_URL` | Backend Next.js |
 | `LINK_TRACKING_WEBHOOK_SECRET` / `CRON_SECRET` | Auth Bearer vers l'API |
-| `BOOKING_TEMPORARY_BASE_URL` | Lien confirmation role recovery |
 
-## Smoke test
+## Smoke tests
 
 ```bash
-python3 ./scripts/streamlit_booking_resend/smokeSchedule.py
+pnpm smoke-streamlit-booking-resend-schedule
+pnpm smoke-booking-partial-trigger
 ```
-
-Vérifie le calcul des horaires (port Python de `lib/booking-communication/schedule.ts`).
 
 ## Architecture
 
 ```
-Streamlit → Calendly API (fetch RDV)
+Streamlit → Calendly API
          → Supabase (leads, templates, jobs)
-         → Next.js /api/booking-communication/* (déclenchement séquences)
-         → Resend (tests email uniquement depuis Streamlit)
+         → Next.js /api/booking-communication/* (trigger partiel ou complet)
+         → Resend (tests email depuis Streamlit)
 ```
-
-Le CRM (`pnpm crm`) reste inchangé ; cet outil en extrait la partie booking email.

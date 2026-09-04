@@ -12,6 +12,8 @@ import {
   getInstantlyApiKey,
   listWebhooks,
 } from "@/lib/instantly-bypass/client";
+import { saveBypassConfig } from "@/lib/instantly-bypass/templates";
+import { webhookSecret } from "@/lib/instantly-bypass/webhook-auth";
 
 const PRODUCTION_WEBHOOK_PATH = "/api/webhooks/instantly";
 
@@ -30,19 +32,15 @@ function webhookPublicUrl(): string {
   return `${base}${PRODUCTION_WEBHOOK_PATH}`;
 }
 
-function webhookSecret(): string {
-  return (
-    process.env.INSTANTLY_BYPASS_WEBHOOK_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim() ||
-    ""
-  );
+function webhookSecretFromEnv(): string {
+  return webhookSecret();
 }
 
 async function main(): Promise<void> {
   const apiKey = getInstantlyApiKey();
   const targetUrl = webhookPublicUrl();
   const campaignId = requireEnv("INSTANTLY_BYPASS_CAMPAIGN_ID");
-  const secret = webhookSecret();
+  const secret = webhookSecretFromEnv();
 
   console.log(`Target webhook URL: ${targetUrl}`);
   console.log(`Campaign: ${campaignId}`);
@@ -66,7 +64,7 @@ async function main(): Promise<void> {
   }
 
   const refreshed = await listWebhooks(apiKey);
-  const alreadyRegistered = refreshed.some(
+  const existingMatch = refreshed.find(
     (hook) =>
       hook.event_type === "lead_interested" &&
       (hook.target_hook_url ?? "").replace(/\/$/, "") ===
@@ -74,8 +72,13 @@ async function main(): Promise<void> {
       (hook.campaign === campaignId || !hook.campaign),
   );
 
-  if (alreadyRegistered) {
+  if (existingMatch?.id) {
     console.log("lead_interested webhook already registered on production URL.");
+    await saveBypassConfig({
+      campaign_id: campaignId,
+      webhook_id: existingMatch.id,
+    });
+    console.log(`Synced webhook_id ${existingMatch.id} to Supabase.`);
     return;
   }
 
@@ -88,7 +91,15 @@ async function main(): Promise<void> {
     headers,
   });
 
-  console.log(`Registered webhook ${created.id ?? "ok"} → ${targetUrl}`);
+  const webhookId = created.id?.trim();
+  console.log(`Registered webhook ${webhookId ?? "ok"} → ${targetUrl}`);
+  if (webhookId) {
+    await saveBypassConfig({
+      campaign_id: campaignId,
+      webhook_id: webhookId,
+    });
+    console.log(`Synced webhook_id ${webhookId} to Supabase.`);
+  }
 }
 
 main().catch((err) => {

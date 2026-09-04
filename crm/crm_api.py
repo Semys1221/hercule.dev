@@ -62,14 +62,19 @@ def start_booking_sequence(
     category: str,
     mode: str = "now",
     scheduled_at: str | None = None,
+    email_types: list[str] | None = None,
+    partial: bool = False,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "lead_id": lead_id,
         "category": category,
         "mode": mode,
+        "partial": partial,
     }
     if scheduled_at:
         payload["scheduled_at"] = scheduled_at
+    if email_types:
+        payload["email_types"] = email_types
     return post_json("/api/booking-communication/trigger", payload)
 
 
@@ -78,10 +83,17 @@ def start_role_recovery_sequence(
     lead_id: str | None = None,
     category: str = "agence",
     email: str | None = None,
+    email_types: list[str] | None = None,
+    partial: bool = False,
 ) -> dict[str, Any]:
-    payload: dict[str, Any] = {"category": category}
+    payload: dict[str, Any] = {
+        "category": category,
+        "partial": partial,
+    }
     if lead_id:
         payload["lead_id"] = lead_id
     if email:
         payload["email"] = email
+    if email_types:
+        payload["email_types"] = email_types
     return post_json("/api/booking-communication/role-sequence/start", payload)

@@ -58,6 +58,7 @@ from supabase_repo import (
     list_templates,
     save_template,
     set_campaign_webhook_auto_send_enabled,
+    sync_webhook_id,
 )
 
 st.set_page_config(page_title="Streamlit Subsequence", layout="wide")
@@ -554,6 +555,12 @@ matched_webhook = find_campaign_webhook(
     campaign_id=selected_campaign_id,
     target_url=public_url,
 )
+if matched_webhook and selected_config:
+    live_webhook_id = str(matched_webhook.get("id") or "")
+    stored_webhook_id = str(selected_config.get("webhook_id") or "")
+    if live_webhook_id and live_webhook_id != stored_webhook_id:
+        sync_webhook_id(selected_campaign_id, live_webhook_id)
+        selected_config = get_config(selected_campaign_id)
 onboarding_status = derive_onboarding_status(
     has_config=selected_config is not None,
     has_webhook=matched_webhook is not None,
