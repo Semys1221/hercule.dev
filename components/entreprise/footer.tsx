@@ -1,5 +1,7 @@
 import Link from "next/link"
 
+import { FooterLegalBar } from "@/components/site/footer-legal-bar"
+
 export function Footer() {
   const footerLinks: Record<string, { label: string; href: string }[]> = {
     Service: [
@@ -8,12 +10,17 @@ export function Footer() {
       { label: "Contact", href: "#contact" },
     ],
     Hercule: [{ label: "Espace agence", href: "/" }],
+    Légal: [
+      { label: "CGV", href: "/cvg" },
+      { label: "Mentions légales", href: "/mentions-legales" },
+      { label: "Confidentialité", href: "/confidentialite" },
+    ],
   }
 
   return (
     <footer className="border-t border-zinc-800 py-16 px-6" style={{ backgroundColor: "#09090B" }}>
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <p className="text-white font-semibold text-lg mb-2">Hercule</p>
             <p className="text-zinc-500 text-sm max-w-xs">
@@ -42,7 +49,8 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <p className="mt-12 text-zinc-600 text-sm">© {new Date().getFullYear()} Hercule · By Henri Fridzi</p>
+
+        <FooterLegalBar />
       </div>
     </footer>
   )

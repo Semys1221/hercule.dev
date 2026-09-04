@@ -12,12 +12,14 @@
 | Champ | Valeur |
 |-------|--------|
 | Dénomination commerciale | **Hercule** |
-| Raison sociale | `[À COMPLÉTER — ex. Hercule SAS]` |
-| Siège social | `[À COMPLÉTER — adresse]` |
-| SIRET / RCS | `[À COMPLÉTER]` |
-| TVA intracommunautaire | `[À COMPLÉTER]` |
-| Email contact | `[À COMPLÉTER — ex. contact@hercule.dev]` |
-| Directeur de la publication | `[À COMPLÉTER]` |
+| Raison sociale | **Nanguy Evan Gbeho** (entrepreneur individuel) |
+| Nom commercial | Goscale France |
+| Siège social / établissement | 4 Rue Claude Bonnier, 33000 Bordeaux |
+| RCS | 885 248 039 R.C.S. Bordeaux (immatriculé le 22/04/2025) |
+| Greffe | Tribunal de Commerce de Bordeaux — n° gestion 2025A02250 |
+| TVA intracommunautaire | Non applicable — article 293 B du CGI (franchise en base) |
+| Email contact | contact@hercule.dev |
+| Directeur de la publication | Evan Nanguy |
 
 **Client**
 
@@ -160,7 +162,7 @@ Champs techniques recommandés : `cvg_version`, `cvg_accepted_at`, `cvg_accepted
 
 Le Client est un **professionnel** agissant dans le cadre de son activité. Les dispositions du Code de la consommation relatives au droit de rétractation des consommateurs **ne s'appliquent en principe pas**.
 
-**Politique commerciale Hercule :** par geste commercial, le Client dispose d'un délai de **4 jours calendaires** à compter de la souscription pour se rétracter, **sans motif ni pénalité**, à condition d'en informer Hercule par email à `[À COMPLÉTER]`.
+**Politique commerciale Hercule :** par geste commercial, le Client dispose d'un délai de **4 jours calendaires** à compter de la souscription pour se rétracter, **sans motif ni pénalité**, à condition d'en informer Hercule par email à contact@hercule.dev.
 
 En cas de rétractation dans ce délai :
 - Hercule rembourse intégralement les sommes versées dans un délai de **14 jours** ;
@@ -281,7 +283,7 @@ Le contrat Starter court jusqu'à **consommation des 5 Attributions** ou **rési
 
 Le contrat est conclu pour une **durée indéterminée**, avec facturation mensuelle.
 
-**Résiliation par le Client :** possible **à tout moment**, avec un **préavis de 30 jours calendaires** par email à `[À COMPLÉTER]`, sans pénalité. Les Attributions déjà facturées pour la période en cours restent dues.
+**Résiliation par le Client :** possible **à tout moment**, avec un **préavis de 30 jours calendaires** par email à contact@hercule.dev, sans pénalité. Les Attributions déjà facturées pour la période en cours restent dues.
 
 **Résiliation par Hercule :** possible avec le même préavis de 30 jours, ou **immédiatement** en cas de manquement grave (impayé, contournement, fraude, atteinte à l'image de Hercule).
 
@@ -322,9 +324,9 @@ Hercule traite les données du Client et des contacts entreprises conformément 
 
 Finalités principales : exécution du contrat, qualification des demandes, prise de RDV, facturation, support.
 
-Le Client agit en qualité de responsable de traitement pour les données qu'il collecte auprès des entreprises rencontrées ; Hercule agit en qualité de sous-traitant ou responsable conjoint selon les flux — détail à compléter dans la **Politique de confidentialité** `[À CRÉER — URL]`.
+Le Client agit en qualité de responsable de traitement pour les données qu'il collecte auprès des entreprises rencontrées ; Hercule agit en qualité de sous-traitant ou responsable conjoint selon les flux — détail dans la [Politique de confidentialité](/confidentialite).
 
-Pour exercer vos droits : `[email RGPD À COMPLÉTER]`.
+Pour exercer vos droits : contact@hercule.dev.
 
 ---
 
