@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votre rendez-vous est confirmé · Hercule</title>
+    <title>Pour vous aider à préparer votre audit · Hercule</title>
     <link rel="icon" href="/icon-32x32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="/apple-icon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
@@ -14,7 +14,6 @@
             --muted-foreground: #a1a1aa;
             --accent: #6366f1;
             --border: #27272a;
-            --success: #22c55e;
             --error: #ef4444;
             --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
         }
@@ -37,74 +36,19 @@
         .container {
             background-color: var(--background);
             border: 1px solid var(--border);
-            max-width: 960px;
-            width: 95%;
+            max-width: 720px;
+            width: 100%;
             max-height: calc(100vh - 64px);
-            display: flex;
-            flex-direction: row;
-            box-shadow: 0 0 60px rgba(99, 102, 241, 0.06);
-            overflow: hidden;
-        }
-
-        .left-col {
-            position: relative;
-            width: 45%;
-            min-height: 620px;
-            border-right: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-
-        .left-col img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            min-height: 620px;
-        }
-
-        .left-col::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-color: rgba(9, 9, 11, 0.55);
-            z-index: 1;
-        }
-
-        .left-col-content {
-            position: absolute;
-            bottom: 30px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            z-index: 2;
-        }
-
-        .left-col-content p {
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 500;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-
-        .right-col {
-            width: 55%;
             padding: 32px 40px 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: stretch;
-            text-align: left;
-            background-color: var(--background);
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.06);
             overflow-y: auto;
+            text-align: center;
         }
 
         .brand {
             margin-bottom: 28px;
             display: flex;
-            justify-content: flex-start;
+            justify-content: center;
             width: 100%;
         }
 
@@ -118,19 +62,6 @@
 
         .brand svg { width: 20px; height: 20px; }
         .brand span { font-size: 15px; font-weight: 600; }
-
-        .confirm-banner {
-            margin: 0 0 20px;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        .confirm-banner.pending { color: var(--muted-foreground); }
-        .confirm-banner.ok { color: var(--success); border-color: rgba(34, 197, 94, 0.35); }
-        .confirm-banner.error { color: var(--error); border-color: rgba(239, 68, 68, 0.35); }
 
         h2 {
             font-size: 24px;
@@ -147,6 +78,11 @@
             letter-spacing: 0.08em;
             color: var(--muted-foreground);
             margin: 0 0 16px;
+            text-align: center;
+        }
+
+        .content-block {
+            text-align: left;
         }
 
         .timeline { margin: 0 0 32px; padding: 0; list-style: none; }
@@ -193,7 +129,7 @@
             text-align: left;
             cursor: pointer;
         }
-        .timeline-chevron { width: 16px; height: 16px; color: var(--muted-foreground); transition: transform 0.2s ease; }
+        .timeline-chevron { width: 16px; height: 16px; color: var(--muted-foreground); transition: transform 0.2s ease; flex-shrink: 0; }
         .timeline-step.is-open .timeline-chevron { transform: rotate(180deg); }
         .timeline-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
         .timeline-step.is-open .timeline-body { grid-template-rows: 1fr; }
@@ -220,21 +156,62 @@
             line-height: 1.45;
             cursor: pointer;
         }
-        .accordion-chevron { width: 16px; height: 16px; margin-top: 2px; color: var(--muted-foreground); transition: transform 0.2s ease; }
+        .accordion-chevron { width: 16px; height: 16px; margin-top: 2px; color: var(--muted-foreground); transition: transform 0.2s ease; flex-shrink: 0; }
         .accordion-item.is-open .accordion-chevron { transform: rotate(180deg); }
         .accordion-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
         .accordion-item.is-open .accordion-panel { grid-template-rows: 1fr; }
         .accordion-panel-inner { overflow: hidden; }
-        .accordion-panel-inner p { color: var(--muted-foreground); font-size: 14px; line-height: 1.65; margin: 0 0 12px; }
+        .accordion-panel-inner p { color: var(--muted-foreground); font-size: 14px; line-height: 1.65; margin: 0 0 12px; text-align: left; }
         .accordion-panel-inner p:last-child { margin-bottom: 16px; }
+
+        .auditor-panel {
+            position: relative;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            min-height: 220px;
+        }
+
+        .auditor-panel img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .auditor-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: rgba(9, 9, 11, 0.55);
+            pointer-events: none;
+        }
+
+        .auditor-panel-caption {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 1;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
 
         .manage-booking-loading, .manage-booking-fallback, .manage-booking-time {
             margin: 0 0 12px;
             color: var(--muted-foreground);
             font-size: 14px;
             line-height: 1.65;
+            text-align: left;
         }
-        .manage-booking-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+        .manage-booking-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; justify-content: flex-start; }
         .manage-booking-btn {
             display: inline-flex;
             align-items: center;
@@ -254,39 +231,34 @@
         .is-hidden { display: none !important; }
 
         @media (max-width: 768px) {
-            body { padding: 0; }
-            .container { flex-direction: column; min-height: 100vh; max-height: none; border: none; width: 100%; box-shadow: none; }
-            .left-col { width: 100%; min-height: 30vh; border-right: none; border-bottom: 1px solid var(--border); }
-            .left-col img { min-height: 30vh; }
-            .right-col { width: 100%; padding: 28px 20px 40px; overflow-y: visible; }
+            body { padding: 0; align-items: stretch; }
+            .container {
+                max-height: none;
+                min-height: 100vh;
+                border: none;
+                box-shadow: none;
+                padding: 28px 20px 40px;
+            }
+            .auditor-panel img { min-height: 180px; height: 180px; }
         }
     </style>
 </head>
 <body>
     <div class="container" id="container">
-        <div class="left-col" id="left-col">
-            <img src="https://grzs6rqzvzupoxv9.public.blob.vercel-storage.com/image%20last-optimized.webp" alt="Evan">
-            <div class="left-col-content">
-                <p>Votre échange se fera avec Evan</p>
-            </div>
+        <div class="brand">
+            <a href="https://hercule.dev">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hercule">
+                    <path d="M3 5v14l7.5-7L3 5z" fill="#ffffff"/>
+                    <path d="M21 5v14l-7.5-7L21 5z" fill="#a1a1aa"/>
+                </svg>
+                <span>Hercule</span>
+            </a>
         </div>
 
-        <div class="right-col" id="right-col">
-            <div class="brand">
-                <a href="https://hercule.dev">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hercule">
-                        <path d="M3 5v14l7.5-7L3 5z" fill="#ffffff"/>
-                        <path d="M21 5v14l-7.5-7L21 5z" fill="#a1a1aa"/>
-                    </svg>
-                    <span>Hercule</span>
-                </a>
-            </div>
+        <div id="view-confirmation" class="view step">
+            <h2>Pour vous aider à préparer votre audit</h2>
 
-            <p id="confirm-banner" class="confirm-banner pending" aria-live="polite">Confirmation de votre présence en cours…</p>
-
-            <div id="view-confirmation" class="view step">
-                <h2>Votre rendez-vous est confirmé.</h2>
-
+            <div class="content-block">
                 <p class="section-title">Déroulement du rendez-vous</p>
                 <ol class="timeline" id="timeline">
                     <li class="timeline-step">
@@ -332,6 +304,21 @@
                     <ul class="accordion" id="faq">
                         <li class="accordion-item">
                             <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Qui auditera mon agence ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <div class="auditor-panel">
+                                        <img src="https://grzs6rqzvzupoxv9.public.blob.vercel-storage.com/image%20last-optimized.webp" alt="Evan">
+                                        <p class="auditor-panel-caption">Votre échange se fera avec Evan</p>
+                                    </div>
+                                    <p>Votre échange se fera avec l'un de nos senior developers. Il possède toute l'expertise en croissance — acquisition organique et payante sur les plateformes majeures — ainsi qu'en développement, pour auditer votre agence et valider les demandes auxquelles vous pourriez être éligible.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
                                 <span>D'où proviennent les demandes clients ?</span>
                                 <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                             </button>
@@ -372,7 +359,8 @@
                             </button>
                             <div class="accordion-panel">
                                 <div class="accordion-panel-inner">
-                                    <p>Starter : 1 489 € pour 5 attributions qualifiées. Growth : 2 500 €/mois pour jusqu'à 4 nouveaux clients signés/mois.</p>
+                                    <p>Starter : 1 489 € pour 5 attributions qualifiées.</p>
+                                    <p><strong>Hercule récurrent : 2 500 €/mois</strong> — jusqu'à 4 clients signés par mois. Hercule qualifie et signe ses propres contrats déjà disponibles pour votre agence, à vos tarifs (0 % commission). <strong>Offre éligible sur profil uniquement</strong>, proposée après validation de compatibilité.</p>
                                     <p>0 % de commission sur vos ventes.</p>
                                 </div>
                             </div>
@@ -418,7 +406,6 @@
         var shortCode = params.get('code') || params.get('slug') || (pathMatch ? pathMatch[1] : '') || '';
         var prospectEmail = params.get('email') || '';
         var manageBookingLoaded = false;
-        var confirmBanner = document.getElementById('confirm-banner');
 
         function initAccordionGroup(container, itemSelector) {
             if (!container) return;
@@ -526,38 +513,7 @@
             manageBookingLoaded = true;
         }
 
-        async function confirmPresence() {
-            if (!shortCode && !prospectEmail) {
-                confirmBanner.textContent = 'Lien invalide : ouvrez ce lien depuis l\'email de confirmation.';
-                confirmBanner.className = 'confirm-banner error';
-                return;
-            }
-
-            confirmBanner.textContent = 'Confirmation de votre présence en cours…';
-            confirmBanner.className = 'confirm-banner pending';
-
-            try {
-                var res = await fetch('/api/link-tracking/confirm', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ slug: shortCode, email: prospectEmail })
-                });
-                var data = await res.json();
-                if (!res.ok || data.ok === false) {
-                    throw new Error(data.error || data.reason || 'Échec');
-                }
-                confirmBanner.textContent = data.alreadyConfirmed
-                    ? 'Votre présence était déjà confirmée. Merci.'
-                    : 'Votre créneau a bien été confirmé. Merci.';
-                confirmBanner.className = 'confirm-banner ok';
-            } catch (err) {
-                confirmBanner.textContent = err instanceof Error ? err.message : 'Impossible de confirmer.';
-                confirmBanner.className = 'confirm-banner error';
-            }
-        }
-
         initAccordions();
-        void confirmPresence();
         void fetchCalendlyLinks();
     </script>
 </body>

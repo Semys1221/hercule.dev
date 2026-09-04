@@ -33,6 +33,14 @@ On Vercel Hobby, use [cron-job.org](https://cron-job.org):
 - Schedule: `*/15 * * * *`
 - Header: `Authorization: Bearer <CRON_SECRET>`
 
+Automated registration (add `CRON_JOB_ORG_API_KEY` to `.env` from cron-job.org Console → Settings):
+
+```bash
+pnpm configure-booking-cron
+```
+
+**Deploy first:** production must include the route before the cron returns `200`.
+
 ## 5. Instantly bypass cron (every 10 min)
 
 Manual Streamlit sends outside the Paris send window are queued in `instantly_bypass_jobs`. This cron drains due jobs.

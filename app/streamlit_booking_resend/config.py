@@ -26,6 +26,9 @@ def env(name: str, default: str = "") -> str:
     return value
 
 
+_env = env
+
+
 def env_source_label() -> str:
     if _LOCAL_ENV.is_file():
         return str(_LOCAL_ENV)
@@ -42,3 +45,30 @@ def crm_dir() -> Path:
 
 def repo_root() -> Path:
     return _REPO_ROOT
+
+
+def booking_go_live_at() -> str:
+    return env("BOOKING_GO_LIVE_AT", "2026-09-03T14:00:00.000Z") or "2026-09-03T14:00:00.000Z"
+
+
+class Settings:
+    @property
+    def crm_backend_url(self) -> str:
+        return env("CRM_BACKEND_URL", "http://localhost:3000").rstrip("/")
+
+    @property
+    def tracking_base_url_agence(self) -> str:
+        return env(
+            "TRACKING_BASE_URL_AGENCE",
+            "https://www.hercule.dev/reservation.html",
+        ).rstrip("/")
+
+    @property
+    def tracking_base_url_entreprise(self) -> str:
+        return env(
+            "TRACKING_BASE_URL_ENTREPRISE",
+            "https://www.hercule.dev/reservation-entreprise.html",
+        ).rstrip("/")
+
+
+settings = Settings()

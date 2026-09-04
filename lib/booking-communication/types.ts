@@ -26,13 +26,19 @@ export type BookingEmailJob = {
   resend_email_id: string | null;
   resend_message_id: string | null;
   thread_subject: string | null;
+  use_html: boolean | null;
   idempotency_key: string;
   triggered_by: SequenceTriggeredBy;
   sent_at: string | null;
+  opened_at: string | null;
+  clicked_at: string | null;
+  delivered_at: string | null;
   cancelled_at: string | null;
   error_message: string | null;
   created_at: string;
 };
+
+export type BookingEmailEngagementEvent = "opened" | "clicked" | "delivered";
 
 export type StartSequenceParams = {
   category: LeadCategory;
@@ -44,6 +50,8 @@ export type StartSequenceParams = {
   emailTypes?: BookingEmailType[];
   /** Skip hasSequenceStarted guard — rely on per-job idempotency. */
   partial?: boolean;
+  /** Per-type HTML override; null on job = defaultUseHtml(email_type). */
+  htmlByType?: Partial<Record<BookingEmailType, boolean>>;
 };
 
 export type RenderedBookingEmail = {

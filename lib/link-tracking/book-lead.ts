@@ -1,3 +1,4 @@
+import { isLegacyAgenceLead } from "@/lib/booking-communication/legacy";
 import { startBookingSequence } from "@/lib/booking-communication/orchestrator";
 
 import {
@@ -45,6 +46,9 @@ async function syncAndStartSequence(lookup: LeadLookup): Promise<{
   }
 
   let sequenceStarted = false;
+  if (isLegacyAgenceLead(lookup.category, lookup.lead)) {
+    return { instantlySynced, sequenceStarted };
+  }
   try {
     const seq = await startBookingSequence({
       category: lookup.category,

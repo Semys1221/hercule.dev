@@ -135,6 +135,8 @@ export type InstantlyWebhookRecord = {
   event_type?: string | null;
   campaign?: string | null;
   status?: number | null;
+  timestamp_error?: string | null;
+  headers?: Record<string, string> | null;
 };
 
 export async function listWebhooks(apiKey: string): Promise<InstantlyWebhookRecord[]> {
@@ -179,6 +181,32 @@ export async function createWebhook(
   return instantlyFetch<InstantlyWebhookRecord>(apiKey, "/webhooks", {
     method: "POST",
     body: JSON.stringify(params),
+  });
+}
+
+export type PatchWebhookParams = {
+  headers?: Record<string, string>;
+  name?: string;
+  target_hook_url?: string;
+};
+
+export async function patchWebhook(
+  apiKey: string,
+  webhookId: string,
+  params: PatchWebhookParams,
+): Promise<InstantlyWebhookRecord> {
+  return instantlyFetch<InstantlyWebhookRecord>(apiKey, `/webhooks/${webhookId}`, {
+    method: "PATCH",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function resumeWebhook(
+  apiKey: string,
+  webhookId: string,
+): Promise<InstantlyWebhookRecord> {
+  return instantlyFetch<InstantlyWebhookRecord>(apiKey, `/webhooks/${webhookId}/resume`, {
+    method: "POST",
   });
 }
 

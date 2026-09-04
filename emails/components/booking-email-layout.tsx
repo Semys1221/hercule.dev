@@ -35,6 +35,8 @@ export function BookingEmailLayout({
           style={{
             maxWidth: "560px",
             margin: "0 auto",
+            border: `1px solid ${EMAIL_COLORS.border}`,
+            padding: "32px 24px",
           }}
         >
           {children}

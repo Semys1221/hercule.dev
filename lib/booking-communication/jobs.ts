@@ -2,10 +2,20 @@ import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 import type {
+  BookingEmailEngagementEvent,
   BookingEmailJob,
   BookingEmailType,
   SequenceTriggeredBy,
 } from "./types";
+
+const ENGAGEMENT_COLUMN: Record<
+  BookingEmailEngagementEvent,
+  "opened_at" | "clicked_at" | "delivered_at"
+> = {
+  opened: "opened_at",
+  clicked: "clicked_at",
+  delivered: "delivered_at",
+};
 
 export async function insertJob(params: {
   category: LeadCategory;
@@ -14,20 +24,25 @@ export async function insertJob(params: {
   scheduledFor: Date;
   triggeredBy: SequenceTriggeredBy;
   idempotencyKey: string;
+  useHtml?: boolean | null;
 }): Promise<BookingEmailJob | null> {
   const client = createLinkTrackingClient();
+  const row: Record<string, unknown> = {
+    lead_category: params.category,
+    lead_id: params.leadId,
+    email_type: params.emailType,
+    scheduled_for: params.scheduledFor.toISOString(),
+    status: "pending",
+    idempotency_key: params.idempotencyKey,
+    triggered_by: params.triggeredBy,
+  };
+  if (params.useHtml != null) {
+    row.use_html = params.useHtml;
+  }
   const { data, error } = await client
     .from("booking_email_jobs")
     .upsert(
-      {
-        lead_category: params.category,
-        lead_id: params.leadId,
-        email_type: params.emailType,
-        scheduled_for: params.scheduledFor.toISOString(),
-        status: "pending",
-        idempotency_key: params.idempotencyKey,
-        triggered_by: params.triggeredBy,
-      },
+      row,
       { onConflict: "idempotency_key", ignoreDuplicates: true },
     )
     .select("*")
@@ -86,6 +101,47 @@ export async function markJobSent(
   if (error) {
     throw new Error(`Failed to mark job sent: ${error.message}`);
   }
+}
+
+export async function markJobEngagement(
+  resendEmailId: string,
+  event: BookingEmailEngagementEvent,
+  occurredAt: string,
+): Promise<boolean> {
+  const trimmedId = resendEmailId.trim();
+  if (!trimmedId) return false;
+
+  const column = ENGAGEMENT_COLUMN[event];
+  const client = createLinkTrackingClient();
+  const { data: job, error: fetchError } = await client
+    .from("booking_email_jobs")
+    .select(`id, ${column}`)
+    .eq("resend_email_id", trimmedId)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new Error(`Failed to load job for engagement: ${fetchError.message}`);
+  }
+  if (!job) return false;
+
+  const existing = (job as Record<string, string | null>)[column];
+  const nextValue =
+    existing && existing <= occurredAt ? existing : occurredAt;
+
+  if (existing === nextValue) {
+    return true;
+  }
+
+  const { error: updateError } = await client
+    .from("booking_email_jobs")
+    .update({ [column]: nextValue })
+    .eq("id", job.id);
+
+  if (updateError) {
+    throw new Error(`Failed to mark job engagement: ${updateError.message}`);
+  }
+
+  return true;
 }
 
 export async function markJobFailed(jobId: string, message: string): Promise<void> {

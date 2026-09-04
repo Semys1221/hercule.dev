@@ -15,19 +15,9 @@ export const PLAIN_SIGNATURE = [
   HERCULE_CONTACT_EMAIL,
 ].join("\n");
 
-export const HTML_EMAIL_TYPES = [
-  "h48_confirm",
-  "h24_relance",
-  "role_seq_48",
-  "role_seq_24",
-] as const;
-
-export type HtmlBookingEmailType = (typeof HTML_EMAIL_TYPES)[number];
-
-export function isHtmlBookingEmailType(
-  emailType: BookingEmailType,
-): emailType is HtmlBookingEmailType {
-  return (HTML_EMAIL_TYPES as readonly BookingEmailType[]).includes(emailType);
+/** First email in each sequence uses plain text only; follow-ups use React HTML. */
+export function defaultUseHtml(emailType: BookingEmailType): boolean {
+  return emailType !== "immediate" && emailType !== "role_seq_48";
 }
 
 const LEGACY_CLOSING_PATTERN = /\n*Cordialement,?\s*$/i;
@@ -61,9 +51,11 @@ export async function finalizeRenderedEmail(params: {
   body: string;
   emailType: BookingEmailType;
   confirmUrl?: string;
+  useHtml?: boolean;
 }): Promise<{ subject: string; text: string; html?: string }> {
   const cleanedBody = stripLegacyClosing(params.body);
   const confirmUrl = params.confirmUrl?.trim() || "";
+  const useHtml = params.useHtml ?? defaultUseHtml(params.emailType);
 
   let textBody = cleanedBody;
   if (textBody.includes("{{confirmLink}}")) {
@@ -73,7 +65,7 @@ export async function finalizeRenderedEmail(params: {
     );
   }
 
-  if (isHtmlBookingEmailType(params.emailType)) {
+  if (useHtml) {
     return {
       subject: params.subject,
       text: appendPlainSignature(textBody),

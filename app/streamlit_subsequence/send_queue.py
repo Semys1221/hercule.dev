@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal
+from zoneinfo import ZoneInfo
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
@@ -31,7 +32,9 @@ from supabase_repo import (
     record_event,
     upsert_pipeline_step,
 )
+from config import send_window_tz
 from send_window import format_paris_slot, is_within_send_window, next_send_slot
+from unibox_classify import email_timestamp, extract_email_text, is_hercule_email
 
 PipelineStep = Literal["step_0", "step_1", "step_2", "step_3", "replies_to_handle"]
 Flow = Literal["interested_email1", "interested_email2", "interested_email3"]
@@ -293,6 +296,51 @@ def move_pipeline_leads(campaign_id: str, emails: list[str], step: PipelineStep)
         upsert_pipeline_step(campaign_id, email, step)
 
 
+def _paris_day_start_utc(now: datetime | None = None) -> datetime:
+    paris = ZoneInfo(send_window_tz())
+    utc_now = now or datetime.now(timezone.utc)
+    paris_now = utc_now.astimezone(paris)
+    paris_start = datetime(
+        paris_now.year,
+        paris_now.month,
+        paris_now.day,
+        tzinfo=paris,
+    )
+    return paris_start.astimezone(timezone.utc)
+
+
+def was_hercule_sent_today(
+    campaign_id: str,
+    lead_email: str,
+    client: InstantlyClient,
+) -> tuple[bool, str | None]:
+    """Return whether a Hercule email was sent today (Paris calendar day)."""
+    day_start_iso = _paris_day_start_utc().isoformat()
+
+    last_event = get_last_send_at(campaign_id, lead_email)
+    if last_event and last_event >= day_start_iso:
+        return True, last_event
+
+    sent_items = client.list_emails(
+        search=lead_email,
+        campaign_id=campaign_id,
+        email_type="sent",
+        limit=50,
+    )
+    latest = ""
+    for item in sent_items:
+        text, _ = extract_email_text(item)
+        if not is_hercule_email(text):
+            continue
+        ts = email_timestamp(item)
+        if ts >= day_start_iso and ts > latest:
+            latest = ts
+
+    if latest:
+        return True, latest
+    return False, last_event
+
+
 @dataclass
 class QueueLead:
     lead_id: str
@@ -503,6 +551,7 @@ def dispatch_one(
     campaign_id: str,
     lead: dict[str, Any],
     dry_run: bool = False,
+    force_immediate: bool = False,
 ) -> dict[str, Any]:
     lead_email = str(lead.get("email") or "").strip().lower()
     lead_id = str(lead.get("id") or "")
@@ -564,15 +613,15 @@ def dispatch_one(
 
     if dry_run:
         result: dict[str, Any] = {"ok": True, "dry_run": True, "lead_email": lead_email}
-        if not is_within_send_window():
+        if force_immediate or is_within_send_window():
+            result["would_send_now"] = True
+        else:
             slot = next_send_slot()
             result["would_schedule"] = True
             result["scheduled_label"] = format_paris_slot(slot)
-        else:
-            result["would_send_now"] = True
         return result
 
-    if not is_within_send_window():
+    if not force_immediate and not is_within_send_window():
         slot = next_send_slot()
         insert_bypass_job(
             idempotency_key=idem,

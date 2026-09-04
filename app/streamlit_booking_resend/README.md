@@ -1,6 +1,6 @@
 # Booking Resend (Streamlit)
 
-Outil dédié aux réservations Calendly et aux séquences email Resend, séparé par booking link **agence** et **entreprise**.
+Outil dédié aux réservations Calendly et aux séquences email Resend.
 
 ```bash
 pnpm streamlit-booking-resend
@@ -10,32 +10,38 @@ cd app/streamlit_booking_resend && pip install -r requirements.txt && streamlit 
 
 ## Prérequis
 
-- Next.js en local pour déclencher les séquences : `pnpm dev`
+- Next.js en local pour aperçu / send-once / tests : `pnpm dev` (`CRM_BACKEND_URL=http://localhost:3000`)
 - Variables dans `crm/.env` ou `.env` à la racine
+- `BOOKING_GO_LIVE_AT` — cutoff UTC. Les leads agence avec `booked_at` antérieur restent en **Agence Legacy** (pas de séquence auto)
 
 ## Onglets
 
+### Séquences
+
+Édition unique des templates Resend :
+
+- Auto agence : immediate, H-48, H-24, H-20
+- Auto entreprise : immediate
+- Legacy : Intro (`role_seq_48`) et relance page temporaire (`role_seq_24`). La relance lien standard réutilise H-48.
+
 ### Réservations Agence
 
-- Fetch Calendly (30 jours), filtré `booking_category=agence`
-- Booking link : `/reservation.html/{slug}`
-- Séquence principale (trackée) : immediate + H-48 + H-24 + H-20
-- Role recovery (non trackée) : 2 emails + provision
-- Modèles email inline (6 types)
+Nouveaux bookings trackés **après** le go-live. Observation (jobs / confirmation). Bouton d’urgence : annuler les relances restantes. La séquence démarre via le webhook Calendly + cron.
+
+### Agence Legacy
+
+Bookings agence trackés **avant** le go-live. Envoi manuel uniquement :
+
+- Intro Hercule (`role_seq_48`)
+- Relance confirmation : lien standard (`h48_confirm`) ou page temporaire (`role_seq_24` + `temporary-reservation.html`)
 
 ### Réservations Entreprise
 
-- Fetch Calendly filtré `booking_category=entreprise`
-- Booking link : `/reservation-entreprise.html/{slug}`
-- 1 email : confirmation immédiate
-- Modèles email inline (immediate uniquement)
+Observation de l’email immédiat auto.
 
-### Envoi granulaire (les deux onglets)
+### Historique
 
-- **Séquence complète** — tous les emails applicables à la catégorie / type de séquence
-- **Emails sélectionnés** — un ou plusieurs emails (`partial: true` côté API)
-
-Colonnes `job_email_*` : statut des jobs en base (`pending`, `sent`, etc.).
+Tous les jobs `booking_email_jobs` (auto + envois manuels legacy).
 
 ## Variables d'environnement
 
@@ -46,21 +52,23 @@ Colonnes `job_email_*` : statut des jobs en base (`pending`, `sent`, etc.).
 | `SUPABASE_SERVICE_ROLE_KEY` | Accès service role |
 | `RESEND_API_KEY` | Envoi test des modèles |
 | `BOOKING_RESEND_FROM` / `RESEND_FROM` | Adresse expéditeur |
-| `CRM_BACKEND_URL` / `NEXT_PUBLIC_APP_URL` | Backend Next.js |
+| `CRM_BACKEND_URL` | Backend Next.js (défaut `http://localhost:3000`) |
 | `LINK_TRACKING_WEBHOOK_SECRET` / `CRON_SECRET` | Auth Bearer vers l'API |
+| `BOOKING_GO_LIVE_AT` | Cutoff ISO UTC auto vs legacy agence |
 
 ## Smoke tests
 
 ```bash
 pnpm smoke-streamlit-booking-resend-schedule
-pnpm smoke-booking-partial-trigger
+pnpm smoke-booking-legacy
+pnpm smoke-booking-email-render
 ```
 
 ## Architecture
 
 ```
-Streamlit → Calendly API
-         → Supabase (leads, templates, jobs)
-         → Next.js /api/booking-communication/* (trigger partiel ou complet)
-         → Resend (tests email depuis Streamlit)
+Calendly webhook → skip sequence si agence legacy
+                 → startBookingSequence sinon → booking_email_jobs → cron
+Streamlit Legacy → /api/booking-communication/send-once (email_type)
+Streamlit Séquences → templates Supabase
 ```

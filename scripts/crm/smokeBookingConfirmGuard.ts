@@ -12,7 +12,11 @@ import { isMeetingBookedStatus } from "@/lib/link-tracking/types";
 const ROOT = process.cwd();
 
 function assertNoConfirmOnBookingPages(): void {
-  for (const file of ["public/reservation.html", "public/reservation-entreprise.html"]) {
+  for (const file of [
+    "public/reservation.html",
+    "public/reservation-entreprise.html",
+    "public/temporary-reservation.html",
+  ]) {
     const content = fs.readFileSync(path.join(ROOT, file), "utf8");
     if (content.includes("/api/link-tracking/confirm")) {
       throw new Error(`${file} must not call /api/link-tracking/confirm on Calendly book`);

@@ -47,6 +47,97 @@ def _plain_from_html(raw: str) -> str:
     return text
 
 
+_QUOTE_HTML_MARKERS: list[re.Pattern[str]] = [
+    re.compile(r"<blockquote\b", re.I),
+    re.compile(r'class=["\']gmail_quote["\']', re.I),
+    re.compile(r'id=["\']divRplyFwdMsg["\']', re.I),
+]
+
+_QUOTE_TEXT_MARKERS: list[re.Pattern[str]] = [
+    re.compile(r"Le\s+\d{1,2}\s+.+?\s+a\s+(?:écrit|ecrit)\s*:", re.I | re.S),
+    re.compile(r"On\s+.+?\s+wrote\s*:", re.I | re.S),
+    re.compile(r"-----Original Message-----", re.I),
+    re.compile(r"From:\s.+?\nSent:\s", re.I | re.S),
+    re.compile(r"^>+\s", re.M),
+]
+
+
+def strip_quoted_reply(raw: str) -> str:
+    """Return only the new reply text, without quoted previous messages."""
+    if not raw or not raw.strip():
+        return ""
+
+    earliest = len(raw)
+    for pattern in (*_QUOTE_HTML_MARKERS, *_QUOTE_TEXT_MARKERS):
+        match = pattern.search(raw)
+        if match and match.start() < earliest:
+            earliest = match.start()
+
+    return raw[:earliest].rstrip() if earliest < len(raw) else raw.rstrip()
+
+
+def _pick_latest_email(items: list[dict]) -> dict | None:
+    if not items:
+        return None
+
+    def ts(item: dict) -> str:
+        return str(item.get("timestamp_email") or item.get("timestamp_created") or "")
+
+    return sorted(items, key=ts, reverse=True)[0]
+
+
+def fetch_latest_reply(
+    client: InstantlyClient,
+    *,
+    lead_email: str,
+    campaign_id: str,
+    lead_first_name: str = "",
+    limit: int = 1,
+) -> list[ThreadMessage]:
+    """Fetch the lead's most recent received reply (no sent history)."""
+    received_label = lead_first_name.strip() or lead_email
+    items = client.list_emails(
+        search=lead_email,
+        campaign_id=campaign_id,
+        email_type="received",
+        latest_of_thread=True,
+        limit=limit,
+    )
+    item = _pick_latest_email(items)
+    if not item:
+        return []
+
+    email_id = str(item.get("id") or "")
+    if not email_id:
+        return []
+
+    text, has_body = extract_email_text(item)
+    if not has_body:
+        detail = fetch_email_detail(client, email_id)
+        if detail:
+            text, has_body = extract_email_text(detail)
+
+    text = strip_quoted_reply(text) if text else ""
+    body_html = _sanitize_html(text) if text else ""
+    body_plain = (
+        _plain_from_html(body_html)
+        if body_html
+        else str(item.get("subject") or "")
+    )
+
+    return [
+        ThreadMessage(
+            id=email_id,
+            direction="received",
+            timestamp=email_timestamp(item),
+            subject=str(item.get("subject") or ""),
+            body_html=body_html,
+            body_plain=body_plain,
+            sender_label=received_label,
+            flow_tag=None,
+        )
+    ]
+
 
 def fetch_thread_messages(
     client: InstantlyClient,

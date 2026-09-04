@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     supabase_insert_batch_size: int = 100
     supabase_batch_max_retries: int = 4
     supabase_ssl_verify: bool = True
+    booking_go_live_at: str = "2026-09-03T14:00:00.000Z"
 
     def model_post_init(self, __context: object) -> None:
         if not self.supabase_url:
@@ -73,9 +74,7 @@ class Settings(BaseSettings):
                 "TRACKING_BASE_URL_ENTREPRISE"
             ).rstrip("/")
         self.crm_backend_url = (
-            _env("CRM_BACKEND_URL")
-            or _env("NEXT_PUBLIC_APP_URL")
-            or "http://localhost:3000"
+            _env("CRM_BACKEND_URL") or "http://localhost:3000"
         ).rstrip("/")
         self.link_tracking_webhook_secret = (
             _env("LINK_TRACKING_WEBHOOK_SECRET") or _env("CRON_SECRET")
@@ -86,6 +85,8 @@ class Settings(BaseSettings):
             self.confirm_base_url = _env("BOOKING_CONFIRM_BASE_URL").rstrip("/")
         if _env("BOOKING_TEMPORARY_BASE_URL"):
             self.temporary_base_url = _env("BOOKING_TEMPORARY_BASE_URL").rstrip("/")
+        if _env("BOOKING_GO_LIVE_AT"):
+            self.booking_go_live_at = _env("BOOKING_GO_LIVE_AT")
         raw_concurrency = _env("INSTANTLY_PATCH_CONCURRENCY")
         if raw_concurrency:
             try:
@@ -142,6 +143,10 @@ def temporary_base_url_for(category: str) -> str:
     if category == "entreprise":
         return settings.temporary_base_url.rstrip("/")
     return settings.temporary_base_url.rstrip("/")
+
+
+def booking_go_live_at() -> str:
+    return settings.booking_go_live_at.strip() or "2026-09-03T14:00:00.000Z"
 
 
 def require_supabase() -> tuple[str, str]:

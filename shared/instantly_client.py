@@ -527,6 +527,30 @@ class InstantlyClient:
         data = self._fetch("/webhooks", method="POST", body=body)
         return data if isinstance(data, dict) else {}
 
+    def patch_webhook(
+        self,
+        webhook_id: str,
+        *,
+        headers: dict[str, str] | None = None,
+        name: str | None = None,
+        target_hook_url: str | None = None,
+    ) -> dict[str, Any]:
+        body: dict[str, Any] = {}
+        if headers is not None:
+            body["headers"] = headers
+        if name is not None:
+            body["name"] = name
+        if target_hook_url is not None:
+            body["target_hook_url"] = target_hook_url.strip()
+        if not body:
+            raise ValueError("patch_webhook requires at least one field")
+        data = self._fetch(f"/webhooks/{webhook_id.strip()}", method="PATCH", body=body)
+        return data if isinstance(data, dict) else {}
+
+    def resume_webhook(self, webhook_id: str) -> dict[str, Any]:
+        data = self._fetch(f"/webhooks/{webhook_id.strip()}/resume", method="POST")
+        return data if isinstance(data, dict) else {}
+
     def delete_webhook(self, webhook_id: str) -> None:
         self._fetch(f"/webhooks/{webhook_id.strip()}", method="DELETE")
 

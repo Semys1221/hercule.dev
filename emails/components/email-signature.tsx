@@ -41,7 +41,7 @@ export function EmailSignature() {
               fontSize: "15px",
               fontStyle: "italic",
               lineHeight: "1.4",
-              color: EMAIL_COLORS.text,
+              color: EMAIL_COLORS.muted,
             }}
           >
             Courtage de projets Web &amp; Tech
@@ -52,14 +52,14 @@ export function EmailSignature() {
               fontFamily: EMAIL_FONT_FAMILY,
               fontSize: "15px",
               lineHeight: "1.4",
-              color: EMAIL_COLORS.text,
+              color: EMAIL_COLORS.muted,
             }}
           >
             Bordeaux, France |{" "}
             <Link
               href={HERCULE_WEBSITE_URL}
               style={{
-                color: EMAIL_COLORS.link,
+                color: EMAIL_COLORS.accent,
                 textDecoration: "underline",
               }}
             >
@@ -72,7 +72,7 @@ export function EmailSignature() {
               fontFamily: EMAIL_FONT_FAMILY,
               fontSize: "15px",
               lineHeight: "1.4",
-              color: EMAIL_COLORS.text,
+              color: EMAIL_COLORS.muted,
             }}
           >
             {HERCULE_CONTACT_EMAIL}

@@ -1,37 +1,21 @@
 import { NextResponse } from "next/server";
 
+import {
+  isBookingEmailType,
+  verifyBookingCommunicationSecret,
+} from "@/lib/booking-communication/route-utils";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
 import { previewTemplate } from "@/lib/booking-communication/template-store";
-import type { BookingEmailType } from "@/lib/booking-communication/types";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 const DEFAULT_TEST_TO = "nanguy29@gmail.com";
-
-function verifySecret(request: Request): boolean {
-  const expected =
-    process.env.LINK_TRACKING_WEBHOOK_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim();
-  if (!expected) return false;
-  return request.headers.get("authorization") === `Bearer ${expected}`;
-}
 
 function isCategory(value: unknown): value is LeadCategory {
   return value === "agence" || value === "entreprise";
 }
 
-function isEmailType(value: unknown): value is BookingEmailType {
-  return (
-    value === "immediate" ||
-    value === "h48_confirm" ||
-    value === "h24_relance" ||
-    value === "h20_cancel" ||
-    value === "role_seq_48" ||
-    value === "role_seq_24"
-  );
-}
-
 export async function POST(request: Request) {
-  if (!verifySecret(request)) {
+  if (!verifyBookingCommunicationSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -41,6 +25,7 @@ export async function POST(request: Request) {
     subject?: string;
     body?: string;
     to?: string;
+    use_html?: boolean;
   };
   try {
     body = (await request.json()) as typeof body;
@@ -50,7 +35,7 @@ export async function POST(request: Request) {
 
   if (
     !isCategory(body.category) ||
-    !isEmailType(body.email_type) ||
+    !isBookingEmailType(body.email_type) ||
     !body.subject?.trim() ||
     !body.body?.trim()
   ) {
@@ -69,6 +54,7 @@ export async function POST(request: Request) {
     body.subject.trim(),
     body.body,
     body.email_type,
+    body.use_html,
   );
 
   const idempotencyKey = `test:${body.category}:${body.email_type}:${Date.now()}`;

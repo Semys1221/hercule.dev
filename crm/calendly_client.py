@@ -165,6 +165,7 @@ def _build_booking_row(
         "booking_category": booking_category,
         "lead_link": lead.get("slug") if lead else None,
         "lead_statut": lead.get("statut") if lead else None,
+        "booked_at": lead.get("booked_at") if lead else None,
         "provisioned": bool(lead and lead.get("slug")),
         "tracked": tracked,
         "sequence_type": sequence_type,

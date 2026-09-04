@@ -6,9 +6,13 @@ export const HERCULE_WEBSITE_URL = "https://hercule.dev";
 export const HERCULE_CONTACT_EMAIL = "contact@hercule.dev";
 
 export const EMAIL_COLORS = {
-  text: "#18181b",
-  link: "#2563eb",
-  background: "#ffffff",
+  background: "#09090B",
+  text: "#ffffff",
+  muted: "#a1a1aa",
+  accent: "#6366f1",
+  border: "#27272a",
+  ctaBackground: "#ffffff",
+  ctaText: "#18181b",
 } as const;
 
 export const EMAIL_FONT_FAMILY =

@@ -39,6 +39,7 @@ from onboarding import (  # noqa: E402
     explain_webhook_miss,
     find_campaign_webhook,
     initialize_campaign,
+    is_webhook_active,
 )
 
 from unibox_classify import (  # noqa: E402
@@ -47,7 +48,12 @@ from unibox_classify import (  # noqa: E402
     merge_steps,
     normalize_email_text,
 )
-from unibox_thread import ThreadMessage, render_conversation_html  # noqa: E402
+from unibox_thread import (  # noqa: E402
+    ThreadMessage,
+    fetch_latest_reply,
+    render_conversation_html,
+    strip_quoted_reply,
+)
 from verifyBootstrapPipeline import VerifyRow, can_auto_apply  # noqa: E402
 from applyUniboxClassification import _load_classified  # noqa: E402
 
@@ -633,6 +639,92 @@ def test_render_conversation_html_alignment() -> None:
     print("OK render conversation html")
 
 
+def test_strip_quoted_reply_french_apple_mail() -> None:
+    raw = (
+        "Bonjour, Oui je réalise des prestations de marketing digital. "
+        "Donc pourquoi pas, c'est quoi le principe ? Cordialement. &nbsp; "
+        "Stéphane &nbsp; Boesel Marketing - site internet &nbsp; 0652554630 &nbsp; "
+        "stephane@lecafeduweb.fr &nbsp; https://lecafeduweb.fr/ &nbsp; "
+        "46 rue Carnot 95150 TAVERNY &nbsp; "
+        "Le 4 sept. 2026 à 11:25, Béatrice Meyer &lt;beatrice@atlas-conseil.site&gt; "
+        "a écrit : Bonjour, J'ai actuellement plusieurs personnes ayant manifesté "
+        "leur intérêt pour du Marketing Digital dans votre secteur."
+    )
+    stripped = strip_quoted_reply(raw)
+    assert "marketing digital" in stripped
+    assert "Stéphane" in stripped
+    assert "Béatrice Meyer" not in stripped
+    assert "a écrit" not in stripped
+    assert "J'ai actuellement plusieurs personnes" not in stripped
+    print("OK strip quoted reply french apple mail")
+
+
+def test_strip_quoted_reply_html_blockquote() -> None:
+    raw = "<p>Merci pour votre message.</p><blockquote>Previous email</blockquote>"
+    stripped = strip_quoted_reply(raw)
+    assert stripped == "<p>Merci pour votre message.</p>"
+    print("OK strip quoted reply html blockquote")
+
+
+def test_strip_quoted_reply_no_quote() -> None:
+    raw = "Bonjour, oui nous pouvons vous aider. Cordialement."
+    assert strip_quoted_reply(raw) == raw
+    print("OK strip quoted reply no quote")
+
+
+def test_strip_quoted_reply_empty() -> None:
+    assert strip_quoted_reply("") == ""
+    assert strip_quoted_reply("   ") == ""
+    print("OK strip quoted reply empty")
+
+
+def test_fetch_latest_reply_received_only() -> None:
+    mock_client = MagicMock()
+    mock_client.list_emails.return_value = [
+        {
+            "id": "recv-1",
+            "subject": "Re: marketing",
+            "body": {"html": "Oui intéressé. Le 1 jan. 2026 à 10:00, Alice a écrit : old"},
+            "timestamp_email": "2026-01-02T10:00:00Z",
+        },
+    ]
+
+    messages = fetch_latest_reply(
+        mock_client,
+        lead_email="lead@example.com",
+        campaign_id="camp-1",
+        lead_first_name="Jean",
+    )
+
+    mock_client.list_emails.assert_called_once_with(
+        search="lead@example.com",
+        campaign_id="camp-1",
+        email_type="received",
+        latest_of_thread=True,
+        limit=1,
+    )
+    assert len(messages) == 1
+    assert messages[0].direction == "received"
+    assert messages[0].sender_label == "Jean"
+    assert "Oui intéressé" in messages[0].body_plain
+    assert "Alice a écrit" not in messages[0].body_plain
+    print("OK fetch latest reply received only")
+
+
+def test_fetch_latest_reply_empty() -> None:
+    mock_client = MagicMock()
+    mock_client.list_emails.return_value = []
+
+    messages = fetch_latest_reply(
+        mock_client,
+        lead_email="lead@example.com",
+        campaign_id="camp-1",
+    )
+
+    assert messages == []
+    print("OK fetch latest reply empty")
+
+
 def test_verify_can_auto_apply_gate() -> None:
     bootstrap_rows = [
         {"confidence": "high", "proposed_step": "step_1"},
@@ -829,6 +921,30 @@ def test_onboarding_status_and_webhook_match() -> None:
         )
         is None
     )
+    inactive = {
+        "id": "wh-inactive",
+        "event_type": "lead_interested",
+        "target_hook_url": target,
+        "campaign": FAKE_CAMPAIGN_ID,
+        "status": -1,
+        "timestamp_error": "2026-09-04T13:16:36.187Z",
+    }
+    assert not is_webhook_active(inactive)
+    assert (
+        find_campaign_webhook(
+            [inactive], campaign_id=FAKE_CAMPAIGN_ID, target_url=target
+        )
+        is None
+    )
+    assert (
+        find_campaign_webhook(
+            [inactive],
+            campaign_id=FAKE_CAMPAIGN_ID,
+            target_url=target,
+            require_active=False,
+        )
+        is inactive
+    )
     assert template_requires_reservation_link("<p>{{reservation_agence_link}}</p>")
     assert not template_requires_reservation_link("<p>Hello {{first_name}}</p>")
     print("OK onboarding status and webhook match")
@@ -877,7 +993,8 @@ def test_explain_webhook_miss() -> None:
                 "event_type": "lead_interested",
                 "target_hook_url": target,
                 "campaign": FAKE_CAMPAIGN_ID,
-                "status": 0,
+                "status": -1,
+                "timestamp_error": "2026-09-04T13:16:36.187Z",
             }
         ],
         campaign_id=FAKE_CAMPAIGN_ID,
@@ -885,6 +1002,7 @@ def test_explain_webhook_miss() -> None:
     )
     assert inactive is not None
     assert "inactif" in inactive
+    assert "2026-09-04T13:16:36.187Z" in inactive
 
     assert (
         explain_webhook_miss(
@@ -923,6 +1041,43 @@ def test_initialize_campaign_rejects_bad_url() -> None:
     print("OK initialize_campaign rejects bad URL")
 
 
+def test_initialize_campaign_resumes_inactive_webhook() -> None:
+    target = "https://www.hercule.dev/api/webhooks/instantly"
+    mock_client = MagicMock()
+    mock_client.list_webhooks.return_value = [
+        {
+            "id": "wh-inactive",
+            "event_type": "lead_interested",
+            "target_hook_url": target,
+            "campaign": FAKE_CAMPAIGN_ID,
+            "status": -1,
+            "timestamp_error": "2026-09-04T13:16:36.187Z",
+        }
+    ]
+    persisted = {"campaign_id": FAKE_CAMPAIGN_ID, "webhook_id": "wh-inactive"}
+    with (
+        patch("onboarding.get_config", return_value=persisted),
+        patch("onboarding.save_config") as save_config,
+        patch("onboarding.seed_empty_templates"),
+    ):
+        result = initialize_campaign(
+            mock_client,
+            campaign_id=FAKE_CAMPAIGN_ID,
+            campaign_name="Test",
+            target_url=target,
+            secret="secret",
+        )
+    mock_client.create_webhook.assert_not_called()
+    mock_client.patch_webhook.assert_called_once_with(
+        "wh-inactive",
+        headers={"Authorization": "Bearer secret"},
+    )
+    mock_client.resume_webhook.assert_called_once_with("wh-inactive")
+    save_config.assert_called()
+    assert result["webhook_id"] == "wh-inactive"
+    print("OK initialize_campaign resumes inactive webhook")
+
+
 def test_list_webhooks_pagination() -> None:
     from shared.instantly_client import InstantlyClient
 
@@ -940,6 +1095,45 @@ def test_list_webhooks_pagination() -> None:
     assert mock_fetch.call_count == 2
     assert "starting_after=wh-99" in mock_fetch.call_args_list[1].args[0]
     print("OK list_webhooks pagination")
+
+
+def test_mandataires_duplicate_heuristic() -> None:
+    from auditDuplicateE1 import _mandataires_messages  # noqa: E402
+    from unibox_thread import ThreadMessage  # noqa: E402
+
+    e1_text = (
+        "Voici les precisions. cabinets comptables de 3 a 12 mandataires. "
+        "hercule.dev Beatrice Meyer"
+    )
+    single = [
+        ThreadMessage(
+            id="1",
+            direction="sent",
+            timestamp="2026-09-04T10:00:00Z",
+            subject="Re:",
+            body_html=e1_text,
+            body_plain=e1_text,
+            sender_label="Beatrice",
+            flow_tag="E1",
+        )
+    ]
+    assert len(_mandataires_messages(single)) == 1
+
+    duplicate = [
+        *single,
+        ThreadMessage(
+            id="2",
+            direction="sent",
+            timestamp="2026-09-04T11:00:00Z",
+            subject="Re:",
+            body_html=e1_text,
+            body_plain=e1_text,
+            sender_label="Beatrice",
+            flow_tag="E1",
+        ),
+    ]
+    assert len(_mandataires_messages(duplicate)) == 2
+    print("OK mandataires duplicate heuristic")
 
 
 def main() -> None:
@@ -967,13 +1161,21 @@ def main() -> None:
         test_bootstrap_derive_no_show_steps,
         test_bootstrap_merge_steps_no_downgrade,
         test_render_conversation_html_alignment,
+        test_strip_quoted_reply_french_apple_mail,
+        test_strip_quoted_reply_html_blockquote,
+        test_strip_quoted_reply_no_quote,
+        test_strip_quoted_reply_empty,
+        test_fetch_latest_reply_received_only,
+        test_fetch_latest_reply_empty,
         test_verify_can_auto_apply_gate,
         test_apply_load_classified_fixture,
         test_classify_thread_e1_variant,
         test_onboarding_status_and_webhook_match,
         test_explain_webhook_miss,
         test_initialize_campaign_rejects_bad_url,
+        test_initialize_campaign_resumes_inactive_webhook,
         test_list_webhooks_pagination,
+        test_mandataires_duplicate_heuristic,
     ]
     for test in tests:
         test()

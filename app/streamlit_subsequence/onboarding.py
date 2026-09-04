@@ -31,11 +31,19 @@ def normalize_webhook_url(url: str) -> str:
     return url.strip().rstrip("/")
 
 
+def is_webhook_active(hook: dict[str, Any] | None) -> bool:
+    if not hook:
+        return False
+    status = hook.get("status")
+    return status is None or status == 1
+
+
 def find_campaign_webhook(
     webhooks: list[dict[str, Any]],
     *,
     campaign_id: str,
     target_url: str,
+    require_active: bool = True,
 ) -> dict[str, Any] | None:
     target = normalize_webhook_url(target_url)
     for hook in webhooks:
@@ -46,8 +54,7 @@ def find_campaign_webhook(
             continue
         campaign = hook.get("campaign") or hook.get("campaign_id")
         if not campaign or str(campaign) == campaign_id:
-            status = hook.get("status")
-            if status is not None and status != 1:
+            if require_active and not is_webhook_active(hook):
                 continue
             return hook
     return None
@@ -98,8 +105,11 @@ def explain_webhook_miss(
             status = hook.get("status")
             if status is not None and status != 1:
                 hook_id = hook.get("id") or "?"
+                error_at = str(hook.get("timestamp_error") or "").strip()
+                since = f" depuis {error_at}" if error_at else ""
                 return (
-                    f"Webhook trouvé (`{hook_id}`) mais status={status} (inactif)."
+                    f"Webhook trouvé (`{hook_id}`) mais status={status} "
+                    f"(inactif{since}). Instantly l'a coupé après des échecs de livraison."
                 )
 
     scoped_campaigns = sorted(
@@ -175,9 +185,15 @@ def initialize_campaign(
         webhooks,
         campaign_id=campaign_id,
         target_url=target_url,
+        require_active=False,
     )
+    auth_headers = {"Authorization": f"Bearer {secret}"} if secret else None
     if match:
         webhook_id = str(match.get("id") or "")
+        if webhook_id and auth_headers:
+            instantly_client.patch_webhook(webhook_id, headers=auth_headers)
+        if webhook_id and not is_webhook_active(match):
+            instantly_client.resume_webhook(webhook_id)
     else:
         if not secret:
             raise ValueError(
@@ -188,7 +204,7 @@ def initialize_campaign(
             event_type="lead_interested",
             name=f"Hercule Interested Bypass — {campaign_name}"[:80],
             campaign=campaign_id,
-            headers={"Authorization": f"Bearer {secret}"},
+            headers=auth_headers,
         )
         webhook_id = str(created.get("id") or "")
     if webhook_id:

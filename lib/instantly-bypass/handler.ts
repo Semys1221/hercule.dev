@@ -3,6 +3,7 @@ import {
   getInstantlyApiKey,
   replyToEmail,
 } from "./client";
+import { threadAlreadyHasE1 } from "./e1-thread-guard";
 import {
   hasBypassEvent,
   interestedIdempotencyKey,
@@ -103,6 +104,21 @@ export async function handleLeadInterested(
         errorMessage: "Missing reservation_agence_link on lead",
       });
       return { ok: false, error: "missing_reservation_link" };
+    }
+
+    if (await threadAlreadyHasE1(apiKey, { leadEmail, campaignId })) {
+      await recordBypassEvent({
+        idempotencyKey,
+        flow: "interested_email1",
+        campaignId,
+        leadEmail,
+        leadId: lead?.id,
+        webhookReceivedAt,
+        status: "skipped",
+        errorMessage: "E1 already present in Unibox thread",
+      });
+      await upsertPipelineStep(campaignId, leadEmail, "step_1");
+      return { ok: true, skipped: "e1_already_in_thread" };
     }
 
     const thread = await resolveThreadForReply(apiKey, {

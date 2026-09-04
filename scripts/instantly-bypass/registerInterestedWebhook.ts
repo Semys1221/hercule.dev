@@ -11,6 +11,9 @@ import {
   deleteWebhook,
   getInstantlyApiKey,
   listWebhooks,
+  patchWebhook,
+  resumeWebhook,
+  type InstantlyWebhookRecord,
 } from "@/lib/instantly-bypass/client";
 import { saveBypassConfig } from "@/lib/instantly-bypass/templates";
 import { webhookSecret } from "@/lib/instantly-bypass/webhook-auth";
@@ -36,6 +39,14 @@ function webhookSecretFromEnv(): string {
   return webhookSecret();
 }
 
+function normalizeWebhookUrl(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
+function isWebhookActive(hook: InstantlyWebhookRecord): boolean {
+  return hook.status == null || hook.status === 1;
+}
+
 async function main(): Promise<void> {
   const apiKey = getInstantlyApiKey();
   const targetUrl = webhookPublicUrl();
@@ -54,7 +65,7 @@ async function main(): Promise<void> {
     const id = hook.id?.trim();
     if (!id) continue;
 
-    if (url.replace(/\/$/, "") === targetUrl.replace(/\/$/, "")) {
+    if (normalizeWebhookUrl(url) === normalizeWebhookUrl(targetUrl)) {
       console.log(`Keeping existing webhook ${id} → ${url}`);
       continue;
     }
@@ -67,13 +78,26 @@ async function main(): Promise<void> {
   const existingMatch = refreshed.find(
     (hook) =>
       hook.event_type === "lead_interested" &&
-      (hook.target_hook_url ?? "").replace(/\/$/, "") ===
-        targetUrl.replace(/\/$/, "") &&
+      normalizeWebhookUrl(hook.target_hook_url ?? "") ===
+        normalizeWebhookUrl(targetUrl) &&
       (hook.campaign === campaignId || !hook.campaign),
   );
 
   if (existingMatch?.id) {
-    console.log("lead_interested webhook already registered on production URL.");
+    if (secret) {
+      console.log(`Refreshing Authorization header on webhook ${existingMatch.id}.`);
+      await patchWebhook(apiKey, existingMatch.id, {
+        headers: { Authorization: `Bearer ${secret}` },
+      });
+    }
+    if (!isWebhookActive(existingMatch)) {
+      console.log(
+        `Resuming inactive webhook ${existingMatch.id} (status=${existingMatch.status}).`,
+      );
+      await resumeWebhook(apiKey, existingMatch.id);
+    } else {
+      console.log("lead_interested webhook already registered on production URL.");
+    }
     await saveBypassConfig({
       campaign_id: campaignId,
       webhook_id: existingMatch.id,

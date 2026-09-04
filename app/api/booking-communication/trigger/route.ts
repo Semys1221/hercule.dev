@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { startBookingSequence } from "@/lib/booking-communication/orchestrator";
+import { parseEmailTypes, parseHtmlByType, verifyBookingCommunicationSecret } from "@/lib/booking-communication/route-utils";
 import { syncLeadStatutToInstantly } from "@/lib/link-tracking/instantly";
 import {
   createLinkTrackingClient,
@@ -9,48 +10,13 @@ import {
   updateLeadStatut,
 } from "@/lib/link-tracking/supabase";
 import type { LeadCategory } from "@/lib/link-tracking/types";
-import type { BookingEmailType } from "@/lib/booking-communication/types";
-
-function verifySecret(request: Request): boolean {
-  const expected =
-    process.env.LINK_TRACKING_WEBHOOK_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim();
-  if (!expected) return false;
-  return request.headers.get("authorization") === `Bearer ${expected}`;
-}
 
 function isCategory(value: unknown): value is LeadCategory {
   return value === "agence" || value === "entreprise";
 }
 
-const BOOKING_EMAIL_TYPES = new Set<BookingEmailType>([
-  "immediate",
-  "h48_confirm",
-  "h24_relance",
-  "h20_cancel",
-  "role_seq_48",
-  "role_seq_24",
-]);
-
-function parseEmailTypes(value: unknown): BookingEmailType[] | null {
-  if (value == null) {
-    return null;
-  }
-  if (!Array.isArray(value)) {
-    return null;
-  }
-  const types: BookingEmailType[] = [];
-  for (const item of value) {
-    if (typeof item !== "string" || !BOOKING_EMAIL_TYPES.has(item as BookingEmailType)) {
-      return null;
-    }
-    types.push(item as BookingEmailType);
-  }
-  return types;
-}
-
 export async function POST(request: Request) {
-  if (!verifySecret(request)) {
+  if (!verifyBookingCommunicationSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -60,6 +26,7 @@ export async function POST(request: Request) {
     mode?: "now" | "scheduled";
     scheduled_at?: string;
     email_types?: unknown;
+    html_by_type?: unknown;
     partial?: boolean;
   };
   try {
@@ -106,6 +73,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid email_types" }, { status: 400 });
   }
 
+  const htmlByType = parseHtmlByType(body.html_by_type);
+  if (body.html_by_type != null && htmlByType === null) {
+    return NextResponse.json({ error: "invalid html_by_type" }, { status: 400 });
+  }
+
   const seq = await startBookingSequence({
     category: body.category,
     lead,
@@ -113,6 +85,7 @@ export async function POST(request: Request) {
     sequenceStartsAt,
     emailTypes: emailTypes ?? undefined,
     partial: body.partial === true,
+    htmlByType: htmlByType ?? undefined,
   });
 
   return NextResponse.json({ ok: true, ...seq });

@@ -31,6 +31,7 @@ from onboarding import (
     explain_webhook_miss,
     find_campaign_webhook,
     initialize_campaign,
+    is_webhook_active,
 )
 from send_queue import (
     DEFAULT_FLOW_BY_STEP,
@@ -45,9 +46,9 @@ from send_queue import (
     render_template_html,
 )
 from send_window import format_paris_slot, is_within_send_window, next_send_slot
+from unibox_classify import derive_step_from_flows, is_no_show_status
 from unibox_thread import (
-    derive_step_from_thread,
-    fetch_thread_messages,
+    fetch_latest_reply,
     render_conversation_html,
     thread_subject,
 )
@@ -173,33 +174,33 @@ def _render_conversation_panel(
         return
 
     load_key = f"thread_{campaign_id}_{conv_email}"
-    if st.button("Charger la conversation", key=f"load_conv_{step}_{conv_email}"):
+    if st.button("Charger la dernière réponse", key=f"load_conv_{step}_{conv_email}"):
         try:
             client = InstantlyClient(require_instantly_api_key())
-            interest_status = lead_row.raw.get("lt_interest_status")
-            messages = fetch_thread_messages(
+            messages = fetch_latest_reply(
                 client,
                 lead_email=conv_email,
                 campaign_id=campaign_id,
                 lead_first_name=lead_row.first_name,
-                interest_status=int(interest_status) if interest_status is not None else None,
             )
             st.session_state[load_key] = messages
         except Exception as exc:
             st.error(str(exc))
 
-    messages = st.session_state.get(load_key)
-    if not messages:
-        st.info("Cliquez **Charger la conversation** pour afficher le fil Unibox.")
+    if load_key not in st.session_state:
+        st.info("Cliquez **Charger la dernière réponse** pour afficher la dernière réponse du lead.")
         return
 
+    messages = st.session_state[load_key]
     interest_status = lead_row.raw.get("lt_interest_status")
-    derived_step, detected_flows = derive_step_from_thread(
-        messages,
-        interest_status=int(interest_status) if interest_status is not None else None,
+    is_no_show = is_no_show_status(
+        int(interest_status) if interest_status is not None else None
     )
+    detected_flows = set(lead_row.sent_flows)
+    derived_step = derive_step_from_flows(detected_flows, is_no_show=is_no_show)
 
-    st.caption(f"**Sujet :** {thread_subject(messages)}")
+    if messages:
+        st.caption(f"**Sujet :** {thread_subject(messages)}")
     st.caption(
         f"**CRM :** {STEP_LABELS[lead_row.step]} · "
         f"**Détecté :** {STEP_LABELS.get(derived_step, derived_step)} "  # type: ignore[arg-type]
@@ -211,6 +212,10 @@ def _render_conversation_panel(
             f"Écart CRM vs Unibox : étape dashboard **{STEP_LABELS[lead_row.step]}**, "
             f"fingerprints → **{STEP_LABELS.get(derived_step, derived_step)}**."  # type: ignore[arg-type]
         )
+
+    if not messages:
+        st.info("Aucune réponse reçue pour ce lead.")
+        return
 
     st.markdown(render_conversation_html(messages), unsafe_allow_html=True)
 
@@ -555,6 +560,17 @@ matched_webhook = find_campaign_webhook(
     campaign_id=selected_campaign_id,
     target_url=public_url,
 )
+existing_webhook = find_campaign_webhook(
+    webhooks,
+    campaign_id=selected_campaign_id,
+    target_url=public_url,
+    require_active=False,
+)
+inactive_webhook = (
+    existing_webhook
+    if existing_webhook and not is_webhook_active(existing_webhook)
+    else None
+)
 if matched_webhook and selected_config:
     live_webhook_id = str(matched_webhook.get("id") or "")
     stored_webhook_id = str(selected_config.get("webhook_id") or "")
@@ -603,7 +619,8 @@ with action_col:
         onboarding_status in {"not_initialized", "webhook_incomplete"}
         and is_valid_webhook_target_url(public_url)
     )
-    if st.button("Initialiser", disabled=not can_init, key="init_campaign"):
+    init_label = "Réactiver le webhook" if inactive_webhook else "Initialiser"
+    if st.button(init_label, disabled=not can_init, key="init_campaign"):
         try:
             initialize_campaign(
                 instantly_client,
@@ -612,7 +629,10 @@ with action_col:
                 target_url=public_url,
                 secret=webhook_secret(),
             )
-            st.success("Campagne initialisée (config, templates, webhook).")
+            if inactive_webhook:
+                st.success("Webhook Instantly réactivé (headers + resume).")
+            else:
+                st.success("Campagne initialisée (config, templates, webhook).")
             st.rerun()
         except Exception as exc:
             st.error(str(exc))
@@ -627,10 +647,18 @@ with TAB_WORKFLOW:
         selected_config and selected_config.get("webhook_auto_send_enabled", True)
     )
     if onboarding_status == "webhook_incomplete":
-        st.error(
-            "Webhook Instantly manquant — aucun E1 auto ne partira. "
-            "Cliquez **Initialiser** (après correction de l'URL si nécessaire)."
-        )
+        if inactive_webhook:
+            error_at = str(inactive_webhook.get("timestamp_error") or "").strip()
+            since = f" (coupé le {error_at})" if error_at else ""
+            st.error(
+                f"Webhook Instantly inactif{since} — aucun E1 auto ne partira. "
+                "Cliquez **Réactiver le webhook**."
+            )
+        else:
+            st.error(
+                "Webhook Instantly manquant — aucun E1 auto ne partira. "
+                "Cliquez **Initialiser** (après correction de l'URL si nécessaire)."
+            )
     elif not global_webhook_on:
         st.warning("Kill-switch global en pause — voir le bandeau en haut de page.")
     elif not campaign_webhook_on:
@@ -665,7 +693,15 @@ with TAB_SETUP:
     elif onboarding_status == "copy_incomplete":
         st.markdown("Config présente — remplissez Email 1, 2 et 3 ci-dessous.")
     elif onboarding_status == "webhook_incomplete":
-        st.markdown("Config présente mais webhook Instantly manquant — cliquez **Initialiser**.")
+        if inactive_webhook:
+            st.markdown(
+                "Config présente mais le webhook Instantly est **inactif** "
+                "(échecs de livraison). Cliquez **Réactiver le webhook**."
+            )
+        else:
+            st.markdown(
+                "Config présente mais webhook Instantly manquant — cliquez **Initialiser**."
+            )
         if webhook_miss_reason:
             st.warning(webhook_miss_reason)
     else:
@@ -676,7 +712,14 @@ with TAB_SETUP:
         st.subheader("Webhook auto-send (cette campagne)")
         campaign_enabled = bool(selected_config.get("webhook_auto_send_enabled", True))
         if onboarding_status == "webhook_incomplete":
-            st.error("Auto-send configuré, mais webhook Instantly absent — E1 auto impossible.")
+            if inactive_webhook:
+                st.error(
+                    "Auto-send configuré, mais webhook Instantly inactif — E1 auto impossible."
+                )
+            else:
+                st.error(
+                    "Auto-send configuré, mais webhook Instantly absent — E1 auto impossible."
+                )
         elif campaign_enabled:
             st.success("Auto-send webhook: **Actif**")
         else:
@@ -723,6 +766,7 @@ with TAB_SETUP:
                     "campaign": w.get("campaign") or w.get("campaign_id"),
                     "url": w.get("target_hook_url"),
                     "status": w.get("status"),
+                    "timestamp_error": w.get("timestamp_error"),
                 }
                 for w in webhooks
             ],

@@ -230,6 +230,56 @@ def classify_lead_emails(
     return classify_sent_items(sent_items, is_no_show=is_no_show, client=client)
 
 
+def flows_from_existing_unified(existing: list[str]) -> set[str]:
+    allowed = set(ALL_HERCULE_FLOWS)
+    return {flow for flow in existing if flow in allowed}
+
+
+def classify_lead_emails_unified(
+    client: InstantlyClient,
+    *,
+    lead_email: str,
+    campaign_id: str,
+) -> tuple[set[Flow], dict[Flow, str], bool]:
+    """Classify sent Unibox emails using all interested + no-show flows."""
+    sent_items = client.list_emails(
+        search=lead_email,
+        campaign_id=campaign_id,
+        email_type="sent",
+        limit=50,
+    )
+    detected: set[Flow] = set()
+    timestamps: dict[Flow, str] = {}
+    low_confidence = False
+
+    for item in sent_items:
+        text, has_body = extract_email_text(item)
+        if not has_body and item.get("id"):
+            detail = fetch_email_detail(client, str(item["id"]))
+            if detail:
+                text, has_body = extract_email_text(detail)
+                item = {**item, **detail}
+
+        if not text.strip():
+            continue
+
+        matched = match_flows(text, allowed_flows=list(ALL_HERCULE_FLOWS))
+        if not matched:
+            continue
+
+        if not has_body:
+            low_confidence = True
+
+        ts = email_timestamp(item)
+        for flow in matched:
+            detected.add(flow)
+            prev = timestamps.get(flow, "")
+            if ts and (not prev or ts > prev):
+                timestamps[flow] = ts
+
+    return detected, timestamps, low_confidence
+
+
 def flow_tag_for_text(text: str, *, is_no_show: bool) -> str | None:
     allowed: list[Flow] = list(NO_SHOW_FLOWS if is_no_show else INTERESTED_FLOWS)
     matched = match_flows(text, allowed_flows=allowed)

@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-import os
 import re
-import time
 from typing import Any, Literal
 
-import requests
-
-from config import _env
+from crm_api import post_json
 from supabase_repo import get_client
 
 LeadCategory = Literal["agence", "entreprise"]
@@ -186,19 +182,8 @@ def upsert_templates(
     ).execute()
 
 
-def _resend_from() -> str:
-    return (
-        _env("BOOKING_RESEND_FROM")
-        or _env("RESEND_FROM")
-        or "Hercule <contact@hercule.dev>"
-    )
-
-
-def _require_resend_key() -> str:
-    key = _env("RESEND_API_KEY")
-    if not key:
-        raise RuntimeError("Set RESEND_API_KEY in crm/.env")
-    return key
+def default_use_html(email_type: str) -> bool:
+    return email_type not in ("immediate", "role_seq_48")
 
 
 def send_test_email(
@@ -208,29 +193,21 @@ def send_test_email(
     email_type: str,
     subject: str,
     body: str,
+    use_html: bool | None = None,
 ) -> dict[str, Any]:
-    rendered_subject, rendered_body = preview_template(subject, body, email_type)
-    api_key = _require_resend_key()
-    response = requests.post(
-        "https://api.resend.com/emails",
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "from": _resend_from(),
-            "to": [to],
-            "subject": f"[TEST {category}] {rendered_subject}",
-            "text": rendered_body,
-        },
-        timeout=30,
-    )
-    try:
-        data = response.json()
-    except ValueError:
-        data = {"error": response.text}
-    if not response.ok:
-        raise RuntimeError(
-            f"Resend HTTP {response.status_code}: {data.get('message') or data}"
-        )
-    return {"ok": True, "to": to, "resend_email_id": data.get("id"), "subject": rendered_subject}
+    payload: dict[str, Any] = {
+        "category": category,
+        "email_type": email_type,
+        "subject": subject,
+        "body": body,
+        "to": to,
+    }
+    if use_html is not None:
+        payload["use_html"] = use_html
+    data = post_json("/api/booking-communication/templates/test", payload)
+    return {
+        "ok": True,
+        "to": data.get("to", to),
+        "resend_email_id": data.get("resend_email_id"),
+        "subject": data.get("subject"),
+    }

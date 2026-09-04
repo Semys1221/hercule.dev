@@ -2,20 +2,16 @@ import { NextResponse } from "next/server";
 
 import { startRoleRecoverySequence } from "@/lib/booking-communication/orchestrator";
 import {
+  parseHtmlByType,
+  verifyBookingCommunicationSecret,
+} from "@/lib/booking-communication/route-utils";
+import type { BookingEmailType } from "@/lib/booking-communication/types";
+import {
   createLinkTrackingClient,
   findLeadByEmail,
   findLeadById,
 } from "@/lib/link-tracking/supabase";
 import type { LeadCategory } from "@/lib/link-tracking/types";
-import type { BookingEmailType } from "@/lib/booking-communication/types";
-
-function verifySecret(request: Request): boolean {
-  const expected =
-    process.env.LINK_TRACKING_WEBHOOK_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim();
-  if (!expected) return false;
-  return request.headers.get("authorization") === `Bearer ${expected}`;
-}
 
 function isCategory(value: unknown): value is LeadCategory {
   return value === "agence" || value === "entreprise";
@@ -41,7 +37,7 @@ function parseRoleRecoveryEmailTypes(value: unknown): BookingEmailType[] | null 
 }
 
 export async function POST(request: Request) {
-  if (!verifySecret(request)) {
+  if (!verifyBookingCommunicationSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -50,6 +46,7 @@ export async function POST(request: Request) {
     category?: string;
     email?: string;
     email_types?: unknown;
+    html_by_type?: unknown;
     partial?: boolean;
   };
   try {
@@ -90,12 +87,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid email_types" }, { status: 400 });
   }
 
+  const htmlByType = parseHtmlByType(body.html_by_type);
+  if (body.html_by_type != null && htmlByType === null) {
+    return NextResponse.json({ error: "invalid html_by_type" }, { status: 400 });
+  }
+
   const seq = await startRoleRecoverySequence({
     category,
     lead,
     triggeredBy: "role_recovery",
     emailTypes: emailTypes ?? undefined,
     partial: body.partial === true,
+    htmlByType: htmlByType ?? undefined,
   });
 
   return NextResponse.json({ ok: true, ...seq });

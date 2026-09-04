@@ -6,6 +6,14 @@ import { isInstantlyWebhookAuthorized } from "@/lib/instantly-bypass/webhook-aut
 
 import type { InstantlyWebhookPayload } from "@/lib/instantly-bypass/types";
 
+/** Instantly disables the webhook after repeated non-2xx responses. Ack business skips. */
+const ACKNOWLEDGED_ERRORS = new Set([
+  "thread_not_found",
+  "missing_reservation_link",
+  "template_empty",
+  "missing_campaign_or_lead_email",
+]);
+
 export async function POST(request: Request) {
   if (!isInstantlyWebhookAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -15,7 +23,7 @@ export async function POST(request: Request) {
   try {
     payload = (await request.json()) as InstantlyWebhookPayload;
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ ok: true, skipped: "invalid_json" });
   }
 
   const eventType = payload.event_type?.trim();
@@ -35,16 +43,12 @@ export async function POST(request: Request) {
   try {
     const result = await handleLeadInterested(payload);
     if (!result.ok) {
+      if (result.error && ACKNOWLEDGED_ERRORS.has(result.error)) {
+        return NextResponse.json({ ok: true, skipped: result.error });
+      }
       return NextResponse.json(
         { ok: false, error: result.error, skipped: result.skipped },
-        {
-          status:
-            result.error === "thread_not_found" ||
-            result.error === "missing_reservation_link" ||
-            result.error === "template_empty"
-              ? 422
-              : 500,
-        },
+        { status: 500 },
       );
     }
     return NextResponse.json({

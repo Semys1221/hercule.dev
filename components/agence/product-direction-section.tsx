@@ -9,24 +9,6 @@ import { cn } from "@/lib/utils"
 
 const PRICING_PLANS = [
   {
-    name: "Hercule",
-    label: "Offre récurrente",
-    price: "2 500 €",
-    priceSuffix: "/mois",
-    tagline: "Jusqu'à 4 nouveaux clients signés par mois par Hercule",
-    summary:
-      "Jusqu'à quatre attributions par mois. Hercule assure la réception des demandes et la mise en relation commerciale.",
-    footer: "0 % de commission sur vos ventes.",
-    featured: false,
-    features: [
-      "Jusqu'à 4 nouveaux clients signés chaque mois par Hercule pour votre agence.",
-      "L'ensemble des avantages de l'offre Starter.",
-      "Hercule prend en charge la vente de vos prestations auprès des prospects, jusqu'à la signature.",
-      "Garantie : 3 000 € minimum de MRR généré par mois, ou une attribution reportée sur le mois suivant sans frais supplémentaires.",
-      "0 % de commission sur les ventes réalisées.",
-    ],
-  },
-  {
     name: "Hercule Starter",
     label: "Offre d'entrée",
     price: "1 489 €",
@@ -36,12 +18,37 @@ const PRICING_PLANS = [
       "Cinq apports d'affaires avec demandes qualifiées. En l'absence de signature, cinq nouvelles attributions sont replanifiées.",
     footer: "Première attribution, risque maîtrisé.",
     featured: true,
+    profileOnly: false,
+    highlight: null as string | null,
     features: [
       "5 demandes clients qualifiées, validées par appel téléphonique selon 5 critères : taille de l'entreprise, durée souhaitée, horizon de résultat, budget mensuel et historique avec les agences.",
       "Attribution exclusive des demandes à votre agence.",
       "Remplacement de toute demande lorsque le prospect est absent au rendez-vous.",
       "0 % de commission sur les ventes réalisées par votre agence.",
       "Garantie : 1 500 € minimum de MRR généré, ou 5 rendez-vous supplémentaires attribués sans frais.",
+    ],
+  },
+  {
+    name: "Hercule",
+    label: "Offre récurrente",
+    price: "2 500 €",
+    priceSuffix: "/mois",
+    tagline: "Nous qualifions et signons nos contrats disponibles pour vous.",
+    summary:
+      "Des demandes déjà qualifiées dans notre pipeline. Vous sélectionnez celles qui vous conviennent — nous réalisons le closing et la signature en interne, à 100 % de vos tarifs.",
+    footer: "Proposée sur votre profil après validation de compatibilité et résultats Starter.",
+    featured: false,
+    profileOnly: true,
+    highlight:
+      "Pas de prospection. Pas d'appels de vente de votre côté. Nous partons de contrats déjà disponibles chez Hercule, que nous signons pour votre agence.",
+    features: [
+      "Éligible sur profil — offre proposée après validation de votre compatibilité.",
+      "Contrats déjà disponibles — demandes qualifiées dans notre pipeline, pas un démarrage à froid.",
+      "Qualification et signature internes — Hercule qualifie et signe nos contrats disponibles pour votre agence.",
+      "Vos tarifs, 0 % commission — chaque contrat signé à vos prix, sans commission.",
+      "Jusqu'à 4 clients signés par mois pour votre agence.",
+      "Garantie : 3 000 € minimum de MRR généré par mois, ou une attribution reportée sur le mois suivant sans frais supplémentaires.",
+      "L'ensemble des avantages de l'offre Starter.",
     ],
   },
 ] as const
@@ -76,7 +83,7 @@ function MetallicTitle({ name }: { name: string }) {
 }
 
 function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; index: number }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(plan.profileOnly)
 
   return (
     <motion.div
@@ -88,7 +95,9 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
         "rounded-xl p-8 relative overflow-hidden bg-[#0A0A0A]",
         plan.featured
           ? "border border-white/[0.18] ring-1 ring-white/[0.06]"
-          : "border border-white/[0.08]",
+          : plan.profileOnly
+            ? "border border-white/[0.05] opacity-55 saturate-50 select-none"
+            : "border border-white/[0.08]",
       )}
     >
       {plan.featured && (
@@ -117,15 +126,40 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
           </span>
         )}
 
+        {plan.profileOnly && (
+          <span className="absolute top-0 right-0 flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-400 border border-white/10 bg-white/[0.02] rounded-md px-2 py-0.5">
+            <Check className="w-3 h-3" />
+            Éligible sur profil
+          </span>
+        )}
+
         <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
         <MetallicTitle name={plan.name} />
         <p className="text-4xl text-white font-semibold tracking-[-0.04em] mb-2">
           {plan.price}
           {plan.priceSuffix && <span className="text-lg text-neutral-500 font-normal">{plan.priceSuffix}</span>}
         </p>
-        <p className={cn("text-sm mb-4", plan.featured ? "text-white font-medium" : "text-neutral-400")}>{plan.tagline}</p>
+        <p
+          className={cn(
+            "mb-4",
+            plan.profileOnly
+              ? "text-lg sm:text-xl text-neutral-300 font-semibold leading-snug"
+              : cn("text-sm", plan.featured ? "text-white font-medium" : "text-neutral-400"),
+          )}
+        >
+          {plan.tagline}
+        </p>
         <p className="text-neutral-400 text-sm mb-4">{plan.summary}</p>
-        <p className={cn("text-sm mb-6", plan.featured ? "text-white font-medium" : "text-neutral-500")}>{plan.footer}</p>
+
+        {plan.highlight && (
+          <p className="text-neutral-300 text-sm font-medium mb-4 border border-white/[0.06] bg-white/[0.02] rounded-lg p-4">
+            {plan.highlight}
+          </p>
+        )}
+
+        <p className={cn("text-sm mb-6", plan.featured ? "text-white font-medium" : "text-neutral-500")}>
+          {plan.footer}
+        </p>
 
         <Collapsible open={open} onOpenChange={setOpen}>
           <div className="border border-white/10 rounded-md overflow-hidden">
@@ -143,7 +177,7 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
                       <Check
                         className={cn(
                           "w-4 h-4 mt-0.5 shrink-0",
-                          plan.featured ? "text-[#0070F3]" : "text-neutral-500",
+                          plan.featured ? "text-[#0070F3]" : "text-neutral-400",
                         )}
                       />
                       {feature}
@@ -194,7 +228,8 @@ export function ProductDirectionSection() {
         >
           Chaque formule ouvre l&apos;accès à des demandes clients qualifiées, attribuées après audit de
           compatibilité. Un contrat signé à 4 000 € pour 1 489 € d&apos;investissement : retour positif dès la
-          première attribution.
+          première attribution. L&apos;offre récurrente à 2 500 €/mois — nous qualifions et signons nos contrats
+          disponibles pour vous — est proposée sur profil aux agences éligibles.
         </motion.p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 items-start">

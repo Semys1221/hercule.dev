@@ -24,6 +24,7 @@ import { sendBookingEmail } from "./send";
 import { h20SendAt, h24SendAt, h48SendAt, planRoleRecoverySchedule } from "./schedule";
 import { renderEmailFromStore } from "./template-store";
 import { buildTemporaryConfirmUrl } from "./templates";
+import { defaultUseHtml } from "./signatures";
 import { confirmationAgenceLinkFor } from "@/lib/link-tracking/urls";
 import { buildReplySubject, buildThreadHeaders, isThreadFollowUp, threadTypesForJob } from "./threading";
 import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
@@ -140,6 +141,7 @@ export async function startBookingSequence(
       scheduledFor,
       triggeredBy,
       idempotencyKey: jobKey(lead.id, emailType, inviteeUri),
+      useHtml: params.htmlByType?.[emailType] ?? null,
     });
     if (job) {
       inserted += 1;
@@ -196,6 +198,7 @@ export async function startRoleRecoverySequence(
       scheduledFor: scheduleByType[emailType],
       triggeredBy,
       idempotencyKey: jobKey(lead.id, emailType, inviteeUri),
+      useHtml: params.htmlByType?.[emailType] ?? null,
     });
     if (job) {
       inserted += 1;
@@ -378,12 +381,14 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     job.email_type === "role_seq_24"
       ? buildTemporaryConfirmUrl(lead.slug, lead.email)
       : confirmationAgenceLinkFor(lead);
+  const useHtml = job.use_html ?? defaultUseHtml(job.email_type);
   return renderEmailFromStore({
     category: job.lead_category,
     emailType: job.email_type,
     firstName: lead.first_name,
     scheduledAt: lead.scheduled_at,
     confirmUrl,
+    useHtml,
   });
 }
 
