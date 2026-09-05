@@ -4,6 +4,7 @@ import { verifyAdminRequest } from "@/lib/admin/auth";
 import {
   readFunnel,
   updateFunnel,
+  deleteFunnel,
 } from "@/lib/admin/funnels/repo";
 import {
   funnelDocumentSchema,
@@ -109,5 +110,27 @@ export async function PATCH(
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ slug: string }> },
+) {
+  if (!verifyAdminRequest(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { slug } = await context.params;
+  const scope = scopeFromQuery(new URL(request.url).searchParams);
+  if (scope instanceof NextResponse) {
+    return scope;
+  }
+
+  try {
+    await deleteFunnel(scope, slug);
+    return new NextResponse(null, { status: 204 });
+  } catch {
+    return NextResponse.json({ error: "Funnel not found" }, { status: 404 });
   }
 }

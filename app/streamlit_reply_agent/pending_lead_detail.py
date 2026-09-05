@@ -8,7 +8,7 @@ from typing import Any
 import streamlit as st
 
 from pending_fetch import PendingReplyRow, is_reply_over_24h
-from pending_table_state import detail_email_key, reply_draft_key
+from pending_table_state import detail_email_key, ensure_draft, reply_draft_key
 from supabase_repo import get_lead_reply, upsert_lead_reply
 from unibox_thread import render_conversation_html
 
@@ -25,6 +25,32 @@ def _config_summary(config: dict[str, Any] | None) -> str:
         f"**Niche:** {niche} · **Target:** {target} · **Status:** {status}\n\n"
         f"**Prompt (extrait):**\n\n{excerpt or '—'}"
     )
+
+
+@st.fragment
+def _render_lead_draft_editor(campaign_id: str, row: PendingReplyRow) -> None:
+    st.markdown("#### Draft IA")
+    draft_key = reply_draft_key(campaign_id, row.lead_email)
+    ensure_draft(campaign_id, row.lead_email, get_lead_reply(campaign_id, row.lead_email))
+    st.text_area(
+        "Réponse agent",
+        height=160,
+        key=draft_key,
+    )
+
+    save_col, close_col = st.columns(2)
+    with save_col:
+        if st.button("Sauvegarder draft", key=f"save_detail_{campaign_id}_{row.lead_email}"):
+            draft_text = str(st.session_state.get(draft_key, "") or "").strip()
+            if not draft_text:
+                st.warning("Le draft ne peut pas être vide.")
+            else:
+                upsert_lead_reply(campaign_id, row.lead_email, draft_text)
+                st.success("Draft enregistré.")
+    with close_col:
+        if st.button("Fermer", key=f"close_detail_{campaign_id}_{row.lead_email}"):
+            st.session_state.pop(detail_email_key(campaign_id), None)
+            st.rerun()
 
 
 @st.dialog("Lead detail", width="large")
@@ -65,28 +91,7 @@ def show_lead_detail(
         except Exception as exc:
             st.warning(f"Unibox indisponible : {exc}")
 
-    st.markdown("#### Draft IA")
-    draft_key = reply_draft_key(campaign_id, row.lead_email)
-    st.session_state[draft_key] = get_lead_reply(campaign_id, row.lead_email)
-    st.text_area(
-        "Réponse agent",
-        height=160,
-        key=draft_key,
-    )
-
-    save_col, close_col = st.columns(2)
-    with save_col:
-        if st.button("Sauvegarder draft", key=f"save_detail_{campaign_id}_{row.lead_email}"):
-            draft_text = str(st.session_state.get(draft_key, "") or "").strip()
-            if not draft_text:
-                st.warning("Le draft ne peut pas être vide.")
-            else:
-                upsert_lead_reply(campaign_id, row.lead_email, draft_text)
-                st.success("Draft enregistré.")
-    with close_col:
-        if st.button("Fermer", key=f"close_detail_{campaign_id}_{row.lead_email}"):
-            st.session_state.pop(detail_email_key(campaign_id), None)
-            st.rerun()
+    _render_lead_draft_editor(campaign_id, row)
 
 
 def maybe_open_detail(

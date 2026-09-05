@@ -35,22 +35,25 @@ def truncate_inbound_text(text: str, max_chars: int = INBOUND_TEXT_MAX_CHARS) ->
 
 def build_global_rules(*, max_sentences: int = 3) -> str:
     n = max(1, min(10, max_sentences))
-    sentence_label = "sentence" if n == 1 else "sentences"
-    return f"""You are Béatrice Meyer, qualification lead at Hercule (hercule.dev).
+    phrase_label = "phrase" if n == 1 else "phrases"
+    return f"""Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
-Output JSON only with keys: should_reply (boolean), reply_text (string|null), reason (string).
+Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string).
 
-Reply rules when should_reply is true:
-- Plain text only in reply_text (no HTML, no markdown).
-- Write exactly {n} {sentence_label} in reply_text.
-- Structure: acknowledge → address the question → redirect with urgent CTA to book a call.
-- Always sign off as "Béatrice Meyer".
-- Add urgency to the CTA (book this week / reserve a slot now).
+Règles quand should_reply est true :
+- Texte brut uniquement dans reply_text (pas de HTML, pas de markdown).
+- Écris exactement {n} {phrase_label} dans reply_text.
+- Rédige reply_text en français.
+- Structure : accuser réception → répondre à la question → CTA urgent pour réserver un appel.
+- Inclus le lien CTA de réservation en URL brute (sera affiché « Réserver » à l'envoi).
+- Termine toujours par « Béatrice Meyer », puis une ligne avec l'URL du site (https://hercule.dev ou https://hercule.dev/cvg si question tarifs).
+- Signe toujours « Béatrice Meyer ».
+- Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
 
-Safety:
-- If the answer is NOT clearly supported by the knowledge pack, set should_reply to false and explain in reason.
-- Never invent prices, SLAs, guarantees, or product features.
-- Use only the CTA link provided below — never invent URLs."""
+Sécurité :
+- Si la réponse n'est PAS clairement couverte par le pack de connaissances, mets should_reply à false et explique dans reason (en français).
+- N'invente jamais de prix, délais, garanties ou fonctionnalités.
+- Utilise uniquement le lien CTA fourni — n'invente jamais d'URL."""
 
 
 GLOBAL_RULES = build_global_rules(max_sentences=3)
@@ -66,15 +69,15 @@ def assemble_system_prompt(
     parts = [
         build_global_rules(max_sentences=max_sentences),
         "",
-        "## Knowledge pack",
+        "## Pack de connaissances",
         build_knowledge_pack(config),
         "",
-        "## Campaign prompt",
+        "## Prompt campagne",
         prompt_snapshot,
     ]
     directive = (custom_directive or "").strip()
     if directive:
-        parts.extend(["", "## Custom directive (operator)", directive])
+        parts.extend(["", "## Directive custom (opérateur)", directive])
     return "\n".join(parts)
 
 
@@ -107,7 +110,7 @@ def _parse_grok_json(content: str) -> dict[str, Any]:
         reply_text = reply_text.strip()
     else:
         reply_text = None
-    reason = str(parsed.get("reason") or "No reason provided").strip()
+    reason = str(parsed.get("reason") or "Aucune raison fournie").strip()
     return {
         "should_reply": should_reply and bool(reply_text),
         "reply_text": reply_text if should_reply and reply_text else None,
@@ -246,11 +249,11 @@ def generate_reply_preview(
     )
     user_prompt = "\n".join(
         [
-            f"Lead email: {lead_email}",
+            f"Email du lead : {lead_email}",
             "",
-            f"CTA link (use this exact URL in reply_text): {cta_link}",
+            f"Lien CTA (utilise exactement cette URL dans reply_text) : {cta_link}",
             "",
-            "Inbound reply to answer:",
+            "Réponse entrante à traiter :",
             truncate_inbound_text(inbound_text),
         ]
     )

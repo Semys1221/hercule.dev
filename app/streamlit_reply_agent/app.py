@@ -705,6 +705,7 @@ def render_problem_tab(
     *,
     instantly_client: InstantlyClient,
     campaign_id: str,
+    config: dict | None = None,
 ) -> None:
     problems = list_problem_messages(campaign_id)
     if not problems:
@@ -734,6 +735,12 @@ def render_problem_tab(
     except Exception as exc:
         st.caption(f"Unibox : {exc}")
 
+    target_type = None
+    if config:
+        raw_target = str(config.get("target_type") or "").strip().lower()
+        if raw_target in ("buyer", "seller"):
+            target_type = raw_target
+
     reply_text = st.text_area("Réponse manuelle", height=160, key="manual_reply")
     if st.button("Envoyer la réponse manuelle", disabled=not reply_text.strip()):
         try:
@@ -742,6 +749,7 @@ def render_problem_tab(
                 campaign_id=campaign_id,
                 inbound=inbound,
                 reply_text=reply_text,
+                target_type=target_type,
             )
             if result["status"] == "sent":
                 st.success(result["detail"])
@@ -849,6 +857,7 @@ if status in ("waiting_for_replies", "paused"):
             render_problem_tab(
                 instantly_client=instantly_client,
                 campaign_id=selected_campaign_id,
+                config=config,
             )
 else:
     render_onboarding(

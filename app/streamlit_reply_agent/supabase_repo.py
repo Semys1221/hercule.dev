@@ -266,7 +266,8 @@ def insert_inbound_message(row: dict[str, Any]) -> str:
         if existing and existing.data:
             return str(existing.data["id"])
 
-    resp = client.table("ai_reply_agent_messages").insert(row).select("id").single().execute()
+    resp = client.table("ai_reply_agent_messages").insert(row).select("id").execute()
     if not resp or not resp.data:
         raise RuntimeError("Failed to insert inbound message")
-    return str(resp.data["id"])
+    inserted = resp.data[0] if isinstance(resp.data, list) else resp.data
+    return str(inserted["id"])

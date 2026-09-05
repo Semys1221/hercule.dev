@@ -2,6 +2,7 @@ import {
   mkdir,
   readdir,
   readFile,
+  rm,
   writeFile,
 } from "node:fs/promises";
 import { join } from "node:path";
@@ -204,6 +205,11 @@ export async function publishFunnel(scope: FunnelScope, slug: string): Promise<F
   }
 
   return updateFunnel(scope, slug, { status: "published" });
+}
+
+export async function deleteFunnel(scope: FunnelScope, slug: string): Promise<void> {
+  await readFunnel(scope, slug);
+  await rm(funnelDirectory(scope, slug), { recursive: true, force: true });
 }
 
 export async function writeEditTicket(

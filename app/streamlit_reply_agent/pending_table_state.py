@@ -84,6 +84,10 @@ def reply_draft_key(campaign_id: str, lead_email: str) -> str:
     return f"pending_reply_text_{campaign_id}_{lead_email.lower()}"
 
 
+def draft_pending_key(campaign_id: str, lead_email: str) -> str:
+    return f"pending_reply_pending_{campaign_id}_{lead_email.lower()}"
+
+
 def sentence_count_key(campaign_id: str, lead_email: str) -> str:
     return f"reply_mode_sentence_count_{campaign_id}_{lead_email.lower()}"
 
@@ -148,7 +152,32 @@ def get_draft(campaign_id: str, lead_email: str) -> str:
 
 
 def set_draft(campaign_id: str, lead_email: str, text: str) -> None:
+    """Set draft before the text_area widget is rendered (initial seed only)."""
     st.session_state[reply_draft_key(campaign_id, lead_email)] = text
+
+
+def queue_draft_update(campaign_id: str, lead_email: str, text: str) -> None:
+    """Queue a draft update for the next rerun (safe after widget render)."""
+    st.session_state[draft_pending_key(campaign_id, lead_email)] = text
+
+
+def apply_pending_draft(campaign_id: str, lead_email: str) -> bool:
+    """Apply queued draft before rendering the text_area widget."""
+    pending_key = draft_pending_key(campaign_id, lead_email)
+    pending = st.session_state.pop(pending_key, None)
+    if pending is None:
+        return False
+    st.session_state[reply_draft_key(campaign_id, lead_email)] = str(pending)
+    return True
+
+
+def ensure_draft(campaign_id: str, lead_email: str, default: str = "") -> None:
+    """Initialize draft in session state before widget render."""
+    if apply_pending_draft(campaign_id, lead_email):
+        return
+    draft_key = reply_draft_key(campaign_id, lead_email)
+    if draft_key not in st.session_state:
+        st.session_state[draft_key] = default
 
 
 def clear_draft(campaign_id: str, lead_email: str) -> None:

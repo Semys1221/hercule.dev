@@ -143,7 +143,6 @@ def render_custom_ai_panel(
 
         if preview.get("should_reply") and preview.get("reply_text"):
             on_generated(str(preview["reply_text"]))
-            st.success("Brouillon mis à jour.")
             st.rerun()
         else:
             reason = str(preview.get("reason") or "L'IA a choisi de ne pas répondre.")

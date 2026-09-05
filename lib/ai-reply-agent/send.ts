@@ -8,24 +8,13 @@ import { resolveThreadForReply } from "@/lib/instantly-bypass/thread-resolver";
 
 import type { InstantlyEmailRecord } from "@/lib/instantly-bypass/types";
 
+import { formatReplyHtml, plainTextToHtml } from "./format-reply-html";
 import { createAiReplyAgentClient } from "./supabase";
 
 import type { AiReplyAgentConfig, AiReplyTargetType } from "./types";
 
 const COLLISION_MINUTES = 15;
 const HERCULE_FINGERPRINTS = ["beatrice meyer", "hercule.dev", "béatrice meyer"];
-
-function plainTextToHtml(text: string): string {
-  const escaped = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  const paragraphs = escaped
-    .split(/\n{2,}/)
-    .map((block) => block.replace(/\n/g, "<br/>"))
-    .filter(Boolean);
-  return paragraphs.map((p) => `<p>${p}</p>`).join("");
-}
 
 function readCtaFromLead(
   lead: { payload?: Record<string, unknown> | null } | null | undefined,
@@ -107,10 +96,6 @@ export async function sendAiReply(params: {
   );
 
   const ctaLink = readCtaFromLead(lead, params.config.target_type);
-  let bodyText = params.replyText;
-  if (!bodyText.includes(ctaLink) && !bodyText.includes("hercule.dev")) {
-    bodyText = `${bodyText}\n\nRéservez un créneau ici : ${ctaLink}`;
-  }
 
   const thread = await resolveThreadForReply(apiKey, {
     leadEmail: params.leadEmail,
@@ -132,7 +117,7 @@ export async function sendAiReply(params: {
     eaccount: thread.eaccount,
     replyToUuid: thread.replyToUuid,
     subject,
-    html: plainTextToHtml(bodyText),
+    html: formatReplyHtml(params.replyText, { ctaLink }),
   });
 
   return { replyToUuid: thread.replyToUuid };

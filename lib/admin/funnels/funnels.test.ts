@@ -7,6 +7,7 @@ import { tmpdir } from "node:os";
 
 import {
   createFunnel,
+  deleteFunnel,
   listFunnels,
   nextDefaultDisplayName,
   publishFunnel,
@@ -132,6 +133,11 @@ async function runRepoTests() {
       ),
     );
     assert.equal(republishedFirst.status, "draft");
+
+    await deleteFunnel(scope, second.slug);
+    const afterDelete = await listFunnels(scope);
+    assert.equal(afterDelete.length, 1);
+    assert.equal(afterDelete[0]?.slug, funnel.slug);
   });
 }
 

@@ -12,18 +12,26 @@ from supabase_repo import (
     update_message_status,
 )
 from thread_resolve import resolve_thread
+from email_format import format_reply_html
+from lead_links import TargetType
 
 
 def plain_text_to_html(text: str) -> str:
-    escaped = (
-        text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    """Legacy alias — prefer format_reply_html for outbound replies."""
+    return format_reply_html(text)
+
+
+def _build_html_body(
+    reply_text: str,
+    *,
+    lead_email: str,
+    target_type: TargetType | None = None,
+) -> str:
+    return format_reply_html(
+        reply_text.strip(),
+        lead_email=lead_email,
+        target_type=target_type,
     )
-    paragraphs = [
-        p.replace("\n", "<br/>")
-        for p in escaped.split("\n\n")
-        if p.strip()
-    ]
-    return "".join(f"<p>{p}</p>" for p in paragraphs)
 
 
 def _format_subject(subject: str) -> str:
@@ -100,6 +108,7 @@ def dispatch_manual_reply(
     campaign_id: str,
     inbound: dict[str, Any],
     reply_text: str,
+    target_type: TargetType | None = None,
 ) -> dict[str, str]:
     lead_email = str(inbound.get("lead_email") or "")
     message_id = str(inbound.get("id") or "")
@@ -112,7 +121,11 @@ def dispatch_manual_reply(
     if not eaccount or not reply_to_uuid:
         raise ValueError("Missing email_account or reply_to_uuid on inbound message")
 
-    html_body = plain_text_to_html(reply_text.strip())
+    html_body = _build_html_body(
+        reply_text,
+        lead_email=lead_email,
+        target_type=target_type,
+    )
     return _send_or_queue(
         instantly_client,
         campaign_id=campaign_id,
@@ -135,6 +148,7 @@ def dispatch_unibox_reply(
     inbound_body: str = "",
     inbound_subject: str = "",
     instantly_email_id: str | None = None,
+    target_type: TargetType | None = None,
 ) -> dict[str, str]:
     thread = resolve_thread(
         instantly_client,
@@ -163,7 +177,11 @@ def dispatch_unibox_reply(
         }
     )
 
-    html_body = plain_text_to_html(reply_text.strip())
+    html_body = _build_html_body(
+        reply_text,
+        lead_email=lead_email,
+        target_type=target_type,
+    )
     return _send_or_queue(
         instantly_client,
         campaign_id=campaign_id,

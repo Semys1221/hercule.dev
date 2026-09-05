@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { InternalJsonPreview } from "@/components/internal/funnels/ui/internal-json-preview";
+import { InternalPreviewJsonSheet } from "@/components/internal/funnels/ui/internal-preview-json-sheet";
+import { InternalResourceToolbar } from "@/components/internal/funnels/ui/internal-resource-toolbar";
+import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
+import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,11 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { AgenceDemandeRow } from "@/lib/admin/demandes";
 import type { DemandeNiche } from "@/lib/demandes-data";
-import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 
 const NICHE_OPTIONS: DemandeNiche[] = [
   "comptabilite",
@@ -50,6 +56,16 @@ type MockupEditorProps = {
   audience: "agence" | "entreprise";
 };
 
+function MockupEditorSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-4 w-full max-w-md" />
+      <Skeleton className="h-10 w-full max-w-sm" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
+}
+
 export function MockupEditor({ audience }: MockupEditorProps) {
   const [cards, setCards] = useState<AgenceDemandeRow[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
@@ -57,6 +73,7 @@ export function MockupEditor({ audience }: MockupEditorProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const [niche, setNiche] = useState<DemandeNiche>("comptabilite");
   const [secteur, setSecteur] = useState("");
@@ -78,6 +95,59 @@ export function MockupEditor({ audience }: MockupEditorProps) {
     () => cards.find((card) => card.external_id === selectedId) ?? null,
     [cards, selectedId],
   );
+
+  const previewData = useMemo(() => {
+    if (!selectedCard) {
+      return null;
+    }
+
+    const origine =
+      originePreset === "Autre" ? origineCustom.trim() : originePreset;
+
+    if (selectedCard.record_type === "demande") {
+      return {
+        external_id: selectedCard.external_id,
+        record_type: selectedCard.record_type,
+        niche,
+        secteur: secteur.trim(),
+        origine,
+        prestation: prestation.trim(),
+        budget: budget.trim(),
+        taille: taille.trim(),
+        zone: zone.trim(),
+        disponibilite: disponibilite.trim(),
+        status: assigned ? "assigned" : "available",
+        available_from: availableFrom,
+        available_until: availableUntil,
+      };
+    }
+
+    return {
+      external_id: selectedCard.external_id,
+      record_type: selectedCard.record_type,
+      secteur: secteur.trim(),
+      titre: titre.trim(),
+      description: description.trim(),
+      note: note.trim(),
+    };
+  }, [
+    assigned,
+    availableFrom,
+    availableUntil,
+    budget,
+    description,
+    disponibilite,
+    niche,
+    note,
+    origineCustom,
+    originePreset,
+    prestation,
+    secteur,
+    selectedCard,
+    taille,
+    titre,
+    zone,
+  ]);
 
   useEffect(() => {
     if (audience !== "agence") {
@@ -161,10 +231,10 @@ export function MockupEditor({ audience }: MockupEditorProps) {
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Chargement des cartes…</p>;
+    return <MockupEditorSkeleton />;
   }
 
-  if (error) {
+  if (error && cards.length === 0) {
     return <FunnelPlaceholder title="Erreur" detail={error} />;
   }
 
@@ -244,6 +314,27 @@ export function MockupEditor({ audience }: MockupEditorProps) {
 
   return (
     <div className="space-y-6">
+      <InternalResourceToolbar
+        edit={{ enabled: false, reason: "Le formulaire ci-dessous est le mode édition" }}
+        preview={previewData ? { enabled: true } : { enabled: false, reason: "Aucune carte sélectionnée" }}
+        promote={{ enabled: false, reason: "Non applicable aux cartes mockup" }}
+        delete={{
+          enabled: false,
+          reason: "Suppression de slots non supportée",
+          confirmTitle: "Supprimer la carte ?",
+          confirmDescription: "Non applicable",
+        }}
+        onPreview={() => setPreviewOpen(true)}
+      />
+
+      <InternalPreviewJsonSheet
+        title="Preview — carte mockup"
+        description={selectedCard?.external_id}
+        data={previewData}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
+
       <p className="text-sm text-muted-foreground">
         Cartes carousel homepage agence (<code>agence_demandes</code>). Édition
         uniquement — pas de création ni suppression de slots.
@@ -269,156 +360,154 @@ export function MockupEditor({ audience }: MockupEditorProps) {
       </div>
 
       {selectedCard ? (
-        <form onSubmit={onSave} className="space-y-6 rounded-lg border p-6">
-          <div>
-            <h3 className="text-lg font-semibold">Édition : {selectedCard.external_id}</h3>
-            <p className="text-sm text-muted-foreground">
+        <Card>
+          <CardHeader>
+            <CardTitle>Édition : {selectedCard.external_id}</CardTitle>
+            <CardDescription>
               Type : {selectedCard.record_type} · Ordre carousel : {selectedCard.sort_order}
-            </p>
-          </div>
-
-          {selectedCard.record_type === "demande" ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Niche</Label>
-                <Select value={niche} onValueChange={(value) => setNiche(value as DemandeNiche)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NICHE_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="secteur">Secteur</Label>
-                <Input id="secteur" value={secteur} onChange={(e) => setSecteur(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Origine (preset)</Label>
-                <Select value={originePreset} onValueChange={setOriginePreset}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[...ORIGINE_PRESETS.filter((value) => value !== "Autre"), "Autre"].map(
-                      (option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              {originePreset === "Autre" ? (
-                <div className="space-y-2">
-                  <Label htmlFor="origine-custom">Origine (saisie libre)</Label>
-                  <Input
-                    id="origine-custom"
-                    value={origineCustom}
-                    onChange={(e) => setOrigineCustom(e.target.value)}
-                  />
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={onSave} className="space-y-6">
+              {selectedCard.record_type === "demande" ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Niche</Label>
+                    <Select value={niche} onValueChange={(value) => setNiche(value as DemandeNiche)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NICHE_OPTIONS.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="secteur">Secteur</Label>
+                    <Input id="secteur" value={secteur} onChange={(e) => setSecteur(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Origine (preset)</Label>
+                    <Select value={originePreset} onValueChange={setOriginePreset}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[...ORIGINE_PRESETS.filter((value) => value !== "Autre"), "Autre"].map(
+                          (option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {originePreset === "Autre" ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="origine-custom">Origine (saisie libre)</Label>
+                      <Input
+                        id="origine-custom"
+                        value={origineCustom}
+                        onChange={(e) => setOrigineCustom(e.target.value)}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="prestation">Prestation</Label>
+                    <Textarea
+                      id="prestation"
+                      value={prestation}
+                      onChange={(e) => setPrestation(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="budget">Budget</Label>
+                    <Input id="budget" value={budget} onChange={(e) => setBudget(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="taille">Taille</Label>
+                    <Input id="taille" value={taille} onChange={(e) => setTaille(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zone">Zone</Label>
+                    <Input id="zone" value={zone} onChange={(e) => setZone(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="disponibilite">Disponibilité</Label>
+                    <Input
+                      id="disponibilite"
+                      value={disponibilite}
+                      onChange={(e) => setDisponibilite(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Switch checked={assigned} onCheckedChange={setAssigned} id="assigned" />
+                    <Label htmlFor="assigned">Attribué</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="available-from">Disponible à partir du</Label>
+                    <Input
+                      id="available-from"
+                      type="date"
+                      value={availableFrom}
+                      onChange={(e) => setAvailableFrom(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="available-until">Disponible jusqu&apos;au</Label>
+                    <Input
+                      id="available-until"
+                      type="date"
+                      value={availableUntil}
+                      onChange={(e) => setAvailableUntil(e.target.value)}
+                    />
+                  </div>
                 </div>
-              ) : null}
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="prestation">Prestation</Label>
-                <Textarea
-                  id="prestation"
-                  value={prestation}
-                  onChange={(e) => setPrestation(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="budget">Budget</Label>
-                <Input id="budget" value={budget} onChange={(e) => setBudget(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="taille">Taille</Label>
-                <Input id="taille" value={taille} onChange={(e) => setTaille(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zone">Zone</Label>
-                <Input id="zone" value={zone} onChange={(e) => setZone(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="disponibilite">Disponibilité</Label>
-                <Input
-                  id="disponibilite"
-                  value={disponibilite}
-                  onChange={(e) => setDisponibilite(e.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <Switch checked={assigned} onCheckedChange={setAssigned} id="assigned" />
-                <Label htmlFor="assigned">Attribué</Label>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="available-from">Disponible à partir du</Label>
-                <Input
-                  id="available-from"
-                  type="date"
-                  value={availableFrom}
-                  onChange={(e) => setAvailableFrom(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="available-until">Disponible jusqu&apos;au</Label>
-                <Input
-                  id="available-until"
-                  type="date"
-                  value={availableUntil}
-                  onChange={(e) => setAvailableUntil(e.target.value)}
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="teaser-secteur">Secteur</Label>
-                <Input
-                  id="teaser-secteur"
-                  value={secteur}
-                  onChange={(e) => setSecteur(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="titre">Titre</Label>
-                <Input id="titre" value={titre} onChange={(e) => setTitre(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="note">Note</Label>
-                <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} />
-              </div>
-            </div>
-          )}
+              ) : (
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="teaser-secteur">Secteur</Label>
+                    <Input
+                      id="teaser-secteur"
+                      value={secteur}
+                      onChange={(e) => setSecteur(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="titre">Titre</Label>
+                    <Input id="titre" value={titre} onChange={(e) => setTitre(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="note">Note</Label>
+                    <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} />
+                  </div>
+                </div>
+              )}
 
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          {success ? <p className="text-sm text-green-600">{success}</p> : null}
+              {error ? <InternalStatusAlert variant="error" message={error} /> : null}
+              {success ? <InternalStatusAlert variant="success" message={success} /> : null}
 
-          <Button type="submit" disabled={saving}>
-            {saving ? "Enregistrement…" : "Enregistrer"}
-          </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Enregistrement…" : "Enregistrer"}
+              </Button>
 
-          <details className="rounded-md border p-4 text-sm">
-            <summary className="cursor-pointer font-medium">Aperçu JSON</summary>
-            <pre className="mt-3 overflow-auto whitespace-pre-wrap">
-              {JSON.stringify(selectedCard, null, 2)}
-            </pre>
-          </details>
-        </form>
+              <InternalJsonPreview label="Aperçu JSON" data={selectedCard} />
+            </form>
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

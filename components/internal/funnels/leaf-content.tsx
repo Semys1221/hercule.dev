@@ -10,6 +10,7 @@ import { FicheForm } from "@/components/internal/funnels/fiche-form";
 import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
 import { MockupEditor } from "@/components/internal/funnels/mockup-editor";
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
+import { InternalLeafToolbar } from "@/components/internal/funnels/ui/internal-leaf-toolbar";
 import { getLegalMarkdownForLeaf } from "@/lib/admin/legal-preview";
 import { scopeForParsedLeaf } from "@/lib/admin/funnels/routing";
 import { FUNNEL_LIST_LEAF_KEYS } from "@/lib/admin/funnels/schema";
@@ -74,10 +75,13 @@ export function FunnelLeafContent({
 
   if (leafKey === "dashboard") {
     return (
-      <FunnelPlaceholder
-        title="Dashboard KPIs"
-        detail={`KPIs funnel à venir — conversion discovery → closing → booked (${audience}).`}
-      />
+      <>
+        <InternalLeafToolbar leafKey={leafKey} />
+        <FunnelPlaceholder
+          title="Dashboard KPIs"
+          detail={`KPIs funnel à venir — conversion discovery → closing → booked (${audience}).`}
+        />
+      </>
     );
   }
 
@@ -101,10 +105,13 @@ export function FunnelLeafContent({
     const title = EMAIL_TITLES[leafKey] ?? leafKey;
     const toolHint = EMAIL_TOOL_HINTS[leafKey] ?? "à venir";
     return (
-      <FunnelPlaceholder
-        title={title}
-        detail={`Shell ${audience}. Outil associé : \`${toolHint}\`.`}
-      />
+      <>
+        <InternalLeafToolbar leafKey={leafKey} />
+        <FunnelPlaceholder
+          title={title}
+          detail={`Shell ${audience}. Outil associé : \`${toolHint}\`.`}
+        />
+      </>
     );
   }
 

@@ -1,3 +1,4 @@
+import { shouldBypassSendWindow } from "./constants";
 import { hasBypassEvent, recordBypassEvent } from "./jobs";
 import { executeBypassFlow } from "./send-flow";
 import { isWithinSendWindow, nextSendSlot } from "./send-window";
@@ -12,7 +13,40 @@ import {
   type BypassJob,
 } from "./scheduled-jobs";
 
-import type { BypassFlow, InstantlyLeadRecord } from "./types";
+import type {
+  BypassFlow,
+  InstantlyLeadRecord,
+  InstantlyWebhookPayload,
+} from "./types";
+
+function webhookContextFromJob(job: BypassJob) {
+  const payload = job.payload ?? {};
+  const webhookPayload = payload.webhook_payload as
+    | InstantlyWebhookPayload
+    | undefined;
+  const webhookReceivedAt =
+    typeof payload.webhook_received_at === "string" &&
+    payload.webhook_received_at.trim()
+      ? new Date(payload.webhook_received_at)
+      : undefined;
+  const preferredEmailId =
+    typeof payload.preferred_email_id === "string" &&
+    payload.preferred_email_id.trim()
+      ? payload.preferred_email_id.trim()
+      : undefined;
+  const fallbackEaccount =
+    typeof payload.fallback_eaccount === "string" &&
+    payload.fallback_eaccount.trim()
+      ? payload.fallback_eaccount.trim()
+      : undefined;
+
+  return {
+    webhookPayload,
+    webhookReceivedAt,
+    preferredEmailId,
+    fallbackEaccount,
+  };
+}
 
 const SENDABLE_FLOWS = new Set<BypassFlow>([
   "interested_email1",
@@ -33,7 +67,7 @@ async function executeBypassJob(
     return "skipped";
   }
 
-  if (!isWithinSendWindow()) {
+  if (!shouldBypassSendWindow(job.payload) && !isWithinSendWindow()) {
     await rescheduleBypassJob(job.id, nextSendSlot());
     return "rescheduled";
   }
@@ -44,6 +78,7 @@ async function executeBypassJob(
     typeof job.payload?.body_html === "string" && job.payload.body_html.trim()
       ? job.payload.body_html
       : null;
+  const webhookContext = webhookContextFromJob(job);
 
   const result = await executeBypassFlow({
     flow,
@@ -53,6 +88,10 @@ async function executeBypassJob(
     leadId: leadIdFromJob(job),
     idempotencyKey: job.idempotency_key,
     customBodyHtml,
+    webhookPayload: webhookContext.webhookPayload,
+    webhookReceivedAt: webhookContext.webhookReceivedAt,
+    preferredEmailId: webhookContext.preferredEmailId,
+    fallbackEaccount: webhookContext.fallbackEaccount,
   });
 
   if (!result.ok) {
@@ -90,7 +129,7 @@ export async function dispatchDueBypassJobs(limit = 50): Promise<{
         continue;
       }
 
-      if (!isWithinSendWindow()) {
+      if (!shouldBypassSendWindow(job.payload) && !isWithinSendWindow()) {
         await rescheduleBypassJob(job.id, nextSendSlot());
         rescheduled += 1;
         continue;

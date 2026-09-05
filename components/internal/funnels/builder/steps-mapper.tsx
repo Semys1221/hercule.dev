@@ -5,6 +5,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -111,9 +112,9 @@ export function StepsMapper({ scope, funnel, onSaved, onContinue }: StepsMapperP
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {fields.map((field, index) => (
-            <div key={field.id} className="space-y-3 rounded-lg border p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Étape {index + 1}</p>
+            <Card key={field.id}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Étape {index + 1}</CardTitle>
                 <Button
                   type="button"
                   variant="ghost"
@@ -123,7 +124,8 @@ export function StepsMapper({ scope, funnel, onSaved, onContinue }: StepsMapperP
                 >
                   −
                 </Button>
-              </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
               <FormField
                 control={form.control}
                 name={`steps.${index}.name`}
@@ -154,7 +156,8 @@ export function StepsMapper({ scope, funnel, onSaved, onContinue }: StepsMapperP
                   </FormItem>
                 )}
               />
-            </div>
+              </CardContent>
+            </Card>
           ))}
 
           <Button

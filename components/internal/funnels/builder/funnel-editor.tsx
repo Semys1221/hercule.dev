@@ -4,13 +4,17 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
+import { FunnelOptionsMenu } from "@/components/internal/funnels/builder/funnel-options-menu";
 import { FunnelList } from "@/components/internal/funnels/builder/funnel-list";
 import { LayoutPicker } from "@/components/internal/funnels/builder/layout-picker";
 import { StepEditor } from "@/components/internal/funnels/builder/step-editor";
 import { StepsMapper } from "@/components/internal/funnels/builder/steps-mapper";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
-import type { FunnelCatalog } from "@/lib/admin/funnels/catalog";
+import type { FunnelCatalog } from "@/lib/admin/funnels/catalog-types";
 import { funnelEditorHref, funnelListHref } from "@/lib/admin/funnels/routing";
 import type { FunnelDocument, FunnelScope } from "@/lib/admin/funnels/schema";
 
@@ -31,6 +35,16 @@ type FunnelEditorProps = {
 };
 
 type WizardPhase = "layout" | "map" | "step";
+
+function FunnelEditorSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-64" />
+      <Skeleton className="h-10 w-full max-w-md" />
+      <Skeleton className="h-72 w-full" />
+    </div>
+  );
+}
 
 export function FunnelEditor({ scope, navPath, funnelSlug }: FunnelEditorProps) {
   const router = useRouter();
@@ -94,88 +108,105 @@ export function FunnelEditor({ scope, navPath, funnelSlug }: FunnelEditorProps) 
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Chargement du funnel…</p>;
+    return <FunnelEditorSkeleton />;
   }
 
   if (error || !funnel || !catalog) {
-    return <p className="text-sm text-destructive">{error ?? "Funnel introuvable"}</p>;
+    return (
+      <InternalStatusAlert
+        variant="error"
+        message={error ?? "Funnel introuvable"}
+      />
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">{funnel.displayName}</h2>
-          <p className="text-sm text-muted-foreground">
-            {funnel.slug} · {funnel.status} · {funnel.publicPath}
-          </p>
+      <div className="sticky top-0 z-10 space-y-4 bg-background/95 pb-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold">{funnel.displayName}</h2>
+            <p className="text-sm text-muted-foreground">
+              {funnel.slug} · {funnel.status} · {funnel.publicPath}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <FunnelOptionsMenu
+              context="editor"
+              scope={scope}
+              navPath={navPath}
+              slug={funnel.slug}
+              displayName={funnel.displayName}
+              status={funnel.status}
+              funnel={funnel}
+              catalog={catalog}
+              onPublished={() => void load()}
+              onError={setError}
+            />
+            <Button asChild variant="outline" size="sm">
+              <Link href={funnelListHref(navPath)}>Retour à la liste</Link>
+            </Button>
+          </div>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href={funnelListHref(navPath)}>Retour à la liste</Link>
-        </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant={phase === "layout" ? "default" : "outline"}
-          onClick={() => goTo("layout")}
-        >
-          Layout
-        </Button>
-        <Button
-          size="sm"
-          variant={phase === "map" ? "default" : "outline"}
-          onClick={() => goTo("map")}
-        >
-          Étapes
-        </Button>
-        <Button
-          size="sm"
-          variant={phase === "step" ? "default" : "outline"}
-          disabled={funnel.steps.length === 0}
-          onClick={() => goTo("step", activeStep?.id)}
-        >
-          Contenu
-        </Button>
-      </div>
+      <Tabs
+        value={phase}
+        onValueChange={(value) => {
+          if (value === "layout") {
+            goTo("layout");
+          } else if (value === "map") {
+            goTo("map");
+          } else if (value === "step") {
+            goTo("step", activeStep?.id);
+          }
+        }}
+      >
+        <TabsList>
+          <TabsTrigger value="layout">Layout</TabsTrigger>
+          <TabsTrigger value="map">Étapes</TabsTrigger>
+          <TabsTrigger value="step" disabled={funnel.steps.length === 0}>
+            Contenu
+          </TabsTrigger>
+        </TabsList>
 
-      {phase === "layout" ? (
-        <LayoutPicker
-          scope={scope}
-          funnel={funnel}
-          layouts={catalog.layouts}
-          onSaved={setFunnel}
-          onContinue={() => goTo("map")}
-        />
-      ) : null}
+        <TabsContent value="layout" className="mt-6">
+          <LayoutPicker
+            scope={scope}
+            funnel={funnel}
+            layouts={catalog.layouts}
+            onSaved={setFunnel}
+            onContinue={() => goTo("map")}
+          />
+        </TabsContent>
 
-      {phase === "map" ? (
-        <StepsMapper
-          scope={scope}
-          funnel={funnel}
-          onSaved={setFunnel}
-          onContinue={(firstStepId) => goTo("step", firstStepId)}
-        />
-      ) : null}
+        <TabsContent value="map" className="mt-6">
+          <StepsMapper
+            scope={scope}
+            funnel={funnel}
+            onSaved={setFunnel}
+            onContinue={(firstStepId) => goTo("step", firstStepId)}
+          />
+        </TabsContent>
 
-      {phase === "step" && activeStep ? (
-        <StepEditor
-          scope={scope}
-          funnel={funnel}
-          catalog={catalog}
-          step={activeStep}
-          stepIndex={funnel.steps.findIndex((item) => item.id === activeStep.id)}
-          onSaved={setFunnel}
-          onSelectStep={(nextStepId) => goTo("step", nextStepId)}
-        />
-      ) : null}
-
-      {phase === "step" && !activeStep ? (
-        <p className="text-sm text-muted-foreground">
-          Mappez d&apos;abord les étapes du funnel.
-        </p>
-      ) : null}
+        <TabsContent value="step" className="mt-6">
+          {activeStep ? (
+            <StepEditor
+              scope={scope}
+              funnel={funnel}
+              catalog={catalog}
+              step={activeStep}
+              stepIndex={funnel.steps.findIndex((item) => item.id === activeStep.id)}
+              onSaved={setFunnel}
+              onSelectStep={(nextStepId) => goTo("step", nextStepId)}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Mappez d&apos;abord les étapes du funnel.
+            </p>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

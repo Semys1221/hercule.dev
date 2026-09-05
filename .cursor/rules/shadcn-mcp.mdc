@@ -1,0 +1,46 @@
+---
+description: Toujours utiliser le MCP shadcn pour l'UI — jamais de HTML/React custom
+alwaysApply: true
+---
+
+# shadcn MCP obligatoire pour l'UI
+
+Pour tout travail frontend (pages, layouts, forms, composants), utiliser le MCP `plugin-shadcn-shadcn` avant d'écrire du code.
+
+## Workflow obligatoire
+
+1. `search_items_in_registries` — trouver le composant ou block adapté.
+2. Si absent du projet → `get_add_command_for_items` puis `npx shadcn@latest add ...`.
+3. `get_item_examples_from_registries` (ex. `sidebar-demo`, `card-demo`, `form example`) — composer depuis le code officiel.
+4. `view_items_in_registries` — inspecter le source si besoin.
+5. Après création → `get_audit_checklist`.
+
+## Imports
+
+```tsx
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+```
+
+## Interdictions
+
+- Pas de `<button>`, `<input>`, `<select>`, `<table>`, `<dialog>` HTML bruts.
+- Pas de layouts/forms/lists custom quand un block shadcn existe.
+- Pas de réimplémentation d'un composant déjà dans `components/ui/`.
+
+## Exceptions
+
+- `components/ui/` (primitives shadcn).
+- HTML statique `public/`, templates email, apps Streamlit (`app/streamlit_*`), scripts Python.
+- Balises sémantiques (`main`, `section`, `nav`) avec Tailwind — OK si elles wrappent des composants shadcn.
+
+## Exemple
+
+```tsx
+// MAUVAIS
+<button className="rounded bg-blue-500 px-4 py-2">Save</button>
+
+// BON
+import { Button } from "@/components/ui/button"
+<Button>Save</Button>
+```

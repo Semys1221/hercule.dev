@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
+import { FunnelOptionsMenu } from "@/components/internal/funnels/builder/funnel-options-menu";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
 import { funnelEditorHref } from "@/lib/admin/funnels/routing";
 import type { FunnelScope, FunnelSummary } from "@/lib/admin/funnels/schema";
@@ -119,22 +121,6 @@ export function FunnelList({ scope, navPath, title }: FunnelListProps) {
     }
   }
 
-  async function handlePublish(slug: string) {
-    setError(null);
-    try {
-      const response = await fetch(funnelApiUrl(`/${slug}/publish`, scope), {
-        method: "POST",
-      });
-      const body = (await response.json()) as { error?: string };
-      if (!response.ok) {
-        throw new Error(body.error ?? "Erreur de publication");
-      }
-      await loadFunnels();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,10 +133,13 @@ export function FunnelList({ scope, navPath, title }: FunnelListProps) {
         <Button onClick={() => setCreateOpen(true)}>New</Button>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <InternalStatusAlert variant="error" message={error} /> : null}
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Chargement…</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-36 w-full" />
+          <Skeleton className="h-36 w-full" />
+        </div>
       ) : funnels.length === 0 ? (
         <Card>
           <CardHeader>
@@ -180,20 +169,17 @@ export function FunnelList({ scope, navPath, title }: FunnelListProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
-                <Button asChild size="sm">
-                  <Link href={funnelEditorHref(navPath, funnel.slug, { phase: "layout" })}>
-                    Éditer
-                  </Link>
-                </Button>
-                {funnel.status !== "published" ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => void handlePublish(funnel.slug)}
-                  >
-                    Publier
-                  </Button>
-                ) : null}
+                <FunnelOptionsMenu
+                  context="list"
+                  scope={scope}
+                  navPath={navPath}
+                  slug={funnel.slug}
+                  displayName={funnel.displayName}
+                  status={funnel.status}
+                  onPublished={() => void loadFunnels()}
+                  onDeleted={() => void loadFunnels()}
+                  onError={setError}
+                />
               </CardContent>
             </Card>
           ))}

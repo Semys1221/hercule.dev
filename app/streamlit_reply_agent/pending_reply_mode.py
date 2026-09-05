@@ -8,20 +8,23 @@ from typing import Any
 import streamlit as st
 
 from inbox import dispatch_unibox_reply
+from lead_links import TargetType
 from lead_tags import TAG_FILTER_ORDER, TAG_LABELS, count_by_tag
 from pending_bulk_actions import bulk_send
 from pending_fetch import PendingReplyRow, filter_rows_by_tag, resolve_inbound_body
 from pending_table_state import (
     REPLY_MODE_PAGE_SIZE,
+    apply_pending_draft,
     clear_inbound_body_cache,
+    draft_pending_key,
     inbound_body_key,
     is_draft_dirty,
     page_has_unsaved_drafts,
     page_key,
     paginate_rows,
+    queue_draft_update,
     reply_draft_key,
     reply_mode_exit_confirm_key,
-    set_draft,
     set_reply_mode_enabled,
 )
 from reply_mode_ui import (
@@ -30,6 +33,15 @@ from reply_mode_ui import (
 from grok_usage_ui import render_grok_usage_badge
 from config import grok_api_key_status
 from supabase_repo import get_global_auto_send_enabled, get_lead_replies_batch, upsert_lead_reply
+
+
+def _target_type_from_config(config: dict[str, Any]) -> TargetType | None:
+    value = str(config.get("target_type") or "").strip().lower()
+    if value == "seller":
+        return "seller"
+    if value == "buyer":
+        return "buyer"
+    return None
 
 
 def _resolve_cached_inbound_body(
@@ -49,8 +61,11 @@ def _resolve_cached_inbound_body(
 def _seed_drafts(campaign_id: str, rows: list[PendingReplyRow], db_drafts: dict[str, str]) -> None:
     for row in rows:
         draft_key = reply_draft_key(campaign_id, row.lead_email)
-        if draft_key not in st.session_state:
-            st.session_state[draft_key] = db_drafts.get(row.lead_email.lower(), "")
+        if draft_key in st.session_state:
+            continue
+        if draft_pending_key(campaign_id, row.lead_email) in st.session_state:
+            continue
+        st.session_state[draft_key] = db_drafts.get(row.lead_email.lower(), "")
 
 
 def _save_draft(campaign_id: str, lead_email: str) -> None:
@@ -83,6 +98,119 @@ def _remove_emails_from_cache(cache_key: str, emails: set[str]) -> None:
         if row.lead_email.lower() not in emails
     ]
     st.session_state[cache_key] = remaining
+
+
+@st.fragment
+def _render_reply_mode_lead_card(
+    *,
+    instantly_client: Any,
+    campaign_id: str,
+    cache_key: str,
+    config: dict[str, Any],
+    row: PendingReplyRow,
+    inbound_body: str,
+    db_draft: str,
+    target_type: TargetType | None,
+    invalidate_thread_cache: Callable[..., None],
+) -> None:
+    email_key = row.lead_email.lower()
+    draft_key = reply_draft_key(campaign_id, row.lead_email)
+
+    with st.container(border=True):
+        header = (
+            f"**{row.lead_email}** · [{row.interest_label}] · "
+            f"{(row.last_reply_at or '')[:16]}"
+        )
+        if row.last_reply_subject:
+            header += f" · {row.last_reply_subject}"
+        st.markdown(header)
+
+        col_in, col_draft = st.columns(2)
+        with col_in:
+            st.markdown("**Message prospect**")
+            st.text_area(
+                "Message prospect",
+                value=inbound_body or "(vide)",
+                height=200,
+                key=f"reply_mode_inbound_{campaign_id}_{email_key}",
+                label_visibility="collapsed",
+                disabled=True,
+            )
+        with col_draft:
+            st.markdown("**Brouillon IA**")
+            if apply_pending_draft(campaign_id, row.lead_email):
+                st.success("Brouillon mis à jour.")
+            st.text_area(
+                "Brouillon IA",
+                height=200,
+                key=draft_key,
+                label_visibility="collapsed",
+            )
+            draft_text = str(st.session_state.get(draft_key, "") or "").strip()
+            has_draft = bool(draft_text)
+            dirty = is_draft_dirty(campaign_id, row.lead_email, db_draft)
+            if not has_draft:
+                st.caption("Pas de brouillon — utilisez Try agent en mode normal.")
+            elif dirty:
+                st.caption("non enregistré")
+
+            render_custom_ai_panel(
+                campaign_id=campaign_id,
+                lead_email=row.lead_email,
+                config=config,
+                inbound_body=inbound_body,
+                on_generated=lambda text, lead_email=row.lead_email: queue_draft_update(
+                    campaign_id, lead_email, text
+                ),
+            )
+
+            action_col1, action_col2 = st.columns(2)
+            with action_col1:
+                if st.button(
+                    "Enregistrer",
+                    key=f"reply_mode_save_{campaign_id}_{email_key}",
+                    disabled=not has_draft,
+                ):
+                    try:
+                        _save_draft(campaign_id, row.lead_email)
+                        st.success("Brouillon enregistré.")
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(str(exc))
+            with action_col2:
+                if st.button(
+                    "Envoyer",
+                    key=f"reply_mode_send_{campaign_id}_{email_key}",
+                    disabled=not has_draft,
+                ):
+                    try:
+                        if dirty:
+                            _save_draft(campaign_id, row.lead_email)
+                        draft_text = str(st.session_state.get(draft_key, "") or "").strip()
+                        result = dispatch_unibox_reply(
+                            instantly_client,
+                            campaign_id=campaign_id,
+                            lead_email=row.lead_email,
+                            reply_text=draft_text,
+                            inbound_body=inbound_body,
+                            inbound_subject=row.last_reply_subject,
+                            instantly_email_id=row.last_reply_id or None,
+                            target_type=target_type,
+                        )
+                        clear_inbound_body_cache(campaign_id, row.lead_email)
+                        invalidate_thread_cache(
+                            campaign_id,
+                            row.lead_email,
+                            row.thread_id or None,
+                        )
+                        _remove_emails_from_cache(cache_key, {email_key})
+                        if result["status"] == "sent":
+                            st.success(result["detail"])
+                        else:
+                            st.info(result["detail"])
+                        st.rerun()
+                    except Exception as exc:
+                        st.error(str(exc))
 
 
 def _render_exit_bar(
@@ -207,101 +335,21 @@ def render_reply_mode_view(
             for row in page_rows
         }
 
+    target_type = _target_type_from_config(config)
+
     for row in page_rows:
         email_key = row.lead_email.lower()
-        inbound_body = inbound_by_email.get(email_key, "")
-        db_draft = db_drafts.get(email_key, "")
-        draft_key = reply_draft_key(campaign_id, row.lead_email)
-        dirty = is_draft_dirty(campaign_id, row.lead_email, db_draft)
-        has_draft = bool(str(st.session_state.get(draft_key, "") or "").strip())
-
-        with st.container(border=True):
-            header = (
-                f"**{row.lead_email}** · [{row.interest_label}] · "
-                f"{(row.last_reply_at or '')[:16]}"
-            )
-            if row.last_reply_subject:
-                header += f" · {row.last_reply_subject}"
-            st.markdown(header)
-
-            col_in, col_draft = st.columns(2)
-            with col_in:
-                st.markdown("**Message prospect**")
-                st.text_area(
-                    "Message prospect",
-                    value=inbound_body or "(vide)",
-                    height=200,
-                    key=f"reply_mode_inbound_{campaign_id}_{email_key}",
-                    label_visibility="collapsed",
-                    disabled=True,
-                )
-            with col_draft:
-                st.markdown("**Brouillon IA**")
-                st.text_area(
-                    "Brouillon IA",
-                    height=200,
-                    key=draft_key,
-                    label_visibility="collapsed",
-                )
-                if not has_draft:
-                    st.caption("Pas de brouillon — utilisez Try agent en mode normal.")
-                elif dirty:
-                    st.caption("non enregistré")
-
-                render_custom_ai_panel(
-                    campaign_id=campaign_id,
-                    lead_email=row.lead_email,
-                    config=config,
-                    inbound_body=inbound_body,
-                    on_generated=lambda text: set_draft(campaign_id, row.lead_email, text),
-                )
-
-                action_col1, action_col2 = st.columns(2)
-                with action_col1:
-                    if st.button(
-                        "Enregistrer",
-                        key=f"reply_mode_save_{campaign_id}_{email_key}",
-                        disabled=not has_draft,
-                    ):
-                        try:
-                            _save_draft(campaign_id, row.lead_email)
-                            st.success("Brouillon enregistré.")
-                            st.rerun()
-                        except Exception as exc:
-                            st.error(str(exc))
-                with action_col2:
-                    if st.button(
-                        "Envoyer",
-                        key=f"reply_mode_send_{campaign_id}_{email_key}",
-                        disabled=not has_draft,
-                    ):
-                        try:
-                            if dirty:
-                                _save_draft(campaign_id, row.lead_email)
-                            draft_text = str(st.session_state.get(draft_key, "") or "").strip()
-                            result = dispatch_unibox_reply(
-                                instantly_client,
-                                campaign_id=campaign_id,
-                                lead_email=row.lead_email,
-                                reply_text=draft_text,
-                                inbound_body=inbound_body,
-                                inbound_subject=row.last_reply_subject,
-                                instantly_email_id=row.last_reply_id or None,
-                            )
-                            clear_inbound_body_cache(campaign_id, row.lead_email)
-                            invalidate_thread_cache(
-                                campaign_id,
-                                row.lead_email,
-                                row.thread_id or None,
-                            )
-                            _remove_emails_from_cache(cache_key, {email_key})
-                            if result["status"] == "sent":
-                                st.success(result["detail"])
-                            else:
-                                st.info(result["detail"])
-                            st.rerun()
-                        except Exception as exc:
-                            st.error(str(exc))
+        _render_reply_mode_lead_card(
+            instantly_client=instantly_client,
+            campaign_id=campaign_id,
+            cache_key=cache_key,
+            config=config,
+            row=row,
+            inbound_body=inbound_by_email.get(email_key, ""),
+            db_draft=db_drafts.get(email_key, ""),
+            target_type=target_type,
+            invalidate_thread_cache=invalidate_thread_cache,
+        )
 
     nav_col1, nav_col2, nav_col3, bulk_col1, bulk_col2 = st.columns([1, 2, 1, 1, 1])
     with nav_col1:
@@ -362,6 +410,7 @@ def render_reply_mode_view(
                 campaign_id,
                 pending_rows,
                 page_emails,
+                target_type=target_type,
                 on_progress=on_send_progress,
                 on_sent=on_sent,
             )

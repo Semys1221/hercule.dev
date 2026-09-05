@@ -11,6 +11,7 @@ from typing import Any, Literal
 from agent_preview import generate_reply_preview
 from config import bulk_try_agent_concurrency
 from inbox import dispatch_unibox_reply
+from lead_links import TargetType
 from lead_tags import INTERESTED_STATUS
 from pending_fetch import PendingReplyRow, resolve_inbound_body
 from pending_table_state import clear_checkbox
@@ -173,6 +174,7 @@ def bulk_send(
     rows: list[PendingReplyRow],
     emails: set[str],
     *,
+    target_type: TargetType | None = None,
     on_progress: Callable[[str, int, int], None] | None = None,
     on_sent: Callable[[PendingReplyRow], None] | None = None,
 ) -> BulkActionResult:
@@ -204,6 +206,7 @@ def bulk_send(
                 inbound_body=row.last_reply_preview,
                 inbound_subject=row.last_reply_subject,
                 instantly_email_id=row.last_reply_id or None,
+                target_type=target_type,
             )
             if on_sent:
                 on_sent(row)

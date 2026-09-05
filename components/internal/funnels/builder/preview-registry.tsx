@@ -2,7 +2,7 @@ import { DefaultSplitLayout } from "@/components/funnels/layouts/default-split";
 import { FormStepPreview } from "@/components/funnels/presets/form-step";
 import { QuestionStepPreview } from "@/components/funnels/presets/question-step";
 import { PreviewFrame } from "@/components/internal/funnels/builder/preview-frame";
-import type { LayoutCatalogEntry } from "@/lib/admin/funnels/catalog";
+import type { LayoutCatalogEntry } from "@/lib/admin/funnels/catalog-types";
 import type { StepPreset } from "@/lib/admin/funnels/schema";
 
 type LayoutPreviewProps = {

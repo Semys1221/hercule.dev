@@ -13,22 +13,25 @@ const MAX_OUTPUT_TOKENS = 200;
 
 export function buildGlobalRules(maxSentences = 3): string {
   const n = Math.max(1, Math.min(10, maxSentences));
-  const sentenceLabel = n === 1 ? "sentence" : "sentences";
-  return `You are Béatrice Meyer, qualification lead at Hercule (hercule.dev).
+  const phraseLabel = n === 1 ? "phrase" : "phrases";
+  return `Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
-Output JSON only with keys: should_reply (boolean), reply_text (string|null), reason (string).
+Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string).
 
-Reply rules when should_reply is true:
-- Plain text only in reply_text (no HTML, no markdown).
-- Write exactly ${n} ${sentenceLabel} in reply_text.
-- Structure: acknowledge → address the question → redirect with urgent CTA to book a call.
-- Always sign off as "Béatrice Meyer".
-- Add urgency to the CTA (book this week / reserve a slot now).
+Règles quand should_reply est true :
+- Texte brut uniquement dans reply_text (pas de HTML, pas de markdown).
+- Écris exactement ${n} ${phraseLabel} dans reply_text.
+- Rédige reply_text en français.
+- Structure : accuser réception → répondre à la question → CTA urgent pour réserver un appel.
+- Inclus le lien CTA de réservation en URL brute (sera affiché « Réserver » à l'envoi).
+- Termine toujours par « Béatrice Meyer », puis une ligne avec l'URL du site (https://hercule.dev ou https://hercule.dev/cvg si question tarifs).
+- Signe toujours « Béatrice Meyer ».
+- Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
 
-Safety:
-- If the answer is NOT clearly supported by the knowledge pack, set should_reply to false and explain in reason.
-- Never invent prices, SLAs, guarantees, or product features.
-- Use only the CTA link provided below — never invent URLs.`;
+Sécurité :
+- Si la réponse n'est PAS clairement couverte par le pack de connaissances, mets should_reply à false et explique dans reason (en français).
+- N'invente jamais de prix, délais, garanties ou fonctionnalités.
+- Utilise uniquement le lien CTA fourni — n'invente jamais d'URL.`;
 }
 
 function assembleSystemPrompt(params: {
@@ -40,15 +43,15 @@ function assembleSystemPrompt(params: {
   const parts = [
     buildGlobalRules(params.maxSentences ?? 3),
     "",
-    "## Knowledge pack",
+    "## Pack de connaissances",
     params.knowledgePack,
     "",
-    "## Campaign prompt",
+    "## Prompt campagne",
     params.promptSnapshot,
   ];
   const directive = params.customDirective?.trim();
   if (directive) {
-    parts.push("", "## Custom directive (operator)", directive);
+    parts.push("", "## Directive custom (opérateur)", directive);
   }
   return parts.join("\n");
 }
@@ -81,7 +84,7 @@ function parseGrokJson(content: string): GroqReplyDecision {
       ? parsed.reply_text.trim()
       : null;
   const reason =
-    typeof parsed.reason === "string" ? parsed.reason.trim() : "No reason provided";
+    typeof parsed.reason === "string" ? parsed.reason.trim() : "Aucune raison fournie";
   return {
     should_reply: shouldReply && Boolean(replyText),
     reply_text: shouldReply && replyText ? replyText : null,
@@ -177,11 +180,11 @@ export async function generateReplyDecision(params: {
   });
 
   const userPrompt = [
-    `Lead email: ${params.leadEmail}`,
+    `Email du lead : ${params.leadEmail}`,
     "",
-    `CTA link (use this exact URL in reply_text): ${ctaLink}`,
+    `Lien CTA (utilise exactement cette URL dans reply_text) : ${ctaLink}`,
     "",
-    "Inbound reply to answer:",
+    "Réponse entrante à traiter :",
     truncateInboundText(params.inboundText),
   ].join("\n");
 

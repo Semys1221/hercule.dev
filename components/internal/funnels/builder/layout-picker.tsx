@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/card";
 import { EditTicketDialog } from "@/components/internal/funnels/builder/edit-ticket-dialog";
 import { LayoutPreview } from "@/components/internal/funnels/builder/preview-registry";
+import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
-import type { LayoutCatalogEntry } from "@/lib/admin/funnels/catalog";
+import type { LayoutCatalogEntry } from "@/lib/admin/funnels/catalog-types";
 import type { FunnelDocument, FunnelScope } from "@/lib/admin/funnels/schema";
 
 type LayoutPickerProps = {
@@ -99,7 +100,7 @@ export function LayoutPicker({
         </p>
       </div>
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <InternalStatusAlert variant="error" message={error} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         {layouts.map((layout) => (
@@ -129,7 +130,7 @@ export function LayoutPicker({
                     setEditOpen(true);
                   }}
                 >
-                  Edit
+                  Brief layout
                 </Button>
               </div>
             </CardContent>

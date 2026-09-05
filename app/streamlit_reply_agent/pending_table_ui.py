@@ -8,6 +8,7 @@ from typing import Any
 import streamlit as st
 
 from config import grok_api_key_status
+from lead_links import TargetType
 from pending_bulk_actions import bulk_delete, bulk_send, bulk_try_agent
 from pending_fetch import PendingReplyRow, is_reply_over_24h
 from pending_lead_detail import maybe_open_detail
@@ -23,6 +24,17 @@ from pending_table_state import (
     set_all_selected,
 )
 from supabase_repo import get_lead_replies_batch
+
+
+def _target_type_from_config(config: dict | None) -> TargetType | None:
+    if not config:
+        return None
+    value = str(config.get("target_type") or "").strip().lower()
+    if value == "seller":
+        return "seller"
+    if value == "buyer":
+        return "buyer"
+    return None
 
 
 def _show_bulk_result(label: str, result) -> None:
@@ -247,6 +259,7 @@ def render_pending_table(
                 campaign_id,
                 pending_rows,
                 selected_emails,
+                target_type=_target_type_from_config(config),
                 on_progress=on_send_progress,
                 on_sent=on_sent,
             )

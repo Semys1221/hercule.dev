@@ -15,19 +15,23 @@ from agent_preview import (
 class BuildGlobalRulesTests(unittest.TestCase):
     def test_single_sentence(self) -> None:
         rules = build_global_rules(max_sentences=1)
-        self.assertIn("Write exactly 1 sentence in reply_text.", rules)
+        self.assertIn("Écris exactement 1 phrase dans reply_text.", rules)
 
     def test_multiple_sentences(self) -> None:
         rules = build_global_rules(max_sentences=5)
-        self.assertIn("Write exactly 5 sentences in reply_text.", rules)
+        self.assertIn("Écris exactement 5 phrases dans reply_text.", rules)
 
     def test_clamps_above_ten(self) -> None:
         rules = build_global_rules(max_sentences=99)
-        self.assertIn("Write exactly 10 sentences in reply_text.", rules)
+        self.assertIn("Écris exactement 10 phrases dans reply_text.", rules)
 
     def test_clamps_below_one(self) -> None:
         rules = build_global_rules(max_sentences=0)
-        self.assertIn("Write exactly 1 sentence in reply_text.", rules)
+        self.assertIn("Écris exactement 1 phrase dans reply_text.", rules)
+
+    def test_requires_french_reply_text(self) -> None:
+        rules = build_global_rules(max_sentences=2)
+        self.assertIn("Rédige reply_text en français.", rules)
 
 
 class AssembleSystemPromptTests(unittest.TestCase):
@@ -45,11 +49,11 @@ class AssembleSystemPromptTests(unittest.TestCase):
             "Campaign body",
             max_sentences=3,
         )
-        self.assertIn("## Knowledge pack", prompt)
+        self.assertIn("## Pack de connaissances", prompt)
         self.assertIn("KNOWLEDGE", prompt)
-        self.assertIn("## Campaign prompt", prompt)
+        self.assertIn("## Prompt campagne", prompt)
         self.assertIn("Campaign body", prompt)
-        self.assertIn("Write exactly 3 sentences in reply_text.", prompt)
+        self.assertIn("Écris exactement 3 phrases dans reply_text.", prompt)
 
     @patch("agent_preview.build_knowledge_pack", return_value="KNOWLEDGE")
     def test_includes_custom_directive_when_provided(self, _mock_knowledge: object) -> None:
@@ -58,7 +62,7 @@ class AssembleSystemPromptTests(unittest.TestCase):
             "Campaign body",
             custom_directive="Be more direct.",
         )
-        self.assertIn("## Custom directive (operator)", prompt)
+        self.assertIn("## Directive custom (opérateur)", prompt)
         self.assertIn("Be more direct.", prompt)
 
     @patch("agent_preview.build_knowledge_pack", return_value="KNOWLEDGE")
@@ -68,7 +72,7 @@ class AssembleSystemPromptTests(unittest.TestCase):
             "Campaign body",
             custom_directive="   ",
         )
-        self.assertNotIn("## Custom directive (operator)", prompt)
+        self.assertNotIn("## Directive custom (opérateur)", prompt)
 
 
 class TruncateInboundTests(unittest.TestCase):

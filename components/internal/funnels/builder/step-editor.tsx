@@ -6,6 +6,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -28,7 +29,7 @@ import { CursorImpactField } from "@/components/internal/funnels/builder/cursor-
 import { PresetPreview } from "@/components/internal/funnels/builder/preview-registry";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
 import { buildStepContext } from "@/lib/admin/funnels/context";
-import type { FunnelCatalog } from "@/lib/admin/funnels/catalog";
+import type { FunnelCatalog } from "@/lib/admin/funnels/catalog-types";
 import {
   defaultFormFields,
   type FunnelDocument,
@@ -354,8 +355,11 @@ export function StepEditor({
             ) : null}
 
             {preset === "form" ? (
-              <div className="space-y-3 rounded-lg border p-4">
-                <FormLabel>Champs du formulaire</FormLabel>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Champs du formulaire</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                 {(fields ?? []).map((fieldConfig, index) => (
                   <div key={fieldConfig.id} className="flex items-center justify-between gap-3">
                     <label className="flex items-center gap-2 text-sm">
@@ -389,7 +393,8 @@ export function StepEditor({
                     </label>
                   </div>
                 ))}
-              </div>
+                </CardContent>
+              </Card>
             ) : null}
 
             {preset === "other" ? (

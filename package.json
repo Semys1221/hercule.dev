@@ -47,6 +47,8 @@
     "audit-streamlit-duplicate-e1": "python3 ./scripts/streamlit_subsequence/auditDuplicateE1.py --campaign-id 2cd03978-93b3-4462-ad88-f0fb0f35d59c",
     "smoke-instantly-bypass-send-window": "tsx ./scripts/instantly-bypass/smokeSendWindow.ts",
     "smoke-instantly-bypass-e1-thread-guard": "tsx ./scripts/instantly-bypass/smokeE1ThreadGuard.ts",
+    "smoke-instantly-bypass-e1-human-delay": "tsx ./scripts/instantly-bypass/smokeE1HumanDelay.ts",
+    "smoke-instantly-bypass-e1-human-delay-e2e": "tsx --env-file=.env ./scripts/instantly-bypass/smokeE1HumanDelayE2e.ts",
     "smoke-instantly-pipeline-advance": "tsx ./scripts/instantly-bypass/smokePipelineAdvance.ts",
     "configure-instantly-bypass-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configureBypassCronJob.ts",
     "configure-instantly-pipeline-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configurePipelineCronJob.ts",

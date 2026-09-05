@@ -2,10 +2,11 @@ import { notFound } from "next/navigation";
 
 import { FunnelHub } from "@/components/internal/funnels/hub";
 import { FunnelLeafContent } from "@/components/internal/funnels/leaf-content";
+import { segmentsFromNavPath } from "@/components/internal/funnels/ui/breadcrumb-segments";
+import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
 import { parseWorkspacePath } from "@/lib/admin/funnels/routing";
 import {
   AUDIENCE_LABELS,
-  breadcrumb,
   getChildren,
   hubTitle,
   isAudience,
@@ -28,10 +29,10 @@ export default async function FunnelWorkspacePage({
   if (parsed.kind === "hub") {
     return (
       <main className="mx-auto max-w-5xl px-6 py-8">
-        <div className="mb-8 space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Funnels — {label}</h1>
-          <p className="text-sm text-muted-foreground">{breadcrumb(parsed.navPath)}</p>
-        </div>
+        <InternalPageHeader
+          title={`Funnels — ${label}`}
+          segments={segmentsFromNavPath(parsed.navPath)}
+        />
         <FunnelHub
           title={hubTitle(parsed.navPath)}
           path={parsed.navPath}
@@ -48,10 +49,10 @@ export default async function FunnelWorkspacePage({
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
-      <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Funnels — {label}</h1>
-        <p className="text-sm text-muted-foreground">{breadcrumb(crumbPath)}</p>
-      </div>
+      <InternalPageHeader
+        title={`Funnels — ${label}`}
+        segments={segmentsFromNavPath(crumbPath)}
+      />
 
       {isHub(parsed.navPath) ? (
         <FunnelHub

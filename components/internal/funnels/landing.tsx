@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,13 +21,10 @@ const AUDIENCES: Audience[] = ["agence", "entreprise"];
 export function FunnelLanding() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Funnels</h1>
-        <p className="text-muted-foreground">
-          Cockpit interne — sélectionnez une audience pour accéder aux onglets Sales,
-          Onboarding, Dashboard, CVG et Emails.
-        </p>
-      </div>
+      <InternalPageHeader
+        title="Funnels"
+        description="Cockpit interne — sélectionnez une audience pour accéder aux onglets Sales, Onboarding, Dashboard, CVG et Emails."
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         {AUDIENCES.map((audience) => (

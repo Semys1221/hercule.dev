@@ -1,14 +1,17 @@
 import { findLeadByEmailInCampaign, getInstantlyApiKey } from "./client";
+import { e1WebhookScheduledFor } from "./constants";
 import { threadAlreadyHasE1 } from "./e1-thread-guard";
 import {
   hasBypassEvent,
   interestedIdempotencyKey,
   recordBypassEvent,
 } from "./jobs";
-import { executeBypassFlow } from "./send-flow";
-import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate, templateRequiresReservationLink } from "./templates";
-
 import { upsertPipelineStep } from "./pipeline";
+import {
+  hasPendingBypassJob,
+  insertBypassJob,
+} from "./scheduled-jobs";
+import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate, templateRequiresReservationLink } from "./templates";
 
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
 
@@ -110,28 +113,33 @@ export async function handleLeadInterested(
       return { ok: true, skipped: "e1_already_in_thread" };
     }
 
-    const result = await executeBypassFlow({
-      flow: "interested_email1",
-      campaignId,
-      leadEmail,
-      lead,
-      leadId: lead?.id,
-      idempotencyKey,
-      webhookPayload: payload,
-      webhookReceivedAt,
-      preferredEmailId: payload.email_id as string | undefined,
-      fallbackEaccount: payload.email_account as string | undefined,
-    });
-
-    if (!result.ok) {
-      return { ok: false, error: result.error };
+    if (await hasPendingBypassJob(idempotencyKey)) {
+      return { ok: true, skipped: "already_scheduled" };
     }
 
-    return {
-      ok: true,
-      latencyMs: result.latencyMs,
-      replyToUuid: result.replyToUuid,
-    };
+    const scheduledFor = e1WebhookScheduledFor(webhookReceivedAt);
+    await insertBypassJob({
+      idempotencyKey,
+      campaignId,
+      leadEmail,
+      templateKey: "interested_email1",
+      scheduledFor,
+      payload: {
+        lead_id: lead?.id ?? null,
+        lead: lead ?? null,
+        webhook_payload: payload,
+        webhook_received_at: webhookReceivedAt.toISOString(),
+        preferred_email_id:
+          typeof payload.email_id === "string" ? payload.email_id : undefined,
+        fallback_eaccount:
+          typeof payload.email_account === "string"
+            ? payload.email_account
+            : undefined,
+        bypass_send_window: true,
+      },
+    });
+
+    return { ok: true, skipped: "scheduled" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await recordBypassEvent({
