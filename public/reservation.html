@@ -215,6 +215,11 @@
             line-height: 1.6;
         }
 
+        .booking-intro-date {
+            color: var(--foreground);
+            font-weight: 500;
+        }
+
         .calendly-wrapper {
             position: relative;
             width: 100%;
@@ -613,7 +618,7 @@
 
             <div id="view-booking" class="view">
                 <h2>Planifier votre échange</h2>
-                <p class="booking-intro">Choisissez un créneau pour votre audit de compatibilité avec nos demandes.</p>
+                <p class="booking-intro" id="booking-intro" aria-live="polite">Choisissez un créneau pour votre audit de compatibilité avec nos demandes.</p>
                 <div class="calendly-wrapper">
                     <div class="calendly-loader" id="calendly-loader" aria-live="polite">
                         <div class="loader-spinner" aria-hidden="true"></div>
@@ -863,6 +868,49 @@
             }
         }
 
+        function renderAvailabilityMessage(container, data) {
+            if (!container || !data || !data.ok || !data.isFullyBooked || !data.message) return;
+
+            var msg = data.message;
+            container.textContent = '';
+
+            function appendText(text) {
+                if (!text) return;
+                container.appendChild(document.createTextNode(text));
+            }
+
+            function appendDate(text) {
+                if (!text) return;
+                var span = document.createElement('span');
+                span.className = 'booking-intro-date';
+                span.textContent = text;
+                container.appendChild(span);
+            }
+
+            appendText(msg.prefix);
+            if (msg.fullFrom) {
+                appendDate(msg.fullFrom);
+                appendText(msg.middle);
+                appendDate(msg.fullUntil);
+                appendText(msg.suffix);
+                appendDate(msg.nextAvailable);
+                appendText(msg.end);
+            }
+        }
+
+        async function fetchAvailabilityMessage(event) {
+            var container = document.getElementById('booking-intro');
+            if (!container) return;
+
+            try {
+                var response = await fetch('/api/calendly/availability?event=' + encodeURIComponent(event));
+                var data = await response.json();
+                renderAvailabilityMessage(container, data);
+            } catch (err) {
+                // keep fallback intro text
+            }
+        }
+
         function showManageBookingFallback() {
             var loading = document.querySelector('.manage-booking-loading');
             var actions = document.getElementById('manage-booking-actions');
@@ -1002,6 +1050,7 @@
             showConfirmation();
         } else {
             void trackClick();
+            void fetchAvailabilityMessage('agence');
 
             function bootCalendly() {
                 if (window.Calendly) {

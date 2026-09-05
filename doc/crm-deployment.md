@@ -6,8 +6,11 @@ Use this after merging the migration to production.
 
 1. Link this repo to Vercel (or transfer domain from old hercule.dev project).
 2. Copy environment variables from the old project — see [`.env.example`](../../.env.example).
-3. Required vars: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `INSTANTLY_API_KEY`, `RESEND_API_KEY`, `CRON_SECRET`, `LINK_TRACKING_WEBHOOK_SECRET`, `CALENDLY_WEBHOOK_SIGNING_KEY`.
-4. Tracking URLs (already in `.env.example`):
+3. Required vars: `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `INSTANTLY_API_KEY`, `RESEND_API_KEY`, `CRON_SECRET`, `LINK_TRACKING_WEBHOOK_SECRET`, `CALENDLY_WEBHOOK_SIGNING_KEY`, `CALENDLY_API_TOKEN`.
+4. Optional Calendly event type URIs for reservation availability banners (auto-resolved from scheduling URL if omitted):
+   - `CALENDLY_EVENT_TYPE_URI_AGENCE` — `https://calendly.com/hercule-connect/30min`
+   - `CALENDLY_EVENT_TYPE_URI_ENTREPRISE` — `https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone`
+5. Tracking URLs (already in `.env.example`):
    - `TRACKING_BASE_URL_AGENCE=https://www.hercule.dev/reservation.html`
    - `TRACKING_BASE_URL_ENTREPRISE=https://www.hercule.dev/reservation-entreprise.html`
    - `BOOKING_CONFIRM_BASE_URL=https://www.hercule.dev/confirm-reservation.html`
