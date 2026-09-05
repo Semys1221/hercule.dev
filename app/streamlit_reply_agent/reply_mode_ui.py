@@ -108,6 +108,8 @@ def render_custom_ai_panel(
     if not is_open:
         return
 
+    render_sentence_count_toggle(campaign_id, lead_email)
+
     quota_snapshot = get_cached_grok_usage_snapshot()
     if usage_severity(quota_snapshot) in ("warn", "critical"):
         st.caption("Quota Grok bas — évitez les regénérations inutiles.")

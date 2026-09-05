@@ -7,9 +7,12 @@ from unittest.mock import MagicMock, patch
 
 from grok_usage import (
     GrokUsageSnapshot,
+    _fetch_management_prepaid,
+    _resolve_team_id,
     fetch_grok_usage,
     format_usage_label,
     parse_billing_credits,
+    parse_management_key_validation,
     parse_prepaid_balance,
     usage_severity,
 )
@@ -77,6 +80,79 @@ class FormatUsageLabelTests(unittest.TestCase):
         self.assertEqual(label, "Grok · $12.50 restants")
 
 
+class ParseManagementKeyValidationTests(unittest.TestCase):
+    def test_scope_team_uses_scope_id(self) -> None:
+        team_id = parse_management_key_validation(
+            {
+                "scope": "SCOPE_TEAM",
+                "scopeId": "65c1e471-205f-4566-9c5a-07198bcdf4ce",
+                "teamId": "legacy-team-id",
+            }
+        )
+        self.assertEqual(team_id, "65c1e471-205f-4566-9c5a-07198bcdf4ce")
+
+    def test_fallback_team_id(self) -> None:
+        team_id = parse_management_key_validation({"teamId": "c9a0c990-53e6-491e-8df7-b9f18e6983ac"})
+        self.assertEqual(team_id, "c9a0c990-53e6-491e-8df7-b9f18e6983ac")
+
+
+class ResolveTeamIdTests(unittest.TestCase):
+    @patch("grok_usage.grok_team_id", return_value="env-team-123")
+    def test_prefers_env_team_id(self, *_mocks: object) -> None:
+        team_id, error = _resolve_team_id("mgmt-key", "inference-key")
+        self.assertEqual(team_id, "env-team-123")
+        self.assertIsNone(error)
+
+    @patch("grok_usage.grok_team_id", return_value="")
+    @patch("grok_usage._fetch_team_id_from_management")
+    @patch("grok_usage._fetch_team_id_from_inference")
+    def test_management_validation_before_inference(
+        self,
+        mock_inference: MagicMock,
+        mock_management: MagicMock,
+        *_mocks: object,
+    ) -> None:
+        mock_management.return_value = ("mgmt-team-456", None)
+
+        team_id, error = _resolve_team_id("mgmt-key", "inference-key")
+
+        self.assertEqual(team_id, "mgmt-team-456")
+        self.assertIsNone(error)
+        mock_inference.assert_not_called()
+
+    @patch("grok_usage.grok_team_id", return_value="")
+    @patch("grok_usage._fetch_team_id_from_management", return_value=(None, "HTTP 404"))
+    @patch("grok_usage._fetch_team_id_from_inference", return_value=("api-team-789", None))
+    def test_inference_fallback_camel_case(
+        self,
+        mock_inference: MagicMock,
+        mock_management: MagicMock,
+        *_mocks: object,
+    ) -> None:
+        team_id, error = _resolve_team_id("mgmt-key", "inference-key")
+
+        self.assertEqual(team_id, "api-team-789")
+        self.assertIsNone(error)
+        mock_management.assert_called_once_with("mgmt-key")
+        mock_inference.assert_called_once_with("inference-key")
+
+
+class FetchManagementPrepaidTests(unittest.TestCase):
+    @patch("grok_usage._resolve_team_id", return_value=("team-abc", None))
+    @patch("grok_usage._fetch_json")
+    def test_prepaid_url_uses_resolved_team(self, mock_fetch_json: MagicMock, *_mocks: object) -> None:
+        mock_fetch_json.return_value = ({"total": {"val": "-1500"}}, None)
+
+        snapshot = _fetch_management_prepaid("mgmt-key", "inference-key")
+
+        mock_fetch_json.assert_called_once_with(
+            "https://management-api.x.ai/v1/billing/teams/team-abc/prepaid/balance",
+            "mgmt-key",
+        )
+        self.assertEqual(snapshot.remaining_usd, 15.0)
+        self.assertEqual(snapshot.source, "management_prepaid")
+
+
 class FetchGrokUsageTests(unittest.TestCase):
     @patch("grok_usage.grok_management_key", return_value="")
     @patch("grok_usage.grok_api_key", return_value="inference-key")
@@ -88,6 +164,32 @@ class FetchGrokUsageTests(unittest.TestCase):
         snapshot = fetch_grok_usage()
         self.assertEqual(snapshot.remaining_percent, 20.0)
         mock_get.assert_called_once()
+
+    @patch("grok_usage.grok_management_key", return_value="mgmt-key")
+    @patch("grok_usage.grok_api_key", return_value="inference-key")
+    @patch("grok_usage.requests.get")
+    def test_fetch_prepaid_fallback(self, mock_get: MagicMock, *_mocks: object) -> None:
+        billing_response = MagicMock()
+        billing_response.ok = False
+        billing_response.status_code = 404
+
+        validation_response = MagicMock()
+        validation_response.ok = True
+        validation_response.json.return_value = {
+            "scope": "SCOPE_TEAM",
+            "scopeId": "team-xyz",
+        }
+
+        prepaid_response = MagicMock()
+        prepaid_response.ok = True
+        prepaid_response.json.return_value = {"total": {"val": "-2000"}}
+
+        mock_get.side_effect = [billing_response, validation_response, prepaid_response]
+
+        snapshot = fetch_grok_usage()
+        self.assertEqual(snapshot.remaining_usd, 20.0)
+        self.assertEqual(snapshot.source, "management_prepaid")
+        self.assertEqual(mock_get.call_count, 3)
 
     @patch("grok_usage.grok_management_key", return_value="")
     @patch("grok_usage.grok_api_key", return_value="inference-key")

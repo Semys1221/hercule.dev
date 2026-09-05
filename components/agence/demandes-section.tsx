@@ -79,7 +79,7 @@ export function DemandesSection({ demandes, teaser }: DemandesSectionProps) {
         transition={{ delay: 0.25 }}
         className="relative mt-10 w-full overflow-hidden"
       >
-        <Marquee smoothPause className="[--duration:45s] [--gap:1rem]">
+        <Marquee pauseOnHover className="[--duration:45s] [--gap:1rem]">
           {demandes.map((demande) => (
             <div key={demande.id} className={cn(CARD_WIDTH, "shrink-0")}>
               <DemandeCard demande={demande} />

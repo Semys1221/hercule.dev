@@ -26,8 +26,6 @@ from pending_table_state import (
 )
 from reply_mode_ui import (
     render_custom_ai_panel,
-    render_selectable_readonly,
-    render_sentence_count_toggle,
 )
 from grok_usage_ui import render_grok_usage_badge
 from config import grok_api_key_status
@@ -229,10 +227,16 @@ def render_reply_mode_view(
             col_in, col_draft = st.columns(2)
             with col_in:
                 st.markdown("**Message prospect**")
-                render_selectable_readonly(inbound_body or "(vide)")
+                st.text_area(
+                    "Message prospect",
+                    value=inbound_body or "(vide)",
+                    height=200,
+                    key=f"reply_mode_inbound_{campaign_id}_{email_key}",
+                    label_visibility="collapsed",
+                    disabled=True,
+                )
             with col_draft:
                 st.markdown("**Brouillon IA**")
-                render_sentence_count_toggle(campaign_id, row.lead_email)
                 st.text_area(
                     "Brouillon IA",
                     height=200,

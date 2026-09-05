@@ -110,6 +110,11 @@ def grok_management_key() -> str:
     return env("XAI_MANAGEMENT_KEY") or env("XAI_MGMT_KEY") or env("GROK_MANAGEMENT_KEY")
 
 
+def grok_team_id() -> str:
+    # Team ID from console.x.ai URL: console.x.ai/team/<team_id>/settings
+    return env("XAI_TEAM_ID") or env("GROK_TEAM_ID")
+
+
 def groq_api_key() -> str:
     """Deprecated alias — use grok_api_key()."""
     return grok_api_key()

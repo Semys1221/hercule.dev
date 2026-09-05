@@ -101,16 +101,13 @@ function DemandeStatusBadge({ status }: { status: DemandeStatus }) {
   return null
 }
 
-function PostulerOverlay() {
+function PostulerActionBar() {
   return (
-    <div
-      className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-zinc-950/80 via-zinc-950/25 to-transparent pb-8 opacity-0 transition-opacity duration-500 ease-out group-hover/card:opacity-100"
-      aria-hidden="true"
-    >
-      <span className="inline-flex translate-y-1.5 items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-zinc-900 opacity-0 transition-all delay-100 duration-400 ease-out group-hover/card:translate-y-0 group-hover/card:opacity-100">
+    <div className="mt-3 flex items-center justify-between border-t border-zinc-800/80 pt-3">
+      <span className="text-sm font-medium text-zinc-400 transition-colors duration-150 group-hover/card:text-white">
         Postuler
-        <ArrowRight className="size-4" />
       </span>
+      <ArrowRight className="size-4 text-zinc-500 transition-all duration-150 group-hover/card:translate-x-0.5 group-hover/card:text-white" />
     </div>
   )
 }
@@ -127,13 +124,15 @@ export function DemandeCard({ demande }: { demande: DemandeContrat }) {
       href={CALENDLY_AGENCE_URL}
       aria-label={ariaLabel}
       className={cn(
-        "group/card relative block h-full cursor-pointer rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-white/20",
-        isAssigned && "hover:opacity-65 transition-opacity duration-500 ease-out",
+        "group/card relative z-0 block h-full cursor-pointer rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-white/20",
+        isAssigned
+          ? "hover:opacity-65 transition-opacity duration-500 ease-out"
+          : "transition-[transform,box-shadow,border-color] duration-150 ease-out hover:z-20 hover:-translate-y-0.5 focus-visible:z-20 motion-reduce:transition-none motion-reduce:hover:translate-y-0",
       )}
     >
       <Card
         className={cn(
-          "relative h-full min-h-[260px] gap-0 overflow-hidden rounded-2xl border-zinc-800 bg-zinc-900/50 py-0 shadow-none transition-all duration-500 ease-out",
+          "relative h-full min-h-[260px] gap-0 overflow-hidden rounded-2xl border-zinc-800 bg-zinc-900/50 py-0 shadow-none transition-[border-color,background-color,box-shadow] duration-150 ease-out",
           !isAssigned &&
             "group-hover/card:border-zinc-600 group-hover/card:bg-zinc-900/80 group-hover/card:ring-1 group-hover/card:ring-white/10",
           isAssigned && "opacity-55 saturate-50 select-none",
@@ -168,9 +167,8 @@ export function DemandeCard({ demande }: { demande: DemandeContrat }) {
             <MetaRow label="Budget" value={demande.budget} />
             <MetaRow label="Taille" value={demande.taille} />
           </div>
+          {!isAssigned && <PostulerActionBar />}
         </CardContent>
-
-        {!isAssigned && <PostulerOverlay />}
       </Card>
     </a>
   )

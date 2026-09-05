@@ -7,10 +7,11 @@ from typing import Any, Literal
 
 import requests
 
-from config import grok_api_key, grok_management_key
+from config import grok_api_key, grok_management_key, grok_team_id
 
 XAI_API_BASE = "https://api.x.ai/v1"
 XAI_MGMT_BASE = "https://management-api.x.ai/v1"
+XAI_MGMT_AUTH_BASE = "https://management-api.x.ai"
 _REQUEST_TIMEOUT = 15
 
 
@@ -194,18 +195,70 @@ def _fetch_billing_credits(inference_key: str) -> GrokUsageSnapshot:
     )
 
 
-def _fetch_team_id(inference_key: str) -> tuple[str | None, str | None]:
-    data, error = _fetch_json(f"{XAI_API_BASE}/api-key", inference_key)
+def _extract_team_id(payload: dict[str, Any]) -> str | None:
+    for key in ("teamId", "team_id"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def parse_management_key_validation(payload: dict[str, Any]) -> str | None:
+    scope = str(payload.get("scope") or "").upper()
+    if scope == "SCOPE_TEAM":
+        scope_id = payload.get("scopeId")
+        if isinstance(scope_id, str) and scope_id.strip():
+            return scope_id.strip()
+    return _extract_team_id(payload)
+
+
+def _fetch_team_id_from_management(management_key: str) -> tuple[str | None, str | None]:
+    data, error = _fetch_json(
+        f"{XAI_MGMT_AUTH_BASE}/auth/management-keys/validation",
+        management_key,
+    )
     if error or data is None:
         return None, error
-    team_id = data.get("team_id")
-    if isinstance(team_id, str) and team_id.strip():
-        return team_id.strip(), None
+    team_id = parse_management_key_validation(data)
+    if team_id:
+        return team_id, None
+    return None, "team_id absent (validation management)"
+
+
+def _fetch_team_id_from_inference(inference_key: str) -> tuple[str | None, str | None]:
+    for path in ("/me", "/api-key"):
+        data, error = _fetch_json(f"{XAI_API_BASE}{path}", inference_key)
+        if error or data is None:
+            continue
+        team_id = _extract_team_id(data)
+        if team_id:
+            return team_id, None
     return None, "team_id absent"
 
 
-def _fetch_management_prepaid(inference_key: str, management_key: str) -> GrokUsageSnapshot:
-    team_id, team_error = _fetch_team_id(inference_key)
+def _resolve_team_id(management_key: str, inference_key: str) -> tuple[str | None, str | None]:
+    env_team_id = grok_team_id()
+    if env_team_id:
+        return env_team_id, None
+
+    if management_key:
+        team_id, error = _fetch_team_id_from_management(management_key)
+        if team_id:
+            return team_id, None
+        management_error = error
+    else:
+        management_error = None
+
+    team_id, inference_error = _fetch_team_id_from_inference(inference_key)
+    if team_id:
+        return team_id, None
+
+    errors = [err for err in (management_error, inference_error) if err]
+    return None, "; ".join(errors) if errors else "team_id introuvable"
+
+
+def _fetch_management_prepaid(management_key: str, inference_key: str) -> GrokUsageSnapshot:
+    team_id, team_error = _resolve_team_id(management_key, inference_key)
     if not team_id:
         return GrokUsageSnapshot(
             remaining_percent=None,
@@ -238,7 +291,7 @@ def fetch_grok_usage() -> GrokUsageSnapshot:
     if not management_key:
         return billing
 
-    prepaid = _fetch_management_prepaid(inference_key, management_key)
+    prepaid = _fetch_management_prepaid(management_key, inference_key)
     if prepaid.remaining_percent is not None or prepaid.remaining_usd is not None:
         return prepaid
 

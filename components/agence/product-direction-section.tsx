@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Check, ChevronDown, ChevronRight, Lock, Shield } from "lucide-react"
+import { ArrowRight, Check, ChevronDown, ChevronRight, Lock, Shield } from "lucide-react"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
@@ -119,20 +119,18 @@ function GatedDetails() {
           ))}
         </ul>
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0A0A0A]/80 backdrop-blur-[1px] px-4 py-6">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#0A0A0A]/80 backdrop-blur-[1px] px-4 py-5">
           <div className="flex items-center gap-2 text-neutral-400">
             <Lock className="w-4 h-4 shrink-0" />
             <span className="text-sm font-medium text-center">Détails réservés aux membres Hercule</span>
           </div>
           <p className="text-xs text-neutral-500 text-center max-w-[240px]">
-            Débloqué après validation de votre profil via l&apos;offre Starter.
+            Débloqué après validation de votre profil via{" "}
+            <a href="#pricing" className="text-neutral-400 underline-offset-2 hover:text-neutral-300 hover:underline">
+              l&apos;offre Starter
+            </a>
+            .
           </p>
-          <a
-            href={CALENDLY_AGENCE_URL}
-            className="text-sm text-white border border-white/20 rounded-md px-3 py-1.5 hover:bg-white/[0.04] transition-colors"
-          >
-            Demander l&apos;accès
-          </a>
         </div>
       </div>
     </div>
@@ -231,6 +229,17 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
               </p>
             )}
 
+            {plan.featured && (
+              <a
+                href={CALENDLY_AGENCE_URL}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+              >
+                Soumettre ma candidature
+                <ArrowRight className="size-4" />
+              </a>
+            )}
+
+            <div className={cn(plan.featured && "mt-6")}>
             <Collapsible open={open} onOpenChange={setOpen}>
               <div className="border border-white/10 rounded-md overflow-hidden">
                 <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/20">
@@ -261,6 +270,7 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
                 </CollapsibleContent>
               </div>
             </Collapsible>
+            </div>
           </>
         )}
       </div>
