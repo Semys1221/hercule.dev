@@ -3,10 +3,10 @@
 import { useState, useEffect, type MouseEvent } from "react"
 import { motion } from "framer-motion"
 import { Navbar } from "./navbar"
-import { HowItWorksSection } from "./how-it-works-section"
-import { TransparencySection } from "./transparency-section"
-import { BenefitsSection } from "./benefits-section"
-import { CTASection } from "./cta-section"
+import { ParcoursEtapes } from "./parcours-etapes"
+import { ModeleGratuit } from "./modele-gratuit"
+import { TrioAvantages } from "./trio-avantages"
+import { BandeAgence } from "./bande-agence"
 import { Footer } from "./footer"
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
 
@@ -18,7 +18,7 @@ function scrollToMethode(e: MouseEvent<HTMLAnchorElement>) {
   window.scrollTo({ top, behavior: "smooth" })
 }
 
-export function HeroStage() {
+export function AccueilScene() {
   const [yOffset, setYOffset] = useState(0)
 
   useEffect(() => {
@@ -103,10 +103,10 @@ export function HeroStage() {
             </div>
           </div>
 
-          <HowItWorksSection />
-          <TransparencySection />
-          <BenefitsSection />
-          <CTASection />
+          <ParcoursEtapes />
+          <ModeleGratuit />
+          <TrioAvantages />
+          <BandeAgence />
           <Footer />
         </div>
       </section>

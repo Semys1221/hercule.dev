@@ -27,6 +27,10 @@ from shell import render_workspace
 
 st.set_page_config(page_title="Funnels", layout="wide", page_icon="🔀")
 
+st.warning(
+    "⚠️ Cet outil Streamlit est déprécié. Utilisez le Funnel Builder Next.js : `/internal/funnels`."
+)
+
 if "funnel_view" not in st.session_state:
     st.session_state["funnel_view"] = "landing"
 

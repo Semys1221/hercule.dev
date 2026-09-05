@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { ChevronRight, Users, CheckCircle2, Inbox } from "lucide-react"
 
-export function AISection() {
+export function AuditLive() {
   return (
     <div className="relative z-20 py-40" style={{ backgroundColor: "#09090B" }}>
       <div

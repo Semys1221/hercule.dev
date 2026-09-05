@@ -27,7 +27,7 @@ const steps = [
   },
 ]
 
-export function HowItWorksSection() {
+export function ParcoursEtapes() {
   return (
     <section id="methode" className="relative z-20 py-40 px-6 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div className="max-w-5xl mx-auto">

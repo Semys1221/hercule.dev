@@ -6,7 +6,8 @@ export type LeadStatut =
   | "BOOKED"
   | "MEETING_BOOKED"
   | "CONFIRMED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "ONBOARDED";
 
 export type LinkTrackingLead = {
   id: string;
@@ -33,6 +34,8 @@ export type LinkTrackingLead = {
   scheduled_at: string | null;
   confirmed_at: string | null;
   instantly_confirmed_synced_at: string | null;
+  onboarding_completed_at: string | null;
+  profile: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 };

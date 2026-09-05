@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion"
 import { ChevronRight } from "lucide-react"
-import { SignalAcquisitionTerminal } from "./signal-acquisition-terminal"
+import { TerminalSignaux } from "./terminal-signaux"
 
-export function WorkflowsSection() {
+export function MethodeRadar() {
   return (
     <section id="methode" className="relative z-20 py-40 px-6 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div className="max-w-5xl mx-auto">
@@ -43,7 +43,7 @@ export function WorkflowsSection() {
             Hercule détecte en continu les signaux d’intention sur plus de 1 000 sites : recrutements, développements, changements d’activité et autres indicateurs. Ces entreprises sont qualifiées puis accompagnées par Hercule pour identifier l’agence la plus adaptée à leur besoin.
             </p>
           </div>
-          <SignalAcquisitionTerminal />
+          <TerminalSignaux />
         </motion.div>
       </div>
     </section>

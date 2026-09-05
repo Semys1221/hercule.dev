@@ -26,19 +26,19 @@ const PRICING_PLANS = [
     label: "Offre d'entrée",
     price: "1 489 €",
     priceSuffix: null as string | null,
-    tagline: "5 attributions de demandes clients",
+    tagline: "5 demandes clients à votre portée",
     summary:
-      "Cinq apports d'affaires avec demandes qualifiées. En l'absence de signature, cinq nouvelles attributions sont replanifiées.",
-    footer: "Première attribution, risque maîtrisé.",
+      "Cinq demandes qualifiées sélectionnées selon votre activité et votre capacité. En l’absence de signature, l’attribution est renouvelée. (sous conditions CGV).",
+    footer: "Commencez par une première attribution, sans engagement.",
     featured: true,
     profileOnly: false,
     highlight: null as string | null,
     features: [
-      "5 demandes clients qualifiées, validées par appel téléphonique selon 5 critères : taille de l'entreprise, durée souhaitée, horizon de résultat, budget mensuel et historique avec les agences.",
+      "5 demandes dans votre champs d'éligibilité, validées par appel téléphonique selon 5 critères : taille de l'entreprise, durée souhaitée, horizon de résultat, budget mensuel et historique avec les agences.",
       "Attribution exclusive des demandes à votre agence.",
-      "Remplacement de toute demande lorsque le prospect est absent au rendez-vous.",
+      "Remplacement de toute demande lorsque le prospect est absent au rendez-vous, avec remplacement sous 14 jours ouvrés.",
       "0 % de commission sur les ventes réalisées par votre agence.",
-      "Garantie : 1 500 € minimum de MRR généré, ou 5 rendez-vous supplémentaires attribués sans frais.",
+      "Garantie : 1 500 € de MRR minimum, ou 5 rendez-vous supplémentaires offerts (onboarding 48 h, retours post-RDV, présence aux RDV).",
     ],
   },
   {
@@ -57,8 +57,8 @@ const PRICING_PLANS = [
       "Contrats déjà disponibles — demandes qualifiées dans notre pipeline, pas un démarrage à froid.",
       "Qualification et signature internes — Hercule qualifie et signe nos contrats disponibles pour votre agence.",
       "Vos tarifs, 0 % commission — chaque contrat signé à vos prix, sans commission.",
-      "Jusqu'à 4 clients signés par mois pour votre agence.",
-      "Garantie : 3 000 € minimum de MRR généré par mois, ou une attribution reportée sur le mois suivant sans frais supplémentaires.",
+      "Jusqu'à 4 attributions par mois pour votre agence.",
+      "Garantie : 3 000 € minimum de MRR généré par mois, ou une attribution reportée sur le mois suivant sans frais supplémentaires (≥ 2 attributions/mois, service actif complet).",
       "L'ensemble des avantages de l'offre Starter.",
     ],
   },
@@ -278,7 +278,7 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
   )
 }
 
-export function ProductDirectionSection() {
+export function GrilleOffres() {
   return (
     <section id="pricing" className="relative py-40 px-6 bg-black">
       <div className="max-w-5xl mx-auto">
@@ -301,7 +301,7 @@ export function ProductDirectionSection() {
           className="text-3xl sm:text-4xl md:text-5xl text-white max-w-2xl mb-4"
           style={{ letterSpacing: "-0.04em", fontWeight: 538, lineHeight: 1.1 }}
         >
-          Accès aux apports d&apos;affaires. Résiliable à tout moment.
+          Accès aux apports d&apos;affaires. Starter sans engagement. Récurrent résiliable avec préavis.
         </motion.h2>
 
         <motion.p
@@ -332,12 +332,13 @@ export function ProductDirectionSection() {
         >
           <div className="flex items-center gap-3 mb-6">
             <Shield className="w-5 h-5 text-neutral-400" />
-            <h3 className="text-white text-xl font-medium tracking-[-0.02em]">Garantie contre les absences</h3>
+            <h3 className="text-white text-xl font-medium tracking-[-0.02em]">Garantie Hercule Starter</h3>
           </div>
           <ul className="space-y-3">
             {[
-              "Prospect qualifié absent en visioconférence (malgré relance H-24) : rendez-vous non facturé",
-              "Rendez-vous de remplacement planifié sans délai",
+              "1 489 € TTC — 5 rendez-vous qualifiés, 0 % de commission sur vos ventes",
+              "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
+              "Moins de 1 500 € de MRR après vos 5 rendez-vous ? 5 rendez-vous supplémentaires offerts",
             ].map((item) => (
               <li key={item} className="flex items-start gap-3 text-neutral-400 text-sm">
                 <Check className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />

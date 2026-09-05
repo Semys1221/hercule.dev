@@ -1,6 +1,6 @@
 # Audit alignement site ↔ CGV
 
-> **CGV de référence :** [cvg_master.md](./cvg_master.md) (version 2026-09-04)  
+> **CGV de référence :** [cvg_master.md](./cvg_master.md) (version 2026-09-05)  
 > **Périmètre :** checklist copy existant — **pas de nouvelles sections** entreprise/client dans ce ticket.
 
 ---
@@ -9,9 +9,9 @@
 
 | Zone | Écart principal | Statut |
 |------|-----------------|--------|
-| Landing pricing | No-show « sans délai » vs CGV **14 j ouvrés** | **P0 — à corriger** |
-| Landing pricing | Garanties MRR sans conditions vs CGV § 5 | **P0 — aligner wording** |
-| Landing pricing | Starter **5 attributions** vs capacity **3–4/mois** | **P0 — harmoniser** (pack vs rythme) |
+| Landing pricing | No-show « sans délai » vs CGV **14 j ouvrés** | ☑ corrigé |
+| Landing pricing | Garanties MRR sans conditions vs CGV § 5 | ☑ aligné |
+| Landing pricing | Starter **5 attributions** vs capacity **3–4/mois** | ☑ harmonisé (pack vs rythme) |
 | FAQ booking | Rétractation **4 j** | **P1 — cohérent CGV § 8** |
 | Footer | Pas de liens CGV / mentions légales | Routes `/cvg`, `/mentions-legales`, `/confidentialite` + bundle agent | ☑ |
 | Docs SOP | Références ancien modèle 250 € + 149 € | **P2 — obsolète** |
@@ -26,11 +26,11 @@
 
 | Fichier | Écart actuel | Action CGV-aligned | Statut |
 |---------|--------------|-------------------|--------|
-| [`components/agence/product-direction-section.tsx`](../../components/agence/product-direction-section.tsx) L221 | « Rendez-vous de remplacement planifié **sans délai** » | → « … planifié sous **14 jours ouvrés** » (CGV § 10.1) | ☐ |
-| idem L25 | Garantie MRR 3 000 € « ou attribution reportée » sans conditions | Aligner sur CGV § 5.2 (≥ 2 attributions/mois, service actif complet) ou simplifier le claim public | ☐ |
-| idem L44 | Garantie MRR 1 500 € « ou 5 RDV supplémentaires » sans conditions | Aligner sur CGV § 5.1 (onboarding 48 h, retours post-RDV, 100 % RDV honorés) | ☐ |
-| idem L34–36 | « 5 attributions » sans distinction pack vs rythme mensuel | Ajouter nuance : **5 attributions = pack Starter** ; rythme récurrent **jusqu'à 4/mois** ; référence ops **3–4 RDV honorés/mois** en régime stable | ☐ |
-| idem L16 | « Jusqu'à 4 nouveaux clients signés par mois » | Vérifier : CGV parle d'**Attributions** (mise en relation), pas de signatures garanties — reformuler si besoin | ☐ |
+| [`components/agence/product-direction-section.tsx`](../../components/agence/product-direction-section.tsx) L221 | « Rendez-vous de remplacement planifié **sans délai** » | → « … planifié sous **14 jours ouvrés** » (CGV § 10.1) | ☑ |
+| idem L25 | Garantie MRR 3 000 € « ou attribution reportée » sans conditions | Aligner sur CGV § 5.2 (≥ 2 attributions/mois, service actif complet) ou simplifier le claim public | ☑ |
+| idem L44 | Garantie MRR 1 500 € « ou 5 RDV supplémentaires » sans conditions | Aligner sur CGV § 5.1 (onboarding 48 h, retours post-RDV, 100 % RDV honorés) | ☑ |
+| idem L34–36 | « 5 attributions » sans distinction pack vs rythme mensuel | Ajouter nuance : **5 attributions = pack Starter** ; rythme récurrent **jusqu'à 4/mois** ; référence ops **3–4 RDV honorés/mois** en régime stable | ☑ |
+| idem L16 | « Jusqu'à 4 nouveaux clients signés par mois » | Vérifier : CGV parle d'**Attributions** (mise en relation), pas de signatures garanties — reformuler si besoin | ☑ |
 
 **Copy suggéré — garantie no-show :**
 
@@ -93,10 +93,10 @@
 
 | Source | Valeur |
 |--------|--------|
-| Landing (actuel) | « sans délai » |
+| Landing (actuel) | **14 jours ouvrés** |
 | CGV + capacity | **14 jours ouvrés** |
 
-**Décision CGV :** **14 jours ouvrés** — corriger la landing (P0).
+**Décision CGV :** **14 jours ouvrés** — corrigé sur la landing (P0).
 
 ### Abonnement 2 500 € « hors MVP »
 
@@ -115,9 +115,9 @@
 - [ ] Implémentation checkbox onboarding React ([cvg_onboarding.md](./cvg_onboarding.md))
 - [x] Routes publiques `/cvg`, `/mentions-legales`, `/confidentialite` (sources markdown partagées + bundle agent)
 - [ ] Nouvelle page `/entreprise` légale
-- [ ] Correction copy `product-direction-section.tsx` (documentée ici — exécution site = ticket séparé sauf demande explicite)
+- [x] Correction copy `product-direction-section.tsx`
 - [ ] Complétion placeholders SIRET / adresse / TVA dans CGV
-- [ ] Validation juridique HT vs TTC
+- [x] Validation juridique HT vs TTC → **TTC** (franchise en base art. 293 B CGI)
 
 ---
 
@@ -125,11 +125,11 @@
 
 | Point | Statut |
 |-------|--------|
-| HT vs TTC sur 1 489 € et 2 500 € | ☐ À trancher |
+| HT vs TTC sur 1 489 € et 2 500 € | ☑ **TTC** (franchise en base) |
 | Base légale rétractation 4j (B2B pro vs geste commercial) | ☐ CGV § 8 = geste commercial |
 | Placeholders SIRET / adresse / RCS | ☐ Avant publication publique |
-| Formulation exacte garanties MRR (conditions activation) | ☐ Aligner landing P0 |
+| Formulation exacte garanties MRR (conditions activation) | ☑ Aligné landing P0 |
 
 ---
 
-*Dernière revue : 2026-09-04*
+*Dernière revue : 2026-09-05*

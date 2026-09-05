@@ -1,0 +1,19 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Funnel Builder",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+export default function InternalFunnelsLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <div className="min-h-screen bg-background text-foreground">{children}</div>
+  );
+}

@@ -3,24 +3,24 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { DashboardMockup } from "./dashboard-mockup"
+import { ApercuCrm } from "./apercu-crm"
 import { Navbar } from "./navbar"
-import { LogoCloud } from "./logo-cloud"
-import { FeatureCardsSection } from "./feature-cards-section"
-import { DemandesSection } from "./demandes-section"
-import { AISection } from "./ai-section"
-import { ProductDirectionSection } from "./product-direction-section"
-import { WorkflowsSection } from "./workflows-section"
-import { CTASection } from "./cta-section"
+import { BandeStack } from "./bande-stack"
+import { PilierMatching } from "./pilier-matching"
+import { BandeProjets } from "./bande-projets"
+import { AuditLive } from "./audit-live"
+import { GrilleOffres } from "./grille-offres"
+import { MethodeRadar } from "./methode-radar"
+import { BandeAudit } from "./bande-audit"
 import { Footer } from "./footer"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 
-interface Hero3DStageProps {
+interface AccueilSceneProps {
   demandes: DemandeContrat[]
   teaser: DemandeTeaser | null
 }
 
-export function Hero3DStage({ demandes, teaser }: Hero3DStageProps) {
+export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
   const [yOffset, setYOffset] = useState(0)
 
   useEffect(() => {
@@ -169,18 +169,18 @@ export function Hero3DStage({ demandes, teaser }: Hero3DStageProps) {
                   overflow: "hidden",
                 }}
               >
-                <DashboardMockup />
+                <ApercuCrm />
               </motion.div>
             </div>
           </div>
 
-          <LogoCloud />
-          <DemandesSection demandes={demandes} teaser={teaser} />
-          <FeatureCardsSection />
-          <AISection />
-          <ProductDirectionSection />
-          <WorkflowsSection />
-          <CTASection />
+          <BandeStack />
+          <BandeProjets demandes={demandes} teaser={teaser} />
+          <PilierMatching />
+          <AuditLive />
+          <GrilleOffres />
+          <MethodeRadar />
+          <BandeAudit />
           <Footer />
         </div>
       </section>

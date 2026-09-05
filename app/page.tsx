@@ -1,4 +1,4 @@
-import { Hero3DStage } from "@/components/agence/hero-3d-stage"
+import { AccueilScene } from "@/components/agence/scene-accueil"
 import {
   fetchDemandeTeaser,
   fetchDemandesForCarousel,
@@ -14,7 +14,7 @@ export default async function Home() {
 
   return (
     <main>
-      <Hero3DStage demandes={demandes} teaser={teaser} />
+      <AccueilScene demandes={demandes} teaser={teaser} />
     </main>
   )
 }

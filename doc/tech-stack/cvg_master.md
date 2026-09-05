@@ -1,6 +1,6 @@
 # Conditions Générales de Vente — Hercule
 
-> **Version :** 2026-09-18  
+> **Version :** 2026-09-05  
 > **Documents associés :** [cvg_onboarding.md](./cvg_onboarding.md) · [cvg_site-sync.md](./cvg_site-sync.md) · [capacity/03-sla-client.md](./capacity/03-sla-client.md)
 
 ---
@@ -42,6 +42,7 @@ Hercule se réserve le droit de refuser toute commande pour des motifs légitime
 | Terme | Définition |
 |-------|------------|
 | **Attribution** | Mise à disposition exclusive d'une **Demande client qualifiée** à l'agence partenaire, comprenant la qualification téléphonique, la proposition de mise en relation et la planification d'un rendez-vous commercial dans l'agenda du Client. |
+| **Attribution consommée** | Attribution dont le RDV a été planifié dans l'agenda du Client. En cas de no-show (article 10.1), l'Attribution est recréditée. |
 | **Demande client qualifiée** | Besoin d'une entreprise (PME/TPE) validé selon les critères Hercule : taille, durée souhaitée, horizon de résultat, budget, historique avec les agences. |
 | **RDV planifié** | Créneau réservé dans l'agenda du Client avec le décideur ou représentant habilité de l'entreprise, confirmé via l'outil de prise de rendez-vous Hercule. |
 | **RDV honoré** | RDV planifié au cours duquel le décideur (ou mandataire habilité) est **effectivement présent** en visioconférence pendant au moins **15 minutes**. |
@@ -81,6 +82,8 @@ Les fenêtres calendaires affichées sur chaque demande (`disponibilite`, dates 
 
 ### 4.2 Mise en relation post-audit de compatibilité
 
+Ce parcours concerne la mise en relation avant souscription Starter (audit de compatibilité). Les délais post-souscription sont définis à l'article 9.
+
 Ce parcours s'applique après complétion de la **fiche agence** (audit de compatibilité), distinct du service actif post-souscription (article 9) :
 
 1. L'agence complète sa fiche agence lors de l'audit de compatibilité ;
@@ -92,7 +95,7 @@ Ce parcours s'applique après complétion de la **fiche agence** (audit de compa
 
 ## 5. Formules et tarifs
 
-Les prix sont indiqués en **euros**. Sauf mention contraire sur le devis ou la facture : **HT** — TVA applicable selon la réglementation en vigueur au taux de `[À COMPLÉTER]`.
+Les prix sont indiqués en **euros TTC**. Hercule bénéficie de la franchise en base de TVA (article 293 B du CGI) : aucune TVA n'est facturée ni mentionnée sur les factures.
 
 ### 5.1 Hercule Starter (offre d'entrée)
 
@@ -102,6 +105,8 @@ Les prix sont indiqués en **euros**. Sauf mention contraire sur le devis ou la 
 | **Contenu** | **5 Attributions** de demandes clients qualifiées |
 | **Commission Hercule** | **0 %** sur les ventes réalisées par le Client |
 | **Durée** | Jusqu'à consommation des 5 Attributions ou résiliation |
+
+Le pack Starter est un forfait unique prépayé. Le Client ne consomme une Attribution que lorsqu'un RDV est planifié ; un no-show recrédite l'Attribution conformément à l'article 10.1.
 
 **Garantie MRR Starter :** si, à l'issue de la consommation des 5 Attributions initiales, le Client n'a généré au minimum **1 500 € de MRR** cumulé auprès des entreprises rencontrées via Hercule, Hercule attribuera **5 Attributions supplémentaires sans facturation additionnelle**, dans un délai de **60 jours** à compter de la demande écrite du Client.
 
@@ -123,7 +128,7 @@ Conditions de la garantie MRR Starter :
 **Garantie MRR récurrente :** si, sur un mois calendaire complet de service actif, le Client n'a généré au minimum **3 000 € de MRR** cumulé via les entreprises rencontrées via Hercule durant ce mois, **une Attribution** sera reportée sur le **mois suivant sans frais supplémentaires**.
 
 Conditions de la garantie MRR récurrente :
-- le Client était en service actif l'intégralité du moice concerné (hors période de file d'attente documentée) ;
+- le Client était en service actif l'intégralité du mois concerné (hors période de file d'attente documentée) ;
 - le Client a consommé au moins **2 Attributions** durant le mois ;
 - mêmes exclusions que la garantie Starter (article 5.1).
 
@@ -213,7 +218,7 @@ Référence ops : [capacity/03-sla-client.md](./capacity/03-sla-client.md).
 |-------|------------------------|
 | Première proposition de mise en relation | **14 à 21 jours ouvrés** |
 | Premier RDV planifié | **21 à 35 jours ouvrés** |
-| Premier RDV honoré | **≤ 21 jours ouvrés** (allocation standard) |
+| Premier RDV honoré | **≤ 35 jours ouvrés** après Activation |
 
 En **phase de montée en charge** (capacité infrastructure limitée ou allocation réduite), les délais peuvent être allongés de **7 jours** ; le Client en est informé à la signature ou via la page de suivi.
 
@@ -383,6 +388,7 @@ Pour les contrats récurrents, Hercule informe le Client **30 jours** avant l'en
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-05 | 2026-09-05 | Prix TTC (franchise en base) · définition Attribution consommée · clarification forfait Starter · correction §9.2 · typo §5.2 · clarification §4.2 |
 | 2026-09-18 | 2026-09-18 | §4.1 planification anticipée · §4.2 mise en relation post-audit (~6 j ouvrés) · définitions Demande planifiée / Mandat de délégation |
 | 2026-09-04 | 2026-09-04 | Création CGV — migration depuis blueprint `doc/sop/contrat.md` ; modèle 1489 € / 2500 € / mois ; SLA capacity |
 

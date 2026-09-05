@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { ChevronRight, Building2, Briefcase } from "lucide-react"
 
-export function TransparencySection() {
+export function ModeleGratuit() {
   return (
     <section id="modele" className="relative z-20 py-40 px-6 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div

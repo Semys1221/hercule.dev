@@ -11,7 +11,7 @@ const agencyStack = [
   { name: "SEO", icon: Search },
 ]
 
-export function LogoCloud() {
+export function BandeStack() {
   return (
     <div className="relative z-20 pb-24 pt-8" style={{ backgroundColor: "#09090B" }}>
       <div className="w-full flex justify-center px-6">

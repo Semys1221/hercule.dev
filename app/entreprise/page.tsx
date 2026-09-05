@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { HeroStage } from "@/components/entreprise/hero-stage"
+import { AccueilScene } from "@/components/entreprise/scene-accueil"
 
 export const metadata: Metadata = {
   title: "Trouver une agence — Hercule",
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function EntreprisePage() {
   return (
     <main>
-      <HeroStage />
+      <AccueilScene />
     </main>
   )
 }

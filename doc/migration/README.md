@@ -467,7 +467,7 @@ Update this table as migration progresses.
 | Phase | Status | Notes |
 |-------|--------|-------|
 | P0 — Migration doc | Done | This file |
-| P1 — Next shell + CRUD | Not started | |
+| P1 — Next shell + CRUD | Done | `/internal/funnels` + `/api/admin/*` |
 | P2 — Content studio | Not started | |
 | P3 — Comms ops | Not started | |
 | P4 — Scraper optional | Not started | |

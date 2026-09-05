@@ -44,7 +44,7 @@ const MAX_VISIBLE_LINES = 14
 const LINES_PER_TICK = 3
 const TICK_MS = 100
 
-export function SignalAcquisitionTerminal() {
+export function TerminalSignaux() {
   const [lines, setLines] = useState<LogLine[]>([])
   const [cursorVisible, setCursorVisible] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)

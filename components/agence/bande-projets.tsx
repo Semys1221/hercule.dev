@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { ChevronRight } from "lucide-react"
-import { DemandeCard, DemandeTeaserCard } from "@/components/agence/demande-card"
+import { CarteProjet, CarteTeaser } from "@/components/agence/carte-projet"
 import { Marquee } from "@/components/ui/marquee"
 import { cn } from "@/lib/utils"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
@@ -10,12 +10,12 @@ import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 
 const CARD_WIDTH = "w-[300px] sm:w-[320px]"
 
-interface DemandesSectionProps {
+interface BandeProjetsProps {
   demandes: DemandeContrat[]
   teaser: DemandeTeaser | null
 }
 
-export function DemandesSection({ demandes, teaser }: DemandesSectionProps) {
+export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
   return (
     <div id="demandes" className="relative z-20 py-40 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div
@@ -82,12 +82,12 @@ export function DemandesSection({ demandes, teaser }: DemandesSectionProps) {
         <Marquee pauseOnHover className="[--duration:45s] [--gap:1rem]">
           {demandes.map((demande) => (
             <div key={demande.id} className={cn(CARD_WIDTH, "shrink-0")}>
-              <DemandeCard demande={demande} />
+              <CarteProjet demande={demande} />
             </div>
           ))}
           {teaser ? (
             <div className={cn(CARD_WIDTH, "shrink-0")}>
-              <DemandeTeaserCard teaser={teaser} />
+              <CarteTeaser teaser={teaser} />
             </div>
           ) : null}
         </Marquee>

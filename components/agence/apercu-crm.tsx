@@ -86,7 +86,7 @@ const marieConversation = [
   },
 ]
 
-export function DashboardMockup() {
+export function ApercuCrm() {
   const containerVariants = {
     hidden: {},
     visible: {

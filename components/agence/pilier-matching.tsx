@@ -1,32 +1,32 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Target, CircleDollarSign, Handshake } from "lucide-react"
+import { Inbox, Shield, ClipboardCheck } from "lucide-react"
 
-const benefits = [
+const matchingCards = [
   {
-    title: "Sélection sur mesure",
+    title: "Demandes actives",
     description:
-      "Nous sélectionnons les agences adaptées à votre projet — budget, délais, stack technique — plutôt qu'une liste générique de prestataires.",
-    icon: Target,
+      "Des clients qualifiés attendent une agence compatible. Les demandes sont disponibles dès aujourd'hui.",
+    icon: Inbox,
   },
   {
-    title: "Zéro frais pour vous",
+    title: "Attribution exclusive",
     description:
-      "Le service de matching est entièrement gratuit pour les entreprises. Vous bénéficiez d'une sélection qualifiée sans payer d'intermédiaire.",
-    icon: CircleDollarSign,
+      "Chaque demande est confiée à une seule agence sélectionnée, en fonction de son profil et de sa capacité.",
+    icon: Shield,
   },
   {
-    title: "Mise en relation organisée",
+    title: "Audit de compatibilité",
     description:
-      "Après qualification, nous organisons l'échange avec l'agence retenue. Vous gagnez du temps et évitez de comparer des dizaines de profils seuls.",
-    icon: Handshake,
+      "Nous vérifions l'adéquation de votre agence — stack, budget, disponibilité — avant toute distribution.",
+    icon: ClipboardCheck,
   },
 ]
 
-export function BenefitsSection() {
+export function PilierMatching() {
   return (
-    <div className="relative z-20 py-40" style={{ backgroundColor: "#09090B" }}>
+    <div className="relative z-20 pt-16 pb-32" style={{ backgroundColor: "#09090B" }}>
       <div className="w-full flex justify-center px-6">
         <div className="w-full max-w-5xl">
           <div className="flex flex-col gap-6 mb-16 max-w-3xl">
@@ -42,7 +42,7 @@ export function BenefitsSection() {
                 lineHeight: 1.1,
               }}
             >
-              Pourquoi passer par Hercule plutôt que de chercher seul ?
+              Nous recevons des demandes clients. Notre rôle : identifier l&apos;agence la plus adaptée.
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -51,17 +51,17 @@ export function BenefitsSection() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-zinc-400 leading-relaxed"
             >
-              Choisir une agence parmi des dizaines de prestataires qui prétendent tous être les meilleurs est
-              chronophage et peu rassurant. Hercule qualifie votre besoin et sélectionne les agences compatibles.
+              Hercule met en relation des demandes qualifiées avec les agences web compatibles. Chaque attribution
+              repose sur un audit préalable et une distribution en exclusivité.
             </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {benefits.map((benefit, index) => {
-              const Icon = benefit.icon
+            {matchingCards.map((card, index) => {
+              const Icon = card.icon
               return (
                 <motion.div
-                  key={benefit.title}
+                  key={card.title}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -71,8 +71,8 @@ export function BenefitsSection() {
                   <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-6">
                     <Icon className="w-5 h-5 text-zinc-300" />
                   </div>
-                  <h3 className="text-white font-medium text-xl mb-3">{benefit.title}</h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed">{benefit.description}</p>
+                  <h3 className="text-white font-medium text-xl mb-3">{card.title}</h3>
+                  <p className="text-zinc-400 text-sm leading-relaxed">{card.description}</p>
                 </motion.div>
               )
             })}

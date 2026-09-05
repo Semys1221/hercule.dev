@@ -112,7 +112,7 @@ function PostulerActionBar() {
   )
 }
 
-export function DemandeCard({ demande }: { demande: DemandeContrat }) {
+export function CarteProjet({ demande }: { demande: DemandeContrat }) {
   const { icon: Icon, badgeClass } = getSecteurConfig(demande.secteur)
   const isAssigned = demande.status === "assigned"
   const ariaLabel = isAssigned
@@ -174,7 +174,7 @@ export function DemandeCard({ demande }: { demande: DemandeContrat }) {
   )
 }
 
-export function DemandeTeaserCard({ teaser }: { teaser: DemandeTeaser }) {
+export function CarteTeaser({ teaser }: { teaser: DemandeTeaser }) {
   const { icon: Icon, badgeClass } = getSecteurConfig(teaser.secteur)
 
   return (

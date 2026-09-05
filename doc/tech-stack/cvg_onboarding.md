@@ -1,25 +1,25 @@
 # CGV Hercule — Version onboarding (checkbox)
 
-> **Version CGV :** 2026-09-18  
+> **Version CGV :** 2026-09-05  
 > **Document complet :** [cvg_master.md](./cvg_master.md)
 
 Document court pour le formulaire d'onboarding agence. Le texte de la checkbox doit pointer vers la version datée des CGV complètes (URL publique future ou lien interne).
 
 ---
 
-## Résumé (10 points)
+## Résumé (11 points)
 
 1. **Objet** — Hercule met en relation votre agence avec des **demandes clients qualifiées** (entreprises PME/TPE), après validation téléphonique. Obligation de **moyens**, pas de garantie de vente.
 
-2. **Formules** — **Hercule Starter** : **1 489 €** pour **5 Attributions** · **Hercule** (récurrent) : **2 500 € / mois** pour jusqu'à **4 Attributions / mois**. **0 % de commission** sur vos ventes.
+2. **Formules** — **Hercule Starter** : **1 489 € TTC** pour **5 Attributions** · **Hercule** (récurrent) : **2 500 € TTC / mois** pour jusqu'à **4 Attributions / mois**. **0 % de commission** sur vos ventes.
 
 3. **Attribution** — Demande qualifiée + mise en relation exclusive + RDV planifié dans votre agenda. Un **RDV honoré** = présence du décideur en visio ≥ 15 min.
 
-4. **Démarrage** — Onboarding sous **48 h** · Activation sous **4 jours** · Premier RDV honoré sous **21 jours ouvrés** (allocation standard), sous réserve de file d'attente éventuelle (+15 j max).
+4. **Démarrage** — Onboarding sous **48 h** · Activation sous **4 jours** · Premier RDV honoré sous **35 jours ouvrés** (allocation standard), sous réserve de file d'attente éventuelle (+15 j max).
 
 5. **Volume** — Starter = **pack de 5 Attributions** · Récurrent = jusqu'à **4 / mois** · Rythme opérationnel stable : **3 à 4 RDV honorés / mois** en allocation standard.
 
-6. **No-show** — Prospect absent malgré relance H-24 : **non facturé / recrédité**, remplacement sous **14 jours ouvrés**. Signalement sous 48 h.
+6. **No-show** — Prospect absent malgré relance H-24 : **attribution recréditée**, remplacement sous **14 jours ouvrés**. Signalement sous 48 h.
 
 7. **Garanties MRR** — Starter : **1 500 € MRR** min ou 5 attributions supplémentaires · Récurrent : **3 000 € MRR / mois** min ou 1 attribution reportée — conditions dans les CGV complètes.
 
@@ -37,7 +37,7 @@ Document court pour le formulaire d'onboarding agence. Le texte de la checkbox d
 
 ```
 ☐ J'accepte les Conditions Générales de Vente de Hercule
-  (version du 4 septembre 2026) et je confirme être un professionnel
+  (version du 5 septembre 2026) et je confirme être un professionnel
   agissant dans le cadre de mon activité.
 ```
 
@@ -51,7 +51,7 @@ Document court pour le formulaire d'onboarding agence. Le texte de la checkbox d
 
 | Champ | Type | Description |
 |-------|------|-------------|
-| `cvg_version` | `text` | Ex. `2026-09-04` |
+| `cvg_version` | `text` | Ex. `2026-09-05` |
 | `cvg_accepted_at` | `timestamptz` | Horodatage UTC |
 | `cvg_accepted_ip` | `text` | IP du signataire (optionnel, consentement) |
 | `cvg_accepted_by` | `text` | Email ou identifiant utilisateur |
@@ -64,8 +64,8 @@ Document court pour le formulaire d'onboarding agence. Le texte de la checkbox d
 
 | Contexte | Offre | Prix |
 |----------|-------|------|
-| Renouvellement cycle | 5 Attributions | **1 489 €** |
-| Survey agence (decline upsell principal) | 3 Attributions | **898 €** (exclusive page survey) |
+| Renouvellement cycle | 5 Attributions | **1 489 € TTC** |
+| Survey agence (decline upsell principal) | 3 Attributions | **898 € TTC** (exclusive page survey) |
 
 Détail : [post-rdv/agence-commercial.md](./post-rdv/agence-commercial.md) · CGV § 5.3.
 
