@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { FunnelHub } from "@/components/internal/funnels/hub";
 import { FunnelLeafContent } from "@/components/internal/funnels/leaf-content";
+import { parseWorkspacePath } from "@/lib/admin/funnels/routing";
 import {
   AUDIENCE_LABELS,
   breadcrumb,
@@ -9,8 +10,6 @@ import {
   hubTitle,
   isAudience,
   isHub,
-  leafKey,
-  normalizePath,
 } from "@/lib/admin/navigation";
 
 export default async function FunnelWorkspacePage({
@@ -23,24 +22,50 @@ export default async function FunnelWorkspacePage({
     notFound();
   }
 
-  const fullPath = normalizePath([audience, ...path]);
+  const parsed = parseWorkspacePath(audience, path);
   const label = AUDIENCE_LABELS[audience];
+
+  if (parsed.kind === "hub") {
+    return (
+      <main className="mx-auto max-w-5xl px-6 py-8">
+        <div className="mb-8 space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight">Funnels — {label}</h1>
+          <p className="text-sm text-muted-foreground">{breadcrumb(parsed.navPath)}</p>
+        </div>
+        <FunnelHub
+          title={hubTitle(parsed.navPath)}
+          path={parsed.navPath}
+          childrenNodes={getChildren(parsed.navPath)}
+        />
+      </main>
+    );
+  }
+
+  const crumbPath =
+    parsed.kind === "funnel_editor"
+      ? [...parsed.navPath, parsed.funnelSlug]
+      : parsed.navPath;
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-8">
       <div className="mb-8 space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Funnels — {label}</h1>
-        <p className="text-sm text-muted-foreground">{breadcrumb(fullPath)}</p>
+        <p className="text-sm text-muted-foreground">{breadcrumb(crumbPath)}</p>
       </div>
 
-      {isHub(fullPath) ? (
+      {isHub(parsed.navPath) ? (
         <FunnelHub
-          title={hubTitle(fullPath)}
-          path={fullPath}
-          childrenNodes={getChildren(fullPath)}
+          title={hubTitle(parsed.navPath)}
+          path={parsed.navPath}
+          childrenNodes={getChildren(parsed.navPath)}
         />
       ) : (
-        <FunnelLeafContent audience={audience} leafKey={leafKey(fullPath) ?? ""} />
+        <FunnelLeafContent
+          audience={audience}
+          leafKey={parsed.leafKey}
+          navPath={parsed.navPath}
+          funnelSlug={parsed.kind === "funnel_editor" ? parsed.funnelSlug : null}
+        />
       )}
     </main>
   );

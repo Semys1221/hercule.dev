@@ -1,8 +1,18 @@
+import { notFound } from "next/navigation";
+
+import { Suspense } from "react";
+
+import {
+  FunnelBuilderList,
+  FunnelEditor,
+} from "@/components/internal/funnels/builder/funnel-editor";
 import { FicheForm } from "@/components/internal/funnels/fiche-form";
 import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
 import { MockupEditor } from "@/components/internal/funnels/mockup-editor";
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 import { getLegalMarkdownForLeaf } from "@/lib/admin/legal-preview";
+import { scopeForParsedLeaf } from "@/lib/admin/funnels/routing";
+import { FUNNEL_LIST_LEAF_KEYS } from "@/lib/admin/funnels/schema";
 import type { Audience } from "@/lib/admin/navigation";
 
 const EMAIL_TOOL_HINTS: Record<string, string> = {
@@ -23,12 +33,45 @@ const EMAIL_TITLES: Record<string, string> = {
   emails_close_notifications: "Emails — CLOSE — Notifications",
 };
 
+const FUNNEL_TITLES: Record<string, string> = {
+  sales_funnel_discovery: "Sales — Discovery",
+  sales_funnel_pitch: "Sales — Pitch",
+  sales_funnel_closing: "Sales — Closing",
+  onboarding_funnel: "Onboarding funnel",
+};
+
 type FunnelLeafContentProps = {
   audience: Audience;
   leafKey: string;
+  navPath: string[];
+  funnelSlug?: string | null;
 };
 
-export function FunnelLeafContent({ audience, leafKey }: FunnelLeafContentProps) {
+export function FunnelLeafContent({
+  audience,
+  leafKey,
+  navPath,
+  funnelSlug,
+}: FunnelLeafContentProps) {
+  if (FUNNEL_LIST_LEAF_KEYS.has(leafKey)) {
+    const scope = scopeForParsedLeaf(audience, leafKey);
+    if (!scope) {
+      return <FunnelPlaceholder title="Scope introuvable" />;
+    }
+
+    const title = FUNNEL_TITLES[leafKey] ?? leafKey;
+
+    if (funnelSlug) {
+      return (
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Chargement…</p>}>
+          <FunnelEditor scope={scope} navPath={navPath} funnelSlug={funnelSlug} />
+        </Suspense>
+      );
+    }
+
+    return <FunnelBuilderList scope={scope} navPath={navPath} title={title} />;
+  }
+
   if (leafKey === "dashboard") {
     return (
       <FunnelPlaceholder
@@ -38,44 +81,8 @@ export function FunnelLeafContent({ audience, leafKey }: FunnelLeafContentProps)
     );
   }
 
-  if (leafKey === "sales_funnel_discovery") {
-    return (
-      <FunnelPlaceholder
-        title="Sales — Discovery"
-        detail={`Contenu à venir pour l'étape discovery (${audience}).`}
-      />
-    );
-  }
-
-  if (leafKey === "sales_funnel_pitch") {
-    return (
-      <FunnelPlaceholder
-        title="Sales — Pitch"
-        detail={`Contenu à venir pour l'étape pitch (${audience}).`}
-      />
-    );
-  }
-
-  if (leafKey === "sales_funnel_closing") {
-    return (
-      <FunnelPlaceholder
-        title="Sales — Closing"
-        detail={`Contenu à venir pour l'étape closing (${audience}).`}
-      />
-    );
-  }
-
   if (leafKey === "sales_mockup") {
     return <MockupEditor audience={audience} />;
-  }
-
-  if (leafKey === "onboarding_funnel") {
-    return (
-      <FunnelPlaceholder
-        title="Onboarding funnel"
-        detail={`Parcours onboarding ${audience} — contenu à venir.`}
-      />
-    );
   }
 
   if (leafKey === "onboarding_fiche_form") {

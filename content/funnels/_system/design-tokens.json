@@ -1,0 +1,4 @@
+{
+  "schemaVersion": 1,
+  "note": "Static reference. Runtime tickets capture live tokens from app/globals.css via lib/admin/funnels/tokens.ts"
+}

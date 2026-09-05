@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "slug": "second_funnel",
+  "displayName": "Second funnel",
+  "audience": "agence",
+  "kind": "vente",
+  "stage": "discovery",
+  "status": "draft",
+  "layoutId": null,
+  "publicPath": "/vente/agence/discovery",
+  "steps": [],
+  "createdAt": "2026-09-05T10:58:10.657Z",
+  "updatedAt": "2026-09-05T10:58:10.657Z"
+}

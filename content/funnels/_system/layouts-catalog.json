@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "layouts": [
+    {
+      "id": "default-split",
+      "label": "Default split",
+      "description": "Barre de progression + carte centrée, tokens projet.",
+      "componentPath": "components/funnels/layouts/default-split.tsx",
+      "previewKey": "default-split"
+    }
+  ]
+}

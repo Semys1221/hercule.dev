@@ -35,7 +35,7 @@ export function Navbar() {
               href={CALENDLY_AGENCE_URL}
               className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors"
             >
-              Demander des apports d&apos;affaires
+               Soumettre ma candidature
             </a>
           </div>
         </div>

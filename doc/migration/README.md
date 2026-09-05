@@ -201,6 +201,7 @@ flowchart LR
 | Task | Details |
 |------|---------|
 | Legal editor | Read/write `doc/tech-stack/*.md` via API; preview via existing loaders |
+| **Funnel builder** | Spec-driven vente/onboarding briefs in `content/funnels/` — layout, steps, Cursor tickets (`lib/admin/funnels/*`, `/api/admin/funnels/*`) |
 | Booking templates | Editor UI + React Email preview via `render-service.ts` |
 | Template sync | Port or wrap [`crm/template_code_sync.py`](../../crm/template_code_sync.py) |
 | Runtime templates | CRUD `booking_email_templates` (from booking_resend) |
@@ -325,11 +326,11 @@ Landing
 
 | Path (segments after audience) | Supabase | Repo files | lib/ modules | API (target) |
 |-------------------------------|----------|------------|--------------|--------------|
-| `sales/funnel/discovery` | — | — | — | placeholder |
-| `sales/funnel/pitch` | — | — | — | placeholder |
-| `sales/funnel/closing` | — | — | — | placeholder |
+| `sales/funnel/discovery` | — | `content/funnels/{audience}/vente/discovery/` | `lib/admin/funnels/*` | `/api/admin/funnels` |
+| `sales/funnel/pitch` | — | `content/funnels/{audience}/vente/pitch/` | same | same |
+| `sales/funnel/closing` | — | `content/funnels/{audience}/vente/closing/` | same | same |
 | `sales/mockup` | `agence_demandes` | — | `lib/agence/demandes-repo.ts` (read on site) | `GET/PATCH /api/admin/demandes` |
-| `onboarding/funnel` | — | — | — | placeholder |
+| `onboarding/funnel` | — | `content/funnels/{audience}/onboarding/` | `lib/admin/funnels/*` | `/api/admin/funnels` |
 | `onboarding/fiche_form` | `agence`, `entreprise` | — | profile builder (new `lib/admin/`) | `POST /api/admin/onboarding/[category]` |
 | `dashboard` | — | — | — | placeholder / analytics |
 | `legal/cgv` | — | `doc/tech-stack/cvg_master.md` or `cvg_entreprise.md` | `lib/site/legal-content.ts` | `GET/PUT /api/admin/legal/[doc]` |
@@ -468,7 +469,7 @@ Update this table as migration progresses.
 |-------|--------|-------|
 | P0 — Migration doc | Done | This file |
 | P1 — Next shell + CRUD | Done | `/internal/funnels` + `/api/admin/*` |
-| P2 — Content studio | Not started | |
+| P2 — Content studio | In progress | Funnel builder (spec JSON) shipped; legal/booking editors pending |
 | P3 — Comms ops | Not started | |
 | P4 — Scraper optional | Not started | |
 

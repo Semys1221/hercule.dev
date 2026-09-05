@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "presets": [
+    {
+      "id": "question",
+      "label": "Question",
+      "description": "Question avec réponses multiples (max 6), parcours linéaire.",
+      "previewKey": "question",
+      "sharedComponentPath": "components/funnels/presets/question-step.tsx"
+    },
+    {
+      "id": "form",
+      "label": "Form",
+      "description": "Formulaire multi-champs partagé (catalogue fixe).",
+      "previewKey": "form",
+      "sharedComponentPath": "components/funnels/presets/form-step.tsx"
+    },
+    {
+      "id": "other",
+      "label": "Other",
+      "description": "Composant custom — généré via ticket edits_to_make.",
+      "previewKey": "other",
+      "sharedComponentPath": null
+    }
+  ],
+  "formFieldCatalog": [
+    { "id": "firstName", "label": "Prénom" },
+    { "id": "lastName", "label": "Nom" },
+    { "id": "email", "label": "Email" },
+    { "id": "phone", "label": "Téléphone" },
+    { "id": "company", "label": "Société" },
+    { "id": "role", "label": "Rôle" },
+    { "id": "message", "label": "Message" }
+  ]
+}
