@@ -13,21 +13,36 @@ import requests
 
 from config import grok_api_key
 from lead_links import apply_prompt_link_variables, resolve_lead_cta_link
-from legal_content import build_legal_knowledge_markdown
+from legal_content import build_knowledge_pack_cached
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
 GROK_API_URL = "https://api.x.ai/v1/chat/completions"
-PRIMARY_MODEL = "grok-4-1-fast-reasoning"
+PRIMARY_MODEL = "grok-4-1-fast"
 FALLBACK_MODEL = "grok-build-0.1"
+MAX_OUTPUT_TOKENS = 200
+INBOUND_TEXT_MAX_CHARS = 2000
 
-GLOBAL_RULES = """You are Béatrice Meyer, qualification lead at Hercule (hercule.dev).
+
+def truncate_inbound_text(text: str, max_chars: int = INBOUND_TEXT_MAX_CHARS) -> str:
+    trimmed = (text or "").strip()
+    if not trimmed:
+        return "(empty body)"
+    if len(trimmed) <= max_chars:
+        return trimmed
+    return f"{trimmed[: max_chars - 1]}…"
+
+
+def build_global_rules(*, max_sentences: int = 3) -> str:
+    n = max(1, min(10, max_sentences))
+    sentence_label = "sentence" if n == 1 else "sentences"
+    return f"""You are Béatrice Meyer, qualification lead at Hercule (hercule.dev).
 
 Output JSON only with keys: should_reply (boolean), reply_text (string|null), reason (string).
 
 Reply rules when should_reply is true:
 - Plain text only in reply_text (no HTML, no markdown).
-- 2 to 3 sentences maximum.
+- Write exactly {n} {sentence_label} in reply_text.
 - Structure: acknowledge → address the question → redirect with urgent CTA to book a call.
 - Always sign off as "Béatrice Meyer".
 - Add urgency to the CTA (book this week / reserve a slot now).
@@ -38,55 +53,42 @@ Safety:
 - Use only the CTA link provided below — never invent URLs."""
 
 
-def _read_repo_file(relative_path: str) -> str:
-    return (_REPO_ROOT / relative_path).read_text(encoding="utf-8")
+GLOBAL_RULES = build_global_rules(max_sentences=3)
 
 
-def _extract_entreprise_faq(markdown: str) -> str:
-    start = markdown.find("### Questions entreprise")
-    if start < 0:
-        return ""
-    end = markdown.find("---", start + 1)
-    section = markdown[start:end] if end > start else markdown[start:]
-    rows: list[str] = []
-    for line in section.split("\n"):
-        match = re.match(r"^\|\s*E\d+\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|$", line)
-        if match:
-            rows.append(f"Q: {match.group(1)}\nA: {match.group(2)}")
-    return "\n\n".join(rows)
+def assemble_system_prompt(
+    config: dict[str, Any],
+    prompt_snapshot: str,
+    *,
+    max_sentences: int = 3,
+    custom_directive: str | None = None,
+) -> str:
+    parts = [
+        build_global_rules(max_sentences=max_sentences),
+        "",
+        "## Knowledge pack",
+        build_knowledge_pack(config),
+        "",
+        "## Campaign prompt",
+        prompt_snapshot,
+    ]
+    directive = (custom_directive or "").strip()
+    if directive:
+        parts.extend(["", "## Custom directive (operator)", directive])
+    return "\n".join(parts)
 
 
 def build_knowledge_pack(config: dict[str, Any]) -> str:
-    legal_knowledge = build_legal_knowledge_markdown()
-    deliverance = _read_repo_file("doc/tech-stack/deliverance/front-client.md")
-    overview = _read_repo_file("doc/tech-stack/00-overview.md")
-    entreprise_faq = _extract_entreprise_faq(deliverance)
     niche = config.get("niche_metadata") or {}
     niche_angle = niche.get("angle") if isinstance(niche.get("angle"), str) else config.get("niche_preset_id", "")
     niche_effectif = niche.get("effectif_cible") if isinstance(niche.get("effectif_cible"), str) else ""
     target_type = str(config.get("target_type") or "buyer")
-    speaking_to = "agence (Buyer)" if target_type == "buyer" else "entreprise (Seller)"
-
-    parts = [
-        "# Knowledge pack (ground truth only — do not invent facts outside this pack)",
-        "",
-        "## Product overview",
-        overview[:4000],
-        "",
-        "## Legal & CGV (ground truth)",
-        legal_knowledge,
-        "",
-        "## Entreprise FAQ (Seller)",
-        entreprise_faq or "Entreprise service is free. No commission. Calendly via email.",
-        "",
-        "## Niche context",
-        f"Preset: {config.get('niche_preset_id', '')}",
-        f"Angle: {niche_angle}",
-    ]
-    if niche_effectif:
-        parts.append(f"Target size: {niche_effectif}")
-    parts.append(f"Speaking to: {speaking_to}")
-    return "\n".join(parts)
+    return build_knowledge_pack_cached(
+        str(config.get("niche_preset_id") or ""),
+        target_type,
+        str(niche_angle or ""),
+        str(niche_effectif or ""),
+    )
 
 
 def _resolve_model(env_name: str, default: str) -> str:
@@ -113,6 +115,18 @@ def _parse_grok_json(content: str) -> dict[str, Any]:
     }
 
 
+def _parse_cost_usd_ticks(data: dict[str, Any]) -> int | None:
+    usage = data.get("usage")
+    if not isinstance(usage, dict):
+        return None
+    raw = usage.get("cost_in_usd_ticks")
+    if isinstance(raw, int):
+        return raw
+    if isinstance(raw, str) and raw.strip().isdigit():
+        return int(raw.strip())
+    return None
+
+
 def _parse_rate_limit_wait_seconds(error_text: str) -> float | None:
     match = re.search(r"try again in ([\d.]+)s", error_text, re.I)
     if not match:
@@ -128,7 +142,11 @@ def _is_rate_limit_error(exc: BaseException) -> bool:
     return "429" in text or "rate limit" in text.lower()
 
 
-def _call_grok_model(model: str, system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str]:
+def _call_grok_model(
+    model: str,
+    system_prompt: str,
+    user_prompt: str,
+) -> tuple[dict[str, Any], str, int | None]:
     response = requests.post(
         GROK_API_URL,
         headers={
@@ -138,7 +156,7 @@ def _call_grok_model(model: str, system_prompt: str, user_prompt: str) -> tuple[
         json={
             "model": model,
             "temperature": 0.2,
-            "max_tokens": 400,
+            "max_tokens": MAX_OUTPUT_TOKENS,
             "response_format": {"type": "json_object"},
             "messages": [
                 {"role": "system", "content": system_prompt},
@@ -155,15 +173,20 @@ def _call_grok_model(model: str, system_prompt: str, user_prompt: str) -> tuple[
     content = (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
     if not str(content).strip():
         raise RuntimeError(f"Grok {model} returned empty content")
-    return _parse_grok_json(str(content)), model
+    return _parse_grok_json(str(content)), model, _parse_cost_usd_ticks(data)
 
 
-def _generate_with_models(system_prompt: str, user_prompt: str) -> tuple[dict[str, Any], str]:
+def _generate_with_models(
+    system_prompt: str,
+    user_prompt: str,
+) -> tuple[dict[str, Any], str, int | None]:
     primary = _resolve_model("GROK_PRIMARY_MODEL", PRIMARY_MODEL)
     fallback = _resolve_model("GROK_FALLBACK_MODEL", FALLBACK_MODEL)
     try:
         return _call_grok_model(primary, system_prompt, user_prompt)
     except Exception as primary_err:
+        if not fallback or not _is_rate_limit_error(primary_err):
+            raise
         try:
             return _call_grok_model(fallback, system_prompt, user_prompt)
         except Exception as fallback_err:
@@ -178,12 +201,25 @@ def _target_type_from_config(config: dict[str, Any]) -> Literal["buyer", "seller
     return "seller" if value == "seller" else "buyer"
 
 
+def _max_sentences_from_config(config: dict[str, Any], override: int | None = None) -> int:
+    if override is not None:
+        return max(1, min(10, override))
+    raw = config.get("max_sentences", 2)
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        value = 2
+    return max(1, min(10, value))
+
+
 def generate_reply_preview(
     config: dict[str, Any],
     inbound_text: str,
     lead_email: str,
     *,
     prompt_override: str | None = None,
+    max_sentences: int | None = None,
+    custom_directive: str | None = None,
 ) -> dict[str, Any]:
     prompt_snapshot = (
         prompt_override
@@ -200,17 +236,13 @@ def generate_reply_preview(
         cta_link,
         target_type,
     )
+    sentence_count = _max_sentences_from_config(config, max_sentences)
 
-    system_prompt = "\n".join(
-        [
-            GLOBAL_RULES,
-            "",
-            "## Knowledge pack",
-            build_knowledge_pack(config),
-            "",
-            "## Campaign prompt",
-            prompt_snapshot,
-        ]
+    system_prompt = assemble_system_prompt(
+        config,
+        prompt_snapshot,
+        max_sentences=sentence_count,
+        custom_directive=custom_directive,
     )
     user_prompt = "\n".join(
         [
@@ -219,12 +251,12 @@ def generate_reply_preview(
             f"CTA link (use this exact URL in reply_text): {cta_link}",
             "",
             "Inbound reply to answer:",
-            inbound_text,
+            truncate_inbound_text(inbound_text),
         ]
     )
 
     try:
-        decision, model = _generate_with_models(system_prompt, user_prompt)
+        decision, model, cost_ticks = _generate_with_models(system_prompt, user_prompt)
     except Exception as exc:
         if not _is_rate_limit_error(exc):
             raise
@@ -232,6 +264,6 @@ def generate_reply_preview(
         if wait_s is None:
             raise
         time.sleep(min(wait_s + 1.0, 90.0))
-        decision, model = _generate_with_models(system_prompt, user_prompt)
+        decision, model, cost_ticks = _generate_with_models(system_prompt, user_prompt)
 
-    return {**decision, "model": model}
+    return {**decision, "model": model, "cost_usd_ticks": cost_ticks}

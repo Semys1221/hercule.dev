@@ -21,8 +21,16 @@ from pending_table_state import (
     paginate_rows,
     reply_draft_key,
     reply_mode_exit_confirm_key,
+    set_draft,
     set_reply_mode_enabled,
 )
+from reply_mode_ui import (
+    render_custom_ai_panel,
+    render_selectable_readonly,
+    render_sentence_count_toggle,
+)
+from grok_usage_ui import render_grok_usage_badge
+from config import grok_api_key_status
 from supabase_repo import get_global_auto_send_enabled, get_lead_replies_batch, upsert_lead_reply
 
 
@@ -90,7 +98,7 @@ def _render_exit_bar(
     confirm_key = reply_mode_exit_confirm_key(campaign_id)
     has_unsaved = page_has_unsaved_drafts(campaign_id, page_rows, db_drafts)
 
-    exit_col, info_col = st.columns([1.2, 4])
+    exit_col, info_col, quota_col = st.columns([1.2, 3.2, 1.2])
     with exit_col:
         if st.button("← Quitter Reply Mode", key=f"reply_mode_exit_{campaign_id}"):
             if has_unsaved:
@@ -106,6 +114,10 @@ def _render_exit_bar(
             f"**Reply Mode** · Campagne: {campaign_name} · "
             f"{auto_label}"
         )
+
+    with quota_col:
+        grok_ok, _ = grok_api_key_status()
+        render_grok_usage_badge(grok_ok=grok_ok, key_prefix=f"reply_mode_{campaign_id}")
 
     if not st.session_state.get(confirm_key):
         return False
@@ -131,6 +143,7 @@ def render_reply_mode_view(
     instantly_client: Any,
     campaign_id: str,
     campaign_name: str,
+    config: dict[str, Any],
     pending_rows: list[PendingReplyRow],
     cache_key: str,
     invalidate_thread_cache: Callable[..., None],
@@ -216,16 +229,10 @@ def render_reply_mode_view(
             col_in, col_draft = st.columns(2)
             with col_in:
                 st.markdown("**Message prospect**")
-                st.text_area(
-                    "Message prospect",
-                    value=inbound_body or "(vide)",
-                    height=200,
-                    disabled=True,
-                    key=f"reply_mode_inbound_{campaign_id}_{email_key}",
-                    label_visibility="collapsed",
-                )
+                render_selectable_readonly(inbound_body or "(vide)")
             with col_draft:
                 st.markdown("**Brouillon IA**")
+                render_sentence_count_toggle(campaign_id, row.lead_email)
                 st.text_area(
                     "Brouillon IA",
                     height=200,
@@ -236,6 +243,14 @@ def render_reply_mode_view(
                     st.caption("Pas de brouillon — utilisez Try agent en mode normal.")
                 elif dirty:
                     st.caption("non enregistré")
+
+                render_custom_ai_panel(
+                    campaign_id=campaign_id,
+                    lead_email=row.lead_email,
+                    config=config,
+                    inbound_body=inbound_body,
+                    on_generated=lambda text: set_draft(campaign_id, row.lead_email, text),
+                )
 
                 action_col1, action_col2 = st.columns(2)
                 with action_col1:

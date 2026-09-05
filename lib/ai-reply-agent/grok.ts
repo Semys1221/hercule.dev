@@ -2,20 +2,25 @@ import {
   applyPromptLinkVariables,
   resolveLeadCtaLink,
 } from "./lead-links";
+import { truncateInboundText } from "./inbound";
 
 import type { AiReplyTargetType, GroqReplyDecision } from "./types";
 
 const GROK_API_URL = "https://api.x.ai/v1/chat/completions";
-const PRIMARY_MODEL = "grok-4-1-fast-reasoning";
+const PRIMARY_MODEL = "grok-4-1-fast";
 const FALLBACK_MODEL = "grok-build-0.1";
+const MAX_OUTPUT_TOKENS = 200;
 
-const GLOBAL_RULES = `You are Béatrice Meyer, qualification lead at Hercule (hercule.dev).
+export function buildGlobalRules(maxSentences = 3): string {
+  const n = Math.max(1, Math.min(10, maxSentences));
+  const sentenceLabel = n === 1 ? "sentence" : "sentences";
+  return `You are Béatrice Meyer, qualification lead at Hercule (hercule.dev).
 
 Output JSON only with keys: should_reply (boolean), reply_text (string|null), reason (string).
 
 Reply rules when should_reply is true:
 - Plain text only in reply_text (no HTML, no markdown).
-- 2 to 3 sentences maximum.
+- Write exactly ${n} ${sentenceLabel} in reply_text.
 - Structure: acknowledge → address the question → redirect with urgent CTA to book a call.
 - Always sign off as "Béatrice Meyer".
 - Add urgency to the CTA (book this week / reserve a slot now).
@@ -24,6 +29,29 @@ Safety:
 - If the answer is NOT clearly supported by the knowledge pack, set should_reply to false and explain in reason.
 - Never invent prices, SLAs, guarantees, or product features.
 - Use only the CTA link provided below — never invent URLs.`;
+}
+
+function assembleSystemPrompt(params: {
+  knowledgePack: string;
+  promptSnapshot: string;
+  maxSentences?: number;
+  customDirective?: string;
+}): string {
+  const parts = [
+    buildGlobalRules(params.maxSentences ?? 3),
+    "",
+    "## Knowledge pack",
+    params.knowledgePack,
+    "",
+    "## Campaign prompt",
+    params.promptSnapshot,
+  ];
+  const directive = params.customDirective?.trim();
+  if (directive) {
+    parts.push("", "## Custom directive (operator)", directive);
+  }
+  return parts.join("\n");
+}
 
 function getGrokApiKey(): string {
   const key =
@@ -35,6 +63,11 @@ function getGrokApiKey(): string {
 function resolveModel(name: string, fallback: string): string {
   const value = process.env[name]?.trim();
   return value || fallback;
+}
+
+function isRateLimitError(err: unknown): boolean {
+  const text = err instanceof Error ? err.message : String(err);
+  return text.includes("429") || /rate limit/i.test(text);
 }
 
 function parseGrokJson(content: string): GroqReplyDecision {
@@ -56,11 +89,25 @@ function parseGrokJson(content: string): GroqReplyDecision {
   };
 }
 
+function parseCostUsdTicks(data: {
+  usage?: { cost_in_usd_ticks?: number | string | null };
+}): number | null {
+  const raw = data.usage?.cost_in_usd_ticks;
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw;
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 async function callGrokModel(
   model: string,
   systemPrompt: string,
   userPrompt: string,
-): Promise<{ decision: GroqReplyDecision; model: string }> {
+): Promise<{ decision: GroqReplyDecision; model: string; costUsdTicks: number | null }> {
   const response = await fetch(GROK_API_URL, {
     method: "POST",
     headers: {
@@ -70,7 +117,7 @@ async function callGrokModel(
     body: JSON.stringify({
       model,
       temperature: 0.2,
-      max_tokens: 400,
+      max_tokens: MAX_OUTPUT_TOKENS,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt },
@@ -86,12 +133,17 @@ async function callGrokModel(
 
   const data = (await response.json()) as {
     choices?: Array<{ message?: { content?: string } }>;
+    usage?: { cost_in_usd_ticks?: number | string | null };
   };
   const content = data.choices?.[0]?.message?.content;
   if (!content?.trim()) {
     throw new Error(`Grok ${model} returned empty content`);
   }
-  return { decision: parseGrokJson(content), model };
+  return {
+    decision: parseGrokJson(content),
+    model,
+    costUsdTicks: parseCostUsdTicks(data),
+  };
 }
 
 export async function generateReplyDecision(params: {
@@ -100,7 +152,13 @@ export async function generateReplyDecision(params: {
   inboundText: string;
   leadEmail: string;
   targetType: AiReplyTargetType;
-}): Promise<{ decision: GroqReplyDecision; model: string }> {
+  maxSentences?: number;
+  customDirective?: string;
+}): Promise<{
+  decision: GroqReplyDecision;
+  model: string;
+  costUsdTicks: number | null;
+}> {
   const primaryModel = resolveModel("GROK_PRIMARY_MODEL", PRIMARY_MODEL);
   const fallbackModel = resolveModel("GROK_FALLBACK_MODEL", FALLBACK_MODEL);
 
@@ -111,15 +169,12 @@ export async function generateReplyDecision(params: {
     params.targetType,
   );
 
-  const systemPrompt = [
-    GLOBAL_RULES,
-    "",
-    "## Knowledge pack",
-    params.knowledgePack,
-    "",
-    "## Campaign prompt",
+  const systemPrompt = assembleSystemPrompt({
+    knowledgePack: params.knowledgePack,
     promptSnapshot,
-  ].join("\n");
+    maxSentences: params.maxSentences,
+    customDirective: params.customDirective,
+  });
 
   const userPrompt = [
     `Lead email: ${params.leadEmail}`,
@@ -127,7 +182,7 @@ export async function generateReplyDecision(params: {
     `CTA link (use this exact URL in reply_text): ${ctaLink}`,
     "",
     "Inbound reply to answer:",
-    params.inboundText,
+    truncateInboundText(params.inboundText),
   ].join("\n");
 
   try {
@@ -136,6 +191,9 @@ export async function generateReplyDecision(params: {
     const primaryMessage =
       primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
     console.warn("[ai-reply-agent] primary Grok model failed:", primaryMessage);
+    if (!fallbackModel || !isRateLimitError(primaryErr)) {
+      throw primaryErr instanceof Error ? primaryErr : new Error(primaryMessage);
+    }
     try {
       return await callGrokModel(fallbackModel, systemPrompt, userPrompt);
     } catch (fallbackErr) {

@@ -18,6 +18,7 @@ def _row(email: str) -> PendingReplyRow:
         last_reply_preview="Hello",
         last_reply_id=None,
         thread_id=None,
+        interest_status=1,
     )
 
 
@@ -25,12 +26,14 @@ class BulkTryAgentConcurrencyTests(unittest.TestCase):
     @patch("pending_bulk_actions.upsert_lead_reply")
     @patch("pending_bulk_actions.generate_reply_preview")
     @patch("pending_bulk_actions.resolve_inbound_body")
+    @patch("pending_bulk_actions.get_lead_reply", return_value="")
     @patch("pending_bulk_actions.InstantlyClient")
     @patch("pending_bulk_actions.bulk_try_agent_concurrency", return_value=5)
     def test_runs_faster_than_sequential(
         self,
         _mock_concurrency: MagicMock,
         mock_client_cls: MagicMock,
+        _mock_get_reply: MagicMock,
         mock_resolve: MagicMock,
         mock_generate: MagicMock,
         _mock_upsert: MagicMock,
@@ -68,12 +71,14 @@ class BulkTryAgentConcurrencyTests(unittest.TestCase):
     @patch("pending_bulk_actions.upsert_lead_reply")
     @patch("pending_bulk_actions.generate_reply_preview")
     @patch("pending_bulk_actions.resolve_inbound_body")
+    @patch("pending_bulk_actions.get_lead_reply", return_value="")
     @patch("pending_bulk_actions.InstantlyClient")
     @patch("pending_bulk_actions.bulk_try_agent_concurrency", return_value=5)
     def test_failure_on_one_lead_does_not_block_others(
         self,
         _mock_concurrency: MagicMock,
         mock_client_cls: MagicMock,
+        _mock_get_reply: MagicMock,
         mock_resolve: MagicMock,
         mock_generate: MagicMock,
         _mock_upsert: MagicMock,
@@ -102,6 +107,28 @@ class BulkTryAgentConcurrencyTests(unittest.TestCase):
         self.assertEqual(result.succeeded, ["good@example.com"])
         self.assertEqual(result.failed, [("bad@example.com", "grok failed")])
         self.assertEqual(mock_client_cls.call_count, 2)
+
+    @patch("pending_bulk_actions.upsert_lead_reply")
+    @patch("pending_bulk_actions.generate_reply_preview")
+    @patch("pending_bulk_actions.get_lead_reply", return_value="Existing draft")
+    @patch("pending_bulk_actions.bulk_try_agent_concurrency", return_value=1)
+    def test_skips_when_draft_exists(
+        self,
+        _mock_concurrency: MagicMock,
+        _mock_get_reply: MagicMock,
+        mock_generate: MagicMock,
+        _mock_upsert: MagicMock,
+    ) -> None:
+        row = _row("lead@example.com")
+        result = bulk_try_agent(
+            MagicMock(api_key="test-key"),
+            {"prompt_snapshot": "x", "target_type": "buyer"},
+            [row],
+            {"lead@example.com"},
+            "camp-1",
+        )
+        self.assertEqual(result.skipped, [("lead@example.com", "Brouillon déjà présent")])
+        mock_generate.assert_not_called()
 
 
 if __name__ == "__main__":

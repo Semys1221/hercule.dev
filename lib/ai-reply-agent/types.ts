@@ -47,6 +47,7 @@ export type AiReplyAgentConfig = {
   prompt_snapshot: string;
   webhook_id: string | null;
   ooo_webhook_id: string | null;
+  max_sentences: number;
   status: AiReplyConfigStatus;
   initialized_at: string | null;
   updated_at: string;

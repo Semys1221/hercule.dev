@@ -169,6 +169,10 @@ def render_pending_table(
     selected_replies = get_lead_replies_batch(campaign_id, list(selected_emails))
     send_enabled = all(selected_replies.get(email.strip().lower(), "").strip() for email in selected_emails)
     grok_ok, grok_hint = grok_api_key_status()
+    regenerate_existing = st.checkbox(
+        "Regénérer même si brouillon",
+        key=f"pending_try_regenerate_{campaign_id}_{selected_tag}",
+    )
     action_cols = st.columns([1, 1, 1.5])
     with action_cols[0]:
         delete_clicked = st.button(
@@ -213,6 +217,7 @@ def render_pending_table(
                 selected_emails,
                 campaign_id,
                 on_progress=on_try_progress,
+                regenerate_existing=regenerate_existing,
             )
             progress.empty()
             status.empty()

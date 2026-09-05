@@ -107,6 +107,7 @@ export async function updateInboundStatus(
   aiStatus: AiReplyMessageStatus,
   aiReason?: string | null,
   groqModel?: string | null,
+  groqCostUsdTicks?: number | null,
 ): Promise<void> {
   const client = createAiReplyAgentClient();
   const { error } = await client
@@ -115,6 +116,7 @@ export async function updateInboundStatus(
       ai_status: aiStatus,
       ai_reason: aiReason ?? null,
       groq_model: groqModel ?? null,
+      groq_cost_usd_ticks: groqCostUsdTicks ?? null,
     })
     .eq("id", messageId);
   if (error) {

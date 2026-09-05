@@ -26,6 +26,7 @@ from config import (
     webhook_secret,
     webhook_url_error,
 )
+from grok_usage_ui import render_grok_usage_badge
 from inbox import dispatch_manual_reply
 from pending_table_state import invalidate_all_editors, is_reply_mode_enabled, set_reply_mode_enabled
 from pending_table_ui import render_pending_table
@@ -782,7 +783,10 @@ readiness = validate_campaign_readiness(config, selected_campaign_id) if config 
 
 grok_ok, grok_hint = grok_api_key_status()
 with st.sidebar:
-    st.subheader("Global")
+    header_col, _ = st.columns([3, 1])
+    with header_col:
+        st.subheader("Global")
+    render_grok_usage_badge(grok_ok=grok_ok, key_prefix="sidebar")
     if not grok_ok:
         st.error(grok_hint)
     st.caption(f"Webhook: `{webhook_public_url()}`")
@@ -806,14 +810,20 @@ if status in ("waiting_for_replies", "paused"):
         st.session_state.get(pending_cache_key, [])
     )
     if is_reply_mode_enabled(selected_campaign_id) and pending_rows_for_mode:
-        render_reply_mode_view(
-            instantly_client=instantly_client,
-            campaign_id=selected_campaign_id,
-            campaign_name=selected_campaign_name,
-            pending_rows=pending_rows_for_mode,
-            cache_key=pending_cache_key,
-            invalidate_thread_cache=invalidate_thread_cache,
-        )
+        if not config:
+            st.error("Config campagne manquante — Reply Mode indisponible.")
+            set_reply_mode_enabled(selected_campaign_id, False)
+            st.rerun()
+        else:
+            render_reply_mode_view(
+                instantly_client=instantly_client,
+                campaign_id=selected_campaign_id,
+                campaign_name=selected_campaign_name,
+                config=config,
+                pending_rows=pending_rows_for_mode,
+                cache_key=pending_cache_key,
+                invalidate_thread_cache=invalidate_thread_cache,
+            )
     elif is_reply_mode_enabled(selected_campaign_id):
         set_reply_mode_enabled(selected_campaign_id, False)
         st.info("Reply Mode fermé — aucun lead en attente.")

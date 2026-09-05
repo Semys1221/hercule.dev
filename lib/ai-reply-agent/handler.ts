@@ -2,6 +2,7 @@ import { upsertLeadReply } from "./lead-replies";
 import { isAutoSendEnabled, isCampaignConfigReady, loadAiReplyConfig } from "./config";
 import { isHandledReplyAgentEvent, isOooReplyEvent } from "./events";
 import { generateReplyDecision } from "./grok";
+import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack } from "./knowledge";
 import {
   insertInboundMessage,
@@ -142,16 +143,25 @@ export async function handleInstantlyReply(
 
   let decision;
   let model: string;
+  let costUsdTicks: number | null = null;
+  const maxSentences = Math.max(1, Math.min(10, config.max_sentences ?? 2));
   try {
     const groq = await generateReplyDecision({
       knowledgePack: buildKnowledgePack(config),
       promptSnapshot: config.prompt_snapshot,
-      inboundText: inboundText || "(empty body)",
+      inboundText: truncateInboundText(inboundText || "(empty body)"),
       leadEmail,
       targetType: config.target_type,
+      maxSentences,
     });
     decision = groq.decision;
     model = groq.model;
+    costUsdTicks = groq.costUsdTicks;
+    if (costUsdTicks != null) {
+      console.info(
+        `[ai-reply-agent] grok cost ticks=${costUsdTicks} model=${model} campaign=${campaignId}`,
+      );
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await updateInboundStatus(inbound.id, "failed", message);
@@ -164,6 +174,7 @@ export async function handleInstantlyReply(
       "skipped_unsafe",
       decision.reason,
       model,
+      costUsdTicks,
     );
     return {
       ok: true,
@@ -176,7 +187,7 @@ export async function handleInstantlyReply(
   await upsertLeadReply(campaignId, leadEmail, decision.reply_text);
 
   if (!(await isAutoSendEnabled())) {
-    await updateInboundStatus(inbound.id, "pending", decision.reason, model);
+    await updateInboundStatus(inbound.id, "pending", decision.reason, model, costUsdTicks);
     return {
       ok: true,
       aiStatus: "pending",
@@ -195,7 +206,7 @@ export async function handleInstantlyReply(
       preferredEmailId: instantlyEmailId ?? undefined,
     });
 
-    await updateInboundStatus(inbound.id, "auto_replied", decision.reason, model);
+    await updateInboundStatus(inbound.id, "auto_replied", decision.reason, model, costUsdTicks);
     await insertOutboundMessage({
       campaignId,
       leadEmail,

@@ -10,6 +10,9 @@ from pending_fetch import PendingReplyRow, is_reply_over_24h
 
 PAGE_SIZE = 25
 REPLY_MODE_PAGE_SIZE = 6
+_DEFAULT_SENTENCE_COUNT = 2
+_MIN_SENTENCE_COUNT = 1
+_MAX_SENTENCE_COUNT = 10
 _PREVIEW_TRUNCATE = 80
 _REPLY_TRUNCATE = 80
 
@@ -79,6 +82,45 @@ def pop_bulk_try_result(campaign_id: str):
 
 def reply_draft_key(campaign_id: str, lead_email: str) -> str:
     return f"pending_reply_text_{campaign_id}_{lead_email.lower()}"
+
+
+def sentence_count_key(campaign_id: str, lead_email: str) -> str:
+    return f"reply_mode_sentence_count_{campaign_id}_{lead_email.lower()}"
+
+
+def custom_ai_open_key(campaign_id: str, lead_email: str) -> str:
+    return f"reply_mode_custom_ai_open_{campaign_id}_{lead_email.lower()}"
+
+
+def custom_directive_key(campaign_id: str, lead_email: str) -> str:
+    return f"reply_mode_custom_directive_{campaign_id}_{lead_email.lower()}"
+
+
+def get_sentence_count(campaign_id: str, lead_email: str) -> int:
+    key = sentence_count_key(campaign_id, lead_email)
+    raw = st.session_state.get(key, _DEFAULT_SENTENCE_COUNT)
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        value = _DEFAULT_SENTENCE_COUNT
+    return max(_MIN_SENTENCE_COUNT, min(_MAX_SENTENCE_COUNT, value))
+
+
+def set_sentence_count(campaign_id: str, lead_email: str, count: int) -> None:
+    clamped = max(_MIN_SENTENCE_COUNT, min(_MAX_SENTENCE_COUNT, count))
+    st.session_state[sentence_count_key(campaign_id, lead_email)] = clamped
+
+
+def get_custom_ai_open(campaign_id: str, lead_email: str) -> bool:
+    return bool(st.session_state.get(custom_ai_open_key(campaign_id, lead_email), False))
+
+
+def set_custom_ai_open(campaign_id: str, lead_email: str, open_: bool) -> None:
+    st.session_state[custom_ai_open_key(campaign_id, lead_email)] = open_
+
+
+def get_custom_directive(campaign_id: str, lead_email: str) -> str:
+    return str(st.session_state.get(custom_directive_key(campaign_id, lead_email), "") or "")
 
 
 def editor_df_key(campaign_id: str, tag: str) -> str:

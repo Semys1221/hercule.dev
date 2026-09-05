@@ -106,6 +106,10 @@ def grok_api_key() -> str:
     return env("GROK_API_KEY") or env("XAI_API_KEY")
 
 
+def grok_management_key() -> str:
+    return env("XAI_MANAGEMENT_KEY") or env("XAI_MGMT_KEY") or env("GROK_MANAGEMENT_KEY")
+
+
 def groq_api_key() -> str:
     """Deprecated alias — use grok_api_key()."""
     return grok_api_key()

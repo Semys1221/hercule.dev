@@ -21,6 +21,10 @@ export function getConfidentialiteMarkdown(): string {
   return readDocFile("confidentialite.md")
 }
 
+export function getAiReplyKnowledgeMarkdown(): string {
+  return readDocFile("ai-reply-knowledge.md")
+}
+
 export function buildLegalKnowledgeMarkdown(audience: LegalAudience = "agence"): string {
   return [
     "# Legal knowledge (ground truth)",

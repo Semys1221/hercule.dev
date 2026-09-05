@@ -12,9 +12,15 @@ _REPO_ROOT = _APP_DIR.parents[1]
 _CRM_DIR = _REPO_ROOT / "crm"
 _DEMANDS_DIR = _REPO_ROOT / "app" / "streamlit_demands"
 
-for path in (_REPO_ROOT, _APP_DIR, _CRM_DIR, _DEMANDS_DIR):
-    if str(path) not in sys.path:
-        sys.path.insert(0, str(path))
+# streamlit_demands/config.py shadows crm/config.py if both are on sys.path.
+_blocked = {str(_DEMANDS_DIR)}
+sys.path[:] = [entry for entry in sys.path if entry not in _blocked]
+
+for path in (_APP_DIR, _CRM_DIR):
+    path_str = str(path)
+    if path_str in sys.path:
+        sys.path.remove(path_str)
+    sys.path.insert(0, path_str)
 
 from landing import render_landing
 from shell import render_workspace

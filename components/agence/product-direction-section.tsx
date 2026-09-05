@@ -2,10 +2,23 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Check, ChevronDown, ChevronRight, Shield } from "lucide-react"
+import { Check, ChevronDown, ChevronRight, Lock, Shield } from "lucide-react"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { CALENDLY_AGENCE_URL } from "@/lib/constants"
 import { cn } from "@/lib/utils"
+
+const HERCULE_TEASER_FEATURES = [
+  "Contrats déjà disponibles — demandes qualifiées dans notre pipeline, pas un démarrage à froid.",
+  "Vos tarifs, 0 % commission — chaque contrat signé à vos prix, sans commission.",
+  "Jusqu'à 4 clients signés par mois pour votre agence.",
+] as const
+
+const HERCULE_GHOST_FEATURES = [
+  "Garantie MRR 3 000 €",
+  "Signature interne",
+  "Avantages Starter",
+] as const
 
 const PRICING_PLANS = [
   {
@@ -80,29 +93,48 @@ function MetallicTitle({ name }: { name: string }) {
   )
 }
 
-function LockedInclusionsPreview() {
+function GatedDetails() {
   return (
-    <div
-      aria-hidden
-      tabIndex={-1}
-      className="blur-sm opacity-50 pointer-events-none select-none border border-white/10 rounded-md overflow-hidden"
-    >
-      <div className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-neutral-200 text-sm font-medium">
-        Ce qui est inclus
-        <ChevronDown className="w-4 h-4 text-neutral-500 shrink-0" />
-      </div>
-      <ul className="space-y-3 px-4 pb-4 pt-3 border-t border-white/[0.06]">
-        {[
-          "Contrats déjà disponibles dans notre pipeline qualifié.",
-          "Qualification et signature internes pour votre agence.",
-          "Jusqu'à 4 clients signés par mois.",
-        ].map((feature) => (
-          <li key={feature} className="flex items-start gap-3 text-neutral-400 text-sm">
-            <Check className="w-4 h-4 mt-0.5 shrink-0 text-neutral-400" />
+    <div className="mt-6">
+      <ul className="space-y-2.5">
+        {HERCULE_TEASER_FEATURES.map((feature) => (
+          <li key={feature} className="flex items-start gap-2.5 text-sm text-neutral-300">
+            <Check className="w-4 h-4 mt-0.5 shrink-0 text-neutral-500" />
             {feature}
           </li>
         ))}
       </ul>
+
+      <div
+        role="region"
+        aria-label="Détails réservés aux membres Hercule"
+        className="relative mt-4 rounded-lg border border-white/[0.06] overflow-hidden"
+      >
+        <ul className="p-4 space-y-2 opacity-[0.15] select-none pointer-events-none" aria-hidden>
+          {HERCULE_GHOST_FEATURES.map((feature) => (
+            <li key={feature} className="text-sm text-neutral-400 flex items-center gap-2">
+              <Lock className="w-3.5 h-3.5 shrink-0" />
+              {feature}
+            </li>
+          ))}
+        </ul>
+
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0A0A0A]/80 backdrop-blur-[1px] px-4 py-6">
+          <div className="flex items-center gap-2 text-neutral-400">
+            <Lock className="w-4 h-4 shrink-0" />
+            <span className="text-sm font-medium text-center">Détails réservés aux membres Hercule</span>
+          </div>
+          <p className="text-xs text-neutral-500 text-center max-w-[240px]">
+            Débloqué après validation de votre profil via l&apos;offre Starter.
+          </p>
+          <a
+            href={CALENDLY_AGENCE_URL}
+            className="text-sm text-white border border-white/20 rounded-md px-3 py-1.5 hover:bg-white/[0.04] transition-colors"
+          >
+            Demander l&apos;accès
+          </a>
+        </div>
+      </div>
     </div>
   )
 }
@@ -120,7 +152,9 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
         "rounded-xl relative overflow-hidden bg-[#0A0A0A]",
         plan.featured
           ? "p-8 border border-white/[0.22] ring-1 ring-white/[0.06] shadow-[0_0_48px_rgba(255,255,255,0.04)] md:scale-[1.02] md:z-10"
-          : "p-8 border border-white/[0.08]",
+          : plan.profileOnly
+            ? "p-8 border border-dashed border-white/[0.08]"
+            : "p-8 border border-white/[0.08]",
       )}
     >
       {plan.featured && (
@@ -150,24 +184,22 @@ function PricingCard({ plan, index }: { plan: (typeof PRICING_PLANS)[number]; in
         )}
 
         {plan.profileOnly && (
-          <span className="absolute top-0 right-0 z-20 flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-400 border border-white/10 bg-white/[0.02] rounded-md px-2 py-0.5">
-            <Check className="w-3 h-3" />
-            Éligible sur profil
+          <span className="absolute top-0 right-0 z-20 flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-500 border border-white/10 bg-white/[0.02] rounded-md px-2 py-0.5">
+            <Lock className="w-3 h-3" />
+            Réservé aux membres
           </span>
         )}
 
         {plan.profileOnly ? (
           <>
-            <div aria-hidden className="blur-sm opacity-50 pointer-events-none select-none">
-              <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
-              <MetallicTitle name={plan.name} />
-            </div>
-            <p className="text-4xl text-white font-semibold tracking-[-0.04em] mb-2">
+            <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
+            <MetallicTitle name={plan.name} />
+            <p className="text-4xl text-neutral-200 font-semibold tracking-[-0.04em] mb-2">
               {plan.price}
               {plan.priceSuffix && <span className="text-lg text-neutral-500 font-normal">{plan.priceSuffix}</span>}
             </p>
-            <p className="mb-6 text-base text-neutral-400 font-normal leading-snug">{plan.tagline}</p>
-            <LockedInclusionsPreview />
+            <p className="text-base text-neutral-400 font-normal leading-snug">{plan.tagline}</p>
+            <GatedDetails />
           </>
         ) : (
           <>

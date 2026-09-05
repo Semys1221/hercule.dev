@@ -11,6 +11,7 @@ from typing import Any, Literal
 from agent_preview import generate_reply_preview
 from config import bulk_try_agent_concurrency
 from inbox import dispatch_unibox_reply
+from lead_tags import INTERESTED_STATUS
 from pending_fetch import PendingReplyRow, resolve_inbound_body
 from pending_table_state import clear_checkbox
 from shared.instantly_client import InstantlyClient
@@ -41,8 +42,18 @@ def _process_one_lead(
     config: dict[str, Any],
     row: PendingReplyRow,
     api_key: str,
+    regenerate_existing: bool,
+    interested_only: bool,
 ) -> _LeadTryOutcome:
     normalized = row.lead_email.strip().lower()
+    if interested_only and row.interest_status != INTERESTED_STATUS:
+        return _LeadTryOutcome(normalized, "skipped", "Lead non tagué Interested")
+
+    if not regenerate_existing:
+        existing = get_lead_reply(campaign_id, normalized).strip()
+        if existing:
+            return _LeadTryOutcome(normalized, "skipped", "Brouillon déjà présent")
+
     client = InstantlyClient(api_key)
     try:
         inbound_body = resolve_inbound_body(client, row)
@@ -91,6 +102,8 @@ def bulk_try_agent(
     campaign_id: str,
     *,
     on_progress: Callable[[str, int, int], None] | None = None,
+    regenerate_existing: bool = False,
+    interested_only: bool = True,
 ) -> BulkActionResult:
     api_key = str(getattr(instantly_client, "api_key", "") or "").strip()
     if not api_key:
@@ -135,6 +148,8 @@ def bulk_try_agent(
                 config=config,
                 row=row,
                 api_key=api_key,
+                regenerate_existing=regenerate_existing,
+                interested_only=interested_only,
             ): email
             for email, row in work
         }

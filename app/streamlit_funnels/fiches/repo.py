@@ -2,7 +2,17 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from typing import Any
+
+_CRM_DIR = Path(__file__).resolve().parents[3] / "crm"
+_crm_path = str(_CRM_DIR)
+if _crm_path not in sys.path:
+    sys.path.insert(0, _crm_path)
+elif sys.path[0] != _crm_path:
+    sys.path.remove(_crm_path)
+    sys.path.insert(0, _crm_path)
 
 from slug import generate_unique_slug
 from supabase_repo import find_by_email, get_client, insert_lead

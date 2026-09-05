@@ -5,6 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 from audiences import AUDIENCE_CAPTIONS, AUDIENCE_ICONS, AUDIENCE_LABELS, Audience
+from navigation import init_workspace_path
 
 
 def render_landing() -> None:
@@ -31,4 +32,5 @@ def _render_card(audience: Audience, column: st.delta_generator.DeltaGenerator) 
         if st.button(f"Ouvrir {label}", key=f"landing_{audience}", use_container_width=True, type="primary"):
             st.session_state["funnel_audience"] = audience
             st.session_state["funnel_view"] = "workspace"
+            init_workspace_path(audience)
             st.rerun()

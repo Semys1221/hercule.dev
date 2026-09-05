@@ -2,20 +2,13 @@
 
 from __future__ import annotations
 
-import sys
 from datetime import date
-from pathlib import Path
 
 import streamlit as st
 
-_DEMANDS_DIR = Path(__file__).resolve().parents[2] / "streamlit_demands"
-if str(_DEMANDS_DIR) not in sys.path:
-    sys.path.insert(0, str(_DEMANDS_DIR))
-
-from supabase_repo import get_card, list_all_cards, update_demande, update_teaser
-
 from audiences import Audience
 from components.placeholder import render_placeholder
+from demands.demandes_repo import get_card, list_all_cards, update_demande, update_teaser
 
 NICHE_OPTIONS = [
     "comptabilite",

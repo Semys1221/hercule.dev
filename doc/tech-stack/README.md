@@ -38,8 +38,16 @@ Documentation pour implémenter la plateforme matchmaking agence ↔ entreprise.
 | Doc | Contenu |
 |-----|---------|
 | **[tool/streamlit_reply_agent.md](./tool/streamlit_reply_agent.md)** | **AI Reply Agent** — Instantly `reply_received` → Groq → Unibox · Streamlit Inbox / Problem |
+| [tool/streamlit_funnels.md](./tool/streamlit_funnels.md) | Streamlit Funnels — cockpit interne (prototype IA) |
 
 > Notes brutes : [tool/streamlit_reply_agent/my_raw_notes.md](./tool/streamlit_reply_agent/my_raw_notes.md)
+
+## Migration (Streamlit → Next.js admin)
+
+| Doc | Contenu |
+|-----|---------|
+| **[../migration/README.md](../migration/README.md)** | **Pour agents IA** — pourquoi migrer, source de vérité, inventaire Streamlit, roadmap P1–P4, architecture cible |
+
 
 ## Modules (ordre d'implémentation)
 
