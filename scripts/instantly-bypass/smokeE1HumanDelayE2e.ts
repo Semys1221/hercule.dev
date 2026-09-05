@@ -4,6 +4,10 @@
  * Usage:
  *   pnpm smoke-instantly-bypass-e1-human-delay-e2e --dry-run
  *   pnpm smoke-instantly-bypass-e1-human-delay-e2e --execute
+ *   pnpm smoke-instantly-bypass-e1-human-delay-e2e --execute --prepare
+ *
+ * Optional:
+ *   WEBHOOK_BASE_URL=http://localhost:3000  (local dev with new handler code)
  *
  * Requires in .env:
  *   NEXT_PUBLIC_APP_URL, CRON_SECRET, INSTANTLY_BYPASS_CAMPAIGN_ID,
@@ -12,14 +16,17 @@
 
 import assert from "node:assert/strict";
 
-import { E1_WEBHOOK_HUMAN_DELAY_MS } from "@/lib/instantly-bypass/constants";
+import { E1_WEBHOOK_HUMAN_DELAY_MS, e1WebhookScheduledFor } from "@/lib/instantly-bypass/constants";
+import { findLeadByEmailInCampaign, getInstantlyApiKey } from "@/lib/instantly-bypass/client";
 import { interestedIdempotencyKey } from "@/lib/instantly-bypass/jobs";
+import { insertBypassJob } from "@/lib/instantly-bypass/scheduled-jobs";
 import { createBypassClient } from "@/lib/instantly-bypass/supabase";
 
 import type { InstantlyWebhookPayload } from "@/lib/instantly-bypass/types";
 
 const EXECUTE = process.argv.includes("--execute");
 const DRY_RUN = process.argv.includes("--dry-run") || !EXECUTE;
+const PREPARE = process.argv.includes("--prepare");
 
 const SCHEDULE_TOLERANCE_MS = 2 * 60 * 1000;
 
@@ -143,6 +150,86 @@ async function postWebhook(
   }
 
   return body;
+}
+
+async function prepareLeadForTest(
+  campaignId: string,
+  leadEmail: string,
+  idempotencyKey: string,
+): Promise<void> {
+  const client = createBypassClient();
+  const normalizedEmail = leadEmail.trim().toLowerCase();
+  const now = new Date().toISOString();
+
+  const { error: cancelError } = await client
+    .from("instantly_bypass_jobs")
+    .update({ status: "cancelled", cancelled_at: now })
+    .eq("idempotency_key", idempotencyKey)
+    .eq("status", "pending");
+
+  if (cancelError) {
+    throw new Error(`Failed to cancel pending job: ${cancelError.message}`);
+  }
+
+  const { error: deleteError } = await client
+    .from("instantly_bypass_events")
+    .delete()
+    .eq("idempotency_key", idempotencyKey);
+
+  if (deleteError) {
+    throw new Error(`Failed to delete bypass events: ${deleteError.message}`);
+  }
+
+  const { error: pipelineError } = await client.from("instantly_bypass_pipeline").upsert(
+    {
+      campaign_id: campaignId,
+      lead_email: normalizedEmail,
+      step: "step_0",
+    },
+    { onConflict: "campaign_id,lead_email" },
+  );
+
+  if (pipelineError) {
+    throw new Error(`Failed to reset pipeline step: ${pipelineError.message}`);
+  }
+
+  console.log(`Prepared ${normalizedEmail} for E2E (step_0, no E1 event, no pending job)`);
+}
+
+async function seedPendingJob(
+  campaignId: string,
+  leadEmail: string,
+  idempotencyKey: string,
+  webhookPayload: InstantlyWebhookPayload,
+  receivedAt: Date,
+): Promise<void> {
+  const apiKey = getInstantlyApiKey();
+  const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
+
+  await insertBypassJob({
+    idempotencyKey,
+    campaignId,
+    leadEmail,
+    templateKey: "interested_email1",
+    scheduledFor: e1WebhookScheduledFor(receivedAt),
+    payload: {
+      lead_id: lead?.id ?? null,
+      lead: lead ?? null,
+      webhook_payload: webhookPayload,
+      webhook_received_at: receivedAt.toISOString(),
+      preferred_email_id:
+        typeof webhookPayload.email_id === "string"
+          ? webhookPayload.email_id
+          : undefined,
+      fallback_eaccount:
+        typeof webhookPayload.email_account === "string"
+          ? webhookPayload.email_account
+          : undefined,
+      bypass_send_window: true,
+    },
+  });
+
+  console.log("Seeded pending bypass job (+15 min) for cron execute test");
 }
 
 async function fetchJob(idempotencyKey: string): Promise<BypassJobRow | null> {
@@ -282,25 +369,51 @@ async function runDryRunPhase(
   idempotencyKey: string,
 ): Promise<BypassJobRow> {
   const receivedAt = new Date();
+  const webhookPayload = buildWebhookPayload(campaignId, leadEmail);
   const first = await postWebhook(campaignId, leadEmail);
 
+  if (first.latencyMs != null || first.replyToUuid) {
+    throw new Error(
+      `Webhook sent E1 immediately (old code or no delay). Use WEBHOOK_BASE_URL=http://localhost:3000 with pnpm dev, or deploy the delay change to production.`,
+    );
+  }
+
   if (first.skipped === "already_sent") {
-    console.error("Lead already has E1 sent. Run cleanup SQL:\n");
+    console.error("Lead already has E1 sent. Run with --prepare or cleanup SQL:\n");
     console.error(cleanupSql(campaignId, leadEmail));
     throw new Error("already_sent — cleanup required before E2E test");
   }
 
-  if (first.skipped === "scheduled" || first.skipped === "already_scheduled") {
+  if (first.skipped === "scheduled") {
     const job = await fetchJob(idempotencyKey);
     if (!job) {
       throw new Error(`Expected bypass job for ${idempotencyKey}`);
     }
-    if (first.skipped === "scheduled") {
-      assertJobScheduled(job, receivedAt, campaignId, leadEmail);
-      console.log("OK webhook scheduled E1 (+15 min)");
-    } else {
-      console.log("OK webhook already_scheduled (reusing pending job)");
+    assertJobScheduled(job, receivedAt, campaignId, leadEmail);
+    console.log("OK webhook scheduled E1 (+15 min)");
+  } else if (first.skipped === "already_scheduled") {
+    const job = await fetchJob(idempotencyKey);
+    if (!job) {
+      throw new Error(`Expected bypass job for ${idempotencyKey}`);
     }
+    console.log("OK webhook already_scheduled (reusing pending job)");
+  } else if (first.skipped === "e1_already_in_thread") {
+    console.warn(
+      "Webhook skipped scheduling (E1 already in Unibox thread). Seeding pending job for cron test.",
+    );
+    await seedPendingJob(
+      campaignId,
+      leadEmail,
+      idempotencyKey,
+      webhookPayload,
+      receivedAt,
+    );
+    const job = await fetchJob(idempotencyKey);
+    if (!job) {
+      throw new Error(`Expected seeded bypass job for ${idempotencyKey}`);
+    }
+    assertJobScheduled(job, receivedAt, campaignId, leadEmail);
+    console.log("OK seeded pending job (+15 min)");
   } else {
     throw new Error(
       `Unexpected webhook response: ${JSON.stringify(first)} (is prod deployed with E1 delay?)`,
@@ -308,7 +421,11 @@ async function runDryRunPhase(
   }
 
   const second = await postWebhook(campaignId, leadEmail);
-  assert.equal(second.skipped, "already_scheduled", "retry should be already_scheduled");
+  assert.equal(
+    second.skipped,
+    "already_scheduled",
+    `retry should be already_scheduled, got ${second.skipped ?? JSON.stringify(second)}`,
+  );
   console.log("OK webhook retry → already_scheduled");
 
   const job = await fetchJob(idempotencyKey);
@@ -354,10 +471,15 @@ async function main(): Promise<void> {
   const leadEmail = requireEnv("SMOKE_LEAD_EMAIL");
   const idempotencyKey = interestedIdempotencyKey(campaignId, leadEmail);
 
-  console.log(`Mode: ${EXECUTE ? "execute" : "dry-run"}`);
+  console.log(`Mode: ${EXECUTE ? "execute" : "dry-run"}${PREPARE ? " + prepare" : ""}`);
+  console.log(`Target: ${baseUrl()}`);
   console.log(`Campaign: ${campaignId}`);
   console.log(`Lead: ${leadEmail}`);
   console.log(`Idempotency: ${idempotencyKey}`);
+
+  if (PREPARE) {
+    await prepareLeadForTest(campaignId, leadEmail, idempotencyKey);
+  }
 
   await runDryRunPhase(campaignId, leadEmail, idempotencyKey);
 

@@ -98,6 +98,10 @@ export async function handleLeadInterested(
       return { ok: false, error: "missing_reservation_link" };
     }
 
+    if (await hasPendingBypassJob(idempotencyKey)) {
+      return { ok: true, skipped: "already_scheduled" };
+    }
+
     if (await threadAlreadyHasE1(apiKey, { leadEmail, campaignId })) {
       await recordBypassEvent({
         idempotencyKey,
@@ -111,10 +115,6 @@ export async function handleLeadInterested(
       });
       await upsertPipelineStep(campaignId, leadEmail, "step_1");
       return { ok: true, skipped: "e1_already_in_thread" };
-    }
-
-    if (await hasPendingBypassJob(idempotencyKey)) {
-      return { ok: true, skipped: "already_scheduled" };
     }
 
     const scheduledFor = e1WebhookScheduledFor(webhookReceivedAt);
