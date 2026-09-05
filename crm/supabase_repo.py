@@ -375,6 +375,7 @@ def insert_lead(
     scheduled_at: str | None = None,
     calendly_invitee_uri: str | None = None,
     calendly_payload: dict[str, Any] | None = None,
+    booked_at: str | None = None,
     profile: dict[str, Any] | None = None,
     onboarding_completed_at: str | None = None,
 ) -> dict[str, Any]:
@@ -393,6 +394,8 @@ def insert_lead(
         "calendly_invitee_uri": calendly_invitee_uri,
         "calendly_payload": calendly_payload,
     }
+    if booked_at is not None:
+        row["booked_at"] = booked_at
     if profile is not None:
         row["profile"] = profile
     if onboarding_completed_at is not None:
@@ -542,6 +545,7 @@ def provision_or_update_role_recovery_lead(
     calendly_questions: dict[str, Any] | None = None,
     link: str | None = None,
     slug: str | None = None,
+    booked_at: str | None = None,
 ) -> dict[str, Any]:
     normalized = normalize_email(email)
     existing = find_by_email(client, normalized)
@@ -560,6 +564,8 @@ def provision_or_update_role_recovery_lead(
         "slug": resolved,
         **_url_fields(resolved, normalized),
     }
+    if booked_at is not None:
+        patch["booked_at"] = booked_at
 
     if existing:
         category, lead = existing
@@ -579,6 +585,7 @@ def provision_or_update_role_recovery_lead(
         scheduled_at=scheduled_at,
         calendly_invitee_uri=calendly_invitee_uri,
         calendly_payload=calendly_payload,
+        booked_at=booked_at,
     )
 
 

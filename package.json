@@ -25,6 +25,7 @@
     "rebalance-recovery-weekday": "tsx --env-file=.env ./scripts/crm/rebalanceRecoveryByWeekday.ts",
     "apply-role-recovery-migration": "tsx --env-file=.env ./scripts/crm/applyRoleRecoveryMigration.ts",
     "provision-role-recovery-leads": "python3 ./scripts/crm/provisionRoleRecoveryLeads.py",
+    "bootstrap-untracked-booking": "python3 ./scripts/crm/bootstrapUntrackedBooking.py",
     "crm": "streamlit run crm/admin_tool.py",
     "streamlit-subsequence": "cd app/streamlit_subsequence && streamlit run app.py",
     "streamlit-demands": "cd app/streamlit_demands && streamlit run app.py",
