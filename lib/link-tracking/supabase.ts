@@ -235,7 +235,14 @@ export async function markLeadCancelled(
 
   const { data, error } = await client
     .from(lookup.category)
-    .update({ statut: "CANCELLED" })
+    .update({
+      statut: "CANCELLED",
+      calendly_join_url: null,
+      calendly_reschedule_url: null,
+      calendly_cancel_url: null,
+      calendly_links_synced_at: null,
+      calendly_links_sync_error: null,
+    })
     .eq("id", lookup.lead.id)
     .select("*")
     .maybeSingle();
@@ -310,4 +317,114 @@ export async function markInstantlyConfirmedSynced(
       `Failed to mark instantly_confirmed_synced_at: ${error.message}`,
     );
   }
+}
+
+export type PersistCalendlyMeetingLinksParams = {
+  calendlyInviteeUri?: string | null;
+  scheduledAt?: string | null;
+  calendlyPayload?: Record<string, unknown> | null;
+  joinUrl?: string | null;
+  rescheduleUrl?: string | null;
+  cancelUrl?: string | null;
+  synced: boolean;
+  syncError?: string | null;
+};
+
+export async function persistCalendlyMeetingLinks(
+  client: SupabaseClient,
+  lookup: LeadLookup,
+  params: PersistCalendlyMeetingLinksParams,
+): Promise<LinkTrackingLead> {
+  const patch: Record<string, unknown> = {
+    calendly_join_url: params.joinUrl ?? null,
+    calendly_reschedule_url: params.rescheduleUrl ?? null,
+    calendly_cancel_url: params.cancelUrl ?? null,
+    calendly_links_synced_at: params.synced ? new Date().toISOString() : null,
+    calendly_links_sync_error: params.synced ? null : params.syncError ?? null,
+  };
+
+  if (params.calendlyInviteeUri) {
+    patch.calendly_invitee_uri = params.calendlyInviteeUri;
+  }
+  if (params.scheduledAt) {
+    patch.scheduled_at = params.scheduledAt;
+  }
+  if (params.calendlyPayload) {
+    patch.calendly_payload = params.calendlyPayload;
+  }
+
+  const { data, error } = await client
+    .from(lookup.category)
+    .update(patch)
+    .eq("id", lookup.lead.id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to persist Calendly meeting links: ${error.message}`);
+  }
+
+  return (data as LinkTrackingLead) ?? lookup.lead;
+}
+
+export async function clearCalendlyMeetingLinks(
+  client: SupabaseClient,
+  lookup: LeadLookup,
+): Promise<LinkTrackingLead> {
+  const { data, error } = await client
+    .from(lookup.category)
+    .update({
+      calendly_join_url: null,
+      calendly_reschedule_url: null,
+      calendly_cancel_url: null,
+      calendly_links_synced_at: null,
+      calendly_links_sync_error: null,
+    })
+    .eq("id", lookup.lead.id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to clear Calendly meeting links: ${error.message}`);
+  }
+
+  return (data as LinkTrackingLead) ?? lookup.lead;
+}
+
+const BOOKED_STATUTS = ["MEETING_BOOKED", "CONFIRMED", "BOOKED"] as const;
+
+export async function listLeadsWithUnsyncedMeetingLinks(
+  client: SupabaseClient,
+  limit: number,
+): Promise<LeadLookup[]> {
+  const results: LeadLookup[] = [];
+
+  for (const category of TABLES) {
+    const { data, error } = await client
+      .from(category)
+      .select("*")
+      .in("statut", [...BOOKED_STATUTS])
+      .is("calendly_links_synced_at", null)
+      .not("calendly_invitee_uri", "is", null)
+      .order("scheduled_at", { ascending: true })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(
+        `Failed to list unsynced meeting links on ${category}: ${error.message}`,
+      );
+    }
+
+    for (const row of data ?? []) {
+      results.push({ category, lead: row as LinkTrackingLead });
+    }
+  }
+
+  results.sort((a, b) => {
+    const aTime = a.lead.scheduled_at ?? "";
+    const bTime = b.lead.scheduled_at ?? "";
+    return aTime.localeCompare(bTime);
+  });
+
+  return results.slice(0, limit);
 }

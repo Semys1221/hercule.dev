@@ -70,6 +70,7 @@ export async function fetchDemandesForCarousel(): Promise<DemandeContrat[]> {
     .from("agence_demandes")
     .select("*")
     .eq("record_type", "demande")
+    .lte("sort_order", 16)
     .lte("available_from", today)
     .gte("available_until", today)
     .order("sort_order", { ascending: true });
@@ -97,22 +98,4 @@ export async function fetchDemandeTeaser(): Promise<DemandeTeaser | null> {
 
   if (!data) return null;
   return mapTeaserRow(data as AgenceDemandeRow);
-}
-
-export async function countAvailableDemandes(): Promise<number> {
-  const client = createLinkTrackingClient();
-  const today = todayIsoDate();
-  const { count, error } = await client
-    .from("agence_demandes")
-    .select("*", { count: "exact", head: true })
-    .eq("record_type", "demande")
-    .eq("status", "available")
-    .lte("available_from", today)
-    .gte("available_until", today);
-
-  if (error) {
-    throw new Error(`Failed to count available demandes: ${error.message}`);
-  }
-
-  return count ?? 0;
 }

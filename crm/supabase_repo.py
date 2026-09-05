@@ -27,6 +27,7 @@ LeadStatut = Literal[
     "MEETING_BOOKED",
     "CONFIRMED",
     "CANCELLED",
+    "ONBOARDED",
 ]
 TABLES: tuple[LeadCategory, ...] = ("agence", "entreprise")
 
@@ -160,6 +161,26 @@ def find_by_email(client: Client, email: str) -> tuple[LeadCategory, dict[str, A
             client.table(table)
             .select("*")
             .eq("email", normalized)
+            .limit(1)
+            .execute()
+        )
+        if res.data:
+            return table, res.data[0]
+    return None
+
+
+def find_by_calendly_invitee_uri(
+    client: Client,
+    invitee_uri: str,
+) -> tuple[LeadCategory, dict[str, Any]] | None:
+    normalized = str(invitee_uri or "").strip()
+    if not normalized:
+        return None
+    for table in TABLES:
+        res = (
+            client.table(table)
+            .select("*")
+            .eq("calendly_invitee_uri", normalized)
             .limit(1)
             .execute()
         )
@@ -354,6 +375,8 @@ def insert_lead(
     scheduled_at: str | None = None,
     calendly_invitee_uri: str | None = None,
     calendly_payload: dict[str, Any] | None = None,
+    profile: dict[str, Any] | None = None,
+    onboarding_completed_at: str | None = None,
 ) -> dict[str, Any]:
     normalized = normalize_email(email)
     row: dict[str, Any] = {
@@ -370,6 +393,10 @@ def insert_lead(
         "calendly_invitee_uri": calendly_invitee_uri,
         "calendly_payload": calendly_payload,
     }
+    if profile is not None:
+        row["profile"] = profile
+    if onboarding_completed_at is not None:
+        row["onboarding_completed_at"] = onboarding_completed_at
     res = client.table(category).insert(row).select("*").execute()
     if not res.data:
         raise RuntimeError(f"Failed to insert lead into {category}")

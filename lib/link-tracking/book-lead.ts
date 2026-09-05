@@ -1,4 +1,6 @@
+import type { ParsedCalendlyInvitee } from "@/lib/calendly";
 import { isLegacyAgenceLead } from "@/lib/booking-communication/legacy";
+import { syncCalendlyMeetingLinks } from "@/lib/booking-communication/meeting-links";
 import { startSequenceForBookedLead } from "@/lib/booking-communication/route-sequence";
 
 import {
@@ -12,7 +14,7 @@ import { isMeetingBookedStatus, type LeadLookup } from "./types";
 export type BookLeadFromCalendlyParams = {
   email: string;
   slug: string;
-  calendlyInviteeUri: string;
+  invitee: ParsedCalendlyInvitee;
   firstName?: string | null;
   company?: string | null;
   scheduledAt?: string | null;
@@ -71,7 +73,7 @@ export async function bookLeadFromCalendly(
   const result = await markLeadBooked(client, {
     slug: params.slug,
     email: params.email,
-    calendlyInviteeUri: params.calendlyInviteeUri,
+    calendlyInviteeUri: params.invitee.inviteeUri,
     firstName: params.firstName,
     company: params.company,
     scheduledAt: params.scheduledAt,
@@ -88,19 +90,31 @@ export async function bookLeadFromCalendly(
     };
   }
 
+  let lookup = result.lookup;
+  try {
+    const sync = await syncCalendlyMeetingLinks({
+      lookup,
+      invitee: params.invitee,
+      calendlyPayload: params.calendlyPayload,
+    });
+    lookup = { category: lookup.category, lead: sync.lead };
+  } catch (err) {
+    console.error("[link-tracking] Calendly meeting links sync failed:", err);
+  }
+
   if (!result.updated) {
-    const alreadySynced = Boolean(result.lookup.lead.instantly_synced_at);
-    if (isMeetingBookedStatus(result.lookup.lead.statut) && !alreadySynced) {
-      const extra = await syncAndStartSequence(result.lookup);
+    const alreadySynced = Boolean(lookup.lead.instantly_synced_at);
+    if (isMeetingBookedStatus(lookup.lead.statut) && !alreadySynced) {
+      const extra = await syncAndStartSequence(lookup);
       return {
         ok: true,
         updated: false,
         instantlySynced: extra.instantlySynced,
         sequenceStarted: extra.sequenceStarted,
         reason: "instantly_sync_retry",
-        category: result.lookup.category,
-        email: result.lookup.lead.email,
-        slug: result.lookup.lead.slug,
+        category: lookup.category,
+        email: lookup.lead.email,
+        slug: lookup.lead.slug,
       };
     }
 
@@ -109,22 +123,22 @@ export async function bookLeadFromCalendly(
       updated: false,
       instantlySynced: alreadySynced,
       reason: result.reason,
-      category: result.lookup.category,
-      email: result.lookup.lead.email,
-      slug: result.lookup.lead.slug,
+      category: lookup.category,
+      email: lookup.lead.email,
+      slug: lookup.lead.slug,
     };
   }
 
-  const extra = await syncAndStartSequence(result.lookup);
+  const extra = await syncAndStartSequence(lookup);
 
   return {
     ok: true,
     updated: true,
     instantlySynced: extra.instantlySynced,
     sequenceStarted: extra.sequenceStarted,
-    category: result.lookup.category,
-    email: result.lookup.lead.email,
-    slug: result.lookup.lead.slug,
+    category: lookup.category,
+    email: lookup.lead.email,
+    slug: lookup.lead.slug,
   };
 }
 

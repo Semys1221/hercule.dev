@@ -15,6 +15,10 @@
     {
       "source": "/temporary-reservation.html/:slug",
       "destination": "/temporary-reservation.html?code=:slug"
+    },
+    {
+      "source": "/post-booking-entreprise.html/:slug",
+      "destination": "/post-booking-entreprise.html?code=:slug"
     }
   ]
 }

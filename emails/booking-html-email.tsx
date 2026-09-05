@@ -4,17 +4,23 @@ import type { ReactNode } from "react";
 import { EMAIL_COLORS, EMAIL_FONT_FAMILY } from "./constants";
 import { BookingEmailLayout } from "./components/booking-email-layout";
 import { EmailButton } from "./components/email-button";
+import { signatureTagline } from "@/lib/booking-communication/signatures";
+import type { LeadCategory } from "@/lib/link-tracking/types";
+import type { MeetingActionLinks } from "@/lib/booking-communication/meeting-links";
 
 type BookingHtmlEmailProps = {
   bodyText: string;
+  category: LeadCategory;
   confirmUrl?: string;
   confirmButtonLabel?: string;
+  meetingActionLinks?: MeetingActionLinks;
 };
 
 const CONFIRM_MARKERS = [
   "{{confirmation_agence_link}}",
   "{{confirmLink}}",
   "{{confirmUrl}}",
+  "{{post_booking_link}}",
 ] as const;
 
 const PLAIN_BODY_STYLE = {
@@ -27,7 +33,7 @@ const PLAIN_BODY_STYLE = {
 };
 
 function markerButtonLabel(marker: string, fallback: string): string {
-  if (marker === "{{confirmLink}}") {
+  if (marker === "{{confirmLink}}" || marker === "{{post_booking_link}}") {
     return "Consulter";
   }
   return fallback;
@@ -90,8 +96,10 @@ function renderPlainBody(
 
 export function BookingHtmlEmail({
   bodyText,
+  category,
   confirmUrl,
   confirmButtonLabel = "Confirmer ma présence",
+  meetingActionLinks,
 }: BookingHtmlEmailProps) {
   const preview = bodyText
     .split(/\n{2,}/)
@@ -99,10 +107,15 @@ export function BookingHtmlEmail({
     .find(Boolean)
     ?.replace(/\{\{confirmLink\}\}/g, "Consulter")
     ?.replace(/\{\{confirmation_agence_link\}\}/g, "Confirmer")
+    ?.replace(/\{\{post_booking_link\}\}/g, "Consulter")
     ?.slice(0, 120);
 
   return (
-    <BookingEmailLayout preview={preview}>
+    <BookingEmailLayout
+      preview={preview}
+      signatureTagline={signatureTagline(category)}
+      meetingActionLinks={meetingActionLinks}
+    >
       {renderPlainBody(bodyText, confirmUrl, confirmButtonLabel)}
     </BookingEmailLayout>
   );

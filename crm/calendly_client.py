@@ -8,7 +8,13 @@ from typing import Any, Literal
 import httpx
 
 from config import _env
-from supabase_repo import find_by_email, find_by_slug, get_client, normalize_email
+from supabase_repo import (
+    find_by_calendly_invitee_uri,
+    find_by_email,
+    find_by_slug,
+    get_client,
+    normalize_email,
+)
 
 CALENDLY_API = "https://api.calendly.com"
 
@@ -127,6 +133,27 @@ def _resolve_booking_category(
     return "agence"
 
 
+def _resolve_lead_lookup(
+    *,
+    invitee_email: str,
+    utm_content: str,
+    invitee_uri: str,
+) -> tuple[BookingCategory, dict[str, Any]] | None:
+    client = get_client()
+    lookup = find_by_email(client, invitee_email)
+    if lookup:
+        return lookup
+    if utm_content:
+        lookup = find_by_slug(client, utm_content)
+        if lookup:
+            return lookup
+    if invitee_uri:
+        lookup = find_by_calendly_invitee_uri(client, invitee_uri)
+        if lookup:
+            return lookup
+    return None
+
+
 def _build_booking_row(
     *,
     invitee: dict[str, Any],
@@ -134,13 +161,19 @@ def _build_booking_row(
     event_start: str,
 ) -> dict[str, Any]:
     email = normalize_email(str(invitee.get("email") or ""))
+    invitee_uri = str(invitee.get("uri") or "").strip()
     tracking = invitee.get("tracking") or {}
     utm_content = str(tracking.get("utm_content") or "").strip()
     questions = invitee.get("questions_and_answers") or []
     if not isinstance(questions, list):
         questions = []
-    lookup = find_by_email(get_client(), email)
+    lookup = _resolve_lead_lookup(
+        invitee_email=email,
+        utm_content=utm_content,
+        invitee_uri=invitee_uri,
+    )
     lead = lookup[1] if lookup else None
+    lead_email = normalize_email(str(lead.get("email") or "")) if lead else ""
     booking_category = _resolve_booking_category(utm_content=utm_content, lookup=lookup)
     tracked = _detect_tracked(utm_content=utm_content, lead=lead)
     sequence_type = _detect_sequence_type(utm_content=utm_content, lead=lead)
@@ -148,11 +181,12 @@ def _build_booking_row(
 
     return {
         "email": email,
+        "lead_email": lead_email if lead_email and lead_email != email else "",
         "name": str(invitee.get("name") or "").strip(),
         "first_name": _first_name(str(invitee.get("name") or "")),
         "company": _company_from_questions(questions),
         "start_time": event_start,
-        "invitee_uri": str(invitee.get("uri") or ""),
+        "invitee_uri": invitee_uri,
         "event_uri": event_uri,
         "utm_content": utm_content,
         "questions": {
@@ -166,6 +200,11 @@ def _build_booking_row(
         "lead_link": lead.get("slug") if lead else None,
         "lead_statut": lead.get("statut") if lead else None,
         "booked_at": lead.get("booked_at") if lead else None,
+        "scheduled_at": lead.get("scheduled_at") if lead else None,
+        "calendly_join_url": lead.get("calendly_join_url") if lead else None,
+        "calendly_reschedule_url": lead.get("calendly_reschedule_url") if lead else None,
+        "calendly_cancel_url": lead.get("calendly_cancel_url") if lead else None,
+        "calendly_links_synced_at": lead.get("calendly_links_synced_at") if lead else None,
         "provisioned": bool(lead and lead.get("slug")),
         "tracked": tracked,
         "sequence_type": sequence_type,
@@ -173,10 +212,11 @@ def _build_booking_row(
     }
 
 
-def list_all_bookings(*, days_ahead: int = 30) -> list[dict[str, Any]]:
+def list_all_bookings(*, days_back: int = 30, days_ahead: int = 30) -> list[dict[str, Any]]:
     """All active Calendly invitees in the window, with tracking metadata."""
     user_uri = get_current_user_uri()
     now = datetime.now(UTC)
+    min_time = now - timedelta(days=days_back)
     max_time = now + timedelta(days=days_ahead)
 
     events = _paginate(
@@ -184,7 +224,7 @@ def list_all_bookings(*, days_ahead: int = 30) -> list[dict[str, Any]]:
         params={
             "user": user_uri,
             "status": "active",
-            "min_start_time": now.isoformat().replace("+00:00", "Z"),
+            "min_start_time": min_time.isoformat().replace("+00:00", "Z"),
             "max_start_time": max_time.isoformat().replace("+00:00", "Z"),
             "count": 100,
         },

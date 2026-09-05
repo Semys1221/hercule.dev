@@ -18,10 +18,9 @@ import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 interface Hero3DStageProps {
   demandes: DemandeContrat[]
   teaser: DemandeTeaser | null
-  availableCount: number
 }
 
-export function Hero3DStage({ demandes, teaser, availableCount }: Hero3DStageProps) {
+export function Hero3DStage({ demandes, teaser }: Hero3DStageProps) {
   const [yOffset, setYOffset] = useState(0)
 
   useEffect(() => {
@@ -176,11 +175,7 @@ export function Hero3DStage({ demandes, teaser, availableCount }: Hero3DStagePro
           </div>
 
           <LogoCloud />
-          <DemandesSection
-            demandes={demandes}
-            teaser={teaser}
-            availableCount={availableCount}
-          />
+          <DemandesSection demandes={demandes} teaser={teaser} />
           <FeatureCardsSection />
           <AISection />
           <ProductDirectionSection />

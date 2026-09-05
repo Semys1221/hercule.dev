@@ -13,7 +13,7 @@
 | Landing pricing | Garanties MRR sans conditions vs CGV § 5 | **P0 — aligner wording** |
 | Landing pricing | Starter **5 attributions** vs capacity **3–4/mois** | **P0 — harmoniser** (pack vs rythme) |
 | FAQ booking | Rétractation **4 j** | **P1 — cohérent CGV § 8** |
-| Footer | Pas de liens CGV / mentions légales | **P1 — routes futures** |
+| Footer | Pas de liens CGV / mentions légales | Routes `/cvg`, `/mentions-legales`, `/confidentialite` + bundle agent | ☑ |
 | Docs SOP | Références ancien modèle 250 € + 149 € | **P2 — obsolète** |
 | Post-RDV doc | « 2 500 € hors MVP » | **P2 — formule active landing** |
 | Capacity docs | Liens `contrat.md` | **P2 — migrer vers cvg_master** |
@@ -46,7 +46,7 @@
 | Fichier | Écart actuel | Action CGV-aligned | Statut |
 |---------|--------------|-------------------|--------|
 | [`public/reservation.html`](../../public/reservation.html) L726 | « délai de **4 jours** pour vous rétracter » | **Cohérent** avec CGV § 8 (politique commerciale B2B) — ajouter « calendaires » si besoin | ☑ cohérent |
-| [`components/agence/footer.tsx`](../../components/agence/footer.tsx) | Pas de lien CGV / mentions légales | Ajouter section « Légal » : `/cvg`, `/mentions-legales`, `/confidentialite` (routes statiques futures ou `#` temporaire) | ☐ |
+| [`components/agence/footer.tsx`](../../components/agence/footer.tsx) | Pas de lien CGV / mentions légales | Ajouter section « Légal » : `/cvg`, `/mentions-legales`, `/confidentialite` (routes statiques futures ou `#` temporaire) | ☑ |
 | [`components/agence/navbar.tsx`](../../components/agence/navbar.tsx) | Ancre `#garanties` uniquement | Optionnel : lien « CGV » une fois route publique créée | ☐ |
 
 ---
@@ -113,7 +113,7 @@
 ## Hors scope (explicitement)
 
 - [ ] Implémentation checkbox onboarding React ([cvg_onboarding.md](./cvg_onboarding.md))
-- [ ] Routes publiques `/cvg`, `/mentions-legales`, `/confidentialite`
+- [x] Routes publiques `/cvg`, `/mentions-legales`, `/confidentialite` (sources markdown partagées + bundle agent)
 - [ ] Nouvelle page `/entreprise` légale
 - [ ] Correction copy `product-direction-section.tsx` (documentée ici — exécution site = ticket séparé sauf demande explicite)
 - [ ] Complétion placeholders SIRET / adresse / TVA dans CGV

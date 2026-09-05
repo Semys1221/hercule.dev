@@ -4,8 +4,8 @@ import {
   isBookingEmailType,
   verifyBookingCommunicationSecret,
 } from "@/lib/booking-communication/route-utils";
+import { renderBookingEmailPreview } from "@/lib/booking-communication/render-service";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
-import { previewTemplate } from "@/lib/booking-communication/template-store";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 const DEFAULT_TEST_TO = "nanguy29@gmail.com";
@@ -50,12 +50,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid to address" }, { status: 400 });
   }
 
-  const rendered = await previewTemplate(
-    body.subject.trim(),
-    body.body,
-    body.email_type,
-    body.use_html,
-  );
+  const rendered = await renderBookingEmailPreview({
+    category: body.category,
+    emailType: body.email_type,
+    subject: body.subject.trim(),
+    body: body.body,
+    useHtml: body.use_html,
+    sample: true,
+  });
 
   const idempotencyKey = `test:${body.category}:${body.email_type}:${Date.now()}`;
   const result = await sendBookingEmail({

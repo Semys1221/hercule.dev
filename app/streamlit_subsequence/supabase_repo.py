@@ -40,7 +40,14 @@ def list_templates(campaign_id: str) -> list[dict[str, Any]]:
     return resp.data or []
 
 
-def save_template(campaign_id: str, template_key: str, subject: str, body_html: str) -> None:
+def save_template(
+    campaign_id: str,
+    template_key: str,
+    subject: str,
+    body_html: str,
+    *,
+    sync_bootstrap_default: bool = False,
+) -> dict[str, Any]:
     get_client().table("instantly_bypass_templates").upsert(
         {
             "campaign_id": campaign_id,
@@ -51,6 +58,22 @@ def save_template(campaign_id: str, template_key: str, subject: str, body_html: 
         },
         on_conflict="campaign_id,template_key",
     ).execute()
+
+    code_sync: dict[str, Any] = {"default_templates": False, "errors": []}
+    if sync_bootstrap_default and template_key == "interested_email1":
+        try:
+            from template_code_sync import sync_e1_bootstrap_default
+
+            sync_e1_bootstrap_default(body_html)
+            code_sync["default_templates"] = True
+        except Exception as exc:
+            code_sync["errors"].append(str(exc))
+
+    return {
+        "db": True,
+        "template_key": template_key,
+        "code_sync": code_sync,
+    }
 
 
 def seed_empty_templates(

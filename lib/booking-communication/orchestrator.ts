@@ -19,14 +19,17 @@ import {
   listDueJobs,
   markJobFailed,
   markJobSent,
+  rescheduleJob,
 } from "./jobs";
 import { sendBookingEmail } from "./send";
 import { h20SendAt, h24SendAt, h48SendAt, planRoleRecoverySchedule } from "./schedule";
 import { renderEmailFromStore } from "./template-store";
-import { buildTemporaryConfirmUrl } from "./templates";
+import { meetingActionLinksForRender, retryUnsyncedMeetingLinks } from "./meeting-links";
+import { buildTemporaryConfirmUrl, buildEntreprisePostBookingUrl } from "./templates";
 import { defaultUseHtml } from "./signatures";
 import { confirmationAgenceLinkFor } from "@/lib/link-tracking/urls";
 import { buildReplySubject, buildThreadHeaders, isThreadFollowUp, threadTypesForJob } from "./threading";
+import { bypassesSendWindow, isWithinSendWindow, nextSendSlot } from "./send-window";
 import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
 import type { RenderedBookingEmail } from "./types";
 
@@ -44,7 +47,11 @@ const MAIN_AGENCE_TYPES: BookingEmailType[] = [
   "h20_cancel",
 ];
 
-const ENTREPRISE_TYPES: BookingEmailType[] = ["immediate"];
+const ENTREPRISE_TYPES: BookingEmailType[] = [
+  "immediate",
+  "h48_confirm",
+  "h24_relance",
+];
 
 const ROLE_RECOVERY_TYPES: BookingEmailType[] = ["role_seq_48", "role_seq_24"];
 
@@ -223,7 +230,9 @@ export async function dispatchDueBookingEmails(limit = 50): Promise<{
   processed: number;
   sent: number;
   failed: number;
+  linksRetry?: { attempted: number; synced: number; failed: number };
 }> {
+  const linksRetry = await retryUnsyncedMeetingLinks(20);
   const jobs = await listDueJobs(limit);
   let sent = 0;
   let failed = 0;
@@ -234,7 +243,7 @@ export async function dispatchDueBookingEmails(limit = 50): Promise<{
     else failed += 1;
   }
 
-  return { processed: jobs.length, sent, failed };
+  return { processed: jobs.length, sent, failed, linksRetry };
 }
 
 async function dispatchDueJobsForLead(leadId: string): Promise<void> {
@@ -324,6 +333,11 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
     return true;
   }
 
+  if (!bypassesSendWindow(job.email_type) && !isWithinSendWindow()) {
+    await rescheduleJob(job.id, nextSendSlot());
+    return true;
+  }
+
   if (job.email_type === "h20_cancel") {
     return processH20CancelJob(job, lead);
   }
@@ -382,11 +396,14 @@ async function processH20CancelJob(
 }
 
 async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
-  const confirmUrl =
-    job.email_type === "role_seq_24"
-      ? buildTemporaryConfirmUrl(lead.slug, lead.email)
-      : confirmationAgenceLinkFor(lead);
+  const confirmUrl = confirmUrlForJob(job, lead);
   const useHtml = job.use_html ?? defaultUseHtml(job.email_type);
+  const meetingActionLinks = await meetingActionLinksForRender(
+    job.email_type,
+    lead,
+    false,
+    job.lead_category,
+  );
   return renderEmailFromStore({
     category: job.lead_category,
     emailType: job.email_type,
@@ -394,7 +411,21 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     scheduledAt: lead.scheduled_at,
     confirmUrl,
     useHtml,
+    meetingActionLinks,
   });
+}
+
+function confirmUrlForJob(job: BookingEmailJob, lead: LinkTrackingLead): string {
+  if (job.email_type === "role_seq_24") {
+    return buildTemporaryConfirmUrl(lead.slug, lead.email);
+  }
+  if (job.lead_category === "entreprise" && job.email_type === "h48_confirm") {
+    return buildEntreprisePostBookingUrl(lead.slug, lead.email);
+  }
+  if (job.lead_category === "entreprise" && job.email_type === "h24_relance") {
+    return "";
+  }
+  return confirmationAgenceLinkFor(lead);
 }
 
 async function loadLead(

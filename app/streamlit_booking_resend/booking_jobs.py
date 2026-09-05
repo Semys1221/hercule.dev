@@ -58,6 +58,10 @@ def has_role_recovery_started(lead_id: str) -> bool:
     return bool(response.data)
 
 
+def has_any_sequence_started(lead_id: str) -> bool:
+    return has_main_sequence_started(lead_id) or has_role_recovery_started(lead_id)
+
+
 def enrich_sequence_status(row: dict[str, Any]) -> str:
     """Refine sequence_status using lead statut and existing jobs."""
     statut = str(row.get("lead_statut") or "")
@@ -70,11 +74,7 @@ def enrich_sequence_status(row: dict[str, Any]) -> str:
     if not lead_id:
         return str(row.get("sequence_status") or "none")
 
-    sequence_type = row.get("sequence_type")
-    if sequence_type == "role_recovery":
-        if has_role_recovery_started(str(lead_id)):
-            return "started"
-    elif has_main_sequence_started(str(lead_id)):
+    if has_any_sequence_started(str(lead_id)):
         return "started"
 
     return str(row.get("sequence_status") or "none")

@@ -15,6 +15,9 @@ export type ParsedCalendlyInvitee = {
   eventUuid: string;
   utmContent: string;
   startTime: string;
+  cancelUrl: string;
+  rescheduleUrl: string;
+  joinUrl: string | null;
   questionsAndAnswers: CalendlyQuestionAnswer[];
 };
 
@@ -81,9 +84,29 @@ export function parseEventAndInviteeUuids(
 export type ScheduledEventInviteeLinks = {
   cancelUrl: string;
   rescheduleUrl: string;
+  joinUrl: string | null;
   startTime: string | null;
   status: string;
 };
+
+function extractJoinUrlFromLocation(location: unknown): string | null {
+  if (!location || typeof location !== "object") {
+    return null;
+  }
+
+  const loc = location as Record<string, unknown>;
+  const joinUrl = String(loc.join_url ?? "").trim();
+  if (joinUrl) {
+    return joinUrl;
+  }
+
+  const locationText = String(loc.location ?? "").trim();
+  if (/^https?:\/\//i.test(locationText)) {
+    return locationText;
+  }
+
+  return null;
+}
 
 export async function getScheduledEventInvitee(
   eventUuid: string,
@@ -117,6 +140,7 @@ export async function getScheduledEventInvitee(
   }
 
   let startTime: string | null = null;
+  let joinUrl: string | null = null;
   const eventResponse = await fetch(
     `https://api.calendly.com/scheduled_events/${eventUuid}`,
     {
@@ -130,11 +154,13 @@ export async function getScheduledEventInvitee(
     const eventData = (await eventResponse.json()) as {
       resource?: Record<string, unknown>;
     };
-    const eventStart = String(eventData.resource?.start_time ?? "").trim();
+    const resource = eventData.resource ?? {};
+    const eventStart = String(resource.start_time ?? "").trim();
     startTime = eventStart || null;
+    joinUrl = extractJoinUrlFromLocation(resource.location);
   }
 
-  return { cancelUrl, rescheduleUrl, startTime, status };
+  return { cancelUrl, rescheduleUrl, joinUrl, startTime, status };
 }
 
 export function parseInviteeCreatedPayload(
@@ -146,12 +172,16 @@ export function parseInviteeCreatedPayload(
 
   const invitee = (body.payload ?? {}) as Record<string, unknown>;
   const tracking = (invitee.tracking ?? {}) as Record<string, string>;
-  const scheduled = (invitee.scheduled_event ?? {}) as Record<string, string>;
+  const scheduled = (invitee.scheduled_event ?? {}) as Record<string, unknown>;
 
   const inviteeUri = String(invitee.uri ?? "");
   const scheduledUri = String(scheduled.uri ?? "");
   const email = String(invitee.email ?? "").trim().toLowerCase();
   if (!email) return null;
+
+  const cancelUrl = String(invitee.cancel_url ?? "").trim();
+  const rescheduleUrl = String(invitee.reschedule_url ?? "").trim();
+  const joinUrl = extractJoinUrlFromLocation(scheduled.location);
 
   const rawQA = invitee.questions_and_answers;
   const questionsAndAnswers: Array<{ question: string; answer: string }> = [];
@@ -179,6 +209,9 @@ export function parseInviteeCreatedPayload(
     eventUuid: extractUuidFromCalendlyUri(scheduledUri),
     utmContent: String(tracking.utm_content ?? "").trim(),
     startTime: String(scheduled.start_time ?? ""),
+    cancelUrl,
+    rescheduleUrl,
+    joinUrl,
     questionsAndAnswers,
   };
 }

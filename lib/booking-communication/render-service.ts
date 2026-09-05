@@ -2,12 +2,12 @@ import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supa
 import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
 
 import { defaultUseHtml } from "./signatures";
+import { meetingActionLinksForRender } from "./meeting-links";
 import { sendBookingEmail } from "./send";
 import {
   confirmUrlForLead,
-  getBookingEmailTemplates,
   renderCustomBookingEmail,
-  renderEmailFromStore,
+  resolveBookingEmailTemplate,
 } from "./template-store";
 import { insertJob, markJobFailed, markJobSent } from "./jobs";
 import type { BookingEmailType, RenderedBookingEmail } from "./types";
@@ -57,6 +57,11 @@ function sampleLead(_category: LeadCategory): LinkTrackingLead {
     instantly_lead_id: null,
     instantly_campaign_id: null,
     calendly_invitee_uri: null,
+    calendly_join_url: null,
+    calendly_reschedule_url: null,
+    calendly_cancel_url: null,
+    calendly_links_synced_at: null,
+    calendly_links_sync_error: null,
     booked_at: null,
     instantly_synced_at: null,
     calendly_payload: null,
@@ -78,45 +83,32 @@ export async function renderBookingEmailPreview(
     params.sample,
   );
   const resolvedLead = lead ?? sampleLead(params.category);
-  const confirmUrl = confirmUrlForLead(resolvedLead, emailType);
+  const confirmUrl = confirmUrlForLead(resolvedLead, emailType, params.category);
   const useHtml = params.useHtml ?? defaultUseHtml(emailType);
+  const meetingActionLinks = await meetingActionLinksForRender(
+    emailType,
+    lead,
+    sample,
+    params.category,
+  );
 
-  if (params.subject?.trim() && params.body?.trim()) {
-    return renderCustomBookingEmail({
-      subject: params.subject.trim(),
-      body: params.body,
-      emailType,
-      firstName: resolvedLead.first_name,
-      scheduledAt: resolvedLead.scheduled_at,
-      confirmUrl,
-      useHtml,
-    });
-  }
+  const template = await resolveBookingEmailTemplate({
+    category: params.category,
+    emailType,
+    subject: params.subject,
+    body: params.body,
+  });
 
-  if (params.subject?.trim() || params.body) {
-    const templates = await getBookingEmailTemplates(params.category);
-    const template = templates.find((row) => row.email_type === emailType);
-    if (!template) {
-      throw new Error(`missing_template:${emailType}`);
-    }
-    return renderCustomBookingEmail({
-      subject: params.subject?.trim() || template.subject,
-      body: params.body ?? template.body,
-      emailType,
-      firstName: resolvedLead.first_name,
-      scheduledAt: resolvedLead.scheduled_at,
-      confirmUrl,
-      useHtml,
-    });
-  }
-
-  return renderEmailFromStore({
+  return renderCustomBookingEmail({
+    subject: template.subject,
+    body: template.body,
     category: params.category,
     emailType,
     firstName: resolvedLead.first_name,
     scheduledAt: resolvedLead.scheduled_at,
     confirmUrl,
     useHtml,
+    meetingActionLinks,
   });
 }
 
@@ -135,27 +127,36 @@ export async function sendBookingEmailOnce(params: {
   }
 
   const emailType = params.emailType;
-  const confirmUrl = confirmUrlForLead(lead, emailType);
+  const confirmUrl = confirmUrlForLead(lead, emailType, params.category);
   const useHtml = params.useHtml ?? defaultUseHtml(emailType);
-  const rendered =
+  const meetingActionLinks = await meetingActionLinksForRender(
+    emailType,
+    lead,
+    false,
+    params.category,
+  );
+
+  const template =
     params.subject?.trim() && params.body?.trim()
-      ? await renderCustomBookingEmail({
-          subject: params.subject.trim(),
-          body: params.body,
-          emailType,
-          firstName: lead.first_name,
-          scheduledAt: lead.scheduled_at,
-          confirmUrl,
-          useHtml,
-        })
-      : await renderEmailFromStore({
+      ? { subject: params.subject.trim(), body: params.body }
+      : await resolveBookingEmailTemplate({
           category: params.category,
           emailType,
-          firstName: lead.first_name,
-          scheduledAt: lead.scheduled_at,
-          confirmUrl,
-          useHtml,
+          subject: params.subject,
+          body: params.body,
         });
+
+  const rendered = await renderCustomBookingEmail({
+    subject: template.subject,
+    body: template.body,
+    category: params.category,
+    emailType,
+    firstName: lead.first_name,
+    scheduledAt: lead.scheduled_at,
+    confirmUrl,
+    useHtml,
+    meetingActionLinks,
+  });
 
   const now = new Date();
   const idempotencyKey = `legacy:${lead.id}:${emailType}:${now.getTime()}`;

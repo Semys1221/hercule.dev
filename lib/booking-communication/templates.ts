@@ -2,6 +2,8 @@ const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_TEMPORARY_BASE =
   "https://www.hercule.dev/temporary-reservation.html";
+const DEFAULT_ENTREPRISE_POST_BASE =
+  "https://www.hercule.dev/post-booking-entreprise.html";
 const DEFAULT_FROM = "Hercule <contact@hercule.dev>";
 
 export type BookingEmailTemplateType =
@@ -17,6 +19,17 @@ export type BookingEmailTemplateRecord = {
   subject: string;
   body: string;
 };
+
+const ENTREPRISE_H48_BODY = `{{firstNameLine}}
+
+Pour préparer au mieux votre rendez-vous, retrouvez ici le déroulé de votre échange :
+{{post_booking_link}}`;
+
+const ENTREPRISE_H24_BODY = `{{firstNameLine}}
+
+Votre rendez-vous avec Hercule approche — il est prévu le {{date}} à {{heure}}.
+
+Nous avons hâte d'échanger avec vous.`;
 
 export const DEFAULT_BOOKING_EMAIL_TEMPLATES: Record<
   BookingEmailTemplateType,
@@ -34,7 +47,7 @@ Les informations de connexion vous seront transmises directement par email via C
     subject: "Confirmation requise — Votre rendez-vous avec Hercule",
     body: `{{firstNameLine}}
 
-Nous avons le plaisir de vous informer que les profils présentés lors de votre rendez-vous porteront sur des contrats de conseil financier.
+Nous avons le plaisir de vous informer que les profils présentés lors de votre rendez-vous contiendront des contrats de conseil financier.
 
 Afin de maintenir votre créneau, merci de confirmer votre présence :
 {{confirmation_agence_link}}
@@ -82,6 +95,32 @@ Un aperçu du déroulé de votre entretien est disponible ici : {{confirmLink}}`
   },
 };
 
+export const ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES: Partial<
+  Record<BookingEmailTemplateType, Omit<BookingEmailTemplateRecord, "email_type">>
+> = {
+  h48_confirm: {
+    subject: "Préparez votre rendez-vous avec Hercule",
+    body: ENTREPRISE_H48_BODY,
+  },
+  h24_relance: {
+    subject: "Rappel — Votre rendez-vous avec Hercule approche",
+    body: ENTREPRISE_H24_BODY,
+  },
+};
+
+export function defaultBookingEmailTemplate(
+  category: "agence" | "entreprise",
+  emailType: BookingEmailTemplateType,
+): Omit<BookingEmailTemplateRecord, "email_type"> {
+  if (category === "entreprise") {
+    const override = ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES[emailType];
+    if (override) {
+      return override;
+    }
+  }
+  return DEFAULT_BOOKING_EMAIL_TEMPLATES[emailType];
+}
+
 export function renderTemplate(
   template: string,
   vars: Record<string, string>,
@@ -114,6 +153,13 @@ export function getTemporaryReservationBaseUrl(): string {
   );
 }
 
+export function getEntreprisePostBookingBaseUrl(): string {
+  return (
+    process.env.BOOKING_ENTREPRISE_POST_BASE_URL?.trim().replace(/\/$/, "") ??
+    DEFAULT_ENTREPRISE_POST_BASE
+  );
+}
+
 export function getBookingFromAddress(): string {
   return (
     process.env.BOOKING_RESEND_FROM?.trim() ||
@@ -130,6 +176,12 @@ export function buildConfirmUrl(slug: string, email: string): string {
 
 export function buildTemporaryConfirmUrl(slug: string, email: string): string {
   const url = new URL(`${getTemporaryReservationBaseUrl()}/${slug}`);
+  url.searchParams.set("email", email);
+  return url.toString();
+}
+
+export function buildEntreprisePostBookingUrl(slug: string, email: string): string {
+  const url = new URL(`${getEntreprisePostBookingBaseUrl()}/${slug}`);
   url.searchParams.set("email", email);
   return url.toString();
 }

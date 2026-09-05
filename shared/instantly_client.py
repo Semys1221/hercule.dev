@@ -275,6 +275,44 @@ class InstantlyClient:
         data = self._fetch(f"/leads/{lead_id.strip()}")
         return data if isinstance(data, dict) else {}
 
+    def find_lead_by_email_in_campaign(
+        self,
+        campaign_id: str,
+        lead_email: str,
+    ) -> dict[str, Any] | None:
+        normalized = lead_email.strip().lower()
+        campaign = campaign_id.strip()
+
+        searched = self._fetch(
+            "/leads/list",
+            method="POST",
+            body={"campaign": campaign, "search": normalized, "limit": 20},
+        )
+        items = searched.get("items") or [] if isinstance(searched, dict) else []
+        for item in items:
+            email = str(item.get("email") or "").strip().lower()
+            if email == normalized:
+                return item
+
+        starting_after: str | None = None
+        while True:
+            body: dict[str, Any] = {"campaign": campaign, "limit": 100}
+            if starting_after:
+                body["starting_after"] = starting_after
+            page = self._fetch("/leads/list", method="POST", body=body)
+            page_items = page.get("items") or [] if isinstance(page, dict) else []
+            for item in page_items:
+                email = str(item.get("email") or "").strip().lower()
+                if email == normalized:
+                    return item
+            next_cursor = page.get("next_starting_after") if isinstance(page, dict) else None
+            if not next_cursor and page_items:
+                next_cursor = page_items[-1].get("id")
+            if not next_cursor or len(page_items) < 100:
+                break
+            starting_after = str(next_cursor)
+        return None
+
     @staticmethod
     def lead_custom_variables(lead: dict[str, Any]) -> dict[str, Any]:
         merged: dict[str, Any] = {}
@@ -434,6 +472,40 @@ class InstantlyClient:
 
         return items
 
+    def list_campaign_emails(
+        self,
+        *,
+        campaign_id: str,
+        email_type: str,
+        max_items: int = 500,
+    ) -> list[dict[str, Any]]:
+        items: list[dict[str, Any]] = []
+        starting_after: str | None = None
+        campaign = campaign_id.strip()
+
+        while len(items) < max_items:
+            params = f"campaign_id={campaign}&email_type={email_type}&limit={PAGE_SIZE}"
+            if starting_after:
+                params += f"&starting_after={starting_after}"
+            try:
+                page = self._fetch(f"/emails?{params}", method="GET")
+            except RuntimeError:
+                break
+            page_items = page.get("items") or [] if isinstance(page, dict) else []
+            if not page_items:
+                break
+            items.extend(page_items)
+            if len(items) >= max_items:
+                items = items[:max_items]
+                break
+            next_cursor = page.get("next_starting_after") if isinstance(page, dict) else None
+            if not next_cursor:
+                next_cursor = page_items[-1].get("id")
+            if not next_cursor or len(page_items) < PAGE_SIZE:
+                break
+            starting_after = str(next_cursor)
+
+        return items
 
     def list_emails(
         self,
@@ -442,6 +514,8 @@ class InstantlyClient:
         campaign_id: str | None = None,
         email_type: str | None = None,
         latest_of_thread: bool = False,
+        preview_only: bool | None = None,
+        sort_order: str | None = None,
         limit: int = 10,
     ) -> list[dict[str, Any]]:
         params = [f"limit={limit}"]
@@ -453,8 +527,62 @@ class InstantlyClient:
             params.append(f"email_type={email_type}")
         if latest_of_thread:
             params.append("latest_of_thread=true")
+        if preview_only is not None:
+            params.append(f"preview_only={'true' if preview_only else 'false'}")
+        if sort_order:
+            params.append(f"sort_order={sort_order}")
         page = self._fetch(f"/emails?{'&'.join(params)}", method="GET")
         return page.get("items") or [] if isinstance(page, dict) else []
+
+    def list_campaign_latest_threads(
+        self,
+        *,
+        campaign_id: str,
+        max_items: int = 200,
+        preview_only: bool = True,
+    ) -> list[dict[str, Any]]:
+        """Paginate latest message per thread for a campaign (Unibox pending scan)."""
+        items: list[dict[str, Any]] = []
+        starting_after: str | None = None
+        campaign = campaign_id.strip()
+
+        while len(items) < max_items:
+            params = [
+                f"campaign_id={campaign}",
+                "latest_of_thread=true",
+                f"limit={PAGE_SIZE}",
+                "sort_order=desc",
+            ]
+            if preview_only:
+                params.append("preview_only=true")
+            if starting_after:
+                params.append(f"starting_after={starting_after}")
+            try:
+                page = self._fetch(f"/emails?{'&'.join(params)}", method="GET")
+            except RuntimeError:
+                break
+            page_items = page.get("items") or [] if isinstance(page, dict) else []
+            if not page_items:
+                break
+            items.extend(page_items)
+            if len(items) >= max_items:
+                items = items[:max_items]
+                break
+            next_cursor = page.get("next_starting_after") if isinstance(page, dict) else None
+            if not next_cursor:
+                next_cursor = page_items[-1].get("id")
+            if not next_cursor or len(page_items) < PAGE_SIZE:
+                break
+            starting_after = str(next_cursor)
+
+        return items
+
+    def get_email(self, email_id: str) -> dict[str, Any] | None:
+        try:
+            data = self._fetch(f"/emails/{email_id.strip()}", method="GET")
+            return data if isinstance(data, dict) else None
+        except Exception:
+            return None
 
     def reply_to_email(
         self,
@@ -619,6 +747,7 @@ def lead_custom_var(lead: dict[str, Any], key: str) -> str | None:
 
 
 FILTER_LEAD_INTERESTED = "FILTER_LEAD_INTERESTED"
+FILTER_LEAD_NOT_INTERESTED = "FILTER_LEAD_NOT_INTERESTED"
 FILTER_LEAD_NO_SHOW = "FILTER_LEAD_NO_SHOW"
 
 _client: InstantlyClient | None = None

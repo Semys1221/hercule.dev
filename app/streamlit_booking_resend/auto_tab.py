@@ -10,8 +10,12 @@ from booking_jobs import cancel_pending_followups
 from config import settings
 from legacy import is_legacy_agence_row
 from shared import (
+    BOOKING_LINK_COLUMN_CONFIG,
+    BOOKING_TABLE_DISABLED_COLUMNS,
+    booking_filter_stats,
     bookings_dataframe,
     filter_bookings,
+    format_booking_stats_message,
     render_load_controls,
 )
 
@@ -49,38 +53,25 @@ def render_auto_tab(category: Category) -> None:
 
     filtered = filter_bookings(bookings, category=category, filter_mode=filter_mode)
     if category == "agence":
-        filtered = [row for row in filtered if row.get("tracked") and not is_legacy_agence_row(row)]
+        filtered = [row for row in filtered if not is_legacy_agence_row(row)]
 
     if not filtered:
-        st.success(f"Aucune réservation {title.lower()} auto pour « {filter_mode} ».")
+        stats = booking_filter_stats(bookings, category=category)
+        st.info(
+            format_booking_stats_message(
+                stats,
+                category=category,
+                filter_mode=filter_mode,
+                empty=True,
+            )
+        )
         return
 
     df = bookings_dataframe(filtered, category=category)
     edited = st.data_editor(
         df,
-        column_config={
-            "select": st.column_config.CheckboxColumn("Sélection"),
-            "lead_id": None,
-            "_sequence_status_raw": None,
-        },
-        disabled=[
-            "email",
-            "name",
-            "company",
-            "start_time",
-            "tracked",
-            "sequence_status",
-            "send_email_1",
-            "send_email_2",
-            "send_email_3",
-            "send_email_4",
-            "job_email_1",
-            "job_email_2",
-            "job_email_3",
-            "job_email_4",
-            "lead_id",
-            "_sequence_status_raw",
-        ],
+        column_config=BOOKING_LINK_COLUMN_CONFIG,
+        disabled=BOOKING_TABLE_DISABLED_COLUMNS,
         hide_index=True,
         use_container_width=True,
         key=f"{key_prefix}_bookings_editor",
@@ -89,13 +80,19 @@ def render_auto_tab(category: Category) -> None:
     selected = edited[edited["select"] == True]  # noqa: E712
     st.caption(
         f"{len(selected)} / {len(edited)} sélectionné(s) · "
-        "Horaires Europe/Paris · job_email_* = statut en base"
+        "Horaires Europe/Paris · job_email_* = statut en base · "
+        "liens Calendly = colonnes Rejoindre / Replanifier / Annuler"
     )
 
-    if category != "agence":
+    if category != "agence" and category != "entreprise":
         return
 
-    if st.button("Annuler relances restantes", key=f"{key_prefix}_cancel_followups"):
+    button_label = (
+        "Annuler relances restantes"
+        if category == "agence"
+        else "Annuler relances restantes (H-48 / H-24)"
+    )
+    if st.button(button_label, key=f"{key_prefix}_cancel_followups"):
         if selected.empty:
             st.warning("Sélectionnez au moins une ligne.")
             return

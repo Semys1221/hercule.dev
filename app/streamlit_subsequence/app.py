@@ -155,26 +155,102 @@ def _queue_to_dataframe(queue: list) -> pd.DataFrame:
     )
 
 
+def _template_field_keys(key_prefix: str, campaign_id: str, key: str) -> tuple[str, str]:
+    return (
+        f"{key_prefix}_sub_{campaign_id}_{key}",
+        f"{key_prefix}_body_{campaign_id}_{key}",
+    )
+
+
+def _clear_template_session_keys(campaign_id: str, template_key: str | None = None) -> None:
+    for prefix in ("setup", "templates"):
+        if template_key:
+            for field_key in _template_field_keys(prefix, campaign_id, template_key):
+                st.session_state.pop(field_key, None)
+        else:
+            for key in TEMPLATE_KEYS:
+                for field_key in _template_field_keys(prefix, campaign_id, key):
+                    st.session_state.pop(field_key, None)
+
+
+def _show_template_save_result(result: dict) -> None:
+    st.success("Modèle enregistré (DB + prod Instantly).")
+    code_sync = result.get("code_sync") or {}
+    if code_sync.get("default_templates"):
+        st.caption("Default bootstrap E1 synchronisé (default_templates.py).")
+    elif code_sync.get("errors"):
+        st.warning(
+            "DB OK — sync bootstrap partielle : "
+            + "; ".join(str(err) for err in code_sync["errors"])
+        )
+
+
 def _render_sequence_form(campaign_id: str, templates: list[dict], *, key_prefix: str) -> None:
     template_map = {t["template_key"]: t for t in templates}
+    edited: list[dict[str, str]] = []
+
+    if st.button("Recharger les modèles", key=f"{key_prefix}_reload_{campaign_id}"):
+        _clear_template_session_keys(campaign_id)
+        st.rerun()
+
     for key in TEMPLATE_KEYS:
         row = template_map.get(key, {"subject": "", "body_html": ""})
         st.markdown(f"**{FLOW_LABELS.get(key, key)}**")
-        sub_key = f"{key_prefix}_sub_{campaign_id}_{key}"
-        body_key = f"{key_prefix}_body_{campaign_id}_{key}"
+        sub_key, body_key = _template_field_keys(key_prefix, campaign_id, key)
         if sub_key not in st.session_state:
             st.session_state[sub_key] = row.get("subject", "")
         if body_key not in st.session_state:
             st.session_state[body_key] = row.get("body_html", "")
         subject = st.text_input(f"Subject ({key})", key=sub_key)
         body = st.text_area(f"Body HTML ({key})", height=160, key=body_key)
-        if st.button(f"Save {key}", key=f"{key_prefix}_save_{campaign_id}_{key}"):
-            save_template(campaign_id, key, subject, body)
-            for prefix in ("setup", "templates"):
-                st.session_state.pop(f"{prefix}_sub_{campaign_id}_{key}", None)
-                st.session_state.pop(f"{prefix}_body_{campaign_id}_{key}", None)
-            st.success(f"Saved {key}.")
-            st.rerun()
+        sync_bootstrap = False
+        if key == "interested_email1":
+            sync_bootstrap = st.checkbox(
+                "Mettre à jour le default bootstrap (nouvelles campagnes)",
+                value=False,
+                key=f"{key_prefix}_sync_bootstrap_{campaign_id}_{key}",
+            )
+        save_col, _ = st.columns([1, 3])
+        with save_col:
+            if st.button("Enregistrer", key=f"{key_prefix}_save_{campaign_id}_{key}"):
+                result = save_template(
+                    campaign_id,
+                    key,
+                    subject,
+                    body,
+                    sync_bootstrap_default=sync_bootstrap,
+                )
+                _clear_template_session_keys(campaign_id, key)
+                st.session_state[sub_key] = subject
+                st.session_state[body_key] = body
+                _show_template_save_result(result)
+                st.rerun()
+        edited.append(
+            {
+                "template_key": key,
+                "subject": subject,
+                "body_html": body,
+                "sync_bootstrap_default": sync_bootstrap,
+            }
+        )
+
+    if st.button(
+        "Enregistrer tous les modèles",
+        type="primary",
+        key=f"{key_prefix}_save_all_{campaign_id}",
+    ):
+        for item in edited:
+            save_template(
+                campaign_id,
+                item["template_key"],
+                item["subject"],
+                item["body_html"],
+                sync_bootstrap_default=item.get("sync_bootstrap_default", False),
+            )
+        _clear_template_session_keys(campaign_id)
+        st.success("Tous les modèles enregistrés (DB + prod Instantly).")
+        st.rerun()
+
     st.caption(
         "Variables: {{reservation_agence_link}}, {{first_name}}, "
         "{{last_name}}, {{company_name}}. Subject unused — thread subject is kept. "

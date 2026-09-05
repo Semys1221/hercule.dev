@@ -14,6 +14,8 @@
     "apply-agence-demandes-expand-34-migration": "tsx --env-file=.env ./scripts/crm/applyAgenceDemandesExpand34Migration.ts",
     "apply-crm-booking-communication-migration": "tsx --env-file=.env ./scripts/crm/applyCrmBookingCommunicationMigration.ts",
     "apply-booking-email-threading-migration": "tsx --env-file=.env ./scripts/crm/applyBookingEmailThreadingMigration.ts",
+    "apply-calendly-meeting-links-migration": "tsx --env-file=.env ./scripts/crm/applyCalendlyMeetingLinksMigration.ts",
+    "apply-h48-confirm-contiendront-migration": "tsx --env-file=.env ./scripts/crm/applyH48ConfirmContiendrontMigration.ts",
     "configure-calendly-link-tracking-webhook": "tsx --env-file=.env ./scripts/crm/configureCalendlyLinkTrackingWebhook.ts",
     "repair-confirmed-without-booking-email": "tsx --env-file=.env ./scripts/crm/repairConfirmedWithoutBookingEmail.ts",
     "smoke-booking-confirm-guard": "tsx --env-file=.env ./scripts/crm/smokeBookingConfirmGuard.ts",
@@ -26,10 +28,12 @@
     "crm": "streamlit run crm/admin_tool.py",
     "streamlit-subsequence": "cd app/streamlit_subsequence && streamlit run app.py",
     "streamlit-demands": "cd app/streamlit_demands && streamlit run app.py",
+    "streamlit-funnels": "cd app/streamlit_funnels && streamlit run app.py",
     "streamlit-booking-resend": "cd app/streamlit_booking_resend && streamlit run app.py",
     "smoke-streamlit-booking-resend-schedule": "python3 ./scripts/streamlit_booking_resend/smokeSchedule.py",
     "smoke-booking-partial-trigger": "tsx --env-file=.env ./scripts/crm/smokeBookingPartialTrigger.ts",
     "smoke-booking-email-render": "tsx ./scripts/crm/smokeBookingEmailRender.ts",
+    "provision-calendly-meeting-links": "tsx --env-file=.env ./scripts/crm/provisionCalendlyMeetingLinks.ts",
     "smoke-booking-legacy": "tsx ./scripts/crm/smokeBookingLegacy.ts",
     "smoke-streamlit-subsequence": "python3 ./scripts/streamlit_subsequence/smokeSendQueue.py",
     "bootstrap-streamlit-subsequence-pipeline": "python3 ./scripts/streamlit_subsequence/bootstrapPipelineFromUnibox.py",
@@ -49,7 +53,9 @@
     "configure-booking-cron": "tsx --env-file=.env ./scripts/crm/configureBookingCronJob.ts",
     "audit-crons": "tsx --env-file=.env ./scripts/auditCronJobs.ts",
     "streamlit-scraper": "cd app/streamlit_scraper && python main.py ui",
-    "streamlit-clean": "cd app/streamlit_clean && streamlit run app.py"
+    "streamlit-clean": "cd app/streamlit_clean && streamlit run app.py",
+    "streamlit-reply-agent": "cd app/streamlit_reply_agent && streamlit run app.py",
+    "configure-ai-reply-agent-cron": "tsx --env-file=.env ./scripts/ai-reply-agent/configureAiReplyAgentCronJob.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

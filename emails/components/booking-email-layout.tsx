@@ -9,15 +9,21 @@ import type { ReactNode } from "react";
 
 import { EMAIL_COLORS, EMAIL_FONT_FAMILY } from "../constants";
 import { EmailSignature } from "./email-signature";
+import { MeetingActionsLine } from "./meeting-actions-line";
+import type { MeetingActionLinks } from "@/lib/booking-communication/meeting-links";
 
 type BookingEmailLayoutProps = {
   preview?: string;
   children: ReactNode;
+  signatureTagline: string;
+  meetingActionLinks?: MeetingActionLinks;
 };
 
 export function BookingEmailLayout({
   preview,
   children,
+  signatureTagline,
+  meetingActionLinks,
 }: BookingEmailLayoutProps) {
   return (
     <Html lang="fr">
@@ -39,7 +45,10 @@ export function BookingEmailLayout({
           }}
         >
           {children}
-          <EmailSignature />
+          {meetingActionLinks ? (
+            <MeetingActionsLine links={meetingActionLinks} />
+          ) : null}
+          <EmailSignature tagline={signatureTagline} />
         </Container>
       </Body>
     </Html>

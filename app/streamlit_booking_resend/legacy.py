@@ -39,14 +39,23 @@ def go_live_at() -> datetime:
     return parsed
 
 
+def effective_booking_date(row: dict[str, Any]) -> datetime | None:
+    """Best date for legacy vs auto split in Streamlit (observation UI only)."""
+    for key in ("booked_at", "start_time", "scheduled_at"):
+        parsed = parse_iso_dt(str(row.get(key) or "") or None)
+        if parsed is not None:
+            return parsed
+    return None
+
+
 def is_legacy_agence_row(row: dict[str, Any]) -> bool:
     category = str(row.get("booking_category") or row.get("lead_category") or "agence")
     if category != "agence":
         return False
-    booked = parse_iso_dt(str(row.get("booked_at") or "") or None)
-    if booked is None:
-        return bool(row.get("lead_id"))
-    return booked < go_live_at()
+    effective = effective_booking_date(row)
+    if effective is None:
+        return False
+    return effective < go_live_at()
 
 
 def email_type_for_legacy_slot(

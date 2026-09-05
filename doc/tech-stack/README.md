@@ -33,6 +33,14 @@ Documentation pour implémenter la plateforme matchmaking agence ↔ entreprise.
 |-----|---------|
 | **[capacity/README.md](./capacity/README.md)** | **Inbox pool, funnel, délais promettables, file d'attente, bootstrap** |
 
+## Outils internes
+
+| Doc | Contenu |
+|-----|---------|
+| **[tool/streamlit_reply_agent.md](./tool/streamlit_reply_agent.md)** | **AI Reply Agent** — Instantly `reply_received` → Groq → Unibox · Streamlit Inbox / Problem |
+
+> Notes brutes : [tool/streamlit_reply_agent/my_raw_notes.md](./tool/streamlit_reply_agent/my_raw_notes.md)
+
 ## Modules (ordre d'implémentation)
 
 1. [Onboarding](./onboarding/README.md) — formulaire → profile JSON

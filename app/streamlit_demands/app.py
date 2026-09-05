@@ -44,7 +44,10 @@ ORIGINE_PRESETS = [
 
 st.set_page_config(page_title="Streamlit Demands", layout="wide")
 st.title("Streamlit Demands")
-st.caption("Édition des cartes affichées sur la homepage agence. Le jeu de cartes est fixé — pas de création.")
+st.caption(
+    "Édition des cartes affichées sur la homepage agence. Le jeu de cartes est fixé — pas de création. "
+    "Préférez `npm run streamlit-funnels` (Sales › Fiches mockup)."
+)
 
 try:
     cards = list_all_cards()

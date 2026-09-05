@@ -277,6 +277,24 @@ def confirm_and_create(data: CreatePresetInput) -> str:
     path = write_preset_file(data)
     typer.secho(f"Created {path}", fg=typer.colors.GREEN)
 
+    try:
+        import sys
+        from pathlib import Path
+
+        reply_agent_dir = Path(__file__).resolve().parents[2] / "streamlit_reply_agent"
+        if str(reply_agent_dir) not in sys.path:
+            sys.path.insert(0, str(reply_agent_dir))
+        from prompt_scaffold import scaffold_ai_reply_prompts
+
+        prompt_paths = scaffold_ai_reply_prompts(data.preset_id, data.label)
+        for prompt_path in prompt_paths:
+            typer.secho(f"Created AI prompt {prompt_path}", fg=typer.colors.GREEN)
+    except Exception as exc:
+        typer.secho(
+            f"Warning: could not scaffold AI reply prompts: {exc}",
+            fg=typer.colors.YELLOW,
+        )
+
     result = validate_preset_runtime(data.preset_id, dry_run=True)
     if result.ok:
         typer.secho("Validation passed.", fg=typer.colors.GREEN)

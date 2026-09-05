@@ -200,17 +200,26 @@ def plan_main_schedule(
     sequence_starts_at: datetime | None = None,
 ) -> MainSchedule:
     immediate = clamp_to_now(sequence_starts_at or datetime.now(UTC))
-    if category != "agence":
+    if not scheduled_at_iso:
         return {
             "immediate": immediate,
             "h48_confirm": None,
             "h24_relance": None,
             "h20_cancel": None,
         }
+    h48 = h48_send_at(scheduled_at_iso)
+    h24 = h24_send_at(scheduled_at_iso)
+    if category != "agence":
+        return {
+            "immediate": immediate,
+            "h48_confirm": h48,
+            "h24_relance": h24,
+            "h20_cancel": None,
+        }
     return {
         "immediate": immediate,
-        "h48_confirm": h48_send_at(scheduled_at_iso),
-        "h24_relance": h24_send_at(scheduled_at_iso),
+        "h48_confirm": h48,
+        "h24_relance": h24,
         "h20_cancel": h20_send_at(scheduled_at_iso),
     }
 

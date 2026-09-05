@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
 import {
-  extractEventUuidFromPayload,
   getScheduledEventInvitee,
   parseEventAndInviteeUuids,
 } from "@/lib/calendly";
+import { resolveUuidsFromLead } from "@/lib/booking-communication/meeting-links";
 import {
   createLinkTrackingClient,
   findLeadByEmail,
@@ -34,7 +34,7 @@ function resolveUuidsFromSearchParams(searchParams: URLSearchParams): {
   return null;
 }
 
-async function resolveUuidsFromLead(
+async function resolveUuidsFromLeadLookup(
   slug: string,
   email: string,
 ): Promise<{ eventUuid: string; inviteeUuid: string } | null> {
@@ -45,19 +45,7 @@ async function resolveUuidsFromLead(
   }
   if (!lookup) return null;
 
-  const inviteeUri = lookup.lead.calendly_invitee_uri?.trim() ?? "";
-  if (inviteeUri) {
-    const parsed = parseEventAndInviteeUuids(inviteeUri);
-    if (parsed) return parsed;
-  }
-
-  const eventUuid = extractEventUuidFromPayload(lookup.lead.calendly_payload);
-  const inviteeUuid = inviteeUri ? inviteeUri.split("/").pop() ?? "" : "";
-  if (eventUuid && inviteeUuid) {
-    return { eventUuid, inviteeUuid };
-  }
-
-  return null;
+  return resolveUuidsFromLead(lookup.lead);
 }
 
 export async function GET(request: Request) {
@@ -68,7 +56,7 @@ export async function GET(request: Request) {
   let uuids = resolveUuidsFromSearchParams(searchParams);
   if (!uuids && (slug || email)) {
     try {
-      uuids = await resolveUuidsFromLead(slug, email);
+      uuids = await resolveUuidsFromLeadLookup(slug, email);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       return NextResponse.json({ ok: false, reason: message }, { status: 500 });
@@ -92,6 +80,7 @@ export async function GET(request: Request) {
       ok: true,
       cancelUrl: links.cancelUrl,
       rescheduleUrl: links.rescheduleUrl,
+      joinUrl: links.joinUrl,
       startTime: links.startTime,
       status: links.status,
     });

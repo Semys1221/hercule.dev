@@ -119,7 +119,7 @@ export async function POST(request: Request) {
     const result = await bookLeadFromCalendly({
       email: invitee.email,
       slug: invitee.utmContent,
-      calendlyInviteeUri: invitee.inviteeUri,
+      invitee,
       firstName: firstNameFromFullName(invitee.name),
       company: companyFromQuestions(invitee.questionsAndAnswers),
       scheduledAt: invitee.startTime || null,

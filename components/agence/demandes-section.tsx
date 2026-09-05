@@ -13,10 +13,9 @@ const CARD_WIDTH = "w-[300px] sm:w-[320px]"
 interface DemandesSectionProps {
   demandes: DemandeContrat[]
   teaser: DemandeTeaser | null
-  availableCount: number
 }
 
-export function DemandesSection({ demandes, teaser, availableCount }: DemandesSectionProps) {
+export function DemandesSection({ demandes, teaser }: DemandesSectionProps) {
   return (
     <div id="demandes" className="relative z-20 py-40 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div
@@ -47,7 +46,7 @@ export function DemandesSection({ demandes, teaser, availableCount }: DemandesSe
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-6"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            +{availableCount} projets actuellement disponibles
+            +25 projets actuellement disponibles
           </motion.h2>
 
           <motion.p

@@ -19,6 +19,11 @@ export type LinkTrackingLead = {
   instantly_lead_id: string | null;
   instantly_campaign_id: string | null;
   calendly_invitee_uri: string | null;
+  calendly_join_url: string | null;
+  calendly_reschedule_url: string | null;
+  calendly_cancel_url: string | null;
+  calendly_links_synced_at: string | null;
+  calendly_links_sync_error: string | null;
   booked_at: string | null;
   instantly_synced_at: string | null;
   first_name: string | null;

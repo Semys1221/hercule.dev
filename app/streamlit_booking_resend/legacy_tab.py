@@ -14,6 +14,8 @@ from legacy import (
     is_legacy_agence_row,
 )
 from shared import (
+    BOOKING_LINK_COLUMN_CONFIG,
+    BOOKING_TABLE_DISABLED_COLUMNS,
     EMAIL_TYPE_LABELS,
     bookings_dataframe,
     display_rendered_email,
@@ -50,29 +52,8 @@ def render_legacy_tab() -> None:
     df = bookings_dataframe(filtered, category="agence")
     edited = st.data_editor(
         df,
-        column_config={
-            "select": st.column_config.CheckboxColumn("Sélection"),
-            "lead_id": None,
-            "_sequence_status_raw": None,
-        },
-        disabled=[
-            "email",
-            "name",
-            "company",
-            "start_time",
-            "tracked",
-            "sequence_status",
-            "send_email_1",
-            "send_email_2",
-            "send_email_3",
-            "send_email_4",
-            "job_email_1",
-            "job_email_2",
-            "job_email_3",
-            "job_email_4",
-            "lead_id",
-            "_sequence_status_raw",
-        ],
+        column_config=BOOKING_LINK_COLUMN_CONFIG,
+        disabled=BOOKING_TABLE_DISABLED_COLUMNS,
         hide_index=True,
         use_container_width=True,
         key=f"{key_prefix}_bookings_editor",

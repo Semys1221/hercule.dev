@@ -144,6 +144,19 @@ export async function markJobEngagement(
   return true;
 }
 
+export async function rescheduleJob(jobId: string, scheduledFor: Date): Promise<void> {
+  const client = createLinkTrackingClient();
+  const { error } = await client
+    .from("booking_email_jobs")
+    .update({ scheduled_for: scheduledFor.toISOString() })
+    .eq("id", jobId)
+    .eq("status", "pending");
+
+  if (error) {
+    throw new Error(`Failed to reschedule job: ${error.message}`);
+  }
+}
+
 export async function markJobFailed(jobId: string, message: string): Promise<void> {
   const client = createLinkTrackingClient();
   const { error } = await client

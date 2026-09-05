@@ -8,7 +8,11 @@ import {
   HERCULE_WEBSITE_URL,
 } from "../constants";
 
-export function EmailSignature() {
+type EmailSignatureProps = {
+  tagline: string;
+};
+
+export function EmailSignature({ tagline }: EmailSignatureProps) {
   return (
     <Section style={{ marginTop: "32px" }}>
       <Row>
@@ -44,7 +48,7 @@ export function EmailSignature() {
               color: EMAIL_COLORS.muted,
             }}
           >
-            Courtage de projets Web &amp; Tech
+            {tagline}
           </Text>
           <Text
             style={{

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pour vous aider à préparer votre échange · Hercule</title>
+    <link rel="icon" href="/icon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-icon.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
+    <style>
+        :root {
+            --background: #09090B;
+            --foreground: #ffffff;
+            --muted-foreground: #a1a1aa;
+            --accent: #6366f1;
+            --border: #27272a;
+            --error: #ef4444;
+            --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--background);
+            color: var(--foreground);
+            margin: 0;
+            padding: 32px 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            max-width: 720px;
+            width: 100%;
+            max-height: calc(100vh - 64px);
+            padding: 32px 40px 40px;
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.06);
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .brand { margin-bottom: 28px; display: flex; justify-content: center; width: 100%; }
+        .brand a { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+        .brand svg { width: 20px; height: 20px; }
+        .brand span { font-size: 15px; font-weight: 600; }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0 0 24px;
+            line-height: 1.35;
+            letter-spacing: -0.02em;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted-foreground);
+            margin: 0 0 16px;
+            text-align: center;
+        }
+
+        .content-block { text-align: left; }
+
+        .timeline { margin: 0 0 32px; padding: 0; list-style: none; }
+        .timeline-step { position: relative; padding: 0 0 4px 36px; }
+        .timeline-step:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 26px;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--border);
+        }
+        .timeline-marker {
+            position: absolute;
+            left: 0;
+            top: 2px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background-color: var(--background);
+            color: var(--muted-foreground);
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+        .timeline-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 8px 0 12px;
+            background: none;
+            border: 0;
+            color: var(--foreground);
+            font-family: var(--font-sans);
+            font-size: 15px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+        }
+        .timeline-chevron { width: 16px; height: 16px; color: var(--muted-foreground); transition: transform 0.2s ease; flex-shrink: 0; }
+        .timeline-step.is-open .timeline-chevron { transform: rotate(180deg); }
+        .timeline-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
+        .timeline-step.is-open .timeline-body { grid-template-rows: 1fr; }
+        .timeline-body-inner { overflow: hidden; }
+        .timeline-body-inner p { margin: 0 0 16px; padding-right: 8px; color: var(--muted-foreground); font-size: 14px; line-height: 1.65; }
+
+        .faq { border-top: 1px solid var(--border); padding-top: 24px; }
+        .accordion { margin: 0; padding: 0; list-style: none; }
+        .accordion-item { border-bottom: 1px solid var(--border); }
+        .accordion-trigger {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 0;
+            background: none;
+            border: 0;
+            color: var(--foreground);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            line-height: 1.45;
+            cursor: pointer;
+        }
+        .accordion-chevron { width: 16px; height: 16px; margin-top: 2px; color: var(--muted-foreground); transition: transform 0.2s ease; flex-shrink: 0; }
+        .accordion-item.is-open .accordion-chevron { transform: rotate(180deg); }
+        .accordion-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
+        .accordion-item.is-open .accordion-panel { grid-template-rows: 1fr; }
+        .accordion-panel-inner { overflow: hidden; }
+        .accordion-panel-inner p { color: var(--muted-foreground); font-size: 14px; line-height: 1.65; margin: 0 0 12px; text-align: left; }
+        .accordion-panel-inner p:last-child { margin-bottom: 16px; }
+
+        .manage-booking-loading, .manage-booking-fallback, .manage-booking-time {
+            margin: 0 0 12px;
+            color: var(--muted-foreground);
+            font-size: 14px;
+            line-height: 1.65;
+            text-align: left;
+        }
+        .manage-booking-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; justify-content: flex-start; }
+        .manage-booking-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--foreground);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .manage-booking-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .manage-booking-btn.is-danger:hover { border-color: var(--error); color: var(--error); }
+        .is-hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            body { padding: 0; align-items: stretch; }
+            .container {
+                max-height: none;
+                min-height: 100vh;
+                border: none;
+                box-shadow: none;
+                padding: 28px 20px 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="brand">
+            <a href="https://hercule.dev/entreprise">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hercule">
+                    <path d="M3 5v14l7.5-7L3 5z" fill="#ffffff"/>
+                    <path d="M21 5v14l-7.5-7L21 5z" fill="#a1a1aa"/>
+                </svg>
+                <span>Hercule</span>
+            </a>
+        </div>
+
+        <div id="view-confirmation" class="view step">
+            <h2>Pour vous aider à préparer votre échange</h2>
+
+            <div class="content-block">
+                <p class="section-title">Déroulement du rendez-vous</p>
+                <ol class="timeline" id="timeline">
+                    <li class="timeline-step">
+                        <span class="timeline-marker" aria-hidden="true">1</span>
+                        <button class="timeline-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                            <span>Qualification de votre besoin</span>
+                            <svg class="timeline-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                        <div class="timeline-body">
+                            <div class="timeline-body-inner">
+                                <p>Nous échangerons sur la nature précise de votre besoin (site, refonte, e-commerce, SEO, etc.), votre budget envisagé, vos contraintes de délais et le contexte de votre entreprise.</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="timeline-step">
+                        <span class="timeline-marker" aria-hidden="true">2</span>
+                        <button class="timeline-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                            <span>Sélection de l'agence adaptée</span>
+                            <svg class="timeline-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                        <div class="timeline-body">
+                            <div class="timeline-body-inner">
+                                <p>Hercule évalue la compatibilité entre votre besoin et le profil des agences partenaires : prestations, secteur, taille, tarifs et positionnement. Votre projet est qualifié par téléphone avant toute proposition.</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="timeline-step">
+                        <span class="timeline-marker" aria-hidden="true">3</span>
+                        <button class="timeline-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                            <span>Prochaines étapes</span>
+                            <svg class="timeline-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                        </button>
+                        <div class="timeline-body">
+                            <div class="timeline-body-inner">
+                                <p>Si une agence compatible vous est proposée, vous recevrez un email avec un lien Calendly pour planifier un rendez-vous. L'échange portera sur la mise en relation et la suite de votre recherche d'agence.</p>
+                            </div>
+                        </div>
+                    </li>
+                </ol>
+
+                <div class="faq">
+                    <p class="section-title">FAQ</p>
+                    <ul class="accordion" id="faq">
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Ce service est-il vraiment gratuit ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <p>Oui. La qualification de votre besoin et la mise en relation avec une agence adaptée sont gratuites pour vous. Les agences partenaires financent l'accès au service de matching et à la qualification Hercule.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Comment Hercule sélectionne-t-il mon agence ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <p>Hercule évalue la compatibilité entre votre besoin et le profil des agences partenaires : prestations, secteur, taille, tarifs et positionnement. Votre projet est d'abord qualifié par téléphone avant toute proposition.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Où en est ma recherche d'agence ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <p>Votre page de suivi affiche la progression de votre recherche étape par étape. Les mises à jour par email suivent le calendrier défini lors de votre inscription.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Comment réserver un RDV avec l'agence proposée ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <p>Lorsqu'une agence compatible vous est proposée, vous recevez un email avec un lien Calendly pour choisir un créneau. La réservation se fait depuis cet email — pas depuis cette page.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Dois-je payer une commission à Hercule ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <p>Non. Hercule ne facture jamais les entreprises. Il n'y a aucun upsell commercial après la mise en relation.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Puis-je continuer ma recherche si ça ne convient pas ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <p>Oui. Après votre rendez-vous, un questionnaire vous permet d'indiquer si vous souhaitez continuer la recherche.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Comment fonctionnent les emails Hercule ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <p>Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Le domaine principal de la société et de la plateforme est hercule.dev.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="accordion-item">
+                            <button class="accordion-trigger" type="button" data-accordion-trigger aria-expanded="false">
+                                <span>Votre disponibilité a changé ?</span>
+                                <svg class="accordion-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                            </button>
+                            <div class="accordion-panel">
+                                <div class="accordion-panel-inner">
+                                    <div id="manage-booking" class="manage-booking">
+                                        <p class="manage-booking-loading">Chargement des options…</p>
+                                        <p class="manage-booking-time is-hidden" id="manage-booking-time"></p>
+                                        <div class="manage-booking-actions is-hidden" id="manage-booking-actions"></div>
+                                        <p class="manage-booking-fallback is-hidden" id="manage-booking-fallback">
+                                            Utilisez le lien reçu par email Calendly pour annuler ou reporter votre rendez-vous.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var params = new URLSearchParams(window.location.search);
+        var pathMatch = window.location.pathname.match(/\/post-booking-entreprise\.html\/([^/]+)\/?$/);
+        var shortCode = params.get('code') || params.get('slug') || (pathMatch ? pathMatch[1] : '') || '';
+        var prospectEmail = params.get('email') || '';
+        var manageBookingLoaded = false;
+
+        function initAccordionGroup(container, itemSelector) {
+            if (!container) return;
+            var items = container.querySelectorAll(itemSelector);
+            items.forEach(function(item) {
+                var trigger = item.querySelector('[data-accordion-trigger]');
+                if (!trigger) return;
+                trigger.addEventListener('click', function() {
+                    var isOpen = item.classList.contains('is-open');
+                    items.forEach(function(other) {
+                        other.classList.remove('is-open');
+                        var otherTrigger = other.querySelector('[data-accordion-trigger]');
+                        if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+                    });
+                    if (!isOpen) {
+                        item.classList.add('is-open');
+                        trigger.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+        }
+
+        function initAccordions() {
+            initAccordionGroup(document.getElementById('timeline'), '.timeline-step');
+            initAccordionGroup(document.getElementById('faq'), '.accordion-item');
+        }
+
+        function formatBookingTime(isoString) {
+            try {
+                return new Intl.DateTimeFormat('fr-FR', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Europe/Paris'
+                }).format(new Date(isoString));
+            } catch (err) {
+                return '';
+            }
+        }
+
+        function showManageBookingFallback() {
+            var loading = document.querySelector('.manage-booking-loading');
+            var fallback = document.getElementById('manage-booking-fallback');
+            if (loading) loading.classList.add('is-hidden');
+            if (fallback) fallback.classList.remove('is-hidden');
+        }
+
+        function renderManageBooking(data) {
+            var loading = document.querySelector('.manage-booking-loading');
+            var actions = document.getElementById('manage-booking-actions');
+            var time = document.getElementById('manage-booking-time');
+            var fallback = document.getElementById('manage-booking-fallback');
+
+            if (loading) loading.classList.add('is-hidden');
+            if (fallback) fallback.classList.add('is-hidden');
+
+            if (!data || !data.cancelUrl || !data.rescheduleUrl) {
+                showManageBookingFallback();
+                return;
+            }
+
+            if (time && data.startTime) {
+                var formatted = formatBookingTime(data.startTime);
+                if (formatted) {
+                    time.textContent = 'Rendez-vous prévu le ' + formatted + '.';
+                    time.classList.remove('is-hidden');
+                }
+            }
+
+            if (actions) {
+                actions.innerHTML =
+                    '<a class="manage-booking-btn" href="' + data.rescheduleUrl + '" target="_blank" rel="noopener noreferrer">Reporter le rendez-vous</a>' +
+                    '<a class="manage-booking-btn is-danger" href="' + data.cancelUrl + '" target="_blank" rel="noopener noreferrer">Annuler le rendez-vous</a>';
+                actions.classList.remove('is-hidden');
+            }
+        }
+
+        async function fetchCalendlyLinks() {
+            if (manageBookingLoaded) return;
+            var query = new URLSearchParams();
+            if (shortCode) query.set('code', shortCode);
+            if (prospectEmail) query.set('email', prospectEmail);
+
+            if (!shortCode && !prospectEmail) {
+                showManageBookingFallback();
+                manageBookingLoaded = true;
+                return;
+            }
+
+            try {
+                var response = await fetch('/api/link-tracking/calendly-links?' + query.toString());
+                var data = await response.json();
+                if (!response.ok || !data.ok) {
+                    showManageBookingFallback();
+                } else {
+                    renderManageBooking(data);
+                }
+            } catch (err) {
+                showManageBookingFallback();
+            }
+
+            manageBookingLoaded = true;
+        }
+
+        initAccordions();
+        void fetchCalendlyLinks();
+    </script>
+</body>
+</html>
