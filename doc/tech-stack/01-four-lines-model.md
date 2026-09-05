@@ -35,7 +35,7 @@ flowchart TB
   end
 
   subgraph streamlit [Streamlit Cloud ou Local]
-    CRM[crm/admin_tool.py]
+    CRM[app/streamlit_links/app.py]
   end
 
   subgraph external [Services]
@@ -154,5 +154,5 @@ Références :
 - lib/booking-communication/orchestrator.ts
 - lib/link-tracking/book-lead.ts
 - crm/crm_api.py
-- crm/admin_tool.py
+- app/streamlit_links/app.py
 ```

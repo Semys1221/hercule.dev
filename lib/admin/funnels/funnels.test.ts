@@ -17,6 +17,7 @@ import {
   funnelDocumentSchema,
   publicPathForScope,
   scopeFromLeafKey,
+  stepComponentsSchema,
 } from "@/lib/admin/funnels/schema";
 
 assert.equal(
@@ -65,6 +66,24 @@ const sampleDoc = funnelDocumentSchema.parse({
   updatedAt: new Date().toISOString(),
 });
 assert.equal(sampleDoc.slug, "my_funnel_1");
+
+const validComponents = stepComponentsSchema.parse({
+  faq: [
+    { id: "faq_a", hiddenIds: [], localEntries: [] },
+    { id: "faq_b", hiddenIds: [], localEntries: [] },
+  ],
+  pricing: { id: "pricing_a" },
+});
+assert.equal(validComponents.faq?.length, 2);
+
+const invalidComponents = stepComponentsSchema.safeParse({
+  faq: [
+    { id: "faq_a", hiddenIds: [], localEntries: [] },
+    { id: "faq_b", hiddenIds: [], localEntries: [] },
+    { id: "faq_c", hiddenIds: [], localEntries: [] },
+  ],
+});
+assert.equal(invalidComponents.success, false);
 
 async function withTempContentRoot(run: (root: string) => Promise<void>) {
   const originalCwd = process.cwd();

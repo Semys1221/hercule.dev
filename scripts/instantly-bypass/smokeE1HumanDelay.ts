@@ -13,8 +13,8 @@ function testE1WebhookScheduledFor() {
     scheduled.getTime() - receivedAt.getTime(),
     E1_WEBHOOK_HUMAN_DELAY_MS,
   );
-  assert.equal(E1_WEBHOOK_HUMAN_DELAY_MS, 15 * 60 * 1000);
-  console.log("OK e1WebhookScheduledFor adds 15 minutes");
+  assert.equal(E1_WEBHOOK_HUMAN_DELAY_MS, 2 * 60 * 1000);
+  console.log("OK e1WebhookScheduledFor adds 2 minutes");
 }
 
 function testShouldBypassSendWindow() {

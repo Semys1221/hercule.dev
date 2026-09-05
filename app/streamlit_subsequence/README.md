@@ -44,13 +44,13 @@ pnpm smoke-streamlit-subsequence
 
 - URL: `{NEXT_PUBLIC_APP_URL}/api/webhooks/instantly`
 - Skips campaigns that are not initialized or whose per-campaign auto-send is paused
-- Places the lead in **étape 0**, schedules that campaign’s E1 if auto-send is on (15 min human delay), then **étape 1** after send
+- Places the lead in **étape 0**, schedules that campaign’s E1 if auto-send is on (2 min human delay), then **étape 1** after send
 - **Pause / activate** per campaign via **Setup**
 
 ## Send window (manual sends only)
 
 - **Mon–Fri, 8:00–17:00 Europe/Paris** — outside this window, manual sends from **Envois** are queued in `instantly_bypass_jobs` for the next slot (e.g. click at 06:00 Paris → scheduled for 08:00 same day; Friday 18:00 → Monday 08:00).
-- Webhook E1 auto-send is **scheduled 15 minutes after Interested**, 24/7 (processed by the jobs cron every 10 min → typical delivery 15–25 min). Manual sends from **Envois** are unchanged.
+- Webhook E1 auto-send is **scheduled 2 minutes after Interested**, 24/7 (processed by the jobs cron every 5–15 min → typical delivery 2–12 min). Manual sends from **Envois** are unchanged.
 - Cron (same auth as booking emails): `GET /api/cron/instantly-bypass-jobs` every 5–15 minutes with `Authorization: Bearer $CRON_SECRET`.
 
 ## Template variables

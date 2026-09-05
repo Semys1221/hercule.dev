@@ -1,7 +1,8 @@
-"""Hercule CRM — Streamlit lead list, manual add, Unibox, Instantly provisioning."""
+"""Link Tracking — Streamlit lead list, manual add, Unibox, Instantly provisioning."""
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import sys
@@ -11,31 +12,43 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+_APP_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _APP_DIR.parents[1]
+_CRM_DIR = _REPO_ROOT / "crm"
 
-from booking_templates import list_templates, send_test_email, upsert_templates
-from config import (
+_env_spec = importlib.util.spec_from_file_location(
+    "_streamlit_links_env", _APP_DIR / "config.py"
+)
+_env_module = importlib.util.module_from_spec(_env_spec)
+_env_spec.loader.exec_module(_env_module)
+
+for path in (_APP_DIR, _CRM_DIR):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from booking_templates import list_templates, send_test_email, upsert_templates  # noqa: E402
+from config import (  # noqa: E402
     env_source_label,
     instantly_patch_concurrency,
     settings,
     temporary_base_url_for,
 )
-from crm_api import post_json, start_role_recovery_sequence
-from calendly_client import list_untracked_bookings
-from instantly_client import (
+from crm_api import post_json, start_role_recovery_sequence  # noqa: E402
+from calendly_client import list_untracked_bookings  # noqa: E402
+from instantly_client import (  # noqa: E402
     count_leads_in_campaign,
     format_resource_label,
     get_instantly_client,
     leads_to_dataframe,
 )
-from pipeline import (
+from pipeline import (  # noqa: E402
     detect_email_column,
     provision_from_csv,
     provision_from_instantly_leads,
     rows_to_dataframe,
 )
-from slug import build_confirm_url, build_lead_urls
-from supabase_repo import (
+from slug import build_confirm_url, build_lead_urls  # noqa: E402
+from supabase_repo import (  # noqa: E402
     find_by_email,
     get_client,
     list_all_leads,
@@ -44,8 +57,8 @@ from supabase_repo import (
     reset_client_cache,
 )
 
-st.set_page_config(page_title="Hercule CRM", layout="wide")
-st.title("Hercule CRM")
+st.set_page_config(page_title="Link Tracking", layout="wide")
+st.title("Link Tracking")
 st.caption(
     "Leads Supabase (agence / entreprise). Booking agence: "
     f"`{settings.tracking_base_url_agence}/{{slug}}` · entreprise: "

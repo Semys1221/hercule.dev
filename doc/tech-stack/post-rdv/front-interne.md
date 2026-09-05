@@ -50,7 +50,7 @@ Panel Post-RDV Streamlit (doc/tech-stack/post-rdv/front-interne.md).
 - Boutons force-sold, payment-confirmed 1489/898, resend-survey
 - payment-confirmed → ONBOARDED + cancel nurture jobs
 
-Réutiliser : crm/admin_tool.py, crm/crm_api.py
+Réutiliser : app/streamlit_links/app.py, crm/crm_api.py
 
 Tests :
 - payment 898 → ONBOARDED, nurture jobs cancelled

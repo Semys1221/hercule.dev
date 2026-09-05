@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import {
   buildAvailabilitySummary,
   formatFrenchDateLabel,
+  getEarliestQueryableTime,
   parseBookingEvent,
 } from "@/lib/calendly/availability";
 
@@ -15,6 +16,10 @@ function main() {
   assert.equal(parseBookingEvent(null), null);
 
   const now = new Date("2026-09-05T10:00:00.000Z");
+  const earliest = getEarliestQueryableTime(now);
+  assert.ok(earliest.getTime() > now.getTime());
+  assert.equal(earliest.getTime() - now.getTime(), 60_000);
+
   const slotSoon = new Date("2026-09-06T10:00:00.000Z");
   const slotLater = new Date("2026-09-12T10:00:00.000Z");
 

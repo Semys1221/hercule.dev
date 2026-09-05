@@ -20,12 +20,12 @@ Routes:
 ## Streamlit CRM
 
 ```bash
-pnpm crm
+pnpm streamlit-links
 ```
 
 Needs Next.js running for status/sequence APIs (`CRM_BACKEND_URL`, default `http://localhost:3000`).
 
-See [crm/README.md](../../crm/README.md) for admin features.
+See [app/streamlit_links/README.md](../streamlit_links/README.md) for admin features.
 
 ## Lead tools
 

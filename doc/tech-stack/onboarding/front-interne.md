@@ -41,7 +41,7 @@ Preview **3 progressions** : afficher ce que verra le client (`profile.display.t
 ## 3. Prompt d'action IA
 
 ```
-Panel onboarding Streamlit (crm/admin_tool.py).
+Panel onboarding Streamlit (app/streamlit_links/app.py).
 
 - Liste unifiée agence+entreprise, filtre ONBOARDED
 - Colonne preview profile.form

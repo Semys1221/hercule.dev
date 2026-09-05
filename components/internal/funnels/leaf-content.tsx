@@ -7,7 +7,9 @@ import {
   FunnelEditor,
 } from "@/components/internal/funnels/builder/funnel-editor";
 import { FicheForm } from "@/components/internal/funnels/fiche-form";
+import { FaqEditor } from "@/components/internal/funnels/faq-editor";
 import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
+import { PricingEditor } from "@/components/internal/funnels/pricing-editor";
 import { MockupEditor } from "@/components/internal/funnels/mockup-editor";
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 import { InternalLeafToolbar } from "@/components/internal/funnels/ui/internal-leaf-toolbar";
@@ -91,6 +93,14 @@ export function FunnelLeafContent({
 
   if (leafKey === "onboarding_fiche_form") {
     return <FicheForm audience={audience} />;
+  }
+
+  if (leafKey === "legal_faq") {
+    return <FaqEditor audience={audience} />;
+  }
+
+  if (leafKey === "legal_pricing") {
+    return <PricingEditor audience={audience} />;
   }
 
   if (leafKey.startsWith("legal_")) {

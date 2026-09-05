@@ -79,6 +79,7 @@ export function StepsMapper({ scope, funnel, onSaved, onContinue }: StepsMapperP
         question: existing?.question,
         form: existing?.form,
         other: existing?.other,
+        components: existing?.components,
       };
     });
 

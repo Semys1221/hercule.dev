@@ -5,6 +5,7 @@ const PARIS_TIMEZONE = "Europe/Paris";
 const FULLY_BOOKED_THRESHOLD_HOURS = 48;
 const WINDOW_DAYS = 7;
 const DEFAULT_HORIZON_DAYS = 42;
+const MIN_FUTURE_BUFFER_MS = 60_000;
 
 export type CalendlyBookingEvent = "agence" | "entreprise";
 
@@ -98,6 +99,10 @@ function normalizeSchedulingUrl(url: string): string {
 
 function toIsoUtc(date: Date): string {
   return date.toISOString();
+}
+
+export function getEarliestQueryableTime(now: Date = new Date()): Date {
+  return new Date(now.getTime() + MIN_FUTURE_BUFFER_MS);
 }
 
 async function calendlyGet<T>(
@@ -228,7 +233,7 @@ export async function findFirstAvailableSlot(
   const horizonEnd = new Date(
     now.getTime() + horizonDays * 24 * 60 * 60 * 1000,
   );
-  let windowStart = now;
+  let windowStart = getEarliestQueryableTime(now);
 
   while (windowStart < horizonEnd) {
     const windowEnd = new Date(

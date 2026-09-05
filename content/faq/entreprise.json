@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "audience": "entreprise",
+  "updatedAt": "2026-09-05T12:00:00.000Z",
+  "entries": [
+    {
+      "id": "faq-en-001",
+      "question": "Ce service est-il vraiment gratuit ?",
+      "answer": "Oui. La qualification de votre besoin et la mise en relation avec une agence adaptée sont gratuites pour vous. Les agences partenaires financent l'accès au service de matching et à la qualification Hercule."
+    },
+    {
+      "id": "faq-en-002",
+      "question": "Comment Hercule sélectionne-t-il mon agence ?",
+      "answer": "Hercule évalue la compatibilité entre votre besoin et le profil des agences partenaires : prestations, secteur, taille, tarifs et positionnement. Votre projet est d'abord qualifié par téléphone avant toute proposition."
+    },
+    {
+      "id": "faq-en-003",
+      "question": "Où en est ma recherche d'agence ?",
+      "answer": "Votre page de suivi affiche la progression de votre recherche étape par étape. Les mises à jour par email suivent le calendrier défini lors de votre inscription (`profile.communication.delays`)."
+    },
+    {
+      "id": "faq-en-004",
+      "question": "Comment réserver un RDV avec l'agence proposée ?",
+      "answer": "Lorsqu'une agence compatible vous est proposée, vous recevez un email avec un lien Calendly pour choisir un créneau. La réservation se fait depuis cet email — pas depuis cette page."
+    },
+    {
+      "id": "faq-en-005",
+      "question": "Dois-je payer une commission à Hercule ?",
+      "answer": "Non. Hercule ne facture jamais les entreprises. Il n'y a aucun upsell commercial après la mise en relation. Détail : [00-overview.md](../00-overview.md)."
+    },
+    {
+      "id": "faq-en-006",
+      "question": "Puis-je continuer ma recherche si ça ne convient pas ?",
+      "answer": "Oui. Après votre rendez-vous, un questionnaire vous permet d'indiquer si vous souhaitez continuer la recherche. Détail : [post-rdv/front-client.md](../post-rdv/front-client.md)."
+    },
+    {
+      "id": "faq-en-007",
+      "question": "Comment fonctionnent les emails Hercule ?",
+      "answer": "Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Le domaine principal de la société et de la plateforme est hercule.dev."
+    }
+  ]
+}

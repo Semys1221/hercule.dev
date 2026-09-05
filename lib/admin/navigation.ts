@@ -62,6 +62,7 @@ function legalTree(): Record<string, NavNode> {
     mentions: { label: "Mentions légales", leaf: "legal_mentions" },
     confidentialite: { label: "Confidentialité", leaf: "legal_confidentialite" },
     faq: { label: "FAQ", leaf: "legal_faq" },
+    pricing: { label: "Pricing", leaf: "legal_pricing" },
   };
 }
 

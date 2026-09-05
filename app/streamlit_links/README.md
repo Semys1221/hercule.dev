@@ -1,14 +1,14 @@
-# Hercule CRM (Streamlit)
+# Link Tracking (Streamlit)
 
 ```bash
-pnpm crm
+pnpm streamlit-links
 # or:
-cd crm && pip install -r requirements.txt && streamlit run admin_tool.py
+cd app/streamlit_links && pip install -r requirements.txt && streamlit run app.py
 ```
 
 Needs the Next.js app for status/sequence APIs (`CRM_BACKEND_URL` or `NEXT_PUBLIC_APP_URL`, default `http://localhost:3000`).
 
-For Calendly bookings + Resend sequences only, use the dedicated tool: `pnpm streamlit-booking-resend` ([app/streamlit_booking_resend](../app/streamlit_booking_resend/README.md)).
+For Calendly bookings + Resend sequences only, use the dedicated tool: `pnpm streamlit-booking-resend` ([app/streamlit_booking_resend](../streamlit_booking_resend/README.md)).
 
 - **Leads** — list + Actualiser; change statut. MEETING_BOOKED asks whether to trigger Resend (now / schedule / skip).
 - **Ajouter** — manual form. Duplicate email is rejected.
@@ -19,7 +19,7 @@ For Calendly bookings + Resend sequences only, use the dedicated tool: `pnpm str
 
 Large batches commit per chunk (50–100 rows). If Supabase disconnects mid-run, rows from completed chunks are already saved; Instantly PATCH runs for whatever succeeded.
 
-1. Restart Streamlit (`pnpm crm`) so retry logic is active.
+1. Restart Streamlit (`pnpm streamlit-links`) so retry logic is active.
 2. Re-select the same campaign leads and click **Provision / re-sync** again (same category, PATCH enabled).
    - Existing emails → Supabase **update** (fast).
    - Missing emails → **insert** (remaining chunks).
@@ -40,4 +40,4 @@ Tracking URLs (full links stored in Supabase):
 - `reservation_entreprise_link` → `/reservation-entreprise.html/{slug}`
 - `confirmation_agence_link` → `/confirm-reservation.html/{slug}?email=` (Resend email 2 agence)
 
-Copy: [doc/emails_booking](../doc/emails_booking)
+Copy: [doc/emails_booking](../../doc/emails_booking)

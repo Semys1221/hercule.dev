@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import type { Audience } from "@/lib/admin/navigation";
+import { faqEntrySchema } from "@/lib/site/faq-types";
+import { pricingComponentConfigSchema } from "@/lib/site/pricing-types";
 
 export const FUNNEL_SCHEMA_VERSION = 1;
 
@@ -64,6 +66,20 @@ export const otherStepContentSchema = z.object({
   intent: z.string().min(1).max(2000),
 });
 
+export const faqComponentConfigSchema = z.object({
+  id: z.string().min(1),
+  hiddenIds: z.array(z.string()).default([]),
+  localEntries: z.array(faqEntrySchema).default([]),
+});
+
+export const stepComponentsSchema = z.object({
+  faq: z.array(faqComponentConfigSchema).max(2).optional(),
+  pricing: pricingComponentConfigSchema.optional(),
+});
+
+export type FaqComponentConfig = z.infer<typeof faqComponentConfigSchema>;
+export type StepComponents = z.infer<typeof stepComponentsSchema>;
+
 export const stepContextSchema = z.object({
   audience: z.enum(["agence", "entreprise"]),
   kind: funnelKindSchema,
@@ -90,6 +106,7 @@ export const funnelStepSchema = z.object({
   question: questionStepContentSchema.optional(),
   form: formStepContentSchema.optional(),
   other: otherStepContentSchema.optional(),
+  components: stepComponentsSchema.optional(),
 });
 
 export const funnelDocumentSchema = z.object({

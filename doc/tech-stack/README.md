@@ -75,4 +75,4 @@ Détail : [post-rdv/agence-commercial.md](./post-rdv/agence-commercial.md)
 ## Repo
 
 - [`doc/crm-deployment.md`](../crm-deployment.md) — déploiement
-- [`crm/README.md`](../../crm/README.md) — CRM Streamlit existant
+- [`app/streamlit_links/README.md`](../../app/streamlit_links/README.md) — Link tracking Streamlit

@@ -45,5 +45,5 @@ Panel deliverance Streamlit avec preview 3 progressions.
 - Preview profile.display.timeline par lead
 - Boutons via post_json admin/action
 
-Réutiliser : crm/admin_tool.py, crm/crm_api.py
+Réutiliser : app/streamlit_links/app.py, crm/crm_api.py
 ```

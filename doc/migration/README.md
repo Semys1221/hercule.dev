@@ -122,7 +122,7 @@ The migration aligns admin with the documented architecture.
 
 | Domain | Source of truth | Written by (today) | Consumed by (production) |
 |--------|-----------------|--------------------|---------------------------|
-| Lead rows | Supabase `agence`, `entreprise` | Streamlit funnels, `crm/admin_tool.py` | Next API, deliverance, matching |
+| Lead rows | Supabase `agence`, `entreprise` | Streamlit funnels, `app/streamlit_links/app.py` | Next API, deliverance, matching |
 | Lead `profile` JSONB | Same tables, column `profile` | Streamlit funnels fiche form | `profile.display`, emails, timeline |
 | Carousel demandes | Supabase `agence_demandes` | streamlit_funnels, streamlit_demands | [`lib/agence/demandes-repo.ts`](../../lib/agence/demandes-repo.ts), homepage |
 | Booking coded defaults | [`lib/booking-communication/templates.ts`](../../lib/booking-communication/templates.ts) + [`crm/booking_templates.py`](../../crm/booking_templates.py) | `template_code_sync` | [`orchestrator.ts`](../../lib/booking-communication/orchestrator.ts) |
@@ -156,7 +156,7 @@ Agents must not assume everything moves to Supabase. **Git-tracked files** (mark
 | **streamlit_scraper** | `app/streamlit_scraper/` | `streamlit-scraper` | Optional | P4 | Heavy Python; bootstrap CLI may stay |
 | **streamlit_clean** | `app/streamlit_clean/` | `streamlit-clean` | **No** | — | Data cleaning ops pipeline |
 | **streamlit_stats** | `app/streamlit_stats/` | — | **No** | — | Funnel math calibration ([capacity/02-funnel-math.md](../tech-stack/capacity/02-funnel-math.md)) |
-| **crm admin** | `crm/admin_tool.py` | `crm` | Partial | P2 | Leads list, Instantly provision — overlaps onboarding |
+| **streamlit_links** | `app/streamlit_links/app.py` | `streamlit-links` | Partial | P2 | Leads list, Instantly provision — overlaps onboarding |
 
 ### Do not delete Streamlit apps until Next parity is verified
 
@@ -205,7 +205,7 @@ flowchart LR
 | Booking templates | Editor UI + React Email preview via `render-service.ts` |
 | Template sync | Port or wrap [`crm/template_code_sync.py`](../../crm/template_code_sync.py) |
 | Runtime templates | CRUD `booking_email_templates` (from booking_resend) |
-| CRM leads | Optional: leads list from `crm/admin_tool.py` |
+| CRM leads | Optional: leads list from `app/streamlit_links/app.py` |
 
 ### P3 — Comms ops
 
@@ -457,7 +457,7 @@ Agents should **default** to `/internal/funnels` + env-gated admin secret + dire
 | [tool/streamlit_reply_agent.md](../tech-stack/tool/streamlit_reply_agent.md) | AI agent architecture |
 | [cvg_site-sync.md](../tech-stack/cvg_site-sync.md) | Legal vs landing alignment |
 | [onboarding/db.md](../tech-stack/onboarding/db.md) | Onboarding INSERT flow |
-| [crm/README.md](../../crm/README.md) | Legacy CRM Streamlit |
+| [app/streamlit_links/README.md](../../app/streamlit_links/README.md) | Link tracking Streamlit |
 
 ---
 

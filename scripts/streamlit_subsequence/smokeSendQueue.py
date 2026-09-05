@@ -554,14 +554,14 @@ def test_dispatch_one_passes_email_account_fallback() -> None:
 
 def test_bootstrap_normalize_and_match_interested_e1() -> None:
     html = (
-        "Voici les précisions.<br/>"
+        "Pour faire simple,<br/>"
         "Pour réaliser l'audit de compatibilité de votre agence, cliquez ici :<br/>"
         "Mon agence est compatible<br/>"
         "Cordialement,<br/>Béatrice Meyer<br/>"
         '<a href="https://hercule.dev">hercule.dev</a>'
     )
     normalized = normalize_email_text(html)
-    assert "voici les precisions" in normalized
+    assert "pour faire simple" in normalized
     flows = match_flows(html, allowed_flows=["interested_email1", "interested_email2"])
     assert flows == {"interested_email1"}
     assert derive_step_from_flows(flows, is_no_show=False) == "step_1"

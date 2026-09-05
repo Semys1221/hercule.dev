@@ -74,10 +74,10 @@ vercel env add CRON_SECRET production --force --yes --value "<same as .env>"
 Not hosted on Vercel. Run locally:
 
 ```bash
-pnpm crm
+pnpm streamlit-links
 ```
 
-Or deploy `crm/` to Streamlit Cloud with the same env vars as root `.env`.
+Or deploy `app/streamlit_links/` to Streamlit Cloud with the same env vars as root `.env`.
 
 ## 7. Post-deploy smoke test
 

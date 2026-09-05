@@ -38,7 +38,7 @@ Panel Matching Streamlit — bouton Mettre en lien.
 - POST /api/matching/link via post_json
 - Dialog confirmation avec preview des deux fiches
 
-Réutiliser : crm/admin_tool.py dialog pattern, crm/crm_api.py
+Réutiliser : app/streamlit_links/app.py dialog pattern, crm/crm_api.py
 
 Tests : click → MATCH_PROPOSED both + email job match_proposal_entreprise
 ```

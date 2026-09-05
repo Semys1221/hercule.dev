@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 
+import { getFaqEntries } from "@/lib/site/faq-data";
 import { getAiReplyKnowledgeMarkdown } from "@/lib/site/legal-content";
 
 import type { AiReplyAgentConfig } from "./types";
@@ -13,20 +14,10 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(filePath, "utf-8");
 }
 
-function extractEntrepriseFaq(markdown: string): string {
-  const start = markdown.indexOf("### Questions entreprise");
-  if (start < 0) return "";
-  const afterStart = markdown.slice(start);
-  const hrMatch = afterStart.match(/\n---\n/);
-  const section = hrMatch?.index != null ? afterStart.slice(0, hrMatch.index) : afterStart;
-  const rows: string[] = [];
-  for (const line of section.split("\n")) {
-    const match = line.match(/^\|\s*E\d+\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|$/);
-    if (match) {
-      rows.push(`Q: ${match[1]}\nA: ${match[2]}`);
-    }
-  }
-  return rows.join("\n\n");
+function formatEntrepriseFaq(): string {
+  return getFaqEntries("entreprise")
+    .map((entry) => `Q: ${entry.question}\nA: ${entry.answer}`)
+    .join("\n\n");
 }
 
 type CacheEntry = { pack: string; expiresAt: number };
@@ -39,9 +30,8 @@ function knowledgeCacheKey(config: AiReplyAgentConfig): string {
 
 function buildKnowledgePackUncached(config: AiReplyAgentConfig): string {
   const aiReplyKnowledge = getAiReplyKnowledgeMarkdown();
-  const deliverance = readRepoFile("doc/tech-stack/deliverance/front-client.md");
   const overview = readRepoFile("doc/tech-stack/00-overview.md");
-  const entrepriseFaq = extractEntrepriseFaq(deliverance);
+  const entrepriseFaq = formatEntrepriseFaq();
   const niche = config.niche_metadata ?? {};
   const nicheAngle =
     typeof niche.angle === "string" ? niche.angle : config.niche_preset_id;

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CursorImpactField } from "@/components/internal/funnels/builder/cursor-impact-field";
+import { StepComponentsPanel } from "@/components/internal/funnels/builder/step-components-panel";
 import { PresetPreview } from "@/components/internal/funnels/builder/preview-registry";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
 import { buildStepContext } from "@/lib/admin/funnels/context";
@@ -430,6 +431,13 @@ export function StepEditor({
             <Button type="submit" disabled={form.formState.isSubmitting}>
               Enregistrer l&apos;étape
             </Button>
+
+            <StepComponentsPanel
+              scope={scope}
+              funnel={funnel}
+              step={step}
+              onSaved={onSaved}
+            />
           </div>
 
           <PresetPreview
@@ -437,6 +445,8 @@ export function StepEditor({
             prompt={prompt}
             answers={(answers ?? []).map((answer) => answer.label).filter(Boolean)}
             fieldLabels={fieldLabels}
+            audience={scope.audience}
+            components={step.components}
           />
         </form>
       </Form>

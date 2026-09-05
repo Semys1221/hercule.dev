@@ -229,7 +229,7 @@ async function seedPendingJob(
     },
   });
 
-  console.log("Seeded pending bypass job (+15 min) for cron execute test");
+  console.log("Seeded pending bypass job (+2 min) for cron execute test");
 }
 
 async function fetchJob(idempotencyKey: string): Promise<BypassJobRow | null> {
@@ -390,7 +390,7 @@ async function runDryRunPhase(
       throw new Error(`Expected bypass job for ${idempotencyKey}`);
     }
     assertJobScheduled(job, receivedAt, campaignId, leadEmail);
-    console.log("OK webhook scheduled E1 (+15 min)");
+    console.log("OK webhook scheduled E1 (+2 min)");
   } else if (first.skipped === "already_scheduled") {
     const job = await fetchJob(idempotencyKey);
     if (!job) {
@@ -413,7 +413,7 @@ async function runDryRunPhase(
       throw new Error(`Expected seeded bypass job for ${idempotencyKey}`);
     }
     assertJobScheduled(job, receivedAt, campaignId, leadEmail);
-    console.log("OK seeded pending job (+15 min)");
+    console.log("OK seeded pending job (+2 min)");
   } else {
     throw new Error(
       `Unexpected webhook response: ${JSON.stringify(first)} (is prod deployed with E1 delay?)`,

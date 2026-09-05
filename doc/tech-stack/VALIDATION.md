@@ -877,7 +877,7 @@
 
 ### D-08 — Coexistence CRM legacy agence
 
-**Doc :** [crm/README.md](../../crm/README.md) · [01-four-lines-model.md](./01-four-lines-model.md).
+**Doc :** [app/streamlit_links/README.md](../../app/streamlit_links/README.md) · [01-four-lines-model.md](./01-four-lines-model.md).
 
 **Intention :** Vous aviez un funnel agence existant (Instantly / Calendly commercial).
 

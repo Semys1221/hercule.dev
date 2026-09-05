@@ -53,5 +53,5 @@ SLA interne (doc/tech-stack/capacity/04-sla-internal.md).
 - Comparer deliverance_started_at + jours vs seuils U2/U3/U4
 - Flag si closes_mois > clients_max
 
-Références : crm/admin_tool.py (phase C), capacity/05-waiting-list.md
+Références : app/streamlit_links/app.py (phase C), capacity/05-waiting-list.md
 ```

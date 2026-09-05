@@ -1,7 +1,7 @@
 """Default Instantly bypass email copy for new campaign bootstrap."""
 
 DEFAULT_E1_BODY_HTML = (
-    "Voici les précisions.<br/><br/>"
+    "Pour faire simple,<br/><br/>"
     "L'un des groupes de clients que nous avons actuellement est constitué de cabinets comptables "
     "de 3 à 12 mandataires, disposant d'un budget mensuel dédié au développement marketing."
     "<br/><br/>"

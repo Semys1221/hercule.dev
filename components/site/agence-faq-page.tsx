@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Footer } from "@/components/agence/footer"
 import { Navbar } from "@/components/agence/navbar"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { AGENCE_FAQ } from "@/lib/site/agence-faq"
+import { getFaqEntries } from "@/lib/site/faq"
 
 function FaqAnswer({ answer, cvgLink }: { answer: string; cvgLink?: boolean }) {
   return (
@@ -24,6 +24,8 @@ function FaqAnswer({ answer, cvgLink }: { answer: string; cvgLink?: boolean }) {
 }
 
 export function AgenceFaqPage() {
+  const entries = getFaqEntries("agence")
+
   return (
     <div style={{ backgroundColor: "#09090B" }} className="min-h-screen">
       <Navbar />
@@ -44,8 +46,8 @@ export function AgenceFaqPage() {
           </p>
 
           <Accordion type="single" collapsible className="border border-zinc-800 rounded-xl px-4 sm:px-6">
-            {AGENCE_FAQ.map((entry, index) => (
-              <AccordionItem key={entry.question} value={`faq-${index}`} className="border-zinc-800">
+            {entries.map((entry, index) => (
+              <AccordionItem key={entry.id} value={`faq-${index}`} className="border-zinc-800">
                 <AccordionTrigger className="text-white hover:no-underline hover:text-zinc-200 text-sm sm:text-base">
                   {entry.question}
                 </AccordionTrigger>

@@ -17,7 +17,7 @@ Quick start:
 
 ```bash
 pnpm dev          # Next.js API + site
-pnpm crm          # Streamlit admin (separate terminal)
+pnpm streamlit-links          # Streamlit link tracking (separate terminal)
 ```
 
 Copy `.env.example` to `.env` and fill in Supabase, Instantly, Resend, and Calendly credentials.

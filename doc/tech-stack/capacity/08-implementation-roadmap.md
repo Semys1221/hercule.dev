@@ -31,7 +31,7 @@
 
 ## Phase C — Visibilité admin
 
-4. Onglet **Capacity** dans [`crm/admin_tool.py`](../../../crm/admin_tool.py) :
+4. Onglet **Capacity** dans [`app/streamlit_links/app.py`](../../../app/streamlit_links/app.py) :
    - Pool total / agence (10) / livraison / warmup / libre
    - Clients actifs : allocation, statut, queue_position
    - Jalons `estimated_*_at` par client
@@ -100,5 +100,5 @@ Phase B first : migration + computeDeliveranceMilestones
 Phase C : Streamlit tab before suivi page
 Phase D : promote hook + suivi GET
 
-Références : capacity/06-profile-integration.md, crm/admin_tool.py
+Références : capacity/06-profile-integration.md, app/streamlit_links/app.py
 ```

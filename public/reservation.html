@@ -905,9 +905,13 @@
             try {
                 var response = await fetch('/api/calendly/availability?event=' + encodeURIComponent(event));
                 var data = await response.json();
+                if (!response.ok || !data.ok) {
+                    console.warn('[availability]', data.reason || response.status);
+                    return;
+                }
                 renderAvailabilityMessage(container, data);
             } catch (err) {
-                // keep fallback intro text
+                console.warn('[availability]', err);
             }
         }
 

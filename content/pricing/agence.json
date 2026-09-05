@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "audience": "agence",
+  "updatedAt": "2026-09-05T12:00:00.000Z",
+  "hero": {
+    "eyebrow": "Tarification",
+    "title": "Accès aux apports d'affaires. Starter sans engagement. Récurrent résiliable avec préavis.",
+    "intro": "Chaque formule ouvre l'accès à des demandes clients qualifiées, attribuées après audit de compatibilité. Un contrat signé à 4 000 € pour 1 489 € d'investissement : retour positif dès la première attribution."
+  },
+  "plans": [
+    {
+      "id": "plan-starter",
+      "name": "Hercule Starter",
+      "label": "Offre d'entrée",
+      "price": "1 489 €",
+      "priceSuffix": null,
+      "tagline": "5 demandes clients à votre portée",
+      "summary": "Cinq demandes qualifiées sélectionnées selon votre activité et votre capacité. En l'absence de signature, l'attribution est renouvelée. (sous conditions CGV).",
+      "footer": "Commencez par une première attribution, sans engagement.",
+      "featured": true,
+      "profileOnly": false,
+      "highlight": null,
+      "features": [
+        "5 demandes dans votre champs d'éligibilité, validées par appel téléphonique selon 5 critères : taille de l'entreprise, durée souhaitée, horizon de résultat, budget mensuel et historique avec les agences.",
+        "Attribution exclusive des demandes à votre agence.",
+        "Remplacement de toute demande lorsque le prospect est absent au rendez-vous, avec remplacement sous 14 jours ouvrés.",
+        "0 % de commission sur les ventes réalisées par votre agence.",
+        "Garantie : 1 500 € de MRR minimum, ou 5 rendez-vous supplémentaires offerts (onboarding 48 h, retours post-RDV, présence aux RDV)."
+      ]
+    },
+    {
+      "id": "plan-recurrent",
+      "name": "Hercule",
+      "label": "Offre récurrente",
+      "price": "2 500 €",
+      "priceSuffix": "/mois",
+      "tagline": "Nous qualifions et signons nos contrats disponibles pour vous.",
+      "summary": null,
+      "footer": null,
+      "featured": false,
+      "profileOnly": true,
+      "highlight": null,
+      "features": [
+        "Éligible sur profil — offre proposée après validation de votre compatibilité.",
+        "Contrats déjà disponibles — demandes qualifiées dans notre pipeline, pas un démarrage à froid.",
+        "Qualification et signature internes — Hercule qualifie et signe nos contrats disponibles pour votre agence.",
+        "Vos tarifs, 0 % commission — chaque contrat signé à vos prix, sans commission.",
+        "Jusqu'à 4 attributions par mois pour votre agence.",
+        "Garantie : 3 000 € minimum de MRR généré par mois, ou une attribution reportée sur le mois suivant sans frais supplémentaires (≥ 2 attributions/mois, service actif complet).",
+        "L'ensemble des avantages de l'offre Starter."
+      ]
+    }
+  ],
+  "gatedTeaserFeatures": [
+    "Contrats déjà disponibles — demandes qualifiées dans notre pipeline, pas un démarrage à froid.",
+    "Vos tarifs, 0 % commission — chaque contrat signé à vos prix, sans commission.",
+    "Jusqu'à 4 clients signés par mois pour votre agence."
+  ],
+  "gatedGhostFeatures": [
+    "Garantie MRR 3 000 €",
+    "Signature interne",
+    "Avantages Starter"
+  ],
+  "guaranteeSection": {
+    "title": "Garantie Hercule Starter",
+    "items": [
+      "1 489 € TTC — 5 rendez-vous qualifiés, 0 % de commission sur vos ventes",
+      "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
+      "Moins de 1 500 € de MRR après vos 5 rendez-vous ? 5 rendez-vous supplémentaires offerts"
+    ]
+  }
+}
