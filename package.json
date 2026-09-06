@@ -56,6 +56,7 @@
     "configure-booking-cron": "tsx --env-file=.env ./scripts/crm/configureBookingCronJob.ts",
     "audit-crons": "tsx --env-file=.env ./scripts/auditCronJobs.ts",
     "streamlit-scraper": "cd app/streamlit_scraper && python main.py ui",
+    "verify-campaign-bootstrap": "python3 ./scripts/streamlit_scraper/verifyCampaignBootstrapLive.py --audit-all",
     "streamlit-clean": "cd app/streamlit_clean && streamlit run app.py",
     "streamlit-reply-agent": "cd app/streamlit_reply_agent && streamlit run app.py",
     "configure-ai-reply-agent-cron": "tsx --env-file=.env ./scripts/ai-reply-agent/configureAiReplyAgentCronJob.ts"
