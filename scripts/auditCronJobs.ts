@@ -10,6 +10,8 @@ const CRON_JOB_API = "https://api.cron-job.org";
 const TARGETS = [
   { path: "/api/cron/booking-emails", label: "booking-emails" },
   { path: "/api/cron/calendly-seat-check", label: "calendly-seat-check" },
+  { path: "/api/cron/onboarding-reminders", label: "onboarding-reminders" },
+  { path: "/api/cron/post-rdv-surveys", label: "post-rdv-surveys" },
   { path: "/api/cron/instantly-bypass-jobs", label: "instantly-bypass-jobs" },
   { path: "/api/cron/instantly-bypass-pipeline", label: "instantly-bypass-pipeline" },
 ] as const;
@@ -133,11 +135,14 @@ async function main(): Promise<void> {
 
   console.log("\n=== Summary ===");
   if (allRegistered && allHealthy) {
-    console.log("All 3 crons registered and responding OK.");
+    console.log(`All ${TARGETS.length} crons registered and responding OK.`);
   } else {
     if (!allRegistered) {
       console.log("- Missing cron-job.org job(s). Run:");
       console.log("    pnpm configure-booking-cron");
+      console.log("    pnpm configure-calendly-seat-check-cron");
+      console.log("    pnpm configure-onboarding-reminders-cron");
+      console.log("    pnpm configure-post-rdv-surveys-cron");
       console.log("    pnpm configure-instantly-bypass-cron");
       console.log("    pnpm configure-instantly-pipeline-cron");
     }

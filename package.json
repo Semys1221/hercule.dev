@@ -56,6 +56,8 @@
     "configure-instantly-pipeline-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configurePipelineCronJob.ts",
     "configure-booking-cron": "tsx --env-file=.env ./scripts/crm/configureBookingCronJob.ts",
     "configure-calendly-seat-check-cron": "tsx --env-file=.env ./scripts/crm/configureCalendlySeatCheckCronJob.ts",
+    "configure-onboarding-reminders-cron": "tsx --env-file=.env ./scripts/crm/configureOnboardingRemindersCronJob.ts",
+    "configure-post-rdv-surveys-cron": "tsx --env-file=.env ./scripts/crm/configurePostRdvSurveysCronJob.ts",
     "smoke-calendly-seat-onboarding": "tsx --env-file=.env ./scripts/crm/smokeCalendlySeatOnboardingE2e.ts",
     "test-calendly-org": "tsx ./lib/calendly/org.test.ts",
     "audit-crons": "tsx --env-file=.env ./scripts/auditCronJobs.ts",
