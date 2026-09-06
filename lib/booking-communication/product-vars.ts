@@ -1,4 +1,4 @@
-import { dashboardLinkFor } from "@/lib/link-tracking/urls";
+import { dashboardLinkFor, reservationAgenceLinkFor } from "@/lib/link-tracking/urls";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
 
@@ -42,6 +42,7 @@ export async function extraVarsForJob(
   lead: LinkTrackingLead,
 ): Promise<{
   dashboardLink?: string;
+  reservationAgenceLink?: string;
   company?: string | null;
   email?: string;
   surveyLink?: string;
@@ -52,8 +53,10 @@ export async function extraVarsForJob(
   scheduledAt?: string | null;
 }> {
   const dashboardLink = dashboardLinkFor(lead) ?? "";
+  const reservationAgenceLink = reservationAgenceLinkFor(lead);
   const base = {
     dashboardLink,
+    reservationAgenceLink,
     company: lead.company,
     email: lead.email,
     estimatedFirstBookingDate: estimatedFirstBookingDateFromLead(lead),

@@ -9,15 +9,13 @@ import { FicheForm } from "@/components/internal/funnels/fiche-form";
 import { FaqManagementShell } from "@/components/internal/funnels/faq-management-shell";
 import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
 import { PricingEditor } from "@/components/internal/funnels/pricing-editor";
+import { DashboardStateTable } from "@/components/internal/funnels/dashboard/dashboard-state-table";
 import { DeliverancePanel } from "@/components/internal/funnels/deliverance-panel";
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 import { InternalLeafToolbar } from "@/components/internal/funnels/ui/internal-leaf-toolbar";
 import { getLegalMarkdownForLeaf } from "@/lib/admin/legal-preview";
 import { scopeForParsedLeaf } from "@/lib/admin/funnels/routing";
-import {
-  DASHBOARD_KPIS_PLACEHOLDER,
-  ONBOARDING_PARCOURS_LEAF_TITLE,
-} from "@/lib/admin/funnels/ui-copy";
+import { ONBOARDING_PARCOURS_LEAF_TITLE } from "@/lib/admin/funnels/ui-copy";
 import { FUNNEL_LIST_LEAF_KEYS } from "@/lib/admin/funnels/schema";
 import type { Audience } from "@/lib/admin/navigation";
 
@@ -78,10 +76,7 @@ export function FunnelLeafContent({
     return (
       <>
         <InternalLeafToolbar leafKey={leafKey} />
-        <FunnelPlaceholder
-          title="Dashboard KPIs"
-          detail={`${DASHBOARD_KPIS_PLACEHOLDER} (${audience}).`}
-        />
+        <DashboardStateTable />
       </>
     );
   }

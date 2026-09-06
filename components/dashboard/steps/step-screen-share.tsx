@@ -1,5 +1,3 @@
-"use client";
-
 const STEPS = [
   {
     title: "Rejoignez l'appel visio",

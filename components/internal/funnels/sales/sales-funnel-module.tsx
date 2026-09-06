@@ -6,9 +6,13 @@ import { useForm, useWatch } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import {
+  getDeveloperModeEnabled,
+  getDeveloperModeEnabledServerSnapshot,
+  getDeveloperModeEnabledSnapshot,
   getPitchSidebarEnabled,
   getPitchSidebarEnabledServerSnapshot,
   getPitchSidebarEnabledSnapshot,
+  subscribeDeveloperModeEnabled,
   subscribePitchSidebarEnabled,
 } from "@/lib/admin/funnels/sales-funnel-settings";
 import {
@@ -28,6 +32,7 @@ import { RendezVousPanel } from "./rendez-vous-panel";
 import { SalesClosingPanel } from "./sales-closing-panel";
 import {
   isSalesClosingSectionComplete,
+  isSalesClosingSectionId,
   SALES_CLOSING_SECTIONS,
   salesClosingDefaultValues,
   type SalesClosingSectionId,
@@ -77,6 +82,11 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     subscribePitchSidebarEnabled,
     () => getPitchSidebarEnabledSnapshot(audience),
     getPitchSidebarEnabledServerSnapshot,
+  );
+  const developerModeEnabled = useSyncExternalStore(
+    subscribeDeveloperModeEnabled,
+    () => getDeveloperModeEnabledSnapshot(audience),
+    getDeveloperModeEnabledServerSnapshot,
   );
 
   const form = useForm<SalesQualificationValues>({
@@ -270,6 +280,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     if (
       !canEnterClosing ||
       !pitchSidebarEnabled ||
+      developerModeEnabled ||
       phase !== "qualification" ||
       hasAutoTransitionedRef.current
     ) {
@@ -278,7 +289,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
 
     hasAutoTransitionedRef.current = true;
     enterClosingPhase({ animated: true });
-  }, [canEnterClosing, enterClosingPhase, phase, pitchSidebarEnabled]);
+  }, [canEnterClosing, developerModeEnabled, enterClosingPhase, phase, pitchSidebarEnabled]);
 
   useEffect(() => {
     return () => {
@@ -302,9 +313,20 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           settingsHref={settingsHref}
           canEnterClosing={canEnterClosing}
           pitchSidebarEnabled={pitchSidebarEnabled}
+          developerModeEnabled={developerModeEnabled}
           meetingInfo={meetingInfo}
           onEnterClosing={() => enterClosingPhase({ animated: true })}
           onSectionChange={(sectionId) => {
+            if (developerModeEnabled && isSalesClosingSectionId(sectionId)) {
+              setPhase("closing");
+              setActiveClosingId(sectionId);
+              return;
+            }
+            if (developerModeEnabled) {
+              setPhase("qualification");
+              setActiveQualificationId(sectionId as SalesFunnelSectionId);
+              return;
+            }
             if (phase === "closing") {
               setActiveClosingId(sectionId as SalesClosingSectionId);
               return;
@@ -332,6 +354,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
                 }
                 selectedLead={selectedLead}
                 salesCallId={salesCallId}
+                developerMode={developerModeEnabled}
                 onRefreshLead={refreshLead}
                 onPersistClosing={persistClosingNotes}
               />

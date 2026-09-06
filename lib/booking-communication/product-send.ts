@@ -1,5 +1,5 @@
 import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
-import { dashboardLinkFor } from "@/lib/link-tracking/urls";
+import { dashboardLinkFor, reservationAgenceLinkFor } from "@/lib/link-tracking/urls";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 import { insertJob, markJobFailed, markJobSent } from "./jobs";
@@ -56,6 +56,7 @@ export async function sendProductEmailNow(params: {
     estimatedFirstBookingDate?: string;
     dashboardLink?: string;
     scheduledAt?: string | null;
+    reservationAgenceLink?: string;
   };
 }): Promise<{ ok: boolean; error?: string }> {
   const client = createLinkTrackingClient();
@@ -89,6 +90,10 @@ export async function sendProductEmailNow(params: {
     useHtml: defaultUseHtml(params.emailType),
     dashboardLink:
       params.extra?.dashboardLink ?? jobVars.dashboardLink ?? dashboardLinkFor(lead) ?? "",
+    reservationAgenceLink:
+      params.extra?.reservationAgenceLink ??
+      jobVars.reservationAgenceLink ??
+      reservationAgenceLinkFor(lead),
     company: lead.company,
     email: lead.email,
     surveyLink: params.extra?.surveyLink ?? jobVars.surveyLink,

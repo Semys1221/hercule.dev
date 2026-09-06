@@ -41,6 +41,9 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "close_indecis_1",
   "close_indecis_2",
   "close_indecis_3",
+  "no_show_indecis_1",
+  "no_show_indecis_2",
+  "no_show_indecis_3",
   "onboarding_j0",
   "onboarding_j0_bis",
   "onboarding_j1",
@@ -85,6 +88,7 @@ export function isProductBookingEmailType(emailType: BookingEmailType): boolean 
     emailType === "product_payment_welcome" ||
     emailType.startsWith("upsell_") ||
     emailType.startsWith("close_indecis_") ||
+    emailType.startsWith("no_show_indecis_") ||
     emailType.startsWith("onboarding_") ||
     emailType.startsWith("deliverance_") ||
     emailType.startsWith("match_") ||
@@ -233,6 +237,7 @@ export function buildBookingEmailVars(params: {
   emailType: BookingEmailType;
   postBookingUrl?: string;
   dashboardLink?: string;
+  reservationAgenceLink?: string;
   company?: string | null;
   email?: string;
   surveyLink?: string;
@@ -253,6 +258,7 @@ export function buildBookingEmailVars(params: {
     confirmLink: confirmUrl ? `confirmer : ${confirmUrl}` : "",
     post_booking_link: postBookingUrl,
     dashboardLink: params.dashboardLink?.trim() ?? "",
+    reservation_agence_link: params.reservationAgenceLink?.trim() ?? "",
     company: params.company?.trim() ?? "",
     email: params.email?.trim() ?? "",
     surveyLink: params.surveyLink?.trim() ?? "",
@@ -291,6 +297,7 @@ export function sampleBookingEmailVars(
     confirmUrl,
     emailType,
     dashboardLink: "https://www.hercule.dev/dashboard/exemple-slug",
+    reservationAgenceLink: "https://www.hercule.dev/reservation.html/exemple-slug",
     company: "Exemple SARL",
     email: "jean@example.com",
     surveyLink: "https://www.hercule.dev/survey/exemple-token",
@@ -373,6 +380,7 @@ export async function renderEmailFromStore(params: {
   useHtml?: boolean;
   meetingActionLinks?: MeetingActionLinks;
   dashboardLink?: string;
+  reservationAgenceLink?: string;
   company?: string | null;
   email?: string;
   surveyLink?: string;
@@ -397,6 +405,7 @@ export async function renderEmailFromStore(params: {
     useHtml: params.useHtml,
     meetingActionLinks: params.meetingActionLinks,
     dashboardLink: params.dashboardLink,
+    reservationAgenceLink: params.reservationAgenceLink,
     company: params.company,
     email: params.email,
     surveyLink: params.surveyLink,
@@ -418,6 +427,7 @@ export async function renderCustomBookingEmail(params: {
   useHtml?: boolean;
   meetingActionLinks?: MeetingActionLinks;
   dashboardLink?: string;
+  reservationAgenceLink?: string;
   company?: string | null;
   email?: string;
   surveyLink?: string;
@@ -433,6 +443,7 @@ export async function renderCustomBookingEmail(params: {
     emailType: params.emailType,
     postBookingUrl: params.confirmUrl,
     dashboardLink: params.dashboardLink,
+    reservationAgenceLink: params.reservationAgenceLink,
     company: params.company,
     email: params.email,
     surveyLink: params.surveyLink,

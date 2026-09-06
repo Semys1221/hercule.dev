@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import type { DashboardFormData } from "@/lib/dashboard/types";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 
 export type ClientRow = {
   id: string;
+  category: LeadCategory;
   email: string;
   firstName: string | null;
   company: string | null;
@@ -18,7 +20,8 @@ export type ClientRow = {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const category = searchParams.get("category") ?? "agence";
+  const category = (searchParams.get("category") ?? "agence") as LeadCategory;
+  const all = searchParams.get("all") === "true";
 
   try {
     const client = createLinkTrackingClient();
@@ -40,6 +43,7 @@ export async function GET(request: Request) {
         const form = (profile.form ?? {}) as DashboardFormData;
         return {
           id: lead.id as string,
+          category: "entreprise",
           email: lead.email as string,
           firstName: (lead.first_name as string | null) ?? null,
           company: (lead.company as string | null) ?? null,
@@ -55,14 +59,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ clients });
     }
 
-    // Fetch all agence leads that have completed onboarding
-    const { data: leads, error: leadsError } = await client
+    let query = client
       .from("agence")
       .select(
         "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, profile",
-      )
-      .not("onboarding_completed_at", "is", null)
-      .order("onboarding_completed_at", { ascending: false });
+      );
+
+    if (!all) {
+      query = query.not("onboarding_completed_at", "is", null);
+    }
+
+    const { data: leads, error: leadsError } = await query.order(
+      all ? "created_at" : "onboarding_completed_at",
+      { ascending: false },
+    );
 
     if (leadsError) {
       throw new Error(`agence query failed: ${leadsError.message}`);
@@ -72,7 +82,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ clients: [] });
     }
 
-    // Fetch payment status for all agence IDs in a single query
     const agenceIds = leads.map((l) => l.id as string);
     const { data: payments, error: paymentsError } = await client
       .from("payments")
@@ -84,9 +93,7 @@ export async function GET(request: Request) {
       throw new Error(`payments query failed: ${paymentsError.message}`);
     }
 
-    const paidSet = new Set(
-      (payments ?? []).map((p) => p.agence_id as string),
-    );
+    const paidSet = new Set((payments ?? []).map((p) => p.agence_id as string));
 
     const clients: ClientRow[] = leads.map((lead) => {
       const profile = (lead.profile ?? {}) as Record<string, unknown>;
@@ -94,14 +101,14 @@ export async function GET(request: Request) {
 
       return {
         id: lead.id as string,
+        category: "agence",
         email: lead.email as string,
         firstName: (lead.first_name as string | null) ?? null,
         company: (lead.company as string | null) ?? null,
         slug: lead.slug as string,
-        productStatut:
-          (lead.product_statut as string | null) ?? "NONE",
+        productStatut: (lead.product_statut as string | null) ?? "NONE",
         dashboardLink: (lead.dashboard_link as string | null) ?? null,
-        onboardingCompletedAt: lead.onboarding_completed_at as string,
+        onboardingCompletedAt: (lead.onboarding_completed_at as string | null) ?? "",
         form,
         hasPaid: paidSet.has(lead.id as string),
       };
@@ -109,8 +116,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ clients });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "clients fetch failed";
+    const message = error instanceof Error ? error.message : "clients fetch failed";
     console.error("[admin/clients]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

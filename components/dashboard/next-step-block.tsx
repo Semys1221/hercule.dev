@@ -1,5 +1,7 @@
 "use client";
 
+import { Zap } from "lucide-react";
+
 import {
   Card,
   CardContent,
@@ -33,9 +35,12 @@ export function NextStepBlock({ data }: NextStepBlockProps) {
   const message = resolveNextStepMessage(data);
 
   return (
-    <Card className="mt-6 border-primary/20 bg-primary/5">
+    <Card className="mt-6 border-border bg-muted">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Prochaine étape</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base font-medium">
+          <Zap className="size-4 shrink-0 text-primary" />
+          Prochaine étape
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">{message}</p>

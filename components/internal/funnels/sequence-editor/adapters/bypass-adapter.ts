@@ -13,9 +13,9 @@ export function createBypassAdapter(options: BypassAdapterOptions): SequenceEdit
 
   return {
     variables: [
-      "{{firstName}}",
-      "{{lastName}}",
-      "{{companyName}}",
+      "{{first_name}}",
+      "{{last_name}}",
+      "{{company_name}}",
       "{{reservation_agence_link}}",
       "{{accountSignature}}",
     ],

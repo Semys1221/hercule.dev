@@ -52,21 +52,23 @@ Role recovery : `role_seq_48` / `role_seq_24` — recovery weekday.
 
 ## PARTIE 2 — Spec vs code
 
-Documentés **non built** (tech-stack communication md) :
+> **Addendum 2026-09-07 (post-build).** Les séquences produit/close ci-dessous sont **implémentées** dans le code (`booking_email_jobs`, orchestrateurs `lib/*-sequence/`, registry `built`). Les noms `email_type` canoniques sont dans `lib/booking-communication/types.ts`. L'arc nurturing long (`nurture_agence_*`, ~8 emails) reste **non implémenté** — remplacé par `upsell` + `close-indecis`.
 
-| Séquence spec | Trigger | Steps | Stop |
-|---------------|---------|-------|------|
-| onboarding_confirm | INSERT onboarding | 1 email NOW | — |
-| deliverance_search_started, d7, milestone | promote / ADVANCE | daté profile.delays | delay admin |
-| match_proposal_entreprise | Mettre en lien | 1 + Calendly | — |
-| match_booking_confirm_* | webhook book | 1 | — |
-| post_rdv_survey_* | fin RDV | 1 + token | — |
-| entreprise_onboarding_check_j7 | SOLD embarked | J+7 | — |
-| nurture_agence_1489_j7, conseil_j14, weekly_1–6 | decline 898 | ~8 / 60j | payment |
+Documentés **non built** au gel initial (tech-stack communication md) — **statut actuel entre parenthèses** :
 
-`sequence_client_not_paid` : 3 emails + Stripe — autre spec.
+| Séquence spec (doc legacy) | email_type runtime | Statut actuel |
+|----------------------------|-------------------|---------------|
+| onboarding_confirm | `onboarding_j0`, `j0_bis`, `j1`, rappels | **built** |
+| deliverance_search_started, d7, milestone | `deliverance_*` | **built** |
+| match_proposal_entreprise | `match_proposal`, `match_proposal_followup` | **built** |
+| match_booking_confirm_* | `match_booking_agence` | **built** |
+| post_rdv_survey_* | `survey_rdv_*` | **built** |
+| entreprise_onboarding_check_j7 | `sold_check_j7` | **built** |
+| nurture_agence_1489_j7, conseil_j14, weekly_1–6 | — | **non implémenté** |
 
-Outreach copy `doc/email_outreach_copy/*` : **Instantly campaigns** (fichiers), pas Resend.
+`sequence_client_not_paid` : remplacé par **`upsell`** (completed) + **`close-indecis`** (not_paid), 3 emails chacun + Stripe.
+
+Outreach copy `archive/email_outreach_copy/*` : **Instantly campaigns** (fichiers), pas Resend.
 
 #### [EML-01] Les séquences produit (onboarding confirm, délivrance, matching, survey, nurture) doivent-elles réutiliser `booking_email_jobs` + `booking_email_templates` avec de nouveaux `email_type`, ou rester hors MVP ?
 

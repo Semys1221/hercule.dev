@@ -170,7 +170,7 @@ export function OnboardingFormFields({
       </div>
 
       <Alert>
-        <CalendarIcon />
+        <CalendarIcon className="size-4" />
         <AlertDescription>
           Une invitation Calendly vous sera envoyée pour connecter votre calendrier.
         </AlertDescription>

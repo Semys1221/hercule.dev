@@ -121,6 +121,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
           );
         });
       }
+      if (parsed.data.status === "no_show") {
+        const { startNoShowSequence } = await import(
+          "@/lib/no-show-sequence/orchestrator"
+        );
+        await startNoShowSequence(salesCall).catch((err: unknown) => {
+          console.error(
+            "[sales-calls/id] no-show sequence failed:",
+            err instanceof Error ? err.message : err,
+          );
+        });
+      }
     }
 
     return NextResponse.json({ salesCall });

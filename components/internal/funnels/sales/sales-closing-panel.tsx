@@ -14,9 +14,10 @@ import {
   type SalesQuestion,
 } from "@/components/internal/funnels/sales/sales-questions";
 import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
+import { SESSION_DEVELOPER_MODE_FAKE_LINK } from "@/lib/admin/funnels/ui-copy";
 import { SALES_SKIP_VALUE, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
-import { dashboardLinkFor } from "@/lib/link-tracking/urls";
+import { buildDashboardUrl, dashboardLinkFor } from "@/lib/link-tracking/urls";
 
 import {
   getSalesClosingSection,
@@ -33,6 +34,7 @@ type SalesClosingPanelProps = {
   onClosingChange: (values: Partial<SalesClosingValues>) => void;
   selectedLead: LinkTrackingLead | null;
   salesCallId: string | null;
+  developerMode?: boolean;
   onRefreshLead: () => Promise<void>;
   onPersistClosing: (closing: SalesClosingValues) => Promise<void>;
 };
@@ -169,6 +171,8 @@ const DASHBOARD_NEXT_STEPS = [
   "Premier RDV honoré — ≤ 21 jours après activation",
 ] as const;
 
+const DEV_PREVIEW_DASHBOARD_LINK = buildDashboardUrl("dev-preview");
+
 export function SalesClosingPanel({
   sectionId,
   qualificationForm,
@@ -176,6 +180,7 @@ export function SalesClosingPanel({
   onClosingChange,
   selectedLead,
   salesCallId,
+  developerMode = false,
   onRefreshLead,
   onPersistClosing,
 }: SalesClosingPanelProps) {
@@ -185,10 +190,20 @@ export function SalesClosingPanel({
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const dashboardLink = useMemo(
+  const leadDashboardLink = useMemo(
     () => (selectedLead ? dashboardLinkFor(selectedLead) : null),
     [selectedLead],
   );
+  const dashboardLink = useMemo(() => {
+    if (leadDashboardLink) return leadDashboardLink;
+    if (developerMode) return DEV_PREVIEW_DASHBOARD_LINK;
+    return null;
+  }, [developerMode, leadDashboardLink]);
+
+  const showDashboardLinkBlock =
+    Boolean(dashboardLink) &&
+    (developerMode || isSalesClosingReadyForDashboardLink(closingValues));
+  const usingFakeDashboardLink = developerMode && !leadDashboardLink;
 
   const presetResult = useMemo(
     () => scoreAgencyPresets(qualificationValues),
@@ -296,6 +311,7 @@ export function SalesClosingPanel({
         <SalesEligiblePanel
           qualificationValues={qualificationValues}
           reglesAccepted={closingValues.reglesAccepted}
+          developerMode={developerMode}
         />
       ) : null}
 
@@ -349,21 +365,25 @@ export function SalesClosingPanel({
               </ol>
             </div>
 
-            {!isSalesClosingReadyForDashboardLink(closingValues) ? (
+            {!developerMode && !isSalesClosingReadyForDashboardLink(closingValues) ? (
               <InternalStatusAlert
                 variant="error"
                 message="Validez les tie-downs « règles de traitement » et « calendrier » avant d'envoyer le lien."
               />
             ) : null}
 
-            {!selectedLead ? (
+            {!developerMode && !selectedLead ? (
               <InternalStatusAlert
                 variant="error"
                 message="Aucun lead associé — sélectionnez un rendez-vous avec fiche CRM."
               />
             ) : null}
 
-            {dashboardLink ? (
+            {usingFakeDashboardLink ? (
+              <InternalStatusAlert variant="info" message={SESSION_DEVELOPER_MODE_FAKE_LINK} />
+            ) : null}
+
+            {showDashboardLinkBlock ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">Lien dashboard client :</p>
                 <code className="block break-all rounded-md border border-border bg-muted/30 p-3 text-sm">
@@ -373,9 +393,11 @@ export function SalesClosingPanel({
                   <Button type="button" onClick={handleCopyDashboard}>
                     {copied ? "Copié" : "Copier le lien"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={handleRefresh} disabled={refreshing}>
-                    {refreshing ? "Rafraîchissement…" : "Rafraîchir le lien"}
-                  </Button>
+                  {!usingFakeDashboardLink ? (
+                    <Button type="button" variant="outline" onClick={handleRefresh} disabled={refreshing}>
+                      {refreshing ? "Rafraîchissement…" : "Rafraîchir le lien"}
+                    </Button>
+                  ) : null}
                 </div>
                 <SalesCallStatusActions salesCallId={salesCallId} />
               </div>

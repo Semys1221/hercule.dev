@@ -180,7 +180,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
   {
     id: "upsell",
     slug: "upsell",
-    name: "Upsell (1 489 € / 998 €)",
+    name: "Upsell (1 489 € / 989 € × 3)",
     phase: "pre_close",
     category: "Pre-close",
     stepCount: 3,
@@ -188,7 +188,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     provider: "resend",
     audiences: ["agence"],
     description:
-      "Déclenchée automatiquement quand le sales call passe au statut `completed` (appel concluant, intention confirmée, pré-paiement). Propose le plein pot (1 489 €) vs offre 3 mois (998 €).",
+      "Déclenchée automatiquement quand le sales call passe au statut `completed` (appel concluant, intention confirmée, pré-paiement). Propose le plein tarif (1 489 € / mois) vs pack 3 mois (989 € × 3 = 2 967 €, 15 Attributions).",
     steps: [
       { id: "email1", label: "Email 1", delay: "Immédiat", emailType: "upsell_email_1" },
       { id: "email2", label: "Email 2", delay: "+7j", emailType: "upsell_email_2" },
@@ -238,7 +238,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     provider: "resend",
     audiences: ["agence"],
     description:
-      "Séquence déclenchée manuellement via le bouton not_paid dans l'admin booking. Envoie le lien dashboard pour finaliser le paiement et démarrer l'onboarding.",
+      "Séquence déclenchée via le bouton Non Payé dans Bookings (ou le statut not_paid). Envoie le lien dashboard pour finaliser le paiement.",
     steps: [
       { id: "email1", label: "Email 1", delay: "Immédiat", emailType: "close_indecis_1" },
       { id: "email2", label: "Email 2", delay: "+24h", emailType: "close_indecis_2" },
@@ -247,6 +247,26 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     editorKind: "booking",
     bookingCategory: "agence",
     legacyDoc: "archive/2026-09-pre-architecture/documentations_2/sequence_client_not_paid.md",
+  },
+  {
+    id: "sales-call-no-show",
+    slug: "sales-call-no-show",
+    name: "Close — Indécis no-show",
+    phase: "close",
+    category: "Closing",
+    stepCount: 3,
+    status: "built",
+    provider: "resend",
+    audiences: ["agence"],
+    description:
+      "Séquence déclenchée via le bouton No Show dans Bookings (ou le statut no_show). Accueil + valeurs Hercule ; CTA = lien de réservation pour reprendre le parcours.",
+    steps: [
+      { id: "email1", label: "Email 1", delay: "Immédiat", emailType: "no_show_indecis_1" },
+      { id: "email2", label: "Email 2", delay: "+24h", emailType: "no_show_indecis_2" },
+      { id: "email3", label: "Email 3", delay: "+48h", emailType: "no_show_indecis_3" },
+    ],
+    editorKind: "booking",
+    bookingCategory: "agence",
   },
   {
     id: "payment-welcome",
@@ -488,6 +508,11 @@ export const BOOKING_SEQUENCE_SLUGS: Record<string, BookingEmailType[]> = {
   "payment-welcome": ["product_payment_welcome"],
   upsell: ["upsell_email_1", "upsell_email_2", "upsell_email_3"],
   "close-indecis": ["close_indecis_1", "close_indecis_2", "close_indecis_3"],
+  "sales-call-no-show": [
+    "no_show_indecis_1",
+    "no_show_indecis_2",
+    "no_show_indecis_3",
+  ],
   "onboarding-sequence": [
     "onboarding_j0",
     "onboarding_j0_bis",

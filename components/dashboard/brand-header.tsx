@@ -29,7 +29,7 @@ type DashboardPageHeaderProps = {
 export function DashboardPageHeader({ eyebrow, title, subtitle }: DashboardPageHeaderProps) {
   return (
     <div className="mb-8">
-      <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
+      <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
         {eyebrow}
       </p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>

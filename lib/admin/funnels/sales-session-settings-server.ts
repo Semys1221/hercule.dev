@@ -10,6 +10,12 @@ import {
 
 const CONTENT_DIR = join(process.cwd(), "content", "funnels");
 
+export const DEFAULT_PREPARATION_CONTENT = `- Ouvrir Calendly
+- Ouvrir Google Meet et Zoom
+- Ouvrir le site web du client
+- Séparer la fenêtre de présentation sales dans une nouvelle fenêtre
+- Tester le micro et le casque`;
+
 function settingsFilePath(audience: Audience): string {
   return join(CONTENT_DIR, audience, "sales", "session-settings.json");
 }
@@ -19,7 +25,7 @@ export function createDefaultSalesSessionSettings(audience: Audience): SalesSess
     schemaVersion: 1,
     audience,
     updatedAt: new Date().toISOString(),
-    preparation: { content: "" },
+    preparation: { content: DEFAULT_PREPARATION_CONTENT },
     waitingQueue: { enabled: false },
   };
 }

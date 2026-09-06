@@ -10,6 +10,7 @@ const SEND_WINDOW_BYPASS_TYPES: BookingEmailType[] = [
   "immediate",
   "upsell_email_1",
   "close_indecis_1",
+  "no_show_indecis_1",
   "onboarding_j0",
   "match_proposal",
   "match_booking_agence",

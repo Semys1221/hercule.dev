@@ -415,6 +415,7 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     useHtml,
     meetingActionLinks,
     dashboardLink: extra.dashboardLink,
+    reservationAgenceLink: extra.reservationAgenceLink,
     company: extra.company ?? lead.company,
     email: extra.email ?? lead.email,
     surveyLink: extra.surveyLink,

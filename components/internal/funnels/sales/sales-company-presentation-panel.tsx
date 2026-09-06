@@ -26,6 +26,7 @@ import { LEGAL_ENTITY } from "@/lib/constants";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 
 import { PRESENTATION_CONFIRMATION_TEXT } from "./sales-funnel-sections";
+import { CompanyOriginTimeline } from "./company-origin-timeline";
 import { TeamImageFrame } from "./team-image-frame";
 
 type TeamBullet = {
@@ -132,9 +133,9 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
 
       <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
         <p>
-          Hercule est née du logiciel que nous avions développé pour notre propre activité de
-          développement commercial. Ce que nous avions construit en interne pour alimenter notre
-          croissance est devenu le socle de la plateforme.
+          Hercule est l&apos;évolution d&apos;un outil interne que nous utilisons depuis 2018 pour
+          notre propre activité de développement backend. Renommé Hercule en 2025, ce socle est
+          devenu la plateforme que nous présentons aujourd&apos;hui.
         </p>
         <p>
           Aujourd&apos;hui, nous générons plus de 20 demandes clients qualifiées par mois dans
@@ -142,6 +143,8 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
           relation ces demandes avec les profils les plus compatibles.
         </p>
       </div>
+
+      <CompanyOriginTimeline />
 
       <section className="space-y-4">
         <h2 className="text-xl font-medium tracking-tight text-foreground">Notre modèle</h2>
@@ -204,6 +207,8 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
           </p>
           <p>{LEGAL_ENTITY.rcs}</p>
           <p>{LEGAL_ENTITY.address}</p>
+          <p>Nom de domaine acquis : {LEGAL_ENTITY.website}</p>
+          <p>TVA : immatriculation en cours sur la société.</p>
           <p>Dirigeant : {LEGAL_ENTITY.director}</p>
         </CardContent>
       </Card>

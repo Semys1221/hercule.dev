@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { HerculeMark } from "@/components/hercule-mark";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -32,6 +33,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { SESSION_DEVELOPER_MODE_BADGE } from "@/lib/admin/funnels/ui-copy";
 
 import {
   SALES_CLOSING_SECTIONS,
@@ -78,6 +80,7 @@ type SalesFunnelSidebarProps = {
   settingsHref: string;
   canEnterClosing: boolean;
   pitchSidebarEnabled: boolean;
+  developerModeEnabled: boolean;
   meetingInfo?: MeetingInfo | null;
   onEnterClosing: () => void;
   onSectionChange: (sectionId: SalesFunnelSectionId | SalesClosingSectionId) => void;
@@ -96,6 +99,7 @@ export function SalesFunnelSidebar({
   settingsHref,
   canEnterClosing,
   pitchSidebarEnabled,
+  developerModeEnabled,
   meetingInfo,
   onEnterClosing,
   onSectionChange,
@@ -104,6 +108,39 @@ export function SalesFunnelSidebar({
     contentPhase === "pitch" ? SALES_CLOSING_SECTIONS : SALES_FUNNEL_SECTIONS;
   const isPlaceholder = name === PLACEHOLDER_NAME || !meetingInfo;
   const phaseLabel = phase === "closing" ? "Pitch commercial" : "Sales funnel";
+
+  function renderSectionMenu(
+    menuSections: typeof SALES_FUNNEL_SECTIONS | typeof SALES_CLOSING_SECTIONS,
+    variant: "qualification" | "pitch",
+  ) {
+    return (
+      <SidebarMenu>
+        {menuSections.map((section) => {
+          const Icon =
+            variant === "pitch"
+              ? SALES_CLOSING_SECTION_ICONS[section.id as SalesClosingSectionId]
+              : SECTION_ICONS[section.id as SalesFunnelSectionId];
+          const isComplete =
+            section.id !== "rendez-vous" && completedSectionIds.includes(section.id);
+          return (
+            <SidebarMenuItem key={section.id}>
+              <SidebarMenuButton
+                isActive={activeSectionId === section.id}
+                tooltip={section.label}
+                onClick={() => onSectionChange(section.id)}
+              >
+                <Icon />
+                <span className="flex-1 truncate">{section.label}</span>
+                {isComplete ? (
+                  <Check className="size-4 shrink-0 text-primary" aria-hidden />
+                ) : null}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          );
+        })}
+      </SidebarMenu>
+    );
+  }
 
   return (
     <Sidebar variant="sidebar" collapsible="none" className="h-svh shrink-0 border-r border-border">
@@ -115,6 +152,11 @@ export function SalesFunnelSidebar({
           <div className="flex items-center gap-2">
             <HerculeMark variant="dual" className="size-6 shrink-0 text-white" />
             <span className="text-sm font-semibold tracking-tight">{phaseLabel}</span>
+            {developerModeEnabled ? (
+              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-semibold uppercase">
+                {SESSION_DEVELOPER_MODE_BADGE}
+              </Badge>
+            ) : null}
           </div>
           <Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground hover:text-foreground" asChild>
             <Link href={settingsHref} aria-label="Réglages du funnel sales">
@@ -142,56 +184,51 @@ export function SalesFunnelSidebar({
         <Separator className="mb-2" />
 
         <div
-          key={contentPhase}
+          key={developerModeEnabled ? "developer" : contentPhase}
           className={cn(
             "duration-300",
-            contentAnimation === "exit" &&
+            !developerModeEnabled &&
+              contentAnimation === "exit" &&
               "animate-out fade-out-0 slide-out-to-bottom-2 fill-mode-forwards",
-            contentAnimation === "enter" &&
+            !developerModeEnabled &&
+              contentAnimation === "enter" &&
               "animate-in fade-in-0 slide-in-from-bottom-2 fill-mode-forwards",
           )}
         >
-          {/* ── Nav section ── */}
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-widest text-foreground/50">
-              {contentPhase === "pitch" ? "Pitch" : "Étapes"}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {sections.map((section) => {
-                  const Icon =
-                    contentPhase === "pitch"
-                      ? SALES_CLOSING_SECTION_ICONS[section.id as SalesClosingSectionId]
-                      : SECTION_ICONS[section.id as SalesFunnelSectionId];
-                  const isComplete =
-                    section.id !== "rendez-vous" &&
-                    completedSectionIds.includes(section.id);
-                  return (
-                    <SidebarMenuItem key={section.id}>
-                      <SidebarMenuButton
-                        isActive={activeSectionId === section.id}
-                        tooltip={section.label}
-                        onClick={() => onSectionChange(section.id)}
-                      >
-                        <Icon />
-                        <span className="flex-1 truncate">{section.label}</span>
-                        {isComplete ? (
-                          <Check className="size-4 shrink-0 text-primary" aria-hidden />
-                        ) : null}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {developerModeEnabled ? (
+            <>
+              <SidebarGroup>
+                <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-widest text-foreground/50">
+                  Étapes
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  {renderSectionMenu(SALES_FUNNEL_SECTIONS, "qualification")}
+                </SidebarGroupContent>
+              </SidebarGroup>
+              <SidebarGroup>
+                <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-widest text-foreground/50">
+                  Pitch
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  {renderSectionMenu(SALES_CLOSING_SECTIONS, "pitch")}
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          ) : (
+            <SidebarGroup>
+              <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-widest text-foreground/50">
+                {contentPhase === "pitch" ? "Pitch" : "Étapes"}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>{renderSectionMenu(sections, contentPhase)}</SidebarGroupContent>
+            </SidebarGroup>
+          )}
 
           {/* ── Meeting context card ── */}
           <div className="px-2 pt-1">
             <div
               className={cn(
                 "rounded-md border border-border bg-card p-3",
-                !meetingInfo && "border-dashed opacity-60",
+                !meetingInfo && "border-dashed",
               )}
             >
               {meetingInfo ? (
@@ -219,7 +256,7 @@ export function SalesFunnelSidebar({
                   ) : null}
                 </div>
               ) : (
-                <p className="text-[11px] leading-relaxed text-muted-foreground/60">
+                <p className="text-[11px] leading-relaxed text-muted-foreground/50">
                   Sélectionnez un RDV pour afficher les infos du prospect.
                 </p>
               )}
@@ -239,7 +276,10 @@ export function SalesFunnelSidebar({
             label={progressLabel}
             showLabel
           />
-          {phase === "qualification" && canEnterClosing && !pitchSidebarEnabled ? (
+          {phase === "qualification" &&
+          canEnterClosing &&
+          !pitchSidebarEnabled &&
+          !developerModeEnabled ? (
             <Button
               type="button"
               size="sm"

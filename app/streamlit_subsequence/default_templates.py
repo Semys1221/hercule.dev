@@ -7,8 +7,6 @@ DEFAULT_E1_BODY_HTML = (
     "<br/><br/>"
     "L'expertise recherchée porte sur l'acquisition organique et/ou payante."
     "<br/><br/>"
-    "Les premiers échanges entre cabinets et agences marketing sont disponibles du 8 au 27 septembre."
-    "<br/><br/>"
     "Pour réaliser l'audit de compatibilité de votre agence, cliquez ici :"
     "<br/><a href=\"{{reservation_agence_link}}\">Mon agence est compatible</a>"
     "<br/><br/>"

@@ -91,21 +91,32 @@ export function DashboardState({ data, onOnboardingComplete }: DashboardStatePro
           <CardDescription>{statusDetail(data)}</CardDescription>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-4">
-            {data.timeline.map((step) => (
-              <li key={step.id} className="flex gap-3">
-                <span
-                  className={`mt-2 size-2 shrink-0 rounded-full ${
-                    step.status === "done"
-                      ? "bg-emerald-500"
-                      : step.status === "active"
-                        ? "bg-primary"
-                        : "bg-border"
-                  }`}
-                />
-                <div>
-                  <p className="font-medium">{step.label}</p>
-                  <p className="text-sm text-muted-foreground">
+          <ul className="space-y-0">
+            {data.timeline.map((step, index) => (
+              <li key={step.id} className="flex gap-4 pb-5 last:pb-0">
+                <div className="flex flex-col items-center">
+                  <span
+                    className={`flex size-3 shrink-0 rounded-full ring-2 ring-background ${
+                      step.status === "done"
+                        ? "bg-emerald-500"
+                        : step.status === "active"
+                          ? "bg-primary"
+                          : "bg-border"
+                    }`}
+                  />
+                  {index < data.timeline.length - 1 && (
+                    <span className="mt-1 w-px flex-1 bg-border" />
+                  )}
+                </div>
+                <div className="min-w-0 pb-1">
+                  <p
+                    className={`text-sm font-medium ${
+                      step.status === "pending" ? "text-muted-foreground" : ""
+                    }`}
+                  >
+                    {step.label}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {step.meta ||
                       (step.status === "active"
                         ? "En cours"

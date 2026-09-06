@@ -23,6 +23,7 @@ const LOADING_MS = 1500;
 type SalesEligiblePanelProps = {
   qualificationValues: SalesQualificationValues;
   reglesAccepted: boolean;
+  developerMode?: boolean;
 };
 
 export function SalesPresetSummary({ result }: { result: AgencyPresetResult }) {
@@ -108,6 +109,7 @@ function OpportunityCard({ card }: { card: PresetOpportunityCard }) {
 export function SalesEligiblePanel({
   qualificationValues,
   reglesAccepted,
+  developerMode = false,
 }: SalesEligiblePanelProps) {
   const [ready, setReady] = useState(false);
   const result = useMemo(
@@ -136,7 +138,7 @@ export function SalesEligiblePanel({
 
   return (
     <div className="space-y-6">
-      {!reglesAccepted ? (
+      {!developerMode && !reglesAccepted ? (
         <InternalStatusAlert
           variant="info"
           title="Règles de traitement"

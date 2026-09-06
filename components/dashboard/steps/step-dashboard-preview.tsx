@@ -17,7 +17,12 @@ export function StepDashboardPreview() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-medium">Votre tableau de bord</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-medium">Votre tableau de bord</h2>
+          <Badge variant="outline" className="text-xs text-muted-foreground">
+            Aperçu
+          </Badge>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Une fois payé, vous accèderez à votre espace de suivi en temps réel.
         </p>
@@ -78,7 +83,7 @@ export function StepDashboardPreview() {
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        Aperçu — votre tableau de bord sera activé après paiement et onboarding.
+        Activé après paiement et onboarding.
       </p>
     </div>
   );

@@ -67,7 +67,7 @@ export function DeliveryDetailsCard({ data }: DeliveryDetailsCardProps) {
   }
 
   return (
-    <Card className="mt-5">
+    <Card className="mt-6">
       <CardHeader>
         <CardTitle className="text-lg font-medium">Détails de votre livraison</CardTitle>
         <CardDescription>

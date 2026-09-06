@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
+import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import { dashboardLinkFor } from "@/lib/link-tracking/urls";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/payments/stripe";
@@ -92,7 +93,9 @@ export async function POST(request: Request) {
       .from("sales_calls")
       .update({ status: "paid" })
       .eq("agence_id", agenceId)
-      .in("status", ["scheduled", "not_paid", "completed"]);
+      .in("status", ["scheduled", "not_paid", "completed", "no_show"]);
+
+    revalidateBookingsCache();
 
     // Send single notification email post-payment (no Calendly info, no meeting info)
     try {

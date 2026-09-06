@@ -48,6 +48,17 @@ export const SESSION_INSTITUTIONAL_SIDEBAR_ON =
 export const SESSION_INSTITUTIONAL_SIDEBAR_OFF =
   "La sidebar reste en mode qualification. Un bouton « Passer à l'audit institutionnel » apparaîtra à la fin.";
 
+export const SESSION_DEVELOPER_MODE_TITLE = "Mode développeur";
+export const SESSION_DEVELOPER_MODE_DESCRIPTION =
+  "Navigation libre entre toutes les étapes et contournement des restrictions de completion pour tester le parcours.";
+export const SESSION_DEVELOPER_MODE_TOGGLE = "Activer le mode développeur";
+export const SESSION_DEVELOPER_MODE_ON =
+  "Toutes les étapes (qualification et pitch) sont accessibles sans remplir le questionnaire.";
+export const SESSION_DEVELOPER_MODE_OFF = "Parcours live standard — les gates de completion s'appliquent.";
+export const SESSION_DEVELOPER_MODE_BADGE = "DEV";
+export const SESSION_DEVELOPER_MODE_FAKE_LINK =
+  "Lien fictif — mode développeur. Sélectionnez un RDV pour tester le flux réel.";
+
 export const SESSION_SETTINGS_TAB_GENERAL = "Général";
 export const SESSION_SETTINGS_TAB_PREPARATION = "Préparation";
 

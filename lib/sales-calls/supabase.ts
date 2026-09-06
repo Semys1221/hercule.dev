@@ -76,6 +76,36 @@ export async function upsertSalesCallFromBooking(
   return data as SalesCall;
 }
 
+export async function findSalesCallStatusesByInviteeUris(
+  client: SupabaseClient,
+  inviteeUris: string[],
+): Promise<Map<string, SalesCallStatus>> {
+  const uniqueUris = [...new Set(inviteeUris.filter((uri) => uri.trim()))];
+  const statuses = new Map<string, SalesCallStatus>();
+  if (uniqueUris.length === 0) {
+    return statuses;
+  }
+
+  const { data, error } = await client
+    .from("sales_calls")
+    .select("calendly_invitee_uri, status")
+    .in("calendly_invitee_uri", uniqueUris);
+
+  if (error) {
+    throw new Error(`sales_calls batch lookup failed: ${error.message}`);
+  }
+
+  for (const row of data ?? []) {
+    const uri = String(row.calendly_invitee_uri ?? "").trim();
+    const status = row.status as SalesCallStatus | null;
+    if (uri && status) {
+      statuses.set(uri, status);
+    }
+  }
+
+  return statuses;
+}
+
 export async function findSalesCallByInviteeUri(
   client: SupabaseClient,
   inviteeUri: string,

@@ -13,14 +13,23 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  getDeveloperModeEnabledServerSnapshot,
+  getDeveloperModeEnabledSnapshot,
   getPitchSidebarEnabledServerSnapshot,
   getPitchSidebarEnabledSnapshot,
+  setDeveloperModeEnabled,
   setPitchSidebarEnabled,
+  subscribeDeveloperModeEnabled,
   subscribePitchSidebarEnabled,
 } from "@/lib/admin/funnels/sales-funnel-settings";
 import type { SalesSessionSettingsDocument } from "@/lib/admin/funnels/sales-session-settings-types";
 import {
   SESSION_BACK_CTA,
+  SESSION_DEVELOPER_MODE_DESCRIPTION,
+  SESSION_DEVELOPER_MODE_OFF,
+  SESSION_DEVELOPER_MODE_ON,
+  SESSION_DEVELOPER_MODE_TITLE,
+  SESSION_DEVELOPER_MODE_TOGGLE,
   SESSION_INSTITUTIONAL_SIDEBAR_DESCRIPTION,
   SESSION_INSTITUTIONAL_SIDEBAR_OFF,
   SESSION_INSTITUTIONAL_SIDEBAR_ON,
@@ -65,6 +74,11 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
     subscribePitchSidebarEnabled,
     () => getPitchSidebarEnabledSnapshot(audience),
     getPitchSidebarEnabledServerSnapshot,
+  );
+  const developerModeEnabled = useSyncExternalStore(
+    subscribeDeveloperModeEnabled,
+    () => getDeveloperModeEnabledSnapshot(audience),
+    getDeveloperModeEnabledServerSnapshot,
   );
 
   const [settings, setSettings] = useState<SalesSessionSettingsDocument | null>(null);
@@ -211,6 +225,30 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
                     id="pitch-sidebar-toggle"
                     checked={pitchSidebarEnabled}
                     onCheckedChange={(checked) => setPitchSidebarEnabled(audience, checked)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{SESSION_DEVELOPER_MODE_TITLE}</CardTitle>
+                <CardDescription>{SESSION_DEVELOPER_MODE_DESCRIPTION}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="developer-mode-toggle">{SESSION_DEVELOPER_MODE_TOGGLE}</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {developerModeEnabled
+                        ? SESSION_DEVELOPER_MODE_ON
+                        : SESSION_DEVELOPER_MODE_OFF}
+                    </p>
+                  </div>
+                  <Switch
+                    id="developer-mode-toggle"
+                    checked={developerModeEnabled}
+                    onCheckedChange={(checked) => setDeveloperModeEnabled(audience, checked)}
                   />
                 </div>
               </CardContent>

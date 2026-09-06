@@ -28,12 +28,10 @@ export function RdvStatusCard({ data }: RdvStatusCardProps) {
   const hasScheduledRdv = Boolean(data.scheduledAt);
 
   return (
-    <Card className="mt-5">
+    <Card className="mt-6">
       <CardHeader>
         <CardTitle className="text-lg font-medium">Vos rendez-vous</CardTitle>
-        <CardDescription>
-          Allocation standard — 30 inboxes actives.
-        </CardDescription>
+        <CardDescription>Objectif de livraison mensuel.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -43,7 +41,7 @@ export function RdvStatusCard({ data }: RdvStatusCardProps) {
           <span className="text-sm text-muted-foreground">Objectif SLA</span>
         </div>
 
-        <div className="rounded-lg border border-border bg-muted/20 p-4">
+        <div>
           <p className="text-sm font-medium">Prochain RDV</p>
           {hasScheduledRdv ? (
             <p className="mt-1 text-sm text-muted-foreground">

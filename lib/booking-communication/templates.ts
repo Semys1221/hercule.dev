@@ -123,78 +123,150 @@ Votre facture a été émise — vous la recevrez d'ici peu.
 L'équipe Hercule`,
   },
   upsell_email_1: {
-    subject: "Offre Hercule — 1 489 € ou 998 €",
+    subject: "Offre Hercule — 1 489 € ou pack 3 mois",
     body: `{{firstNameLine}}
 
-Suite à notre échange, voici les deux formules pour activer Hercule.
+Suite à notre échange, voici les deux formules pour activer Hercule et recevoir des demandes qualifiées.
 
-Formule complète : 1 489 €.
-Offre 3 mois : 998 €.
+Formule mensuelle : 1 489 € / mois, sans engagement.
+Pack 3 mois : 989 € / mois (soit 2 967 € payés d'avance, 15 Attributions).
 
 Finalisez depuis votre tableau de bord :
-{{dashboardLink}}`,
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   upsell_email_2: {
     subject: "Rappel — activer Hercule",
     body: `{{firstNameLine}}
 
-Un rappel concernant les deux formules évoquées : 1 489 € ou 998 € (3 mois).
+Un rappel concernant les formules évoquées lors de notre échange :
 
-Votre tableau de bord :
-{{dashboardLink}}`,
+• 1 489 € / mois (sans engagement)
+• 989 € / mois × 3 mois (2 967 €, 15 Attributions)
+
+Votre tableau de bord reste disponible pour finaliser votre choix :
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   upsell_email_3: {
     subject: "Dernier rappel — offre Hercule",
     body: `{{firstNameLine}}
 
-Dernier rappel pour activer Hercule (1 489 € ou 998 €).
+Dernier rappel pour activer Hercule et démarrer la réception de demandes qualifiées.
 
-{{dashboardLink}}`,
+Formule mensuelle : 1 489 € / mois.
+Pack 3 mois : 989 € / mois (2 967 €, 15 Attributions).
+
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   close_indecis_1: {
     subject: "Votre lien pour finaliser le paiement Hercule",
     body: `{{firstNameLine}}
 
-Voici le lien pour finaliser le paiement et démarrer l'onboarding :
-{{dashboardLink}}`,
+Suite à notre échange, voici le lien pour finaliser le paiement et démarrer votre onboarding Hercule :
+
+{{dashboardLink}}
+
+Si vous avez une question avant de valider, répondez simplement à cet email.
+
+L'équipe Hercule`,
   },
   close_indecis_2: {
     subject: "Rappel — finaliser votre paiement Hercule",
     body: `{{firstNameLine}}
 
-Votre tableau de bord est toujours disponible pour finaliser le paiement :
-{{dashboardLink}}`,
+Votre accès Hercule est prêt à être activé. Il ne reste plus qu'à finaliser le paiement depuis votre tableau de bord :
+
+{{dashboardLink}}
+
+Nous restons disponibles si vous souhaitez éclaircir un point avant de valider.
+
+L'équipe Hercule`,
   },
   close_indecis_3: {
     subject: "Dernier rappel — accès Hercule",
     body: `{{firstNameLine}}
 
-Dernier rappel pour finaliser le paiement et lancer l'onboarding :
-{{dashboardLink}}`,
+Dernier rappel : votre lien de paiement reste actif pour lancer l'onboarding et recevoir vos premières demandes qualifiées.
+
+{{dashboardLink}}
+
+L'équipe Hercule`,
+  },
+  no_show_indecis_1: {
+    subject: "Bienvenue chez Hercule — reprenez votre parcours",
+    body: `{{firstNameLine}}
+
+Vous êtes déjà entré dans le parcours Hercule — merci pour votre confiance.
+
+Chez Hercule, notre mission est d'orienter chaque agence vers des demandes réellement adaptées à son activité, sans perdre de temps sur des opportunités hors cible.
+
+Pour activer votre calendrier et terminer votre parcours, reprenez ici :
+{{reservation_agence_link}}
+
+À très vite,
+L'équipe Hercule`,
+  },
+  no_show_indecis_2: {
+    subject: "Rappel — votre place dans le parcours Hercule",
+    body: `{{firstNameLine}}
+
+Vous avez déjà entamé votre parcours chez Hercule. Votre lien de réservation reste actif pour reprendre là où vous vous étiez arrêté.
+
+Pour activer votre calendrier et terminer votre parcours :
+{{reservation_agence_link}}
+
+À très vite,
+L'équipe Hercule`,
+  },
+  no_show_indecis_3: {
+    subject: "Dernier rappel — finalisez votre inscription Hercule",
+    body: `{{firstNameLine}}
+
+Dernier rappel : votre place dans le parcours Hercule est toujours disponible.
+
+Pour activer votre calendrier et terminer votre parcours :
+{{reservation_agence_link}}
+
+À très vite,
+L'équipe Hercule`,
   },
   onboarding_j0: {
     subject: "Bienvenue — votre onboarding Hercule est activé",
     body: `{{firstNameLine}}
 
-Votre onboarding est bien enregistré. La recherche de demandes peut démarrer.
+Votre onboarding est bien enregistré. Nous configurons votre espace et préparons la réception de vos premières demandes qualifiées.
 
-Tableau de bord :
-{{dashboardLink}}`,
+Votre tableau de bord :
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   onboarding_j0_bis: {
-    subject: "Hercule — prochaine étape après onboarding",
+    subject: "Hercule — configuration terminée",
     body: `{{firstNameLine}}
 
-Petit point en fin de journée : votre espace Hercule est prêt.
+Petit point en fin de journée : votre compte Hercule est configuré, votre calendrier de livraison est enregistré et les demandes correspondant à vos critères peuvent désormais vous être transmises.
 
-{{dashboardLink}}`,
+Aucune action n'est requise de votre part pour le moment — nous vous préviendrons dès qu'une première demande sera disponible.
+
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   onboarding_j1: {
     subject: "Suivi J+1 — activation Hercule",
     body: `{{firstNameLine}}
 
-Nous suivons l'activation de votre compte. Votre tableau de bord :
-{{dashboardLink}}`,
+Nous suivons l'activation de votre compte. Votre première demande qualifiée est en préparation : surveillez votre boîte mail et votre tableau de bord pour ne rien manquer.
+
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   onboarding_reminder_m10: {
     subject: "Rappel J-10 — première livraison Hercule",
@@ -202,134 +274,170 @@ Nous suivons l'activation de votre compte. Votre tableau de bord :
 
 Rappel : la première date de livraison estimée est le {{estimatedFirstBookingDate}}.
 
-{{dashboardLink}}`,
+Votre tableau de bord reste le point central pour suivre l'avancement :
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   onboarding_reminder_m5: {
     subject: "Rappel J-5 — première livraison Hercule",
     body: `{{firstNameLine}}
 
-Rappel J-5 : livraison estimée le {{estimatedFirstBookingDate}}.
+Rappel J-5 : la livraison estimée approche ({{estimatedFirstBookingDate}}).
 
-{{dashboardLink}}`,
+Consultez votre tableau de bord pour le détail :
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   onboarding_reminder_p5: {
     subject: "Rappel J+5 — suivi première livraison",
     body: `{{firstNameLine}}
 
-Point J+5 après la date estimée ({{estimatedFirstBookingDate}}).
+Point J+5 après la date estimée ({{estimatedFirstBookingDate}}) : nous vérifions que tout se déroule comme prévu.
 
-{{dashboardLink}}`,
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   deliverance_search_started: {
     subject: "Recherche lancée — Hercule",
     body: `{{firstNameLine}}
 
-La recherche de mise en relation a bien été lancée.
+La recherche de mise en relation a bien été lancée. Vous pouvez suivre l'avancement étape par étape depuis votre tableau de bord.
 
-{{dashboardLink}}`,
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   deliverance_d7_update: {
     subject: "Mise à jour J+7 — recherche Hercule",
     body: `{{firstNameLine}}
 
-Mise à jour J+7 de la recherche en cours.
+Mise à jour J+7 : la recherche progresse. Consultez votre tableau de bord pour le détail des actions en cours.
 
-{{dashboardLink}}`,
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   deliverance_milestone: {
     subject: "Avancement — étape de délivrance Hercule",
     body: `{{firstNameLine}}
 
-Une étape de délivrance vient d'avancer.
+Une nouvelle étape de votre recherche vient d'être franchie. Retrouvez le détail sur votre tableau de bord.
 
-{{dashboardLink}}`,
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   deliverance_waitlist: {
     subject: "File d'attente — Hercule",
     body: `{{firstNameLine}}
 
-Votre dossier est actuellement en file d'attente.
+Votre dossier est actuellement en file d'attente. Nous vous préviendrons dès qu'un créneau de livraison se libère.
 
-{{dashboardLink}}`,
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   match_proposal: {
     subject: "Nous vous avons trouvé une agence",
     body: `{{firstNameLine}}
 
-Nous vous proposons une agence pour votre projet.
+Nous vous proposons une agence correspondant à votre demande.
 
 {{agenceInfo}}
 
-Réservez un créneau :
-{{calendlyLink}}`,
+Réservez un créneau pour échanger avec elle :
+{{calendlyLink}}
+
+L'équipe Hercule`,
   },
   match_proposal_followup: {
     subject: "Rappel — réserver votre rendez-vous agence",
     body: `{{firstNameLine}}
 
-Nous n'avons pas encore de réservation pour le rendez-vous proposé.
+Nous n'avons pas encore reçu de réservation pour le rendez-vous proposé avec l'agence ci-dessous.
 
 {{agenceInfo}}
 
-{{calendlyLink}}`,
+Réservez votre créneau ici :
+{{calendlyLink}}
+
+L'équipe Hercule`,
   },
   match_booking_agence: {
     subject: "Un rendez-vous a été réservé avec une entreprise",
     body: `{{firstNameLine}}
 
-Une entreprise a réservé un rendez-vous via votre lien Calendly.
+Une entreprise a réservé un rendez-vous via votre lien Calendly Hercule.
 
 {{entrepriseInfo}}
 
-Date : {{date}} à {{heure}}.`,
+Date : {{date}} à {{heure}}.
+
+L'équipe Hercule`,
   },
   survey_rdv_entreprise: {
     subject: "Votre avis après le rendez-vous",
     body: `{{firstNameLine}}
 
-Pouvez-vous indiquer si l'embarquement avec l'agence s'est bien passé ?
+Pouvez-vous nous indiquer si l'embarquement avec l'agence s'est bien passé ? Votre retour nous aide à améliorer la qualité des mises en relation.
 
-{{surveyLink}}`,
+{{surveyLink}}
+
+L'équipe Hercule`,
   },
   survey_rdv_entreprise_followup: {
     subject: "Rappel — questionnaire post-rendez-vous",
     body: `{{firstNameLine}}
 
-Nous n'avons pas encore reçu votre retour.
+Nous n'avons pas encore reçu votre retour sur le rendez-vous avec l'agence. Quelques minutes suffisent pour compléter le questionnaire :
 
-{{surveyLink}}`,
+{{surveyLink}}
+
+L'équipe Hercule`,
   },
   survey_rdv_agence: {
     subject: "Votre avis après le rendez-vous",
     body: `{{firstNameLine}}
 
-Avez-vous conclu une vente suite au rendez-vous ?
+Avez-vous conclu une vente suite au rendez-vous ? Indiquez-le via le questionnaire ci-dessous — cela nous permet de mettre à jour votre suivi.
 
-{{surveyLink}}`,
+{{surveyLink}}
+
+L'équipe Hercule`,
   },
   survey_rdv_agence_followup: {
-    subject: "Rappel — questionnaire post-rendez-vous",
+    subject: "Rappel — retour après rendez-vous",
     body: `{{firstNameLine}}
 
-Nous n'avons pas encore reçu votre retour.
+Nous n'avons pas encore reçu votre retour après le rendez-vous. Merci de nous indiquer si une vente a été conclue :
 
-{{surveyLink}}`,
+{{surveyLink}}
+
+L'équipe Hercule`,
   },
   sold_check_j7: {
-    subject: "Votre onboarding s'est-il bien passé ?",
+    subject: "Comment s'est passée votre collaboration ?",
     body: `{{firstNameLine}}
 
-Petit point J+7 : votre onboarding avec l'agence s'est-il bien passé ?
+Petit point J+7 : le démarrage de votre collaboration avec l'agence s'est-il bien passé ?
 
-{{dashboardLink}}`,
+Répondez simplement à cet email pour nous le faire savoir — aucun lien n'est nécessaire.
+
+L'équipe Hercule`,
   },
   payment_notification_client: {
     subject: "Confirmation de paiement Hercule",
     body: `{{firstNameLine}}
 
-Nous confirmons la réception de votre paiement.
+Nous confirmons la bonne réception de votre paiement. Votre accès Hercule est à jour.
 
-{{dashboardLink}}`,
+Retrouvez le détail sur votre tableau de bord :
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
   role_seq_24: {
     subject: "Confirmer votre créneau — Hercule",
@@ -386,6 +494,7 @@ export function buildFirstNameLine(
     emailType === "product_payment_welcome" ||
     emailType.startsWith("upsell_") ||
     emailType.startsWith("close_indecis_") ||
+    emailType.startsWith("no_show_indecis_") ||
     emailType.startsWith("onboarding_") ||
     emailType.startsWith("deliverance_") ||
     emailType.startsWith("match_") ||

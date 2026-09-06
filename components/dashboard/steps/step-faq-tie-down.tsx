@@ -1,7 +1,7 @@
 "use client";
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { CheckCircle2 } from "lucide-react";
+
 import {
   Accordion,
   AccordionContent,
@@ -17,7 +17,7 @@ const DEFAULT_FAQ: DashboardFaqItem[] = [
   },
   {
     q: "Combien de temps avant le premier RDV ?",
-    a: "Premier RDV honoré sous 21 jours après activation à 30 inboxes (28 jours si contrainte).",
+    a: "Premier RDV honoré sous 21 jours après activation, sous 28 jours selon configuration.",
   },
   {
     q: "Puis-je modifier mes critères ?",
@@ -56,14 +56,11 @@ export function StepFaqTieDown({ items }: StepFaqTieDownProps) {
       <div className="rounded-lg border border-border bg-muted/30 p-4">
         <p className="mb-3 text-sm font-medium">Confirmation d&apos;intention</p>
         <div className="flex items-start gap-3">
-          <Checkbox id="tie-down-preview" checked disabled className="mt-0.5" />
-          <Label
-            htmlFor="tie-down-preview"
-            className="cursor-default text-sm leading-snug text-muted-foreground font-normal"
-          >
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
+          <p className="text-sm leading-snug text-muted-foreground">
             Le fonctionnement d&apos;Hercule (mise en relation qualifiée, 3–4 RDV/mois,
             obligation de moyens) me convient et je souhaite démarrer.
-          </Label>
+          </p>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           Aperçu — l&apos;acceptation formelle des CGV se fait lors de l&apos;onboarding.

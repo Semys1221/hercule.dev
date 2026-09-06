@@ -7,6 +7,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import type { SalesFunnelSectionId } from "./sales-funnel-sections";
+
 export type SalesClosingSectionId =
   | "recap"
   | "regles-traitement"
@@ -76,6 +78,16 @@ export function getSalesClosingSection(
   id: SalesClosingSectionId,
 ): SalesClosingSection | undefined {
   return SALES_CLOSING_SECTIONS.find((section) => section.id === id);
+}
+
+const CLOSING_SECTION_IDS = new Set<SalesClosingSectionId>(
+  SALES_CLOSING_SECTIONS.map((section) => section.id),
+);
+
+export function isSalesClosingSectionId(
+  id: SalesFunnelSectionId | SalesClosingSectionId,
+): id is SalesClosingSectionId {
+  return CLOSING_SECTION_IDS.has(id as SalesClosingSectionId);
 }
 
 export function isSalesClosingSectionComplete(

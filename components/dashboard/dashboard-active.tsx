@@ -196,29 +196,21 @@ export function DashboardActive({ data }: DashboardActiveProps) {
 
       <DeliveryDetailsCard data={data} />
 
-      <div className="mt-8 flex flex-col items-center gap-4 border-t border-border pt-8">
+      <div className="mt-8 flex flex-col gap-4 border-t border-border pt-8">
         <NoShowDialog slug={data.slug} />
 
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Une question concernant votre livraison ?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>Notre équipe traite les demandes 7j/7.</p>
-            <p>Délai maximal de traitement : 24 h</p>
-            <p>Réponse quotidienne à 9h00, heure de Paris</p>
-            <p>
-              <a
-                href="mailto:contact@hercule.dev"
-                className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
-              >
-                contact@hercule.dev
-              </a>
-            </p>
-          </CardContent>
-        </Card>
+        <div className="space-y-1 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">Une question ?</p>
+          <p>
+            Notre équipe répond 7j/7, délai maximal 24 h (réponse à 9h, heure de Paris).
+          </p>
+          <a
+            href="mailto:contact@hercule.dev"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            contact@hercule.dev
+          </a>
+        </div>
       </div>
     </div>
   );

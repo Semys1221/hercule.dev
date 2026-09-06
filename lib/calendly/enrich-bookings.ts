@@ -8,6 +8,11 @@ import {
 import { provisionRoleRecoveryLead } from "@/lib/link-tracking/provision-role-recovery-lead";
 import type { LeadLookup, LeadStatut, LinkTrackingLead } from "@/lib/link-tracking/types";
 import {
+  createSalesCallsClient,
+  findSalesCallStatusesByInviteeUris,
+} from "@/lib/sales-calls/supabase";
+import type { SalesCallStatus } from "@/lib/sales-calls/types";
+import {
   buildDashboardUrl,
   buildLeadUrls,
   confirmationAgenceLinkFor,
@@ -26,6 +31,7 @@ export type BookingDisplayLinks = {
 
 export type EnrichedCalendlyBooking = CalendlyBookingRow & {
   statut: LeadStatut | null;
+  sales_call_status: SalesCallStatus | null;
   links: BookingDisplayLinks;
   lead_matched: boolean;
   provisioned: boolean;
@@ -253,11 +259,34 @@ async function enrichSingleBooking(
     lead_id: lead?.id ?? booking.lead_id,
     lead_category: lookup?.category ?? booking.lead_category,
     statut: lead?.statut ?? null,
+    sales_call_status: null,
     links,
     lead_matched: Boolean(lead),
     provisioned,
     warning,
   };
+}
+
+async function attachSalesCallStatuses(
+  bookings: EnrichedCalendlyBooking[],
+): Promise<EnrichedCalendlyBooking[]> {
+  try {
+    const client = createSalesCallsClient();
+    const statuses = await findSalesCallStatusesByInviteeUris(
+      client,
+      bookings.map((booking) => booking.invitee_uri),
+    );
+    return bookings.map((booking) => ({
+      ...booking,
+      sales_call_status: statuses.get(booking.invitee_uri) ?? null,
+    }));
+  } catch (err) {
+    console.warn(
+      "[enrich-bookings] sales_calls status lookup failed:",
+      err instanceof Error ? err.message : err,
+    );
+    return bookings;
+  }
 }
 
 export async function enrichBookingsForAdmin(
@@ -267,5 +296,5 @@ export async function enrichBookingsForAdmin(
   for (const booking of bookings) {
     enriched.push(await enrichSingleBooking(booking));
   }
-  return enriched;
+  return attachSalesCallStatuses(enriched);
 }
