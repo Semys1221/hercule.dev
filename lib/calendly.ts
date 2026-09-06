@@ -89,7 +89,7 @@ export type ScheduledEventInviteeLinks = {
   status: string;
 };
 
-function extractJoinUrlFromLocation(location: unknown): string | null {
+export function extractJoinUrlFromLocation(location: unknown): string | null {
   if (!location || typeof location !== "object") {
     return null;
   }

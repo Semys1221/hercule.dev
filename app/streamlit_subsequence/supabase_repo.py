@@ -27,6 +27,64 @@ INTERESTED_TEMPLATE_KEYS = (
     "interested_email3",
 )
 
+BIGGY_TEMPLATE_SOURCE = "2cd03978-93b3-4462-ad88-f0fb0f35d59c"
+CLONE_TEMPLATE_KEYS = (
+    "interested_email1",
+    "interested_email2",
+    "interested_email3",
+    "no_show_email1",
+    "no_show_email2",
+)
+
+
+def clone_templates(
+    source_campaign_id: str,
+    target_campaign_id: str,
+    *,
+    keys: tuple[str, ...] = CLONE_TEMPLATE_KEYS,
+    overwrite_blank_only: bool = True,
+) -> list[str]:
+    """Copy subject + body_html per template_key from source to target campaign."""
+    source_rows = {
+        str(row.get("template_key") or ""): row
+        for row in list_templates(source_campaign_id)
+    }
+    target_rows = {
+        str(row.get("template_key") or ""): row
+        for row in list_templates(target_campaign_id)
+    }
+    client = get_client()
+    cloned: list[str] = []
+    now = datetime.now(timezone.utc).isoformat()
+
+    for key in keys:
+        source = source_rows.get(key)
+        if not source:
+            continue
+        subject = str(source.get("subject") or "")
+        body_html = str(source.get("body_html") or "")
+        if not body_html.strip():
+            continue
+
+        if overwrite_blank_only:
+            existing = target_rows.get(key)
+            if existing and str(existing.get("body_html") or "").strip():
+                continue
+
+        client.table("instantly_bypass_templates").upsert(
+            {
+                "campaign_id": target_campaign_id,
+                "template_key": key,
+                "subject": subject,
+                "body_html": body_html,
+                "updated_at": now,
+            },
+            on_conflict="campaign_id,template_key",
+        ).execute()
+        cloned.append(key)
+
+    return cloned
+
 
 def list_templates(campaign_id: str) -> list[dict[str, Any]]:
     resp = (

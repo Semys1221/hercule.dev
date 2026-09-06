@@ -10,15 +10,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  LANDING_DESCRIPTION,
+  PRODUCT_BUILDER_LABEL,
+  PRODUCT_ROOT_LABEL,
+} from "@/lib/admin/funnels/ui-copy";
 
 const SECTIONS = [
   {
     href: "/internal/funnels",
-    title: "Funnels",
-    description:
-      "Funnel Builder — sales, onboarding, légal, emails par audience agence/entreprise.",
+    title: PRODUCT_ROOT_LABEL,
+    description: LANDING_DESCRIPTION,
     icon: TrendingUp,
-    cta: "Ouvrir Funnels",
+    cta: `Ouvrir ${PRODUCT_ROOT_LABEL}`,
   },
   {
     href: "/internal/components",

@@ -15,6 +15,7 @@ import {
   AUDIENCE_LABELS,
   type Audience,
 } from "@/lib/admin/navigation";
+import { LANDING_DESCRIPTION, PRODUCT_ROOT_LABEL } from "@/lib/admin/funnels/ui-copy";
 
 const AUDIENCES: Audience[] = ["agence", "entreprise"];
 
@@ -22,8 +23,8 @@ export function FunnelLanding() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
       <InternalPageHeader
-        title="Funnels"
-        description="Cockpit interne — sélectionnez une audience pour accéder aux onglets Sales, Onboarding, Dashboard, CVG et Emails."
+        title={PRODUCT_ROOT_LABEL}
+        description={LANDING_DESCRIPTION}
       />
 
       <div className="grid gap-4 md:grid-cols-2">

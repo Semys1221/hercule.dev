@@ -221,20 +221,6 @@ export function publicPathForScope(scope: FunnelScope): string {
 }
 
 export function scopeFromLeafKey(leafKey: string, audience: Audience): FunnelScope | null {
-  const stageByLeaf: Record<string, VenteStage> = {
-    sales_funnel_discovery: "discovery",
-    sales_funnel_pitch: "pitch",
-    sales_funnel_closing: "closing",
-  };
-
-  if (leafKey in stageByLeaf) {
-    return {
-      audience,
-      kind: "vente",
-      stage: stageByLeaf[leafKey],
-    };
-  }
-
   if (leafKey === "onboarding_funnel") {
     return {
       audience,
@@ -247,9 +233,6 @@ export function scopeFromLeafKey(leafKey: string, audience: Audience): FunnelSco
 }
 
 export const FUNNEL_LIST_LEAF_KEYS = new Set([
-  "sales_funnel_discovery",
-  "sales_funnel_pitch",
-  "sales_funnel_closing",
   "onboarding_funnel",
 ]);
 

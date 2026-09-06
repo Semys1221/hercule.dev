@@ -1,13 +1,6 @@
-import type { BookingEmailType } from "./types";
+import { BOOKING_EMAIL_TYPE_VALUES, type BookingEmailType } from "./types";
 
-const BOOKING_EMAIL_TYPES = new Set<BookingEmailType>([
-  "immediate",
-  "h48_confirm",
-  "h24_relance",
-  "h20_cancel",
-  "role_seq_48",
-  "role_seq_24",
-]);
+const BOOKING_EMAIL_TYPES = new Set<BookingEmailType>(BOOKING_EMAIL_TYPE_VALUES);
 
 export function verifyBookingCommunicationSecret(request: Request): boolean {
   const expected =

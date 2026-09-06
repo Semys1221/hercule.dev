@@ -29,21 +29,32 @@ assert.equal(
   "/vente/entreprise/discovery",
 );
 
-const discoveryScope = scopeFromLeafKey("sales_funnel_discovery", "agence");
-assert.ok(discoveryScope);
-assert.equal(discoveryScope?.stage, "discovery");
+const onboardingScope = scopeFromLeafKey("onboarding_funnel", "agence");
+assert.ok(onboardingScope);
+assert.equal(onboardingScope?.kind, "onboarding");
 
-const parsedList = parseWorkspacePath("agence", ["sales", "funnel", "discovery"]);
+const parsedSales = parseWorkspacePath("agence", ["sales"]);
+assert.equal(parsedSales.kind, "hub");
+if (parsedSales.kind === "hub") {
+  assert.deepEqual(parsedSales.navPath, ["agence", "sales"]);
+}
+
+const parsedSalesFunnel = parseWorkspacePath("agence", ["sales", "funnel"]);
+assert.equal(parsedSalesFunnel.kind, "hub");
+if (parsedSalesFunnel.kind === "hub") {
+  assert.deepEqual(parsedSalesFunnel.navPath, ["agence", "sales"]);
+}
+
+const parsedList = parseWorkspacePath("agence", ["onboarding", "funnel"]);
 assert.equal(parsedList.kind, "leaf");
 if (parsedList.kind === "leaf") {
-  assert.equal(parsedList.leafKey, "sales_funnel_discovery");
+  assert.equal(parsedList.leafKey, "onboarding_funnel");
   assert.equal(parsedList.funnelSlug, null);
 }
 
 const parsedEditor = parseWorkspacePath("agence", [
-  "sales",
+  "onboarding",
   "funnel",
-  "discovery",
   "my_funnel_1",
 ]);
 assert.equal(parsedEditor.kind, "funnel_editor");

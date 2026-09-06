@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarCheck,
   Boxes,
   ChevronDown,
   ChevronRight,
@@ -16,6 +17,12 @@ import {
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
+
+import { HerculeMark } from "@/components/hercule-mark";
+import {
+  PRODUCT_BUILDER_TOOLTIP,
+  productBuilderSubtitle,
+} from "@/lib/admin/funnels/ui-copy";
 
 import {
   Collapsible,
@@ -53,6 +60,7 @@ type FunnelAppSidebarProps = {
 
 const MODULE_ICONS: Record<string, LucideIcon> = {
   sales: TrendingUp,
+  bookings: CalendarCheck,
   onboarding: Rocket,
   dashboard: LayoutDashboard,
   legal: Scale,
@@ -221,17 +229,17 @@ export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="Funnel Builder">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <LayoutGrid className="size-4" />
+            <SidebarMenuButton size="lg" tooltip={PRODUCT_BUILDER_TOOLTIP}>
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent">
+                <HerculeMark variant="dual" className="size-5 text-white" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Funnel Builder</span>
+                <span className="truncate font-semibold">Hercule</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {AUDIENCE_LABELS[audience]}
+                  {productBuilderSubtitle(AUDIENCE_LABELS[audience])}
                 </span>
               </div>
             </SidebarMenuButton>

@@ -1,0 +1,45 @@
+import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
+import { scheduleLeadEmailJobs } from "@/lib/booking-communication/product-send";
+import type { SalesCall } from "@/lib/sales-calls/types";
+
+const HOUR_MS = 60 * 60 * 1000;
+
+export async function startCloseIndecisSequence(
+  salesCall: SalesCall,
+): Promise<{ started: boolean; reason?: string }> {
+  if (!salesCall.agence_id) {
+    return { started: false, reason: "missing_agence_id" };
+  }
+
+  const client = createLinkTrackingClient();
+  const lead = await findLeadById(client, "agence", salesCall.agence_id);
+  if (!lead) {
+    return { started: false, reason: "lead_not_found" };
+  }
+
+  const now = new Date();
+  const { inserted } = await scheduleLeadEmailJobs({
+    category: "agence",
+    leadId: lead.id,
+    triggeredBy: "sales_call_not_paid",
+    jobs: [
+      {
+        emailType: "close_indecis_1",
+        scheduledFor: now,
+        idempotencyKey: `close-indecis:1:${salesCall.id}`,
+      },
+      {
+        emailType: "close_indecis_2",
+        scheduledFor: new Date(now.getTime() + 24 * HOUR_MS),
+        idempotencyKey: `close-indecis:2:${salesCall.id}`,
+      },
+      {
+        emailType: "close_indecis_3",
+        scheduledFor: new Date(now.getTime() + 48 * HOUR_MS),
+        idempotencyKey: `close-indecis:3:${salesCall.id}`,
+      },
+    ],
+  });
+
+  return inserted > 0 ? { started: true } : { started: false, reason: "no_jobs_inserted" };
+}

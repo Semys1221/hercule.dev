@@ -1,46 +1,28 @@
-import { notFound } from "next/navigation";
-
 import { Suspense } from "react";
 
+import { BookingsTable } from "@/components/internal/funnels/bookings/bookings-table";
 import {
   FunnelBuilderList,
   FunnelEditor,
 } from "@/components/internal/funnels/builder/funnel-editor";
 import { FicheForm } from "@/components/internal/funnels/fiche-form";
-import { FaqEditor } from "@/components/internal/funnels/faq-editor";
+import { FaqManagementShell } from "@/components/internal/funnels/faq-management-shell";
 import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
 import { PricingEditor } from "@/components/internal/funnels/pricing-editor";
-import { MockupEditor } from "@/components/internal/funnels/mockup-editor";
+import { DeliverancePanel } from "@/components/internal/funnels/deliverance-panel";
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 import { InternalLeafToolbar } from "@/components/internal/funnels/ui/internal-leaf-toolbar";
 import { getLegalMarkdownForLeaf } from "@/lib/admin/legal-preview";
 import { scopeForParsedLeaf } from "@/lib/admin/funnels/routing";
+import {
+  DASHBOARD_KPIS_PLACEHOLDER,
+  ONBOARDING_PARCOURS_LEAF_TITLE,
+} from "@/lib/admin/funnels/ui-copy";
 import { FUNNEL_LIST_LEAF_KEYS } from "@/lib/admin/funnels/schema";
 import type { Audience } from "@/lib/admin/navigation";
 
-const EMAIL_TOOL_HINTS: Record<string, string> = {
-  emails_pre_close_outreach: "npm run streamlit-scraper",
-  emails_pre_close_subsequence: "npm run streamlit-subsequence",
-  emails_pre_close_reply_prompt: "npm run streamlit-reply-agent",
-  emails_pre_close_booking: "npm run streamlit-booking-resend",
-  emails_close_onboarding: "booking-communication / séquences post-signature (à venir)",
-  emails_close_notifications: "matching / post-RDV notifications (à venir)",
-};
-
-const EMAIL_TITLES: Record<string, string> = {
-  emails_pre_close_outreach: "Emails — PRE-CLOSE — Outreach",
-  emails_pre_close_subsequence: "Emails — PRE-CLOSE — Subsequence",
-  emails_pre_close_reply_prompt: "Emails — PRE-CLOSE — Reply prompt",
-  emails_pre_close_booking: "Emails — PRE-CLOSE — Booking",
-  emails_close_onboarding: "Emails — CLOSE — Onboarding",
-  emails_close_notifications: "Emails — CLOSE — Notifications",
-};
-
 const FUNNEL_TITLES: Record<string, string> = {
-  sales_funnel_discovery: "Sales — Discovery",
-  sales_funnel_pitch: "Sales — Pitch",
-  sales_funnel_closing: "Sales — Closing",
-  onboarding_funnel: "Onboarding funnel",
+  onboarding_funnel: ONBOARDING_PARCOURS_LEAF_TITLE,
 };
 
 type FunnelLeafContentProps = {
@@ -75,20 +57,42 @@ export function FunnelLeafContent({
     return <FunnelBuilderList scope={scope} navPath={navPath} title={title} />;
   }
 
+  if (leafKey === "bookings_hub") {
+    if (audience !== "agence") {
+      return (
+        <FunnelPlaceholder
+          title="Bookings"
+          detail="Disponible pour l'audience agence uniquement."
+        />
+      );
+    }
+    return (
+      <>
+        <InternalLeafToolbar leafKey={leafKey} />
+        <BookingsTable audience={audience} />
+      </>
+    );
+  }
+
   if (leafKey === "dashboard") {
     return (
       <>
         <InternalLeafToolbar leafKey={leafKey} />
         <FunnelPlaceholder
           title="Dashboard KPIs"
-          detail={`KPIs funnel à venir — conversion discovery → closing → booked (${audience}).`}
+          detail={`${DASHBOARD_KPIS_PLACEHOLDER} (${audience}).`}
         />
       </>
     );
   }
 
-  if (leafKey === "sales_mockup") {
-    return <MockupEditor audience={audience} />;
+  if (leafKey === "delivery_hub") {
+    return (
+      <>
+        <InternalLeafToolbar leafKey={leafKey} />
+        <DeliverancePanel />
+      </>
+    );
   }
 
   if (leafKey === "onboarding_fiche_form") {
@@ -96,7 +100,7 @@ export function FunnelLeafContent({
   }
 
   if (leafKey === "legal_faq") {
-    return <FaqEditor audience={audience} />;
+    return <FaqManagementShell audience={audience} />;
   }
 
   if (leafKey === "legal_pricing") {
@@ -109,20 +113,6 @@ export function FunnelLeafContent({
       return <FunnelPlaceholder title="Document introuvable" />;
     }
     return <FunnelLegalDoc label={legal.label} markdown={legal.markdown} />;
-  }
-
-  if (leafKey.startsWith("emails_")) {
-    const title = EMAIL_TITLES[leafKey] ?? leafKey;
-    const toolHint = EMAIL_TOOL_HINTS[leafKey] ?? "à venir";
-    return (
-      <>
-        <InternalLeafToolbar leafKey={leafKey} />
-        <FunnelPlaceholder
-          title={title}
-          detail={`Shell ${audience}. Outil associé : \`${toolHint}\`.`}
-        />
-      </>
-    );
   }
 
   return <FunnelPlaceholder title="Section introuvable" detail={`Renderer inconnu : ${leafKey}`} />;

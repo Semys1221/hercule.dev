@@ -1,3 +1,5 @@
+import type { BookingEmailType } from "./types";
+
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_TEMPORARY_BASE =
@@ -6,13 +8,7 @@ const DEFAULT_ENTREPRISE_POST_BASE =
   "https://www.hercule.dev/post-booking-entreprise.html";
 const DEFAULT_FROM = "Hercule <contact@hercule.dev>";
 
-export type BookingEmailTemplateType =
-  | "immediate"
-  | "h48_confirm"
-  | "h24_relance"
-  | "h20_cancel"
-  | "role_seq_48"
-  | "role_seq_24";
+export type BookingEmailTemplateType = BookingEmailType;
 
 export type BookingEmailTemplateRecord = {
   email_type: BookingEmailTemplateType;
@@ -85,6 +81,256 @@ C'est précisément là qu'Hercule prend son sens : faire ce tri et orienter cha
 
 Nous en parlerons ensemble au rendez-vous.`,
   },
+  product_calendly_welcome: {
+    subject: "Bienvenue chez Hercule — prochaine étape Calendly",
+    body: `{{firstNameLine}}
+
+Merci pour votre confiance. Votre paiement est bien confirmé.
+
+Dans les prochaines heures, vous recevrez une invitation Calendly sur {{email}} pour accéder à votre espace Hercule et configurer votre agenda de livraison.
+
+En attendant, vous pouvez consulter votre tableau de bord ici :
+{{dashboardLink}}
+
+À très vite,
+L'équipe Hercule`,
+  },
+  product_calendly_reminder: {
+    subject: "Rappel — acceptez votre invitation Calendly",
+    body: `{{firstNameLine}}
+
+Nous n'avons pas encore vu votre invitation Calendly acceptée pour {{email}}.
+
+Merci de vérifier votre boîte mail (et vos spams) et d'accepter l'invitation pour activer votre accès Calendly.
+
+Si vous n'avez pas reçu l'invitation, répondez à cet email ou contactez-nous à contact@hercule.dev.
+
+Votre tableau de bord : {{dashboardLink}}`,
+  },
+  product_payment_welcome: {
+    subject: "Votre accès Hercule est activé",
+    body: `{{firstNameLine}}
+
+Votre paiement a bien été reçu. Votre accès Hercule est maintenant actif.
+
+Prochaine étape : complétez votre onboarding pour démarrer la recherche de demandes qualifiées.
+
+Accédez à votre tableau de bord :
+{{dashboardLink}}
+
+Votre facture a été émise — vous la recevrez d'ici peu.
+
+L'équipe Hercule`,
+  },
+  upsell_email_1: {
+    subject: "Offre Hercule — 1 489 € ou 998 €",
+    body: `{{firstNameLine}}
+
+Suite à notre échange, voici les deux formules pour activer Hercule.
+
+Formule complète : 1 489 €.
+Offre 3 mois : 998 €.
+
+Finalisez depuis votre tableau de bord :
+{{dashboardLink}}`,
+  },
+  upsell_email_2: {
+    subject: "Rappel — activer Hercule",
+    body: `{{firstNameLine}}
+
+Un rappel concernant les deux formules évoquées : 1 489 € ou 998 € (3 mois).
+
+Votre tableau de bord :
+{{dashboardLink}}`,
+  },
+  upsell_email_3: {
+    subject: "Dernier rappel — offre Hercule",
+    body: `{{firstNameLine}}
+
+Dernier rappel pour activer Hercule (1 489 € ou 998 €).
+
+{{dashboardLink}}`,
+  },
+  close_indecis_1: {
+    subject: "Votre lien pour finaliser le paiement Hercule",
+    body: `{{firstNameLine}}
+
+Voici le lien pour finaliser le paiement et démarrer l'onboarding :
+{{dashboardLink}}`,
+  },
+  close_indecis_2: {
+    subject: "Rappel — finaliser votre paiement Hercule",
+    body: `{{firstNameLine}}
+
+Votre tableau de bord est toujours disponible pour finaliser le paiement :
+{{dashboardLink}}`,
+  },
+  close_indecis_3: {
+    subject: "Dernier rappel — accès Hercule",
+    body: `{{firstNameLine}}
+
+Dernier rappel pour finaliser le paiement et lancer l'onboarding :
+{{dashboardLink}}`,
+  },
+  onboarding_j0: {
+    subject: "Bienvenue — votre onboarding Hercule est activé",
+    body: `{{firstNameLine}}
+
+Votre onboarding est bien enregistré. La recherche de demandes peut démarrer.
+
+Tableau de bord :
+{{dashboardLink}}`,
+  },
+  onboarding_j0_bis: {
+    subject: "Hercule — prochaine étape après onboarding",
+    body: `{{firstNameLine}}
+
+Petit point en fin de journée : votre espace Hercule est prêt.
+
+{{dashboardLink}}`,
+  },
+  onboarding_j1: {
+    subject: "Suivi J+1 — activation Hercule",
+    body: `{{firstNameLine}}
+
+Nous suivons l'activation de votre compte. Votre tableau de bord :
+{{dashboardLink}}`,
+  },
+  onboarding_reminder_m10: {
+    subject: "Rappel J-10 — première livraison Hercule",
+    body: `{{firstNameLine}}
+
+Rappel : la première date de livraison estimée est le {{estimatedFirstBookingDate}}.
+
+{{dashboardLink}}`,
+  },
+  onboarding_reminder_m5: {
+    subject: "Rappel J-5 — première livraison Hercule",
+    body: `{{firstNameLine}}
+
+Rappel J-5 : livraison estimée le {{estimatedFirstBookingDate}}.
+
+{{dashboardLink}}`,
+  },
+  onboarding_reminder_p5: {
+    subject: "Rappel J+5 — suivi première livraison",
+    body: `{{firstNameLine}}
+
+Point J+5 après la date estimée ({{estimatedFirstBookingDate}}).
+
+{{dashboardLink}}`,
+  },
+  deliverance_search_started: {
+    subject: "Recherche lancée — Hercule",
+    body: `{{firstNameLine}}
+
+La recherche de mise en relation a bien été lancée.
+
+{{dashboardLink}}`,
+  },
+  deliverance_d7_update: {
+    subject: "Mise à jour J+7 — recherche Hercule",
+    body: `{{firstNameLine}}
+
+Mise à jour J+7 de la recherche en cours.
+
+{{dashboardLink}}`,
+  },
+  deliverance_milestone: {
+    subject: "Avancement — étape de délivrance Hercule",
+    body: `{{firstNameLine}}
+
+Une étape de délivrance vient d'avancer.
+
+{{dashboardLink}}`,
+  },
+  deliverance_waitlist: {
+    subject: "File d'attente — Hercule",
+    body: `{{firstNameLine}}
+
+Votre dossier est actuellement en file d'attente.
+
+{{dashboardLink}}`,
+  },
+  match_proposal: {
+    subject: "Nous vous avons trouvé une agence",
+    body: `{{firstNameLine}}
+
+Nous vous proposons une agence pour votre projet.
+
+{{agenceInfo}}
+
+Réservez un créneau :
+{{calendlyLink}}`,
+  },
+  match_proposal_followup: {
+    subject: "Rappel — réserver votre rendez-vous agence",
+    body: `{{firstNameLine}}
+
+Nous n'avons pas encore de réservation pour le rendez-vous proposé.
+
+{{agenceInfo}}
+
+{{calendlyLink}}`,
+  },
+  match_booking_agence: {
+    subject: "Un rendez-vous a été réservé avec une entreprise",
+    body: `{{firstNameLine}}
+
+Une entreprise a réservé un rendez-vous via votre lien Calendly.
+
+{{entrepriseInfo}}
+
+Date : {{date}} à {{heure}}.`,
+  },
+  survey_rdv_entreprise: {
+    subject: "Votre avis après le rendez-vous",
+    body: `{{firstNameLine}}
+
+Pouvez-vous indiquer si l'embarquement avec l'agence s'est bien passé ?
+
+{{surveyLink}}`,
+  },
+  survey_rdv_entreprise_followup: {
+    subject: "Rappel — questionnaire post-rendez-vous",
+    body: `{{firstNameLine}}
+
+Nous n'avons pas encore reçu votre retour.
+
+{{surveyLink}}`,
+  },
+  survey_rdv_agence: {
+    subject: "Votre avis après le rendez-vous",
+    body: `{{firstNameLine}}
+
+Avez-vous conclu une vente suite au rendez-vous ?
+
+{{surveyLink}}`,
+  },
+  survey_rdv_agence_followup: {
+    subject: "Rappel — questionnaire post-rendez-vous",
+    body: `{{firstNameLine}}
+
+Nous n'avons pas encore reçu votre retour.
+
+{{surveyLink}}`,
+  },
+  sold_check_j7: {
+    subject: "Votre onboarding s'est-il bien passé ?",
+    body: `{{firstNameLine}}
+
+Petit point J+7 : votre onboarding avec l'agence s'est-il bien passé ?
+
+{{dashboardLink}}`,
+  },
+  payment_notification_client: {
+    subject: "Confirmation de paiement Hercule",
+    body: `{{firstNameLine}}
+
+Nous confirmons la réception de votre paiement.
+
+{{dashboardLink}}`,
+  },
   role_seq_24: {
     subject: "Confirmer votre créneau — Hercule",
     body: `{{firstNameLine}}
@@ -133,7 +379,20 @@ export function buildFirstNameLine(
   emailType: BookingEmailTemplateType = "h48_confirm",
 ): string {
   const trimmed = firstName?.trim();
-  if (emailType === "immediate") {
+  if (
+    emailType === "immediate" ||
+    emailType === "product_calendly_welcome" ||
+    emailType === "product_calendly_reminder" ||
+    emailType === "product_payment_welcome" ||
+    emailType.startsWith("upsell_") ||
+    emailType.startsWith("close_indecis_") ||
+    emailType.startsWith("onboarding_") ||
+    emailType.startsWith("deliverance_") ||
+    emailType.startsWith("match_") ||
+    emailType.startsWith("survey_") ||
+    emailType === "sold_check_j7" ||
+    emailType === "payment_notification_client"
+  ) {
     return trimmed ? `Bonjour ${trimmed},` : "Bonjour,";
   }
   return trimmed ? `${trimmed},` : "Bonjour,";

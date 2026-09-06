@@ -1,0 +1,193 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
+
+import type { SalesCall, SalesCallNotesPatch, SalesCallStatus } from "./types";
+
+export function createSalesCallsClient(): SupabaseClient {
+  return createLinkTrackingClient();
+}
+
+export type UpsertSalesCallParams = {
+  agenceId: string | null;
+  email: string;
+  inviteeUri: string;
+  scheduledAt?: string | null;
+  status?: SalesCallStatus;
+};
+
+export async function upsertSalesCallFromBooking(
+  client: SupabaseClient,
+  params: UpsertSalesCallParams,
+): Promise<SalesCall> {
+  const normalizedEmail = params.email.trim().toLowerCase();
+  const { data: existing, error: lookupError } = await client
+    .from("sales_calls")
+    .select("*")
+    .eq("calendly_invitee_uri", params.inviteeUri)
+    .maybeSingle();
+
+  if (lookupError) {
+    throw new Error(`sales_calls lookup failed: ${lookupError.message}`);
+  }
+
+  if (existing) {
+    const patch: Record<string, unknown> = {};
+    if (params.agenceId && !existing.agence_id) {
+      patch.agence_id = params.agenceId;
+    }
+    if (params.scheduledAt) {
+      patch.scheduled_at = params.scheduledAt;
+    }
+    if (Object.keys(patch).length === 0) {
+      return existing as SalesCall;
+    }
+
+    const { data, error } = await client
+      .from("sales_calls")
+      .update(patch)
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`sales_calls update failed: ${error?.message ?? "no row"}`);
+    }
+    return data as SalesCall;
+  }
+
+  const { data, error } = await client
+    .from("sales_calls")
+    .insert({
+      agence_id: params.agenceId,
+      email: normalizedEmail,
+      calendly_invitee_uri: params.inviteeUri,
+      scheduled_at: params.scheduledAt ?? null,
+      status: params.status ?? "scheduled",
+      notes: {},
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`sales_calls insert failed: ${error?.message ?? "no row"}`);
+  }
+
+  return data as SalesCall;
+}
+
+export async function findSalesCallByInviteeUri(
+  client: SupabaseClient,
+  inviteeUri: string,
+): Promise<SalesCall | null> {
+  const { data, error } = await client
+    .from("sales_calls")
+    .select("*")
+    .eq("calendly_invitee_uri", inviteeUri)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`sales_calls lookup failed: ${error.message}`);
+  }
+
+  return (data as SalesCall | null) ?? null;
+}
+
+export async function findSalesCallById(
+  client: SupabaseClient,
+  salesCallId: string,
+): Promise<SalesCall | null> {
+  const { data, error } = await client
+    .from("sales_calls")
+    .select("*")
+    .eq("id", salesCallId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`sales_calls lookup failed: ${error.message}`);
+  }
+
+  return (data as SalesCall | null) ?? null;
+}
+
+export async function updateSalesCallNotes(
+  client: SupabaseClient,
+  salesCallId: string,
+  notesPatch: SalesCallNotesPatch,
+): Promise<SalesCall> {
+  const existing = await findSalesCallById(client, salesCallId);
+  if (!existing) {
+    throw new Error("sales_call_not_found");
+  }
+
+  const mergedNotes = {
+    ...existing.notes,
+    ...(notesPatch.qualification
+      ? { qualification: { ...(existing.notes.qualification as object), ...notesPatch.qualification } }
+      : {}),
+    ...(notesPatch.closing
+      ? { closing: { ...(existing.notes.closing as object), ...notesPatch.closing } }
+      : {}),
+  };
+
+  const { data, error } = await client
+    .from("sales_calls")
+    .update({ notes: mergedNotes })
+    .eq("id", salesCallId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`sales_calls notes update failed: ${error?.message ?? "no row"}`);
+  }
+
+  return data as SalesCall;
+}
+
+export async function updateSalesCallStatus(
+  client: SupabaseClient,
+  salesCallId: string,
+  status: SalesCallStatus,
+): Promise<SalesCall> {
+  const { data, error } = await client
+    .from("sales_calls")
+    .update({ status })
+    .eq("id", salesCallId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`sales_calls status update failed: ${error?.message ?? "no row"}`);
+  }
+  return data as SalesCall;
+}
+
+export async function replaceSalesCallNotesSection(
+  client: SupabaseClient,
+  salesCallId: string,
+  section: "qualification" | "closing",
+  value: Record<string, unknown>,
+): Promise<SalesCall> {
+  const existing = await findSalesCallById(client, salesCallId);
+  if (!existing) {
+    throw new Error("sales_call_not_found");
+  }
+
+  const mergedNotes = {
+    ...existing.notes,
+    [section]: value,
+  };
+
+  const { data, error } = await client
+    .from("sales_calls")
+    .update({ notes: mergedNotes })
+    .eq("id", salesCallId)
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`sales_calls notes replace failed: ${error?.message ?? "no row"}`);
+  }
+
+  return data as SalesCall;
+}

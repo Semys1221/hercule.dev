@@ -21,6 +21,7 @@ import {
   markJobSent,
   rescheduleJob,
 } from "./jobs";
+import { extraVarsForJob } from "./product-vars";
 import { sendBookingEmail } from "./send";
 import { h20SendAt, h24SendAt, h48SendAt, planRoleRecoverySchedule } from "./schedule";
 import { renderEmailFromStore } from "./template-store";
@@ -404,14 +405,23 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     false,
     job.lead_category,
   );
+  const extra = await extraVarsForJob(job, lead);
   return renderEmailFromStore({
     category: job.lead_category,
     emailType: job.email_type,
     firstName: lead.first_name,
-    scheduledAt: lead.scheduled_at,
+    scheduledAt: extra.scheduledAt ?? lead.scheduled_at,
     confirmUrl,
     useHtml,
     meetingActionLinks,
+    dashboardLink: extra.dashboardLink,
+    company: extra.company ?? lead.company,
+    email: extra.email ?? lead.email,
+    surveyLink: extra.surveyLink,
+    agenceInfo: extra.agenceInfo,
+    entrepriseInfo: extra.entrepriseInfo,
+    calendlyLink: extra.calendlyLink,
+    estimatedFirstBookingDate: extra.estimatedFirstBookingDate,
   });
 }
 

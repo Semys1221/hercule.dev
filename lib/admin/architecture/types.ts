@@ -101,8 +101,8 @@ export type DatabaseStatus = z.infer<typeof databaseStatusSchema>;
 export type DatabaseEntry = z.infer<typeof databaseEntrySchema>;
 
 export const COMPONENT_DOMAIN_LABELS: Record<ComponentDomain, string> = {
-  sales_funnel: "Sales funnel",
-  onboarding_funnel: "Onboarding funnel",
+  sales_funnel: "Session",
+  onboarding_funnel: "Parcours onboarding",
   dashboard_internal: "Dashboard interne",
   dashboard_client: "Dashboard client",
   crm: "CRM",

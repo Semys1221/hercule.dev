@@ -1,0 +1,117 @@
+import { NextResponse } from "next/server";
+
+import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
+import type { DashboardFormData } from "@/lib/dashboard/types";
+
+export type ClientRow = {
+  id: string;
+  email: string;
+  firstName: string | null;
+  company: string | null;
+  slug: string;
+  productStatut: string;
+  dashboardLink: string | null;
+  onboardingCompletedAt: string;
+  form: DashboardFormData;
+  hasPaid: boolean;
+};
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const category = searchParams.get("category") ?? "agence";
+
+  try {
+    const client = createLinkTrackingClient();
+
+    if (category === "entreprise") {
+      const { data: leads, error: leadsError } = await client
+        .from("entreprise")
+        .select(
+          "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, profile",
+        )
+        .order("created_at", { ascending: false });
+
+      if (leadsError) {
+        throw new Error(`entreprise query failed: ${leadsError.message}`);
+      }
+
+      const clients: ClientRow[] = (leads ?? []).map((lead) => {
+        const profile = (lead.profile ?? {}) as Record<string, unknown>;
+        const form = (profile.form ?? {}) as DashboardFormData;
+        return {
+          id: lead.id as string,
+          email: lead.email as string,
+          firstName: (lead.first_name as string | null) ?? null,
+          company: (lead.company as string | null) ?? null,
+          slug: lead.slug as string,
+          productStatut: (lead.product_statut as string | null) ?? "NONE",
+          dashboardLink: (lead.dashboard_link as string | null) ?? null,
+          onboardingCompletedAt: (lead.onboarding_completed_at as string | null) ?? "",
+          form,
+          hasPaid: false,
+        };
+      });
+
+      return NextResponse.json({ clients });
+    }
+
+    // Fetch all agence leads that have completed onboarding
+    const { data: leads, error: leadsError } = await client
+      .from("agence")
+      .select(
+        "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, profile",
+      )
+      .not("onboarding_completed_at", "is", null)
+      .order("onboarding_completed_at", { ascending: false });
+
+    if (leadsError) {
+      throw new Error(`agence query failed: ${leadsError.message}`);
+    }
+
+    if (!leads || leads.length === 0) {
+      return NextResponse.json({ clients: [] });
+    }
+
+    // Fetch payment status for all agence IDs in a single query
+    const agenceIds = leads.map((l) => l.id as string);
+    const { data: payments, error: paymentsError } = await client
+      .from("payments")
+      .select("agence_id")
+      .in("agence_id", agenceIds)
+      .eq("status", "succeeded");
+
+    if (paymentsError) {
+      throw new Error(`payments query failed: ${paymentsError.message}`);
+    }
+
+    const paidSet = new Set(
+      (payments ?? []).map((p) => p.agence_id as string),
+    );
+
+    const clients: ClientRow[] = leads.map((lead) => {
+      const profile = (lead.profile ?? {}) as Record<string, unknown>;
+      const form = (profile.form ?? {}) as DashboardFormData;
+
+      return {
+        id: lead.id as string,
+        email: lead.email as string,
+        firstName: (lead.first_name as string | null) ?? null,
+        company: (lead.company as string | null) ?? null,
+        slug: lead.slug as string,
+        productStatut:
+          (lead.product_statut as string | null) ?? "NONE",
+        dashboardLink: (lead.dashboard_link as string | null) ?? null,
+        onboardingCompletedAt: lead.onboarding_completed_at as string,
+        form,
+        hasPaid: paidSet.has(lead.id as string),
+      };
+    });
+
+    return NextResponse.json({ clients });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "clients fetch failed";
+    console.error("[admin/clients]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

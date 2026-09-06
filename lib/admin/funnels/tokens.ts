@@ -17,9 +17,9 @@ export type DesignTokensSnapshot = {
 
 export function captureDesignTokens(): DesignTokensSnapshot {
   const css = readFileSync(GLOBALS_CSS, "utf8");
-  const rootBlock = css.match(/:root\s*\{([\s\S]*?)\}/)?.[1] ?? "";
+  const internalBlock = css.match(/\.internal\s*\{([\s\S]*?)\}/)?.[1] ?? "";
   const themeBlock = css.match(/@theme inline\s*\{([\s\S]*?)\}/)?.[1] ?? "";
-  const combined = `${rootBlock}\n${themeBlock}`;
+  const combined = `${internalBlock}\n${themeBlock}`;
 
   const variables: Record<string, string> = {};
   for (const match of combined.matchAll(CSS_VAR_PATTERN)) {
@@ -41,7 +41,7 @@ export function captureDesignTokens(): DesignTokensSnapshot {
     variables,
     fonts,
     constraints: [
-      "Reuse project CSS variables from app/globals.css",
+      "Reuse .internal CSS variables from app/globals.css (canonical admin theme)",
       "Use shadcn/ui components from components/ui",
       "Do not introduce a new visual language",
       "Match Geist typography and existing radius tokens",

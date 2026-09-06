@@ -1,3 +1,13 @@
+import {
+  DASHBOARD_KPIS_CAPTION,
+  ONBOARDING_PARCOURS_CAPTION,
+  ONBOARDING_PARCOURS_LABEL,
+  PRODUCT_ROOT_LABEL,
+  SEGMENT_LABELS,
+  SESSION_MODULE_CAPTION,
+  SESSION_MODULE_LABEL,
+} from "@/lib/admin/funnels/ui-copy";
+
 export type Audience = "agence" | "entreprise";
 
 export type NavNode = {
@@ -22,30 +32,11 @@ export const AUDIENCE_CAPTIONS: Record<Audience, string> = {
   entreprise: "Seller — entreprises qui recherchent une agence.",
 };
 
-function salesTree(): Record<string, NavNode> {
-  return {
-    funnel: {
-      label: "Funnel",
-      caption: "Parcours commercial discovery → pitch → closing.",
-      children: {
-        discovery: { label: "Discovery", leaf: "sales_funnel_discovery" },
-        pitch: { label: "Pitch", leaf: "sales_funnel_pitch" },
-        closing: { label: "Closing", leaf: "sales_funnel_closing" },
-      },
-    },
-    mockup: {
-      label: "Fiches mockup",
-      caption: "Cartes carousel homepage agence (agence_demandes).",
-      leaf: "sales_mockup",
-    },
-  };
-}
-
 function onboardingTree(): Record<string, NavNode> {
   return {
     funnel: {
-      label: "Funnel",
-      caption: "Parcours onboarding — contenu à venir.",
+      label: ONBOARDING_PARCOURS_LABEL,
+      caption: ONBOARDING_PARCOURS_CAPTION,
       leaf: "onboarding_funnel",
     },
     fiche_form: {
@@ -66,43 +57,24 @@ function legalTree(): Record<string, NavNode> {
   };
 }
 
-function emailsTree(): Record<string, NavNode> {
-  return {
-    pre_close: {
-      label: "PRE-CLOSE",
-      caption: "Outreach, subsequence, reply prompt, booking.",
-      children: {
-        outreach: { label: "Outreach", leaf: "emails_pre_close_outreach" },
-        subsequence: { label: "Subsequence", leaf: "emails_pre_close_subsequence" },
-        reply_prompt: { label: "Reply prompt", leaf: "emails_pre_close_reply_prompt" },
-        booking: { label: "Booking", leaf: "emails_pre_close_booking" },
-      },
-    },
-    close: {
-      label: "CLOSE",
-      caption: "Onboarding et notifications post-signature.",
-      children: {
-        onboarding: { label: "Onboarding", leaf: "emails_close_onboarding" },
-        notifications: { label: "Notifications", leaf: "emails_close_notifications" },
-      },
-    },
-  };
-}
-
 export const MODULES: Record<string, NavNode> = {
   sales: {
-    label: "Sales",
-    caption: "Funnel commercial et fiches mockup.",
-    children: salesTree(),
+    label: SESSION_MODULE_LABEL,
+    caption: SESSION_MODULE_CAPTION,
   },
   onboarding: {
     label: "Onboarding",
     caption: "Parcours et création de fiches réelles.",
     children: onboardingTree(),
   },
+  bookings: {
+    label: "Bookings",
+    caption: "RDV Calendly et liens prospect.",
+    leaf: "bookings_hub",
+  },
   dashboard: {
     label: "Dashboard",
-    caption: "KPIs funnel — à venir.",
+    caption: DASHBOARD_KPIS_CAPTION,
     leaf: "dashboard",
   },
   legal: {
@@ -112,8 +84,13 @@ export const MODULES: Record<string, NavNode> = {
   },
   emails: {
     label: "Emails",
-    caption: "Workflows email PRE-CLOSE et CLOSE.",
-    children: emailsTree(),
+    caption: "Séquences email PRE-CLOSE et CLOSE.",
+    leaf: "emails_hub",
+  },
+  delivery: {
+    label: "Délivrance",
+    caption: "Recherche, milestones et file d'attente.",
+    leaf: "delivery_hub",
   },
 };
 
@@ -201,7 +178,7 @@ export function leafKey(path: string[]): string | null {
 }
 
 export function breadcrumb(path: string[]): string {
-  const labels = ["Funnels"];
+  const labels = [PRODUCT_ROOT_LABEL];
   if (path.length === 0) {
     return labels.join(" › ");
   }
@@ -216,7 +193,7 @@ export function breadcrumb(path: string[]): string {
   for (const segment of path.slice(1)) {
     const node = currentChildren[segment];
     if (!node) {
-      labels.push(segment);
+      labels.push(SEGMENT_LABELS[segment] ?? segment);
       break;
     }
     labels.push(node.label);
@@ -231,6 +208,10 @@ export function pathToHref(path: string[]): string {
     return "/internal/funnels";
   }
   return `/internal/funnels/${path.join("/")}`;
+}
+
+export function salesFunnelHref(audience: Audience): string {
+  return pathToHref([audience, "sales", "funnel"]);
 }
 
 export function hubTitle(path: string[]): string {

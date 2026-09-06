@@ -21,6 +21,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getComponentsRegistry } from "@/lib/admin/architecture/components-registry";
 import {
+  getPreviewKind,
+  getPreviewLabel,
+} from "@/lib/admin/architecture/component-preview-registry";
+import {
   COMPONENT_DOMAIN_LABELS,
   COMPONENT_KIND_LABELS,
   COMPONENT_ROLE_LABELS,
@@ -137,6 +141,22 @@ const columns: ColumnDef<ComponentEntry, unknown>[] = [
       <StatusBadge status={row.getValue("status") as ComponentEntry["status"]} />
     ),
   },
+  {
+    id: "preview",
+    header: "Preview",
+    cell: ({ row }) => {
+      const entry = row.original;
+      const kind = getPreviewKind(entry);
+      if (kind === "unavailable") {
+        return <span className="text-muted-foreground">—</span>;
+      }
+      return (
+        <Badge variant={kind === "live" ? "default" : "secondary"}>
+          {getPreviewLabel(entry)}
+        </Badge>
+      );
+    },
+  },
 ];
 
 type MultiFilterProps<T extends string> = {
@@ -185,7 +205,13 @@ function MultiFilter<T extends string>({
   );
 }
 
-export function ComponentsTable() {
+export function ComponentsTable({
+  selectedEntryId = null,
+  onSelectEntry,
+}: {
+  selectedEntryId?: string | null;
+  onSelectEntry?: (entry: ComponentEntry) => void;
+}) {
   const data = React.useMemo(() => getComponentsRegistry(), []);
   const [search, setSearch] = React.useState("");
   const [domainFilter, setDomainFilter] = React.useState<ComponentDomain[]>([]);
@@ -213,6 +239,9 @@ export function ComponentsTable() {
       searchValue={search}
       onSearchChange={setSearch}
       searchPlaceholder="Rechercher par nom ou id…"
+      onRowClick={onSelectEntry}
+      getRowId={(entry) => entry.id}
+      selectedRowId={selectedEntryId}
       toolbar={
         <>
           <MultiFilter

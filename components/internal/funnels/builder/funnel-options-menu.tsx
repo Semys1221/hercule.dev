@@ -3,13 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { FunnelFullPreviewSheet } from "@/components/internal/funnels/builder/funnel-full-preview-sheet";
 import { InternalResourceToolbar } from "@/components/internal/funnels/ui/internal-resource-toolbar";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
-import type { FunnelCatalog } from "@/lib/admin/funnels/catalog-types";
 import { funnelListHref } from "@/lib/admin/funnels/routing";
 import { funnelToolbarActions } from "@/lib/admin/funnels/toolbar-actions";
 import type { FunnelDocument, FunnelScope } from "@/lib/admin/funnels/schema";
+import { PARCOURS_DELETE_WARNING } from "@/lib/admin/funnels/ui-copy";
 
 type FunnelOptionsMenuProps = {
   scope: FunnelScope;
@@ -18,7 +17,7 @@ type FunnelOptionsMenuProps = {
   displayName: string;
   status: "draft" | "published";
   context: "list" | "editor";
-  catalog?: FunnelCatalog | null;
+  catalog?: unknown;
   funnel?: FunnelDocument | null;
   onPublished?: () => void;
   onDeleted?: () => void;
@@ -32,15 +31,12 @@ export function FunnelOptionsMenu({
   displayName,
   status,
   context,
-  catalog,
-  funnel,
   onPublished,
   onDeleted,
   onError,
 }: FunnelOptionsMenuProps) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   const actions = funnelToolbarActions(context, status, navPath, slug);
 
@@ -85,31 +81,18 @@ export function FunnelOptionsMenu({
   }
 
   return (
-    <>
-      <InternalResourceToolbar
-        edit={actions.edit}
-        preview={actions.preview}
-        promote={actions.promote}
-        delete={{
-          enabled: true,
-          confirmTitle: `Supprimer « ${displayName} » ?`,
-          confirmDescription:
-            "Cette action est irréversible. Le dossier JSON local du funnel sera supprimé définitivement.",
-        }}
-        busy={busy}
-        onPreview={() => setPreviewOpen(true)}
-        onPromote={handlePromote}
-        onDeleteConfirm={handleDelete}
-      />
-
-      {context === "editor" && funnel && catalog ? (
-        <FunnelFullPreviewSheet
-          funnel={funnel}
-          catalog={catalog}
-          open={previewOpen}
-          onOpenChange={setPreviewOpen}
-        />
-      ) : null}
-    </>
+    <InternalResourceToolbar
+      edit={actions.edit}
+      preview={{ enabled: false, reason: "Preview non disponible" }}
+      promote={actions.promote}
+      delete={{
+        enabled: true,
+        confirmTitle: `Supprimer « ${displayName} » ?`,
+        confirmDescription: PARCOURS_DELETE_WARNING,
+      }}
+      busy={busy}
+      onPromote={handlePromote}
+      onDeleteConfirm={handleDelete}
+    />
   );
 }

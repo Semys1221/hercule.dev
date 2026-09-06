@@ -6,9 +6,12 @@ import {
   Boxes,
   Database,
   Home,
-  LayoutGrid,
   TrendingUp,
+  Users2,
 } from "lucide-react";
+
+import { HerculeMark } from "@/components/hercule-mark";
+import { PRODUCT_ROOT_LABEL } from "@/lib/admin/funnels/ui-copy";
 
 import {
   Sidebar,
@@ -45,8 +48,14 @@ const NAV_ITEMS = [
   },
   {
     href: "/internal/funnels",
-    label: "Funnels",
+    label: PRODUCT_ROOT_LABEL,
     icon: TrendingUp,
+    exact: false,
+  },
+  {
+    href: "/internal/clients",
+    label: "Clients",
+    icon: Users2,
     exact: false,
   },
 ] as const;
@@ -63,17 +72,17 @@ export function InternalShellSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-border">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip="Internal">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <LayoutGrid className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent">
+                <HerculeMark variant="dual" className="size-5 text-white" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Internal</span>
+                <span className="truncate font-semibold">Hercule</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  Architecture & ops
+                  Internal
                 </span>
               </div>
             </SidebarMenuButton>

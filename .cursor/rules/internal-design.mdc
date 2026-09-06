@@ -1,0 +1,24 @@
+---
+description: Thème dark Hercule pour tout UI interne — tokens .internal, pas de second design system
+alwaysApply: true
+---
+
+# Thème internal — dark brand Hercule
+
+Tout UI admin/internal utilise le thème **`.internal`** défini dans `app/globals.css` (background `#09090B`, palette zinc, tokens shadcn).
+
+## Règles
+
+1. **Périmètre** — Les pages sous `app/internal/**` héritent automatiquement via `app/internal/layout.tsx` (`className="internal"`). Toute nouvelle UI admin doit vivre sous `/internal` ou être wrappée dans `.internal`.
+
+2. **Tokens sémantiques uniquement** — Utiliser `bg-background`, `text-foreground`, `border-border`, `text-muted-foreground`, etc. **Ne pas** hardcoder `#09090B` ou `zinc-*` dans les composants internal (sauf previews marketing fidèles au site public).
+
+3. **shadcn obligatoire** — Composer depuis `components/ui/*` (voir règle shadcn-mcp). Pas de second design system.
+
+4. **Sidebar** — `HerculeMark` + labels « Hercule » dans les en-têtes sidebar internal. Couleurs via tokens sidebar (`bg-sidebar`, `border-sidebar-border`).
+
+5. **Source of truth tokens** — `app/globals.css` bloc `.internal { ... }`. Référencé par `lib/admin/funnels/tokens.ts` pour les tickets Cursor.
+
+## Marketing vs internal
+
+Le marketing (`components/agence/*`, `components/entreprise/*`) garde ses styles inline `#09090B` existants. L'internal aligne visuellement via les mêmes valeurs en tokens CSS — pas de refactor marketing requis lors d'ajouts internal.

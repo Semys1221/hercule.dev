@@ -7,6 +7,7 @@ import {
   type LeadStatut,
   type LinkTrackingLead,
 } from "./types";
+import { buildDashboardUrl } from "./urls";
 
 const TABLES: LeadCategory[] = ["agence", "entreprise"];
 
@@ -79,6 +80,32 @@ export async function findLeadByEmail(
   return null;
 }
 
+export async function findLeadByCalendlyInviteeUri(
+  client: SupabaseClient,
+  inviteeUri: string,
+): Promise<LeadLookup | null> {
+  const normalized = inviteeUri.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  for (const category of TABLES) {
+    const { data, error } = await client
+      .from(category)
+      .select("*")
+      .eq("calendly_invitee_uri", normalized)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Supabase lookup failed on ${category}: ${error.message}`);
+    }
+    if (data) {
+      return { category, lead: data as LinkTrackingLead };
+    }
+  }
+  return null;
+}
+
 export async function findLeadById(
   client: SupabaseClient,
   category: LeadCategory,
@@ -111,6 +138,29 @@ export type MarkBookedResult =
   | { updated: true; lookup: LeadLookup }
   | { updated: false; lookup: LeadLookup | null; reason: string };
 
+async function ensureDashboardLink(
+  client: SupabaseClient,
+  lookup: LeadLookup,
+): Promise<LeadLookup> {
+  if (lookup.category !== "agence" || lookup.lead.dashboard_link?.trim()) {
+    return lookup;
+  }
+
+  const dashboardLink = buildDashboardUrl(lookup.lead.slug);
+  const { data, error } = await client
+    .from(lookup.category)
+    .update({ dashboard_link: dashboardLink })
+    .eq("id", lookup.lead.id)
+    .select("*")
+    .maybeSingle();
+
+  if (error || !data) {
+    return lookup;
+  }
+
+  return { category: lookup.category, lead: data as LinkTrackingLead };
+}
+
 export async function markLeadBooked(
   client: SupabaseClient,
   params: MarkBookedParams,
@@ -128,7 +178,8 @@ export async function markLeadBooked(
   }
 
   if (isMeetingBookedStatus(lookup.lead.statut)) {
-    return { updated: false, lookup, reason: "already_booked" };
+    const withDashboard = await ensureDashboardLink(client, lookup);
+    return { updated: false, lookup: withDashboard, reason: "already_booked" };
   }
 
   const now = new Date().toISOString();
@@ -136,6 +187,7 @@ export async function markLeadBooked(
     statut: "MEETING_BOOKED",
     booked_at: now,
     calendly_invitee_uri: params.calendlyInviteeUri || lookup.lead.calendly_invitee_uri,
+    dashboard_link: buildDashboardUrl(lookup.lead.slug),
   };
   if (params.firstName) patch.first_name = params.firstName;
   if (params.company) patch.company = params.company;

@@ -1,5 +1,6 @@
 import { funnelEditorHref } from "@/lib/admin/funnels/routing";
 import type { FunnelStatus } from "@/lib/admin/funnels/schema";
+import { PARCOURS_ALREADY_LIVE } from "@/lib/admin/funnels/ui-copy";
 
 export type ToolbarActionState =
   | { enabled: true }
@@ -9,7 +10,6 @@ export type FunnelToolbarContext = "list" | "editor";
 
 export type FunnelToolbarActionStates = {
   edit: ToolbarActionState & { href?: string };
-  preview: ToolbarActionState;
   promote: ToolbarActionState;
 };
 
@@ -25,23 +25,18 @@ export function funnelToolbarActions(
         enabled: true,
         href: funnelEditorHref(navPath, slug, { phase: "layout" }),
       },
-      preview: {
-        enabled: false,
-        reason: "Ouvrir l'éditeur pour prévisualiser le funnel",
-      },
       promote:
         status === "published"
-          ? { enabled: false, reason: "Ce funnel est déjà en live" }
+          ? { enabled: false, reason: PARCOURS_ALREADY_LIVE }
           : { enabled: true },
     };
   }
 
   return {
     edit: { enabled: false, reason: "Déjà en édition" },
-    preview: { enabled: true },
     promote:
       status === "published"
-        ? { enabled: false, reason: "Ce funnel est déjà en live" }
+        ? { enabled: false, reason: PARCOURS_ALREADY_LIVE }
         : { enabled: true },
   };
 }

@@ -106,6 +106,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: "parse_failed" });
   }
 
+  const matchId = invitee.utmContent.startsWith("match:")
+    ? invitee.utmContent.slice("match:".length).trim()
+    : null;
+  if (matchId) {
+    try {
+      const { handleMatchBooking } = await import("@/lib/matching/orchestrator");
+      const result = await handleMatchBooking({
+        matchId,
+        scheduledAt: invitee.startTime || new Date().toISOString(),
+      });
+      return NextResponse.json(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[link-tracking/calendly] match booking:", message);
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  }
+
   if (!invitee.utmContent) {
     return NextResponse.json({ ok: true, ignored: "missing_utm_content" });
   }

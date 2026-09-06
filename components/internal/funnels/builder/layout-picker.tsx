@@ -11,11 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EditTicketDialog } from "@/components/internal/funnels/builder/edit-ticket-dialog";
-import { LayoutPreview } from "@/components/internal/funnels/builder/preview-registry";
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
 import type { LayoutCatalogEntry } from "@/lib/admin/funnels/catalog-types";
 import type { FunnelDocument, FunnelScope } from "@/lib/admin/funnels/schema";
+import { PARCOURS_LAYOUT_THEME_HINT } from "@/lib/admin/funnels/ui-copy";
 
 type LayoutPickerProps = {
   scope: FunnelScope;
@@ -96,7 +96,7 @@ export function LayoutPicker({
       <div>
         <h2 className="text-xl font-semibold">Choisir un layout</h2>
         <p className="text-sm text-muted-foreground">
-          Le thème global n&apos;est pas personnalisable par funnel.
+          {PARCOURS_LAYOUT_THEME_HINT}
         </p>
       </div>
 
@@ -113,7 +113,6 @@ export function LayoutPicker({
               <CardDescription>{layout.description}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <LayoutPreview layout={layout} />
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"

@@ -38,6 +38,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
 import { funnelEditorHref } from "@/lib/admin/funnels/routing";
 import type { FunnelScope, FunnelSummary } from "@/lib/admin/funnels/schema";
+import {
+  PARCOURS_EMPTY_DESCRIPTION,
+  PARCOURS_EMPTY_TITLE,
+  PARCOURS_NAME_LABEL,
+  PARCOURS_NEW_CTA,
+  PARCOURS_NEW_DIALOG_DESCRIPTION,
+  PARCOURS_NEW_DIALOG_TITLE,
+  PARCOURS_PUBLISHED_MAX_HINT,
+} from "@/lib/admin/funnels/ui-copy";
 
 const createFormSchema = z.object({
   displayName: z.string().max(120).optional(),
@@ -127,7 +136,7 @@ export function FunnelList({ scope, navPath, title }: FunnelListProps) {
         <div>
           <h2 className="text-xl font-semibold">{title}</h2>
           <p className="text-sm text-muted-foreground">
-            Briefs JSON locaux — 1 funnel publié max par dossier.
+            {PARCOURS_PUBLISHED_MAX_HINT}
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)}>New</Button>
@@ -143,14 +152,14 @@ export function FunnelList({ scope, navPath, title }: FunnelListProps) {
       ) : funnels.length === 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Aucun funnel</CardTitle>
+            <CardTitle>{PARCOURS_EMPTY_TITLE}</CardTitle>
             <CardDescription>
-              Créez un funnel pour documenter le parcours. Cursor implémentera les pages
+              {PARCOURS_EMPTY_DESCRIPTION}
               client plus tard.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => setCreateOpen(true)}>New funnel</Button>
+            <Button onClick={() => setCreateOpen(true)}>{PARCOURS_NEW_CTA}</Button>
           </CardContent>
         </Card>
       ) : (
@@ -189,10 +198,8 @@ export function FunnelList({ scope, navPath, title }: FunnelListProps) {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nouveau funnel</DialogTitle>
-            <DialogDescription>
-              Nom obligatoire. Laissez vide pour utiliser my_funnel_N automatiquement.
-            </DialogDescription>
+            <DialogTitle>{PARCOURS_NEW_DIALOG_TITLE}</DialogTitle>
+            <DialogDescription>{PARCOURS_NEW_DIALOG_DESCRIPTION}</DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4">
@@ -201,7 +208,7 @@ export function FunnelList({ scope, navPath, title }: FunnelListProps) {
                 name="displayName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom du funnel</FormLabel>
+                    <FormLabel>{PARCOURS_NAME_LABEL}</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="my_funnel_1" />
                     </FormControl>

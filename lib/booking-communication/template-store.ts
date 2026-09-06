@@ -32,16 +32,66 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "h20_cancel",
   "role_seq_48",
   "role_seq_24",
+  "product_calendly_welcome",
+  "product_calendly_reminder",
+  "product_payment_welcome",
+  "upsell_email_1",
+  "upsell_email_2",
+  "upsell_email_3",
+  "close_indecis_1",
+  "close_indecis_2",
+  "close_indecis_3",
+  "onboarding_j0",
+  "onboarding_j0_bis",
+  "onboarding_j1",
+  "onboarding_reminder_m10",
+  "onboarding_reminder_m5",
+  "onboarding_reminder_p5",
+  "deliverance_search_started",
+  "deliverance_d7_update",
+  "deliverance_milestone",
+  "deliverance_waitlist",
+  "match_booking_agence",
+  "survey_rdv_agence",
+  "survey_rdv_agence_followup",
+  "sold_check_j7",
+  "payment_notification_client",
 ];
 
 const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
   "immediate",
   "h48_confirm",
   "h24_relance",
+  "deliverance_search_started",
+  "deliverance_d7_update",
+  "deliverance_milestone",
+  "deliverance_waitlist",
+  "match_proposal",
+  "match_proposal_followup",
+  "survey_rdv_entreprise",
+  "survey_rdv_entreprise_followup",
+  "sold_check_j7",
+  "payment_notification_client",
 ];
 
 function emailTypesForCategory(category: LeadCategory): BookingEmailType[] {
   return category === "entreprise" ? ENTREPRISE_EMAIL_TYPES : AGENCE_EMAIL_TYPES;
+}
+
+export function isProductBookingEmailType(emailType: BookingEmailType): boolean {
+  return (
+    emailType === "product_calendly_welcome" ||
+    emailType === "product_calendly_reminder" ||
+    emailType === "product_payment_welcome" ||
+    emailType.startsWith("upsell_") ||
+    emailType.startsWith("close_indecis_") ||
+    emailType.startsWith("onboarding_") ||
+    emailType.startsWith("deliverance_") ||
+    emailType.startsWith("match_") ||
+    emailType.startsWith("survey_") ||
+    emailType === "sold_check_j7" ||
+    emailType === "payment_notification_client"
+  );
 }
 
 const STALE_ENTREPRISE_MARKERS = [
@@ -182,6 +232,14 @@ export function buildBookingEmailVars(params: {
   confirmUrl: string;
   emailType: BookingEmailType;
   postBookingUrl?: string;
+  dashboardLink?: string;
+  company?: string | null;
+  email?: string;
+  surveyLink?: string;
+  agenceInfo?: string;
+  entrepriseInfo?: string;
+  calendlyLink?: string;
+  estimatedFirstBookingDate?: string;
 }): Record<string, string> {
   const { date, heure } = formatMeetingDateTime(params.scheduledAt);
   const confirmUrl = params.confirmUrl.trim();
@@ -194,12 +252,30 @@ export function buildBookingEmailVars(params: {
     confirmation_agence_link: confirmUrl,
     confirmLink: confirmUrl ? `confirmer : ${confirmUrl}` : "",
     post_booking_link: postBookingUrl,
+    dashboardLink: params.dashboardLink?.trim() ?? "",
+    company: params.company?.trim() ?? "",
+    email: params.email?.trim() ?? "",
+    surveyLink: params.surveyLink?.trim() ?? "",
+    agenceInfo: params.agenceInfo?.trim() ?? "",
+    entrepriseInfo: params.entrepriseInfo?.trim() ?? "",
+    calendlyLink: params.calendlyLink?.trim() ?? "",
+    estimatedFirstBookingDate: params.estimatedFirstBookingDate?.trim() ?? "",
   };
   if (params.emailType === "immediate") {
     delete vars.confirmUrl;
     delete vars.confirmation_agence_link;
     delete vars.confirmLink;
     delete vars.post_booking_link;
+  }
+  if (isProductBookingEmailType(params.emailType)) {
+    delete vars.confirmUrl;
+    delete vars.confirmation_agence_link;
+    delete vars.confirmLink;
+    delete vars.post_booking_link;
+    if (params.emailType !== "match_booking_agence") {
+      delete vars.date;
+      delete vars.heure;
+    }
   }
   return vars;
 }
@@ -209,12 +285,21 @@ export function sampleBookingEmailVars(
 ): Record<string, string> {
   const confirmUrl =
     emailType === "role_seq_24" ? SAMPLE_TEMPORARY_URL : SAMPLE_CONFIRM_URL;
-  return buildBookingEmailVars({
+  const vars = buildBookingEmailVars({
     firstName: "Jean",
     scheduledAt: "2026-09-10T09:00:00+02:00",
     confirmUrl,
     emailType,
+    dashboardLink: "https://www.hercule.dev/dashboard/exemple-slug",
+    company: "Exemple SARL",
+    email: "jean@example.com",
+    surveyLink: "https://www.hercule.dev/survey/exemple-token",
+    agenceInfo: "Agence Exemple — Bordeaux",
+    entrepriseInfo: "Entreprise Exemple — Paris",
+    calendlyLink: "https://calendly.com/exemple?utm_content=match:demo",
+    estimatedFirstBookingDate: "lundi 21 septembre 2026",
   });
+  return vars;
 }
 
 export function confirmUrlForLead(
@@ -287,6 +372,14 @@ export async function renderEmailFromStore(params: {
   confirmUrl: string;
   useHtml?: boolean;
   meetingActionLinks?: MeetingActionLinks;
+  dashboardLink?: string;
+  company?: string | null;
+  email?: string;
+  surveyLink?: string;
+  agenceInfo?: string;
+  entrepriseInfo?: string;
+  calendlyLink?: string;
+  estimatedFirstBookingDate?: string;
 }): Promise<RenderedBookingEmail> {
   const template = await resolveBookingEmailTemplate({
     category: params.category,
@@ -303,6 +396,14 @@ export async function renderEmailFromStore(params: {
     confirmUrl: params.confirmUrl,
     useHtml: params.useHtml,
     meetingActionLinks: params.meetingActionLinks,
+    dashboardLink: params.dashboardLink,
+    company: params.company,
+    email: params.email,
+    surveyLink: params.surveyLink,
+    agenceInfo: params.agenceInfo,
+    entrepriseInfo: params.entrepriseInfo,
+    calendlyLink: params.calendlyLink,
+    estimatedFirstBookingDate: params.estimatedFirstBookingDate,
   });
 }
 
@@ -316,6 +417,14 @@ export async function renderCustomBookingEmail(params: {
   confirmUrl: string;
   useHtml?: boolean;
   meetingActionLinks?: MeetingActionLinks;
+  dashboardLink?: string;
+  company?: string | null;
+  email?: string;
+  surveyLink?: string;
+  agenceInfo?: string;
+  entrepriseInfo?: string;
+  calendlyLink?: string;
+  estimatedFirstBookingDate?: string;
 }): Promise<RenderedBookingEmail> {
   const vars = buildBookingEmailVars({
     firstName: params.firstName,
@@ -323,6 +432,14 @@ export async function renderCustomBookingEmail(params: {
     confirmUrl: params.confirmUrl,
     emailType: params.emailType,
     postBookingUrl: params.confirmUrl,
+    dashboardLink: params.dashboardLink,
+    company: params.company,
+    email: params.email,
+    surveyLink: params.surveyLink,
+    agenceInfo: params.agenceInfo,
+    entrepriseInfo: params.entrepriseInfo,
+    calendlyLink: params.calendlyLink,
+    estimatedFirstBookingDate: params.estimatedFirstBookingDate,
   });
 
   return finalizeRenderedEmail({

@@ -9,6 +9,7 @@ const CRON_JOB_API = "https://api.cron-job.org";
 
 const TARGETS = [
   { path: "/api/cron/booking-emails", label: "booking-emails" },
+  { path: "/api/cron/calendly-seat-check", label: "calendly-seat-check" },
   { path: "/api/cron/instantly-bypass-jobs", label: "instantly-bypass-jobs" },
   { path: "/api/cron/instantly-bypass-pipeline", label: "instantly-bypass-pipeline" },
 ] as const;

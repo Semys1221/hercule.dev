@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,7 +27,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { CursorImpactField } from "@/components/internal/funnels/builder/cursor-impact-field";
 import { StepComponentsPanel } from "@/components/internal/funnels/builder/step-components-panel";
-import { PresetPreview } from "@/components/internal/funnels/builder/preview-registry";
 import { funnelApiUrl } from "@/lib/admin/funnels/client";
 import { buildStepContext } from "@/lib/admin/funnels/context";
 import type { FunnelCatalog } from "@/lib/admin/funnels/catalog-types";
@@ -149,20 +148,12 @@ export function StepEditor({
   }, [step, form]);
 
   const preset = form.watch("preset");
-  const prompt = form.watch("prompt");
-  const answers = form.watch("answers");
   const fields = form.watch("fields");
 
   const { fields: answerFields, append, remove } = useFieldArray({
     control: form.control,
     name: "answers",
   });
-
-  const fieldLabels = useMemo(() => {
-    return (fields ?? [])
-      .filter((field) => field.enabled)
-      .map((field) => catalog.formFieldCatalog.find((item) => item.id === field.id)?.label ?? field.id);
-  }, [fields, catalog.formFieldCatalog]);
 
   async function onSubmit(values: StepEditorValues) {
     const context = buildStepContext({
@@ -272,7 +263,7 @@ export function StepEditor({
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6 lg:grid-cols-2">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-4">
             <FormField
               control={form.control}
@@ -439,15 +430,6 @@ export function StepEditor({
               onSaved={onSaved}
             />
           </div>
-
-          <PresetPreview
-            preset={preset}
-            prompt={prompt}
-            answers={(answers ?? []).map((answer) => answer.label).filter(Boolean)}
-            fieldLabels={fieldLabels}
-            audience={scope.audience}
-            components={step.components}
-          />
         </form>
       </Form>
     </div>

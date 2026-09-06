@@ -54,6 +54,7 @@ function sampleLead(_category: LeadCategory): LinkTrackingLead {
     reservation_agence_link: "",
     reservation_entreprise_link: "",
     confirmation_agence_link: SAMPLE_CONFIRM_URL,
+    dashboard_link: "https://www.hercule.dev/dashboard/exemple-slug",
     instantly_lead_id: null,
     instantly_campaign_id: null,
     calendly_invitee_uri: null,
@@ -68,6 +69,8 @@ function sampleLead(_category: LeadCategory): LinkTrackingLead {
     calendly_questions: null,
     confirmed_at: null,
     instantly_confirmed_synced_at: null,
+    onboarding_completed_at: null,
+    profile: null,
     created_at: now,
     updated_at: now,
   };
@@ -109,6 +112,9 @@ export async function renderBookingEmailPreview(
     confirmUrl,
     useHtml,
     meetingActionLinks,
+    dashboardLink: resolvedLead.dashboard_link ?? undefined,
+    company: resolvedLead.company,
+    email: resolvedLead.email,
   });
 }
 
@@ -156,6 +162,9 @@ export async function sendBookingEmailOnce(params: {
     confirmUrl,
     useHtml,
     meetingActionLinks,
+    dashboardLink: lead.dashboard_link ?? undefined,
+    company: lead.company,
+    email: lead.email,
   });
 
   const now = new Date();

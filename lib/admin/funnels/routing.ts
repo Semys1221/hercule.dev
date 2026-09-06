@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 
 import {
+  isEmailSequenceSlug,
+  resolveLegacyEmailSlugForAudience,
+} from "@/lib/admin/email-sequences/registry";
+import {
   FUNNEL_LIST_LEAF_KEYS,
   scopeFromLeafKey,
 } from "@/lib/admin/funnels/schema";
@@ -28,7 +32,28 @@ export type ParsedWorkspacePath =
       navPath: string[];
       leafKey: string;
       funnelSlug: string;
+    }
+  | {
+      kind: "emails_hub";
+      navPath: string[];
+    }
+  | {
+      kind: "email_sequence_editor";
+      navPath: string[];
+      sequenceSlug: string;
+    }
+  | {
+      kind: "legacy_email_redirect";
+      navPath: string[];
+      sequenceSlug: string;
     };
+
+export function resolveLegacyEmailSlug(
+  audience: Audience,
+  rawPath: string[],
+): string | null {
+  return resolveLegacyEmailSlugForAudience(audience, rawPath);
+}
 
 export function parseWorkspacePath(
   audience: string,
@@ -36,6 +61,15 @@ export function parseWorkspacePath(
 ): ParsedWorkspacePath {
   if (!isAudience(audience)) {
     notFound();
+  }
+
+  const legacySlug = resolveLegacyEmailSlug(audience, rawPath);
+  if (legacySlug) {
+    return {
+      kind: "legacy_email_redirect",
+      navPath: [audience, "emails"],
+      sequenceSlug: legacySlug,
+    };
   }
 
   const navPath = normalizePath([audience, ...rawPath]);
@@ -47,6 +81,24 @@ export function parseWorkspacePath(
 
   const navSegments = navPath.slice(1);
   const extraCount = rawPath.length - navSegments.length;
+
+  if (key === "emails_hub") {
+    if (extraCount === 0) {
+      return { kind: "emails_hub", navPath };
+    }
+    if (extraCount === 1) {
+      const sequenceSlug = rawPath[rawPath.length - 1] ?? "";
+      if (!isEmailSequenceSlug(sequenceSlug)) {
+        notFound();
+      }
+      return {
+        kind: "email_sequence_editor",
+        navPath,
+        sequenceSlug,
+      };
+    }
+    notFound();
+  }
 
   if (!FUNNEL_LIST_LEAF_KEYS.has(key)) {
     if (extraCount > 0) {

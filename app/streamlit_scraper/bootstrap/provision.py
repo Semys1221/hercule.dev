@@ -77,6 +77,8 @@ def _onboard_subsequence_app(
     *,
     campaign_id: str,
     campaign_name: str,
+    api_key: str = "",
+    clone_from: str = "",
     log_cb: Any = None,
 ) -> dict[str, Any] | None:
     """Initialize streamlit_subsequence Supabase config + webhook when env allows."""
@@ -96,6 +98,7 @@ def _onboard_subsequence_app(
         from config import webhook_public_url, webhook_secret, webhook_url_error
         from onboarding import initialize_campaign
         from shared.instantly_client import InstantlyClient
+        from supabase_repo import BIGGY_TEMPLATE_SOURCE, clone_templates
     except ImportError as exc:
         if log_cb:
             log_cb(f"Subsequence onboarding import failed: {exc}")
@@ -114,18 +117,84 @@ def _onboard_subsequence_app(
         return None
 
     try:
-        client = InstantlyClient()
-        return initialize_campaign(
+        from shared.instantly_client import InstantlyClient, get_api_key
+
+        key = api_key or get_api_key()
+        if not key:
+            if log_cb:
+                log_cb("INSTANTLY_API_KEY missing — onboarding skipped")
+            return None
+        client = InstantlyClient(key)
+        config = initialize_campaign(
             client,
             campaign_id=campaign_id,
             campaign_name=campaign_name,
             target_url=webhook_public_url(),
             secret=secret,
         )
+        source = (clone_from or BIGGY_TEMPLATE_SOURCE).strip()
+        cloned = clone_templates(source, campaign_id)
+        if log_cb and cloned:
+            log_cb(f"Cloned templates: {', '.join(cloned)}")
+        config = dict(config)
+        config["cloned_templates"] = cloned
+        return config
     except Exception as exc:
         if log_cb:
             log_cb(f"Subsequence onboarding failed: {exc}")
         return None
+
+
+def onboard_subsequence_preset(
+    preset_id: str,
+    *,
+    api_key: str = "",
+    clone_from: str = "",
+    dry_run: bool = False,
+    log_cb: Any = None,
+) -> dict[str, Any]:
+    """Idempotent Supabase + webhook onboarding for an existing preset campaign."""
+    presets = discover_presets(use_cache=True)
+    meta = presets[preset_id]
+    config = meta.loader()
+    label = meta.label
+    name = instantly_resource_name(label)
+    campaign_id = _uuid(config.get("INSTANTLY_CAMPAIGN_ID"))
+    subsequence_id = _uuid(config.get("INSTANTLY_SUBSEQUENCE_ID"))
+
+    if not campaign_id:
+        raise ValueError(f"{preset_id}: INSTANTLY_CAMPAIGN_ID missing")
+
+    if dry_run:
+        return {
+            "preset_id": preset_id,
+            "label": label,
+            "name": name,
+            "campaign_id": campaign_id,
+            "subsequence_id": subsequence_id,
+            "dry_run": True,
+            "skipped": False,
+        }
+
+    result = _onboard_subsequence_app(
+        campaign_id=campaign_id,
+        campaign_name=name,
+        api_key=api_key,
+        clone_from=clone_from,
+        log_cb=log_cb,
+    )
+    if result is None:
+        raise RuntimeError(f"{preset_id}: subsequence onboarding failed or env incomplete")
+
+    return {
+        "preset_id": preset_id,
+        "label": label,
+        "name": name,
+        "campaign_id": campaign_id,
+        "subsequence_id": subsequence_id,
+        "cloned_templates": result.get("cloned_templates") or [],
+        "skipped": False,
+    }
 
 
 def provision_preset(
@@ -205,6 +274,7 @@ def provision_preset(
         _onboard_subsequence_app(
             campaign_id=campaign_id,
             campaign_name=name,
+            api_key=api_key,
             log_cb=log_cb,
         )
 

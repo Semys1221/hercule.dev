@@ -30,7 +30,12 @@ export function buildThreadHeaders(messageIds: string[]): Record<string, string>
 }
 
 export function isThreadFollowUp(emailType: string): boolean {
-  return emailType !== "immediate" && emailType !== "role_seq_48";
+  return (
+    emailType === "h48_confirm" ||
+    emailType === "h24_relance" ||
+    emailType === "h20_cancel" ||
+    emailType === "role_seq_24"
+  );
 }
 
 export function threadTypesForJob(emailType: BookingEmailType): BookingEmailType[] {

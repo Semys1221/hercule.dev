@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
+import { PRODUCT_BUILDER_LABEL } from "@/lib/admin/funnels/ui-copy";
+
 export const metadata: Metadata = {
-  title: "Funnel Builder",
+  title: PRODUCT_BUILDER_LABEL,
   robots: {
     index: false,
     follow: false,
@@ -13,7 +15,5 @@ export default function InternalFunnelsLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <div className="min-h-screen bg-background text-foreground">{children}</div>
-  );
+  return children;
 }

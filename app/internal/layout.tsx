@@ -14,6 +14,6 @@ export default function InternalLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="min-h-screen bg-background text-foreground">{children}</div>
+    <div className="internal min-h-screen bg-background text-foreground">{children}</div>
   );
 }

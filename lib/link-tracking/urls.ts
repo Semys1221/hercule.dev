@@ -6,6 +6,7 @@ const DEFAULT_TRACKING_BASE_ENTREPRISE =
   "https://www.hercule.dev/reservation-entreprise.html";
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
+const DEFAULT_DASHBOARD_BASE = "https://www.hercule.dev/dashboard";
 
 export type LeadUrls = {
   reservation_agence_link: string;
@@ -41,6 +42,13 @@ export function getConfirmBaseUrl(): string {
   );
 }
 
+export function getDashboardBaseUrl(): string {
+  return (
+    process.env.DASHBOARD_BASE_URL?.trim().replace(/\/$/, "") ??
+    DEFAULT_DASHBOARD_BASE
+  );
+}
+
 export function buildTrackingUrl(slug: string, category: LeadCategory): string {
   return `${getTrackingBaseUrl(category)}/${slug}`;
 }
@@ -53,12 +61,26 @@ export function buildConfirmationAgenceLink(slug: string, email: string): string
   return url.toString();
 }
 
+export function buildDashboardUrl(slug: string): string {
+  return `${getDashboardBaseUrl()}/${slug}`;
+}
+
 export function buildLeadUrls(slug: string, email: string): LeadUrls {
   return {
     reservation_agence_link: buildTrackingUrl(slug, "agence"),
     reservation_entreprise_link: buildTrackingUrl(slug, "entreprise"),
     confirmation_agence_link: buildConfirmationAgenceLink(slug, email),
   };
+}
+
+export function dashboardLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "dashboard_link">,
+): string | null {
+  const stored = lead.dashboard_link?.trim();
+  if (stored) return stored;
+  const slug = lead.slug?.trim();
+  if (!slug) return null;
+  return buildDashboardUrl(slug);
 }
 
 export function leadSlug(lead: Pick<LinkTrackingLead, "slug">): string {
@@ -71,6 +93,16 @@ export function confirmationAgenceLinkFor(
   const stored = lead.confirmation_agence_link?.trim();
   if (stored) return stored;
   return buildConfirmationAgenceLink(lead.slug, lead.email);
+}
+
+export function reservationAgenceLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "reservation_agence_link">,
+): string {
+  const stored = lead.reservation_agence_link?.trim();
+  if (stored) return stored;
+  const slug = lead.slug?.trim();
+  if (!slug) return "";
+  return buildTrackingUrl(slug, "agence");
 }
 
 export function buildInstantlyCustomVariables(

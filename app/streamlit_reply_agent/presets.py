@@ -46,11 +46,14 @@ def build_campaign_preset_index() -> dict[str, str]:
         primary = str(config.get("INSTANTLY_CAMPAIGN_ID") or "").strip()
         if primary:
             index[primary] = preset_id
+
+    for preset_id in PRESETS:
+        config = load_config(preset_id, require_keys=False)
         dedup_ids = config.get("INSTANTLY_DEDUP_CAMPAIGN_IDS") or []
         if isinstance(dedup_ids, list):
             for campaign_id in dedup_ids:
                 cid = str(campaign_id or "").strip()
-                if cid:
+                if cid and cid not in index:
                     index[cid] = preset_id
     return index
 

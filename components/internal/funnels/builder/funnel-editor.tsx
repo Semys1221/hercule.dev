@@ -17,6 +17,7 @@ import { funnelApiUrl } from "@/lib/admin/funnels/client";
 import type { FunnelCatalog } from "@/lib/admin/funnels/catalog-types";
 import { funnelEditorHref, funnelListHref } from "@/lib/admin/funnels/routing";
 import type { FunnelDocument, FunnelScope } from "@/lib/admin/funnels/schema";
+import { PARCOURS_MAP_STEPS_FIRST, PARCOURS_NOT_FOUND } from "@/lib/admin/funnels/ui-copy";
 
 type FunnelBuilderListProps = {
   scope: FunnelScope;
@@ -74,7 +75,7 @@ export function FunnelEditor({ scope, navPath, funnelSlug }: FunnelEditorProps) 
         error?: string;
       };
       if (!funnelResponse.ok) {
-        throw new Error(funnelBody.error ?? "Funnel introuvable");
+        throw new Error(funnelBody.error ?? PARCOURS_NOT_FOUND);
       }
       if (!catalogResponse.ok) {
         throw new Error(catalogBody.error ?? "Catalogue introuvable");
@@ -115,7 +116,7 @@ export function FunnelEditor({ scope, navPath, funnelSlug }: FunnelEditorProps) 
     return (
       <InternalStatusAlert
         variant="error"
-        message={error ?? "Funnel introuvable"}
+        message={error ?? PARCOURS_NOT_FOUND}
       />
     );
   }
@@ -202,7 +203,7 @@ export function FunnelEditor({ scope, navPath, funnelSlug }: FunnelEditorProps) 
             />
           ) : (
             <p className="text-sm text-muted-foreground">
-              Mappez d&apos;abord les étapes du funnel.
+              {PARCOURS_MAP_STEPS_FIRST}
             </p>
           )}
         </TabsContent>

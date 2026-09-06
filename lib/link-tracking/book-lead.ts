@@ -2,13 +2,14 @@ import type { ParsedCalendlyInvitee } from "@/lib/calendly";
 import { isLegacyAgenceLead } from "@/lib/booking-communication/legacy";
 import { syncCalendlyMeetingLinks } from "@/lib/booking-communication/meeting-links";
 import { startSequenceForBookedLead } from "@/lib/booking-communication/route-sequence";
+import { upsertSalesCallFromBooking } from "@/lib/sales-calls/supabase";
 
+import { syncLeadMeetingBookedToInstantly } from "./instantly";
 import {
   createLinkTrackingClient,
   markInstantlySynced,
   markLeadBooked,
 } from "./supabase";
-import { syncLeadMeetingBookedToInstantly } from "./instantly";
 import { isMeetingBookedStatus, type LeadLookup } from "./types";
 
 export type BookLeadFromCalendlyParams = {
@@ -65,6 +66,29 @@ async function syncAndStartSequence(lookup: LeadLookup): Promise<{
   return { instantlySynced, sequenceStarted };
 }
 
+async function persistAgenceBookingSideEffects(
+  lookup: LeadLookup,
+  params: BookLeadFromCalendlyParams,
+): Promise<LeadLookup> {
+  if (lookup.category !== "agence") {
+    return lookup;
+  }
+
+  const client = createLinkTrackingClient();
+  try {
+    await upsertSalesCallFromBooking(client, {
+      agenceId: lookup.lead.id,
+      email: lookup.lead.email,
+      inviteeUri: params.invitee.inviteeUri,
+      scheduledAt: params.scheduledAt ?? lookup.lead.scheduled_at,
+    });
+  } catch (err) {
+    console.error("[link-tracking] sales_calls upsert failed:", err);
+  }
+
+  return lookup;
+}
+
 export async function bookLeadFromCalendly(
   params: BookLeadFromCalendlyParams,
 ): Promise<BookLeadFromCalendlyResult> {
@@ -91,6 +115,11 @@ export async function bookLeadFromCalendly(
   }
 
   let lookup = result.lookup;
+
+  if (result.updated || isMeetingBookedStatus(lookup.lead.statut)) {
+    lookup = await persistAgenceBookingSideEffects(lookup, params);
+  }
+
   try {
     const sync = await syncCalendlyMeetingLinks({
       lookup,

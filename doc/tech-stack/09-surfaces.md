@@ -13,6 +13,8 @@ do_not:
 
 UI : **un** langage shadcn, **y compris marketing** (UI-01 C).
 
+**Thème internal :** `app/internal/layout.tsx` applique la classe `.internal` — tokens dark Hercule (`#09090B` + zinc) dans `app/globals.css`. Toute nouvelle UI admin hérite automatiquement ; utiliser les classes sémantiques shadcn (`bg-background`, `border-border`, …), pas de couleurs hardcodées.
+
 ---
 
 ## Live

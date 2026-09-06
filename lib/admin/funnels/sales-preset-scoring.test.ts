@@ -1,0 +1,57 @@
+/** Unit tests for agency preset scoring. */
+
+import assert from "node:assert/strict";
+
+import { salesQualificationDefaultValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { formatContractWindow, getPresetCards } from "@/lib/admin/funnels/sales-preset-registry";
+import { AGENCY_PRESET_IDS, scoreAgency } from "@/lib/admin/funnels/sales-preset-scoring";
+
+function main() {
+  const serial = scoreAgency({
+    ...salesQualificationDefaultValues,
+    q3: 8,
+    q4: "high",
+    q10: "all",
+    q13: 2000,
+    q20: 5,
+  });
+  assert.equal(serial, "serial");
+
+  const growth = scoreAgency({
+    ...salesQualificationDefaultValues,
+    q1: ["google_ads", "seo"],
+    q2: ["paid_acquisition", "organic_seo"],
+    q19: ["acquisition", "seo", "recurring"],
+    q15: 2500,
+  });
+  assert.equal(growth, "growth");
+
+  const architect = scoreAgency({
+    ...salesQualificationDefaultValues,
+    q1: ["dev", "shopify"],
+    q2: ["frontend", "backend"],
+    q12: "technical",
+    q19: ["development"],
+  });
+  assert.equal(architect, "architect");
+
+  for (const id of AGENCY_PRESET_IDS) {
+    const cards = getPresetCards(id);
+    assert.equal(cards.length, 5);
+    for (const card of cards) {
+      assert.ok(card.minDaysOffset >= 8);
+      assert.ok(card.maxDaysOffset <= 30);
+      assert.ok(card.maxDaysOffset > card.minDaysOffset);
+    }
+  }
+
+  const window = formatContractWindow(
+    { minDaysOffset: 8, maxDaysOffset: 15 },
+    new Date("2026-09-07T00:00:00.000Z"),
+  );
+  assert.match(window, /Prêt pour contrat entre/);
+
+  console.log("OK lib/admin/funnels/sales-preset-scoring.test.ts");
+}
+
+main();

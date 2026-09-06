@@ -89,7 +89,10 @@ MOCK_COMPANIES: list[tuple[str, str, str]] = [
     ("Audit Moreau Partners", "Claire", "Moreau"),
 ]
 
-AuditStatus = Literal["OK", "WARN", "FAIL"]
+AuditStatus = Literal["OK", "WARN", "FAIL", "DEPRECATED"]
+
+DEPRECATED_PRESETS = frozenset({"comptables", "conseillers_financiers"})
+ORPHAN_REPLY_AGENT_CAMPAIGN_ID = "fd0175d2-1d13-4616-b1b8-cc498b41e65d"
 
 
 @dataclass
@@ -144,21 +147,10 @@ def _status_from_layers(layers: dict[str, LayerResult]) -> AuditStatus:
     return "OK"
 
 
-def _resolve_prompt_paths(preset_id: str, niche_group: str) -> tuple[Path, Path]:
-    candidates = [
-        (preset_id, preset_id),
-        (niche_group, niche_group),
-        (preset_id, niche_group),
-    ]
-    for buyer_key, seller_key in candidates:
-        buyer = _PROMPTS_DIR / f"{buyer_key}_buyer.md"
-        seller = _PROMPTS_DIR / f"{seller_key}_seller.md"
-        if buyer.is_file() and seller.is_file():
-            return buyer, seller
-    return (
-        _PROMPTS_DIR / f"{preset_id}_buyer.md",
-        _PROMPTS_DIR / f"{preset_id}_seller.md",
-    )
+def _resolve_prompt_paths(preset_id: str, target_type: str = "buyer") -> tuple[Path, Path]:
+    buyer = _PROMPTS_DIR / f"{preset_id}_{target_type}.md"
+    seller = _PROMPTS_DIR / f"{preset_id}_seller.md"
+    return buyer, seller
 
 
 def _check_links_tables() -> LayerResult:
@@ -309,6 +301,15 @@ def audit_preset(
         subsequence_id=subsequence_id,
     )
 
+    if preset_id in DEPRECATED_PRESETS:
+        audit.layers["deprecated"] = LayerResult(
+            True,
+            "OK",
+            "Legacy preset — Instantly campaign stale, excluded from bootstrap",
+        )
+        audit.overall = "DEPRECATED"
+        return audit
+
     if not list_id or not campaign_id:
         audit.layers["config"] = LayerResult(
             False,
@@ -338,7 +339,7 @@ def audit_preset(
             "No INSTANTLY_SUBSEQUENCE_ID (legacy or incomplete preset)",
         )
 
-    buyer_path, seller_path = _resolve_prompt_paths(preset_id, meta.niche_group)
+    buyer_path, seller_path = _resolve_prompt_paths(preset_id)
     if buyer_path.is_file() and seller_path.is_file():
         audit.layers["reply_prompts"] = LayerResult(
             True,
@@ -348,8 +349,8 @@ def audit_preset(
     else:
         audit.layers["reply_prompts"] = LayerResult(
             False,
-            "WARN",
-            f"Missing prompts (checked {buyer_path.name}, {seller_path.name})",
+            "FAIL",
+            f"Missing per-preset prompts ({buyer_path.name}, {seller_path.name})",
         )
 
     if campaign_id:
@@ -392,6 +393,7 @@ def run_audit_all() -> dict[str, Any]:
         "OK": sum(1 for row in results if row.overall == "OK"),
         "WARN": sum(1 for row in results if row.overall == "WARN"),
         "FAIL": sum(1 for row in results if row.overall == "FAIL"),
+        "DEPRECATED": sum(1 for row in results if row.overall == "DEPRECATED"),
     }
 
     report = {
@@ -411,7 +413,7 @@ def run_audit_all() -> dict[str, Any]:
     _REPORT_PATH.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     print(f"\nBootstrap audit — {len(results)} presets")
-    print(f"  OK: {summary['OK']}  WARN: {summary['WARN']}  FAIL: {summary['FAIL']}")
+    print(f"  OK: {summary['OK']}  WARN: {summary['WARN']}  FAIL: {summary['FAIL']}  DEPRECATED: {summary['DEPRECATED']}")
     print(f"  Report: {_REPORT_PATH}\n")
     print(f"{'PRESET':<28} {'STATUS':<6} {'CAMPAIGN_ID':<38} NOTES")
     print("-" * 110)

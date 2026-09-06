@@ -151,6 +151,78 @@ def provision_instantly_cmd(
         raise typer.Exit(code=1)
 
 
+@app.command("onboard-subsequence")
+def onboard_subsequence_cmd(
+    preset_id: str = typer.Argument(
+        "",
+        help="Preset to onboard (default: all sub-niche configs/)",
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Show what would be onboarded without calling APIs",
+    ),
+    clone_from: str = typer.Option(
+        "",
+        "--clone-from",
+        help="Source campaign UUID for template clone (default: Biggy Agency)",
+    ),
+) -> None:
+    """Onboard Supabase subsequence config + webhook for existing campaigns."""
+    from bootstrap.provision import onboard_subsequence_preset, provision_targets
+
+    try:
+        targets = provision_targets(preset_id)
+    except KeyError:
+        typer.secho(f"Unknown preset {preset_id!r}.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    if not targets:
+        typer.secho("No sub-niche configs/ presets to onboard.", fg=typer.colors.YELLOW)
+        raise typer.Exit(code=0)
+
+    failed = False
+    api_key = ""
+    if not dry_run:
+        import os
+
+        from config_loader import load_config
+
+        sample = load_config(targets[0], require_keys=False)
+        api_key = str(
+            sample.get("INSTANTLY_API_KEY") or os.getenv("INSTANTLY_API_KEY") or ""
+        ).strip()
+        if not api_key:
+            typer.secho("INSTANTLY_API_KEY is required (set it in repo .env).", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    for pid in targets:
+        try:
+            result = onboard_subsequence_preset(
+                pid,
+                api_key=api_key,
+                clone_from=clone_from,
+                dry_run=dry_run,
+                log_cb=lambda msg: typer.echo(f"    {msg}"),
+            )
+        except Exception as exc:
+            failed = True
+            typer.secho(f"FAIL {pid}: {exc}", fg=typer.colors.RED)
+            continue
+
+        status = "DRY" if dry_run else "OK"
+        cloned = result.get("cloned_templates") or []
+        clone_note = f" templates={len(cloned)}" if cloned else ""
+        typer.secho(
+            f"{status} {pid} — {result['name']} "
+            f"campaign={result.get('campaign_id')}{clone_note}",
+            fg=typer.colors.GREEN if status == "OK" else typer.colors.YELLOW,
+        )
+
+    if failed:
+        raise typer.Exit(code=1)
+
+
 @app.command("cleanup-instantly")
 def cleanup_instantly_cmd(
     parent: str = typer.Argument(

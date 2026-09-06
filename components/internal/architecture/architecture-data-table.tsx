@@ -38,6 +38,9 @@ type ArchitectureDataTableProps<TData extends object> = {
   searchPlaceholder?: string;
   toolbar?: React.ReactNode;
   footer?: React.ReactNode;
+  onRowClick?: (row: TData) => void;
+  getRowId?: (row: TData) => string;
+  selectedRowId?: string | null;
 };
 
 export function ArchitectureDataTable<TData extends object>({
@@ -49,6 +52,9 @@ export function ArchitectureDataTable<TData extends object>({
   searchPlaceholder = "Rechercher…",
   toolbar,
   footer,
+  onRowClick,
+  getRowId,
+  selectedRowId,
 }: ArchitectureDataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<
     Array<{ id: string; desc: boolean }>
@@ -152,8 +158,26 @@ export function ArchitectureDataTable<TData extends object>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+              table.getRowModel().rows.map((row) => {
+                const rowId = getRowId?.(row.original as TData);
+                const isSelected =
+                  selectedRowId != null && rowId != null && selectedRowId === rowId;
+
+                return (
+                <TableRow
+                  key={row.id}
+                  data-state={isSelected ? "selected" : undefined}
+                  className={
+                    onRowClick
+                      ? "cursor-pointer hover:bg-muted/50 data-[state=selected]:bg-muted"
+                      : undefined
+                  }
+                  onClick={
+                    onRowClick
+                      ? () => onRowClick(row.original as TData)
+                      : undefined
+                  }
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -163,7 +187,8 @@ export function ArchitectureDataTable<TData extends object>({
                     </TableCell>
                   ))}
                 </TableRow>
-              ))
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell

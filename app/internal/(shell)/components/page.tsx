@@ -1,4 +1,4 @@
-import { ComponentsTable } from "@/components/internal/architecture/components-table";
+import { ComponentsPageShell } from "@/components/internal/architecture/components-page-shell";
 import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
 
 export default function InternalComponentsPage() {
@@ -12,7 +12,7 @@ export default function InternalComponentsPage() {
           { label: "Composants" },
         ]}
       />
-      <ComponentsTable />
+      <ComponentsPageShell />
     </main>
   );
 }

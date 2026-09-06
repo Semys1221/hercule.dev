@@ -6,7 +6,22 @@ export {
   nextSendSlot,
 } from "@/lib/instantly-bypass/send-window";
 
-const SEND_WINDOW_BYPASS_TYPES: BookingEmailType[] = ["immediate"];
+const SEND_WINDOW_BYPASS_TYPES: BookingEmailType[] = [
+  "immediate",
+  "upsell_email_1",
+  "close_indecis_1",
+  "onboarding_j0",
+  "match_proposal",
+  "match_booking_agence",
+  "survey_rdv_entreprise",
+  "survey_rdv_agence",
+  "payment_notification_client",
+  "deliverance_search_started",
+  "deliverance_milestone",
+  "deliverance_waitlist",
+  "product_calendly_welcome",
+  "product_payment_welcome",
+];
 
 /** Mail 1 sends immediately, even outside the Paris weekday send window. */
 export function bypassesSendWindow(emailType: BookingEmailType): boolean {

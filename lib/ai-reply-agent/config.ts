@@ -53,3 +53,30 @@ export async function loadAiReplyConfig(
   }
   return (data as AiReplyAgentConfig | null) ?? null;
 }
+
+export async function saveAiReplyConfig(
+  campaignId: string,
+  patch: { prompt_snapshot: string },
+): Promise<AiReplyAgentConfig> {
+  const client = createAiReplyAgentClient();
+  const existing = await loadAiReplyConfig(campaignId);
+  if (!existing) {
+    throw new Error(`ai_reply_agent_config not found for campaign ${campaignId}`);
+  }
+
+  const { data, error } = await client
+    .from("ai_reply_agent_config")
+    .update({
+      prompt_snapshot: patch.prompt_snapshot,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("campaign_id", campaignId)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to save ai_reply_agent_config: ${error.message}`);
+  }
+
+  return data as AiReplyAgentConfig;
+}
