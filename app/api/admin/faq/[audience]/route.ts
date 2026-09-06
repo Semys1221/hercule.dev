@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { verifyAdminRequest } from "@/lib/admin/auth";
 import { readFaqDocument, writeFaqDocument } from "@/lib/site/faq-server";
 import { faqAudienceSchema, faqDocumentSchema } from "@/lib/site/faq-types";
 
@@ -16,10 +15,6 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ audience: string }> },
 ) {
-  if (!verifyAdminRequest(_request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { audience: rawAudience } = await context.params;
   const audience = parseAudience(rawAudience);
   if (!audience) {
@@ -38,10 +33,6 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ audience: string }> },
 ) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { audience: rawAudience } = await context.params;
   const audience = parseAudience(rawAudience);
   if (!audience) {

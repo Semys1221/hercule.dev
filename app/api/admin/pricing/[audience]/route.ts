@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { verifyAdminRequest } from "@/lib/admin/auth";
 import { readPricingDocument, writePricingDocument } from "@/lib/site/pricing-server";
 import { pricingDocumentSchema } from "@/lib/site/pricing-types";
 
@@ -8,10 +7,6 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ audience: string }> },
 ) {
-  if (!verifyAdminRequest(_request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { audience } = await context.params;
   if (audience !== "agence") {
     return NextResponse.json({ error: "Pricing is only available for agence" }, { status: 400 });
@@ -29,10 +24,6 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ audience: string }> },
 ) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { audience } = await context.params;
   if (audience !== "agence") {
     return NextResponse.json({ error: "Pricing is only available for agence" }, { status: 400 });

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { verifyAdminRequest } from "@/lib/admin/auth";
 import { getPresetsCatalog } from "@/lib/admin/funnels/catalog";
 import {
   createFunnel,
@@ -36,10 +35,6 @@ function scopeFromQuery(params: URLSearchParams): FunnelScope | NextResponse {
 }
 
 export async function GET(request: Request) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const scope = scopeFromQuery(new URL(request.url).searchParams);
   if (scope instanceof NextResponse) {
     return scope;
@@ -55,10 +50,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   let raw: unknown;
   try {
     raw = await request.json();

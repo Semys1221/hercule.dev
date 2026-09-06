@@ -6,7 +6,8 @@ Documentation pour implémenter la plateforme matchmaking agence ↔ entreprise.
 
 | Doc | Contenu |
 |-----|---------|
-| **[VALIDATION.md](./VALIDATION.md)** | **Validation doc tech-stack** — 55 questions, cases à cocher |
+| **[planning/README.md](../planning/README.md)** | **Actif** — audit + questionnaire (remplace VALIDATION.md) |
+| ~~[VALIDATION.md](./VALIDATION.md)~~ | **Remplacé** — mapping des IDs dans [planning/00-index.md](../planning/00-index.md) |
 
 ## Fondations
 
@@ -46,7 +47,7 @@ Documentation pour implémenter la plateforme matchmaking agence ↔ entreprise.
 
 | Doc | Contenu |
 |-----|---------|
-| **[../migration/README.md](../migration/README.md)** | **Pour agents IA** — pourquoi migrer, source de vérité, inventaire Streamlit, roadmap P1–P4, architecture cible |
+| ~~`doc/migration/README.md`~~ | **Fichier absent** — inventaire Streamlit : [planning/18-legacy-ops-validation.md](../planning/18-legacy-ops-validation.md) |
 
 
 ## Modules (ordre d'implémentation)

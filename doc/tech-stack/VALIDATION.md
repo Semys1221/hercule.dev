@@ -1,5 +1,7 @@
 # Validation doc tech-stack Hercule
 
+> **REMPLACÉ.** Ne plus cocher ce fichier. Le questionnaire actif est [`doc/planning/`](../planning/README.md) (audit code + docs, 51 décisions produit). Mapping `V-*` / `D-*` / `C-*` → nouveaux IDs : [`doc/planning/00-index.md`](../planning/00-index.md). Les C-01–C-06 pré-cochés ci-dessous restent la base de `CAP-01`.
+
 > Ce document synthétise toute la doc du dossier [`doc/tech-stack/`](./README.md) (26 fichiers).  
 > **Mode d'emploi :** pour chaque question, **coche une seule case**. Recopie le libellé coché (ou l'ID question) dans la [Partie 3](#partie-3--réponses--à-remplir). L'IA mettra à jour la doc et le code selon tes réponses.  
 > **Format :** chaque question résume une **décision** — ton intention (X), le choix technique documenté (Y), et son impact (H). Coche **Oui** si la doc reflète bien ce que tu veux. Coche **Non** ou **Partiellement** et décris en Partie 3 ce que tu voulais à la place — l'IA en déduira les changements doc/code.  

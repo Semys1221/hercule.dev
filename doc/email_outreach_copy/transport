@@ -1,0 +1,27 @@
+Mail 1
+
+Bonjour {{firstName}},
+
+Nous avons actuellement plusieurs entreprises recherchant un prestataire pour du transport de marchandises et de la logistique dans votre secteur.
+
+Votre entreprise est-elle en mesure de prendre en charge ce type de demande ?
+
+Répondez simplement oui ou non afin que je sache si je dois vous transmettre les détails.
+
+{{accountSignature}}
+
+Reply
+
+Bonjour {{firstName}},
+
+Parfait.
+
+Les demandes concernent principalement des PME et entreprises professionnelles ayant des besoins réguliers en transport, livraison ou stockage de marchandises.
+
+Elles font partie des demandes que nous recevons actuellement pour nos partenaires.
+
+Si vous souhaitez pouvoir recevoir des demandes de profils similaires, vous pouvez proposer votre entreprise ici :
+
+→ Proposer mon entreprise
+
+{{accountSignature}}

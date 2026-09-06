@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { verifyAdminRequest } from "@/lib/admin/auth";
 import { publishFunnel } from "@/lib/admin/funnels/repo";
 import { listFunnelsQuerySchema, type FunnelScope } from "@/lib/admin/funnels/schema";
 
@@ -31,10 +30,6 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ slug: string }> },
 ) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { slug } = await context.params;
   const scope = scopeFromQuery(new URL(request.url).searchParams);
   if (scope instanceof NextResponse) {

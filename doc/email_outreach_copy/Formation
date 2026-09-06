@@ -1,0 +1,27 @@
+Mail 1
+
+Bonjour {{firstName}},
+
+Nous avons actuellement plusieurs personnes recherchant une formation professionnelle ou une formation en alternance dans votre secteur.
+
+Votre établissement est-il en mesure de prendre en charge ce type de demande ?
+
+Répondez simplement oui ou non afin que je sache si je dois vous transmettre les détails.
+
+{{accountSignature}}
+
+Reply
+
+Bonjour {{firstName}},
+
+Parfait.
+
+Les demandes concernent principalement des personnes en recherche de formation professionnelle, de reconversion ou d’une formation en alternance.
+
+Elles font partie des demandes que nous recevons actuellement pour nos établissements partenaires.
+
+Si vous souhaitez pouvoir recevoir des demandes de profils similaires, vous pouvez proposer votre établissement ici :
+
+→ Proposer mon établissement
+
+{{accountSignature}}

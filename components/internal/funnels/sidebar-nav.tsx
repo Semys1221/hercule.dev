@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Boxes,
   ChevronDown,
   ChevronRight,
+  Database,
   Home,
   LayoutDashboard,
   LayoutGrid,
@@ -330,6 +332,22 @@ export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
               <Link href="/internal/funnels">
                 <Home className="size-4" />
                 <span>Accueil</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Composants">
+              <Link href="/internal/components">
+                <Boxes className="size-4" />
+                <span>Composants</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Database">
+              <Link href="/internal/database">
+                <Database className="size-4" />
+                <span>Database</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

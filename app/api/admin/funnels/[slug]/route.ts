@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { verifyAdminRequest } from "@/lib/admin/auth";
 import {
   readFunnel,
   updateFunnel,
@@ -40,10 +39,6 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ slug: string }> },
 ) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { slug } = await context.params;
   const scope = scopeFromQuery(new URL(request.url).searchParams);
   if (scope instanceof NextResponse) {
@@ -62,10 +57,6 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ slug: string }> },
 ) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { slug } = await context.params;
   const scope = scopeFromQuery(new URL(request.url).searchParams);
   if (scope instanceof NextResponse) {
@@ -117,10 +108,6 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ slug: string }> },
 ) {
-  if (!verifyAdminRequest(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { slug } = await context.params;
   const scope = scopeFromQuery(new URL(request.url).searchParams);
   if (scope instanceof NextResponse) {
