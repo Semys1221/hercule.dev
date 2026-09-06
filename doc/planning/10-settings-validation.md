@@ -1,5 +1,8 @@
 # 10 — Settings
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Ne pas inventer un « Global Settings » si un mécanisme existe. Aujourd’hui : **env vars**, **singletons SQL**, **profile JSON**, **fichiers**, **Instantly config par campagne**. Pas de table `global_settings`.
 
 ---
@@ -34,7 +37,7 @@ Mécanismes existants à **réutiliser** : env (secrets/URLs), singleton tables 
 
 #### [SET-01] Un toggle global « File d’attente 15 jours » (Agenda grisé 15 j vs 6 j) fait-il partie du produit à construire ?
 
-- [ ] **A (recommandé)** — Oui, **plus tard** avec l’Agenda client ; implémenter comme setting **DB singleton** (même pattern que `instantly_bypass_settings`), pas un nouveau framework. Délai 15 j déjà dans profile.capacity/delays.
+- [x] **A (recommandé)** — Oui, **plus tard** avec l’Agenda client ; implémenter comme setting **DB singleton** (même pattern que `instantly_bypass_settings`), pas un nouveau framework. Délai 15 j déjà dans profile.capacity/delays.
 - [ ] **B** — Non : pas d’Agenda / pas de toggle ; les 6 j vs 15 j se gèrent par fiche (`profile`) ou pas du tout au MVP.
 - [ ] **C** — Toggle **env** ou fichier, pas la DB.
 
@@ -44,7 +47,7 @@ Mécanismes existants à **réutiliser** : env (secrets/URLs), singleton tables 
 
 #### [SET-02] Les kill switches ops (bypass webhook, AI agent) restent-ils des **singletons SQL** édités dans Streamlit, hors `/internal` Next ?
 
-- [ ] **A (recommandé)** — Oui tant que INT-02 = ops ; éventuellement un écran Next plus tard, **même tables**.
+- [x] **A (recommandé)** — Oui tant que INT-02 = ops ; éventuellement un écran Next plus tard, **même tables**.
 - [ ] **B** — Les migrer maintenant dans `/internal`.
 - [ ] **C** — Tout passer en variables d’environnement.
 
@@ -57,5 +60,5 @@ Mécanismes existants à **réutiliser** : env (secrets/URLs), singleton tables 
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| SET-01 | | |
-| SET-02 | | |
+| SET-01 | A | Toggle file 15j plus tard |
+| SET-02 | A | Toggles ops Streamlit pour l’instant |

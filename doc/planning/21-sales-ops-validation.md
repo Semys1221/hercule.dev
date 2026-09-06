@@ -1,5 +1,8 @@
 # 21 — Sales ops (appels, métriques, entreprise)
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 **Intention :** un système cohérent d’**activité commerciale** (appels, issues, prévisions) relié aux fiches agence/entreprise — **sans** fusionner ça avec `lead_statut` ni avec `MEETING_n` tant que FND-01 n’est pas tranché.
 
 Spec uniquement : [`doc/documentations_2/admin_sales_metric_page.md`](../documentations_2/admin_sales_metric_page.md) (doublon `documentation_2/`). **Zéro** table, **zéro** page.
@@ -44,7 +47,7 @@ Entreprise : [`cvg_entreprise.md`](../tech-stack/cvg_entreprise.md) = **gratuit,
 
 Ce n’est pas le matching de délivrance ni le CRM Instantly, même si Calendly peut alimenter le calendrier.
 
-- [ ] **A (recommandé)** — Oui : domaine **séparé** du `lead_statut` ; Calendly = RDV planifiés (dérivé) ; issues et notes en **base** (pas JSON laptop) ; métriques calculées.
+- [x] **A (recommandé)** — Oui : domaine **séparé** du `lead_statut` ; Calendly = RDV planifiés (dérivé) ; issues et notes en **base** (pas JSON laptop) ; métriques calculées.
 - [ ] **B** — Hors MVP : Calendly + notes Streamlit / hors app suffisent.
 - [ ] **C** — Fusionner les issues d’appel dans `lead_statut` (un seul enum pour tout).
 
@@ -56,7 +59,7 @@ Ce n’est pas le matching de délivrance ni le CRM Instantly, même si Calendly
 
 La CGV entreprise interdit frais et upsell. Le builder internal a pourtant un funnel Sales entreprise (discovery / pitch / closing).
 
-- [ ] **A (recommandé)** — **Pas** de pipeline de vente payante entreprise : qualification / acquisition gratuite ; d’éventuelles métriques = ops (taux de book), pas de CA entreprise.
+- [x] **A (recommandé)** — **Pas** de pipeline de vente payante entreprise : qualification / acquisition gratuite ; d’éventuelles métriques = ops (taux de book), pas de CA entreprise.
 - [ ] **B** — Même workflow sales **payant** que l’agence (contredit `cvg_entreprise.md` — préciser l’offre en notes).
 - [ ] **C** — Domaine entreprise séparé (expliquer **ce qui est vendu** en notes).
 
@@ -70,5 +73,5 @@ La CGV entreprise interdit frais et upsell. Le builder internal a pourtant un fu
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| SAL-01 | | |
-| SAL-02 | | |
+| SAL-01 | A | Sales-ops in /internal ; notes en base |
+| SAL-02 | A | Entreprise jamais payante |

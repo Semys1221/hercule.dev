@@ -1,7 +1,17 @@
 # Conditions Générales de Vente — Hercule
 
-> **Version :** 2026-09-05  
-> **Documents associés :** [cvg_onboarding.md](./cvg_onboarding.md) · [cvg_site-sync.md](./cvg_site-sync.md) · [capacity/03-sla-client.md](./capacity/03-sla-client.md)
+```
+status: canonical
+audience: coding-agent
+depends_on: constants-commercial.md
+decisions: CVG-01 CPY-01 CPY-04 BIZ-10 CAP-01
+do_not:
+  - Réintroduire 898 €, 4 jours de rétractation, pack 5×1489 one-shot, 149 €/RDV
+```
+
+> **Version :** 2026-09-06  
+> **Documents associés :** [cvg_onboarding.md](./cvg_onboarding.md) · [cvg_site-sync.md](./cvg_site-sync.md) · [capacity/03-sla-client.md](./capacity/03-sla-client.md) · [constants-commercial.md](./constants-commercial.md)  
+> Chiffres code : `lib/commercial/constants.ts` (ENG-16) — ne pas parser ce fichier au runtime.
 
 ---
 
@@ -48,7 +58,7 @@ Hercule se réserve le droit de refuser toute commande pour des motifs légitime
 | **RDV honoré** | RDV planifié au cours duquel le décideur (ou mandataire habilité) est **effectivement présent** en visioconférence pendant au moins **15 minutes**. |
 | **No-show** | Absence du prospect qualifié au RDV planifié, malgré une relance de confirmation envoyée au minimum **24 heures** avant l'horaire prévu (H-24). |
 | **MRR** | Revenu récurrent mensuel (Monthly Recurring Revenue) généré par le Client auprès de l'entreprise rencontrée via Hercule, au titre d'un contrat de prestation signé post-RDV. |
-| **Activation** | Date à laquelle Hercule démarre la recherche et la prospection entreprises pour le compte du Client (statut opérationnel « service actif »), après onboarding complet et, le cas échéant, expiration du délai de rétractation. |
+| **Activation** | Date à laquelle Hercule démarre la recherche et la prospection entreprises pour le compte du Client (statut opérationnel « service actif »), après **paiement reçu** et onboarding complet. |
 | **Live Qualification** | Appel téléphonique ou échange vocal mené par Hercule (ou prestataire mandaté) pour valider le budget, le besoin et la pertinence du match avant attribution. |
 | **Période de service** | Intervalle entre l'Activation et la fin ou la résiliation du contrat. |
 | **Demande planifiée** | Demande client dont la fenêtre de mise en relation est fixée à l'avance (ex. septembre–novembre). |
@@ -68,7 +78,7 @@ Le processus comprend notamment :
 
 Hercule met à disposition, ou mettra à disposition, une **page de suivi** permettant au Client de consulter l'avancement de son service (roadmap produit).
 
-**Hercule n'est pas une agence de vente aux resultats garantis.** Le Client reste seul responsable de la négociation, de la proposition commerciale et de la signature avec l'entreprise rencontrée. Hercule s'engage sur une **obligation de moyens** dans la qualification et l'attribution, aux délais et volumes décrits aux présentes CGV.
+**Hercule n'est pas une agence de vente aux résultats garantis.** Le Client reste seul responsable de la négociation, de la proposition commerciale et de la signature avec l'entreprise rencontrée. Hercule s'engage sur une **obligation de moyens** dans la qualification et l'attribution, aux délais et volumes décrits aux présentes CGV. L'offre « 2 500 € / mois » éventuellement affichée sur le site est une **vitrine** : elle n'est pas commercialisée et ne peut pas être souscrite au titre des présentes.
 
 Les entreprises mises en relation **ne paient aucune commission à Hercule**.
 
@@ -97,53 +107,46 @@ Ce parcours s'applique après complétion de la **fiche agence** (audit de compa
 
 Les prix sont indiqués en **euros TTC**. Hercule bénéficie de la franchise en base de TVA (article 293 B du CGI) : aucune TVA n'est facturée ni mentionnée sur les factures.
 
-### 5.1 Hercule Starter (offre d'entrée)
+Le Client ne consomme une Attribution que lorsqu'un RDV de mise en relation est **planifié**. Un no-show entreprise recrédite l'Attribution conformément à l'article 10.1. Une vente signée par le Client **n'éteint pas** les Attributions ou la période mensuelle restantes.
+
+### 5.1 Offre mensuelle sans engagement
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **1 489 €** (forfait unique) |
-| **Contenu** | **5 Attributions** de demandes clients qualifiées |
-| **Commission Hercule** | **0 %** sur les ventes réalisées par le Client |
-| **Durée** | Jusqu'à consommation des 5 Attributions ou résiliation |
+| **Prix** | **1 489 € / mois** |
+| **Contenu** | Service actif de mise en relation ; rythme opérationnel **3 à 4 RDV honorés / mois** en allocation inbox standard (article 9) |
+| **Commission Hercule** | **0 %** |
+| **Engagement** | Aucun. Résiliation : article 13 |
 
-Le pack Starter est un forfait unique prépayé. Le Client ne consomme une Attribution que lorsqu'un RDV est planifié ; un no-show recrédite l'Attribution conformément à l'article 10.1.
+### 5.2 Pack 3 mois
 
-**Garantie MRR Starter :** si, à l'issue de la consommation des 5 Attributions initiales, le Client n'a généré au minimum **1 500 € de MRR** cumulé auprès des entreprises rencontrées via Hercule, Hercule attribuera **5 Attributions supplémentaires sans facturation additionnelle**, dans un délai de **60 jours** à compter de la demande écrite du Client.
+| Élément | Détail |
+|---------|--------|
+| **Prix** | **989 € × 3 = 2 967 €** (payable en une fois) |
+| **Contenu** | **15 Attributions** |
+| **Commission Hercule** | **0 %** |
+| **Durée** | Jusqu'à consommation des 15 Attributions, expiration de 3 mois calendaires de service actif, ou résiliation |
 
-Conditions de la garantie MRR Starter :
-- le Client a honoré **100 %** des RDV planifiés (présence en visio) ou les no-shows ont été traités conformément à l'article 10 ;
-- le Client a complété l'onboarding dans les **48 heures** suivant le paiement ;
-- le Client a transmis les retours post-RDV demandés par Hercule dans les **7 jours** suivant chaque RDV ;
+**Garantie pack 3 mois :** si, à l'issue des 3 mois de service actif, le chiffre d'affaires (CA) généré par le Client auprès des entreprises rencontrées via Hercule est inférieur à **4 500 €**, Hercule attribue jusqu'à **15 Attributions de remplacement**, dans la limite des règles de qualification et de no-show des présentes.
+
+Conditions de cette garantie :
+- onboarding complété dans les **48 heures** suivant le paiement ;
+- retours post-RDV transmis dans les **7 jours** suivant chaque RDV ;
+- RDV honorés ou no-shows traités conformément à l'article 10 ;
 - la garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
 
-### 5.2 Hercule (offre récurrente)
+### 5.3 Renouvellement
 
-| Élément | Détail |
-|---------|--------|
-| **Prix** | **2 500 € / mois** |
-| **Contenu** | Jusqu'à **4 Attributions par mois calendaire** |
-| **Commission Hercule** | **0 %** sur les ventes réalisées par le Client |
-| **Engagement** | Résiliable conformément à l'article 13 |
+À l'issue d'un match ou à tout moment pendant le service, Hercule peut proposer au Client, **sur la page de questionnaire ou par échange ops**, de souscrire à nouveau l'offre 5.1 ou 5.2. Cette proposition est **optionnelle**. Elle n'est pas envoyée automatiquement par email du seul fait d'une vente.
 
-**Garantie MRR récurrente :** si, sur un mois calendaire complet de service actif, le Client n'a généré au minimum **3 000 € de MRR** cumulé via les entreprises rencontrées via Hercule durant ce mois, **une Attribution** sera reportée sur le **mois suivant sans frais supplémentaires**.
+### 5.4 Offres non commercialisées
 
-Conditions de la garantie MRR récurrente :
-- le Client était en service actif l'intégralité du mois concerné (hors période de file d'attente documentée) ;
-- le Client a consommé au moins **2 Attributions** durant le mois ;
-- mêmes exclusions que la garantie Starter (article 5.1).
+Ne font **pas** l'objet des présentes et ne peuvent pas être souscrites :
 
-### 5.3 Renouvellement et offres complémentaires
-
-| Offre | Prix | Contenu |
-|-------|------|---------|
-| **Renouvellement cycle** | **1 489 €** | Nouveau pack de **5 Attributions** (proposé après survey post-RDV agence) |
-| **Offre 898 €** | **898 €** | **3 Attributions** — proposée **exclusivement** sur la page survey post-RDV agence, sous conditions d'éligibilité ; non reconductible après refus explicite |
-
-Détail opérationnel des offres post-RDV : [post-rdv/agence-commercial.md](./post-rdv/agence-commercial.md).
-
-### 5.4 Ancien modèle tarifaire
-
-Le modèle historique **250 € / mois + 149 € par RDV honoré** n'est **plus commercialisé**. Les clients existants sous ce modèle restent régis par leur contrat antérieur jusqu'à renégociation.
+- **2 500 € / mois** (éventuellement visible à titre de vitrine marketing) ;
+- **898 €** / pack 3 Attributions ;
+- **1 500 €** forfait d'entrée historique ;
+- **250 € / mois + 149 € par RDV honoré** (ancien modèle). Les clients encore sous un contrat antérieur restent régis par ce contrat jusqu'à renégociation.
 
 ---
 
@@ -159,9 +162,10 @@ La commande est ferme lorsque :
 
 ### 6.2 Paiement
 
-- Paiement par `[À COMPLÉTER — virement, carte, etc.]` à réception de facture ou via lien de paiement.
-- Pour l'offre récurrente : prélèvement ou facturation **mensuelle à date anniversaire**, sauf accord contraire.
+- Paiement par **lien Stripe** (carte) envoyé par Hercule, ou virement sur facture.
+- Pour l'offre mensuelle : facturation **mensuelle à date anniversaire**, sauf accord contraire.
 - **Retard de paiement :** pénalités au taux légal + indemnité forfaitaire de recouvrement (40 €). Suspension du service après **7 jours** de retard sans régularisation.
+- Le service de recherche active ne démarre qu'après **paiement reçu** (Activation).
 
 ### 6.3 Facturation
 
@@ -184,23 +188,17 @@ Champs techniques recommandés : `cvg_version`, `cvg_accepted_at`, `cvg_accepted
 
 ## 8. Droit de rétractation
 
-Le Client est un **professionnel** agissant dans le cadre de son activité. Les dispositions du Code de la consommation relatives au droit de rétractation des consommateurs **ne s'appliquent en principe pas**.
+Le Client est un **professionnel** agissant dans le cadre de son activité. Les dispositions du Code de la consommation relatives au droit de rétractation des consommateurs **ne s'appliquent pas**.
 
-**Politique commerciale Hercule :** par geste commercial, le Client dispose d'un délai de **4 jours calendaires** à compter de la souscription pour se rétracter, **sans motif ni pénalité**, à condition d'en informer Hercule par email à contact@hercule.dev.
+**Politique commerciale :** aucun délai de rétractation de 4 jours n'est offert. La commande est ferme dès acceptation des CGV et réception du paiement. L'Activation peut intervenir dès le paiement et l'onboarding.
 
-En cas de rétractation dans ce délai :
-- Hercule rembourse intégralement les sommes versées dans un délai de **14 jours** ;
-- aucune Attribution n'est due ; tout service déjà amorcé est interrompu.
-
-Passé ce délai de 4 jours, la commande est ferme aux conditions des présentes CGV.
-
-*(Aligné FAQ booking : [public/reservation.html](../../public/reservation.html).)*
+(La politique antérieure de geste commercial « 4 jours » est **abrogée** à compter de la version 2026-09-06.)
 
 ---
 
 ## 9. Délais et modalités de livraison
 
-Les délais ci-dessous s'appliquent à partir de l'**Activation** du service (onboarding complet, rétractation expirée le cas échéant).
+Les délais ci-dessous s'appliquent à partir de l'**Activation** du service (paiement reçu et onboarding complet).
 
 Référence ops : [capacity/03-sla-client.md](./capacity/03-sla-client.md).
 
@@ -209,7 +207,7 @@ Référence ops : [capacity/03-sla-client.md](./capacity/03-sla-client.md).
 | Étape | Délai maximum |
 |-------|---------------|
 | Accès onboarding après paiement | **48 heures** |
-| Activation (démarrage recherche) | **J+0 à J+4** (J+4 si droit de rétractation exercé ou informations manquantes) |
+| Activation (démarrage recherche) | **J+0** après paiement + onboarding (sous réserve de file d'attente) |
 | File d'attente (capacité infrastructure) | **+15 jours** maximum — position et date estimée communiquées |
 
 ### 9.2 Premiers livrables (allocation standard)
@@ -218,19 +216,18 @@ Référence ops : [capacity/03-sla-client.md](./capacity/03-sla-client.md).
 |-------|------------------------|
 | Première proposition de mise en relation | **14 à 21 jours ouvrés** |
 | Premier RDV planifié | **21 à 35 jours ouvrés** |
-| Premier RDV honoré | **≤ 35 jours ouvrés** après Activation |
+| Premier RDV honoré | **≤ 21 jours** @ 30 inbox ; **≤ 28 jours** @ 15 inbox (C-01) |
 
-En **phase de montée en charge** (capacité infrastructure limitée ou allocation réduite), les délais peuvent être allongés de **7 jours** ; le Client en est informé à la signature ou via la page de suivi.
+En **phase de montée en charge**, les délais peuvent être allongés de **7 jours** ; le Client en est informé.
 
 ### 9.3 Rythme en service actif
 
-| Formule | Volume contractuel |
-|---------|-------------------|
-| **Starter** | **5 Attributions** au total (pack initial) |
-| **Hercule récurrent** | Jusqu'à **4 Attributions / mois calendaire** |
-| **Rythme opérationnel stable** | En moyenne **3 à 4 RDV honorés / mois** lorsque l'infrastructure est en allocation standard |
+| Formule | Volume |
+|---------|--------|
+| **Mensuel 1 489 €** | Rythme opérationnel **3 à 4 RDV honorés / mois** @ allocation standard |
+| **Pack 2 967 €** | **15 Attributions** sur 3 mois, sans que le rythme mensuel C-02 soit une obligation inférieure au pack |
 
-Le pack Starter de **5 Attributions** est un **forfait initial** ; le rythme mensuel de **3 à 4 RDV honorés** s'applique au modèle récurrent et comme référence opérationnelle de débit une fois le service stabilisé.
+Le plafond marketing « 3–5 » n'est **pas** un minimum contractuel (C-02).
 
 ### 9.4 Délais entre étapes
 
@@ -251,9 +248,9 @@ Si un prospect **qualifié** ne se présente pas au RDV planifié en visioconfé
 
 Le Client doit signaler tout no-show dans les **48 heures** suivant l'horaire prévu du RDV.
 
-### 10.2 Garanties MRR
+### 10.2 Garantie pack 3 mois
 
-Voir article 5.1 (Starter) et 5.2 (récurrent).
+Voir article 5.2. L'offre mensuelle 5.1 n'emporte pas de garantie de CA ; elle emporte les délais et volumes de l'article 9.
 
 ### 10.3 Absence de commission
 
@@ -299,17 +296,17 @@ Hercule **ne garantit pas** un volume de signatures commerciales, un chiffre d'a
 
 ## 13. Durée, résiliation et suspension
 
-### 13.1 Hercule Starter
+### 13.1 Offre mensuelle (article 5.1)
 
-Le contrat Starter court jusqu'à **consommation des 5 Attributions** ou **résiliation** par l'une des parties.
+Contrat à **durée indéterminée**, facturation mensuelle.
 
-### 13.2 Hercule récurrent
+**Résiliation par le Client :** à tout moment, **préavis de 30 jours calendaires** par email à contact@hercule.dev, sans pénalité. Les Attributions **déjà planifiées** restent dues. Les crédits / période non consommés sont **forclos** (pas de remboursement), sauf geste commercial écrit de Hercule.
 
-Le contrat est conclu pour une **durée indéterminée**, avec facturation mensuelle.
+**Résiliation par Hercule :** même préavis de 30 jours, ou **immédiatement** en cas de manquement grave (impayé, contournement, fraude, atteinte à l'image).
 
-**Résiliation par le Client :** possible **à tout moment**, avec un **préavis de 30 jours calendaires** par email à contact@hercule.dev, sans pénalité. Les Attributions déjà facturées pour la période en cours restent dues.
+### 13.2 Pack 3 mois (article 5.2)
 
-**Résiliation par Hercule :** possible avec le même préavis de 30 jours, ou **immédiatement** en cas de manquement grave (impayé, contournement, fraude, atteinte à l'image de Hercule).
+Le contrat court jusqu'à **consommation des 15 Attributions**, **expiration des 3 mois**, ou résiliation. Même régime de non-remboursement et d'Attributions déjà planifiées à honorer.
 
 ### 13.3 Suspension
 
@@ -379,8 +376,8 @@ Pour les contrats récurrents, Hercule informe le Client **30 jours** avant l'en
 | Document | Contenu |
 |----------|---------|
 | [capacity/README.md](./capacity/README.md) | Capacité inbox, funnel, files d'attente |
-| [capacity/09-bootstrap-timeline.md](./capacity/09-bootstrap-timeline.md) | Phase démarrage |
-| [post-rdv/agence-commercial.md](./post-rdv/agence-commercial.md) | Renouvellement 1489 € / 898 € |
+| [01-product.md](./01-product.md) | Offres, Attribution, pack qui continue |
+| [modules/post-rdv.md](./modules/post-rdv.md) | Survey, nurturing plein tarif |
 
 ---
 
@@ -388,9 +385,10 @@ Pour les contrats récurrents, Hercule informe le Client **30 jours** avant l'en
 
 | Version | Date | Changements |
 |---------|------|-------------|
-| 2026-09-05 | 2026-09-05 | Prix TTC (franchise en base) · définition Attribution consommée · clarification forfait Starter · correction §9.2 · typo §5.2 · clarification §4.2 |
-| 2026-09-18 | 2026-09-18 | §4.1 planification anticipée · §4.2 mise en relation post-audit (~6 j ouvrés) · définitions Demande planifiée / Mandat de délégation |
-| 2026-09-04 | 2026-09-04 | Création CGV — migration depuis blueprint `doc/sop/contrat.md` ; modèle 1489 € / 2500 € / mois ; SLA capacity |
+| 2026-09-06 | 6 sept. 2026 | Offres 1 489 €/mois et 989×3 / 15 Attributions ; suppression 898 €, 4 j de rétractation, pack 5×1489 ; 2 500 € vitrine |
+| 2026-09-05 | 5 sept. 2026 | Prix TTC · Attribution consommée · forfait Starter (version archivée) |
+| 2026-09-18 | 18 sept. 2026 | §4.1–4.2 planification anticipée |
+| 2026-09-04 | 4 sept. 2026 | Création CGV |
 
 ---
 

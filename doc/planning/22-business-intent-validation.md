@@ -1,5 +1,8 @@
 # 22 — Intention métier
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 **Propriétaire :** produit pour les questions `BIZ-*`.  
 **À remplir en premier**, avant [01-foundations-validation.md](./01-foundations-validation.md). L’ingénierie traduira ensuite ces réponses en architecture. Les `FND-*` / `SUR-*` / `FUN-*` restent : ce fichier est **en amont** et indique lesquelles deviennent inférables.
 
@@ -161,7 +164,7 @@ Ne pas cocher une `FND-*` plus tard d’une façon qui **contredit** ces répons
 La CGV dit que l’agence négocie et signe. [`content/pricing/agence.json`](../../content/pricing/agence.json) dit que le 2 500 € inclut « qualification et signature internes » et « 4 clients signés ». Le SOP commercial § 4.4 n’est pas tranché. C’est l’identité de l’entreprise : meetings, closing, ou marketplace.
 
 - [ ] **A (recommandé)** — Toujours **meetings-only** : l’agence close. Le 2 500 € = plus de **volume**, pas du closing Hercule. Le copy 2500 « on signe pour vous » doit être corrigé.
-- [ ] **B** — **Hybride** : Starter = meetings (l’agence close) ; 2 500 € = Hercule qualifie **et** close.
+- [x] **B** — **Hybride** : Starter = meetings (l’agence close) ; 2 500 € = Hercule qualifie **et** close.
 - [ ] **C** — Hercule close **toujours** (y compris Starter). La CGV doit être alignée.
 - [ ] **D** — **Marketplace self-serve** : l’agence choisit et booke seule. Hercule n’assigne pas.
 
@@ -175,7 +178,7 @@ La CGV dit que l’agence négocie et signe. [`content/pricing/agence.json`](../
 
 La landing dit « en l’absence de signature, l’attribution est renouvelée ». La CGV consomme au **planifié** (sauf no-show entreprise). La capacity compte des **RDV honorés** (U4). Compteurs, garantie MRR, 898 et fin de pack dépendent de cette unité.
 
-- [ ] **A (recommandé)** — Consommée au RDV **planifié**. No-show entreprise = recrédit (CGV). **Pas de vente ≠ recrédit** (sauf garantie MRR **après le pack entier**).
+- [x] **A (recommandé)** — Consommée au RDV **planifié**. No-show entreprise = recrédit (CGV). **Pas de vente ≠ recrédit** (sauf garantie MRR **après le pack entier**).
 - [ ] **B** — Consommée seulement si le RDV est **honoré**. No-show ou absence de vente = recrédit.
 - [ ] **C** — Consommée seulement si un **contrat est signé**. Tout le reste est recrédité.
 
@@ -190,7 +193,7 @@ La landing dit « en l’absence de signature, l’attribution est renouvelée �
 
 « Attribution exclusive » (CGV) n’est pas la même chose qu’un catalogue public de demandes datées (CGV § 4.1, carousel `agence_demandes`). L’un est de l’assignation Hercule ; l’autre est un marché où l’agence choisit.
 
-- [ ] **A (recommandé)** — Hercule **assigne exclusivement**. Le carousel du site est **marketing / preuve**, pas un catalogue d’achat.
+- [x] **A (recommandé)** — Hercule **assigne exclusivement**. Le carousel du site est **marketing / preuve**, pas un catalogue d’achat.
 - [ ] **B** — L’agence **choisit** dans un catalogue de demandes visibles (après paiement ou pendant l’audit).
 - [ ] **C** — **Mix** : catalogue pour la démo / l’audit ; assignation exclusive une fois payé.
 
@@ -204,7 +207,7 @@ La landing dit « en l’absence de signature, l’attribution est renouvelée �
 
 Trois parcours documentés ne peuvent pas partager le même cycle de vie : Starter prépayé (CGV), match **avant** souscription (~6 j, CGV § 4.2), dashboard `NOT_PAID` + CTA Activer (`sequence_client_not_paid`). Ici : **quand** l’argent conditionne le service — pas comment on encaisse.
 
-- [ ] **A (recommandé)** — Paiement (ou facture acceptée) **avant** toute Attribution de **service actif**. L’appel de vente Hercule peut montrer des exemples ; ce n’est **pas** une Attribution contractuelle. CGV § 4.2 = récit de vente, pas un parcours livré.
+- [x] **A (recommandé)** — Paiement (ou facture acceptée) **avant** toute Attribution de **service actif**. L’appel de vente Hercule peut montrer des exemples ; ce n’est **pas** une Attribution contractuelle. CGV § 4.2 = récit de vente, pas un parcours livré.
 - [ ] **B** — **Audit réel** : 1 mise en relation **avant** souscription (CGV § 4.2 est un vrai parcours).
 - [ ] **C** — Onboarding / dashboard possibles **sans** paiement (`NOT_PAID`) ; activation plus tard.
 - [ ] **D** — **Self-checkout** sans appel de vente Hercule.
@@ -219,7 +222,7 @@ Trois parcours documentés ne peuvent pas partager le même cycle de vie : Start
 
 C’est la frontière **SaaS vs concierge**. Les surfaces, l’auth et les écritures client en découlent — on ne demande pas quelles pages ni quel login.
 
-- [ ] **A (recommandé)** — **Suivi** de livraison + **déclarer un no-show** + **survey** post-RDV. Pas de choix de demandes, pas de self-checkout.
+- [x] **A (recommandé)** — **Suivi** de livraison + **déclarer un no-show** + **survey** post-RDV. Pas de choix de demandes, pas de self-checkout.
 - [ ] **B** — **Rien** dans une app : Calendly + email seulement. Le logiciel reste l’outil **ops Hercule**.
 - [ ] **C** — **Self-serve large** : onboarding, paiement, choix de demandes, suivi, survey.
 
@@ -233,7 +236,7 @@ C’est la frontière **SaaS vs concierge**. Les surfaces, l’auth et les écri
 
 `SOLD` sur **un** match n’est pas « pack vide ». Proposer 898 € à chaque RDV sans vente, alors qu’il reste des crédits Starter, empile deux offres. [FUN-02](./07-funnels-validation.md) est cette question déguisée (3 cycles vs 3 Calendly).
 
-- [ ] **A (recommandé)** — **Un match à la fois**. Une vente **n’éteint pas** les Attributions restantes (le pack continue). L’898 seulement si le pack est **épuisé sans vente** (ou après refus de continuer). L’898 = **3 Attributions** au **même sens** que BIZ-02. Le CTA 1 489 € = **nouveau pack de 5**, pas un recrédit.
+- [x] **A (recommandé)** — **Un match à la fois**. Une vente **n’éteint pas** les Attributions restantes (le pack continue). L’898 seulement si le pack est **épuisé sans vente** (ou après refus de continuer). L’898 = **3 Attributions** au **même sens** que BIZ-02. Le CTA 1 489 € = **nouveau pack de 5**, pas un recrédit.
 - [ ] **B** — Une vente **termine** le pack ; 1 489 € = recommencer. L’898 = secours **dès le premier** RDV sans vente, même s’il reste des crédits Starter.
 - [ ] **C** — Plusieurs Attributions **en parallèle**. **Pas d’offre 898** ; seulement renouvellement 1 489 € / 2 500 €.
 
@@ -253,7 +256,7 @@ C’est la frontière **SaaS vs concierge**. Les surfaces, l’auth et les écri
 - [ ] **A (recommandé)** — Deux formules **parallèles**. Le 2 500 € = volume mensuel (jusqu’à 4 attr.), **même** logique meetings-only que BIZ-01 A.
 - [ ] **B** — Starter = **entrée** ; 2 500 € = formule **cible** après une première réussite.
 - [ ] **C** — Le 2 500 € est un **autre métier** (closing Hercule) — cohérent **seulement** si BIZ-01 = B.
-- [ ] **D** — Le 2 500 € est du **copy** : on ne le vend pas encore (retirer, ou garder en vitrine).
+- [x] **D** — Le 2 500 € est du **copy** : on ne le vend pas encore (retirer, ou garder en vitrine).
 
 **Impact si l’architecture change :** High si C/D ; Medium si B  
 **Domaines affectés :** CGV, landing, FND-11, post-RDV  
@@ -265,7 +268,7 @@ C’est la frontière **SaaS vs concierge**. Les surfaces, l’auth et les écri
 
 L’exclusivité « pendant l’Attribution » n’a pas la même durée qu’« une entreprise = une agence Hercule pour toujours ». [FND-08](./01-foundations-validation.md) pose un **statut** ; ici c’est le **droit commercial**.
 
-- [ ] **A (recommandé)** — **Lead sourcé** : email + Calendly ; pas de portail obligatoire. **Oui**, Hercule peut la réattribuer à une autre agence si le match échoue (exclusivité = **Attribution en cours** seulement).
+- [x] **A (recommandé)** — **Lead sourcé** : email + Calendly ; pas de portail obligatoire. **Oui**, Hercule peut la réattribuer à une autre agence si le match échoue (exclusivité = **Attribution en cours** seulement).
 - [ ] **B** — **Utilisateur** : elle peut refuser / demander une autre agence via un parcours dédié. Réattribution = oui.
 - [ ] **C** — Exclusivité **forte** : une entreprise = une seule agence Hercule, même après échec (sauf remplacement no-show **avec la même** agence).
 
@@ -279,7 +282,7 @@ L’exclusivité « pendant l’Attribution » n’a pas la même durée qu’«
 
 Ce que le logiciel **n’a jamais le droit de décider tout seul**. Pas « quel bouton dans quelle app ».
 
-- [ ] **A (recommandé)** — Toujours humain : **qualifier** l’entreprise, **décider le match**, **confirmer le paiement reçu**, **juger** no-show / RDV honoré en cas de doute, **valider** une garantie MRR. Le survey « vente faite ? » peut rester **déclaré par l’agence**.
+- [x] **A (recommandé)** — Toujours humain : **qualifier** l’entreprise, **décider le match**, **confirmer le paiement reçu**, **juger** no-show / RDV honoré en cas de doute, **valider** une garantie MRR. Le survey « vente faite ? » peut rester **déclaré par l’agence**.
 - [ ] **B** — Le moins possible : match et paiement **pourront** devenir self-serve plus tard ; la qualification humaine **reste**.
 - [ ] **C** — Tout A, **plus** la confirmation de vente (l’agence **ne** self-declare **pas** `SOLD`).
 
@@ -295,7 +298,7 @@ Ce que le logiciel **n’a jamais le droit de décider tout seul**. Pas « quel 
 
 La CGV § 13.1 dit « jusqu’à consommation des 5 Attributions **ou** résiliation », sans dire ce qu’il advient des unités prépayées non utilisées. Le récurrent § 13.2 dit que la période en cours reste due. Sans cette règle, ni facturation ni geste admin ne sont cohérents.
 
-- [ ] **A (recommandé)** — Après J+4 : **pas de remboursement**. Les Attributions non utilisées sont **forcloses** à la résiliation (sauf celles **déjà** matchées / planifiées, à honorer).
+- [x] **A (recommandé)** — Après J+4 : **pas de remboursement**. Les Attributions non utilisées sont **forcloses** à la résiliation (sauf celles **déjà** matchées / planifiées, à honorer).
 - [ ] **B** — Les Attributions restantes restent **dues jusqu’à épuisement**, même après résiliation « commerciale ».
 - [ ] **C** — Remboursement ou avoir **au prorata** (geste **produit**, pas seulement exception admin).
 
@@ -343,13 +346,13 @@ Après remplissage, une réponse `FND-*` / `SUR-*` / `FUN-*` **ne doit pas** con
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| BIZ-01 | | |
-| BIZ-02 | | |
-| BIZ-03 | | |
-| BIZ-04 | | |
-| BIZ-05 | | |
-| BIZ-06 | | |
-| BIZ-07 | | |
-| BIZ-08 | | |
-| BIZ-09 | | |
-| BIZ-10 | | |
+| BIZ-01 | B | Starter=RDV ; 2500=closing Hercule mais vitrine |
+| BIZ-02 | A | Crédit au RDV planifié ; no-show entreprise=recrédit |
+| BIZ-03 | A | Assignation exclusive |
+| BIZ-04 | A | Paiement avant livraison |
+| BIZ-05 | A | Suivi + no-show + survey ; pas self-serve paiement |
+| BIZ-06 | A* | Post-validation : 1 match ; pas 898 ; vente ne termine pas le pack — voir 23 |
+| BIZ-07 | D | 2500 vitrine |
+| BIZ-08 | A | Entreprise=contact ; rematch OK |
+| BIZ-09 | A | Ops : qualif, match, paiement, no-show, garantie |
+| BIZ-10 | A | Pas de remboursement ; proposer suppression rétractation 4j — voir 23 |

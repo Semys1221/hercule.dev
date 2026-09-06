@@ -1,5 +1,8 @@
 # 06 — Surfaces
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Quatre familles réelles : **marketing Next**, **HTML public booking**, **internal Next**, **Streamlit ops**. **Zéro** dashboard client agence/entreprise.
 
 ---
@@ -31,7 +34,7 @@ Tech-stack promet `/suivi/...` read-only. documentations_2 promet dashboard agen
 
 Sans ça on ne sait pas si `/suivi` entreprise existe.
 
-- [ ] **A (recommandé)** — Suivi **agence et entreprise** (tech-stack) + survey tokenisé ; marketing reste public. Pas de portail login (token / slug).
+- [x] **A (recommandé)** — Suivi **agence et entreprise** (tech-stack) + survey tokenisé ; marketing reste public. Pas de portail login (token / slug).
 - [ ] **B** — Dashboard **agence seulement** (documentations_2) ; entreprise = emails + Calendly, pas d’app.
 - [ ] **C** — Aucun dashboard client tant que matching n’existe pas ; seulement marketing + HTML booking.
 
@@ -43,7 +46,7 @@ Sans ça on ne sait pas si `/suivi` entreprise existe.
 
 Réécrire ces pages en React sans décision mélangerait acquisition et délivrance (mêmes colonnes Calendly).
 
-- [ ] **A (recommandé)** — Oui : HTML (ou équivalent Next) = funnel Instantly → Calendly Hercule ; le matching aura **d’autres** URLs / event types.
+- [x] **A (recommandé)** — Oui : HTML (ou équivalent Next) = funnel Instantly → Calendly Hercule ; le matching aura **d’autres** URLs / event types.
 - [ ] **B** — Unifier plus tard toutes les prises de RDV sur les mêmes pages / mêmes event types Calendly.
 - [ ] **C** — Remplacer dès maintenant les HTML par des pages App Router, même comportement CRM.
 
@@ -54,7 +57,7 @@ Réécrire ces pages en React sans décision mélangerait acquisition et délivr
 
 La spec matching envoie `match_booking_confirm_agence` sans imposer de bump de timeline.
 
-- [ ] **A (recommandé)** — Email **et** mise à jour du suivi agence (étape / date / lien visio).
+- [x] **A (recommandé)** — Email **et** mise à jour du suivi agence (étape / date / lien visio).
 - [ ] **B** — Email seulement (spec minimale actuelle).
 - [ ] **C** — In-app seulement, pas d’email de confirm agence.
 
@@ -68,7 +71,7 @@ Aujourd’hui : shadcn + tokens (`app/globals.css`), marketing custom, HTML publ
 
 - [ ] **A (recommandé)** — Un système de tokens / shadcn pour **internal + futur client** ; le marketing peut garder une mise en page distincte mais **les mêmes tokens**.
 - [ ] **B** — Trois looks jusqu’à la fin de Streamlit (marketing / internal / Streamlit).
-- [ ] **C** — Restyler **tout** (y compris marketing et HTML booking) pour imiter le chrome Grok.
+- [x] **C** — Restyler **tout** (y compris marketing et HTML booking) pour imiter le chrome Grok.
 
 **Impact si l’architecture change :** Medium  
 **Domaines affectés :** `components/ui`, `/internal`, landings, SUR-02  
@@ -92,7 +95,7 @@ Aujourd’hui : shadcn + tokens (`app/globals.css`), marketing custom, HTML publ
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| SUR-01 | | |
-| SUR-02 | | |
-| SUR-03 | | |
-| UI-01 | | |
+| SUR-01 | A | Suivi agence + entreprise + survey |
+| SUR-02 | A | Calendly vente ≠ Calendly livraison |
+| SUR-03 | A | Email + page suivi |
+| UI-01 | C | Même langage visuel y compris marketing |

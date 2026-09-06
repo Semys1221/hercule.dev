@@ -1,8 +1,17 @@
 # AI Reply Agent — ground truth (condensed)
 
-> Source condensée pour les réponses email. Ne pas inventer au-delà de ce pack.
+```
+status: legacy-ops
+audience: coding-agent
+decisions: INT-02 EML-05
+do_not:
+  - Contredire cvg_master.md / constants-commercial.md sur les prix
+```
+
+> Source condensée pour les réponses email **ops**. Prix : [constants-commercial.md](./constants-commercial.md).
 
 ## Produit Hercule
+
 
 - Hercule met en relation des **entreprises** (PME, TPE) avec des **agences web** partenaires.
 - **Agence (buyer)** : paiement à l'entrée (~1 500 €) ; renouvellement / nouveau cycle **1 489 €**.

@@ -1,5 +1,8 @@
 # 02 — Composants
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Taxonomie : **component** | **api_route** | **webhook** | **cron** | **orchestrator** | **html_public** | **streamlit**.  
 Rendu : Server Component par défaut ; `"use client"` seulement si interaction.
 
@@ -33,7 +36,7 @@ Pas de question « faut-il Shadcn » (`ENG`).
 
 Aujourd’hui le registry a ~22 entries ; ce package est plus complet. Deux sources divergeront.
 
-- [ ] **A (recommandé)** — Après architecture définitive : le registry TypeScript est aligné sur la doc canonique (CI test déjà présent) ; `/internal/components` = vue de cette SoT.
+- [x] **A (recommandé)** — Après architecture définitive : le registry TypeScript est aligné sur la doc canonique (CI test déjà présent) ; `/internal/components` = vue de cette SoT.
 - [ ] **B** — Garder le registry comme prototype ; la doc `doc/` (puis planning → tech-stack) reste la SoT.
 - [ ] **C** — Supprimer les pages `/internal/components` et `/internal/database` ; inventaire seulement en markdown.
 
@@ -44,7 +47,7 @@ Aujourd’hui le registry a ~22 entries ; ce package est plus complet. Deux sour
 
 C’est le comportement actuel (presets / layouts fichiers). L’intention ops : composer, pas inventer des primitives.
 
-- [ ] **A (recommandé)** — Catalogue **fermé** dans l’UI ; les ingénieurs ajoutent des widgets via `content/funnels/_system/presets-catalog.json` (ou code).
+- [x] **A (recommandé)** — Catalogue **fermé** dans l’UI ; les ingénieurs ajoutent des widgets via `content/funnels/_system/presets-catalog.json` (ou code).
 - [ ] **B** — L’UI permet de créer de nouveaux types de steps / composants.
 - [ ] **C** — Catalogue éditable **seulement** par fichiers (jamais l’UI), y compris pour réordonner les presets.
 
@@ -179,5 +182,5 @@ Landing marketing : nombreux `components/agence/*` et `entreprise/*` — recipie
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| COMP-01 | | |
-| COMP-02 | | |
+| COMP-01 | A | /internal/components = vue de la doc |
+| COMP-02 | A | Catalogue funnel fermé |

@@ -1,5 +1,8 @@
 # 01 — Fondations
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 **Propriétaire :** produit pour les questions `FND-*`. Les `ENG-*` liées (vérité en base, pas de table comms, orchestration TS) sont dans [00-decision-ownership.md](./00-decision-ownership.md).
 
 **Dépendances :** [22-business-intent-validation.md](./22-business-intent-validation.md) (`BIZ-*`). Remplir **`22` d’abord**. Une réponse `FND-*` ne doit pas contredire un `BIZ-*` déjà coché.
@@ -44,7 +47,7 @@ Le modèle « 4 lignes » (DB, front client, front interne Streamlit, emails) et
 
 Les trois modèles (CRM booking, 4 modules tech-stack jusqu’à `SOLD`, compteurs `MEETING_1`–`MEETING_10`) sont incompatibles ; les implémenter en parallèle duplique les sources de vérité.
 
-- [ ] **A (recommandé)** — Canonique = modèle tech-stack (`ONBOARDED` … `SOLD`) ; le CRM `CLICKED` / `MEETING_BOOKED` / `CONFIRMED` reste un **sous-état d’acquisition** jusqu’au paiement / promote, puis bascule vers les statuts produit.
+- [x] **A (recommandé)** — Canonique = modèle tech-stack (`ONBOARDED` … `SOLD`) ; le CRM `CLICKED` / `MEETING_BOOKED` / `CONFIRMED` reste un **sous-état d’acquisition** jusqu’au paiement / promote, puis bascule vers les statuts produit.
 - [ ] **B** — Canonique = rester sur l’enum CRM live uniquement ; les modules délivrance / matching / post-RDV ne sont pas le produit à implémenter maintenant.
 - [ ] **C** — Canonique = `NOT_PAID` → `PAID` → `MEETING_n` → `COMPLETED` (`documentations_2`) ; le tech-stack `SOLD` n’est pas la cible.
 
@@ -65,7 +68,7 @@ Les trois modèles (CRM booking, 4 modules tech-stack jusqu’à `SOLD`, compteu
 
 La doc impose Streamlit comme unique writer ; Next `/internal` et les APIs admin existent déjà et écrivent (onboarding, funnels, demandes).
 
-- [ ] **A (recommandé)** — Next `/internal` devient le cockpit produit (fiches, matching, paiement, dashboards) ; Streamlit reste **temporairement** l’ops Instantly / scraper / AI reply, avec cutover documenté.
+- [x] **A (recommandé)** — Next `/internal` devient le cockpit produit (fiches, matching, paiement, dashboards) ; Streamlit reste **temporairement** l’ops Instantly / scraper / AI reply, avec cutover documenté.
 - [ ] **B** — Préserver l’architecture documentée : Streamlit reste le seul writer métier ; `/internal` = documentation / funnel builder de contenu seulement.
 - [ ] **C** — Split durable par domaine : Streamlit = CRM acquisition (liens, booking, Instantly) ; Next = produit (onboarding payant, délivrance, matching) ; les deux coexistent sans date de fin.
 
@@ -86,7 +89,7 @@ La doc impose Streamlit comme unique writer ; Next `/internal` et les APIs admin
 
 Deux specs et zéro dashboard client : sans cette règle, on ne sait pas quelles routes publiques créer.
 
-- [ ] **A (recommandé)** — Exceptions = onboarding (création de fiche) + survey post-RDV tokenisé, comme le tech-stack ; tout le reste (paiement, matching, statut) est admin.
+- [x] **A (recommandé)** — Exceptions = onboarding (création de fiche) + survey post-RDV tokenisé, comme le tech-stack ; tout le reste (paiement, matching, statut) est admin.
 - [ ] **B** — Aucune écriture client pour l’instant : l’admin crée les fiches (comportement **actuel** de `/api/admin/onboarding`) ; onboarding public et survey restent hors MVP.
 - [ ] **C** — Le client peut aussi payer / « Activer » (Stripe ou lien de paiement) et donc écrire un statut `PAID` / `NOT_PAID`, comme `sequence_client_not_paid`.
 
@@ -107,7 +110,7 @@ Sans ça, on ne sait pas si l’onboarding doit enqueuer des emails tout de suit
 
 - [ ] **A (recommandé)** — Oui : admin promote manuel → `IN_DELIVERANCE` + séquence emails (V-23).
 - [ ] **B** — Pas de module délivrance pour le MVP : `ONBOARDED` suffit ; le CRM booking reste le seul parcours auto.
-- [ ] **C** — Auto-promote à l’inscription ou au paiement confirmé, sans clic admin.
+- [x] **C** — Auto-promote à l’inscription ou au paiement confirmé, sans clic admin.
 
 **Impact si l’architecture change :** High  
 **Domaines affectés :** Onboarding, emails, admin, SLA  
@@ -123,7 +126,7 @@ Sans ça, on ne sait pas si l’onboarding doit enqueuer des emails tout de suit
 
 Sans ça, Calendly restera uniquement un outil d’acquisition, pas de délivrance.
 
-- [ ] **A (recommandé)** — Oui : matching manuel admin + table `matches` + email Calendly entreprise, **en plus** du CRM d’acquisition, avec un flag/catégorie pour ne pas mélanger les leads.
+- [x] **A (recommandé)** — Oui : matching manuel admin + table `matches` + email Calendly entreprise, **en plus** du CRM d’acquisition, avec un flag/catégorie pour ne pas mélanger les leads.
 - [ ] **B** — Non : garder uniquement le funnel Calendly d’acquisition actuel ; pas de module matching.
 - [ ] **C** — Matching plus tard ; d’abord terminer le CRM + dashboards de suivi **sans** lier agence et entreprise en base.
 
@@ -141,7 +144,7 @@ Les règles tech-stack (entreprise sans upsell, agence 1489 in-page, 898 page-on
 
 `SOLD` à la vente survey vs `COMPLETED` à 10 RDV vs `CONFIRMED` Calendly décrivent trois fins de parcours.
 
-- [ ] **A (recommandé)** — Fin de mission = survey positif (vente agence **ou** embarquement entreprise) → `SOLD`, comme le tech-stack ; `MEETING_10` n’est pas le trigger de clôture.
+- [x] **A (recommandé)** — Fin de mission = survey positif (vente agence **ou** embarquement entreprise) → `SOLD`, comme le tech-stack ; `MEETING_10` n’est pas le trigger de clôture.
 - [ ] **B** — Pas de clôture produit au MVP : le CRM s’arrête à `CONFIRMED` / `CANCELLED`.
 - [ ] **C** — Fin de mission = quota de RDV livrés (`MEETING_10` / pack d’attributions), comme `documentations_2`.
 
@@ -153,7 +156,7 @@ Les règles tech-stack (entreprise sans upsell, agence 1489 in-page, 898 page-on
 
 La doc `evaluateMatchOutcome` ferme les deux rows dès qu’une partie répond oui ; l’autre spec attend les deux ou l’admin.
 
-- [ ] **A (recommandé)** — Une réponse positive suffit pour passer les deux en `SOLD` ; l’admin `force-sold` tranche les désaccords.
+- [x] **A (recommandé)** — Une réponse positive suffit pour passer les deux en `SOLD` ; l’admin `force-sold` tranche les désaccords.
 - [ ] **B** — Ne pas implémenter le survey au MVP (cohérent si FND-06 = B).
 - [ ] **C** — Attendre les **deux** surveys, ou seulement l’admin, avant toute clôture.
 
@@ -165,7 +168,7 @@ La doc `evaluateMatchOutcome` ferme les deux rows dès qu’une partie répond o
 
 La doc ne définit pas le statut (rester `POST_RDV_SURVEY`, archiver, `CANCELLED`).
 
-- [ ] **A (recommandé)** — Statut terminal explicite (ex. `CANCELLED` ou `ARCHIVED`), plus d’emails auto.
+- [x] **A (recommandé)** — Statut terminal explicite (ex. `CANCELLED` ou `ARCHIVED`), plus d’emails auto.
 - [ ] **B** — Rester sur le statut survey / CRM actuel pour recontact admin manuel, sans nouvel enum.
 - [ ] **C** — Retour `IN_DELIVERANCE` même si elle a dit ne pas continuer (relance malgré tout).
 
@@ -183,7 +186,7 @@ Exigences métier **distinctes** ; ne pas les fusionner.
 
 Tech-stack V-34 : CTA sur `/survey/[token]`, pas de job `renewal_agence_1489`.
 
-- [ ] **A (recommandé)** — Oui : 1489 in-page seulement ; paiement confirmé par l’admin ; pas d’email renewal auto à la vente.
+- [x] **A (recommandé)** — Oui : 1489 in-page seulement ; paiement confirmé par l’admin ; pas d’email renewal auto à la vente.
 - [ ] **B** — Pas d’upsell post-vente au MVP.
 - [ ] **C** — Email auto 1489 à `SOLD` **et/ou** CTA in-page.
 
@@ -194,7 +197,7 @@ Tech-stack V-34 : CTA sur `/survey/[token]`, pas de job `renewal_agence_1489`.
 #### [FND-10] L’offre 898 € (secours si pas de vente) reste-t-elle exclusive à la page survey, jamais en email ?
 
 - [ ] **A (recommandé)** — Oui : 898 visible seulement sur la page survey ; decline = disparition permanente ; closing l’onglet ≠ refus.
-- [ ] **B** — Pas d’offre 898 au MVP.
+- [x] **B** — Pas d’offre 898 au MVP.
 - [ ] **C** — 898 aussi par email, ou expiration temporelle, ou session unique (retour = plus d’offre).
 
 **Impact si l’architecture change :** Medium  
@@ -203,7 +206,7 @@ Tech-stack V-34 : CTA sur `/survey/[token]`, pas de job `renewal_agence_1489`.
 
 #### [FND-11] L’abonnement 2 500 €/mois reste-t-il commercialisé (landing + CGV) mais hors parcours technique MVP ?
 
-- [ ] **A (recommandé)** — Oui : copy/CGV inchangés ; **pas** de routes, webhooks Stripe, ni champs `profile` abo au MVP.
+- [x] **A (recommandé)** — Oui : copy/CGV inchangés ; **pas** de routes, webhooks Stripe, ni champs `profile` abo au MVP.
 - [ ] **B** — Retirer 2500 de la landing / CGV jusqu’à implémentation (changement **commercial**).
 - [ ] **C** — Implémenter le parcours 2500 dans le MVP (paiement récurrent).
 
@@ -219,7 +222,7 @@ Tech-stack V-34 : CTA sur `/survey/[token]`, pas de job `renewal_agence_1489`.
 
 La spec matching désynchronise volontairement les deux fiches.
 
-- [ ] **A (recommandé)** — Synchroniser : les deux rows passent `MEETING_BOOKED` (plus simple pour admin et compteurs).
+- [x] **A (recommandé)** — Synchroniser : les deux rows passent `MEETING_BOOKED` (plus simple pour admin et compteurs).
 - [ ] **B** — Préserver la spec : entreprise `MEETING_BOOKED` ; agence flag JSON seulement.
 - [ ] **C** — Un statut commun de paire sur `matches` ; les leads gardent leur statut CRM.
 
@@ -231,7 +234,7 @@ La spec matching désynchronise volontairement les deux fiches.
 
 La doc post-survey (898 / nurturing) ne dit pas si l’entrée est créditée, remboursée, ou consommée.
 
-- [ ] **A (recommandé)** — Pas de remboursement auto : l’agence reste en recherche (`IN_DELIVERANCE`) ou nurturing ; tout remboursement = geste admin hors système.
+- [x] **A (recommandé)** — Pas de remboursement auto : l’agence reste en recherche (`IN_DELIVERANCE`) ou nurturing ; tout remboursement = geste admin hors système.
 - [ ] **B** — Workflow litige + action admin remboursement (statut / flag dédié).
 - [ ] **C** — Crédit automatique d’un nouveau matching (sans 898).
 
@@ -241,7 +244,7 @@ La doc post-survey (898 / nurturing) ne dit pas si l’entrée est créditée, r
 
 #### [FND-14] Après decline 898 € + nurturing, le lien `matches` / FK `matched_*` est-il conservé comme historique ?
 
-- [ ] **A (recommandé)** — Conservé (historique) ; unlink seulement bouton admin.
+- [x] **A (recommandé)** — Conservé (historique) ; unlink seulement bouton admin.
 - [ ] **B** — Unlink automatique au decline.
 - [ ] **C** — Pas de table `matches` au MVP (FND-05 B) : question sans objet.
 
@@ -253,7 +256,7 @@ La doc post-survey (898 / nurturing) ne dit pas si l’entrée est créditée, r
 
 Sans délivrance (FND-04 B) cette question est sans objet.
 
-- [ ] **A (recommandé)** — Oui : actions admin `ADVANCE_STEP` / `DELAY` via API, client read-only.
+- [x] **A (recommandé)** — Oui : actions admin `ADVANCE_STEP` / `DELAY` via API, client read-only.
 - [ ] **B** — Timeline 100 % automatique (emails datés) ; pas de boutons advance/delay.
 - [ ] **C** — Delay seulement (incident ops), pas d’advance manuel.
 
@@ -265,7 +268,7 @@ Sans délivrance (FND-04 B) cette question est sans objet.
 
 L’intention « PAID → ONBOARDING → ACTIVE DELIVERY » est un **enchaînement commercial**, pas forcément l’enum canonique. Le code n’a ni colonne `PAID` ni promote auto. Si vous cochez B ici **et** une autre option à FND-01, l’architecture définitive s’arrêtera pour lever la contradiction.
 
-- [ ] **A (recommandé)** — `PAID` = **événement / enregistrement commercial** (flag ou table paiement) ; ensuite promote admin ou auto vers les états de délivrance **choisis en FND-01** — pas un rival de `lead_statut`.
+- [x] **A (recommandé)** — `PAID` = **événement / enregistrement commercial** (flag ou table paiement) ; ensuite promote admin ou auto vers les états de délivrance **choisis en FND-01** — pas un rival de `lead_statut`.
 - [ ] **B** — `NOT_PAID → PAID → ONBOARDING → ACTIVE` **est** la machine canonique (alors FND-01 doit être aligné ; sinon contradiction).
 - [ ] **C** — Le paiement reste ops-only (INT-01 B) : onboarding / délivrance **ignorent** PAID.
 
@@ -279,19 +282,19 @@ L’intention « PAID → ONBOARDING → ACTIVE DELIVERY » est un **enchaîneme
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| FND-01 | | |
-| FND-02 | | |
-| FND-03 | | |
-| FND-04 | | |
-| FND-05 | | |
-| FND-06 | | |
-| FND-07 | | |
-| FND-08 | | |
-| FND-09 | | |
-| FND-10 | | |
-| FND-11 | | |
-| FND-12 | | |
-| FND-13 | | |
-| FND-14 | | |
-| FND-15 | | |
-| FND-16 | | |
+| FND-01 | A | Canonique ONBOARDED…SOLD ; CRM=sous-état acquisition |
+| FND-02 | A | /internal cockpit ; Streamlit temporaire outreach |
+| FND-03 | A | Client : onboarding + survey seulement |
+| FND-04 | C* | Auto IN_DELIVERANCE au PAID seulement — voir 23 |
+| FND-05 | A | Matching produit + table matches |
+| FND-06 | A | SOLD = survey positif (couple match) |
+| FND-07 | A | Un oui clôt le couple match, pas le pack agence — voir 23 |
+| FND-08 | A | Entreprise refuse → ARCHIVED |
+| FND-09 | A* | CTA in-page optionnel ; pas de reset dashboard — voir 23 |
+| FND-10 | B | Pas d’898 au MVP |
+| FND-11 | A | 2500 vitrine ; pas d’abo technique MVP |
+| FND-12 | A | Les deux fiches MEETING_BOOKED ; compteur RDV entreprise |
+| FND-13 | A | Pas de remboursement auto |
+| FND-14 | A | Override C→A : historique matches — voir 23 |
+| FND-15 | A | ADVANCE + DELAY admin |
+| FND-16 | A | Override B→A : paiement=événement — voir 23 |

@@ -1,5 +1,8 @@
 # 12 — Sécurité et permissions
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Les **problèmes de sécurité** sont séparés des améliorations d’architecture optionnelles.
 
 `ENG-04` (fail-closed secrets cron/webhook) n’est **pas** une question : c’est un défaut à corriger à l’implémentation.
@@ -41,7 +44,7 @@ Ce n’est **pas** « on ajoutera Clerk plus tard » : SEC-01 tranche la politiq
 L’intention documentée est : pas de login, isolation par déploiement. Le risque : quiconque atteint l’URL crée des leads, réécrit FAQ/pricing/funnels, patche le carousel.
 
 - [ ] **A (recommandé)** — Non : ajouter une auth réelle (mot de passe partagé / SSO / Bearer ops) **au moins sur les mutations**. L’intention « pas de théâtre de login client » reste ; ce n’est pas un portail agence.
-- [ ] **B** — Oui : préserver zéro auth app ; URL non publique + noindex suffisent (politique actuelle).
+- [x] **B** — Oui : préserver zéro auth app ; URL non publique + noindex suffisent (politique actuelle).
 - [ ] **C** — Auth seulement hors production locale ; production protégée par SSO Vercel / firewall, toujours pas de login in-app.
 
 **Impact si l’architecture change :** High  
@@ -53,7 +56,7 @@ L’intention documentée est : pas de login, isolation par déploiement. Le ris
 
 C’est le modèle CRM actuel et la spec survey (token). Un login client changerait FND-03.
 
-- [ ] **A (recommandé)** — Oui : capability URLs (slug / token survey) ; pas de comptes clients au MVP.
+- [x] **A (recommandé)** — Oui : capability URLs (slug / token survey) ; pas de comptes clients au MVP.
 - [ ] **B** — Introduire un login client (Clerk ou autre) pour suivi + survey.
 - [ ] **C** — Slug pour le booking acquisition seulement ; le suivi produit exigera un login.
 
@@ -79,5 +82,5 @@ C’est le modèle CRM actuel et la spec survey (token). Un login client changer
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| SEC-01 | | |
-| SEC-02 | | |
+| SEC-01 | B | Zéro login /internal |
+| SEC-02 | A | Slug/token, pas de compte client |

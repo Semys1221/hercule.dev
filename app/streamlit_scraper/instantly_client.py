@@ -15,8 +15,20 @@ import requests
 INSTANTLY_API_BASE = "https://api.instantly.ai/api/v2"
 PAGE_SIZE = 100
 _MAX_RETRIES = 5
+_BACKOFF_BASE = 2.0
 _HTTP_TIMEOUT = (10, 60)
 _BULK_BATCH_SIZE = 100
+
+
+def _leads_read_timeout_s() -> int:
+    raw = os.getenv("INSTANTLY_READ_TIMEOUT_S", "180")
+    try:
+        return max(int(raw), 30)
+    except ValueError:
+        return 180
+
+
+_HTTP_TIMEOUT_LEADS_LIST = (10, _leads_read_timeout_s())
 
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
 WORKSPACE_CACHE_PATH = os.path.join(_LIB_DIR, "output", "workspace_emails.json")
@@ -26,6 +38,8 @@ CSV_COLUMNS = [
     "Company",
     "Website",
     "Service",
+    "Niche",
+    "Subniche",
     "City",
     "Type",
     "Category",
@@ -44,6 +58,19 @@ _REQUIRED_CSV_COLUMNS = ["Email", "Company", "Website", "Service", "City"]
 
 def _normalize_email(email: str) -> str:
     return email.strip().lower()
+
+
+def _normalize_scope_ids(ids: list[str] | None) -> list[str]:
+    if not ids:
+        return []
+    seen: set[str] = set()
+    result: list[str] = []
+    for raw in ids:
+        value = str(raw).strip()
+        if value and value not in seen:
+            seen.add(value)
+            result.append(value)
+    return sorted(result)
 
 
 def _read_email(lead: dict[str, Any]) -> str:
@@ -70,19 +97,39 @@ class InstantlyClient:
         method: str = "GET",
         body: dict[str, Any] | None = None,
         attempt: int = 0,
+        timeout: tuple[int, int] | None = None,
     ) -> Any:
         url = f"{INSTANTLY_API_BASE}{endpoint}"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
-        response = self.session.request(
-            method,
-            url,
-            headers=headers,
-            json=body,
-            timeout=_HTTP_TIMEOUT,
-        )
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+        req_timeout = timeout or _HTTP_TIMEOUT
+
+        try:
+            response = self.session.request(
+                method,
+                url,
+                headers=headers,
+                json=body if body is not None else None,
+                timeout=req_timeout,
+            )
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+        ) as exc:
+            if attempt < _MAX_RETRIES:
+                time.sleep(_BACKOFF_BASE**attempt)
+                return self._fetch(
+                    endpoint,
+                    method=method,
+                    body=body,
+                    attempt=attempt + 1,
+                    timeout=timeout,
+                )
+            raise RuntimeError(
+                f"Instantly API request failed on {endpoint} after "
+                f"{attempt + 1} attempt(s): {exc}"
+            ) from exc
 
         text = response.text or ""
         data: Any = None
@@ -99,7 +146,23 @@ class InstantlyClient:
             except ValueError:
                 wait_s = 65
             time.sleep(max(wait_s, 1))
-            return self._fetch(endpoint, method=method, body=body, attempt=attempt + 1)
+            return self._fetch(
+                endpoint,
+                method=method,
+                body=body,
+                attempt=attempt + 1,
+                timeout=timeout,
+            )
+
+        if response.status_code >= 500 and attempt < _MAX_RETRIES:
+            time.sleep(_BACKOFF_BASE**attempt)
+            return self._fetch(
+                endpoint,
+                method=method,
+                body=body,
+                attempt=attempt + 1,
+                timeout=timeout,
+            )
 
         if not response.ok:
             detail = data if isinstance(data, str) else json.dumps(data)
@@ -109,26 +172,29 @@ class InstantlyClient:
 
         return data
 
-    def fetch_workspace_emails(
+    def _paginate_lead_emails(
         self,
+        scope: dict[str, str],
         *,
         on_progress: Callable[[int], None] | None = None,
+        on_page: Callable[[set[str]], None] | None = None,
         max_pages: int = 500,
     ) -> set[str]:
-        """Return all distinct contact emails already present in the workspace."""
         emails: set[str] = set()
         starting_after: str | None = None
         previous_cursor: str | None = None
 
         for _page in range(max_pages):
-            body: dict[str, Any] = {
-                "limit": PAGE_SIZE,
-                "distinct_contacts": True,
-            }
+            body: dict[str, Any] = {**scope, "limit": PAGE_SIZE}
             if starting_after:
                 body["starting_after"] = starting_after
 
-            page = self._fetch("/leads/list", method="POST", body=body)
+            page = self._fetch(
+                "/leads/list",
+                method="POST",
+                body=body,
+                timeout=_HTTP_TIMEOUT_LEADS_LIST,
+            )
             items = page.get("items") or []
             if not items:
                 break
@@ -140,6 +206,8 @@ class InstantlyClient:
 
             if on_progress:
                 on_progress(len(emails))
+            if on_page:
+                on_page(set(emails))
 
             next_cursor = page.get("next_starting_after")
             if not next_cursor:
@@ -156,6 +224,45 @@ class InstantlyClient:
             previous_cursor = next_cursor
             starting_after = next_cursor
 
+        return emails
+
+    def fetch_dedup_emails(
+        self,
+        list_ids: list[str],
+        campaign_ids: list[str],
+        *,
+        on_progress: Callable[[int], None] | None = None,
+        on_page: Callable[[set[str]], None] | None = None,
+    ) -> set[str]:
+        """Return emails from configured Instantly lists and campaigns."""
+        emails: set[str] = set()
+
+        def _checkpoint(scope_emails: set[str]) -> None:
+            combined = set(emails)
+            combined.update(scope_emails)
+            if on_progress:
+                on_progress(len(combined))
+            if on_page:
+                on_page(combined)
+
+        for list_id in list_ids:
+            scoped = self._paginate_lead_emails(
+                {"list_id": list_id},
+                on_page=_checkpoint,
+            )
+            emails.update(scoped)
+            _checkpoint(set())
+
+        for campaign_id in campaign_ids:
+            scoped = self._paginate_lead_emails(
+                {"campaign": campaign_id},
+                on_page=_checkpoint,
+            )
+            emails.update(scoped)
+            _checkpoint(set())
+
+        if on_progress:
+            on_progress(len(emails))
         return emails
 
     def list_all_lead_lists(self) -> list[dict[str, Any]]:
@@ -256,8 +363,91 @@ def ensure_campaign(api_key: str, name: str) -> dict[str, Any]:
     return client.create_campaign(name)
 
 
+def list_subsequences(api_key: str, campaign_id: str) -> list[dict[str, Any]]:
+    client = InstantlyClient(api_key)
+    suffix = f"?parent_campaign={campaign_id.strip()}&limit=100"
+    page = client._fetch(f"/subsequences{suffix}", method="GET")
+    return page.get("items") or [] if isinstance(page, dict) else []
+
+
+def create_subsequence(
+    api_key: str,
+    *,
+    parent_campaign_id: str,
+    name: str,
+    conditions: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    client = InstantlyClient(api_key)
+    body: dict[str, Any] = {
+        "parent_campaign": parent_campaign_id.strip(),
+        "name": name,
+        "conditions": conditions or {"crm_status": [1]},
+        "subsequence_schedule": DEFAULT_CAMPAIGN_SCHEDULE,
+        "sequences": [
+            {
+                "steps": [
+                    {
+                        "type": "email",
+                        "delay": 0,
+                        "pre_delay": 0,
+                        "pre_delay_unit": "minutes",
+                        "variants": [
+                            {
+                                "subject": "Suite à votre intérêt",
+                                "body": "Bonjour,<br/><br/>Merci pour votre intérêt.",
+                            }
+                        ],
+                    }
+                ]
+            }
+        ],
+    }
+    data = client._fetch("/subsequences", method="POST", body=body)
+    if not isinstance(data, dict) or not data.get("id"):
+        raise RuntimeError(f"Instantly create subsequence returned no id: {data!r}")
+    return data
+
+
+def ensure_subsequence(
+    api_key: str,
+    *,
+    parent_campaign_id: str,
+    name: str = "Interested bypass",
+) -> dict[str, Any]:
+    existing_items = list_subsequences(api_key, parent_campaign_id)
+    needle = name.strip().lower()
+    for item in existing_items:
+        if str(item.get("name") or "").strip().lower() == needle:
+            return item
+    return create_subsequence(
+        api_key,
+        parent_campaign_id=parent_campaign_id,
+        name=name,
+    )
+
+
+def delete_lead_list(api_key: str, list_id: str) -> None:
+    client = InstantlyClient(api_key)
+    try:
+        client._fetch(f"/lead-lists/{list_id.strip()}", method="DELETE")
+    except RuntimeError as exc:
+        if "404" not in str(exc):
+            raise
+
+
+def delete_campaign(api_key: str, campaign_id: str) -> None:
+    client = InstantlyClient(api_key)
+    try:
+        client._fetch(f"/campaigns/{campaign_id.strip()}", method="DELETE")
+    except RuntimeError as exc:
+        if "404" not in str(exc):
+            raise
+
+
 def load_workspace_email_cache(
     *,
+    list_ids: list[str] | None = None,
+    campaign_ids: list[str] | None = None,
     max_age_s: int = WORKSPACE_CACHE_TTL_S,
     cache_path: str | None = None,
 ) -> set[str] | None:
@@ -270,6 +460,14 @@ def load_workspace_email_cache(
         saved_at = float(data.get("saved_at", 0))
         if saved_at <= 0 or time.time() - saved_at > max_age_s:
             return None
+        if not data.get("complete", False):
+            return None
+        cached_lists = _normalize_scope_ids(data.get("list_ids"))
+        cached_campaigns = _normalize_scope_ids(data.get("campaign_ids"))
+        if cached_lists != _normalize_scope_ids(list_ids):
+            return None
+        if cached_campaigns != _normalize_scope_ids(campaign_ids):
+            return None
         raw = data.get("emails") or []
         return {str(email).strip().lower() for email in raw if "@" in str(email)}
     except (OSError, TypeError, ValueError, json.JSONDecodeError):
@@ -279,6 +477,9 @@ def load_workspace_email_cache(
 def save_workspace_email_cache(
     emails: set[str],
     *,
+    list_ids: list[str] | None = None,
+    campaign_ids: list[str] | None = None,
+    complete: bool = True,
     cache_path: str | None = None,
 ) -> None:
     path = cache_path or WORKSPACE_CACHE_PATH
@@ -286,7 +487,10 @@ def save_workspace_email_cache(
     payload = {
         "saved_at": time.time(),
         "count": len(emails),
+        "list_ids": _normalize_scope_ids(list_ids),
+        "campaign_ids": _normalize_scope_ids(campaign_ids),
         "emails": sorted(emails),
+        "complete": complete,
     }
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
@@ -303,18 +507,57 @@ def clear_workspace_email_cache(*, cache_path: str | None = None) -> None:
 def fetch_workspace_emails(
     api_key: str,
     *,
+    list_ids: list[str] | None = None,
+    campaign_ids: list[str] | None = None,
     on_progress: Callable[[int], None] | None = None,
     use_cache: bool = True,
     cache_path: str | None = None,
+    log_cb: Callable[[str], None] | None = None,
 ) -> set[str]:
+    norm_lists = _normalize_scope_ids(list_ids)
+    norm_campaigns = _normalize_scope_ids(campaign_ids)
+
+    if not norm_lists and not norm_campaigns:
+        if log_cb:
+            log_cb(
+                "Instantly dedup: no INSTANTLY_DEDUP_* IDs configured — skipping local dedup."
+            )
+        return set()
+
     if use_cache:
-        cached = load_workspace_email_cache(cache_path=cache_path)
+        cached = load_workspace_email_cache(
+            list_ids=norm_lists,
+            campaign_ids=norm_campaigns,
+            cache_path=cache_path,
+        )
         if cached is not None:
             if on_progress:
                 on_progress(len(cached))
             return cached
-    emails = InstantlyClient(api_key).fetch_workspace_emails(on_progress=on_progress)
-    save_workspace_email_cache(emails, cache_path=cache_path)
+
+    def _checkpoint(emails: set[str]) -> None:
+        save_workspace_email_cache(
+            emails,
+            list_ids=norm_lists,
+            campaign_ids=norm_campaigns,
+            complete=False,
+            cache_path=cache_path,
+        )
+
+    client = InstantlyClient(api_key)
+    emails = client.fetch_dedup_emails(
+        norm_lists,
+        norm_campaigns,
+        on_progress=on_progress,
+        on_page=_checkpoint,
+    )
+    save_workspace_email_cache(
+        emails,
+        list_ids=norm_lists,
+        campaign_ids=norm_campaigns,
+        complete=True,
+        cache_path=cache_path,
+    )
     return emails
 
 
@@ -336,7 +579,12 @@ def _count_leads(client: InstantlyClient, scope: dict[str, str]) -> int:
         if starting_after:
             body["starting_after"] = starting_after
 
-        page = client._fetch("/leads/list", method="POST", body=body)
+        page = client._fetch(
+            "/leads/list",
+            method="POST",
+            body=body,
+            timeout=_HTTP_TIMEOUT_LEADS_LIST,
+        )
         items = page.get("items") or []
         if not items:
             break
@@ -520,6 +768,8 @@ def _lead_payload(row: dict[str, str], list_id: str) -> dict[str, Any]:
         "custom_variables": {
             "city": row.get("City") or "",
             "service": row.get("Service") or "",
+            "niche": row.get("Niche") or "",
+            "subniche": row.get("Subniche") or "",
             "type": row.get("Type") or "",
             "category": row.get("Category") or "",
             "subtypes": row.get("Subtypes") or "",
@@ -707,6 +957,8 @@ async def push_csv_to_instantly(
                 "Company": str(row.get("Company", "") or "").strip(),
                 "Website": str(row.get("Website", "") or "").strip(),
                 "Service": str(row.get("Service", "") or "").strip(),
+                "Niche": str(row.get("Niche", "") or "").strip(),
+                "Subniche": str(row.get("Subniche", "") or "").strip(),
                 "City": str(row.get("City", "") or "").strip(),
                 "Type": str(row.get("Type", "") or "").strip(),
                 "Category": str(row.get("Category", "") or "").strip(),

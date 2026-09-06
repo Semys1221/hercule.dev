@@ -1,5 +1,8 @@
 # 03 — Base de données
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 **17 tables migrées.** Aucune table `matches`. Aucun `CREATE POLICY` (RLS on = deny anon). Types TS **manuels**, pas de `database.types.ts` généré.
 
 Légende colonnes : **A** autoritaire · **D** dérivé · **L** legacy · **T** temporaire · **W** déclenche workflow · **U** UI · **I** interne.
@@ -33,7 +36,7 @@ Légende colonnes : **A** autoritaire · **D** dérivé · **L** legacy · **T**
 
 Mélanger `CLICKED` et `IN_DELIVERANCE` sur une colonne unique rend les filtres admin et les webhooks Calendly ambigus.
 
-- [ ] **A (recommandé)** — Deux champs : `statut` CRM (existant) + `product_statut` (ou équivalent) pour le parcours payant / délivrance.
+- [x] **A (recommandé)** — Deux champs : `statut` CRM (existant) + `product_statut` (ou équivalent) pour le parcours payant / délivrance.
 - [ ] **B** — Un seul enum étendu (ajouter les valeurs tech-stack / MEETING_n sur `lead_statut` actuel).
 - [ ] **C** — Tables séparées (lead CRM vs client produit) liées par email.
 
@@ -45,7 +48,7 @@ Mélanger `CLICKED` et `IN_DELIVERANCE` sur une colonne unique rend les filtres 
 
 C’est l’intention V-11 ; le CRM n’utilise presque pas `profile` hors onboarding admin.
 
-- [ ] **A (recommandé)** — Oui : `profile` = config / UI / offres ; colonnes SQL = identité, CRM Calendly, FKs, compteurs dérivés si SOT-01 = A.
+- [x] **A (recommandé)** — Oui : `profile` = config / UI / offres ; colonnes SQL = identité, CRM Calendly, FKs, compteurs dérivés si SOT-01 = A.
 - [ ] **B** — Réduire `profile` ; normaliser survey / offers / capacity en colonnes ou tables.
 - [ ] **C** — `profile` seulement pour le formulaire ; le reste en tables dédiées.
 
@@ -180,5 +183,5 @@ Voir migration. `origine` ajoutée plus tard. Writers : admin API + Streamlit de
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| DB-01 | | |
-| DB-02 | | |
+| DB-01 | A | statut CRM + product_statut |
+| DB-02 | A | profile JSON config/UI/offres |

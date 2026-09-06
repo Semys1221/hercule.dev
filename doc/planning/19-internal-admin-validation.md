@@ -1,5 +1,8 @@
 # 19 — Console admin `/internal`
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 **Intention produit (pas l’implémentation actuelle) :** `/internal` est le **cockpit opérateur** à trois métiers — édition de ressources live, documentation canonique qui se propage, déclenchement de workflows. Streamlit / JSON / placeholders ne sont pas la cible par défaut.
 
 Ne pas reposer [FND-02](./01-foundations-validation.md) (Streamlit vs Next) ni [SEC-01](./12-security-permissions-validation.md) (auth). Répondre **de façon cohérente** avec FND-02 : si FND-02 = B (Streamlit seul writer métier), ADM-01 C ou B devient le seul couple cohérent.
@@ -35,7 +38,7 @@ Toolbar édition / preview / promote / delete : pattern UI déjà là ([`interna
 
 Aujourd’hui : édition partielle, CGV lecture seule, zéro trigger.
 
-- [ ] **A (recommandé)** — Oui : c’est le contrat produit ; Streamlit reste temporaire jusqu’à parité (FND-02 A).
+- [x] **A (recommandé)** — Oui : c’est le contrat produit ; Streamlit reste temporaire jusqu’à parité (FND-02 A).
 - [ ] **B** — Non : `/internal` reste architecture + funnel content / FAQ / pricing ; l’ops métier reste Streamlit.
 - [ ] **C** — Split durable : docs + édition de contenu dans Next ; **triggers** (no-show, send-once, promote) restent Streamlit.
 
@@ -47,7 +50,7 @@ Aujourd’hui : édition partielle, CGV lecture seule, zéro trigger.
 
 Le live est [`app/streamlit_booking_resend`](../../app/streamlit_booking_resend/). La feuille `/internal/funnels/.../emails/pre_close/booking` n’est qu’un placeholder.
 
-- [ ] **A (recommandé)** — Oui : migrer l’UI d’édition/preview vers `/internal` ; la table et le cron Next restent la SoT d’exécution.
+- [x] **A (recommandé)** — Oui : migrer l’UI d’édition/preview vers `/internal` ; la table et le cron Next restent la SoT d’exécution.
 - [ ] **B** — Garder Streamlit `booking_resend` comme éditeur.
 - [ ] **C** — `/internal` = preview seulement ; l’édition reste SQL / scripts.
 
@@ -59,7 +62,7 @@ Le live est [`app/streamlit_booking_resend`](../../app/streamlit_booking_resend/
 
 Complète [ORCH-01](./04-orchestration-validation.md) (comment l’événement est **défini**) : ici c’est **où l’opérateur clique**. Aucune table UI n’existe.
 
-- [ ] **A (recommandé)** — Oui : table meetings / bookings interne ; clic « no-show » enqueue la séquence no-show (après ORCH-01).
+- [x] **A (recommandé)** — Oui : table meetings / bookings interne ; clic « no-show » enqueue la séquence no-show (après ORCH-01).
 - [ ] **B** — Pas de table interne au MVP ; no-show = Streamlit ou déclaration hors app (CGV 48 h).
 - [ ] **C** — Triggers uniquement via API/script, sans table UI.
 
@@ -73,6 +76,6 @@ Complète [ORCH-01](./04-orchestration-validation.md) (comment l’événement e
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| ADM-01 | | |
-| ADM-02 | | |
-| ADM-03 | | |
+| ADM-01 | A | /internal = édition + docs + triggers |
+| ADM-02 | A | Édition emails vente dans /internal |
+| ADM-03 | A | Table RDV interne pour no-show / RDV fait |

@@ -1,5 +1,8 @@
 # 13 — Dette technique
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Inventaire. **Delete seulement après vérification des références** (`ENG-09`). Pas de questions A/B/C ici : les suppressions dangereuses sont `LEG-*` / `BND-*`.
 
 ---

@@ -1,5 +1,8 @@
 # 05 — API, webhooks, crons
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Taxonomie : **route API** ≠ **webhook** ≠ **cron** ≠ **action UI**. Aucune Server Action.
 
 Auth réelle : par route. **Pas** de middleware Next.
@@ -32,7 +35,7 @@ Auth réelle : par route. **Pas** de middleware Next.
 C’est une **politique produit / ops**, pas un détail HTTP. Répondre de façon cohérente avec [SEC-01](./12-security-permissions-validation.md) (même sujet, option C = split lectures / mutations).
 
 - [ ] **A (recommandé)** — Non : exiger une auth (session, SSO, ou au minimum le même Bearer ops que le CRM) sur toute mutation admin, y compris funnels.
-- [ ] **B** — Oui : préserver **aucune auth app** ; isolation = URL / déploiement non public (README actuel).
+- [x] **B** — Oui : préserver **aucune auth app** ; isolation = URL / déploiement non public (README actuel).
 - [ ] **C** — Split : lectures et funnel filesystem ouverts en interne ; **onboarding INSERT** et **demandes PATCH** protégés.
 
 **Impact si l’architecture change :** High  
@@ -102,4 +105,4 @@ Auth : `CRON_SECRET` ; **si unset → 200 ouvert**. Scripts : `pnpm configure-*-
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| API-01 | | |
+| API-01 | B | Pas de login admin |

@@ -1,6 +1,11 @@
 # Mentions légales
 
-> **Version :** 2026-09-05  
+```
+status: canonical
+audience: coding-agent
+```
+
+> **Version :** 2026-09-06  
 > **Documents associés :** [cvg_master.md](./cvg_master.md) · [confidentialite.md](./confidentialite.md)
 
 ---

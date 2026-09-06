@@ -21,6 +21,9 @@ class PresetMeta:
     module_name: str
     config_path: str
     loader: Callable[[], dict[str, Any]]
+    niche_group: str = ""
+    niche_group_label: str = ""
+    subniche_label: str = ""
 
 
 def _ensure_lib_on_path() -> None:
@@ -67,12 +70,32 @@ def _load_preset_file(filename: str, config_path: str) -> PresetMeta:
             f"{_expected_module_name(preset_id)}.py"
         )
 
+    niche_group = str(getattr(module, "NICHE_GROUP", "") or "").strip()
+    niche_group_label = str(getattr(module, "NICHE_GROUP_LABEL", "") or "").strip()
+    subniche_label = str(getattr(module, "SUBNICHE_LABEL", "") or "").strip()
+    if isinstance(config, dict):
+        if not niche_group:
+            niche_group = str(config.get("NICHE_GROUP") or "").strip()
+        if not niche_group_label:
+            niche_group_label = str(config.get("NICHE_GROUP_LABEL") or "").strip()
+        if not subniche_label:
+            subniche_label = str(config.get("SUBNICHE_LABEL") or "").strip()
+    if not niche_group:
+        niche_group = preset_id
+    if not niche_group_label:
+        niche_group_label = label.strip()
+    if not subniche_label:
+        subniche_label = label.strip()
+
     return PresetMeta(
         preset_id=preset_id,
         label=label.strip(),
         module_name=module_name,
         config_path=config_path,
         loader=lambda m=module: dict(m.CONFIG),
+        niche_group=niche_group,
+        niche_group_label=niche_group_label,
+        subniche_label=subniche_label,
     )
 
 
@@ -118,3 +141,61 @@ def configs_dir() -> str:
 def is_configs_preset(preset_id: str) -> bool:
     path = preset_config_path(preset_id)
     return os.path.dirname(os.path.abspath(path)) == os.path.abspath(_CONFIGS_DIR)
+
+
+def _uuid(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def list_niche_groups(*, use_cache: bool = True) -> dict[str, list[PresetMeta]]:
+    """Group presets by niche_group; standalone presets form single-item groups."""
+    presets = discover_presets(use_cache=use_cache)
+    groups: dict[str, list[PresetMeta]] = {}
+    for meta in presets.values():
+        groups.setdefault(meta.niche_group, []).append(meta)
+    for group_id in groups:
+        groups[group_id].sort(key=lambda m: m.label)
+    return dict(sorted(groups.items(), key=lambda item: item[1][0].niche_group_label))
+
+
+def presets_in_group(group_id: str, *, use_cache: bool = True) -> list[str]:
+    groups = list_niche_groups(use_cache=use_cache)
+    return [meta.preset_id for meta in groups.get(group_id, [])]
+
+
+def all_dedup_list_ids(preset_id: str, *, use_cache: bool = True) -> list[str]:
+    """Union of Instantly list IDs for all presets in the same niche group."""
+    presets = discover_presets(use_cache=use_cache)
+    meta = presets.get(preset_id)
+    if meta is None:
+        return []
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for sibling in presets.values():
+        if sibling.niche_group != meta.niche_group:
+            continue
+        list_id = _uuid(sibling.loader().get("INSTANTLY_LIST_ID"))
+        if list_id and list_id not in seen:
+            seen.add(list_id)
+            result.append(list_id)
+    return result
+
+
+def all_dedup_campaign_ids(preset_id: str, *, use_cache: bool = True) -> list[str]:
+    """Union of Instantly campaign IDs for all presets in the same niche group."""
+    presets = discover_presets(use_cache=use_cache)
+    meta = presets.get(preset_id)
+    if meta is None:
+        return []
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for sibling in presets.values():
+        if sibling.niche_group != meta.niche_group:
+            continue
+        campaign_id = _uuid(sibling.loader().get("INSTANTLY_CAMPAIGN_ID"))
+        if campaign_id and campaign_id not in seen:
+            seen.add(campaign_id)
+            result.append(campaign_id)
+    return result

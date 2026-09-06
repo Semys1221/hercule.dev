@@ -84,6 +84,16 @@ PRESETS: Mapping[str, Callable[[], dict[str, Any]]] = _PresetRegistry()
 PRESET_LABELS: Mapping[str, str] = _PresetLabels()
 
 
+def get_niche_groups() -> dict[str, list[tuple[str, str]]]:
+    """Return {group_id: [(preset_id, label), ...]} for UI grouping."""
+    from bootstrap.discovery import list_niche_groups
+
+    return {
+        group_id: [(m.preset_id, m.label) for m in metas]
+        for group_id, metas in list_niche_groups().items()
+    }
+
+
 def _require_env(name: str) -> str:
     value = os.getenv(name, "").strip()
     if not value:
@@ -116,6 +126,22 @@ def _inject_secrets(config: dict, *, require_keys: bool, preset: str) -> dict:
         config["INSTANTLY_LIST_ID"] = preset_list_id
     elif global_list_id and preset == DEFAULT_PRESET:
         config["INSTANTLY_LIST_ID"] = global_list_id
+
+    from bootstrap.discovery import all_dedup_campaign_ids, all_dedup_list_ids, discover_presets
+
+    presets = discover_presets(use_cache=True)
+    meta = presets.get(preset)
+    if meta is not None:
+        config.setdefault("NICHE_GROUP", meta.niche_group)
+        config.setdefault("NICHE_GROUP_LABEL", meta.niche_group_label)
+        config.setdefault("SUBNICHE_LABEL", meta.subniche_label)
+
+    group_lists = all_dedup_list_ids(preset)
+    if group_lists:
+        config["INSTANTLY_DEDUP_LIST_IDS"] = group_lists
+    group_campaigns = all_dedup_campaign_ids(preset)
+    if group_campaigns:
+        config["INSTANTLY_DEDUP_CAMPAIGN_IDS"] = group_campaigns
 
     for env_key, cfg_key in (
         ("OUTSCRAPER_BATCH_SIZE", "OUTSCRAPER_BATCH_SIZE"),

@@ -1,6 +1,9 @@
 # 17 — Capacity & SLA
 
-Pré-validé dans [VALIDATION.md](../tech-stack/VALIDATION.md) Partie 1 bis (cases cochées **Oui**). Ce fichier **ne relance pas** 6 débats. Une seule confirmation : ces décisions tiennent-elles toujours ?
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
+Pré-validé dans l’ancien [`VALIDATION.md`](../archive/2026-09-pre-architecture/VALIDATION.md) Partie 1 bis (cases cochées **Oui**). Ce fichier **ne relance pas** 6 débats. Une seule confirmation : ces décisions tiennent-elles toujours ?
 
 Sources : `doc/tech-stack/capacity/*`, `cvg_master.md`.
 
@@ -27,7 +30,7 @@ C’est de la **config JSON + promesse commerciale**, pas un moteur capacity.
 
 #### [CAP-01] Les décisions capacity C-01 à C-06 restent-elles la vérité **commerciale / SLA** à implémenter (même si le moteur inbox n’est pas le premier module) ?
 
-- [ ] **A (recommandé)** — Oui : elles restent ; l’implémentation technique (inbox pool, waiting list) peut être **plus tard**, mais copy, profile.delays et CGV ne doivent pas les contredire.
+- [x] **A (recommandé)** — Oui : elles restent ; l’implémentation technique (inbox pool, waiting list) peut être **plus tard**, mais copy, profile.delays et CGV ne doivent pas les contredire.
 - [ ] **B** — Les rouvrir : une ou plusieurs C-* sont obsolètes (préciser lesquelles en notes).
 - [ ] **C** — Capacity hors produit logiciel : ops humaine seulement, pas de champs `profile.capacity`.
 
@@ -43,4 +46,4 @@ Si B : lister les C-* invalidées sous la table.
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| CAP-01 | | |
+| CAP-01 | A | C-01…C-06 restent la vérité commerciale |

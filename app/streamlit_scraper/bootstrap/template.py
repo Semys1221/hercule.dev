@@ -57,6 +57,10 @@ def render_preset_config(
     label: str,
     list_id: str,
     campaign_id: str,
+    subsequence_id: str = "",
+    niche_group: str = "",
+    niche_group_label: str = "",
+    subniche_label: str = "",
     target_leads: int,
     keywords: list[str],
     expansion_keywords: list[str],
@@ -78,6 +82,16 @@ def render_preset_config(
         dedup_campaign = "[]"
 
     dedup_lists = f'["{list_id}"]' if list_id else "[]"
+    subseq_block = f'\n_SUBSEQUENCE_ID = "{subsequence_id}"' if subsequence_id else ""
+    group_exports = ""
+    if niche_group:
+        group_exports = (
+            f'\nNICHE_GROUP = "{niche_group}"\n'
+            f'NICHE_GROUP_LABEL = "{niche_group_label.replace(chr(34), chr(92)+chr(34))}"\n'
+            f'SUBNICHE_LABEL = "{subniche_label.replace(chr(34), chr(92)+chr(34))}"\n'
+        )
+
+    subseq_ref = "_SUBSEQUENCE_ID" if subsequence_id else '""'
 
     return f'''"""{label} scraper preset — static rules; secrets come from config_loader."""
 
@@ -85,14 +99,15 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 
 PRESET_ID = "{preset_id}"
 PRESET_LABEL = "{label.replace(chr(34), chr(92)+chr(34))}"
-
-_LIST_ID = "{list_id}"{campaign_block}
+{group_exports}
+_LIST_ID = "{list_id}"{campaign_block}{subseq_block}
 
 {var_name} = {{
     "OUTSCRAPER_API_KEY": "",
     "INSTANTLY_API_KEY": "",
     "INSTANTLY_LIST_ID": _LIST_ID,
     "INSTANTLY_CAMPAIGN_ID": {campaign_ref},
+    "INSTANTLY_SUBSEQUENCE_ID": {subseq_ref},
     "INSTANTLY_DEDUP_LIST_IDS": {dedup_lists},
     "INSTANTLY_DEDUP_CAMPAIGN_IDS": {dedup_campaign},
     "INSTANTLY_PUSH_EVERY": {tuning.get("INSTANTLY_PUSH_EVERY", 100)},

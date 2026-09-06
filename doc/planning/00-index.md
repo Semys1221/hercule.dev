@@ -1,7 +1,10 @@
 # 00 — Index du package de validation
 
-**Statut du package :** à remplir par le product owner.  
-**Statut code :** aucun changement de production dans cette phase.
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
+**Statut du package :** gelé 2026-09-06.  
+**Statut code :** aucun changement de production dans cette phase. Canon : [`doc/README.md`](../README.md).
 
 Mode d’emploi : [README.md](./README.md) · Propriété : [00-decision-ownership.md](./00-decision-ownership.md)
 
@@ -58,7 +61,7 @@ Ordre de remplissage recommandé : `22` → `01` → `15`+`16` → `03` → `11`
 | Domaine | Document | Purpose | # décisions | High-impact | Dépend de | Statut |
 |---------|----------|---------|-------------|-------------|-----------|--------|
 | Propriété | [00-decision-ownership.md](./00-decision-ownership.md) | ENG vs produit | 0 (ENG décidés) | — | — | à lire |
-| Intention métier | [22-business-intent-validation.md](./22-business-intent-validation.md) | Offre, unité, paiement vs livraison, pack | 10 | BIZ-01…06 | — | à remplir **en premier** |
+| Intention métier | [22-business-intent-validation.md](./22-business-intent-validation.md) | Offre, unité, paiement vs livraison, pack | 10 | BIZ-01…06 | — | gelé |
 | Fondations | [01-foundations-validation.md](./01-foundations-validation.md) | Machines d’état, cockpit, matching, commercial, paiement | 16 | FND-01,02,03,04,05,06,13,16 | 22 | à remplir |
 | Composants | [02-components-validation.md](./02-components-validation.md) | Inventaire + registry + catalogue fermé | 2 | COMP-02 | 01, 03, 19 | à remplir |
 | Database | [03-database-validation.md](./03-database-validation.md) | 17 tables, enum, profile | 2 | DB-01 | 01, 16 | à remplir |
@@ -122,7 +125,7 @@ Ordre de remplissage recommandé : `22` → `01` → `15`+`16` → `03` → `11`
 
 ## Mapping ancien VALIDATION.md → ce package
 
-L’ancien [VALIDATION.md](../tech-stack/VALIDATION.md) est **remplacé** pour la prise de décision. C-01–C-06 restent la base de CAP-01.
+L’ancien [`VALIDATION.md`](../archive/2026-09-pre-architecture/VALIDATION.md) (archivé) est **remplacé** pour la prise de décision. C-01–C-06 restent la base de CAP-01.
 
 | Ancien | Nouveau | Note |
 |--------|---------|------|

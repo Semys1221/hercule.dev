@@ -1,5 +1,8 @@
 # 11 — Intégrations
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Stripe, Clerk, n8n : **absents du code**. Ne pas les « brancher pour plus tard » sans question.
 
 ---
@@ -32,7 +35,7 @@ V-38 = manuel. `sequence_client_not_paid` = Stripe. **Aucun** des deux n’est d
 
 - [ ] **A (recommandé)** — Manuel au MVP : l’admin confirme 1489 / 898 (et l’entrée ~1500) ; **pas** de Stripe tant que FND-11 C n’est pas choisi.
 - [ ] **B** — Préserver « pas de paiement dans le code » (le plus proche du live) : même pas de route `payment-confirmed`.
-- [ ] **C** — Stripe (Payment Link ou Checkout) pour not-paid / upsell, avec webhook `payment_intent.succeeded` idempotent.
+- [x] **C** — Stripe (Payment Link ou Checkout) pour not-paid / upsell, avec webhook `payment_intent.succeeded` idempotent.
 
 **Impact si l’architecture change :** High  
 **Domaines affectés :** Post-RDV, onboarding, sécurité, jobs  
@@ -43,7 +46,7 @@ V-38 = manuel. `sequence_client_not_paid` = Stripe. **Aucun** des deux n’est d
 
 Ils sont live et critiques pour l’acquisition, mais hors des 4 modules tech-stack.
 
-- [ ] **A (recommandé)** — Stack **ops** : documentée, maintenue, hors modules matching/délivrance ; le produit consomme les leads déjà `CONFIRMED` / payés.
+- [x] **A (recommandé)** — Stack **ops** : documentée, maintenue, hors modules matching/délivrance ; le produit consomme les leads déjà `CONFIRMED` / payés.
 - [ ] **B** — Tout est un seul produit : internal dashboard doit piloter Instantly/AI comme le matching.
 - [ ] **C** — Sortir Instantly/AI du repo /internal à moyen terme (outil externe only).
 
@@ -53,7 +56,7 @@ Ils sont live et critiques pour l’acquisition, mais hors des 4 modules tech-st
 
 #### [INT-03] Le scraper (Outscraper / Pappers) et le cleaner (MyEmailVerifier) restent-ils des outils Streamlit hors plateforme Next ?
 
-- [ ] **A (recommandé)** — Oui : hors `/internal` Next ; pas d’API Next pour scraper.
+- [x] **A (recommandé)** — Oui : hors `/internal` Next ; pas d’API Next pour scraper.
 - [ ] **B** — Les migrer dans `/internal` comme le funnel builder.
 - [ ] **C** — Les abandonner / remplacer (autre fournisseur).
 
@@ -115,6 +118,6 @@ Grok : `lib/ai-reply-agent/grok.ts`. GA composant `components/google-analytics.t
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| INT-01 | | |
-| INT-02 | | |
-| INT-03 | | |
+| INT-01 | C | Stripe lien/checkout + webhook ; ops envoie le lien |
+| INT-02 | A | Instantly/IA = outils ops hors livraison |
+| INT-03 | A | Scraper hors Next |

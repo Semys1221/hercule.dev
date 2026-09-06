@@ -1,5 +1,8 @@
 # Propriété des décisions — Produit vs ingénierie
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Ce fichier n’est **pas** un questionnaire. Il fixe qui décide quoi. Les `ENG-*` sont tranchés. Ne les recochez pas. Si une `ENG-*` viole une intention produit que vous n’aviez pas exprimée, signalez-le en commentaire sous la décision concernée — ce n’est pas une question A/B/C.
 
 ## Règle
@@ -96,7 +99,7 @@ Pas de second design system. Ne pas « Grok-thémer » Streamlit. Tokens / shadc
 
 ## Ce que l’ancien VALIDATION.md mélangeait
 
-[`doc/tech-stack/VALIDATION.md`](../tech-stack/VALIDATION.md) posait 55 questions Oui / Non / Partiel, **non remplies** sauf C-01–C-06 (capacity, pré-cochés).
+[`doc/archive/2026-09-pre-architecture/VALIDATION.md`](../archive/2026-09-pre-architecture/VALIDATION.md) posait 55 questions Oui / Non / Partiel, **non remplies** sauf C-01–C-06 (capacity, pré-cochés).
 
 Beaucoup de `V-*` étaient de la confirmation de doc, pas un choix d’architecture. Celles qui sont de l’ingénierie deviennent `ENG-*`. Celles qui restent produit sont réécrites ici (A/B/C). Mapping : [00-index.md](./00-index.md).
 

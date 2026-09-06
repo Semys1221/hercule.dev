@@ -1,8 +1,19 @@
 # AI Reply Agent — Technical Specification
 
-> Tool : Streamlit AI Sales Agent · Source notes : [my_raw_notes.md](./streamlit_reply_agent/my_raw_notes.md)  
-> Related : [Instantly bypass / Subsequence](../../../app/streamlit_subsequence/) · [CVG master](../cvg_master.md) · [Overview](../00-overview.md)  
-> Status : **implemented** — see `app/streamlit_reply_agent/`, `lib/ai-reply-agent/`, migration `20260920120000_ai_reply_agent.sql`. Config also stores `ooo_webhook_id` and frozen `niche_metadata`.
+```
+status: legacy-ops
+audience: coding-agent
+depends_on: ../00-decisions.md
+decisions: INT-02 SET-02
+do_not:
+  - En faire le cockpit produit
+  - Le migrer dans /internal au MVP
+```
+
+> Tool : Streamlit AI Sales Agent · **Ops outreach, hors modules livraison.**  
+> Source notes : [my_raw_notes.md](./streamlit_reply_agent/my_raw_notes.md)  
+> Related : Instantly subsequence · [cvg_master.md](../cvg_master.md)  
+> Status : **implemented** — `app/streamlit_reply_agent/`, `lib/ai-reply-agent/`.
 
 ---
 
@@ -220,7 +231,7 @@ sequenceDiagram
 |-------|------|----------|
 | 1. CGV | [`doc/tech-stack/cvg_master.md`](../cvg_master.md) | Buyer pricing, SLA, guarantees, no-show 14 jours ouvrés, 4-day rétractation |
 | 2. Entreprise FAQ | [`doc/tech-stack/deliverance/front-client.md`](../deliverance/front-client.md) §4 E1–E7 | Seller: free service, no commission, Calendly via email, continue search |
-| 3. Product rules | [`doc/tech-stack/00-overview.md`](../00-overview.md) | Agence pays · entreprise never pays · no entreprise upsell |
+| 3. Product rules | [`doc/tech-stack/01-product.md`](../01-product.md) | Agence pays · entreprise never pays · no entreprise upsell |
 | 4. Niche metadata | `NICHE_METADATA` from the selected scraper preset | Angle, target size, who we are talking to |
 | 5. Prompt snapshot | Frozen at activation from the registry file | Tone and niche-specific framing |
 

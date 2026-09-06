@@ -4,7 +4,8 @@ import os
 import pandas as pd
 import streamlit as st
 
-from config_loader import PRESET_LABELS, load_config
+from bootstrap.discovery import discover_presets, list_niche_groups
+from config_loader import load_config
 from core_logic import clear_local_leads, output_paths, run_scraper_pipeline
 from instantly_client import csv_push_stats, push_csv_to_instantly
 from scrape_state import detect_recoverable_run, load_scrape_state, target_mode
@@ -23,8 +24,28 @@ def _count_pappers_rejects(audit_path: str) -> int:
 
 st.set_page_config(page_title="Streamlit Scraper", page_icon="⚡", layout="wide")
 
-PRESET_OPTIONS = ["Manual Setup", *PRESET_LABELS.values()]
-LABEL_TO_PRESET = {label: preset_id for preset_id, label in PRESET_LABELS.items()}
+_NICHE_GROUPS = list_niche_groups()
+_GROUP_OPTIONS = ["Manual Setup"] + [
+    metas[0].niche_group_label for metas in _NICHE_GROUPS.values()
+]
+_GROUP_ID_BY_LABEL = {
+    metas[0].niche_group_label: group_id for group_id, metas in _NICHE_GROUPS.items()
+}
+
+
+def _resolve_preset(group_label: str, subniche_label: str) -> str:
+    if group_label == "Manual Setup":
+        return ""
+    group_id = _GROUP_ID_BY_LABEL.get(group_label)
+    if not group_id:
+        return ""
+    metas = _NICHE_GROUPS.get(group_id, [])
+    if len(metas) == 1:
+        return metas[0].preset_id
+    for meta in metas:
+        if meta.subniche_label == subniche_label or meta.label == subniche_label:
+            return meta.preset_id
+    return metas[0].preset_id if metas else ""
 
 if "logs" not in st.session_state:
     st.session_state.logs = []
@@ -75,8 +96,21 @@ col1, col2 = st.columns([1, 2])
 with col1:
     st.subheader("⚙️ Bootstrap Configuration")
 
-    preset_label = st.selectbox("Select a Profile Configuration:", PRESET_OPTIONS)
-    preset_id = LABEL_TO_PRESET.get(preset_label, "")
+    group_label = st.selectbox("Niche group:", _GROUP_OPTIONS)
+    subniche_label = ""
+    if group_label != "Manual Setup":
+        group_id = _GROUP_ID_BY_LABEL.get(group_label, "")
+        group_metas = _NICHE_GROUPS.get(group_id, [])
+        if len(group_metas) > 1:
+            subniche_options = [m.subniche_label for m in group_metas]
+            subniche_label = st.selectbox("Sub-niche:", subniche_options)
+        elif group_metas:
+            subniche_label = group_metas[0].subniche_label
+
+    preset_id = _resolve_preset(group_label, subniche_label)
+    preset_label = ""
+    if preset_id:
+        preset_label = discover_presets().get(preset_id).label if preset_id in discover_presets() else preset_id
 
     if preset_id:
         config = load_config(preset_id, require_keys=False)
@@ -107,6 +141,8 @@ with col1:
             st.info(f"SIRET via site + Annuaire (BeautifulSoup) — min {min_emp} salariés")
         if config.get("INSTANTLY_CAMPAIGN_ID"):
             st.caption(f"Instantly campaign: `{config.get('INSTANTLY_CAMPAIGN_ID')}`")
+        if config.get("INSTANTLY_SUBSEQUENCE_ID"):
+            st.caption(f"Instantly subsequence: `{config.get('INSTANTLY_SUBSEQUENCE_ID')}`")
     else:
         preset_id = ""
         paths = None

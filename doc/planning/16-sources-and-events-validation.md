@@ -1,5 +1,8 @@
 # 16 — Sources de vérité et événements métier
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Ne pas mélanger : **configuration**, **exécution**, **événement**, **vue dérivée**.
 
 ---
@@ -45,7 +48,7 @@ Le CRM suppose **un** invitee Calendly par lead. La délivrance suppose **N** RD
 
 Aujourd’hui un lead n’a qu’un jeu de colonnes Calendly ; `documentations_2` exige un historique et `MEETING_n`. Inventer `appointments` sans votre feu vert serait un nouveau produit.
 
-- [ ] **A (recommandé)** — Oui : table (ou équivalent) `appointments` / livraisons, **séparée** des colonnes Calendly d’acquisition ; le compteur et les statuts `MEETING_n` se **dérivent** de ces records, ils ne sont pas tapés dans l’UI.
+- [x] **A (recommandé)** — Oui : table (ou équivalent) `appointments` / livraisons, **séparée** des colonnes Calendly d’acquisition ; le compteur et les statuts `MEETING_n` se **dérivent** de ces records, ils ne sont pas tapés dans l’UI.
 - [ ] **B** — Non : garder un seul RDV par lead (colonnes actuelles) ; pas de compteur `MEETING_n`.
 - [ ] **C** — Historique dans `profile` JSON / JSONB, sans table SQL.
 
@@ -69,7 +72,7 @@ Aujourd’hui un lead n’a qu’un jeu de colonnes Calendly ; `documentations_2
 
 - [ ] **A (recommandé)** — Instantly API = vérité live ; cache local optionnel avec refresh manuel ; ne pas traiter le JSON comme métier.
 - [ ] **B** — Garder le JSON local comme archive / snapshot ops sans obligation de sync.
-- [ ] **C** — Persister les stats en Supabase (nouvelle table) comme vérité interne.
+- [x] **C** — Persister les stats en Supabase (nouvelle table) comme vérité interne.
 
 **Impact si l’architecture change :** Low–Medium  
 **Domaines affectés :** Internal dashboard, Instantly, Streamlit stats
@@ -120,7 +123,7 @@ Chaque événement live a : owner, source, effet DB, idempotence, échec.
 
 Le CRM booking utilise aujourd’hui des offsets **code** (h48/h24/h20) + templates DB, pas `profile.delays`.
 
-- [ ] **A (recommandé)** — Oui pour les séquences **produit** ; le booking CRM garde ses offsets code (deux familles, deux SoT assumées).
+- [x] **A (recommandé)** — Oui pour les séquences **produit** ; le booking CRM garde ses offsets code (deux familles, deux SoT assumées).
 - [ ] **B** — Tout rester en code + `booking_email_templates` ; `profile.delays` n’est pas nécessaire.
 - [ ] **C** — Une table de config globale (settings) pour les délais produit, pas du JSON par fiche.
 
@@ -134,6 +137,6 @@ Le CRM booking utilise aujourd’hui des offsets **code** (h48/h24/h20) + templa
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| SOT-01 | | |
-| SOT-02 | | |
-| SOT-03 | | |
+| SOT-01 | A | Table appointments ; compteur dérivé |
+| SOT-02 | C | Stats Instantly en base |
+| SOT-03 | A | Délais produit dans profile ; vente en code |

@@ -1,5 +1,8 @@
 # 20 — CGV (source de vérité légale)
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 **Intention :** un seul texte contractuel ; un changement met à jour **tous** les consommateurs (site, internal, AI reply, checkbox onboarding). JSON / Streamlit **ne sont pas** la SoT actuelle — malgré le souvenir ops.
 
 Ne pas reposer [CPY-03](./09-copywriting-validation.md) (FAQ/pricing/légal site vs `doc/`). Ici : **contrat** vs copy marketing.
@@ -43,7 +46,7 @@ Catégories dans l’UI : **nœuds de nav** (CGV / mentions / confidentialité /
 
 Le code utilise déjà les markdown `doc/tech-stack/`. JSON Streamlit n’existe pas pour ce contenu.
 
-- [ ] **A (recommandé)** — Garder **markdown** `cvg_master.md` / `cvg_entreprise.md` comme SoT légale ; `/internal` peut écrire ces fichiers ; tous les consommateurs passent par `legal-content.ts` (déjà le cas pour le site).
+- [x] **A (recommandé)** — Garder **markdown** `cvg_master.md` / `cvg_entreprise.md` comme SoT légale ; `/internal` peut écrire ces fichiers ; tous les consommateurs passent par `legal-content.ts` (déjà le cas pour le site).
 - [ ] **B** — Déplacer la CGV en **Supabase** (versioning, `cvg_version` à l’acceptation).
 - [ ] **C** — CMS JSON (modèle Streamlit souvenir) comme SoT, markdown généré ou abandonné.
 
@@ -55,7 +58,7 @@ Le code utilise déjà les markdown `doc/tech-stack/`. JSON Streamlit n’existe
 
 Sans ça, l’éditeur pricing `/internal` peut contredire le contrat.
 
-- [ ] **A (recommandé)** — Éditeur internal **explicite** (« ceci est le contrat ») ; pricing / FAQ **dérivent** ou citent les constantes, pas une deuxième vérité.
+- [x] **A (recommandé)** — Éditeur internal **explicite** (« ceci est le contrat ») ; pricing / FAQ **dérivent** ou citent les constantes, pas une deuxième vérité.
 - [ ] **B** — CGV = git / juridique seulement ; `/internal` reste preview lecture seule (état actuel).
 - [ ] **C** — Le pricing JSON **peut** diverger pour le marketing (landing ≠ contrat).
 
@@ -69,5 +72,5 @@ Sans ça, l’éditeur pricing `/internal` peut contredire le contrat.
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| CVG-01 | | |
-| CVG-02 | | |
+| CVG-01 | A | Markdown tech-stack SoT contrat |
+| CVG-02 | A | Pricing/FAQ dérivent du contrat |

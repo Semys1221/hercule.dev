@@ -1,6 +1,14 @@
 # Conditions d'utilisation — Entreprise
 
-> Version : 2026-09-24 · Audience : entreprises recherchant une agence partenaire  
+```
+status: canonical
+audience: coding-agent
+decisions: SAL-02 BIZ-08 EML-03
+do_not:
+  - Upsell ou paiement entreprise
+```
+
+> Version : 2026-09-06 · Audience : entreprises recherchant une agence partenaire  
 > Complément : [cvg_master.md](./cvg_master.md) (contrat agences partenaires)
 
 ---

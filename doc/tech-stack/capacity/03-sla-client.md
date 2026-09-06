@@ -1,12 +1,21 @@
 # Capacity — SLA client (promesses externes)
 
-> Module : [Capacity](./README.md) · Voir aussi : [SLA interne](./04-sla-internal.md) · [Bootstrap timeline](./09-bootstrap-timeline.md)
+```
+status: canonical
+audience: coding-agent
+depends_on: README.md, ../cvg_master.md
+decisions: CAP-01
+do_not:
+  - J+4 à cause d’une rétractation 4 jours (abrogée)
+```
+
+> Module : [Capacity](./README.md) · CGV § 9
 
 ---
 
-## 1. Intro (langage simple)
+## 1. Intro
 
-Ce document liste ce que tu peux **promettre par écrit** au client payant — avec buffer par rapport aux cibles internes. Deux phases : **bootstrap** (pool 60, warmup en cours) et **stable** (pool 120, T+15+).
+Promesses **écrites** au client payant. Buffer vs cibles internes. Phases bootstrap (pool 60) et stable (pool 120, T+15+).
 
 ---
 
@@ -15,8 +24,8 @@ Ce document liste ce que tu peux **promettre par écrit** au client payant — a
 | Étape | Promesse client | Condition |
 |-------|-----------------|-----------|
 | Accès onboarding | **48h** après paiement | Client remplit le form |
-| Démarrage recherche (U1) | **J+0 à J+4** | J+4 si rétractation légale |
-| File d'attente | **+15 jours max** | Batch warmup ou capacité saturée — position communiquée |
+| Démarrage recherche (U1) | **J+0** après paiement + onboarding | File d’attente éventuelle |
+| File d'attente | **+15 jours max** | Warmup ou capacité saturée — position communiquée |
 
 ---
 
@@ -66,7 +75,7 @@ Phase bootstrap = **+7j** de marge implicite + mention « montée en charge infr
 
 ## 7. Réponses pré-validées (ex-sop E2.2 / E3.x)
 
-Décisions documentées pour [VALIDATION.md](../VALIDATION.md) :
+Décisions documentées (C-01…C-06, [00-decisions.md](../00-decisions.md) CAP-01) :
 
 | Question | Décision doc |
 |----------|--------------|

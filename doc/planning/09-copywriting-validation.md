@@ -1,5 +1,8 @@
 # 09 — Copywriting
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Copy ≠ workflow. Ici : textes business-facing, pas les CHECK SQL.
 
 ---
@@ -41,7 +44,7 @@ Terminologie **alignée CGV** à préserver : Attribution (pas « signature gara
 #### [CPY-01] Faut-il conserver **deux** tarifs agence distincts (entrée ~1 500 € et renouvellement 1 489 €) dans toute la copy ?
 
 - [ ] **A (recommandé)** — Oui : deux montants, templates et CTA séparés (entrée vs renew).
-- [ ] **B** — Harmoniser tout à **1 489 €**.
+- [x] **B** — Harmoniser tout à **1 489 €**.
 - [ ] **C** — Harmoniser tout à **1 500 €** (ou un autre montant unique à préciser).
 
 **Impact si l’architecture change :** Medium  
@@ -50,7 +53,7 @@ Terminologie **alignée CGV** à préserver : Attribution (pas « signature gara
 
 #### [CPY-02] Le mot « onboarding » dans l’email J+7 entreprise (après RDV + embarquement) doit-il rester ?
 
-- [ ] **A (recommandé)** — Remplacer par « collaboration / démarrage avec l’agence » (évite le choc avec l’onboarding formulaire).
+- [x] **A (recommandé)** — Remplacer par « collaboration / démarrage avec l’agence » (évite le choc avec l’onboarding formulaire).
 - [ ] **B** — Garder « onboarding » tel que documenté.
 - [ ] **C** — Wording neutre type « Comment s’est passé votre projet ? »
 
@@ -62,7 +65,7 @@ Terminologie **alignée CGV** à préserver : Attribution (pas « signature gara
 
 Les deux existent ; les éditeurs internal écrivent plutôt `content/` / doc selon le composant.
 
-- [ ] **A (recommandé)** — Site public = `content/` (FAQ, pricing) ; CGV légales = `cvg_master.md` (pas d’édition légère qui diverges du contrat).
+- [x] **A (recommandé)** — Site public = `content/` (FAQ, pricing) ; CGV légales = `cvg_master.md` (pas d’édition légère qui diverges du contrat).
 - [ ] **B** — Un seul arbre markdown `doc/` alimente le site et l’éditeur.
 - [ ] **C** — CMS en base (nouvelle table).
 
@@ -75,7 +78,7 @@ Les deux existent ; les éditeurs internal écrivent plutôt `content/` / doc se
 Elle n’existe ni en CGV ni en V-35 (898 one-shot).
 
 - [ ] **A (recommandé)** — Ignorer / brouillon : **pas** dans le produit ; 898 one-shot + 1489 + 2500 CGV seulement.
-- [ ] **B** — C’est une offre produit à ajouter (préciser HT, durée).
+- [x] **B** — C’est une offre produit à ajouter (préciser HT, durée).
 - [ ] **C** — Remplace 898.
 
 **Impact si l’architecture change :** High si B/C  
@@ -87,7 +90,7 @@ Elle n’existe ni en CGV ni en V-35 (898 one-shot).
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| CPY-01 | | |
-| CPY-02 | | |
-| CPY-03 | | |
-| CPY-04 | | |
+| CPY-01 | B | 1489/mois ou 989×3=2967 / 15 RDV |
+| CPY-02 | A | Pas le mot onboarding côté entreprise |
+| CPY-03 | A | content/ site ; cvg_master contrat |
+| CPY-04 | B | Offre réelle 1489 + 989×3 ; 2500 vitrine |

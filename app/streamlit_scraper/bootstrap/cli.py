@@ -29,14 +29,13 @@ def list_cmd() -> None:
         typer.secho("No presets found.", fg=typer.colors.YELLOW)
         raise typer.Exit(code=0)
 
-    typer.echo(f"{'ID':<28} {'LABEL':<40} {'TARGET':>8} {'KW':>4}  LIST_ID")
-    typer.echo("-" * 100)
+    typer.echo(f"{'ID':<28} {'GROUP':<28} {'LABEL':<36} {'TARGET':>8}  LIST_ID")
+    typer.echo("-" * 120)
     for meta in presets.values():
         config = meta.loader()
         typer.echo(
-            f"{meta.preset_id:<28} {meta.label:<40} "
-            f"{int(config.get('TARGET_LEADS', 0)):>8,} "
-            f"{len(config.get('KEYWORDS') or []):>4}  "
+            f"{meta.preset_id:<28} {meta.niche_group:<28} {meta.label:<36} "
+            f"{int(config.get('TARGET_LEADS', 0)):>8,}  "
             f"{config.get('INSTANTLY_LIST_ID', '')}"
         )
 
@@ -86,12 +85,17 @@ def validate_cmd(
 def provision_instantly_cmd(
     preset_id: str = typer.Argument(
         "",
-        help="Preset to provision (default: all configs/ niches)",
+        help="Preset to provision (default: all sub-niche configs/)",
     ),
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
         help="Show what would be created without calling Instantly",
+    ),
+    with_subsequence: bool = typer.Option(
+        False,
+        "--with-subsequence",
+        help="Also create interested bypass subsequence + onboard webhook",
     ),
 ) -> None:
     """Create or reuse Instantly list + draft campaign for niche presets."""
@@ -107,7 +111,7 @@ def provision_instantly_cmd(
         raise typer.Exit(code=1)
 
     if not targets:
-        typer.secho("No configs/ presets to provision.", fg=typer.colors.YELLOW)
+        typer.secho("No sub-niche configs/ presets to provision.", fg=typer.colors.YELLOW)
         raise typer.Exit(code=0)
 
     api_key = ""
@@ -121,7 +125,12 @@ def provision_instantly_cmd(
     failed = False
     for pid in targets:
         try:
-            result = provision_preset(pid, api_key=api_key, dry_run=dry_run)
+            result = provision_preset(
+                pid,
+                api_key=api_key,
+                dry_run=dry_run,
+                with_subsequence=with_subsequence,
+            )
         except Exception as exc:
             failed = True
             typer.secho(f"FAIL {pid}: {exc}", fg=typer.colors.RED)
@@ -129,11 +138,78 @@ def provision_instantly_cmd(
 
         status = "SKIP" if result.get("skipped") else ("DRY" if dry_run else "OK")
         color = typer.colors.YELLOW if status != "OK" else typer.colors.GREEN
+        subseq = result.get("subsequence_id") or "(none)"
         typer.secho(
             f"{status} {pid} — {result['name']} "
             f"list={result.get('list_id') or '(pending)'} "
-            f"campaign={result.get('campaign_id') or '(pending)'}",
+            f"campaign={result.get('campaign_id') or '(pending)'} "
+            f"subsequence={subseq}",
             fg=color,
+        )
+
+    if failed:
+        raise typer.Exit(code=1)
+
+
+@app.command("cleanup-instantly")
+def cleanup_instantly_cmd(
+    parent: str = typer.Argument(
+        "",
+        help="Deprecated parent niche to clean up (e.g. btp_reno)",
+    ),
+    all_deprecated: bool = typer.Option(
+        False,
+        "--all-deprecated",
+        help="Clean up all 6 deprecated monolithic niches",
+    ),
+    execute: bool = typer.Option(
+        False,
+        "--execute",
+        help="Actually delete Instantly resources (default is dry-run)",
+    ),
+) -> None:
+    """Delete deprecated monolithic Instantly lists and campaigns."""
+    import os
+
+    from bootstrap.cleanup import cleanup_deprecated, cleanup_targets
+
+    if not parent and not all_deprecated:
+        typer.secho("Specify a parent niche or --all-deprecated.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    try:
+        targets = cleanup_targets(parent, all_deprecated=all_deprecated)
+    except KeyError:
+        typer.secho(f"Unknown parent niche {parent!r}.", fg=typer.colors.RED)
+        raise typer.Exit(code=1)
+
+    api_key = ""
+    if execute:
+        from config_loader import load_config
+
+        from bootstrap.provision import provision_targets
+
+        targets_for_key = provision_targets()
+        sample_id = targets_for_key[0] if targets_for_key else "services_fm"
+        sample = load_config(sample_id, require_keys=False)
+        api_key = str(sample.get("INSTANTLY_API_KEY") or os.getenv("INSTANTLY_API_KEY") or "").strip()
+        if not api_key:
+            typer.secho("INSTANTLY_API_KEY is required for --execute.", fg=typer.colors.RED)
+            raise typer.Exit(code=1)
+
+    failed = False
+    for pid in targets:
+        try:
+            result = cleanup_deprecated(pid, api_key=api_key, dry_run=not execute)
+        except Exception as exc:
+            failed = True
+            typer.secho(f"FAIL {pid}: {exc}", fg=typer.colors.RED)
+            continue
+
+        mode = "EXEC" if execute else "DRY"
+        typer.secho(
+            f"{mode} {pid} — list={result['list_id']} campaign={result['campaign_id']}",
+            fg=typer.colors.YELLOW if not execute else typer.colors.GREEN,
         )
 
     if failed:

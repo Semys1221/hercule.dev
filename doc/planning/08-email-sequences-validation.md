@@ -1,5 +1,8 @@
 # 08 — Séquences email
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Une séquence n’est pas un funnel, pas un cron, pas un template seul.
 
 Familles : **(1) booking CRM — code+DB, event-driven Calendly** · **(2) Instantly bypass — code+DB, webhook** · **(3) AI reply — pas une séquence marketing** · **(4) produit délivrance/matching/post-RDV — spec**.
@@ -69,7 +72,7 @@ Outreach copy `doc/email_outreach_copy/*` : **Instantly campaigns** (fichiers), 
 
 Réutiliser la queue évite un second moteur (`ENG` préfère A **si** FND construit ces modules).
 
-- [ ] **A (recommandé)** — Réutiliser jobs + templates + cron booking-emails ; étendre CHECK `email_type` ; triggers = events produit.
+- [x] **A (recommandé)** — Réutiliser jobs + templates + cron booking-emails ; étendre CHECK `email_type` ; triggers = events produit.
 - [ ] **B** — Aucune séquence produit au MVP ; seulement booking CRM + Instantly.
 - [ ] **C** — Moteur / table séparés pour le produit (deuxième queue).
 
@@ -79,7 +82,7 @@ Réutiliser la queue évite un second moteur (`ENG` préfère A **si** FND const
 
 #### [EML-02] Le calendrier nurturing agence ~8 emails / 60 jours est-il toujours voulu ?
 
-- [ ] **A (recommandé)** — Oui : J+7 1489, J+14 conseil, puis weekly ×6 ; cancel si paiement.
+- [x] **A (recommandé)** — Oui : J+7 1489, J+14 conseil, puis weekly ×6 ; cancel si paiement.
 - [ ] **B** — Pas de nurturing au MVP.
 - [ ] **C** — Volume réduit (max 3–4) ou bi-mensuel.
 
@@ -91,7 +94,7 @@ Réutiliser la queue évite un second moteur (`ENG` préfère A **si** FND const
 
 Exigence métier répétée dans le tech-stack. Confirmer ; ne pas « ajouter un drip » par confort technique.
 
-- [ ] **A (recommandé)** — Oui : J+7 seulement ; pas d’avis MVP ; pas d’upsell entreprise.
+- [x] **A (recommandé)** — Oui : J+7 seulement ; pas d’avis MVP ; pas d’upsell entreprise.
 - [ ] **B** — Zéro email post-SOLD entreprise (même pas J+7).
 - [ ] **C** — Ajouter avis et/ou autres relances.
 
@@ -103,7 +106,7 @@ Exigence métier répétée dans le tech-stack. Confirmer ; ne pas « ajouter un
 
 Ce n’est pas Resend. Les fusionner casserait le bypass.
 
-- [ ] **A (recommandé)** — Oui : outreach Instantly ≠ templates Resend ; pas de SoT unique « tous les emails ».
+- [x] **A (recommandé)** — Oui : outreach Instantly ≠ templates Resend ; pas de SoT unique « tous les emails ».
 - [ ] **B** — Centraliser tout le copy email (y compris Instantly) dans Supabase.
 - [ ] **C** — Centraliser dans le funnel builder filesystem.
 
@@ -114,7 +117,7 @@ Ce n’est pas Resend. Les fusionner casserait le bypass.
 
 Aujourd’hui les offsets booking (h48/h24/h20) vivent dans le **code**, pas dans `cvg_master.md` §9–§10. Le pricing JSON recopie des garanties. Mécanisme après un oui : constantes commerciales + tests (`ENG-16`), **pas** un parseur markdown.
 
-- [ ] **A (recommandé)** — Oui : la CGV (CVG-01) est la référence métier ; les séquences consomment les mêmes constantes ; un test échoue si copy/délais divergent.
+- [x] **A (recommandé)** — Oui : la CGV (CVG-01) est la référence métier ; les séquences consomment les mêmes constantes ; un test échoue si copy/délais divergent.
 - [ ] **B** — Audit manuel seulement, pas de garde-fou technique.
 - [ ] **C** — La CGV est informative ; les séquences **peuvent** diverger (ops).
 
@@ -128,8 +131,8 @@ Aujourd’hui les offsets booking (h48/h24/h20) vivent dans le **code**, pas dan
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| EML-01 | | |
-| EML-02 | | |
-| EML-03 | | |
-| EML-04 | | |
-| EML-05 | | |
+| EML-01 | A | Même file, nouveaux types produit |
+| EML-02 | A | Nurturing plein tarif si NOT_PAID ; tarif ne baisse pas |
+| EML-03 | A | Entreprise : 1 email J+7, pas d’upsell |
+| EML-04 | A | Copy Instantly hors éditeur Resend |
+| EML-05 | A | Emails = chiffres CGV ; constantes + tests |

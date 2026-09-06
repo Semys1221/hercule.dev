@@ -1,7 +1,17 @@
-# streamlit_funnels — internal funnel cockpit
+# streamlit_funnels — HISTORIQUE (ne pas ressusciter)
 
-> Tool : Streamlit Funnels · Status : **implemented (v1 shell)**  
-> Related : [streamlit_demands](../../../app/streamlit_demands/) · [streamlit_reply_agent](./streamlit_reply_agent.md) · [02-profile-json.md](../02-profile-json.md)
+```
+status: legacy-ops
+audience: coding-agent
+decisions: ENG-15 ADM-01 FUN-01
+do_not:
+  - Recréer app/streamlit_funnels
+  - Éditer funnels hors /internal
+```
+
+L’app Streamlit Funnels est **absente**. L’édition vit dans `/internal/funnels` (fichiers aujourd’hui, CMS DB étape 10).
+
+Le texte ci-dessous est **archivé** pour mémoire. Ne pas l’implémenter.
 
 ---
 

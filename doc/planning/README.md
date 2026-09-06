@@ -1,8 +1,11 @@
 # Package de validation — Hercule
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 ## 1. Pourquoi ce package existe
 
-Le code, `doc/tech-stack/`, `doc/documentations_2/` et `doc/documentation_2/` décrivent **plusieurs architectures produit** qui ne coïncident pas. Une partie du système est en production (CRM Instantly → Calendly → Resend). Une autre n’existe que dans la documentation (matching, délivrance, post-RDV, compteurs `MEETING_n`).
+Le code, `doc/tech-stack/` (canon actuel) et l’archive `doc/archive/2026-09-pre-architecture/` décrivent l’état **avant** gel. Ce package a fixé les décisions. Ne plus recocher.
 
 Ce package n’implémente rien. Il établit une **couche de validation** : ce qui est réellement en place, ce qui est cohérent, ce qui entre en conflit, et les décisions produit sans lesquelles aucune architecture définitive n’est honnête.
 
@@ -66,8 +69,9 @@ infrastructure / modules / tests
 | [20-cvg-validation.md](./20-cvg-validation.md) | SoT CGV, write-back, consommateurs |
 | [21-sales-ops-validation.md](./21-sales-ops-validation.md) | Appels de vente, métriques, sales entreprise |
 | [22-business-intent-validation.md](./22-business-intent-validation.md) | Intention métier (offre, unité, paiement, pack) — **à remplir en premier** |
+| [simplified_version/README.md](./simplified_version/README.md) | **Même package en langage simple** (marketing / PO) — IDs identiques |
 
-**Total questions produit : 72** (hors `ENG-*` / `CF-*`). Compteurs et graphe : [00-index.md](./00-index.md).
+**Total questions produit : 72**
 
 Chaque domaine a **deux parties** :
 
@@ -113,7 +117,7 @@ Chaque domaine a **deux parties** :
 | `UI-` | Produit | Périmètre du langage visuel |
 | `CF-` | — | Conflit documenté (la décision est une question ailleurs) |
 | `ENG-` | Ingénierie | **Décidé.** Pas une question. |
-| `V-` / `D-` / `C-` | — | Ancien [VALIDATION.md](../tech-stack/VALIDATION.md), mappé ici |
+| `V-` / `D-` / `C-` | — | Ancien [`VALIDATION.md`](../archive/2026-09-pre-architecture/VALIDATION.md), mappé ici |
 
 Format d’une question produit :
 
@@ -131,19 +135,16 @@ Domaines affectés : …
 Ancien ID : V-xx / D-xx (si applicable)
 ```
 
-## 6. Ce qui sera reporté après vos réponses
+## 6. Après validation (fait)
 
-Quand vous indiquerez que la validation est terminée, l’agent :
+1. Réponses recopiées simplified → parents. Clarifications : [23-clarifications-post-validation.md](./23-clarifications-post-validation.md).
+2. Plan d’architecture définitif : [`doc/tech-stack/00-decisions.md`](../tech-stack/00-decisions.md).
+3. Spec de build pour agent IA : [`doc/README.md`](../README.md) + [`13-implementation-roadmap.md`](../tech-stack/13-implementation-roadmap.md).
+4. Ancienne doc contradictoire : [`doc/archive/2026-09-pre-architecture/`](../archive/2026-09-pre-architecture/).
 
-1. Lira **tous** les documents remplis.
-2. Produira un **plan d’architecture définitif** (CONFIRMED / RECOMMENDED / REJECTED / DEPRECATED / NEW / UNCHANGED / MIGRATION REQUIRED).
-3. Résoudra les `CF-*` à partir de vos réponses.
-4. S’arrêtera si deux réponses créent une contradiction technique, au lieu d’implémenter l’impossible.
-5. N’écrira le code qu’après validation de ce plan définitif.
+**Ne plus recocher.** Pour changer une décision : nouvelle revue d’architecture, pas d’édition silencieuse des cases.
 
-## 7. Ce que ce package ne fait pas
+## 7. Ce que ce package ne fait plus
 
-- Ne choisit pas silencieusement entre les trois machines d’état produit.
-- Ne supprime pas Streamlit, Instantly, ni les tables CRM.
-- Ne réécrit pas encore `doc/tech-stack/` (archivage **après** vos réponses).
-- Ne corrige pas les secrets fail-open dans le code (décision `ENG-*`, implémentation plus tard).
+- N’implémente pas le code (roadmap seulement).
+- Ne corrige pas les secrets fail-open (étape 1 du roadmap, `ENG-04`).

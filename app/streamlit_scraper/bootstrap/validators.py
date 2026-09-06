@@ -115,6 +115,14 @@ def validate_config_schema(config: dict[str, Any], *, preset_id: str) -> Validat
     if campaign_id and not UUID_RE.fullmatch(campaign_id):
         result.add_error(f"INSTANTLY_CAMPAIGN_ID is not a valid UUID: {campaign_id!r}")
 
+    subsequence_id = str(config.get("INSTANTLY_SUBSEQUENCE_ID", "")).strip()
+    if subsequence_id and not UUID_RE.fullmatch(subsequence_id):
+        result.add_error(f"INSTANTLY_SUBSEQUENCE_ID is not a valid UUID: {subsequence_id!r}")
+
+    niche_group = str(config.get("NICHE_GROUP") or "").strip()
+    if niche_group and not PRESET_ID_RE.match(niche_group):
+        result.add_error(f"NICHE_GROUP must be snake_case: {niche_group!r}")
+
     target = config.get("TARGET_LEADS")
     if target is not None and int(target) <= 0:
         result.add_error("TARGET_LEADS must be positive")

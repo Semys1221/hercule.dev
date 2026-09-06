@@ -1,5 +1,19 @@
 # Capacity — Roadmap implémentation
 
+```
+status: canonical
+audience: coding-agent
+depends_on: README.md
+decisions: CAP-01
+do_not:
+  - Utiliser un prix de ce fichier s’il contredit cvg_master.md / constants-commercial.md
+```
+
+> **Prix / offres :** ignorer 898, 149 €/U4, 2500 commercialisé, rétractation 4 j. Canon : [`../cvg_master.md`](../cvg_master.md). Garder les **maths inbox** (C-01…C-06).
+
+> **Legacy.** Ne pas exécuter ce fichier. Build : [`../13-implementation-roadmap.md`](../13-implementation-roadmap.md).
+
+
 > Module : [Capacity](./README.md) · Phase A (doc) → Phase D (produit)
 
 ---

@@ -88,6 +88,8 @@ _CSV_COLUMNS = [
     "Company",
     "Website",
     "Service",
+    "Niche",
+    "Subniche",
     "City",
     "Type",
     "Category",
@@ -811,6 +813,8 @@ def _process_business(
         "Company": company,
         "Website": web,
         "Service": service,
+        "Niche": str(config.get("NICHE_GROUP_LABEL") or ""),
+        "Subniche": str(config.get("SUBNICHE_LABEL") or ""),
         "City": (b.get("city") or "").strip(),
         "Type": fields["Type"],
         "Category": fields["Category"],
@@ -1452,11 +1456,16 @@ async def run_scraper_pipeline(
     if instantly_enabled:
         from instantly_client import fetch_workspace_emails
 
-        log_cb("Loading Instantly workspace emails for duplicate skip...")
+        log_cb("Loading Instantly dedup emails for duplicate skip...")
+        dedup_list_ids = config.get("INSTANTLY_DEDUP_LIST_IDS") or []
+        dedup_campaign_ids = config.get("INSTANTLY_DEDUP_CAMPAIGN_IDS") or []
         workspace_emails = fetch_workspace_emails(
             config["INSTANTLY_API_KEY"],
+            list_ids=dedup_list_ids,
+            campaign_ids=dedup_campaign_ids,
             cache_path=paths.workspace_cache,
-            on_progress=lambda n: log_cb(f"  workspace index: {n} emails loaded..."),
+            log_cb=log_cb,
+            on_progress=lambda n: log_cb(f"  dedup index: {n} emails loaded..."),
         )
         before = len(seen_em)
         seen_em.update(workspace_emails)

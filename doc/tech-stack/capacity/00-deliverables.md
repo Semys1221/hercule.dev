@@ -1,72 +1,37 @@
 # Capacity — Livrables par client payant
 
-> Module : [Capacity](./README.md) · Suite : [Inbox model](./01-inbox-model.md) · [SLA client](./03-sla-client.md)
-
----
-
-## 1. Intro (langage simple)
-
-Chaque agence payante reçoit un **flux de RDV entreprises qualifiés** dans son agenda. Pour éviter la confusion entre « RDV commercial Hercule », « match proposé » et « RDV facturable », on définit **5 unités** distinctes.
-
----
-
-## 2. Unités de livraison
-
-| Unité | Description | Déclencheur | Preuve en base |
-|-------|-------------|-------------|----------------|
-| **U1 — Activation service** | Recherche lancée, fiche en délivrance | Admin promote après onboarding | `IN_DELIVERANCE`, `deliverance_started_at` |
-| **U2 — Proposition match** | Entreprise identifiée + email Calendly entreprise | Admin « Mettre en lien » | `MATCH_PROPOSED`, job `match_proposal_entreprise` |
-| **U3 — RDV qualifié booké** | Créneau entreprise réservé dans agenda agence | Webhook Calendly match | `MEETING_BOOKED`, `scheduled_at` |
-| **U4 — RDV honoré** | Décideur présent en visio | Confirmation post-RDV / admin | Facturable **149 €** |
-| **U5 — Remplacement no-show** | Recrédit si absence H-24 | Garantie [cvg_master.md](../cvg_master.md) § 10.1 | Re-match ou nouveau U3 |
-
-**Unité de facturation : U4 uniquement** (aligné contrat).
-
----
-
-## 3. Promesse commerciale (calibrée funnel baseline)
-
-| Allocation inbox | Promesse volume | Modèle prédit (U4/mois) |
-|------------------|-----------------|-------------------------|
-| **30 inbox** (standard) | **3 à 4 RDV honorés / mois** | ~7 U4 |
-| **15 inbox** (constrained) | **2 à 3 RDV honorés / mois** | ~3,6 U4 |
-
-- « **3–5 RDV/mois** » du contrat = **plafond marketing** — pas engagement minimum documenté.
-- Promesse **safe** = 3–4 @ 30 inbox (marge ~×1,75 vs modèle).
-
----
-
-## 4. Ce que le client voit (page suivi)
-
-| Élément | Source |
-|---------|--------|
-| Progression U1 → U2 → U3 | `statut` + `deliverance_step` + `profile.display.timeline` |
-| Compteur RDV honorés du mois | Comptage U4 (à implémenter) |
-| Prochain jalon estimé | `profile.capacity.estimated_*_at` |
-| Phase bootstrap vs stable | `profile.capacity.capacity_phase` |
-| Position file d'attente | `profile.capacity.queue_position` |
-
----
-
-## 5. Distinction cycles commerciaux
-
-| Terme | Sens |
-|-------|------|
-| **RDV commercial agence** | Call vente Hercule (Calendly `/30min`) — funnel acquisition |
-| **U3 / U4 match** | RDV entreprise ↔ agence partenaire — funnel livraison |
-| **Pack 898 €** | 3 cycles match (doc [agence-commercial](../post-rdv/agence-commercial.md)) — distinct du rythme mensuel U4 |
-
----
-
-## 6. Prompt d'action IA
-
 ```
-Livrables capacity (doc/tech-stack/capacity/00-deliverables.md).
-
-- Distinguer U1–U5 dans toute copy client et admin
-- Facturation = U4 seulement
-- Promesse volume depuis allocation inbox (30 → 3–4/mois, 15 → 2–3/mois)
-- Page suivi : compteur U4 + dates profile.capacity
-
-Références : capacity/02-funnel-math.md, capacity/03-sla-client.md
+status: canonical
+audience: coding-agent
+depends_on: README.md, ../01-product.md
+decisions: CAP-01 BIZ-02
+do_not:
+  - Unité de facturation = U4 / 149 €
 ```
+
+---
+
+## Unités
+
+Voir [README.md](./README.md). Attribution consommée = **U3** (RDV planifié). SLA volume client = **U4** (honorés / mois).
+
+## Promesse volume (C-02)
+
+| Allocation inbox | Promesse U4/mois |
+|------------------|------------------|
+| 30 (standard) | **3 à 4** RDV honorés |
+| 15 (constrained) | **2 à 3** |
+
+« 3–5 / mois » = plafond marketing, pas un minimum.
+
+## Mapping offres
+
+| Offre | Lien capacity |
+|-------|----------------|
+| 1 489 €/mois | C-02 rythme mensuel |
+| 989×3 / 15 attributions | 15 × U3 sur ~3 mois + garantie CA 4,5 k€ |
+| 2 500 €/mois | vitrine, pas de capacité vendue |
+
+## Page suivi (étape 9)
+
+Compteur U3/U4 dérivé de `appointments`, dates `profile.capacity`, file d’attente. Pas de `MEETING_n` en statut.

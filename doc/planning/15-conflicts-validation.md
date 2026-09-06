@@ -1,5 +1,8 @@
 # 15 — Conflits d’architecture
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 **Règle :** ne pas fusionner silencieusement deux specs incompatibles. Chaque `CF-*` pointe vers la question produit qui le résout. Ce fichier n’ajoute **pas** de questions dupliquées.
 
 Format : ID, sources, implémentation réelle, écart, risque, reco, décision requise, systèmes, migration.

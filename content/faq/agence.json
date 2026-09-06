@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "agence",
-  "updatedAt": "2026-09-05T12:00:00.000Z",
+  "updatedAt": "2026-09-06T11:00:00.000Z",
   "entries": [
     {
       "id": "faq-ag-001",
@@ -27,6 +27,12 @@
       "id": "faq-ag-005",
       "question": "Combien coûte Hercule ?",
       "answer": "Starter : 1 489 € pour 5 attributions qualifiées. Hercule récurrent : 2 500 €/mois — jusqu'à 4 clients signés par mois. Hercule qualifie et signe ses propres contrats déjà disponibles pour votre agence, à vos tarifs (0 % commission). Offre éligible sur profil uniquement, proposée après validation de compatibilité. 0 % de commission sur vos ventes.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-ag-012",
+      "question": "Le tarif affiché inclut-il la TVA ?",
+      "answer": "Le tarif indiqué est net de taxe. En raison d'une restructuration juridique liée à la forte croissance de notre plateforme Hercule, nos prestations sont actuellement facturées sans TVA (TVA non applicable, art. 293 B du CGI). Ce que cela change pour votre agence : c'est un avantage immédiat pour votre trésorerie. Le montant affiché est le montant exact que vous payez. Vous n'avez aucune avance de TVA à faire ce mois-ci, ce qui vous évite d'attendre son remboursement par l'État.",
       "cvgLink": true
     },
     {

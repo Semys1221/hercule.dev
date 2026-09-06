@@ -1,5 +1,8 @@
 # 14 — Frontières d’implémentation
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Après vos réponses : un plan définitif, **puis** infra `/internal`, **puis** un module à la fois. Pas tout en parallèle.
 
 ---
@@ -24,7 +27,7 @@ Règles d’implémentation déjà `ENG-*` : SoT unique, règles serveur, webhoo
 
 Trois arbres actifs (CF-10) garantissent la dérive.
 
-- [ ] **A (recommandé)** — `doc/tech-stack/` réécrit pour matcher vos réponses + le code ; `documentations_2` / `documentation_2` archivés (`doc/_archive/`) ; SOP commerciaux restent à part (`doc/sop/`).
+- [x] **A (recommandé)** — `doc/tech-stack/` réécrit pour matcher vos réponses + le code ; `documentations_2` / `documentation_2` archivés (`doc/_archive/`) ; SOP commerciaux restent à part (`doc/sop/`).
 - [ ] **B** — `documentations_2` devient canonique ; tech-stack archivé.
 - [ ] **C** — Nouveau `doc/architecture/` uniquement ; tout le reste archive.
 
@@ -36,7 +39,7 @@ Trois arbres actifs (CF-10) garantissent la dérive.
 
 Le tech-stack ordonnait onboarding → délivrance → matching → post-RDV. Le live est le CRM. Un mauvais premier module crée des statuts orphelins.
 
-- [ ] **A (recommandé)** — Infra interne + **modèle de statuts / SoT** (DB-01, SOT-01) **avant** toute UI client ; puis onboarding (public ou admin selon FND-03) ; matching seulement si FND-05 ≠ B.
+- [x] **A (recommandé)** — Infra interne + **modèle de statuts / SoT** (DB-01, SOT-01) **avant** toute UI client ; puis onboarding (public ou admin selon FND-03) ; matching seulement si FND-05 ≠ B.
 - [ ] **B** — D’abord parité Streamlit → Next (CRM links/templates) sans modules produit.
 - [ ] **C** — D’abord dashboard client / MEETING_n (documentations_2), CRM inchangé.
 
@@ -57,5 +60,5 @@ Pour chaque workflow retenu : happy path, duplicate event, invalid, échec Calen
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| BND-01 | | |
-| BND-02 | | |
+| BND-01 | A | Canon = doc/tech-stack/ réécrit |
+| BND-02 | A | Data truth avant pages client |

@@ -1,5 +1,8 @@
 # 04 — Orchestration
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Pas de Temporal / n8n / Inngest / Server Actions. **Moteur = webhook → mutation DB → insert job → cron drain.**
 
 Ne pas confondre : webhook, cron, job, workflow métier, séquence email.
@@ -32,7 +35,7 @@ Durées : jobs = minutes à 48 h (h48) ; h20 cancel agence seulement. Concurrenc
 
 Le webhook ignore tout sauf `invitee.created` / `invitee.canceled`. La spec matching veut un event ended ; la CGV veut un signalement humain.
 
-- [ ] **A (recommandé)** — Admin (ou client via parcours dédié) marque réalisé / no-show ; Calendly `canceled` reste le seul webhook d’annulation. Pas de dépendance à `event.ended` (Calendly ne le fournit pas de façon fiable pour ce flux).
+- [x] **A (recommandé)** — Admin (ou client via parcours dédié) marque réalisé / no-show ; Calendly `canceled` reste le seul webhook d’annulation. Pas de dépendance à `event.ended` (Calendly ne le fournit pas de façon fiable pour ce flux).
 - [ ] **B** — Préserver l’actuel : rien après book/cancel/confirm ; pas de survey auto.
 - [ ] **C** — Brancher d’autres events Calendly (ou un cron « RDV dans le passé ») pour basculer automatiquement `POST_RDV_SURVEY` / recréditer no-show.
 
@@ -45,7 +48,7 @@ Le webhook ignore tout sauf `invitee.created` / `invitee.canceled`. La spec matc
 
 C’est le comportement **actuel**. Les emails « recherche lancée » sont une autre famille (FND-04).
 
-- [ ] **A (recommandé)** — Oui : ne pas fusionner booking acquisition et emails délivrance ; deux orchestrateurs, deux types de jobs (réutiliser la table jobs avec de nouveaux `email_type` si FND-04 = A).
+- [x] **A (recommandé)** — Oui : ne pas fusionner booking acquisition et emails délivrance ; deux orchestrateurs, deux types de jobs (réutiliser la table jobs avec de nouveaux `email_type` si FND-04 = A).
 - [ ] **B** — Remplacer / éteindre la séquence booking une fois le produit délivrance live.
 - [ ] **C** — Un seul moteur de séquence générique (builder UI) dès le MVP.
 
@@ -57,7 +60,7 @@ C’est le comportement **actuel**. Les emails « recherche lancée » sont une 
 
 Spec : `payment-confirmed` coupe les emails 60 j. Le code n’a pas cette route.
 
-- [ ] **A (recommandé)** — Oui : même transaction/request que le PATCH paiement : cancel jobs + statut ; pas de cron « réconcilie paiement ».
+- [x] **A (recommandé)** — Oui : même transaction/request que le PATCH paiement : cancel jobs + statut ; pas de cron « réconcilie paiement ».
 - [ ] **B** — Pas de nurturing au MVP (alors pas d’orchestration).
 - [ ] **C** — Event asynchrone (job) pour cancel, au risque d’un email après paiement.
 
@@ -126,6 +129,6 @@ Promote, matching link, survey tokens, nurture 60 j, onboarding_confirm, milesto
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| ORCH-01 | | |
-| ORCH-02 | | |
-| ORCH-03 | | |
+| ORCH-01 | A | Fin RDV / no-show = acte admin ou client |
+| ORCH-02 | A | Deux familles email, même moteur |
+| ORCH-03 | A | Stop nurturing immédiat au paiement |

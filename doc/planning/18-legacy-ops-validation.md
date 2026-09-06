@@ -1,5 +1,8 @@
 # 18 — Legacy / ops (Streamlit, Python, HTML)
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Ne rien supprimer avant réponses + grep des références (`ENG-09`).
 
 ---
@@ -27,7 +30,7 @@ Python partagé : `crm/*`, `shared/instantly_client.py`. Next est déjà le back
 
 #### [LEG-01] Après FND-02, que faire des apps Streamlit **métier leads** (`links`, `booking_resend`) une fois un cockpit Next équivalent ?
 
-- [ ] **A (recommandé)** — Cutover : Next interne reprend links + templates booking ; Streamlit booking/links **dépréciés** après parité, pas avant.
+- [x] **A (recommandé)** — Cutover : Next interne reprend links + templates booking ; Streamlit booking/links **dépréciés** après parité, pas avant.
 - [ ] **B** — Les garder indéfiniment comme cockpit CRM (FND-02 B/C).
 - [ ] **C** — Les éteindre immédiatement (interdit tant que Next n’a pas la parité — option dangereuse).
 
@@ -38,7 +41,7 @@ Python partagé : `crm/*`, `shared/instantly_client.py`. Next est déjà le back
 
 Next bypass **et** Streamlit subsequence peuvent envoyer. Risque double E1 (CF-11).
 
-- [ ] **A (recommandé)** — Exécuteur = Next (`lib/instantly-bypass` + crons + webhooks) ; Streamlit = UI / config / lecture seulement.
+- [x] **A (recommandé)** — Exécuteur = Next (`lib/instantly-bypass` + crons + webhooks) ; Streamlit = UI / config / lecture seulement.
 - [ ] **B** — Préserver les deux chemins (état actuel).
 - [ ] **C** — Exécuteur = Streamlit ; désactiver webhooks/crons Next bypass.
 
@@ -50,7 +53,7 @@ Next bypass **et** Streamlit subsequence peuvent envoyer. Risque double E1 (CF-1
 
 C’est un workaround de bascule 2026-09-03.
 
-- [ ] **A (recommandé)** — Le garder jusqu’à ce qu’il n’y ait plus de leads pre-go-live actifs ; ensuite supprimer le split (`ENG` fera le delete).
+- [x] **A (recommandé)** — Le garder jusqu’à ce qu’il n’y ait plus de leads pre-go-live actifs ; ensuite supprimer le split (`ENG` fera le delete).
 - [ ] **B** — Forcer tous les leads sur la séquence auto maintenant.
 - [ ] **C** — Étendre le split (nouvelles dates / flags par campagne).
 
@@ -75,6 +78,6 @@ C’est un workaround de bascule 2026-09-03.
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| LEG-01 | | |
-| LEG-02 | | |
-| LEG-03 | | |
+| LEG-01 | A | Streamlit déprécié après parité Next |
+| LEG-02 | A | Next envoie Instantly E1–E3 |
+| LEG-03 | A | Garder BOOKING_GO_LIVE_AT tant que besoin |

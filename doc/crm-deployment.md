@@ -1,6 +1,15 @@
 # CRM deployment checklist (hercule.dev)
 
-Use this after merging the migration to production.
+```
+status: canonical
+audience: coding-agent
+depends_on: README.md, tech-stack/13-implementation-roadmap.md
+```
+
+Spec produit / infra : [`doc/README.md`](./README.md).  
+Étape 1 code : secrets fail-closed (`CRON_SECRET`, signatures webhooks). Stripe s’ajoute à l’étape 5 du roadmap.
+
+Use this after merging CRM migrations to production.
 
 ## 1. Vercel project
 

@@ -1,6 +1,11 @@
 # Politique de confidentialité
 
-> **Version :** 2026-09-05  
+```
+status: canonical
+audience: coding-agent
+```
+
+> **Version :** 2026-09-06  
 > **Documents associés :** [cvg_master.md](./cvg_master.md) · [mentions_legales.md](./mentions_legales.md)
 
 ---

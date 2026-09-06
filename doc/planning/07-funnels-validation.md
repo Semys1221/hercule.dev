@@ -1,5 +1,8 @@
 # 07 — Funnels
 
+> **GELÉ — 2026-09-06.** Validation terminée. Ne plus recocher. Canon de build : [`doc/README.md`](../README.md) · Clarifications : [`23-clarifications-post-validation.md`](./23-clarifications-post-validation.md)
+
+
 Séparer **définition** (JSON / copy), **exécution** (code + DB), **séquence email**, **événement**, **état DB**.
 
 Il y a **trois** familles appelées « funnel » dans le repo.
@@ -41,7 +44,7 @@ Onboarding → délivrance → matching → post-RDV. Voir FND-*.
 Aujourd’hui publish n’expose pas `/vente/agence/discovery`.
 
 - [ ] **A (recommandé)** — Oui : fichiers = définition ; une page publique n’existe que lorsqu’on mappe explicitement `publicPath` → App Router (travail ultérieur, pas un second CMS).
-- [ ] **B** — Migrer les funnels sales en base Supabase (définition + runtime).
+- [x] **B** — Migrer les funnels sales en base Supabase (définition + runtime).
 - [ ] **C** — Abandonner le builder ; landings = composants React figés (`components/agence`) seulement.
 
 **Impact si l’architecture change :** Medium  
@@ -53,7 +56,7 @@ Aujourd’hui publish n’expose pas `/vente/agence/discovery`.
 Ambiguïté D-11 ; bloque `payment-confirmed` et tout compteur.
 
 - [ ] **A (recommandé)** — 3 cycles de matching complets (crédit de 3 mises en lien / 3 U4) après paiement 898.
-- [ ] **B** — Pas d’offre 898 (aligné FND-10 B) ; la question est sans objet au MVP.
+- [x] **B** — Pas d’offre 898 (aligné FND-10 B) ; la question est sans objet au MVP.
 - [ ] **C** — 3 RDV Calendly sur le match courant seulement, sans nouveau matching.
 
 **Impact si l’architecture change :** High  
@@ -90,5 +93,5 @@ NOT_PAID → CTA Activer → Stripe → PAID → dashboard. **Conflit** FND-03 /
 
 | ID | Choix | Notes |
 |----|-------|-------|
-| FUN-01 | | |
-| FUN-02 | | |
+| FUN-01 | B | CMS funnels en base |
+| FUN-02 | B | Pas d’898 |
