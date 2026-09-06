@@ -51,4 +51,4 @@ Les fichiers `01-inbox-model.md` … `09-bootstrap-timeline.md` décrivent le **
 - [06-profile-integration.md](./06-profile-integration.md)
 - [09-bootstrap-timeline.md](./09-bootstrap-timeline.md)
 
-`07-doc-corrections.md` et `08-implementation-roadmap.md` : **legacy** (Streamlit / anciens modules). Suivre [../13-implementation-roadmap.md](../13-implementation-roadmap.md).
+Anciens `07-doc-corrections.md` / `08-implementation-roadmap.md` : [`archive/tech-stack-ops-legacy/capacity/`](../../../archive/tech-stack-ops-legacy/capacity/). Build : [../13-implementation-roadmap.md](../13-implementation-roadmap.md).

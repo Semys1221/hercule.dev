@@ -8,12 +8,12 @@ do_not:
 ```
 
 Déplacé le **6 septembre 2026** après validation produit.  
-**Canon de build :** [`../../README.md`](../../README.md)
+**Canon de build :** [`../../doc/README.md`](../../doc/README.md)
 
 | Contenu | Pourquoi archivé |
 |---------|------------------|
 | `documentations_2/` | Machine MEETING_n, NOT_PAID comme statut lead, 898 |
-| `VALIDATION.md` | Questionnaire remplacé par `doc/planning/` |
+| `VALIDATION.md` | Questionnaire remplacé par [`archive/planning/`](../planning/) |
 | `ai_recommandations.md` | Absorbé dans registres composants / DB / orch |
 | `tech-stack-legacy/` | 4 lignes Streamlit-only, matching spec absente du code, 1500 € / 898 |
 

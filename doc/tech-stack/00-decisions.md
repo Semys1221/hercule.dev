@@ -3,13 +3,13 @@
 ```
 status: canonical
 audience: coding-agent
-depends_on: ../planning/23-clarifications-post-validation.md
+depends_on: ../../archive/planning/23-clarifications-post-validation.md
 do_not:
   - Réinterpréter une case simplified si une clarification existe
   - Implémenter un ID REJECTED ou DEPRECATED
 ```
 
-**Source :** `doc/planning/simplified_version/` (2026-09-06) + clarifications session.  
+**Source :** `archive/planning/simplified_version/` (2026-09-06) + clarifications session.  
 **Légende :** CONFIRMED · REJECTED · DEPRECATED · NEW · UNCHANGED · MIGRATION REQUIRED
 
 Une ligne = une vérité. Si deux docs se disputent, **celle-ci gagne**.
@@ -105,7 +105,7 @@ Une ligne = une vérité. Si deux docs se disputent, **celle-ci gagne**.
 | EML-01 | A | NEW | Nouveaux `email_type` produit sur la file existante |
 | EML-02 | A | NEW | Nurturing **plein tarif** si sales_call NOT_PAID |
 | EML-03 | A | NEW | Entreprise succès : 1 email J+7, pas d’upsell |
-| EML-04 | A | UNCHANGED | Copy Instantly dans Instantly / `doc/email_outreach_copy/` |
+| EML-04 | A | UNCHANGED | Copy Instantly dans Instantly / `archive/email_outreach_copy/` |
 | EML-05 | A | NEW | Constantes CGV + tests ; pas de parseur markdown |
 | CPY-01 | B | CONFIRMED | **1 489 €/mois** sans engagement **ou** **989×3 = 2 967 € / 15 attributions** |
 | CPY-02 | A | CONFIRMED | Entreprise : « collaboration / démarrage », pas « onboarding » |

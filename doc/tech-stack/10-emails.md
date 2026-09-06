@@ -22,7 +22,7 @@ Moteur : `booking_email_jobs` + `booking_email_templates` + cron. Pas de table `
 Types : `immediate`, `h48_confirm`, `h24_relance`, `h20_cancel`, `role_seq_48`, `role_seq_24`.  
 Déclencheur : Calendly **vente**. Délais **en code**.
 
-Copy Instantly : Instantly + `doc/email_outreach_copy/` (EML-04). Next envoie E1–E3 (LEG-02).
+Copy Instantly : Instantly + `archive/email_outreach_copy/` (EML-04). Next envoie E1–E3 (LEG-02).
 
 ---
 

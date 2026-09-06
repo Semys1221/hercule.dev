@@ -96,7 +96,7 @@ const RAW_COMPONENTS: ComponentEntry[] = [
     role: "edition",
     actor: "admin",
     route: "components/internal/funnels/pricing-editor.tsx",
-    dataIn: "doc/sop/pricing.md",
+    dataIn: "archive/sop/pricing.md",
     dataOut: "Pricing markdown",
     sideEffects: "—",
     storage: "filesystem",

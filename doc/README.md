@@ -5,14 +5,14 @@ status: canonical
 audience: coding-agent
 depends_on: none
 do_not:
-  - Lire doc/archive/ comme spec de build
-  - Recocher doc/planning/
+  - Lire archive/ comme spec de build
+  - Recocher archive/planning/
   - Étendre lead_statut avec PAID, MEETING_n, SOLD
   - Coder avant d’avoir lu 00-decisions + 02-state-machines + 03-data-model + l’étape N du roadmap
 ```
 
 **Date de gel :** 2026-09-06.  
-**Cette phase n’implémente pas le code.** Le code suit [`tech-stack/13-implementation-roadmap.md`](./tech-stack/13-implementation-roadmap.md), une étape à la fois.
+Le code suit [`tech-stack/13-implementation-roadmap.md`](./tech-stack/13-implementation-roadmap.md), une étape à la fois.
 
 ---
 
@@ -30,16 +30,13 @@ Compléments selon l’étape : composants, orchestrateurs, API, surfaces, email
 
 ---
 
-## Canon vs gelé vs archive
+## Ce dossier
 
 | Chemin | Rôle |
 |--------|------|
 | `doc/tech-stack/` | **Canon.** Spec de build. |
-| `doc/planning/` | **Gelé.** Preuves des 72 décisions. Ne plus recocher. Clarifications : [`planning/23-clarifications-post-validation.md`](./planning/23-clarifications-post-validation.md) |
-| `doc/archive/2026-09-pre-architecture/` | **Archivé.** Contradictoire (MEETING_n, 898, Streamlit=seul writer, 1500 €). Ne pas implémenter. |
-| `doc/sop/` | SOP commerciaux. Pas une spec technique. |
-| `doc/email_outreach_copy/` | Copy Instantly (froid). Hors éditeur Resend. |
 | `doc/crm-deployment.md` | Checklist déploiement CRM live. |
+| [`archive/`](../archive/README.md) | Hors spec. Planning gelé, SOP, copy Instantly, anciennes docs. |
 
 ---
 
@@ -59,7 +56,7 @@ Compléments selon l’étape : composants, orchestrateurs, API, surfaces, email
 
 ---
 
-## Première étape code (plus tard)
+## Première étape code
 
 Roadmap étape 1 : secrets fail-closed (`ENG-04`).  
 Roadmap étape 2 : `product_statut`, `payments`, `matches`, `appointments`, `sales_calls`.

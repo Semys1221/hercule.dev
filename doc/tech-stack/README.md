@@ -5,7 +5,7 @@ status: canonical
 audience: coding-agent
 depends_on: ../README.md
 do_not:
-  - Traiter doc/archive/ comme canon
+  - Traiter archive/ comme canon
   - Implémenter hors de l’ordre 13-implementation-roadmap.md
 ```
 
@@ -39,12 +39,6 @@ do_not:
 - [cvg_site-sync.md](./cvg_site-sync.md)
 - [capacity/README.md](./capacity/README.md)
 
-## Legacy ops (pas le cockpit produit)
+## Hors spec
 
-- [tool/streamlit_reply_agent.md](./tool/streamlit_reply_agent.md)
-- [tool/streamlit_funnels.md](./tool/streamlit_funnels.md) — historique ; ne pas ressusciter l’app
-
-## Gel / archive
-
-- Décisions : [`../planning/`](../planning/)
-- Pré-architecture : [`../archive/2026-09-pre-architecture/`](../archive/2026-09-pre-architecture/)
+Questionnaire, SOP, Streamlit, anciennes docs : [`archive/`](../../archive/README.md)
