@@ -2,8 +2,9 @@
 
 import assert from "node:assert/strict";
 
+import { composeOpportunityCards } from "@/lib/admin/funnels/compose-opportunity-cards";
 import { salesQualificationDefaultValues } from "@/lib/admin/funnels/sales-qualification-schema";
-import { formatContractWindow, getPresetCards } from "@/lib/admin/funnels/sales-preset-registry";
+import { formatContractWindow } from "@/lib/admin/funnels/sales-preset-registry";
 import { AGENCY_PRESET_IDS, scoreAgency } from "@/lib/admin/funnels/sales-preset-scoring";
 
 function main() {
@@ -35,14 +36,22 @@ function main() {
   });
   assert.equal(architect, "architect");
 
+  const composeValues = {
+    ...salesQualificationDefaultValues,
+    q1: ["web_creation", "seo", "google_ads"],
+    q19: ["one_off", "recurring", "acquisition", "seo"],
+  };
+
   for (const id of AGENCY_PRESET_IDS) {
-    const cards = getPresetCards(id);
+    const cards = composeOpportunityCards(composeValues, id);
     assert.equal(cards.length, 5);
     for (const card of cards) {
-      assert.ok(card.minDaysOffset >= 8);
-      assert.ok(card.maxDaysOffset <= 30);
+      assert.ok(card.minDaysOffset >= 7);
+      assert.ok(card.maxDaysOffset <= 35);
       assert.ok(card.maxDaysOffset > card.minDaysOffset);
     }
+    const delayed = cards.filter((card) => card.maxDaysOffset >= 30);
+    assert.equal(delayed.length, 1);
   }
 
   const window = formatContractWindow(

@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getComponentsRegistry } from "@/lib/admin/architecture/components-registry";
 import type { ComponentEntry } from "@/lib/admin/architecture/types";
 import type { DashboardData } from "@/lib/dashboard/types";
+import { COMMERCIAL } from "@/lib/commercial/constants";
 
 export type PreviewKind = "live" | "stub" | "unavailable";
 
@@ -37,6 +38,24 @@ export const MOCK_DASHBOARD_DATA: DashboardData = {
   faq: [],
   isPaid: true,
   dashboardMode: "dashboard_state",
+  deliveryPlan: {
+    formulaLabel: COMMERCIAL.starterFormulaLabel,
+    attributionsTotal: COMMERCIAL.starterAttributions,
+    attributionsUsed: 1,
+  },
+  enterpriseBrief: {
+    matchId: "preview-match",
+    status: "proposed",
+    companyLabel: "Entreprise ••••",
+    secteur: "Comptabilité",
+    prestation: "Campagnes Google Ads locales",
+    budget: "2 500 € / mois",
+    verso: {
+      dureeSouhaitee: "6 mois",
+      horizonResultat: "3 mois",
+      historiqueAgences: "Première collaboration avec une agence web",
+    },
+  },
 };
 
 const LIVE_PREVIEW_IDS = new Set(["dashboard-onboarding-form"]);

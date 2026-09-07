@@ -82,6 +82,9 @@ export function MockupEditor({ audience }: MockupEditorProps) {
   const [prestation, setPrestation] = useState("");
   const [budget, setBudget] = useState("");
   const [taille, setTaille] = useState("");
+  const [dureeSouhaitee, setDureeSouhaitee] = useState("");
+  const [horizonResultat, setHorizonResultat] = useState("");
+  const [historiqueAgences, setHistoriqueAgences] = useState("");
   const [zone, setZone] = useState("");
   const [disponibilite, setDisponibilite] = useState("");
   const [assigned, setAssigned] = useState(false);
@@ -114,6 +117,9 @@ export function MockupEditor({ audience }: MockupEditorProps) {
         prestation: prestation.trim(),
         budget: budget.trim(),
         taille: taille.trim(),
+        duree_souhaitee: dureeSouhaitee.trim(),
+        horizon_resultat: horizonResultat.trim(),
+        historique_agences: historiqueAgences.trim(),
         zone: zone.trim(),
         disponibilite: disponibilite.trim(),
         status: assigned ? "assigned" : "available",
@@ -137,6 +143,9 @@ export function MockupEditor({ audience }: MockupEditorProps) {
     budget,
     description,
     disponibilite,
+    dureeSouhaitee,
+    historiqueAgences,
+    horizonResultat,
     niche,
     note,
     origineCustom,
@@ -208,6 +217,9 @@ export function MockupEditor({ audience }: MockupEditorProps) {
       setPrestation(selectedCard.prestation ?? "");
       setBudget(selectedCard.budget ?? "");
       setTaille(selectedCard.taille ?? "");
+      setDureeSouhaitee(selectedCard.duree_souhaitee ?? "");
+      setHorizonResultat(selectedCard.horizon_resultat ?? "");
+      setHistoriqueAgences(selectedCard.historique_agences ?? "");
       setZone(selectedCard.zone ?? "");
       setDisponibilite(selectedCard.disponibilite ?? "");
       setAssigned(selectedCard.status === "assigned");
@@ -269,6 +281,9 @@ export function MockupEditor({ audience }: MockupEditorProps) {
             prestation: prestation.trim(),
             budget: budget.trim(),
             taille: taille.trim(),
+            duree_souhaitee: dureeSouhaitee.trim(),
+            horizon_resultat: horizonResultat.trim(),
+            historique_agences: historiqueAgences.trim(),
             zone: zone.trim(),
             disponibilite: disponibilite.trim(),
             status: assigned ? "assigned" : "available",
@@ -432,6 +447,30 @@ export function MockupEditor({ audience }: MockupEditorProps) {
                   <div className="space-y-2">
                     <Label htmlFor="taille">Taille</Label>
                     <Input id="taille" value={taille} onChange={(e) => setTaille(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="duree-souhaitee">Durée souhaitée</Label>
+                    <Input
+                      id="duree-souhaitee"
+                      value={dureeSouhaitee}
+                      onChange={(e) => setDureeSouhaitee(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="horizon-resultat">Horizon de résultat</Label>
+                    <Input
+                      id="horizon-resultat"
+                      value={horizonResultat}
+                      onChange={(e) => setHorizonResultat(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="historique-agences">Historique avec les agences</Label>
+                    <Textarea
+                      id="historique-agences"
+                      value={historiqueAgences}
+                      onChange={(e) => setHistoriqueAgences(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="zone">Zone</Label>

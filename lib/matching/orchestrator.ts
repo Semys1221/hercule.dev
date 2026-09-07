@@ -111,6 +111,7 @@ export async function createMatchAndPropose(params: {
 export async function handleMatchBooking(params: {
   matchId: string;
   scheduledAt: string;
+  calendlyInviteeUri?: string;
 }): Promise<{ ok: boolean; reason?: string }> {
   const match = await findMatchById(params.matchId);
   if (!match) return { ok: false, reason: "match_not_found" };
@@ -126,6 +127,45 @@ export async function handleMatchBooking(params: {
   if (!agence || !entreprise) {
     return { ok: false, reason: "lead_not_found" };
   }
+
+  // INSERT appointments row (idempotent via calendly_invitee_uri UNIQUE)
+  const { data: appointmentRow } = await client
+    .from("appointments")
+    .upsert(
+      {
+        match_id: updated.id,
+        agence_id: updated.agence_id,
+        entreprise_id: updated.entreprise_id,
+        kind: "delivery",
+        calendly_invitee_uri: params.calendlyInviteeUri ?? null,
+        scheduled_at: params.scheduledAt,
+        status: "scheduled",
+      },
+      { onConflict: "calendly_invitee_uri", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle();
+
+  // Set active_match_id on agence; decrement credits if pack_989x3
+  const agenceProfile = agence.profile as Record<string, unknown> | null;
+  const offerType = (agenceProfile?.offer_type as string | undefined) ?? null;
+
+  const agencePatch: Record<string, unknown> = {
+    active_match_id: updated.id,
+    product_statut: "MEETING_BOOKED",
+  };
+  if (offerType === "pack_989x3") {
+    const { data: agRow } = await client
+      .from("agence")
+      .select("credits_remaining")
+      .eq("id", agence.id)
+      .maybeSingle();
+    if (typeof agRow?.credits_remaining === "number" && agRow.credits_remaining > 0) {
+      agencePatch.credits_remaining = agRow.credits_remaining - 1;
+    }
+  }
+
+  await client.from("agence").update(agencePatch).eq("id", agence.id);
 
   await cancelPendingJobsForLead(entreprise.id, ["match_proposal_followup"]);
 
@@ -143,7 +183,6 @@ export async function handleMatchBooking(params: {
     },
   });
 
-  await client.from("agence").update({ product_statut: "MEETING_BOOKED" }).eq("id", agence.id);
   try {
     await client
       .from("entreprise")
@@ -155,6 +194,10 @@ export async function handleMatchBooking(params: {
       error instanceof Error ? error.message : error,
     );
   }
+
+  console.log(
+    `[matching] handleMatchBooking ok: match=${updated.id} appointment=${appointmentRow?.id ?? "upserted"}`,
+  );
 
   return { ok: true };
 }

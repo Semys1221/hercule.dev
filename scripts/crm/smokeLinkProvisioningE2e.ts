@@ -7,7 +7,7 @@
  *   pnpm smoke-link-provisioning-e2e -- --no-email
  *
  * Optional env:
- *   TEST_LEAD_EMAIL          inbox for Resend email 2 (default nanguy29@gmail.com)
+ *   TEST_LEAD_EMAIL          inbox for Resend email 2 (default onboarding@resend.dev)
  *   INSTANTLY_TEST_LEAD_ID   real Instantly lead to PATCH/GET (wipe + canonical vars)
  *   LINK_PAGES_BASE_URL      HTML pages (default https://www.hercule.dev)
  *   CRM_BACKEND_URL          click/confirm API (default http://localhost:3000)
@@ -15,12 +15,13 @@
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import { buildLeadUrls, buildInstantlyCustomVariables } from "@/lib/link-tracking/urls";
 import { DEFAULT_BOOKING_EMAIL_TEMPLATES, renderTemplate } from "@/lib/booking-communication/templates";
+import { E2E_RESEND_FROM, E2E_TEST_EMAIL } from "@/lib/test/e2e-identity";
 
 const SITE_BASE =
   process.env.LINK_PAGES_BASE_URL?.trim().replace(/\/$/, "") ||
   "https://www.hercule.dev";
 const TEST_TO =
-  process.env.TEST_LEAD_EMAIL?.trim() || "nanguy29@gmail.com";
+  process.env.TEST_LEAD_EMAIL?.trim() || E2E_TEST_EMAIL;
 const KEEP = process.argv.includes("--keep");
 const NO_EMAIL = process.argv.includes("--no-email");
 
@@ -185,7 +186,7 @@ async function sendResendEmail2(confirmUrl: string): Promise<string | null> {
   const from =
     process.env.BOOKING_RESEND_FROM?.trim() ||
     process.env.RESEND_FROM?.trim() ||
-    "Hercule <contact@hercule.dev>";
+    E2E_RESEND_FROM;
   const subject = "[TEST agence] Confirmation requise — smoke link provisioning";
   const text = renderTemplate(DEFAULT_BOOKING_EMAIL_TEMPLATES.h48_confirm.body, {
     firstNameLine: "Smoke,",

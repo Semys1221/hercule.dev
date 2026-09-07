@@ -120,7 +120,9 @@ export function CockpitOverview({ data }: CockpitOverviewProps) {
       <Card className="md:col-span-2">
         <CardHeader>
           <CardTitle className="text-base">Matches</CardTitle>
-          <CardDescription>{data.matches.length} relation(s)</CardDescription>
+          <CardDescription>
+            {data.matches.length} relation(s). Actions délivrance dans l&apos;onglet Délivrance.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {data.matches.length === 0 ? (

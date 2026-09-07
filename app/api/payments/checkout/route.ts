@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { z } from "zod";
 
 import {
@@ -42,8 +43,27 @@ export async function POST(request: Request) {
     const baseUrl = getAppBaseUrl();
     const slug = lookup.lead.slug;
 
-    const price = await stripe.prices.retrieve(priceId);
+    const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
     const amountCents = price.unit_amount ?? 148900;
+    const product = price.product as Stripe.Product;
+    const productName = typeof product === "string" ? product : product.name;
+
+    if (
+      (typeof product !== "string" && !product.name.includes("Starter")) ||
+      amountCents !== 148900
+    ) {
+      console.error(
+        "[payments/checkout] Unexpected Stripe product:",
+        productName,
+        amountCents,
+      );
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { error: "Invalid Stripe product configuration" },
+          { status: 500 },
+        );
+      }
+    }
 
     const { data: paymentRow, error: paymentError } = await client
       .from("payments")
@@ -62,11 +82,16 @@ export async function POST(request: Request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      ui_mode: "embedded",
+      ui_mode: "embedded_page",
       line_items: [{ price: priceId, quantity: 1 }],
       return_url: `${baseUrl}/dashboard/${slug}?paid=1`,
       customer_email: lookup.lead.email,
       invoice_creation: { enabled: true },
+      wallet_options: {
+        link: {
+          display: "never",
+        },
+      },
       metadata: {
         agence_id: lookup.lead.id,
         payment_id: paymentRow.id,

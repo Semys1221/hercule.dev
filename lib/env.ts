@@ -32,3 +32,12 @@ export function getStripeStarterPriceId(): string {
     ""
   );
 }
+
+/**
+ * Calendly event type URI for delivery (match) meetings.
+ * If set, the webhook uses it as an additional guard.
+ * Set via CALENDLY_DELIVERY_EVENT_TYPE_URI env var.
+ */
+export function getCalendlyDeliveryEventTypeUri(): string {
+  return process.env.CALENDLY_DELIVERY_EVENT_TYPE_URI?.trim() || "";
+}

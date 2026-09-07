@@ -16,22 +16,13 @@ import { parseWorkspacePath } from "@/lib/admin/funnels/routing";
 import {
   funnelDocumentSchema,
   publicPathForScope,
-  scopeFromLeafKey,
   stepComponentsSchema,
 } from "@/lib/admin/funnels/schema";
 
 assert.equal(
-  publicPathForScope({ audience: "agence", kind: "onboarding", stage: null }),
-  "/onboarding/agence",
-);
-assert.equal(
   publicPathForScope({ audience: "entreprise", kind: "vente", stage: "discovery" }),
   "/vente/entreprise/discovery",
 );
-
-const onboardingScope = scopeFromLeafKey("onboarding_funnel", "agence");
-assert.ok(onboardingScope);
-assert.equal(onboardingScope?.kind, "onboarding");
 
 const parsedSales = parseWorkspacePath("agence", ["sales"]);
 assert.equal(parsedSales.kind, "hub");
@@ -43,23 +34,6 @@ const parsedSalesFunnel = parseWorkspacePath("agence", ["sales", "funnel"]);
 assert.equal(parsedSalesFunnel.kind, "hub");
 if (parsedSalesFunnel.kind === "hub") {
   assert.deepEqual(parsedSalesFunnel.navPath, ["agence", "sales"]);
-}
-
-const parsedList = parseWorkspacePath("agence", ["onboarding", "funnel"]);
-assert.equal(parsedList.kind, "leaf");
-if (parsedList.kind === "leaf") {
-  assert.equal(parsedList.leafKey, "onboarding_funnel");
-  assert.equal(parsedList.funnelSlug, null);
-}
-
-const parsedEditor = parseWorkspacePath("agence", [
-  "onboarding",
-  "funnel",
-  "my_funnel_1",
-]);
-assert.equal(parsedEditor.kind, "funnel_editor");
-if (parsedEditor.kind === "funnel_editor") {
-  assert.equal(parsedEditor.funnelSlug, "my_funnel_1");
 }
 
 const sampleDoc = funnelDocumentSchema.parse({

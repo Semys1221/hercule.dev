@@ -26,11 +26,11 @@ assert.deepEqual(normalizePath(["agence", "sales", "unknown", "extra"]), [
 
 assert.equal(isHub(["agence"]), true);
 assert.equal(isHub(["agence", "sales"]), false);
-assert.equal(isHub(["agence", "onboarding"]), true);
+assert.equal(isHub(["agence", "legal"]), true);
 
 assert.equal(leafKey(["agence", "sales"]), null);
 assert.equal(leafKey(["agence", "sales", "funnel"]), null);
-assert.equal(leafKey(["agence", "dashboard"]), "dashboard");
+assert.equal(leafKey(["agence", "clients"]), "clients_hub");
 
 assert.equal(
   salesFunnelHref("agence"),

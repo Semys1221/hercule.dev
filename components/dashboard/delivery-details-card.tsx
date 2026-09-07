@@ -7,82 +7,88 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { DashboardData } from "@/lib/dashboard/types";
+import { DEMANDE_VERSO_CRITERIA } from "@/lib/commercial/qualification-criteria";
+import type { DemandeVersoFields } from "@/lib/commercial/qualification-criteria";
+import type { DashboardDeliveryPlan, DashboardEnterpriseBrief } from "@/lib/dashboard/types";
 
 type DetailRow = {
   label: string;
   value: string;
 };
 
-function buildDetailRows(data: DashboardData): DetailRow[] {
+function buildEnterpriseRows(brief: DashboardEnterpriseBrief): DetailRow[] {
   const rows: DetailRow[] = [];
-  const form = data.form;
 
-  if (form.specialites && form.specialites.length > 0) {
-    rows.push({
-      label: "Spécialités",
-      value: form.specialites.join(", "),
-    });
+  if (brief.companyLabel) {
+    rows.push({ label: "Entreprise", value: brief.companyLabel });
+  }
+  if (brief.secteur) {
+    rows.push({ label: "Secteur", value: brief.secteur });
+  }
+  if (brief.prestation) {
+    rows.push({ label: "Prestation", value: brief.prestation });
+  }
+  if (brief.budget) {
+    rows.push({ label: "Budget", value: brief.budget });
   }
 
-  if (form.zone?.trim()) {
-    rows.push({
-      label: "Zone géographique",
-      value: form.zone.trim(),
-    });
-  }
-
-  if (typeof form.capacite === "number" && form.capacite > 0) {
-    rows.push({
-      label: "Capacité mensuelle",
-      value: `${form.capacite} demande${form.capacite > 1 ? "s" : ""}`,
-    });
-  }
-
-  if (typeof form.budgetMinPonctuel === "number" && form.budgetMinPonctuel > 0) {
-    rows.push({
-      label: "Budget minimum (ponctuel)",
-      value: `${form.budgetMinPonctuel.toLocaleString("fr-FR")} €`,
-    });
-  }
-
-  if (typeof form.budgetMinMensuel === "number" && form.budgetMinMensuel > 0) {
-    rows.push({
-      label: "Budget minimum (mensuel)",
-      value: `${form.budgetMinMensuel.toLocaleString("fr-FR")} € / mois`,
-    });
+  if (brief.verso) {
+    for (const criterion of DEMANDE_VERSO_CRITERIA) {
+      const key = criterion.key as keyof DemandeVersoFields;
+      const value = brief.verso[key];
+      if (value && value !== "—") {
+        rows.push({ label: criterion.title, value });
+      }
+    }
   }
 
   return rows;
 }
 
 type DeliveryDetailsCardProps = {
-  data: DashboardData;
+  deliveryPlan: DashboardDeliveryPlan;
+  enterpriseBrief?: DashboardEnterpriseBrief | null;
 };
 
-export function DeliveryDetailsCard({ data }: DeliveryDetailsCardProps) {
-  const rows = buildDetailRows(data);
-  if (rows.length === 0) {
-    return null;
-  }
+export function DeliveryDetailsCard({
+  deliveryPlan,
+  enterpriseBrief,
+}: DeliveryDetailsCardProps) {
+  const enterpriseRows = enterpriseBrief ? buildEnterpriseRows(enterpriseBrief) : [];
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="text-lg font-medium">Détails de votre livraison</CardTitle>
         <CardDescription>
-          Critères enregistrés lors de votre onboarding.
+          Vérifiez votre formule et la demande en cours de mise en relation.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
         <dl className="space-y-3">
-          {rows.map((row) => (
-            <div key={row.label} className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
-              <dt className="min-w-[9rem] text-sm text-muted-foreground">{row.label}</dt>
-              <dd className="text-sm font-medium">{row.value}</dd>
-            </div>
-          ))}
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
+            <dt className="min-w-[9rem] text-sm text-muted-foreground">Formule</dt>
+            <dd className="text-sm font-medium">{deliveryPlan.formulaLabel}</dd>
+          </div>
         </dl>
+
+        {enterpriseRows.length > 0 ? (
+          <div className="space-y-3 border-t border-border pt-4">
+            <p className="text-sm font-medium">Fiche entreprise</p>
+            <dl className="space-y-3">
+              {enterpriseRows.map((row) => (
+                <div key={row.label} className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
+                  <dt className="min-w-[9rem] text-sm text-muted-foreground">{row.label}</dt>
+                  <dd className="text-sm font-medium">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ) : (
+          <p className="border-t border-border pt-4 text-sm text-muted-foreground">
+            Aucune mise en relation en cours — recherche active sur vos critères.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

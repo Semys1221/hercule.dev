@@ -13,8 +13,7 @@ type InternalLeafToolbarProps = {
 };
 
 export function InternalLeafToolbar({ leafKey }: InternalLeafToolbarProps) {
-  const isStub =
-    leafKey === "dashboard" || leafKey.startsWith("emails_");
+  const isStub = leafKey.startsWith("emails_");
 
   if (!isStub) {
     return null;

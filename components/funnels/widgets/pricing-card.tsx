@@ -95,6 +95,8 @@ export type PricingCardProps = {
   gatedTeaserFeatures?: string[];
   gatedGhostFeatures?: string[];
   animated?: boolean;
+  ctaLabel?: string;
+  onCtaClick?: () => void;
 };
 
 export function PricingCard({
@@ -104,6 +106,8 @@ export function PricingCard({
   gatedTeaserFeatures = [],
   gatedGhostFeatures = [],
   animated = true,
+  ctaLabel,
+  onCtaClick,
 }: PricingCardProps) {
   const [open, setOpen] = useState(false);
 
@@ -205,7 +209,16 @@ export function PricingCard({
               </p>
             )}
 
-            {plan.featured && !compact && (
+            {plan.featured && onCtaClick && ctaLabel ? (
+              <button
+                type="button"
+                onClick={onCtaClick}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+              >
+                {ctaLabel}
+                <ArrowRight className="size-4" />
+              </button>
+            ) : plan.featured && !compact ? (
               <a
                 href={CALENDLY_AGENCE_URL}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
@@ -213,9 +226,15 @@ export function PricingCard({
                 Soumettre ma candidature
                 <ArrowRight className="size-4" />
               </a>
-            )}
+            ) : null}
 
-            <div className={cn(plan.featured && !compact && "mt-6")}>
+            <div
+              className={cn(
+                (plan.featured && !compact) || (plan.featured && onCtaClick && ctaLabel)
+                  ? "mt-6"
+                  : "",
+              )}
+            >
               <Collapsible open={open} onOpenChange={setOpen}>
                 <div className="border border-white/10 rounded-md overflow-hidden">
                   <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/20">

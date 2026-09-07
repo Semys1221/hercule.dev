@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DASHBOARD_STARTER_SUBTITLE, formatStarterProgress } from "@/lib/dashboard/copy";
 import type { DashboardData } from "@/lib/dashboard/types";
 
 function formatScheduledAt(value: string): string {
@@ -26,19 +27,31 @@ type RdvStatusCardProps = {
 
 export function RdvStatusCard({ data }: RdvStatusCardProps) {
   const hasScheduledRdv = Boolean(data.scheduledAt);
+  const deliveryPlan = data.deliveryPlan;
+
+  if (!deliveryPlan) {
+    return null;
+  }
+
+  const progressLabel = formatStarterProgress(
+    deliveryPlan.attributionsUsed,
+    deliveryPlan.attributionsTotal,
+  );
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="text-lg font-medium">Vos rendez-vous</CardTitle>
-        <CardDescription>Objectif de livraison mensuel.</CardDescription>
+        <CardDescription>{DASHBOARD_STARTER_SUBTITLE}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="border-primary text-foreground">
-            3–4 RDV honorés / mois
+            {progressLabel}
           </Badge>
-          <span className="text-sm text-muted-foreground">Objectif SLA</span>
+          <span className="text-sm text-muted-foreground">
+            {deliveryPlan.formulaLabel}
+          </span>
         </div>
 
         <div>

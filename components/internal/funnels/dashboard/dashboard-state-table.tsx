@@ -99,7 +99,7 @@ const GAPS = [
   {
     title: "Cockpit /internal/clients/[category]/[slug]",
     file: "app/internal/(shell)/clients/[category]/[slug]",
-    impact: "Panneau de contrôle live — désormais implémenté (Part 2).",
+    impact: "Liste Parcours : /internal/funnels/agence/clients — actions délivrance dans le cockpit.",
   },
   {
     title: "MATCH_PROPOSED écrit seulement sur entreprise",

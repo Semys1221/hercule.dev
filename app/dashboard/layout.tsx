@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 
 import { Toaster } from "@/components/ui/toaster";
 
+import { DASHBOARD_EYEBROW } from "@/lib/dashboard/copy";
+
 export const metadata: Metadata = {
-  title: "Suivi de votre livraison · Hercule",
+  title: `${DASHBOARD_EYEBROW.replace(" :", "")} · Hercule`,
   robots: {
     index: false,
     follow: false,

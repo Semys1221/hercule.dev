@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 
 import { PricingCard } from "@/components/funnels/widgets/pricing-card";
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
-import { InternalResourceToolbar } from "@/components/internal/funnels/ui/internal-resource-toolbar";
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -149,19 +148,6 @@ export function PricingEditor({ audience }: PricingEditorProps) {
 
   return (
     <div className="space-y-6">
-      <InternalResourceToolbar
-        edit={{ enabled: false, reason: "Édition inline ci-dessous" }}
-        preview={{ enabled: false, reason: "Aperçu live en bas de page" }}
-        promote={{ enabled: false, reason: "Non applicable" }}
-        delete={{
-          enabled: false,
-          reason: "Non applicable",
-          confirmTitle: "Supprimer le pricing ?",
-          confirmDescription: "Non applicable",
-        }}
-        busy={saving}
-      />
-
       <Alert>
         <AlertTitle>Alignement CGV</AlertTitle>
         <AlertDescription>

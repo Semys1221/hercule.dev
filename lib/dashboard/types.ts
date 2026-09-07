@@ -20,6 +20,26 @@ export type DashboardFormData = {
   budgetMinMensuel?: number;
 };
 
+export type DashboardEnterpriseBrief = {
+  matchId: string;
+  status: "proposed" | "booked" | "completed" | "cancelled";
+  secteur?: string;
+  prestation?: string;
+  budget?: string;
+  companyLabel?: string;
+  verso?: {
+    dureeSouhaitee: string;
+    horizonResultat: string;
+    historiqueAgences: string;
+  };
+};
+
+export type DashboardDeliveryPlan = {
+  formulaLabel: string;
+  attributionsTotal: number;
+  attributionsUsed: number;
+};
+
 export type DashboardData = {
   slug: string;
   email: string;
@@ -36,4 +56,6 @@ export type DashboardData = {
   faq: DashboardFaqItem[];
   isPaid: boolean;
   dashboardMode: DashboardMode;
+  deliveryPlan: DashboardDeliveryPlan | null;
+  enterpriseBrief: DashboardEnterpriseBrief | null;
 };

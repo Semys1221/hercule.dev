@@ -8,7 +8,9 @@ import { renderBookingEmailPreview } from "@/lib/booking-communication/render-se
 import { sendBookingEmail } from "@/lib/booking-communication/send";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
-const DEFAULT_TEST_TO = "nanguy29@gmail.com";
+import { SALES_TEST_SESSION_EMAIL } from "@/lib/admin/funnels/sales-test-session-preset";
+
+const DEFAULT_TEST_TO = SALES_TEST_SESSION_EMAIL;
 
 function isCategory(value: unknown): value is LeadCategory {
   return value === "agence" || value === "entreprise";

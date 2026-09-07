@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "audience": "agence",
-  "updatedAt": "2026-09-07T00:00:00.000Z",
+  "updatedAt": "2026-09-07T00:36:57.333Z",
   "preparation": {
-    "content": "- Ouvrir Calendly\n- Ouvrir Google Meet et Zoom\n- Ouvrir le site web du client\n- Séparer la fenêtre de présentation sales dans une nouvelle fenêtre\n- Tester le micro et le casque"
+    "content": "E2E preparation 1788741417037"
   },
   "waitingQueue": {
-    "enabled": false
+    "enabled": true
   }
 }

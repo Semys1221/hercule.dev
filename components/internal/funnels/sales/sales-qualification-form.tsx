@@ -4,16 +4,8 @@ import { useEffect } from "react";
 import { useWatch, type UseFormReturn } from "react-hook-form";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSet,
-} from "@/components/ui/field";
-import { FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
 import {
   SALES_SKIP_VALUE,
   mergeSalesQualificationValues,
@@ -30,13 +22,10 @@ import {
 } from "./sales-question-fields";
 import { getSalesQuestionsForSection } from "./sales-questions";
 import type { SalesConditionalSliderQuestion } from "./sales-questions";
-import {
-  INTRO_CONFIRMATION_TEXT,
-  type SalesFunnelSection,
-} from "./sales-funnel-sections";
+import type { SalesFunnelSection } from "./sales-funnel-sections";
 
-const COMPACT_CARD_CLASS = "gap-0 py-0 shadow-none";
-const COMPACT_ROW_CLASS = "px-4 py-2.5 md:px-5 md:py-3";
+const COMPACT_CARD_CLASS = `${RESERVATION_SURFACE} gap-0 py-0 shadow-none`;
+const COMPACT_ROW_CLASS = "px-5 py-5 md:px-6 md:py-6";
 
 type SalesQualificationFormProps = {
   section: SalesFunnelSection;
@@ -48,49 +37,8 @@ export function SalesQualificationForm({ section, form }: SalesQualificationForm
     useWatch({ control: form.control }) as Partial<SalesQualificationValues>,
   );
 
-  if (section.id === "rendez-vous") {
+  if (section.id === "rendez-vous" || section.id === "introduction") {
     return null;
-  }
-
-  if (section.id === "introduction") {
-    return (
-      <Card className={COMPACT_CARD_CLASS}>
-        <CardContent className="p-0">
-          <div className={COMPACT_ROW_CLASS}>
-            <FormField
-              control={form.control}
-              name="introConfirmed"
-              render={({ field }) => (
-                <FormItem>
-                  <FieldSet className="gap-2">
-                    <FieldLegend className="mb-1 text-sm font-medium">Confirmation</FieldLegend>
-                    <FieldGroup>
-                      <Field orientation="horizontal">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={(checked) => field.onChange(checked === true)}
-                          />
-                        </FormControl>
-                        <div className="space-y-0.5">
-                          <FieldLabel className="text-sm font-normal leading-snug">
-                            {INTRO_CONFIRMATION_TEXT}
-                          </FieldLabel>
-                          <FieldDescription className="text-xs">
-                            Cette étape est requise avant de commencer la qualification.
-                          </FieldDescription>
-                        </div>
-                      </Field>
-                    </FieldGroup>
-                  </FieldSet>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    );
   }
 
   const questions = getSalesQuestionsForSection(section.id);

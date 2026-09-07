@@ -15,7 +15,6 @@ export type ClientRow = {
   dashboardLink: string | null;
   onboardingCompletedAt: string;
   form: DashboardFormData;
-  hasPaid: boolean;
 };
 
 export async function GET(request: Request) {
@@ -30,7 +29,7 @@ export async function GET(request: Request) {
       const { data: leads, error: leadsError } = await client
         .from("entreprise")
         .select(
-          "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, profile",
+          "id, email, first_name, company, slug, product_statut, onboarding_completed_at, profile",
         )
         .order("created_at", { ascending: false });
 
@@ -49,10 +48,9 @@ export async function GET(request: Request) {
           company: (lead.company as string | null) ?? null,
           slug: lead.slug as string,
           productStatut: (lead.product_statut as string | null) ?? "NONE",
-          dashboardLink: (lead.dashboard_link as string | null) ?? null,
+          dashboardLink: null,
           onboardingCompletedAt: (lead.onboarding_completed_at as string | null) ?? "",
           form,
-          hasPaid: false,
         };
       });
 
@@ -82,19 +80,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ clients: [] });
     }
 
-    const agenceIds = leads.map((l) => l.id as string);
-    const { data: payments, error: paymentsError } = await client
-      .from("payments")
-      .select("agence_id")
-      .in("agence_id", agenceIds)
-      .eq("status", "succeeded");
-
-    if (paymentsError) {
-      throw new Error(`payments query failed: ${paymentsError.message}`);
-    }
-
-    const paidSet = new Set((payments ?? []).map((p) => p.agence_id as string));
-
     const clients: ClientRow[] = leads.map((lead) => {
       const profile = (lead.profile ?? {}) as Record<string, unknown>;
       const form = (profile.form ?? {}) as DashboardFormData;
@@ -110,7 +95,6 @@ export async function GET(request: Request) {
         dashboardLink: (lead.dashboard_link as string | null) ?? null,
         onboardingCompletedAt: (lead.onboarding_completed_at as string | null) ?? "",
         form,
-        hasPaid: paidSet.has(lead.id as string),
       };
     });
 

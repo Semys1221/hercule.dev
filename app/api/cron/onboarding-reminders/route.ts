@@ -4,7 +4,7 @@ import { scheduleOnboardingReminders } from "@/lib/onboarding-sequence/orchestra
 
 function isAuthorized(request: Request): boolean {
   const cronSecret = process.env.CRON_SECRET?.trim();
-  if (!cronSecret) return true;
+  if (!cronSecret) return false;
   const auth = request.headers.get("authorization");
   if (auth === `Bearer ${cronSecret}`) return true;
   return request.headers.get("x-cron-secret") === cronSecret;

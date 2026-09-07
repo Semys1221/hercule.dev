@@ -95,6 +95,21 @@ export async function POST(request: Request) {
       .eq("agence_id", agenceId)
       .in("status", ["scheduled", "not_paid", "completed", "no_show"]);
 
+    // ORCH-03: Cancel any pending nurturing email jobs immediately on payment
+    await client
+      .from("booking_email_jobs")
+      .update({ status: "cancelled" })
+      .eq("lead_id", agenceId)
+      .eq("status", "pending")
+      .in("email_type", [
+        "close_indecis_1",
+        "close_indecis_2",
+        "close_indecis_3",
+        "no_show_indecis_1",
+        "no_show_indecis_2",
+        "no_show_indecis_3",
+      ]);
+
     revalidateBookingsCache();
 
     // Send single notification email post-payment (no Calendly info, no meeting info)

@@ -12,6 +12,9 @@ export interface AgenceDemandeRow {
   zone: string | null;
   disponibilite: string | null;
   origine: string | null;
+  duree_souhaitee: string | null;
+  horizon_resultat: string | null;
+  historique_agences: string | null;
   status: DemandeStatus | null;
   available_from: string | null;
   available_until: string | null;
@@ -30,6 +33,9 @@ const DEMANDE_ALLOWED_FIELDS = new Set([
   "zone",
   "disponibilite",
   "origine",
+  "duree_souhaitee",
+  "horizon_resultat",
+  "historique_agences",
   "status",
   "available_from",
   "available_until",

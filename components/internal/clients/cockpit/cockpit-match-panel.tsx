@@ -12,7 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PROPOSE_MATCH_ACTION_HELP } from "@/lib/admin/clients/action-help";
 import type { ClientCockpitData } from "@/lib/admin/clients/types";
+
+import { CockpitActionHint } from "./cockpit-action-hint";
 
 type CockpitMatchPanelProps = {
   data: ClientCockpitData;
@@ -92,8 +95,9 @@ export function CockpitMatchPanel({ data, onUpdated }: CockpitMatchPanelProps) {
         </SelectContent>
       </Select>
       <Button type="button" disabled={!selectedId || pending} onClick={() => void confirm()}>
-        {pending ? "Envoi…" : "Proposer le match"}
+        {pending ? "Envoi…" : PROPOSE_MATCH_ACTION_HELP.buttonLabel}
       </Button>
+      <CockpitActionHint help={PROPOSE_MATCH_ACTION_HELP} />
     </div>
   );
 }

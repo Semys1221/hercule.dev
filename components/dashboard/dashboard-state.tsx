@@ -1,20 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isSeedSlug } from "@/lib/admin/clients/seed";
+import {
+  DASHBOARD_DEV_COMPLETE_ONBOARDING_CTA,
+  DASHBOARD_DEV_COMPLETE_ONBOARDING_ERROR,
+  DASHBOARD_DEV_COMPLETE_ONBOARDING_LOADING,
+} from "@/lib/admin/funnels/ui-copy";
+import { DASHBOARD_EYEBROW, dashboardPageTitle } from "@/lib/dashboard/copy";
+import {
+  getDashboardDeveloperModeEnabledServerSnapshot,
+  getDashboardDeveloperModeEnabledSnapshot,
+  subscribeDashboardDeveloperModeEnabled,
+} from "@/lib/dashboard/developer-mode";
 import type { DashboardData } from "@/lib/dashboard/types";
 
+import { ChronologieSection } from "./chronologie-section";
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
+import { PostPaymentFaqLink } from "./post-payment-faq-link";
+import { CGV_VERSION } from "./onboarding-form-fields";
 import { OnboardingFormModal } from "./onboarding-form-modal";
 
 type DashboardStateProps = {
@@ -41,8 +55,52 @@ function statusDetail(data: DashboardData): string {
 
 export function DashboardState({ data, onOnboardingComplete }: DashboardStateProps) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [devCompleteLoading, setDevCompleteLoading] = useState(false);
+  const [devCompleteError, setDevCompleteError] = useState<string | null>(null);
+  const developerModeEnabled = useSyncExternalStore(
+    subscribeDashboardDeveloperModeEnabled,
+    getDashboardDeveloperModeEnabledSnapshot,
+    getDashboardDeveloperModeEnabledServerSnapshot,
+  );
+  const showDevOnboardingShortcut = developerModeEnabled && isSeedSlug(data.slug);
   const greeting = data.firstName || "Bonjour";
   const prospectLine = data.company ? `${greeting} · ${data.company}` : greeting;
+
+  async function completeOnboardingForTest() {
+    setDevCompleteLoading(true);
+    setDevCompleteError(null);
+
+    try {
+      const response = await fetch(`/api/dashboard/${encodeURIComponent(data.slug)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          form: data.form,
+          tieDownAccepted: true,
+          completeOnboarding: true,
+          cgvVersion: CGV_VERSION,
+        }),
+      });
+      const body = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(body.error ?? DASHBOARD_DEV_COMPLETE_ONBOARDING_ERROR);
+      }
+      onOnboardingComplete?.();
+    } catch (err) {
+      setDevCompleteError(
+        err instanceof Error ? err.message : DASHBOARD_DEV_COMPLETE_ONBOARDING_ERROR,
+      );
+    } finally {
+      setDevCompleteLoading(false);
+    }
+  }
+
+  const chronologieSteps = data.timeline.map((step) => ({
+    id: step.id,
+    label: step.label,
+    meta: step.meta,
+    status: step.status,
+  }));
 
   return (
     <div className="mx-auto max-w-3xl px-6 pb-20">
@@ -50,15 +108,22 @@ export function DashboardState({ data, onOnboardingComplete }: DashboardStatePro
 
       <div className="pt-10">
         <DashboardPageHeader
-          eyebrow="Suivi de votre livraison"
-          title={`Commande #${data.slug.slice(0, 8).toUpperCase()}`}
+          eyebrow={DASHBOARD_EYEBROW}
+          title={dashboardPageTitle(data.slug)}
           subtitle={prospectLine}
         />
       </div>
 
+      <ChronologieSection
+        steps={chronologieSteps}
+        animated={false}
+        description={`${statusLabel(data)} — ${statusDetail(data)}`}
+        activeStatusLabel="En cours"
+      />
+
       {/* Onboarding CTA — shown only when onboarding is not complete */}
       {!data.onboardingCompleted && (
-        <Card className="mt-0 border-border">
+        <Card className="mt-6 border-border">
           <CardHeader className="pb-3">
             <div className="mb-1 flex items-center gap-2">
               <Badge
@@ -76,60 +141,29 @@ export function DashboardState({ data, onOnboardingComplete }: DashboardStatePro
               Moins de 3 minutes.
             </CardDescription>
           </CardHeader>
-          <CardFooter>
+          <CardFooter className="flex flex-wrap gap-3">
             <Button type="button" size="sm" onClick={() => setModalOpen(true)}>
               Compléter mon onboarding
             </Button>
+            {showDevOnboardingShortcut ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => void completeOnboardingForTest()}
+                disabled={devCompleteLoading}
+              >
+                {devCompleteLoading
+                  ? DASHBOARD_DEV_COMPLETE_ONBOARDING_LOADING
+                  : DASHBOARD_DEV_COMPLETE_ONBOARDING_CTA}
+              </Button>
+            ) : null}
           </CardFooter>
+          {devCompleteError ? (
+            <p className="px-6 pb-4 text-sm text-destructive">{devCompleteError}</p>
+          ) : null}
         </Card>
       )}
-
-      {/* Timeline — single card, no duplicate badge version */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg font-medium">{statusLabel(data)}</CardTitle>
-          <CardDescription>{statusDetail(data)}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-0">
-            {data.timeline.map((step, index) => (
-              <li key={step.id} className="flex gap-4 pb-5 last:pb-0">
-                <div className="flex flex-col items-center">
-                  <span
-                    className={`flex size-3 shrink-0 rounded-full ring-2 ring-background ${
-                      step.status === "done"
-                        ? "bg-emerald-500"
-                        : step.status === "active"
-                          ? "bg-primary"
-                          : "bg-border"
-                    }`}
-                  />
-                  {index < data.timeline.length - 1 && (
-                    <span className="mt-1 w-px flex-1 bg-border" />
-                  )}
-                </div>
-                <div className="min-w-0 pb-1">
-                  <p
-                    className={`text-sm font-medium ${
-                      step.status === "pending" ? "text-muted-foreground" : ""
-                    }`}
-                  >
-                    {step.label}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {step.meta ||
-                      (step.status === "active"
-                        ? "En cours"
-                        : step.status === "done"
-                          ? "Terminé"
-                          : "À venir")}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
 
       <OnboardingFormModal
         open={modalOpen}
@@ -140,6 +174,8 @@ export function DashboardState({ data, onOnboardingComplete }: DashboardStatePro
           onOnboardingComplete?.();
         }}
       />
+
+      {data.isPaid ? <PostPaymentFaqLink /> : null}
     </div>
   );
 }

@@ -6,10 +6,8 @@ import { useForm, useWatch } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import {
-  getDeveloperModeEnabled,
   getDeveloperModeEnabledServerSnapshot,
   getDeveloperModeEnabledSnapshot,
-  getPitchSidebarEnabled,
   getPitchSidebarEnabledServerSnapshot,
   getPitchSidebarEnabledSnapshot,
   subscribeDeveloperModeEnabled,
@@ -60,9 +58,7 @@ type SalesFunnelShellProps = {
 export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const [meetingName, setMeetingName] = useState(DEFAULT_MEETING_NAME);
   const [phase, setPhase] = useState<"qualification" | "closing">("qualification");
-  const [contentPhase, setContentPhase] = useState<SidebarContentPhase>(() =>
-    getPitchSidebarEnabled(audience) ? "pitch" : "qualification",
-  );
+  const [contentPhase, setContentPhase] = useState<SidebarContentPhase>("qualification");
   const [contentAnimation, setContentAnimation] =
     useState<SidebarContentAnimation>("idle");
   const [activeQualificationId, setActiveQualificationId] =
@@ -74,6 +70,9 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const [salesCallId, setSalesCallId] = useState<string | null>(null);
   const [closingValues, setClosingValues] =
     useState<SalesClosingValues>(salesClosingDefaultValues);
+  const [visitedClosingSectionIds, setVisitedClosingSectionIds] = useState<
+    Set<SalesClosingSectionId>
+  >(() => new Set());
 
   const hasAutoTransitionedRef = useRef(false);
   const transitionTimeoutRef = useRef<number | null>(null);
@@ -102,22 +101,31 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const settingsHref = pathToHref([audience, "sales", "funnel", "settings"]);
   const activeSectionId = phase === "closing" ? activeClosingId : activeQualificationId;
 
-  const completedSectionIds = useMemo(() => {
-    if (phase === "closing") {
-      return SALES_CLOSING_SECTIONS.filter((section) =>
-        isSalesClosingSectionComplete(section.id, closingValues),
-      ).map((section) => section.id);
-    }
+  const closingCompletionContext = useMemo(
+    () => ({
+      values: closingValues,
+      visitedIds: visitedClosingSectionIds,
+      activeClosingId,
+    }),
+    [activeClosingId, closingValues, visitedClosingSectionIds],
+  );
 
-    return SALES_FUNNEL_SECTIONS.filter((section) =>
+  const completedSectionIds = useMemo(() => {
+    const qualificationCompleted = SALES_FUNNEL_SECTIONS.filter((section) =>
       isSalesSectionComplete(section.id, watchedValues),
     ).map((section) => section.id);
-  }, [closingValues, phase, watchedValues]);
+
+    const closingCompleted = SALES_CLOSING_SECTIONS.filter((section) =>
+      isSalesClosingSectionComplete(section.id, closingCompletionContext),
+    ).map((section) => section.id);
+
+    return [...qualificationCompleted, ...closingCompleted];
+  }, [closingCompletionContext, watchedValues]);
 
   const { progress, progressLabel } = useMemo(() => {
     if (phase === "closing") {
       const completed = SALES_CLOSING_SECTIONS.filter((section) =>
-        isSalesClosingSectionComplete(section.id, closingValues),
+        isSalesClosingSectionComplete(section.id, closingCompletionContext),
       ).length;
       const total = SALES_CLOSING_SECTIONS.length;
       return {
@@ -133,7 +141,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
       progress: percent,
       progressLabel: `${completedSections}/${totalSections}`,
     };
-  }, [closingValues, phase, watchedValues]);
+  }, [closingCompletionContext, phase, watchedValues]);
 
   const canEnterClosing = isSalesQualificationComplete(watchedValues);
   const activeQualificationSection = getSalesFunnelSection(activeQualificationId);
@@ -163,7 +171,6 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         setPhase("closing");
         setContentPhase("pitch");
         setContentAnimation("idle");
-        setActiveClosingId("recap");
         return;
       }
 
@@ -173,7 +180,6 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         setPhase("closing");
         setContentPhase("pitch");
         setContentAnimation("enter");
-        setActiveClosingId("recap");
 
         transitionTimeoutRef.current = window.setTimeout(() => {
           setContentAnimation("idle");
@@ -183,6 +189,13 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     },
     [clearTransitionTimeout],
   );
+
+  const backToQualification = useCallback(() => {
+    clearTransitionTimeout();
+    setPhase("qualification");
+    setContentPhase("qualification");
+    setContentAnimation("idle");
+  }, [clearTransitionTimeout]);
 
   const persistQualificationNotes = useCallback(async () => {
     if (!salesCallId) return;
@@ -208,6 +221,8 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const loadLeadForBooking = useCallback(
     async (booking: EnrichedCalendlyBooking | null) => {
       setSelectedBooking(booking);
+      setVisitedClosingSectionIds(new Set());
+      setClosingValues(salesClosingDefaultValues);
       if (!booking?.lead_id || !booking.lead_category) {
         setSelectedLead(null);
         setSalesCallId(null);
@@ -262,6 +277,18 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     setSelectedLead(leadBody.lead ?? null);
   }, [selectedBooking?.lead_category, selectedBooking?.lead_id]);
 
+  const applyTestPreset = useCallback(
+    (preset: {
+      qualification: SalesQualificationValues;
+      closing: SalesClosingValues;
+    }) => {
+      form.reset(preset.qualification);
+      setClosingValues(preset.closing);
+      setVisitedClosingSectionIds(new Set());
+    },
+    [form],
+  );
+
   useEffect(() => {
     if (phase === "closing") {
       void persistQualificationNotes();
@@ -269,12 +296,28 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   }, [phase, persistQualificationNotes]);
 
   useEffect(() => {
-    if (phase !== "qualification") {
+    if (phase === "closing") {
+      setContentPhase("pitch");
       return;
     }
 
-    setContentPhase(pitchSidebarEnabled ? "pitch" : "qualification");
-  }, [phase, pitchSidebarEnabled]);
+    setContentPhase("qualification");
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "closing") {
+      return;
+    }
+
+    setVisitedClosingSectionIds((current) => {
+      if (current.has(activeClosingId)) {
+        return current;
+      }
+      const next = new Set(current);
+      next.add(activeClosingId);
+      return next;
+    });
+  }, [activeClosingId, phase]);
 
   useEffect(() => {
     if (
@@ -316,21 +359,14 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           developerModeEnabled={developerModeEnabled}
           meetingInfo={meetingInfo}
           onEnterClosing={() => enterClosingPhase({ animated: true })}
+          onBackToQualification={backToQualification}
           onSectionChange={(sectionId) => {
-            if (developerModeEnabled && isSalesClosingSectionId(sectionId)) {
+            if (isSalesClosingSectionId(sectionId)) {
               setPhase("closing");
               setActiveClosingId(sectionId);
               return;
             }
-            if (developerModeEnabled) {
-              setPhase("qualification");
-              setActiveQualificationId(sectionId as SalesFunnelSectionId);
-              return;
-            }
-            if (phase === "closing") {
-              setActiveClosingId(sectionId as SalesClosingSectionId);
-              return;
-            }
+            setPhase("qualification");
             setActiveQualificationId(sectionId as SalesFunnelSectionId);
           }}
         />
@@ -340,7 +376,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
               {phase === "closing"
                 ? SALES_CLOSING_SECTIONS.find((section) => section.id === activeClosingId)
                     ?.label
-                : activeQualificationSection?.label ?? SESSION_PHASE_QUALIFICATION}
+                : activeQualificationSection?.title ?? SESSION_PHASE_QUALIFICATION}
             </p>
           </header>
           <div className="flex-1 overflow-auto p-3 md:p-4">
@@ -364,6 +400,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
                 selectedLead={selectedLead}
                 onMeetingNameChange={setMeetingName}
                 onBookingSelect={loadLeadForBooking}
+                onApplyTestPreset={applyTestPreset}
               />
             ) : activeQualificationId === "presentation-societe" ? (
               <SalesCompanyPresentationPanel form={form} />

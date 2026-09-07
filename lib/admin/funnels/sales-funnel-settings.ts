@@ -14,6 +14,7 @@ function notifyListeners() {
   }
 }
 
+/** Client-only read. For SSR/hydration-safe initial state, use `getPitchSidebarEnabledServerSnapshot()` with `useSyncExternalStore` or `useEffect`. */
 export function getPitchSidebarEnabled(audience: Audience): boolean {
   if (typeof window === "undefined") {
     return true;

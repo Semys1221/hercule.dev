@@ -5,7 +5,7 @@ import { dispatchDueAiReplyJobs } from "@/lib/ai-reply-agent/jobs";
 function isAuthorized(request: Request): boolean {
   const cronSecret = process.env.CRON_SECRET?.trim();
   if (!cronSecret) {
-    return true;
+    return false;
   }
   const auth = request.headers.get("authorization");
   if (auth === `Bearer ${cronSecret}`) return true;

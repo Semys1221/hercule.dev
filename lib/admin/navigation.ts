@@ -1,7 +1,6 @@
 import {
-  DASHBOARD_KPIS_CAPTION,
-  ONBOARDING_PARCOURS_CAPTION,
-  ONBOARDING_PARCOURS_LABEL,
+  CLIENTS_MODULE_CAPTION,
+  CLIENTS_MODULE_LABEL,
   PRODUCT_ROOT_LABEL,
   SEGMENT_LABELS,
   SESSION_MODULE_CAPTION,
@@ -32,21 +31,6 @@ export const AUDIENCE_CAPTIONS: Record<Audience, string> = {
   entreprise: "Seller — entreprises qui recherchent une agence.",
 };
 
-function onboardingTree(): Record<string, NavNode> {
-  return {
-    funnel: {
-      label: ONBOARDING_PARCOURS_LABEL,
-      caption: ONBOARDING_PARCOURS_CAPTION,
-      leaf: "onboarding_funnel",
-    },
-    fiche_form: {
-      label: "Fiche form",
-      caption: "Créer une fiche réelle en base.",
-      leaf: "onboarding_fiche_form",
-    },
-  };
-}
-
 function legalTree(): Record<string, NavNode> {
   return {
     cgv: { label: "CGV", leaf: "legal_cgv" },
@@ -62,20 +46,15 @@ export const MODULES: Record<string, NavNode> = {
     label: SESSION_MODULE_LABEL,
     caption: SESSION_MODULE_CAPTION,
   },
-  onboarding: {
-    label: "Onboarding",
-    caption: "Parcours et création de fiches réelles.",
-    children: onboardingTree(),
-  },
   bookings: {
     label: "Bookings",
     caption: "RDV Calendly et liens prospect.",
     leaf: "bookings_hub",
   },
-  dashboard: {
-    label: "Dashboard",
-    caption: DASHBOARD_KPIS_CAPTION,
-    leaf: "dashboard",
+  clients: {
+    label: CLIENTS_MODULE_LABEL,
+    caption: CLIENTS_MODULE_CAPTION,
+    leaf: "clients_hub",
   },
   legal: {
     label: "CVG & légal",
@@ -86,11 +65,6 @@ export const MODULES: Record<string, NavNode> = {
     label: "Emails",
     caption: "Séquences email PRE-CLOSE et CLOSE.",
     leaf: "emails_hub",
-  },
-  delivery: {
-    label: "Délivrance",
-    caption: "Recherche, milestones et file d'attente.",
-    leaf: "delivery_hub",
   },
 };
 
@@ -212,6 +186,10 @@ export function pathToHref(path: string[]): string {
 
 export function salesFunnelHref(audience: Audience): string {
   return pathToHref([audience, "sales", "funnel"]);
+}
+
+export function clientsHubHref(audience: Audience = "agence"): string {
+  return pathToHref([audience, "clients"]);
 }
 
 export function hubTitle(path: string[]): string {

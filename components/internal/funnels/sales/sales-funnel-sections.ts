@@ -25,7 +25,7 @@ export const SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   {
     id: "introduction",
     label: "Audit de compatibilité",
-    title: "Audit de compatibilité",
+    title: "Avant-propos",
     duration: "Durée : 20min",
     subtitle:
       "Avant de commencer, quelques informations nous permettront d'évaluer votre profil et de vous orienter vers les opportunités les plus adaptées.",

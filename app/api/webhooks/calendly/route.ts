@@ -112,9 +112,18 @@ export async function POST(request: Request) {
   if (matchId) {
     try {
       const { handleMatchBooking } = await import("@/lib/matching/orchestrator");
+      // Extract invitee URI for idempotency guard on appointments
+      const calendlyInviteeUri =
+        payload && typeof payload === "object" && "payload" in payload
+          ? (
+              (payload as { payload?: { invitee?: { uri?: string } } }).payload?.invitee?.uri ??
+              undefined
+            )
+          : undefined;
       const result = await handleMatchBooking({
         matchId,
         scheduledAt: invitee.startTime || new Date().toISOString(),
+        calendlyInviteeUri,
       });
       return NextResponse.json(result);
     } catch (err) {

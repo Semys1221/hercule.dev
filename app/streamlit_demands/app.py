@@ -119,6 +119,15 @@ if card["record_type"] == "demande":
             prestation = st.text_area("Prestation", value=card.get("prestation") or "")
             budget = st.text_input("Budget", value=card.get("budget") or "")
             taille = st.text_input("Taille", value=card.get("taille") or "")
+            duree_souhaitee = st.text_input(
+                "Durée souhaitée", value=card.get("duree_souhaitee") or ""
+            )
+            horizon_resultat = st.text_input(
+                "Horizon de résultat", value=card.get("horizon_resultat") or ""
+            )
+            historique_agences = st.text_area(
+                "Historique avec les agences", value=card.get("historique_agences") or ""
+            )
 
         with col2:
             zone = st.text_input("Zone", value=card.get("zone") or "")
@@ -153,6 +162,9 @@ if card["record_type"] == "demande":
                         "prestation": prestation.strip(),
                         "budget": budget.strip(),
                         "taille": taille.strip(),
+                        "duree_souhaitee": duree_souhaitee.strip(),
+                        "horizon_resultat": horizon_resultat.strip(),
+                        "historique_agences": historique_agences.strip(),
                         "zone": zone.strip(),
                         "disponibilite": disponibilite.strip(),
                         "status": "assigned" if assigned else "available",

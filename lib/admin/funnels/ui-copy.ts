@@ -9,6 +9,8 @@
  * URLs and code identifiers may still use sales/funnel — only UI strings here.
  */
 
+import { E2E_TEST_EMAIL } from "@/lib/test/e2e-identity";
+
 export const PRODUCT_ROOT_LABEL = "Parcours";
 export const PRODUCT_BUILDER_LABEL = "Éditeur de parcours";
 export const PRODUCT_BUILDER_TOOLTIP = PRODUCT_BUILDER_LABEL;
@@ -27,6 +29,7 @@ export const SESSION_MODULE_CAPTION = "Hub admin et session client.";
 export const SESSION_PHASE_QUALIFICATION = "Session";
 export const SESSION_PHASE_INSTITUTIONAL = "Audit institutionnel";
 export const SESSION_SIDEBAR_INSTITUTIONAL = "Institutionnel";
+export const SESSION_SIDEBAR_QUALIFICATION = "Qualification";
 export const SESSION_SIDEBAR_STEPS = "Étapes";
 
 export const SESSION_SETTINGS_LABEL = "Réglages de la session";
@@ -59,6 +62,25 @@ export const SESSION_DEVELOPER_MODE_BADGE = "DEV";
 export const SESSION_DEVELOPER_MODE_FAKE_LINK =
   "Lien fictif — mode développeur. Sélectionnez un RDV pour tester le flux réel.";
 
+export const SESSION_TEST_MEETING_CTA = "Test";
+export const SESSION_TEST_MEETING_LOADING = "Préparation…";
+export const SESSION_TEST_MEETING_ACTIVE =
+  `Session test — réponses pré-remplies, mode développeur actif (${E2E_TEST_EMAIL}).`;
+export const SESSION_TEST_MEETING_ERROR = "Impossible de préparer la session test.";
+
+export const DASHBOARD_DEV_SKIP_PAYMENT_CTA = "Simuler le paiement";
+export const DASHBOARD_DEV_SKIP_PAYMENT_LOADING = "Simulation…";
+export const DASHBOARD_DEV_SKIP_PAYMENT_ERROR = "Simulation de paiement impossible.";
+export const DASHBOARD_DEV_COMPLETE_ONBOARDING_CTA = "Compléter l'onboarding (test)";
+export const DASHBOARD_DEV_COMPLETE_ONBOARDING_LOADING = "Finalisation…";
+export const DASHBOARD_DEV_COMPLETE_ONBOARDING_ERROR =
+  "Finalisation test de l'onboarding impossible.";
+
+export const SESSION_ONBOARDING_DEV_TITLE = "Parcours onboarding (dev)";
+export const SESSION_ONBOARDING_DEV_DESCRIPTION =
+  "Ouvre le tableau de bord client de la session test avec les outils développeur activés. Provisionnez d'abord via Test sur Rendez-vous si la page est vide.";
+export const SESSION_ONBOARDING_DEV_CTA = "Ouvrir le parcours onboarding";
+
 export const SESSION_SETTINGS_TAB_GENERAL = "Général";
 export const SESSION_SETTINGS_TAB_PREPARATION = "Préparation";
 
@@ -87,8 +109,13 @@ export const DASHBOARD_KPIS_CAPTION = "KPIs parcours — à venir.";
 export const DASHBOARD_KPIS_PLACEHOLDER =
   "KPIs parcours à venir — conversion découverte → audit → réservation";
 
+export const CLIENTS_MODULE_LABEL = "Clients";
+export const CLIENTS_MODULE_CAPTION =
+  "Agences et entreprises produit — liste et cockpit ops.";
+export const CLIENTS_LIST_HREF = "/internal/funnels/agence/clients";
+
 export const LANDING_DESCRIPTION =
-  "Cockpit interne — sélectionnez une audience pour accéder aux onglets Session, Onboarding, Dashboard, CVG et Emails.";
+  "Cockpit interne — sélectionnez une audience pour accéder aux onglets Session, Onboarding, Clients, CVG et Emails.";
 
 export const WELCOME_SCRIPT_TITLE = "Script d'accueil";
 

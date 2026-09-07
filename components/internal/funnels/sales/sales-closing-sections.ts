@@ -51,7 +51,7 @@ export const SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
   {
     id: "envoi-dashboard",
     label: "Lien dashboard",
-    title: "Parfait, je vous envoie le lien",
+    title: "Accès dashboard",
     subtitle: "Copiez et envoyez le lien de suivi dashboard au prospect.",
   },
 ];
@@ -90,20 +90,56 @@ export function isSalesClosingSectionId(
   return CLOSING_SECTION_IDS.has(id as SalesClosingSectionId);
 }
 
-export function isSalesClosingSectionComplete(
+export type SalesClosingCompletionContext = {
+  values: SalesClosingValues;
+  visitedIds: ReadonlySet<SalesClosingSectionId>;
+  activeClosingId: SalesClosingSectionId;
+};
+
+export function isSalesClosingSectionValidated(
   sectionId: SalesClosingSectionId,
-  values: SalesClosingValues,
+  context: SalesClosingCompletionContext,
 ): boolean {
-  if (sectionId === "recap" || sectionId === "demandes-eligibles") {
-    return true;
+  const { values, visitedIds } = context;
+
+  if (sectionId === "recap") {
+    return visitedIds.has("recap");
   }
   if (sectionId === "regles-traitement") {
     return values.reglesAccepted;
+  }
+  if (sectionId === "demandes-eligibles") {
+    return visitedIds.has("demandes-eligibles");
   }
   if (sectionId === "calendrier") {
     return values.calendrierAccepted;
   }
   return false;
+}
+
+export function isSalesClosingSectionComplete(
+  sectionId: SalesClosingSectionId,
+  context: SalesClosingCompletionContext,
+): boolean {
+  if (sectionId === "envoi-dashboard") {
+    return false;
+  }
+
+  const sectionIndex = SALES_CLOSING_SECTIONS.findIndex((section) => section.id === sectionId);
+  if (sectionIndex === -1) {
+    return false;
+  }
+
+  const priorSections = SALES_CLOSING_SECTIONS.slice(0, sectionIndex);
+  const allPriorValidated = priorSections.every((section) =>
+    isSalesClosingSectionValidated(section.id, context),
+  );
+
+  if (!allPriorValidated) {
+    return false;
+  }
+
+  return isSalesClosingSectionValidated(sectionId, context);
 }
 
 export function isSalesClosingReadyForDashboardLink(values: SalesClosingValues): boolean {

@@ -8,7 +8,7 @@ import { dashboardLinkFor } from "@/lib/link-tracking/urls";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import { listMatches, type MatchRow } from "@/lib/matching/store";
 
-import { DEFAULT_TIMELINE, type ClientCockpitData } from "./types";
+import { DEFAULT_TIMELINE, type AppointmentRow, type ClientCockpitData } from "./types";
 
 function timelineFromProfile(profile: Record<string, unknown> | null): TimelineStep[] {
   const display = profile?.display as Record<string, unknown> | undefined;
@@ -61,6 +61,16 @@ export async function loadClientCockpit(
       : match.entreprise_id === lead.id,
   );
 
+  // Fetch appointments for this lead
+  const appointmentsColumn = category === "agence" ? "agence_id" : "entreprise_id";
+  const { data: rawAppointments } = await client
+    .from("appointments")
+    .select("*")
+    .eq(appointmentsColumn, lead.id)
+    .order("created_at", { ascending: false });
+
+  const appointments: AppointmentRow[] = (rawAppointments ?? []) as AppointmentRow[];
+
   const productStatut =
     ((lead as { product_statut?: string }).product_statut ?? "NONE") as string;
 
@@ -85,5 +95,6 @@ export async function loadClientCockpit(
     form,
     timeline: timelineFromProfile(profile),
     matches,
+    appointments,
   };
 }

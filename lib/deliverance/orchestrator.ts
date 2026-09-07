@@ -1,6 +1,8 @@
 import { sendProductEmailNow, scheduleLeadEmailJobs } from "@/lib/booking-communication/product-send";
 import { findMatchById, updateMatch } from "@/lib/matching/store";
 
+import { applyDeliveranceTimelineForAgence } from "./advance-client-step";
+
 export type DeliveranceAction = "search_started" | "milestone" | "waitlist";
 
 const ACTION_TYPE = {
@@ -64,6 +66,11 @@ export async function runDeliveranceAction(params: {
       ],
     });
   }
+
+  await applyDeliveranceTimelineForAgence({
+    agenceId: match.agence_id,
+    action: params.action,
+  });
 
   return { ok: true };
 }

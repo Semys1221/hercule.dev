@@ -10,8 +10,8 @@ import type { DashboardFaqItem } from "@/lib/dashboard/types";
 
 const DEFAULT_FAQ: DashboardFaqItem[] = [
   {
-    q: "Que se passe-t-il après le paiement ?",
-    a: "Nous activons la recherche de demandes correspondant à vos critères.",
+    q: "Comment fonctionne la mise en relation ?",
+    a: "Hercule vous attribue 5 demandes qualifiées selon vos critères d'éligibilité. 0 % de commission sur vos ventes. Si aucune signature n'est conclue, la garantie Starter prévoit 5 rendez-vous supplémentaires.",
   },
   {
     q: "Puis-je modifier mes critères ?",

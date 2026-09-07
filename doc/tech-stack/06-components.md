@@ -82,7 +82,7 @@ Référence archivée : `archive/2026-09-pre-architecture/documentations_2/` (da
 | streamlit-reply-agent | component | communication | `app/streamlit_reply_agent/app.py` |
 | streamlit-stats | component | sales_funnel | `app/streamlit_stats/app.py` |
 | dashboard-onboarding-form | component | dashboard_client | `onboarding-form-modal.tsx` |
-| dashboard-kpis | component | dashboard_internal | `app/internal/funnels/[audience]/dashboard` (wip) |
+| dashboard-kpis | component | dashboard_internal | `components/internal/funnels/dashboard/dashboard-state-table.tsx` (archived) |
 
 ---
 
@@ -94,7 +94,7 @@ Référence archivée : `archive/2026-09-pre-architecture/documentations_2/` (da
 | deliverance-timeline | `/suivi/[category]/[slug]` | dashboard_client | recipient | dashboards_infos_1 |
 | post-rdv-survey | `/survey/[token]` | dashboard_client | trigger | planning |
 | matching-admin-action | Mettre en lien | dashboard_internal | trigger | dashboards_infos_1 |
-| clients-table | Dashboard interne ops | dashboard_internal | recipient | dashboards_infos_1 |
+| clients-table | Dashboard interne ops | dashboard_internal | recipient | `/internal/funnels/agence/clients` |
 | rdv-association-ui | Associer RDV → entreprise | dashboard_internal | trigger | dashboards_infos_1 |
 | upsell-admin-action | Proposer upsell | dashboard_internal | trigger | dashboards_infos_1 |
 | agenda | Sales call calendar | sales_funnel | recipient | global_settings |

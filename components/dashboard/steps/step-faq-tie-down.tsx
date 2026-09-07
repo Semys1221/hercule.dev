@@ -1,23 +1,23 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
-
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import type { DashboardFaqItem } from "@/lib/dashboard/types";
 
-const DEFAULT_FAQ: DashboardFaqItem[] = [
+export const DEFAULT_FAQ: DashboardFaqItem[] = [
   {
-    q: "Que se passe-t-il après le paiement ?",
-    a: "Nous activons la recherche de demandes correspondant à vos critères dès la complétion de votre onboarding.",
+    q: "Comment fonctionne la mise en relation ?",
+    a: "Hercule vous attribue 5 demandes qualifiées selon vos critères d'éligibilité. 0 % de commission sur vos ventes. Si aucune signature n'est conclue, la garantie Starter prévoit 5 rendez-vous supplémentaires.",
   },
   {
     q: "Combien de temps avant le premier RDV ?",
-    a: "Premier RDV honoré sous 21 jours après activation, sous 28 jours selon configuration.",
+    a: "Premier RDV honoré sous 21 jours dès validation de votre profil, sous 28 jours selon configuration.",
   },
   {
     q: "Puis-je modifier mes critères ?",
@@ -27,9 +27,15 @@ const DEFAULT_FAQ: DashboardFaqItem[] = [
 
 type StepFaqTieDownProps = {
   items?: DashboardFaqItem[];
+  tieDownAccepted: boolean;
+  onTieDownChange: (accepted: boolean) => void;
 };
 
-export function StepFaqTieDown({ items }: StepFaqTieDownProps) {
+export function StepFaqTieDown({
+  items,
+  tieDownAccepted,
+  onTieDownChange,
+}: StepFaqTieDownProps) {
   const faqItems = items?.length ? items : DEFAULT_FAQ;
 
   return (
@@ -52,29 +58,21 @@ export function StepFaqTieDown({ items }: StepFaqTieDownProps) {
         ))}
       </Accordion>
 
-      {/* Tie-down d'intention — read-only display, not a CGV acceptance */}
       <div className="rounded-lg border border-border bg-muted/30 p-4">
-        <p className="mb-3 text-sm font-medium">Confirmation d&apos;intention</p>
         <div className="flex items-start gap-3">
-          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-400" />
-          <p className="text-sm leading-snug text-muted-foreground">
-            Le fonctionnement d&apos;Hercule (mise en relation qualifiée, 3–4 RDV/mois,
-            obligation de moyens) me convient et je souhaite démarrer.
-          </p>
+          <Checkbox
+            id="tie-down-intention"
+            checked={tieDownAccepted}
+            onCheckedChange={(checked) => onTieDownChange(checked === true)}
+          />
+          <Label
+            htmlFor="tie-down-intention"
+            className="cursor-pointer text-sm leading-snug font-normal"
+          >
+            Le fonctionnement d&apos;Hercule (5 attributions qualifiées, garantie 5 RDV si pas
+            de signature, obligation de moyens) me convient et je souhaite démarrer.
+          </Label>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Aperçu — l&apos;acceptation formelle des CGV se fait lors de l&apos;onboarding.
-        </p>
-      </div>
-
-      {/* Onboarding form placeholder — available after payment */}
-      <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-center">
-        <p className="text-xs text-muted-foreground">
-          Formulaire de configuration — disponible après activation
-        </p>
-        <p className="mt-1 text-[11px] text-muted-foreground/60">
-          Spécialités · Zone · Capacité · Budget minimum
-        </p>
       </div>
     </div>
   );

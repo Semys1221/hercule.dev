@@ -13,10 +13,16 @@ const stripePromise = loadStripe(
 
 type StepEmbeddedCheckoutProps = {
   slug: string;
+  clientSecret?: string | null;
+  preloadError?: string | null;
 };
 
-export function StepEmbeddedCheckout({ slug }: StepEmbeddedCheckoutProps) {
-  const [error, setError] = useState<string | null>(null);
+export function StepEmbeddedCheckout({
+  slug,
+  clientSecret: preloadedClientSecret,
+  preloadError,
+}: StepEmbeddedCheckoutProps) {
+  const [error, setError] = useState<string | null>(preloadError ?? null);
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     setError(null);
@@ -35,17 +41,24 @@ export function StepEmbeddedCheckout({ slug }: StepEmbeddedCheckoutProps) {
   }, [slug]);
 
   useEffect(() => {
-    setError(null);
-  }, [slug]);
+    setError(preloadError ?? null);
+  }, [preloadError, slug]);
+
+  const providerOptions = preloadedClientSecret
+    ? { clientSecret: preloadedClientSecret }
+    : { fetchClientSecret };
 
   return (
     <div className="space-y-3">
       {error ? (
         <p className="text-sm text-destructive">{error}</p>
       ) : null}
-      <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
-        <EmbeddedCheckout />
-      </EmbeddedCheckoutProvider>
+      {!error && (preloadedClientSecret || slug) ? (
+        <EmbeddedCheckoutProvider stripe={stripePromise} options={providerOptions}>
+          <EmbeddedCheckout />
+        </EmbeddedCheckoutProvider>
+      ) : null}
+      <p className="text-center text-[11px] text-muted-foreground/50">Powered by Stripe</p>
     </div>
   );
 }

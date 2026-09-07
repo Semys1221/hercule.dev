@@ -3,26 +3,21 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  CalendarCheck,
   Boxes,
+  CalendarCheck,
   ChevronDown,
   ChevronRight,
   Database,
   Home,
-  LayoutDashboard,
   LayoutGrid,
   Mail,
-  Rocket,
   Scale,
   TrendingUp,
+  Users2,
   type LucideIcon,
 } from "lucide-react";
 
 import { HerculeMark } from "@/components/hercule-mark";
-import {
-  PRODUCT_BUILDER_TOOLTIP,
-  productBuilderSubtitle,
-} from "@/lib/admin/funnels/ui-copy";
 
 import {
   Collapsible,
@@ -48,26 +43,43 @@ import {
 import {
   AUDIENCE_LABELS,
   MODULES,
+  isAudience,
   pathToHref,
   type Audience,
   type NavNode,
 } from "@/lib/admin/navigation";
 import { cn } from "@/lib/utils";
 
-type FunnelAppSidebarProps = {
-  audience: Audience;
-};
+const GLOBAL_NAV = [
+  { href: "/internal/funnels", label: "Accueil", icon: Home, exact: false },
+  { href: "/internal/components", label: "Composants", icon: Boxes, exact: false },
+  { href: "/internal/database", label: "Database", icon: Database, exact: false },
+] as const;
 
 const MODULE_ICONS: Record<string, LucideIcon> = {
   sales: TrendingUp,
   bookings: CalendarCheck,
-  onboarding: Rocket,
-  dashboard: LayoutDashboard,
+  clients: Users2,
   legal: Scale,
   emails: Mail,
 };
 
-function isPathActive(pathname: string, href: string): boolean {
+function audienceFromPathname(pathname: string): Audience {
+  const funnelMatch = pathname.match(/^\/internal\/funnels\/(agence|entreprise)/);
+  if (funnelMatch && isAudience(funnelMatch[1])) {
+    return funnelMatch[1];
+  }
+  const cockpitMatch = pathname.match(/^\/internal\/clients\/(agence|entreprise)/);
+  if (cockpitMatch && isAudience(cockpitMatch[1])) {
+    return cockpitMatch[1];
+  }
+  return "agence";
+}
+
+function isPathActive(pathname: string, href: string, exact = false): boolean {
+  if (exact) {
+    return pathname === href;
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -223,8 +235,9 @@ function renderNavNodes(
   });
 }
 
-export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
+export function InternalAppSidebar() {
   const pathname = usePathname();
+  const audience = audienceFromPathname(pathname);
   const audienceHref = pathToHref([audience]);
 
   return (
@@ -232,15 +245,11 @@ export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
       <SidebarHeader className="border-b border-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip={PRODUCT_BUILDER_TOOLTIP}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent">
-                <HerculeMark variant="dual" className="size-5 text-white" />
-              </div>
+            <SidebarMenuButton size="lg" tooltip="Internal">
+              <HerculeMark variant="dual" className="size-5 shrink-0 text-foreground" />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Hercule</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {productBuilderSubtitle(AUDIENCE_LABELS[audience])}
-                </span>
+                <span className="truncate text-xs text-muted-foreground">Internal</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -249,6 +258,31 @@ export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>Documentation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {GLOBAL_NAV.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isPathActive(pathname, item.href, item.exact)}
+                    tooltip={item.label}
+                  >
+                    <Link href={item.href}>
+                      <item.icon className="size-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            Parcours · {AUDIENCE_LABELS[audience]}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -263,23 +297,17 @@ export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
-        {Object.entries(MODULES).map(([moduleId, module]) => {
-          const path = [audience, moduleId];
-          const href = pathToHref(path);
-          const Icon = MODULE_ICONS[moduleId] ?? LayoutGrid;
-          const hasChildren =
-            module.children && Object.keys(module.children).length > 0;
+              {Object.entries(MODULES).map(([moduleId, module]) => {
+                const path = [audience, moduleId];
+                const href = pathToHref(path);
+                const Icon = MODULE_ICONS[moduleId] ?? LayoutGrid;
+                const hasChildren =
+                  module.children && Object.keys(module.children).length > 0;
 
-          if (!hasChildren) {
-            return (
-              <SidebarGroup key={moduleId}>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
+                if (!hasChildren) {
+                  return (
+                    <SidebarMenuItem key={moduleId}>
                       <SidebarMenuButton
                         asChild
                         isActive={isPathActive(pathname, href)}
@@ -291,71 +319,51 @@ export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            );
-          }
+                  );
+                }
 
-          const branchOpen = isPathInBranch(pathname, path);
+                const branchOpen = isPathInBranch(pathname, path);
 
-          return (
-            <Collapsible
-              key={moduleId}
-              defaultOpen={branchOpen}
-              className="group/collapsible"
-            >
-              <SidebarGroup>
-                <SidebarGroupLabel asChild>
-                  <CollapsibleTrigger
-                    className="flex w-full cursor-pointer items-center gap-2 [&>svg]:size-4"
+                return (
+                  <Collapsible
+                    key={moduleId}
+                    defaultOpen={branchOpen}
+                    className="group/collapsible"
                   >
-                    <Icon className="size-4 shrink-0" />
-                    <span className="flex-1 truncate text-left">{module.label}</span>
-                    <ChevronDown
-                      className={cn(
-                        "size-4 shrink-0 transition-transform duration-200",
-                        "group-data-[state=open]/collapsible:rotate-180",
-                      )}
-                    />
-                  </CollapsibleTrigger>
-                </SidebarGroupLabel>
-                <CollapsibleContent>
-                  <SidebarGroupContent>
-                    <SidebarMenu>
-                      {renderNavNodes(pathname, path, module.children!)}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </CollapsibleContent>
-              </SidebarGroup>
-            </Collapsible>
-          );
-        })}
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton tooltip={module.label}>
+                          <Icon className="size-4" />
+                          <span>{module.label}</span>
+                          <ChevronDown
+                            className={cn(
+                              "ml-auto size-4 transition-transform duration-200",
+                              "group-data-[state=open]/collapsible:rotate-180",
+                            )}
+                          />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {renderNavNodes(pathname, path, module.children!)}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Accueil">
-              <Link href="/internal/funnels">
+            <SidebarMenuButton asChild tooltip="Site public">
+              <Link href="/">
                 <Home className="size-4" />
-                <span>Accueil</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Composants">
-              <Link href="/internal/components">
-                <Boxes className="size-4" />
-                <span>Composants</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Database">
-              <Link href="/internal/database">
-                <Database className="size-4" />
-                <span>Database</span>
+                <span>Site public</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -367,5 +375,8 @@ export function FunnelAppSidebar({ audience }: FunnelAppSidebarProps) {
   );
 }
 
-/** @deprecated Use FunnelAppSidebar */
-export const FunnelSidebarNav = FunnelAppSidebar;
+/** @deprecated Use InternalAppSidebar */
+export const FunnelAppSidebar = InternalAppSidebar;
+
+/** @deprecated Use InternalAppSidebar */
+export const FunnelSidebarNav = InternalAppSidebar;

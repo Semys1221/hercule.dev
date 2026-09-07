@@ -1,13 +1,29 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  CalendarOff,
+  ClipboardCheck,
+  Clock,
+  UserX,
+} from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   SALES_QUESTIONS,
   formatSliderLabel,
@@ -25,6 +41,7 @@ import {
   type SalesClosingSectionId,
   type SalesClosingValues,
 } from "./sales-closing-sections";
+import { SalesCalendrierPanel } from "./sales-calendrier-panel";
 import { SalesEligiblePanel, SalesPresetSummary } from "./sales-eligible-panel";
 
 type SalesClosingPanelProps = {
@@ -86,77 +103,40 @@ function formatQuestionAnswer(question: SalesQuestion, values: SalesQualificatio
   return raw === null || raw === undefined || raw === "" ? "—" : String(raw);
 }
 
-function SalesCallStatusActions({ salesCallId }: { salesCallId: string | null }) {
-  const [pending, setPending] = useState<"completed" | "not_paid" | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+type TreatmentRule = {
+  id: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+};
 
-  const patchStatus = useCallback(
-    async (status: "completed" | "not_paid") => {
-      if (!salesCallId) return;
-      setPending(status);
-      setMessage(null);
-      try {
-        const response = await fetch(`/api/admin/sales-calls/${salesCallId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status }),
-        });
-        const body = (await response.json()) as { error?: string };
-        if (!response.ok) {
-          throw new Error(body.error ?? "Mise à jour impossible");
-        }
-        setMessage(
-          status === "completed"
-            ? "Statut completed — séquence upsell lancée."
-            : "Statut not_paid — séquence indécis lancée.",
-        );
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Erreur");
-      } finally {
-        setPending(null);
-      }
-    },
-    [salesCallId],
-  );
-
-  return (
-    <div className="space-y-2 border-t border-border pt-4">
-      <p className="text-sm font-medium">Issue de l&apos;appel</p>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          disabled={!salesCallId || pending !== null}
-          onClick={() => void patchStatus("completed")}
-        >
-          {pending === "completed" ? "Envoi…" : "Completed — upsell"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={!salesCallId || pending !== null}
-          onClick={() => void patchStatus("not_paid")}
-        >
-          {pending === "not_paid" ? "Envoi…" : "not_paid"}
-        </Button>
-      </div>
-      {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
-    </div>
-  );
-}
-
-const TREATMENT_RULES = [
-  "Réactivité — répondre à toute proposition Hercule sous 24h ouvrées.",
-  "Traitement — chaque demande est traitée avec sérieux dans un délai raisonnable.",
-  "No-show — signaler tout no-show entreprise sous 48h → remplacement ≤ 14 jours.",
-  "Disponibilité — informer Hercule en cas d'indisponibilité avant la date prévue.",
-  "Exclusivité — ne pas contacter directement une entreprise transmise hors du cadre Hercule.",
-] as const;
-
-const CALENDAR_RULES = [
-  "Réponse aux propositions — sous 24h ouvrées.",
-  "Indisponibilité — prévenez-nous au minimum 48h à l'avance.",
-  "Pas de double-sourcing — une demande Hercule n'est pas soumise à d'autres canaux simultanément.",
-] as const;
+const TREATMENT_RULES: TreatmentRule[] = [
+  {
+    id: "reactivite",
+    title: "Réactivité",
+    description: "Répondre à toute proposition Hercule sous 24h ouvrées.",
+    icon: Clock,
+  },
+  {
+    id: "traitement",
+    title: "Traitement",
+    description: "Chaque demande est traitée avec sérieux dans un délai raisonnable.",
+    icon: ClipboardCheck,
+  },
+  {
+    id: "no-show",
+    title: "No-show",
+    description:
+      "Signaler tout no-show entreprise sous 48h → remplacement ≤ 14 jours.",
+    icon: UserX,
+  },
+  {
+    id: "disponibilite",
+    title: "Disponibilité",
+    description: "Informer Hercule en cas d'indisponibilité avant la date prévue.",
+    icon: CalendarOff,
+  },
+];
 
 const DASHBOARD_FEATURES = [
   "Le suivi de vos demandes en cours et leur statut",
@@ -245,20 +225,24 @@ export function SalesClosingPanel({
     return null;
   }
 
+  const isEligibleSection = sectionId === "demandes-eligibles";
+
   return (
     <div
       className={
-        sectionId === "demandes-eligibles"
-          ? "mx-auto max-w-5xl space-y-6 text-left"
+        isEligibleSection
+          ? "mx-auto max-w-5xl space-y-6 text-center"
           : "mx-auto max-w-3xl space-y-6 text-left"
       }
     >
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{section.title}</h1>
-        {section.subtitle ? (
-          <p className="mt-2 text-sm text-muted-foreground">{section.subtitle}</p>
-        ) : null}
-      </div>
+      {!isEligibleSection ? (
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{section.title}</h1>
+          {section.subtitle ? (
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{section.subtitle}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       {sectionId === "recap" ? (
         <div className="space-y-6">
@@ -283,12 +267,24 @@ export function SalesClosingPanel({
 
       {sectionId === "regles-traitement" ? (
         <Card>
-          <CardContent className="space-y-4 pt-6 text-sm">
-            <ul className="list-disc space-y-2 pl-5 leading-relaxed">
-              {TREATMENT_RULES.map((rule) => (
-                <li key={rule}>{rule}</li>
-              ))}
-            </ul>
+          <CardContent className="space-y-5 pt-6 text-sm">
+            <ItemGroup className="gap-3">
+              {TREATMENT_RULES.map((rule) => {
+                const Icon = rule.icon;
+                return (
+                  <Item key={rule.id} variant="outline" size="default">
+                    <ItemMedia variant="icon">
+                      <Icon aria-hidden />
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle>{rule.title}</ItemTitle>
+                      <ItemDescription>{rule.description}</ItemDescription>
+                    </ItemContent>
+                  </Item>
+                );
+              })}
+            </ItemGroup>
+            <Separator />
             <div className="flex items-start gap-3">
               <Checkbox
                 id="reglesAccepted"
@@ -316,35 +312,12 @@ export function SalesClosingPanel({
       ) : null}
 
       {sectionId === "calendrier" ? (
-        <Card>
-          <CardContent className="space-y-4 pt-6 text-sm">
-            <p>
-              Sur la base de votre capacité déclarée ({qualificationValues.q20} projets / mois
-              réservés à Hercule) :
-            </p>
-            <ul className="list-disc space-y-2 pl-5 leading-relaxed">
-              {CALENDAR_RULES.map((rule) => (
-                <li key={rule}>{rule}</li>
-              ))}
-            </ul>
-            <p className="text-muted-foreground">
-              Ce calendrier est indicatif et s&apos;adapte à la disponibilité des deux parties.
-            </p>
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="calendrierAccepted"
-                checked={closingValues.calendrierAccepted}
-                onCheckedChange={(checked) => {
-                  void persistTieDown({ calendrierAccepted: checked === true });
-                }}
-                disabled={saving}
-              />
-              <Label htmlFor="calendrierAccepted" className="leading-relaxed">
-                J&apos;ai pris note du calendrier prévisionnel de collaboration.
-              </Label>
-            </div>
-          </CardContent>
-        </Card>
+        <SalesCalendrierPanel
+          qualificationValues={qualificationValues}
+          closingValues={closingValues}
+          saving={saving}
+          persistTieDown={persistTieDown}
+        />
       ) : null}
 
       {sectionId === "envoi-dashboard" ? (
@@ -399,7 +372,6 @@ export function SalesClosingPanel({
                     </Button>
                   ) : null}
                 </div>
-                <SalesCallStatusActions salesCallId={salesCallId} />
               </div>
             ) : (
               <div className="space-y-3">

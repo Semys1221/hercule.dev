@@ -23,6 +23,7 @@ import {
   subscribePitchSidebarEnabled,
 } from "@/lib/admin/funnels/sales-funnel-settings";
 import type { SalesSessionSettingsDocument } from "@/lib/admin/funnels/sales-session-settings-types";
+import { SALES_TEST_SESSION_SLUG } from "@/lib/admin/funnels/sales-test-session-preset";
 import {
   SESSION_BACK_CTA,
   SESSION_DEVELOPER_MODE_DESCRIPTION,
@@ -51,7 +52,11 @@ import {
   SESSION_WAITING_QUEUE_ON,
   SESSION_WAITING_QUEUE_TITLE,
   SESSION_WAITING_QUEUE_TOGGLE,
+  SESSION_ONBOARDING_DEV_CTA,
+  SESSION_ONBOARDING_DEV_DESCRIPTION,
+  SESSION_ONBOARDING_DEV_TITLE,
 } from "@/lib/admin/funnels/ui-copy";
+import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode";
 import { pathToHref, type Audience } from "@/lib/admin/navigation";
 
 type SalesFunnelSettingsPageProps = {
@@ -177,6 +182,16 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
 
   const waitingQueueEnabled = settings?.waitingQueue.enabled ?? false;
 
+  function openOnboardingDevFunnel() {
+    setDeveloperModeEnabled(audience, true);
+    setDashboardDeveloperModeEnabled(true);
+    window.open(
+      `/dashboard/${encodeURIComponent(SALES_TEST_SESSION_SLUG)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-2xl flex-col gap-6 p-6">
       <div className="flex items-center gap-3">
@@ -251,6 +266,18 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
                     onCheckedChange={(checked) => setDeveloperModeEnabled(audience, checked)}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{SESSION_ONBOARDING_DEV_TITLE}</CardTitle>
+                <CardDescription>{SESSION_ONBOARDING_DEV_DESCRIPTION}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button type="button" variant="secondary" onClick={openOnboardingDevFunnel}>
+                  {SESSION_ONBOARDING_DEV_CTA}
+                </Button>
               </CardContent>
             </Card>
 

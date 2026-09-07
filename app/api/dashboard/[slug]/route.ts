@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { hasSucceededPayment } from "@/lib/dashboard/payments";
+import { loadDeliveryContext } from "@/lib/dashboard/load-delivery-context";
+import { isSeedSlug } from "@/lib/admin/clients/seed";
+import { transitionToInDeliverance } from "@/lib/product/transitions";
 import type { DashboardFaqItem, DashboardFormData } from "@/lib/dashboard/types";
 import {
   createLinkTrackingClient,
@@ -62,6 +65,12 @@ export async function GET(_request: Request, { params }: RouteParams) {
         typeof (item as DashboardFaqItem).a === "string",
     );
 
+    const { deliveryPlan, enterpriseBrief } = await loadDeliveryContext(
+      client,
+      lead.id,
+      isPaid,
+    );
+
     return NextResponse.json({
       slug: lead.slug,
       email: lead.email,
@@ -78,6 +87,8 @@ export async function GET(_request: Request, { params }: RouteParams) {
       faq,
       isPaid,
       dashboardMode,
+      deliveryPlan,
+      enterpriseBrief,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Dashboard fetch failed";
@@ -145,10 +156,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const patch: Record<string, unknown> = { profile };
     if (body.completeOnboarding === true) {
-      const completedAt = new Date().toISOString();
-      patch.onboarding_completed_at = completedAt;
-      // Activation: paiement + onboarding complété → IN_DELIVERANCE (service actif)
-      patch.product_statut = "IN_DELIVERANCE";
+      patch.onboarding_completed_at = new Date().toISOString();
     }
 
     const { data, error } = await client
@@ -162,13 +170,25 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       throw new Error(error?.message ?? "Update failed");
     }
 
-    // After successful onboarding completion: start Calendly seat workflow
+    // After successful onboarding completion: transition to IN_DELIVERANCE + start workflows
     if (body.completeOnboarding === true) {
+      const isTestLead = isSeedSlug(normalizedSlug);
+
+      try {
+        await transitionToInDeliverance(client, lead.id, "agence");
+      } catch (transitionError) {
+        // Log but don't fail — onboarding data already saved
+        console.error(
+          "[dashboard/slug] transitionToInDeliverance failed:",
+          transitionError instanceof Error ? transitionError.message : transitionError,
+        );
+      }
+
       try {
         const { startCalendlySeatWorkflow } = await import(
           "@/lib/calendly-seat-onboarding/orchestrator"
         );
-        await startCalendlySeatWorkflow(lead.id);
+        await startCalendlySeatWorkflow(lead.id, { dryRun: isTestLead });
       } catch (workflowError) {
         console.error(
           "[dashboard/slug] calendly seat workflow failed:",
@@ -176,16 +196,18 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         );
       }
 
-      try {
-        const { startOnboardingSequence } = await import(
-          "@/lib/onboarding-sequence/orchestrator"
-        );
-        await startOnboardingSequence(lead.id);
-      } catch (sequenceError) {
-        console.error(
-          "[dashboard/slug] onboarding sequence failed:",
-          sequenceError instanceof Error ? sequenceError.message : sequenceError,
-        );
+      if (!isTestLead) {
+        try {
+          const { startOnboardingSequence } = await import(
+            "@/lib/onboarding-sequence/orchestrator"
+          );
+          await startOnboardingSequence(lead.id);
+        } catch (sequenceError) {
+          console.error(
+            "[dashboard/slug] onboarding sequence failed:",
+            sequenceError instanceof Error ? sequenceError.message : sequenceError,
+          );
+        }
       }
     }
 

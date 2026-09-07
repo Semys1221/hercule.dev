@@ -62,6 +62,7 @@ export const SEQUENCE_TRIGGERED_BY_VALUES = [
   "cron_sold_check",
   "stripe_payment_notification",
   "deliverance_admin",
+  "admin_complete_appt",
 ] as const;
 
 export type SequenceTriggeredBy = (typeof SEQUENCE_TRIGGERED_BY_VALUES)[number];

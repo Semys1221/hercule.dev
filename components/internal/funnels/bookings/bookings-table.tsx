@@ -7,6 +7,12 @@ import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-s
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Table,
   TableBody,
   TableCell,
@@ -14,7 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { bookingRowActionState } from "@/lib/calendly/booking-row-actions";
+import {
+  bookingRowActionState,
+  type BookingRowActionState,
+} from "@/lib/calendly/booking-row-actions";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import type { Audience } from "@/lib/admin/navigation";
@@ -91,6 +100,80 @@ function SalesCallStatusBadge({ status }: { status: SalesCallStatus | null }) {
     return <Badge variant="destructive">NON PAYÉ</Badge>;
   }
   return null;
+}
+
+function SalesCallStatusHint({
+  salesCallStatus,
+  leadStatut,
+}: {
+  salesCallStatus: SalesCallStatus | null;
+  leadStatut: string | null;
+}) {
+  const { badge } = bookingRowActionState(salesCallStatus);
+  if (!badge || leadStatut !== "MEETING_BOOKED") {
+    return null;
+  }
+
+  const callLabel =
+    badge === "NO SHOW" ? "no-show" : badge === "NON PAYÉ" ? "non payé" : "payé";
+
+  return (
+    <p className="mt-1 text-xs text-muted-foreground">
+      Statut appel : {callLabel} (CRM inchangé)
+    </p>
+  );
+}
+
+function BookingRowActionsMenu({
+  actions,
+  pending,
+  pendingNotPresent,
+  onWorkflow,
+  onNotPresent,
+}: {
+  actions: BookingRowActionState;
+  pending: boolean;
+  pendingNotPresent: boolean;
+  onWorkflow: (action: WorkflowAction) => void;
+  onNotPresent: () => void;
+}) {
+  const hasActions =
+    actions.showNoShow || actions.showNotPaid || actions.showNotPresent;
+  if (!hasActions) {
+    return null;
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          disabled={pending || pendingNotPresent}
+          aria-label="Actions"
+        >
+          <span className="text-base leading-none" aria-hidden="true">…</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {actions.showNoShow ? (
+          <DropdownMenuItem onSelect={() => onWorkflow("no_show")}>
+            No Show
+          </DropdownMenuItem>
+        ) : null}
+        {actions.showNotPaid ? (
+          <DropdownMenuItem onSelect={() => onWorkflow("not_paid")}>
+            Non Payé
+          </DropdownMenuItem>
+        ) : null}
+        {actions.showNotPresent ? (
+          <DropdownMenuItem onSelect={() => onNotPresent()}>Absent ?</DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 function formatNotPresentFeedback(resend: ChannelStatus, instantly: ChannelStatus): string {
@@ -348,40 +431,18 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                     <TableCell className="min-w-[10rem]">
                       <div className="flex flex-wrap items-center gap-2">
                         <SalesCallStatusBadge status={row.sales_call_status} />
-                        {actions.showNoShow ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={pending}
-                            onClick={() => void runWorkflowAction(row, "no_show")}
-                          >
-                            {pending ? "…" : "No Show"}
-                          </Button>
-                        ) : null}
-                        {actions.showNotPaid ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={pending}
-                            onClick={() => void runWorkflowAction(row, "not_paid")}
-                          >
-                            {pending ? "…" : "Non Payé"}
-                          </Button>
-                        ) : null}
-                        {actions.showNotPresent ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            disabled={pendingNotPresent}
-                            onClick={() => void sendNotPresentEmail(row)}
-                          >
-                            {pendingNotPresent ? "…" : "Absent ?"}
-                          </Button>
-                        ) : null}
+                        <BookingRowActionsMenu
+                          actions={actions}
+                          pending={pending}
+                          pendingNotPresent={pendingNotPresent}
+                          onWorkflow={(status) => void runWorkflowAction(row, status)}
+                          onNotPresent={() => void sendNotPresentEmail(row)}
+                        />
                       </div>
+                      <SalesCallStatusHint
+                        salesCallStatus={row.sales_call_status}
+                        leadStatut={row.statut}
+                      />
                     </TableCell>
                     <TableCell className="min-w-[7rem]">
                       <LinkActions

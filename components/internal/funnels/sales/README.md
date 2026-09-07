@@ -30,3 +30,13 @@ Ne pas brancher ce flux via `leaf-content` ni le catch-all `(workspace)/[[...pat
 ## Usage
 
 Cette interface est destinée à être affichée **directement devant le client** pendant un rendez-vous.
+
+## Session test (mode développeur)
+
+Sur l'étape **Rendez-vous**, le bouton **Test** :
+
+- provisionne ou réinitialise le lead `seed-sales-session` (`nanguy29@gmail.com`) ;
+- pré-remplit qualification, closing et formulaire dashboard ;
+- active le mode développeur (navigation libre + raccourcis dashboard).
+
+Sur le dashboard client (`/dashboard/seed-sales-session`), en mode dev : **Simuler le paiement** puis **Compléter l'onboarding (test)** pour parcourir le pipeline sans Stripe ni saisie manuelle.

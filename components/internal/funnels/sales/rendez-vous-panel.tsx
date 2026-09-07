@@ -16,7 +16,17 @@ import {
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import type { Audience } from "@/lib/admin/navigation";
-import { WELCOME_SCRIPT_TITLE } from "@/lib/admin/funnels/ui-copy";
+import { setDeveloperModeEnabled } from "@/lib/admin/funnels/sales-funnel-settings";
+import {
+  SESSION_TEST_MEETING_ACTIVE,
+  SESSION_TEST_MEETING_CTA,
+  SESSION_TEST_MEETING_ERROR,
+  SESSION_TEST_MEETING_LOADING,
+  WELCOME_SCRIPT_TITLE,
+} from "@/lib/admin/funnels/ui-copy";
+import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode";
+import type { SalesClosingValues } from "@/components/internal/funnels/sales/sales-closing-sections";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { dashboardLinkFor } from "@/lib/link-tracking/urls";
 
@@ -30,11 +40,17 @@ const DEFAULT_MEETING_NAME = "No meetings";
 
 type ScriptTab = "intro" | "declarative";
 
+type TestMeetingPreset = {
+  qualification: SalesQualificationValues;
+  closing: SalesClosingValues;
+};
+
 type RendezVousPanelProps = {
   audience: Audience;
   selectedLead: LinkTrackingLead | null;
   onMeetingNameChange: (name: string) => void;
   onBookingSelect: (booking: EnrichedCalendlyBooking | null) => Promise<void>;
+  onApplyTestPreset: (preset: TestMeetingPreset) => void;
 };
 
 function formatParisDateTime(iso: string): string {
@@ -82,11 +98,14 @@ export function RendezVousPanel({
   selectedLead,
   onMeetingNameChange,
   onBookingSelect,
+  onApplyTestPreset,
 }: RendezVousPanelProps) {
   const [bookings, setBookings] = useState<EnrichedCalendlyBooking[]>([]);
   const [selectedUri, setSelectedUri] = useState<string>("");
   const [scriptTab, setScriptTab] = useState<ScriptTab>("intro");
   const [loading, setLoading] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testActive, setTestActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const selectedBooking = useMemo(
@@ -139,11 +158,54 @@ export function RendezVousPanel({
   const handleBookingChange = useCallback(
     async (inviteeUri: string) => {
       setSelectedUri(inviteeUri);
+      setTestActive(false);
       const booking = bookings.find((row) => row.invitee_uri === inviteeUri) ?? null;
       await onBookingSelect(booking);
     },
     [bookings, onBookingSelect],
   );
+
+  const startTestMeeting = useCallback(async () => {
+    setTestLoading(true);
+    setError(null);
+    setTestActive(false);
+
+    try {
+      const response = await fetch("/api/admin/sales-funnel/test-meeting", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audience }),
+      });
+      const body = (await response.json()) as {
+        booking?: EnrichedCalendlyBooking;
+        qualification?: SalesQualificationValues;
+        closing?: SalesClosingValues;
+        error?: string;
+      };
+
+      if (!response.ok || !body.booking || !body.qualification || !body.closing) {
+        throw new Error(body.error ?? SESSION_TEST_MEETING_ERROR);
+      }
+
+      setDeveloperModeEnabled(audience, true);
+      setDashboardDeveloperModeEnabled(true);
+      setBookings([body.booking]);
+      setSelectedUri(body.booking.invitee_uri);
+      setScriptTab("intro");
+      await onBookingSelect(body.booking);
+      onApplyTestPreset({
+        qualification: body.qualification,
+        closing: body.closing,
+      });
+      setTestActive(true);
+    } catch (testError) {
+      setError(
+        testError instanceof Error ? testError.message : SESSION_TEST_MEETING_ERROR,
+      );
+    } finally {
+      setTestLoading(false);
+    }
+  }, [audience, onApplyTestPreset, onBookingSelect]);
 
   const activeScript =
     scriptTab === "intro" ? introScript : SALES_DECLARATIVE_SCRIPT;
@@ -155,8 +217,16 @@ export function RendezVousPanel({
       <h1 className="text-2xl font-semibold tracking-tight">Rendez-vous</h1>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" onClick={fetchBookings} disabled={loading}>
+        <Button type="button" onClick={fetchBookings} disabled={loading || testLoading}>
           {loading ? "Chargement…" : "Récupérer les rendez-vous"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => void startTestMeeting()}
+          disabled={loading || testLoading}
+        >
+          {testLoading ? SESSION_TEST_MEETING_LOADING : SESSION_TEST_MEETING_CTA}
         </Button>
         {bookings.length > 0 ? (
           <Select value={selectedUri} onValueChange={(value) => void handleBookingChange(value)}>
@@ -175,6 +245,10 @@ export function RendezVousPanel({
       </div>
 
       {error ? <InternalStatusAlert variant="error" message={error} /> : null}
+
+      {testActive ? (
+        <InternalStatusAlert variant="success" message={SESSION_TEST_MEETING_ACTIVE} />
+      ) : null}
 
       {selectedBooking && !selectedBooking.lead_matched ? (
         <InternalStatusAlert

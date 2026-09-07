@@ -17,6 +17,9 @@ interface AgenceDemandeRow {
   zone: string | null;
   disponibilite: string | null;
   origine: string | null;
+  duree_souhaitee: string | null;
+  horizon_resultat: string | null;
+  historique_agences: string | null;
   status: DemandeStatus | null;
   available_from: string | null;
   available_until: string | null;
@@ -26,7 +29,7 @@ interface AgenceDemandeRow {
   sort_order: number;
 }
 
-function mapDemandeRow(row: AgenceDemandeRow): DemandeContrat {
+export function mapDemandeRow(row: AgenceDemandeRow): DemandeContrat {
   return {
     id: row.external_id,
     niche: row.niche,
@@ -36,6 +39,9 @@ function mapDemandeRow(row: AgenceDemandeRow): DemandeContrat {
     prestation: row.prestation ?? "",
     budget: row.budget ?? "",
     taille: row.taille ?? "",
+    dureeSouhaitee: row.duree_souhaitee ?? "",
+    horizonResultat: row.horizon_resultat ?? "",
+    historiqueAgences: row.historique_agences ?? "",
     zone: row.zone ?? "",
     disponibilite: row.disponibilite ?? "",
     origine: row.origine ?? "",

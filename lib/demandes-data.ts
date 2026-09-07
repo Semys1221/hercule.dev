@@ -17,6 +17,9 @@ export interface DemandeContrat {
   prestation: string
   budget: string
   taille: string
+  dureeSouhaitee: string
+  horizonResultat: string
+  historiqueAgences: string
   zone: string
   disponibilite: string
   status: DemandeStatus

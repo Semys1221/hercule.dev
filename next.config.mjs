@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -12,13 +13,24 @@ const nextConfig = {
       },
     ],
   },
-  async rewrites() {
+  async redirects() {
     return [
       {
-        source: "/dashboard.html/:slug",
-        destination: "/dashboard/:slug",
+        source: "/dashboard.html",
+        destination: "/",
+        permanent: false,
       },
     ];
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/dashboard.html/:slug",
+          destination: "/dashboard/:slug",
+        },
+      ],
+    };
   },
 }
 

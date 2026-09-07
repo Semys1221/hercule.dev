@@ -11,7 +11,6 @@ const SCAN_ROOTS = [
   "app/internal/funnels",
   "lib/admin/navigation.ts",
   "lib/admin/architecture/types.ts",
-  "app/internal/(shell)/page.tsx",
 ];
 
 const BANNED_PATTERNS: RegExp[] = [

@@ -2,6 +2,23 @@ import type { DashboardFormData, DashboardMode, TimelineStep } from "@/lib/dashb
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import type { MatchRow } from "@/lib/matching/store";
 
+export type AppointmentRow = {
+  id: string;
+  match_id: string;
+  agence_id: string;
+  entreprise_id: string;
+  kind: "delivery";
+  calendly_invitee_uri: string | null;
+  scheduled_at: string | null;
+  status: "scheduled" | "completed" | "no_show_entreprise" | "no_show_agence" | "cancelled";
+  survey_token_agence: string | null;
+  survey_token_entreprise: string | null;
+  completed_at: string | null;
+  noshow_reported_at: string | null;
+  noshow_reported_by: string | null;
+  created_at: string;
+};
+
 export const PRODUCT_STATUT_VALUES = [
   "NONE",
   "PAID_PENDING_ONBOARDING",
@@ -58,4 +75,5 @@ export type ClientCockpitData = {
   form: DashboardFormData;
   timeline: TimelineStep[];
   matches: MatchRow[];
+  appointments: AppointmentRow[];
 };

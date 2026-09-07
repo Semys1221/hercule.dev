@@ -220,21 +220,11 @@ export function publicPathForScope(scope: FunnelScope): string {
   return `/vente/${scope.audience}/${scope.stage}`;
 }
 
-export function scopeFromLeafKey(leafKey: string, audience: Audience): FunnelScope | null {
-  if (leafKey === "onboarding_funnel") {
-    return {
-      audience,
-      kind: "onboarding",
-      stage: null,
-    };
-  }
-
+export function scopeFromLeafKey(_leafKey: string, _audience: Audience): FunnelScope | null {
   return null;
 }
 
-export const FUNNEL_LIST_LEAF_KEYS = new Set([
-  "onboarding_funnel",
-]);
+export const FUNNEL_LIST_LEAF_KEYS = new Set<string>();
 
 export function defaultFormFields(): z.infer<typeof formStepContentSchema>["fields"] {
   return FORM_FIELD_IDS.map((id) => ({

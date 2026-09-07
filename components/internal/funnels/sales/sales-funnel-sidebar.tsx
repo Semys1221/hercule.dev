@@ -6,12 +6,14 @@ import {
   Building2,
   Calendar,
   Check,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
   ClipboardList,
   Handshake,
   History,
   LogOut,
   Settings,
-  Sparkles,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -33,7 +35,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { SESSION_DEVELOPER_MODE_BADGE } from "@/lib/admin/funnels/ui-copy";
+import { SESSION_DEVELOPER_MODE_BADGE, SESSION_ENTER_INSTITUTIONAL_CTA, SESSION_PHASE_INSTITUTIONAL, SESSION_SETTINGS_LABEL, SESSION_SIDEBAR_QUALIFICATION, SESSION_SIDEBAR_STEPS } from "@/lib/admin/funnels/ui-copy";
 
 import {
   SALES_CLOSING_SECTIONS,
@@ -48,7 +50,7 @@ import {
 
 const SECTION_ICONS: Record<SalesFunnelSectionId, LucideIcon> = {
   "rendez-vous": Calendar,
-  introduction: Sparkles,
+  introduction: ClipboardCheck,
   "presentation-societe": Building2,
   capacite: Briefcase,
   historique: History,
@@ -83,6 +85,7 @@ type SalesFunnelSidebarProps = {
   developerModeEnabled: boolean;
   meetingInfo?: MeetingInfo | null;
   onEnterClosing: () => void;
+  onBackToQualification: () => void;
   onSectionChange: (sectionId: SalesFunnelSectionId | SalesClosingSectionId) => void;
 };
 
@@ -102,12 +105,18 @@ export function SalesFunnelSidebar({
   developerModeEnabled,
   meetingInfo,
   onEnterClosing,
+  onBackToQualification,
   onSectionChange,
 }: SalesFunnelSidebarProps) {
   const sections =
     contentPhase === "pitch" ? SALES_CLOSING_SECTIONS : SALES_FUNNEL_SECTIONS;
+  const sidebarGroupLabel =
+    contentPhase === "pitch" ? SESSION_SIDEBAR_STEPS : SESSION_SIDEBAR_QUALIFICATION;
+  const showForwardArrow =
+    contentPhase === "qualification" && (developerModeEnabled || canEnterClosing);
+  const showBackArrow = contentPhase === "pitch";
   const isPlaceholder = name === PLACEHOLDER_NAME || !meetingInfo;
-  const phaseLabel = phase === "closing" ? "Pitch commercial" : "Sales funnel";
+  const phaseLabel = phase === "closing" ? SESSION_PHASE_INSTITUTIONAL : "Hercule";
 
   function renderSectionMenu(
     menuSections: typeof SALES_FUNNEL_SECTIONS | typeof SALES_CLOSING_SECTIONS,
@@ -147,8 +156,8 @@ export function SalesFunnelSidebar({
 
       {/* ── Header ── */}
       <SidebarHeader className="gap-0 pb-3 pt-3">
-        {/* Row 1: brand + gear */}
-        <div className="flex items-center justify-between px-3 py-1">
+        {/* Row 1: brand */}
+        <div className="flex items-center px-3 py-1">
           <div className="flex items-center gap-2">
             <HerculeMark variant="dual" className="size-6 shrink-0 text-white" />
             <span className="text-sm font-semibold tracking-tight">{phaseLabel}</span>
@@ -158,11 +167,6 @@ export function SalesFunnelSidebar({
               </Badge>
             ) : null}
           </div>
-          <Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground hover:text-foreground" asChild>
-            <Link href={settingsHref} aria-label="Réglages du funnel sales">
-              <Settings className="size-4" />
-            </Link>
-          </Button>
         </div>
 
         {/* Row 2: meeting name badge */}
@@ -179,49 +183,59 @@ export function SalesFunnelSidebar({
       </SidebarHeader>
 
       {/* ── Navigation + Context card ── */}
-      <SidebarContent className="overflow-hidden">
+      <SidebarContent className="overflow-auto">
         {/* Separator between header and nav */}
         <Separator className="mb-2" />
 
         <div
-          key={developerModeEnabled ? "developer" : contentPhase}
+          key={contentPhase}
           className={cn(
             "duration-300",
-            !developerModeEnabled &&
-              contentAnimation === "exit" &&
+            contentAnimation === "exit" &&
               "animate-out fade-out-0 slide-out-to-bottom-2 fill-mode-forwards",
-            !developerModeEnabled &&
-              contentAnimation === "enter" &&
+            contentAnimation === "enter" &&
               "animate-in fade-in-0 slide-in-from-bottom-2 fill-mode-forwards",
           )}
         >
-          {developerModeEnabled ? (
-            <>
-              <SidebarGroup>
-                <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-widest text-foreground/50">
-                  Étapes
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  {renderSectionMenu(SALES_FUNNEL_SECTIONS, "qualification")}
-                </SidebarGroupContent>
-              </SidebarGroup>
-              <SidebarGroup>
-                <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-widest text-foreground/50">
-                  Pitch
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  {renderSectionMenu(SALES_CLOSING_SECTIONS, "pitch")}
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </>
-          ) : (
-            <SidebarGroup>
-              <SidebarGroupLabel className="px-2 text-xs font-semibold uppercase tracking-widest text-foreground/50">
-                {contentPhase === "pitch" ? "Pitch" : "Étapes"}
+          <SidebarGroup>
+            <div className="flex items-center gap-1 px-2">
+              {showBackArrow ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  aria-label="Retour à la qualification"
+                  onClick={onBackToQualification}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+              ) : null}
+              <SidebarGroupLabel
+                className={cn(
+                  "px-0 text-xs font-semibold uppercase tracking-widest text-foreground/50",
+                  showBackArrow || showForwardArrow ? "flex-1" : undefined,
+                )}
+              >
+                {sidebarGroupLabel}
               </SidebarGroupLabel>
-              <SidebarGroupContent>{renderSectionMenu(sections, contentPhase)}</SidebarGroupContent>
-            </SidebarGroup>
-          )}
+              {showForwardArrow ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  aria-label="Passer aux étapes"
+                  onClick={onEnterClosing}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              ) : null}
+            </div>
+            <SidebarGroupContent>
+              {renderSectionMenu(sections, contentPhase)}
+            </SidebarGroupContent>
+          </SidebarGroup>
 
           {/* ── Meeting context card ── */}
           <div className="px-2 pt-1">
@@ -286,12 +300,25 @@ export function SalesFunnelSidebar({
               className="ml-auto"
               onClick={onEnterClosing}
             >
-              Passer au closing
+              {SESSION_ENTER_INSTITUTIONAL_CTA}
             </Button>
           ) : null}
         </div>
 
-        {/* Row 2: Exit as ghost button */}
+        {/* Row 2: Settings */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+          asChild
+        >
+          <Link href={settingsHref} aria-label={SESSION_SETTINGS_LABEL}>
+            <Settings className="size-4" />
+            {SESSION_SETTINGS_LABEL}
+          </Link>
+        </Button>
+
+        {/* Row 3: Exit */}
         <Button
           variant="ghost"
           size="sm"
