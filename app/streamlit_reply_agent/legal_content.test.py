@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 
 from legal_content import (
+    build_knowledge_pack_cached,
     build_legal_knowledge_markdown,
     extract_entreprise_faq,
     get_ai_reply_knowledge_markdown,
@@ -65,6 +66,17 @@ class LegalContentTests(unittest.TestCase):
         self.assertIn("Q: Gratuit ?", faq)
         self.assertIn("A: Oui.", faq)
         self.assertIn("Q: Commission ?", faq)
+
+    def test_build_knowledge_pack_cached_succeeds(self) -> None:
+        pack = build_knowledge_pack_cached(
+            "biggy_agency",
+            "buyer",
+            "Agences web",
+            "5-50",
+        )
+        self.assertIn("Knowledge pack", pack)
+        self.assertIn("biggy_agency", pack)
+        self.assertIn("1 489 €", pack)
 
 
 if __name__ == "__main__":

@@ -39,6 +39,14 @@ do_not:
 - [cvg_site-sync.md](./cvg_site-sync.md)
 - [capacity/README.md](./capacity/README.md)
 
+## Runtime deps (AI Reply Agent)
+
+Ces fichiers sont lus au runtime par le reply agent Grok (Streamlit + webhook Next.js). Ne pas archiver sans mettre à jour [`app/streamlit_reply_agent/legal_content.py`](../../app/streamlit_reply_agent/legal_content.py) et [`lib/ai-reply-agent/knowledge.ts`](../../lib/ai-reply-agent/knowledge.ts).
+
+- [ai-reply-knowledge.md](./ai-reply-knowledge.md)
+- [00-overview.md](./00-overview.md)
+- [deliverance/front-client.md](./deliverance/front-client.md)
+
 ## Hors spec
 
 Questionnaire, SOP, Streamlit, anciennes docs : [`archive/`](../../archive/README.md)

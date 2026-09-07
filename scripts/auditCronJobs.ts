@@ -14,6 +14,7 @@ const TARGETS = [
   { path: "/api/cron/post-rdv-surveys", label: "post-rdv-surveys" },
   { path: "/api/cron/instantly-bypass-jobs", label: "instantly-bypass-jobs" },
   { path: "/api/cron/instantly-bypass-pipeline", label: "instantly-bypass-pipeline" },
+  { path: "/api/cron/ai-reply-agent-jobs", label: "ai-reply-agent-jobs" },
 ] as const;
 
 function env(name: string): string {
@@ -145,6 +146,7 @@ async function main(): Promise<void> {
       console.log("    pnpm configure-post-rdv-surveys-cron");
       console.log("    pnpm configure-instantly-bypass-cron");
       console.log("    pnpm configure-instantly-pipeline-cron");
+      console.log("    pnpm configure-ai-reply-agent-cron");
     }
     if (!allHealthy) {
       console.log("- One or more endpoints failed. Check Vercel deploy + CRON_SECRET match.");
