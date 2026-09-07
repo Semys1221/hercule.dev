@@ -29,6 +29,10 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 logger = logging.getLogger(__name__)
 
 LIB_DIR = os.path.dirname(os.path.abspath(__file__))
+_APP_DIR = os.path.dirname(LIB_DIR)
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+from outreach_data import scraper_output_base  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -44,7 +48,7 @@ class OutputPaths:
 
 
 def output_paths(preset: str = "biggy_agency") -> OutputPaths:
-    out_dir = os.path.join(LIB_DIR, "output", preset)
+    out_dir = os.path.join(scraper_output_base(), preset)
     os.makedirs(out_dir, exist_ok=True)
     return OutputPaths(
         out_dir=out_dir,
@@ -102,6 +106,10 @@ _CSV_COLUMNS = [
     "FormeJuridique",
     "AnneeCreation",
     "ChiffreAffaires",
+    "TailleEntreprise",
+    "LeadScore",
+    "RegistrySource",
+    "RegistryFetchedAt",
 ]
 _FILTER_AUDIT_COLUMNS = ["Email", "Company", "Category", "Verdict", "Reason"]
 _ENRICH_AUDIT_COLUMNS = [
@@ -119,6 +127,8 @@ _ENRICH_AUDIT_COLUMNS = [
     "Effectif",
     "Naf",
     "FormeJuridique",
+    "TailleEntreprise",
+    "LeadScore",
 ]
 
 
@@ -204,7 +214,14 @@ def _is_target_reached(
     target_mode: str,
     leads_saved: int,
     instantly_pushed: int,
+    config: dict | None = None,
 ) -> bool:
+    if target_mode == "instantly_pushed" and config:
+        from scrape_metrics import fetch_instantly_live
+
+        live = fetch_instantly_live(config)
+        if live is not None and live >= target:
+            return True
     return _progress_value(
         target_mode=target_mode,
         leads_saved=leads_saved,
@@ -213,17 +230,28 @@ def _is_target_reached(
 
 
 def _query_pass_lists(config: dict, query_pass: int) -> tuple[list[str], list[str]]:
+    import commune_passes
+
     if query_pass <= 0:
         return list(config.get("KEYWORDS") or []), list(config.get("LOCATIONS") or [])
-    return (
-        list(config.get("EXPANSION_KEYWORDS") or []),
-        list(config.get("EXPANSION_LOCATIONS") or []),
-    )
+    has_expansion = bool(config.get("EXPANSION_KEYWORDS") and config.get("EXPANSION_LOCATIONS"))
+    if has_expansion and query_pass == 1:
+        return (
+            list(config.get("EXPANSION_KEYWORDS") or []),
+            list(config.get("EXPANSION_LOCATIONS") or []),
+        )
+    chunk_idx = commune_passes.commune_chunk_index(config, query_pass)
+    if chunk_idx is None:
+        return [], []
+    locations = commune_passes.get_chunk(config, chunk_idx)
+    keywords = commune_passes.combined_keywords(config)
+    return keywords, locations
 
 
 def max_query_passes(config: dict) -> int:
-    has_expansion = bool(config.get("EXPANSION_KEYWORDS") and config.get("EXPANSION_LOCATIONS"))
-    return 1 if has_expansion else 0
+    import commune_passes
+
+    return commune_passes.max_query_pass_index(config)
 
 
 def build_queries(config: dict, query_pass: int = 0) -> list[str]:
@@ -689,6 +717,7 @@ async def _maybe_enrich_and_push(
     batches_total: int,
     last_completed: int,
     force_enrich: bool = False,
+    on_progress_persist: Callable[[int, int, int], None] | None = None,
 ) -> tuple[int, int, int]:
     """Run enrich batch if buffer full; flush Instantly if buffer full. Returns updated counters."""
     while enrich_enabled and (len(pending_scraped) >= enrich_batch_size or force_enrich):
@@ -706,12 +735,14 @@ async def _maybe_enrich_and_push(
             f"(totals: {leads_enriched_valid} valid / {leads_enriched_rejected} rejected)"
         )
         metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
+        if on_progress_persist:
+            on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
 
     if not enrich_enabled and pending_scraped:
         to_push = list(pending_scraped)
         pending_scraped.clear()
         if bool(config.get("PAPPERS_ENABLED", False)):
-            from pappers_validator import validate_leads
+            from company_registry import validate_leads
 
             valid, rejected = await validate_leads(to_push, config, log_cb=log_cb)
             for row in rejected:
@@ -741,6 +772,8 @@ async def _maybe_enrich_and_push(
             f"Instantly totals — pushed: {instantly_pushed}/{target}, "
             f"skipped (duplicate): {flush_stats['skipped_duplicate']}"
         )
+        if on_progress_persist:
+            on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
 
     return leads_enriched_valid, leads_enriched_rejected, instantly_pushed
 
@@ -808,6 +841,9 @@ def _process_business(
     tax = taxonomy_text(b)
     service = detect_service(tax, config)
     fields = taxonomy_fields(b)
+    from company_registry.siret_extract import extract_from_outscraper
+
+    siret, siren = extract_from_outscraper(b)
     row = {
         "Email": email,
         "Company": company,
@@ -819,6 +855,8 @@ def _process_business(
         "Type": fields["Type"],
         "Category": fields["Category"],
         "Subtypes": fields["Subtypes"],
+        "Siret": siret,
+        "Siren": siren,
     }
     audit = {
         "Email": email,
@@ -933,6 +971,7 @@ def _persist_run_state(
 ) -> None:
     if run_state is None:
         return
+    from scrape_metrics import touch_worker_heartbeat
     from scrape_state import save_scrape_state
 
     run_state["leads_saved"] = leads_saved
@@ -944,6 +983,9 @@ def _persist_run_state(
     run_state["inflight_tasks"] = [job.to_state() for job in inflight.values()]
     run_state["status"] = "running"
     save_scrape_state(run_state, path=_active.scrape_state)
+    preset = str(run_state.get("preset") or "").strip()
+    if preset:
+        touch_worker_heartbeat(_active.out_dir, preset=preset, status="running")
 
 
 async def _process_batch_results(
@@ -969,6 +1011,7 @@ async def _process_batch_results(
     instantly_pushed: int,
     batches_total: int,
     last_completed: int,
+    on_progress_persist: Callable[[int, int, int], None] | None = None,
 ) -> tuple[int, int, int, int, bool]:
     log_cb("Applying scrape gates (email, website, dedup)...")
     raw_places = 0
@@ -1028,6 +1071,7 @@ async def _process_batch_results(
                 instantly_pushed=instantly_pushed,
                 batches_total=batches_total,
                 last_completed=last_completed,
+                on_progress_persist=on_progress_persist,
             )
 
             if _is_target_reached(
@@ -1035,9 +1079,12 @@ async def _process_batch_results(
                 target_mode=target_mode,
                 leads_saved=leads_saved,
                 instantly_pushed=instantly_pushed,
+                config=config,
             ):
                 target_reached = True
                 break
+            if on_progress_persist:
+                on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
         if target_reached:
             break
 
@@ -1060,6 +1107,9 @@ async def _process_batch_results(
         f"accepted={accepted}, rejected={rejected}, enriched_valid={leads_enriched_valid}"
     )
     return leads_saved, leads_enriched_valid, leads_enriched_rejected, instantly_pushed, target_reached
+
+
+_EMPTY_BATCH_MAX_RETRIES = 3
 
 
 async def _run_concurrent_scrape(
@@ -1105,6 +1155,7 @@ async def _run_concurrent_scrape(
     last_inflight_log = 0.0
     last_logged_inflight_count = -1
     target_reached = False
+    batch_empty_retries: dict[int, int] = {}
 
     def _progress() -> int:
         return _progress_value(
@@ -1198,10 +1249,49 @@ async def _run_concurrent_scrape(
                 results = []
             completed_jobs.append((job, results))
 
+        def _persist_now(ls: int, lev: int, ip: int) -> None:
+            _persist_run_state(
+                run_state,
+                leads_saved=ls,
+                leads_enriched_valid=lev,
+                leads_enriched_rejected=leads_enriched_rejected,
+                instantly_pushed=ip,
+                last_completed_batch_index=last_completed,
+                last_submitted_batch_index=max(
+                    next_submit_idx - 1,
+                    int(run_state.get("last_submitted_batch_index", -1))
+                    if run_state
+                    else -1,
+                ),
+                inflight=inflight,
+            )
+
         for job, results in completed_jobs:
             inflight.pop(job.task_id, None)
 
             if not results:
+                attempt = batch_empty_retries.get(job.batch_index, 0) + 1
+                if attempt < _EMPTY_BATCH_MAX_RETRIES and job.batch_index < len(batches):
+                    batch_empty_retries[job.batch_index] = attempt
+                    retry_batch = batches[job.batch_index]
+                    total_limit = compute_total_limit(target, _progress(), settings.total_limit_buffer)
+                    log_cb(
+                        f"Batch {job.batch_index + 1} empty — retry {attempt}/"
+                        f"{_EMPTY_BATCH_MAX_RETRIES - 1}..."
+                    )
+                    task_id = await client.send_async_tasks(
+                        retry_batch,
+                        settings.limit_per_query,
+                        total_limit=total_limit,
+                    )
+                    if task_id:
+                        inflight[task_id] = InflightBatch(
+                            batch_index=job.batch_index,
+                            task_id=task_id,
+                            submitted_at=time.time(),
+                        )
+                        log_cb(f"Task [{task_id}] resubmitted.")
+                    continue
                 log_cb(f"Batch {job.batch_index + 1} returned no results.")
                 last_completed = max(last_completed, job.batch_index)
                 _persist_run_state(
@@ -1249,6 +1339,7 @@ async def _run_concurrent_scrape(
                 instantly_pushed=instantly_pushed,
                 batches_total=len(batches),
                 last_completed=job.batch_index,
+                on_progress_persist=_persist_now,
             )
             last_completed = max(last_completed, job.batch_index)
             log_cb(
@@ -1333,6 +1424,12 @@ async def run_scraper_pipeline(
     target = int(config["TARGET_LEADS"])
     fingerprint = build_config_fingerprint(config)
 
+    from scrape_log import make_file_log_cb
+    from scrape_metrics import touch_worker_heartbeat
+
+    log_cb = make_file_log_cb(paths.out_dir, also=log_cb)
+    touch_worker_heartbeat(paths.out_dir, preset=preset, status="running")
+
     if reset:
         await clear_local_leads(
             cancel_remote=True,
@@ -1386,7 +1483,8 @@ async def run_scraper_pipeline(
     if bool(config.get("PAPPERS_ENABLED", False)):
         log_cb(
             f"SIRET lookup enabled — site + Annuaire, min effectif "
-            f"{int(config.get('PAPPERS_MIN_EMPLOYEES', 10) or 10)}, "
+            f"{int(config.get('PAPPERS_MIN_EMPLOYEES', 3))}, "
+            f"min_score={int(config.get('PAPPERS_MIN_SCORE', 55) or 55)}, "
             f"on_unknown={config.get('PAPPERS_ON_UNKNOWN') or 'reject'}"
         )
     else:
@@ -1500,6 +1598,8 @@ async def run_scraper_pipeline(
         run_state = existing_state
         run_state["status"] = "running"
         run_state["push_to_instantly"] = push_to_instantly
+        if leads_saved > int(run_state.get("leads_saved", 0) or 0):
+            run_state["leads_saved"] = leads_saved
         save_scrape_state(run_state, path=_active.scrape_state)
         progress = instantly_pushed if mode == "instantly_pushed" else leads_saved
         log_cb(
@@ -1580,6 +1680,7 @@ async def run_scraper_pipeline(
                 target_mode=mode,
                 leads_saved=leads_saved,
                 instantly_pushed=instantly_pushed,
+                config=config,
             ):
                 break
 
@@ -1637,6 +1738,7 @@ async def run_scraper_pipeline(
                 target_mode=mode,
                 leads_saved=leads_saved,
                 instantly_pushed=instantly_pushed,
+                config=config,
             ):
                 log_cb(
                     f"Target reached — "
@@ -1711,6 +1813,7 @@ async def run_scraper_pipeline(
         target_mode=mode,
         leads_saved=leads_saved,
         instantly_pushed=instantly_pushed,
+        config=config,
     )
     progress_cb(min(instantly_pushed / target, 1.0) if mode == "instantly_pushed" and target else 1.0)
 
