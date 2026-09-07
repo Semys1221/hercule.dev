@@ -26,6 +26,7 @@ export async function runBookingsTableSmoke(page: Page): Promise<void> {
     page.waitForResponse(
       (response) =>
         response.url().includes("/api/admin/calendly/bookings?category=agence") &&
+        response.url().includes("daysBehind=30") &&
         response.request().method() === "GET",
       { timeout: 90_000 },
     ),

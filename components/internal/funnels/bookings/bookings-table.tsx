@@ -28,6 +28,7 @@ import {
   bookingRowActionState,
   type BookingRowActionState,
 } from "@/lib/calendly/booking-row-actions";
+import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import type { Audience } from "@/lib/admin/navigation";
@@ -236,6 +237,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
       try {
         const { bookings, error: fetchError } = await fetchEnrichedBookings(audience, {
           fresh,
+          daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
         });
         if (fetchError) {
           throw new Error(fetchError);
@@ -243,7 +245,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
 
         setRows(bookings);
         if (bookings.length === 0) {
-          setError("Aucun rendez-vous Calendly à venir.");
+          setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
         }
       } catch (fetchError) {
         setRows([]);
@@ -385,9 +387,14 @@ export function BookingsTable({ audience }: BookingsTableProps) {
     }
   }, []);
 
+  const sortedRows = useMemo(
+    () => rows.slice().sort((a, b) => b.start_time.localeCompare(a.start_time)),
+    [rows],
+  );
+
   const tableCaption = useMemo(
-    () => `${rows.length} rendez-vous`,
-    [rows.length],
+    () => `${sortedRows.length} rendez-vous`,
+    [sortedRows.length],
   );
 
   return (
@@ -396,7 +403,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
           <p className="text-sm text-muted-foreground">
-            RDV Calendly et liens associés par prospect.
+            RDV Calendly des 30 derniers jours et à venir.
           </p>
         </div>
         <Button
@@ -417,7 +424,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         <InternalStatusAlert variant="success" message={workflowMessage} />
       ) : null}
 
-      {isAgenceScope && rows.length > 0 ? (
+      {isAgenceScope && sortedRows.length > 0 ? (
         <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
@@ -433,7 +440,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row) => {
+              {sortedRows.map((row) => {
                 const actions = bookingRowActionState(row.sales_call_status);
                 const pending = pendingInvitee === row.invitee_uri;
                 const pendingNotPresent = pendingNotPresentInvitee === row.invitee_uri;

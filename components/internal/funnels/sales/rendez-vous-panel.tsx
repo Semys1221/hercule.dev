@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { readBookingsClientCache } from "@/lib/calendly/bookings-client-cache";
+import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import type { Audience } from "@/lib/admin/navigation";
 import { setDeveloperModeEnabled } from "@/lib/admin/funnels/sales-funnel-settings";
@@ -40,7 +41,6 @@ import {
 } from "./sales-intro-script";
 
 const DEFAULT_MEETING_NAME = "No meetings";
-const SALES_FUNNEL_DAYS_BEHIND = 30;
 
 type ScriptTab = "intro" | "declarative";
 
@@ -131,7 +131,7 @@ export function RendezVousPanel({
   }, [selectedBooking, onMeetingNameChange]);
 
   useEffect(() => {
-    const cached = readBookingsClientCache(audience, SALES_FUNNEL_DAYS_BEHIND);
+    const cached = readBookingsClientCache(audience, CALENDLY_BOOKINGS_DAYS_BEHIND);
     if (cached && cached.bookings.length > 0) {
       setBookings(cached.bookings);
     }
@@ -148,7 +148,7 @@ export function RendezVousPanel({
       try {
         const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
           fresh,
-          daysBehind: SALES_FUNNEL_DAYS_BEHIND,
+          daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
         });
         if (fetchError) {
           throw new Error(fetchError);
