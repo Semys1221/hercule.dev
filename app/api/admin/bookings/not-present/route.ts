@@ -29,6 +29,8 @@ const RESEND_THREAD_TYPES: BookingEmailType[] = [
   "h20_cancel",
 ];
 
+const NOT_PRESENT_SUBJECT = "Votre rendez-vous avec Hercule";
+
 type ChannelStatus = "sent" | "skipped" | "error";
 
 function formatParisTime(iso: string | null | undefined): string {
@@ -98,22 +100,26 @@ async function sendResendNotPresent(params: {
   inviteeUri: string;
 }): Promise<ChannelStatus> {
   const thread = await getThreadContext(params.lead.id, RESEND_THREAD_TYPES);
-  if (!thread.threadSubject || thread.messageIds.length === 0) {
-    return "skipped";
-  }
+  const hasThread =
+    Boolean(thread.threadSubject?.trim()) && thread.messageIds.length > 0;
 
   const { text, html } = buildNotPresentEmail(
     resolveFirstName(params.lead, params.email),
     params.startTime,
   );
 
+  const subject = hasThread
+    ? buildReplySubject(thread.threadSubject!)
+    : NOT_PRESENT_SUBJECT;
+  const headers = hasThread ? buildThreadHeaders(thread.messageIds) : undefined;
+
   const result = await sendBookingEmail({
     to: params.email,
-    subject: buildReplySubject(thread.threadSubject),
+    subject,
     text,
     html,
     idempotencyKey: `not-present:resend:${params.inviteeUri}:${Date.now()}`,
-    headers: buildThreadHeaders(thread.messageIds),
+    headers,
   });
 
   if (!result.ok) {
@@ -152,7 +158,7 @@ async function sendInstantlyNotPresent(params: {
     resolveFirstName(params.lead, params.email),
     params.startTime,
   );
-  const subject = thread.subject?.trim() || "Votre rendez-vous avec Hercule";
+  const subject = thread.subject?.trim() || NOT_PRESENT_SUBJECT;
 
   try {
     await replyToEmail(apiKey, {
