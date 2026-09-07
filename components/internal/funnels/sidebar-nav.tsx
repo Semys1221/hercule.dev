@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
+  Globe,
   Home,
   LayoutGrid,
   Mail,
@@ -27,7 +28,6 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -48,12 +48,14 @@ import {
   type Audience,
   type NavNode,
 } from "@/lib/admin/navigation";
+import { ADMIN_ROOT_LABEL } from "@/lib/admin/funnels/ui-copy";
 import { cn } from "@/lib/utils";
 
 const GLOBAL_NAV = [
   { href: "/internal/funnels", label: "Accueil", icon: Home, exact: false },
   { href: "/internal/components", label: "Composants", icon: Boxes, exact: false },
   { href: "/internal/database", label: "Database", icon: Database, exact: false },
+  { href: "/", label: "Site public", icon: Globe, exact: true },
 ] as const;
 
 const MODULE_ICONS: Record<string, LucideIcon> = {
@@ -245,11 +247,11 @@ export function InternalAppSidebar() {
       <SidebarHeader className="border-b border-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="Internal">
+            <SidebarMenuButton size="lg" tooltip={ADMIN_ROOT_LABEL}>
               <HerculeMark variant="dual" className="size-5 shrink-0 text-foreground" />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Hercule</span>
-                <span className="truncate text-xs text-muted-foreground">Internal</span>
+                <span className="truncate text-xs text-muted-foreground">{ADMIN_ROOT_LABEL}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -356,19 +358,6 @@ export function InternalAppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Site public">
-              <Link href="/">
-                <Home className="size-4" />
-                <span>Site public</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>

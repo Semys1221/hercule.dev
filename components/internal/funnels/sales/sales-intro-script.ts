@@ -102,3 +102,22 @@ L'objectif c'est de continuer :
 - profil en tant qu'agence : vos tarifs, vos succès, vos attentes.
 - les demandes qui vous sont eligibles`;
 }
+
+export function buildSalesIntroChecklist(
+  booking: Pick<CalendlyBookingRow, "first_name" | "name" | "questions">,
+): string[] {
+  const fields = extractSalesIntroFields(booking);
+  const teamSize = fields.teamSize ?? "[ex. 2 à 5 salariés]";
+  const activities = fields.activities ?? "[ex. Trafic Payant, Dev Front-end]";
+
+  return [
+    `${fields.firstName} — en ligne — Evan / Hercule`,
+    `Dossier Calendly — ${teamSize} — ${activities}`,
+    "Hercule — projets B2B qualifiés — dizaines / semaine",
+    "Rôle — sélection agence → qualifier attentes + compétences → relation",
+    "Cadre — propositions = expertises déclarées — zéro perte de temps",
+    "Brutal honesty — déclaratif OK — client éduqué — fini virement SEPA → paiement carte — inventer pour la compétition → dispute agrégateur -- mauvais moment -- chargeback",
+    "Objectif — qualité agences recommandées + profils attribués",
+    "Suite → profil agence (tarifs, succès, attentes) → demandes éligibles",
+  ];
+}

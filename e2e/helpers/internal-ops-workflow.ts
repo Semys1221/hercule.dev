@@ -9,7 +9,7 @@ const BOOKINGS_PATH = "/internal/funnels/agence/bookings";
 
 export async function runInternalHubNavigation(page: Page): Promise<void> {
   await page.goto(INTERNAL_HUB, { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "Internal" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Admin" })).toBeVisible();
 
   await page.getByRole("link", { name: /Ouvrir Parcours/i }).click();
   await expect(page).toHaveURL(new RegExp(`${FUNNELS_LANDING}$`));

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 
 import { isUpcomingBooking } from "@/lib/calendly/list-bookings";
 import {
+  buildSalesIntroChecklist,
   buildSalesIntroScript,
   extractSalesIntroFields,
   SALES_DECLARATIVE_SCRIPT,
@@ -32,6 +33,17 @@ function main() {
   assert.match(script, /2 à 5/);
   assert.match(script, /Trafic Payant/);
   assert.match(script, /1 500 €/);
+
+  const checklist = buildSalesIntroChecklist(booking);
+  assert.equal(checklist.length, 8);
+  assert.match(checklist[0], /Marie — en ligne — Evan \/ Hercule/);
+  assert.match(checklist[1], /2 à 5/);
+  assert.match(checklist[1], /Trafic Payant/);
+  assert.match(checklist[5], /Brutal honesty/);
+  assert.match(checklist[5], /dispute agrégateur/);
+  assert.match(checklist[5], /chargeback/);
+  assert.ok(!checklist.some((item) => /1 500 €/.test(item)));
+  assert.ok(!checklist.some((item) => /formulaire calendly/i.test(item)));
 
   assert.match(SALES_DECLARATIVE_SCRIPT, /Toutes les questions restent du déclaratif/);
   assert.match(SALES_DECLARATIVE_SCRIPT, /Ça vous va \?/);

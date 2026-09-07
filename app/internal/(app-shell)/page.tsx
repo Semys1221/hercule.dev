@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  ADMIN_ROOT_LABEL,
   LANDING_DESCRIPTION,
   PRODUCT_BUILDER_LABEL,
   PRODUCT_ROOT_LABEL,
@@ -46,7 +47,7 @@ export default function InternalHubPage() {
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <InternalPageHeader
-        title="Internal"
+        title={ADMIN_ROOT_LABEL}
         description="Documentation vivante de l'architecture Hercule — composants, base de données et outils ops."
       />
 

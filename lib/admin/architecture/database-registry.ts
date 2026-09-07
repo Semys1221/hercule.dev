@@ -38,7 +38,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     readers: ["admin", "cron"],
     profileKeys: "—",
     relatedTables: ["agence", "entreprise", "appointments"],
-    status: "active",
+    status: "migrated",
   },
   {
     id: "appointments",
@@ -50,7 +50,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     readers: ["admin", "client"],
     profileKeys: "—",
     relatedTables: ["matches", "agence", "entreprise"],
-    status: "active",
+    status: "migrated",
   },
   {
     id: "payments",
@@ -62,7 +62,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     readers: ["admin", "client"],
     profileKeys: "—",
     relatedTables: ["agence"],
-    status: "active",
+    status: "migrated",
   },
   {
     id: "sales_calls",
@@ -74,7 +74,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     readers: ["admin"],
     profileKeys: "—",
     relatedTables: ["agence"],
-    status: "active",
+    status: "migrated",
   },
   {
     id: "booking_email_jobs",
@@ -122,7 +122,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     readers: ["public", "admin"],
     profileKeys: "—",
     relatedTables: [],
-    status: "active",
+    status: "migrated",
   },
   {
     id: "instantly_bypass_templates",

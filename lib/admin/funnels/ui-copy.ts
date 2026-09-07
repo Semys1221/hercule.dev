@@ -12,6 +12,7 @@
 import { E2E_TEST_EMAIL } from "@/lib/test/e2e-identity";
 
 export const PRODUCT_ROOT_LABEL = "Parcours";
+export const ADMIN_ROOT_LABEL = "Admin";
 export const PRODUCT_BUILDER_LABEL = "Éditeur de parcours";
 export const PRODUCT_BUILDER_TOOLTIP = PRODUCT_BUILDER_LABEL;
 

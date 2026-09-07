@@ -30,10 +30,12 @@ import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode
 import type { SalesClosingValues } from "@/components/internal/funnels/sales/sales-closing-sections";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { dashboardLinkFor } from "@/lib/link-tracking/urls";
+import { cn } from "@/lib/utils";
 
+import { SalesIntroChecklist } from "./sales-intro-checklist";
 import { SalesScriptContent } from "./sales-script-content";
 import {
-  buildSalesIntroScript,
+  buildSalesIntroChecklist,
   SALES_DECLARATIVE_SCRIPT,
 } from "./sales-intro-script";
 
@@ -114,8 +116,8 @@ export function RendezVousPanel({
     [bookings, selectedUri],
   );
 
-  const introScript = useMemo(
-    () => (selectedBooking ? buildSalesIntroScript(selectedBooking) : null),
+  const introChecklist = useMemo(
+    () => (selectedBooking ? buildSalesIntroChecklist(selectedBooking) : null),
     [selectedBooking],
   );
 
@@ -219,9 +221,6 @@ export function RendezVousPanel({
       setTestLoading(false);
     }
   }, [audience, onApplyTestPreset, onBookingSelect]);
-
-  const activeScript =
-    scriptTab === "intro" ? introScript : SALES_DECLARATIVE_SCRIPT;
 
   const dashboardLink = selectedLead ? dashboardLinkFor(selectedLead) : null;
 
@@ -349,8 +348,15 @@ export function RendezVousPanel({
             </CardContent>
           </Card>
 
-          <Card className="flex h-[28rem] flex-col">
-            <CardHeader className="shrink-0 space-y-3">
+          <Card
+            className={cn(
+              "flex h-[28rem] flex-col",
+              scriptTab === "intro" && "border-0 bg-transparent shadow-none",
+            )}
+          >
+            <CardHeader
+              className={cn("shrink-0 space-y-3", scriptTab === "intro" && "px-0")}
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle className="text-base">{WELCOME_SCRIPT_TITLE}</CardTitle>
                 <ButtonGroup>
@@ -373,8 +379,18 @@ export function RendezVousPanel({
                 </ButtonGroup>
               </div>
             </CardHeader>
-            <CardContent className="min-h-0 flex-1 overflow-y-auto">
-              {activeScript ? <SalesScriptContent text={activeScript} /> : null}
+            <CardContent
+              className={cn("min-h-0 flex-1 overflow-y-auto", scriptTab === "intro" && "px-0")}
+            >
+              {scriptTab === "intro" && introChecklist ? (
+                <SalesIntroChecklist
+                  items={introChecklist}
+                  resetKey={selectedBooking.invitee_uri}
+                />
+              ) : null}
+              {scriptTab === "declarative" ? (
+                <SalesScriptContent text={SALES_DECLARATIVE_SCRIPT} />
+              ) : null}
             </CardContent>
           </Card>
         </div>
