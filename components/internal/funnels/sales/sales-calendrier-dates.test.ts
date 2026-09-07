@@ -7,6 +7,8 @@ import {
   bookMeetingsFromCards,
   calendarGridRevealIndex,
   calendarScrollWeeksBeforeToday,
+  calendarScrollWeeksForMeetings,
+  calendarWeekIndex,
   dateKey,
   BLOCKED_DAY_COUNT,
   isWeekend,
@@ -55,5 +57,31 @@ assert.equal(meetings[0].secteur, "SEO");
 
 assert.equal(calendarScrollWeeksBeforeToday(monday, new Date(2026, 8, 1)), 1);
 assert.equal(calendarScrollWeeksBeforeToday(new Date(2026, 8, 1), new Date(2026, 8, 1)), 0);
+
+const fiveCards = [
+  { id: "a", secteur: "SEO", minDaysOffset: 9, maxDaysOffset: 15 },
+  { id: "b", secteur: "Ads", minDaysOffset: 9, maxDaysOffset: 15 },
+  { id: "c", secteur: "Web", minDaysOffset: 12, maxDaysOffset: 22 },
+  { id: "d", secteur: "Shop", minDaysOffset: 9, maxDaysOffset: 15 },
+  { id: "e", secteur: "Pool", minDaysOffset: 27, maxDaysOffset: 31 },
+];
+const fiveMeetings = bookMeetingsFromCards(fiveCards, monday);
+const september = new Date(2026, 8, 1);
+const visibleWeekStart = calendarScrollWeeksForMeetings(
+  monday,
+  september,
+  fiveMeetings.map((meeting) => meeting.date),
+  5,
+);
+
+assert.equal(fiveMeetings.length, 5);
+assert.equal(dateKey(fiveMeetings[4].date), "2026-10-06");
+fiveMeetings.forEach((meeting) => {
+  const week = calendarWeekIndex(meeting.date, september);
+  assert.ok(
+    week >= visibleWeekStart && week < visibleWeekStart + 5,
+    `meeting ${dateKey(meeting.date)} should be visible in viewport`,
+  );
+});
 
 console.log("sales-calendrier-dates.test.ts: ok");

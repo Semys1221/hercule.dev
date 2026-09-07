@@ -106,6 +106,102 @@ export async function findLeadByCalendlyInviteeUri(
   return null;
 }
 
+function uniqueNonEmpty(values: string[]): string[] {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
+async function findLeadsInTableByColumn(
+  client: SupabaseClient,
+  category: LeadCategory,
+  column: "email" | "slug" | "calendly_invitee_uri",
+  values: string[],
+): Promise<LinkTrackingLead[]> {
+  if (values.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await client.from(category).select("*").in(column, values);
+  if (error) {
+    throw new Error(`Supabase bulk lookup failed on ${category}.${column}: ${error.message}`);
+  }
+
+  return (data ?? []) as LinkTrackingLead[];
+}
+
+export async function findLeadsByEmails(
+  client: SupabaseClient,
+  emails: string[],
+): Promise<Map<string, LeadLookup>> {
+  const normalized = uniqueNonEmpty(emails.map(normalizeEmail));
+  const map = new Map<string, LeadLookup>();
+  if (normalized.length === 0) {
+    return map;
+  }
+
+  for (const category of TABLES) {
+    const rows = await findLeadsInTableByColumn(client, category, "email", normalized);
+    for (const lead of rows) {
+      const key = normalizeEmail(lead.email);
+      if (!map.has(key)) {
+        map.set(key, { category, lead });
+      }
+    }
+  }
+
+  return map;
+}
+
+export async function findLeadsBySlugs(
+  client: SupabaseClient,
+  slugs: string[],
+): Promise<Map<string, LeadLookup>> {
+  const normalized = uniqueNonEmpty(slugs);
+  const map = new Map<string, LeadLookup>();
+  if (normalized.length === 0) {
+    return map;
+  }
+
+  for (const category of TABLES) {
+    const rows = await findLeadsInTableByColumn(client, category, "slug", normalized);
+    for (const lead of rows) {
+      const key = lead.slug?.trim();
+      if (key && !map.has(key)) {
+        map.set(key, { category, lead });
+      }
+    }
+  }
+
+  return map;
+}
+
+export async function findLeadsByCalendlyInviteeUris(
+  client: SupabaseClient,
+  inviteeUris: string[],
+): Promise<Map<string, LeadLookup>> {
+  const normalized = uniqueNonEmpty(inviteeUris);
+  const map = new Map<string, LeadLookup>();
+  if (normalized.length === 0) {
+    return map;
+  }
+
+  for (const category of TABLES) {
+    const rows = await findLeadsInTableByColumn(
+      client,
+      category,
+      "calendly_invitee_uri",
+      normalized,
+    );
+    for (const lead of rows) {
+      const key = lead.calendly_invitee_uri?.trim();
+      if (key && !map.has(key)) {
+        map.set(key, { category, lead });
+      }
+    }
+  }
+
+  return map;
+}
+
 export async function findLeadById(
   client: SupabaseClient,
   category: LeadCategory,

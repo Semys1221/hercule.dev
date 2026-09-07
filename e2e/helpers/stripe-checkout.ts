@@ -1,12 +1,17 @@
 import { expect, type Page } from "@playwright/test";
 
-const TEST_CARD = {
-  name: "Agence Test Hercule",
-  number: "4242424242424242",
-  expiry: "12/34",
-  cvc: "123",
-  zip: "75001",
-};
+const PRICING_CTA = "Activer et sécuriser mon calendrier";
+
+export async function advancePreviewWizardToCheckout(page: Page): Promise<void> {
+  for (let step = 0; step < 3; step += 1) {
+    await page.getByRole("button", { name: "Suivant" }).click();
+  }
+
+  await page.getByRole("checkbox", { name: /Le fonctionnement d'Hercule/i }).check();
+  await page.getByRole("button", { name: "Suivant" }).click();
+  await page.getByRole("button", { name: PRICING_CTA }).click();
+  await page.waitForTimeout(500);
+}
 
 export async function completeStripeEmbeddedCheckout(page: Page): Promise<void> {
   await expect(page.locator('iframe[name="embedded-checkout"]')).toBeVisible({ timeout: 60_000 });
@@ -18,6 +23,14 @@ export async function completeStripeEmbeddedCheckout(page: Page): Promise<void> 
     await cardLabel.first().click({ force: true });
     await page.waitForTimeout(1000);
   }
+
+  const TEST_CARD = {
+    name: "Agence Test Hercule",
+    number: "4242424242424242",
+    expiry: "12/34",
+    cvc: "123",
+    zip: "75001",
+  };
 
   const nameInput = checkout.getByPlaceholder(/full name on card/i);
   if (await nameInput.count()) {
@@ -65,11 +78,7 @@ export async function completeStripeEmbeddedCheckout(page: Page): Promise<void> 
 }
 
 export async function navigateToStripeCheckout(page: Page): Promise<void> {
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole("button", { name: "Suivant" }).click();
-  }
-  await page.getByRole("button", { name: "Procéder au paiement" }).click();
-  await page.waitForTimeout(2000);
+  await advancePreviewWizardToCheckout(page);
 }
 
 export async function enableDashboardDeveloperMode(page: Page): Promise<void> {

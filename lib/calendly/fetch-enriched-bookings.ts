@@ -1,10 +1,27 @@
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
+import {
+  readBookingsClientCache,
+  writeBookingsClientCache,
+} from "@/lib/calendly/bookings-client-cache";
 import type { Audience } from "@/lib/admin/navigation";
+
+export type FetchEnrichedBookingsResult = {
+  bookings: EnrichedCalendlyBooking[];
+  error: string | null;
+  fromCache?: boolean;
+};
 
 export async function fetchEnrichedBookings(
   audience: Audience,
   options?: { fresh?: boolean },
-): Promise<{ bookings: EnrichedCalendlyBooking[]; error: string | null }> {
+): Promise<FetchEnrichedBookingsResult> {
+  if (!options?.fresh) {
+    const cached = readBookingsClientCache(audience);
+    if (cached) {
+      return { bookings: cached.bookings, error: null, fromCache: true };
+    }
+  }
+
   const params = new URLSearchParams({ category: audience });
   if (options?.fresh) {
     params.set("fresh", "1");
@@ -22,5 +39,8 @@ export async function fetchEnrichedBookings(
     };
   }
 
-  return { bookings: body.bookings ?? [], error: null };
+  const bookings = body.bookings ?? [];
+  writeBookingsClientCache(audience, bookings);
+
+  return { bookings, error: null, fromCache: false };
 }

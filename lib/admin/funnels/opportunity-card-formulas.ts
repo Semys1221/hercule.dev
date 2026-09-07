@@ -9,7 +9,7 @@ export const HERCULE_FLOOR_CENTS = HERCULE_MONTHLY_MIN * 100;
 export const TIER_MULTIPLIERS = [1.0, 1.15, 1.25, 1.4, 1.65] as const;
 export const STRETCH_TIER_INDEX = 4;
 export const STRETCH_RATIO = TIER_MULTIPLIERS[STRETCH_TIER_INDEX];
-export const DELAYED_TIMING = { min: 30, max: 35 } as const;
+export const DELAYED_TIMING = { min: 27, max: 31 } as const;
 
 export type PrestationType =
   | "site_vitrine"

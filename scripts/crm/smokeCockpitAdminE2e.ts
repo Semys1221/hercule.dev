@@ -100,7 +100,7 @@ async function main(): Promise<void> {
       timeline: [
         { id: "confirmed", label: timelineLabel, status: "done" },
         { id: "setup", label: "Mise en place", status: "pending" },
-        { id: "preparation", label: "Première livraison en préparation", status: "pending" },
+        { id: "preparation", label: "Mise en relation", status: "pending" },
         { id: "delivery", label: "Première demande attribuée", status: "pending" },
       ],
     },

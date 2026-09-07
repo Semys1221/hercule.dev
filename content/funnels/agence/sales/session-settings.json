@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "audience": "agence",
-  "updatedAt": "2026-09-07T00:36:57.333Z",
+  "updatedAt": "2026-09-07T00:51:54.887Z",
   "preparation": {
-    "content": "E2E preparation 1788741417037"
+    "content": "E2E preparation 1788742314747"
   },
   "waitingQueue": {
     "enabled": true

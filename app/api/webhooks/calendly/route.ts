@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { cancelFollowUpJobs } from "@/lib/booking-communication/jobs";
+import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 import {
   parseInviteeCanceledPayload,
   parseInviteeCreatedPayload,
@@ -66,6 +67,17 @@ async function handleInviteeCanceled(payload: unknown) {
   return NextResponse.json({ ok: true, statut: "CANCELLED" });
 }
 
+function revalidateBookingsAfterWebhook(): void {
+  try {
+    revalidateBookingsCache();
+  } catch (err) {
+    console.warn(
+      "[link-tracking/calendly] bookings cache revalidation failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get("calendly-webhook-signature");
@@ -89,7 +101,9 @@ export async function POST(request: Request) {
 
   if (eventType === "invitee.canceled") {
     try {
-      return await handleInviteeCanceled(payload);
+      const response = await handleInviteeCanceled(payload);
+      revalidateBookingsAfterWebhook();
+      return response;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error("[link-tracking/calendly] cancel:", message);
@@ -157,6 +171,7 @@ export async function POST(request: Request) {
       calendlyQuestions: Object.keys(questions).length > 0 ? questions : null,
     });
 
+    revalidateBookingsAfterWebhook();
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

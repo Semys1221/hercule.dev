@@ -52,9 +52,9 @@ export function isProductStatut(value: string): value is ProductStatut {
 }
 
 export const DEFAULT_TIMELINE: TimelineStep[] = [
-  { id: "confirmed", label: "Commande confirmée", status: "done" },
+  { id: "confirmed", label: "Profil confirmé", status: "done" },
   { id: "setup", label: "Mise en place", status: "pending" },
-  { id: "preparation", label: "Première livraison en préparation", status: "pending" },
+  { id: "preparation", label: "Mise en relation", status: "pending" },
   { id: "delivery", label: "Première demande attribuée", status: "pending" },
 ];
 

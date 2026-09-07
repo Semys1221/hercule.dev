@@ -2,7 +2,7 @@ import { test } from "@playwright/test";
 
 import { assertServerReachable, cleanupSalesSession, provisionSalesSession } from "./helpers/cockpit-fixture";
 import {
-  assertTestBookingVisibleInTable,
+  assertProvisionedTestClientVisible,
   runBookingsTableSmoke,
   runInternalHubNavigation,
 } from "./helpers/internal-ops-workflow";
@@ -21,6 +21,6 @@ test.describe("@internal-ops Internal hub and bookings E2E", () => {
     await runBookingsTableSmoke(page);
 
     await provisionSalesSession(request);
-    await assertTestBookingVisibleInTable(page);
+    await assertProvisionedTestClientVisible(page);
   });
 });

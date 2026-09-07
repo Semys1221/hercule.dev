@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -44,6 +44,7 @@ export function OnboardingPreviewWizard({
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
   const [skipLoading, setSkipLoading] = useState(false);
   const [skipError, setSkipError] = useState<string | null>(null);
+  const checkoutPreloadStartedRef = useRef(false);
   const developerModeEnabled = useSyncExternalStore(
     subscribeDashboardDeveloperModeEnabled,
     getDashboardDeveloperModeEnabledSnapshot,
@@ -59,39 +60,49 @@ export function OnboardingPreviewWizard({
   const isFaqStep = step === 3;
   const canGoNext = !isFaqStep || tieDownAccepted;
 
-  useEffect(() => {
-    let cancelled = false;
+  const preloadCheckout = useCallback(async () => {
+    if (checkoutPreloadStartedRef.current) {
+      return;
+    }
+    checkoutPreloadStartedRef.current = true;
 
-    async function preloadCheckout() {
-      try {
-        const response = await fetch("/api/payments/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug: data.slug }),
-        });
-        const body = (await response.json()) as { clientSecret?: string; error?: string };
-        if (cancelled) return;
+    try {
+      const response = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: data.slug }),
+      });
+      const body = (await response.json()) as { clientSecret?: string; error?: string };
 
-        if (!response.ok || !body.clientSecret) {
-          setCheckoutPreloadError(body.error ?? "Paiement indisponible");
-          return;
-        }
-
-        setCheckoutClientSecret(body.clientSecret);
-        setCheckoutPreloadError(null);
-      } catch {
-        if (!cancelled) {
-          setCheckoutPreloadError("Paiement indisponible");
-        }
+      if (!response.ok || !body.clientSecret) {
+        checkoutPreloadStartedRef.current = false;
+        setCheckoutPreloadError(body.error ?? "Paiement indisponible");
+        setCheckoutClientSecret(null);
+        return;
       }
+
+      setCheckoutClientSecret(body.clientSecret);
+      setCheckoutPreloadError(null);
+    } catch {
+      checkoutPreloadStartedRef.current = false;
+      setCheckoutPreloadError("Paiement indisponible");
+      setCheckoutClientSecret(null);
+    }
+  }, [data.slug]);
+
+  useEffect(() => {
+    checkoutPreloadStartedRef.current = false;
+    setCheckoutClientSecret(null);
+    setCheckoutPreloadError(null);
+  }, [data.slug]);
+
+  useEffect(() => {
+    if (step < 4) {
+      return;
     }
 
     void preloadCheckout();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [data.slug]);
+  }, [step, preloadCheckout]);
 
   function goNext() {
     setStep((current) => Math.min(current + 1, STEP_COUNT - 1));
@@ -168,7 +179,6 @@ export function OnboardingPreviewWizard({
               )}
               {step === 3 && (
                 <StepFaqTieDown
-                  items={data.faq}
                   tieDownAccepted={tieDownAccepted}
                   onTieDownChange={setTieDownAccepted}
                 />

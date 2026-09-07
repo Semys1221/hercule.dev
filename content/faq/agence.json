@@ -20,7 +20,7 @@
     },
     {
       "id": "faq-ag-004",
-      "question": "Que se passe-t-il quand une entreprise me est proposée ?",
+      "question": "Que se passe-t-il quand une entreprise m'est proposée ?",
       "answer": "Votre statut passe en « proposition de match ». Vous recevez un email avec les informations de l'entreprise. La réservation du rendez-vous se fait via le lien Calendly dans cet email — pas depuis cette page."
     },
     {
@@ -67,7 +67,7 @@
     {
       "id": "faq-ag-011",
       "question": "Comment se passe ma mise en relation ?",
-      "answer": "Une fois votre fiche agence complétée, les dirigeants éligibles dont la demande entre dans la timeframe du mois reçoivent un email de proposition. Comptez environ 6 jours ouvrés pour voir le premier RDV dans votre agenda.",
+      "answer": "Une fois votre fiche agence complétée, les dirigeants éligibles dont la demande entre dans la fenêtre calendaire du mois reçoivent un email de proposition. Comptez environ 6 jours ouvrés pour voir le premier RDV dans votre agenda.",
       "cvgLink": true
     }
   ]

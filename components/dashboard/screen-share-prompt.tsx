@@ -1,33 +1,39 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
 import { Monitor } from "lucide-react";
+import { useSyncExternalStore } from "react";
 
 import { DASHBOARD_SCREEN_SHARE_PROMPT } from "@/lib/dashboard/copy";
 
-function PulseRings({ animate }: { animate: boolean }) {
+function subscribeReducedMotion(onChange: () => void) {
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
+}
+
+function MonitorPulseRings({ animate }: { animate: boolean }) {
   if (!animate) {
-    return (
-      <span
-        aria-hidden
-        className="absolute inset-0 rounded-2xl border border-primary/20"
-      />
-    );
+    return null;
   }
 
   return (
     <>
       {[0, 1, 2].map((index) => (
-        <motion.span
+        <span
           key={index}
           aria-hidden
-          className="absolute inset-0 rounded-2xl border border-primary/30"
-          animate={{ scale: [1, 1.35 + index * 0.15], opacity: [0.5, 0] }}
-          transition={{
-            repeat: Infinity,
-            duration: 2.4,
-            delay: index * 0.6,
-            ease: "easeOut",
+          className="pointer-events-none absolute inset-0 rounded-full border border-primary/35 animate-ping"
+          style={{
+            animationDuration: "2.4s",
+            animationDelay: `${index * 0.8}s`,
           }}
         />
       ))}
@@ -36,25 +42,26 @@ function PulseRings({ animate }: { animate: boolean }) {
 }
 
 export function ScreenSharePrompt() {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
+  );
   const shouldAnimate = !reducedMotion;
 
   return (
     <div className="flex min-h-[280px] flex-col items-center justify-center gap-6">
-      <div className="relative flex size-40 items-center justify-center">
-        <PulseRings animate={shouldAnimate} />
-
-        <div className="relative z-10 w-36 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="flex h-5 items-center gap-1 border-b border-border bg-muted/40 px-2">
-            <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-            <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-            <span className="size-1.5 rounded-full bg-muted-foreground/40" />
-          </div>
-          <div className="flex h-24 items-center justify-center bg-muted/30">
+      <div className="w-36 rounded-xl border border-border bg-card shadow-sm">
+        <div className="flex h-5 items-center gap-1 border-b border-border bg-muted/40 px-2">
+          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+          <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+        </div>
+        <div className="flex h-24 items-center justify-center overflow-visible bg-muted/30 py-3">
+          <div className="relative size-10">
+            <MonitorPulseRings animate={shouldAnimate} />
             <Monitor
-              className={`size-10 text-muted-foreground ${
-                shouldAnimate ? "animate-pulse" : ""
-              }`}
+              className="relative z-10 size-10 text-muted-foreground"
               aria-hidden
             />
           </div>

@@ -4,8 +4,8 @@ import { z } from "zod";
 
 import {
   createLinkTrackingClient,
-  findLeadByLink,
 } from "@/lib/link-tracking/supabase";
+import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
 import {
   getAppBaseUrl,
   getStarterOfferType,
@@ -32,7 +32,8 @@ export async function POST(request: Request) {
 
   try {
     const client = createLinkTrackingClient();
-    const lookup = await findLeadByLink(client, parsed.data.slug.trim());
+    const slug = parsed.data.slug.trim();
+    const lookup = await ensureSalesTestSessionLead(client, slug);
     if (!lookup || lookup.category !== "agence") {
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     const priceId = getStarterPriceId();
     const offerType = getStarterOfferType();
     const baseUrl = getAppBaseUrl();
-    const slug = lookup.lead.slug;
+    const leadSlug = lookup.lead.slug;
 
     const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
     const amountCents = price.unit_amount ?? 148900;
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
       mode: "payment",
       ui_mode: "embedded_page",
       line_items: [{ price: priceId, quantity: 1 }],
-      return_url: `${baseUrl}/dashboard/${slug}?paid=1`,
+      return_url: `${baseUrl}/dashboard/${leadSlug}?paid=1`,
       customer_email: lookup.lead.email,
       invoice_creation: { enabled: true },
       wallet_options: {
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
       metadata: {
         agence_id: lookup.lead.id,
         payment_id: paymentRow.id,
-        slug,
+        slug: leadSlug,
         offer_type: offerType,
       },
     });

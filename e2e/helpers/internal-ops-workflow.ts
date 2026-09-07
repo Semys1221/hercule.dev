@@ -46,8 +46,20 @@ export async function runBookingsTableSmoke(page: Page): Promise<void> {
   await expect(page.getByText(/\d+ rendez-vous/)).toBeVisible();
 }
 
-export async function assertTestBookingVisibleInTable(page: Page): Promise<void> {
-  await page.goto(BOOKINGS_PATH, { waitUntil: "domcontentloaded" });
-  await page.getByRole("button", { name: "Rafraîchir" }).click();
-  await expect(page.getByText(TEST_AGENCE_EMAIL)).toBeVisible({ timeout: 30_000 });
+const CLIENTS_PATH = "/internal/funnels/agence/clients";
+
+export async function assertProvisionedTestClientVisible(page: Page): Promise<void> {
+  const [clientsRes] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/admin/clients?category=agence") &&
+        response.request().method() === "GET",
+      { timeout: 90_000 },
+    ),
+    page.goto(CLIENTS_PATH, { waitUntil: "domcontentloaded" }),
+  ]);
+  expect(clientsRes.ok()).toBeTruthy();
+  await expect(page.getByRole("cell", { name: new RegExp(TEST_AGENCE_EMAIL, "i") })).toBeVisible({
+    timeout: 30_000,
+  });
 }

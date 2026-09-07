@@ -115,7 +115,7 @@ export function SalesFunnelSidebar({
   const showForwardArrow =
     contentPhase === "qualification" && (developerModeEnabled || canEnterClosing);
   const showBackArrow = contentPhase === "pitch";
-  const isPlaceholder = name === PLACEHOLDER_NAME || !meetingInfo;
+  const isPlaceholder = name === PLACEHOLDER_NAME;
   const phaseLabel = phase === "closing" ? SESSION_PHASE_INSTITUTIONAL : "Hercule";
 
   function renderSectionMenu(

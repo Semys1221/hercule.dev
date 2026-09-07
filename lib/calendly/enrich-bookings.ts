@@ -1,4 +1,5 @@
 import { getScheduledEventInvitee, parseEventAndInviteeUuids } from "@/lib/calendly";
+import { mapWithConcurrency } from "@/lib/calendly/map-with-concurrency";
 import type { CalendlyBookingRow } from "@/lib/calendly/list-bookings";
 import {
   createLinkTrackingClient,
@@ -292,9 +293,6 @@ async function attachSalesCallStatuses(
 export async function enrichBookingsForAdmin(
   bookings: CalendlyBookingRow[],
 ): Promise<EnrichedCalendlyBooking[]> {
-  const enriched: EnrichedCalendlyBooking[] = [];
-  for (const booking of bookings) {
-    enriched.push(await enrichSingleBooking(booking));
-  }
+  const enriched = await mapWithConcurrency(bookings, 5, enrichSingleBooking);
   return attachSalesCallStatuses(enriched);
 }

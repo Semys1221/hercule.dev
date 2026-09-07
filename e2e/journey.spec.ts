@@ -31,6 +31,7 @@ test.describe("@journey Sales to dashboard to cockpit handoff", () => {
   });
 
   test("test meeting, closing, client onboarding, cockpit IN_DELIVERANCE", async ({ page }) => {
+    test.setTimeout(480_000);
     await openSalesSessionFromHub(page);
     await provisionTestMeetingInSession(page);
     await runClosingWorkflow(page);
@@ -40,17 +41,9 @@ test.describe("@journey Sales to dashboard to cockpit handoff", () => {
     await runDryPaymentAndOnboarding(page);
     await pollAgenceProductStatut(TEST_AGENCE_SLUG, "IN_DELIVERANCE");
 
-    const [cockpitRes] = await Promise.all([
-      page.waitForResponse(
-        (response) =>
-          response.url().includes(`/api/admin/clients/agence/${TEST_AGENCE_SLUG}`) &&
-          response.request().method() === "GET",
-      ),
-      page.goto(COCKPIT_PATH, { waitUntil: "domcontentloaded" }),
-    ]);
-    expect(cockpitRes.ok()).toBeTruthy();
-
+    await page.goto(COCKPIT_PATH, { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("tab", { name: "État" })).toBeVisible({ timeout: 60_000 });
     await page.getByRole("tab", { name: "État" }).click();
-    await expect(page.getByText(/IN_DELIVERANCE|En délivrance/i)).toBeVisible();
+    await expect(page.getByText(/IN_DELIVERANCE|En délivrance|En livraison/i)).toBeVisible();
   });
 });

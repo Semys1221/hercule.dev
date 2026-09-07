@@ -75,6 +75,39 @@ export function calendarGridRevealIndex(day: Date, month: Date): number {
   );
 }
 
+/** Index 0-based week row in the Monday-first month grid (includes outside days). */
+export function calendarWeekIndex(day: Date, month: Date): number {
+  const firstOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+  const gridStart = addDays(firstOfMonth, -mondayBasedWeekday(firstOfMonth));
+  const daysSinceGridStart = Math.round(
+    (startOfDay(day).getTime() - gridStart.getTime()) / (24 * 60 * 60 * 1000),
+  );
+  return Math.floor(daysSinceGridStart / 7);
+}
+
+/**
+ * Scroll weeks so today's week stays near the top while the latest meeting
+ * remains inside the visible week window.
+ */
+export function calendarScrollWeeksForMeetings(
+  today: Date,
+  month: Date,
+  meetingDates: Date[],
+  visibleWeeks: number,
+): number {
+  const todayWeeks = calendarScrollWeeksBeforeToday(today, month);
+  if (meetingDates.length === 0) {
+    return todayWeeks;
+  }
+
+  const lastMeetingWeek = meetingDates.reduce(
+    (max, date) => Math.max(max, calendarWeekIndex(date, month)),
+    0,
+  );
+  const scrollForLastMeeting = Math.max(0, lastMeetingWeek - visibleWeeks + 1);
+  return Math.min(todayWeeks, scrollForLastMeeting);
+}
+
 export function bookMeetingsFromCards(
   cards: Array<
     Pick<PresetOpportunityCard, "id" | "secteur" | "minDaysOffset" | "maxDaysOffset">

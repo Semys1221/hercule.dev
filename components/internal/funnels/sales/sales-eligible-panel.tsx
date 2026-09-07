@@ -270,10 +270,10 @@ export function SalesEligiblePanel({
             transition={{ duration: reducedMotion ? 0 : 0.5, ease: "easeOut" }}
             className="max-w-xl space-y-2 text-center"
           >
-            <p className="text-base font-medium text-foreground">
+            <h2 className="text-base font-medium text-foreground">
               {cards.length} opportunité{cards.length > 1 ? "s" : ""} sélectionnée
               {cards.length > 1 ? "s" : ""} pour votre profil {preset.name}
-            </p>
+            </h2>
             <p className="text-sm text-muted-foreground">{preset.tagline}</p>
           </motion.div>
         ) : null}

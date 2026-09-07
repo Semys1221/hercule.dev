@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
+import { readBookingsClientCache } from "@/lib/calendly/bookings-client-cache";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import type { Audience } from "@/lib/admin/navigation";
 import { setDeveloperModeEnabled } from "@/lib/admin/funnels/sales-funnel-settings";
@@ -126,34 +127,46 @@ export function RendezVousPanel({
     onMeetingNameChange(DEFAULT_MEETING_NAME);
   }, [selectedBooking, onMeetingNameChange]);
 
-  const fetchBookings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setSelectedUri("");
-    setScriptTab("intro");
-    await onBookingSelect(null);
-
-    try {
-      const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience);
-      if (fetchError) {
-        throw new Error(fetchError);
-      }
-
-      setBookings(rows);
-      if (rows.length === 0) {
-        setError("Aucun rendez-vous Calendly à venir pour cette audience.");
-      }
-    } catch (fetchError) {
-      setBookings([]);
-      setError(
-        fetchError instanceof Error
-          ? fetchError.message
-          : "Impossible de récupérer les rendez-vous",
-      );
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const cached = readBookingsClientCache(audience);
+    if (cached && cached.bookings.length > 0) {
+      setBookings(cached.bookings);
     }
-  }, [audience, onBookingSelect]);
+  }, [audience]);
+
+  const fetchBookings = useCallback(
+    async (fresh = false) => {
+      setLoading(true);
+      setError(null);
+      setSelectedUri("");
+      setScriptTab("intro");
+      await onBookingSelect(null);
+
+      try {
+        const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
+          fresh,
+        });
+        if (fetchError) {
+          throw new Error(fetchError);
+        }
+
+        setBookings(rows);
+        if (rows.length === 0) {
+          setError("Aucun rendez-vous Calendly à venir pour cette audience.");
+        }
+      } catch (fetchError) {
+        setBookings([]);
+        setError(
+          fetchError instanceof Error
+            ? fetchError.message
+            : "Impossible de récupérer les rendez-vous",
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [audience, onBookingSelect],
+  );
 
   const handleBookingChange = useCallback(
     async (inviteeUri: string) => {
@@ -217,8 +230,16 @@ export function RendezVousPanel({
       <h1 className="text-2xl font-semibold tracking-tight">Rendez-vous</h1>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" onClick={fetchBookings} disabled={loading || testLoading}>
+        <Button type="button" onClick={() => void fetchBookings(false)} disabled={loading || testLoading}>
           {loading ? "Chargement…" : "Récupérer les rendez-vous"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => void fetchBookings(true)}
+          disabled={loading || testLoading}
+        >
+          {loading ? "Chargement…" : "Rafraîchir"}
         </Button>
         <Button
           type="button"

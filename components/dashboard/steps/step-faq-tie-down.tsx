@@ -17,7 +17,7 @@ export const DEFAULT_FAQ: DashboardFaqItem[] = [
   },
   {
     q: "Combien de temps avant le premier RDV ?",
-    a: "Premier RDV honoré sous 21 jours dès validation de votre profil, sous 28 jours selon configuration.",
+    a: "Premier RDV honoré planifié 6 jours ouvrés dès validation de votre profil, sous 15 jours en file d'attente.",
   },
   {
     q: "Puis-je modifier mes critères ?",
@@ -64,6 +64,7 @@ export function StepFaqTieDown({
             id="tie-down-intention"
             checked={tieDownAccepted}
             onCheckedChange={(checked) => onTieDownChange(checked === true)}
+            className="mt-0.5 size-5 border-2 border-foreground/40 bg-background shadow-sm"
           />
           <Label
             htmlFor="tie-down-intention"

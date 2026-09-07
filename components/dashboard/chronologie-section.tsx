@@ -11,14 +11,67 @@ export type ChronologieStep = {
   status: TimelineStep["status"];
 };
 
+type FillAnimation = "default" | "reload";
+
 type ChronologieSectionProps = {
   steps: ChronologieStep[];
   animated?: boolean;
   description?: string;
   activeStatusLabel?: string;
+  fillAnimation?: FillAnimation;
   layout?: "vertical" | "horizontal";
   showHeader?: boolean;
 };
+
+const RELOAD_FILL_DURATION = 2;
+const RELOAD_FILL_INITIAL_DELAY = 0.6;
+
+function connectorFillTransition(
+  index: number,
+  fillAnimation: FillAnimation,
+): { delay: number; duration: number; ease: "easeOut" | "easeInOut" } {
+  if (fillAnimation === "reload") {
+    return {
+      delay: RELOAD_FILL_INITIAL_DELAY + index * RELOAD_FILL_DURATION,
+      duration: RELOAD_FILL_DURATION,
+      ease: "easeInOut",
+    };
+  }
+
+  return {
+    delay: 0.12 + index * 0.12,
+    duration: 0.45,
+    ease: "easeOut",
+  };
+}
+
+function stepRevealTransition(
+  index: number,
+  fillAnimation: FillAnimation,
+): { delay: number; duration: number } {
+  if (fillAnimation === "reload") {
+    return {
+      delay: RELOAD_FILL_INITIAL_DELAY + index * RELOAD_FILL_DURATION * 0.9,
+      duration: 0.55,
+    };
+  }
+
+  return {
+    delay: index * 0.12,
+    duration: 0.3,
+  };
+}
+
+function shouldAnimateConnectorFill(
+  step: ChronologieStep,
+  fillAnimation: FillAnimation,
+): boolean {
+  if (fillAnimation === "reload") {
+    return true;
+  }
+
+  return step.status === "done" || step.status === "active";
+}
 
 function stepMetaLabel(step: ChronologieStep): string | null {
   if (step.meta) return step.meta;
@@ -27,26 +80,49 @@ function stepMetaLabel(step: ChronologieStep): string | null {
   return null;
 }
 
+function dotColorClass(
+  status: TimelineStep["status"],
+  fillAnimation: FillAnimation,
+): string {
+  if (status === "done") {
+    return "bg-emerald-500";
+  }
+
+  if (status === "active" || (fillAnimation === "reload" && status === "pending")) {
+    return "bg-primary";
+  }
+
+  return "bg-border";
+}
+
+function stepLabelClass(
+  status: TimelineStep["status"],
+  fillAnimation: FillAnimation,
+): string {
+  if (fillAnimation === "reload") {
+    return "";
+  }
+
+  return status === "pending" ? "text-muted-foreground" : "";
+}
+
 function TimelineDot({
   status,
   pulse,
+  fillAnimation = "default",
 }: {
   status: TimelineStep["status"];
   pulse: boolean;
+  fillAnimation?: FillAnimation;
 }) {
-  const colorClass =
-    status === "done"
-      ? "bg-emerald-500"
-      : status === "active"
-        ? "bg-primary"
-        : "bg-border";
+  const colorClass = dotColorClass(status, fillAnimation);
 
   if (pulse && status === "active") {
     return (
       <motion.span
         className={`flex size-3 shrink-0 rounded-full ring-2 ring-background ${colorClass}`}
-        animate={{ opacity: [0.6, 1, 0.6] }}
-        transition={{ repeat: Infinity, duration: 3 }}
+        animate={{ opacity: [0.72, 1, 0.72], scale: [1, 1.12, 1] }}
+        transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
       />
     );
   }
@@ -61,7 +137,16 @@ function TimelineDot({
 function connectorColor(
   leftStep: ChronologieStep,
   rightStep: ChronologieStep,
+  fillAnimation: FillAnimation = "default",
 ): string {
+  if (fillAnimation === "reload") {
+    if (leftStep.status === "done") {
+      return "bg-emerald-500";
+    }
+
+    return "bg-primary/60";
+  }
+
   if (leftStep.status === "done" && rightStep.status !== "pending") {
     return "bg-emerald-500";
   }
@@ -75,10 +160,12 @@ function HorizontalTimeline({
   steps,
   shouldAnimate,
   activeStatusLabel,
+  fillAnimation,
 }: {
   steps: ChronologieStep[];
   shouldAnimate: boolean;
   activeStatusLabel: string;
+  fillAnimation: FillAnimation;
 }) {
   return (
     <ol className="flex w-full items-start">
@@ -91,7 +178,7 @@ function HorizontalTimeline({
           ? {
               initial: { opacity: 0, y: 8 },
               animate: { opacity: 1, y: 0 },
-              transition: { delay: index * 0.12, duration: 0.3 },
+              transition: stepRevealTransition(index, fillAnimation),
             }
           : {};
 
@@ -102,11 +189,13 @@ function HorizontalTimeline({
             {...listItemProps}
           >
             <div className="flex min-w-0 flex-1 flex-col items-center">
-              <TimelineDot status={step.status} pulse={shouldAnimate} />
+              <TimelineDot
+                status={step.status}
+                pulse={shouldAnimate}
+                fillAnimation={fillAnimation}
+              />
               <p
-                className={`mt-2 w-full px-1 text-center text-xs font-medium leading-tight ${
-                  step.status === "pending" ? "text-muted-foreground" : ""
-                }`}
+                className={`mt-2 w-full px-1 text-center text-xs font-medium leading-tight ${stepLabelClass(step.status, fillAnimation)}`}
               >
                 {step.label}
               </p>
@@ -133,20 +222,20 @@ function HorizontalTimeline({
 
             {!isLast && nextStep ? (
               <div className="relative mt-1.5 h-0.5 min-w-[12px] flex-1 self-start overflow-hidden rounded-full bg-border">
-                {shouldAnimate ? (
+                {shouldAnimate && shouldAnimateConnectorFill(step, fillAnimation) ? (
                   <motion.span
-                    className={`absolute inset-y-0 left-0 rounded-full ${connectorColor(step, nextStep)}`}
+                    className={`absolute inset-y-0 left-0 rounded-full ${connectorColor(step, nextStep, fillAnimation)}`}
                     initial={{ width: "0%" }}
                     animate={{ width: "100%" }}
-                    transition={{
-                      delay: 0.12 + index * 0.12,
-                      duration: 0.45,
-                      ease: "easeOut",
-                    }}
+                    transition={connectorFillTransition(index, fillAnimation)}
                   />
                 ) : (
                   <span
-                    className={`absolute inset-y-0 left-0 w-full rounded-full ${connectorColor(step, nextStep)}`}
+                    className={`absolute inset-y-0 left-0 w-full rounded-full ${
+                      shouldAnimateConnectorFill(step, fillAnimation)
+                        ? connectorColor(step, nextStep, fillAnimation)
+                        : "bg-border"
+                    }`}
                   />
                 )}
               </div>
@@ -229,6 +318,7 @@ export function ChronologieSection({
   animated = true,
   description,
   activeStatusLabel = "En recherche active",
+  fillAnimation = "default",
   layout = "vertical",
   showHeader = true,
 }: ChronologieSectionProps) {
@@ -266,6 +356,7 @@ export function ChronologieSection({
           steps={steps}
           shouldAnimate={shouldAnimate}
           activeStatusLabel={activeStatusLabel}
+          fillAnimation={fillAnimation}
         />
       ) : (
         <VerticalTimeline

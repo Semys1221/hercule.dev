@@ -37,7 +37,7 @@ test.describe("@sales-dry Sales funnel E2E", () => {
     await assertSalesCallPersisted();
 
     await runSalesSettingsWorkflow(page);
-    await page.getByRole("link", { name: "Retour à la session" }).last().click();
+    await page.getByRole("link", { name: "Retour à la session" }).click();
     await expect(page).toHaveURL(new RegExp(`${SALES_FUNNEL_PATH}$`));
   });
 });

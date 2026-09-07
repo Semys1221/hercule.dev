@@ -4,16 +4,21 @@ import {
   getScheduledEventInvitee,
   parseEventAndInviteeUuids,
 } from "@/lib/calendly";
+import { mapWithConcurrency } from "@/lib/calendly/map-with-concurrency";
 import {
   createLinkTrackingClient,
   findLeadByCalendlyInviteeUri,
   findLeadByEmail,
   findLeadByLink,
+  findLeadsByCalendlyInviteeUris,
+  findLeadsByEmails,
+  findLeadsBySlugs,
   normalizeEmail,
 } from "@/lib/link-tracking/supabase";
 import type { LeadCategory, LeadLookup } from "@/lib/link-tracking/types";
 
 const CALENDLY_API = "https://api.calendly.com";
+const INVITEE_FETCH_CONCURRENCY = 5;
 
 export type CalendlyBookingRow = {
   email: string;
@@ -36,6 +41,19 @@ export type CalendlyBookingRow = {
 type CalendlyListPayload = {
   collection?: Record<string, unknown>[];
   pagination?: { next_page_token?: string };
+};
+
+type InviteeCandidate = {
+  email: string;
+  utmContent: string;
+  inviteeUri: string;
+};
+
+type ParsedEventInvitee = {
+  event: Record<string, unknown>;
+  eventUri: string;
+  eventStart: string;
+  invitee: Record<string, unknown>;
 };
 
 async function calendlyGet(
@@ -216,6 +234,45 @@ export async function resolveLeadLookup(
   return null;
 }
 
+export function resolveLeadFromBatchMaps(
+  candidate: InviteeCandidate,
+  byEmail: Map<string, LeadLookup>,
+  bySlug: Map<string, LeadLookup>,
+  byInviteeUri: Map<string, LeadLookup>,
+): LeadLookup | null {
+  const emailLookup = byEmail.get(normalizeEmail(candidate.email)) ?? null;
+  const slugLookup = candidate.utmContent
+    ? bySlug.get(candidate.utmContent.trim()) ?? null
+    : null;
+  const inviteeLookup = candidate.inviteeUri
+    ? byInviteeUri.get(candidate.inviteeUri.trim()) ?? null
+    : null;
+
+  return emailLookup ?? slugLookup ?? inviteeLookup ?? null;
+}
+
+export async function batchResolveLeadLookups(
+  candidates: InviteeCandidate[],
+): Promise<Map<string, LeadLookup | null>> {
+  const client = createLinkTrackingClient();
+  const [byEmail, bySlug, byInviteeUri] = await Promise.all([
+    findLeadsByEmails(client, candidates.map((candidate) => candidate.email)),
+    findLeadsBySlugs(client, candidates.map((candidate) => candidate.utmContent)),
+    findLeadsByCalendlyInviteeUris(
+      client,
+      candidates.map((candidate) => candidate.inviteeUri),
+    ),
+  ]);
+
+  const resolved = new Map<string, LeadLookup | null>();
+  for (const candidate of candidates) {
+    const key = candidate.inviteeUri || candidate.email;
+    resolved.set(key, resolveLeadFromBatchMaps(candidate, byEmail, bySlug, byInviteeUri));
+  }
+
+  return resolved;
+}
+
 function resolveBookingCategory(
   utmContent: string,
   lookup: LeadLookup | null,
@@ -232,6 +289,29 @@ function resolveBookingCategory(
 export function isUpcomingBooking(startTime: string, now = new Date()): boolean {
   const parsed = new Date(startTime);
   return !Number.isNaN(parsed.getTime()) && parsed >= now;
+}
+
+async function fetchEventInvitees(
+  event: Record<string, unknown>,
+  now: Date,
+): Promise<ParsedEventInvitee[]> {
+  const eventUri = String(event.uri ?? "");
+  const eventUuid = eventUri.replace(/\/$/, "").split("/").pop() ?? "";
+  const eventStart = String(event.start_time ?? "");
+  if (!eventUuid || !eventStart || !isUpcomingBooking(eventStart, now)) {
+    return [];
+  }
+
+  const invitees = await paginate(`/scheduled_events/${eventUuid}/invitees`, {
+    count: "100",
+  });
+
+  return invitees.map((invitee) => ({
+    event,
+    eventUri,
+    eventStart,
+    invitee,
+  }));
 }
 
 export async function listUpcomingBookings(options: {
@@ -252,60 +332,70 @@ export async function listUpcomingBookings(options: {
     count: "100",
   });
 
-  const rows: CalendlyBookingRow[] = [];
+  const parsedInvitees = (
+    await mapWithConcurrency(events, INVITEE_FETCH_CONCURRENCY, (event) =>
+      fetchEventInvitees(event, now),
+    )
+  ).flat();
 
-  for (const event of events) {
-    const eventUri = String(event.uri ?? "");
-    const eventUuid = eventUri.replace(/\/$/, "").split("/").pop() ?? "";
-    const eventStart = String(event.start_time ?? "");
-    if (!eventUuid || !eventStart || !isUpcomingBooking(eventStart, now)) {
+  const candidates: InviteeCandidate[] = [];
+  for (const { invitee } of parsedInvitees) {
+    const email = normalizeEmail(String(invitee.email ?? ""));
+    if (!email) {
       continue;
     }
 
-    const invitees = await paginate(`/scheduled_events/${eventUuid}/invitees`, {
-      count: "100",
+    const tracking = (invitee.tracking ?? {}) as Record<string, string>;
+    candidates.push({
+      email,
+      utmContent: String(tracking.utm_content ?? "").trim(),
+      inviteeUri: String(invitee.uri ?? "").trim(),
     });
+  }
 
-    for (const invitee of invitees) {
-      const email = normalizeEmail(String(invitee.email ?? ""));
-      if (!email) {
-        continue;
-      }
+  const lookupByKey = await batchResolveLeadLookups(candidates);
+  const rows: CalendlyBookingRow[] = [];
 
-      const rawQA = Array.isArray(invitee.questions_and_answers)
-        ? (invitee.questions_and_answers as Array<{ question?: string; answer?: string }>)
-        : [];
-      const questions = questionsFromInvitee(invitee);
-      const tracking = (invitee.tracking ?? {}) as Record<string, string>;
-      const utmContent = String(tracking.utm_content ?? "").trim();
-      const inviteeUri = String(invitee.uri ?? "").trim();
-      const lookup = await resolveLeadLookup(email, utmContent, inviteeUri);
-      const bookingCategory = resolveBookingCategory(utmContent, lookup);
-
-      if (options.category && bookingCategory !== options.category) {
-        continue;
-      }
-
-      const rawLinks = meetingLinksFromInvitee(invitee, event);
-      const meetingLinks = await resolveMeetingLinksFallback(inviteeUri, rawLinks);
-      const slug = lookup?.lead.slug?.trim() || utmContent || null;
-
-      rows.push({
-        email,
-        name: String(invitee.name ?? "").trim(),
-        first_name: firstName(String(invitee.name ?? "")),
-        company: companyFromQuestions(rawQA),
-        start_time: eventStart,
-        invitee_uri: inviteeUri,
-        event_uri: eventUri,
-        questions,
-        slug,
-        lead_id: lookup?.lead.id ?? null,
-        lead_category: lookup?.category ?? null,
-        booking_category: bookingCategory,
-        ...meetingLinks,
-      });
+  for (const { event, eventUri, eventStart, invitee } of parsedInvitees) {
+    const email = normalizeEmail(String(invitee.email ?? ""));
+    if (!email) {
+      continue;
     }
+
+    const rawQA = Array.isArray(invitee.questions_and_answers)
+      ? (invitee.questions_and_answers as Array<{ question?: string; answer?: string }>)
+      : [];
+    const questions = questionsFromInvitee(invitee);
+    const tracking = (invitee.tracking ?? {}) as Record<string, string>;
+    const utmContent = String(tracking.utm_content ?? "").trim();
+    const inviteeUri = String(invitee.uri ?? "").trim();
+    const lookupKey = inviteeUri || email;
+    const lookup = lookupByKey.get(lookupKey) ?? null;
+    const bookingCategory = resolveBookingCategory(utmContent, lookup);
+
+    if (options.category && bookingCategory !== options.category) {
+      continue;
+    }
+
+    const rawLinks = meetingLinksFromInvitee(invitee, event);
+    const meetingLinks = await resolveMeetingLinksFallback(inviteeUri, rawLinks);
+    const slug = lookup?.lead.slug?.trim() || utmContent || null;
+
+    rows.push({
+      email,
+      name: String(invitee.name ?? "").trim(),
+      first_name: firstName(String(invitee.name ?? "")),
+      company: companyFromQuestions(rawQA),
+      start_time: eventStart,
+      invitee_uri: inviteeUri,
+      event_uri: eventUri,
+      questions,
+      slug,
+      lead_id: lookup?.lead.id ?? null,
+      lead_category: lookup?.category ?? null,
+      booking_category: bookingCategory,
+      ...meetingLinks,
+    });
   }
 
   rows.sort((a, b) => a.start_time.localeCompare(b.start_time));

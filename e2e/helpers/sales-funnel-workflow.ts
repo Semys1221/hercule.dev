@@ -124,14 +124,18 @@ export async function runSalesSettingsWorkflow(page: Page): Promise<void> {
 }
 
 export async function fetchCalendlyBookingsInSession(page: Page): Promise<boolean> {
+  await expect(page.getByRole("heading", { name: "Rendez-vous" })).toBeVisible();
+  const fetchButton = page.getByRole("button", { name: "Récupérer les rendez-vous" });
+  await expect(fetchButton).toBeEnabled();
+
   const [bookingsRes] = await Promise.all([
     page.waitForResponse(
       (response) =>
         response.url().includes("/api/admin/calendly/bookings") &&
         response.request().method() === "GET",
-      { timeout: 60_000 },
+      { timeout: 120_000 },
     ),
-    page.getByRole("button", { name: "Récupérer les rendez-vous" }).click(),
+    fetchButton.click(),
   ]);
   return bookingsRes.ok();
 }

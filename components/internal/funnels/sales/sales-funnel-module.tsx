@@ -146,11 +146,15 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const canEnterClosing = isSalesQualificationComplete(watchedValues);
   const activeQualificationSection = getSalesFunnelSection(activeQualificationId);
 
-  const meetingInfo: MeetingInfo | null = selectedLead
+  const meetingInfo: MeetingInfo | null = selectedBooking
     ? {
-        leadName: selectedBooking?.first_name ?? selectedLead.first_name,
-        company: selectedBooking?.company ?? selectedLead.company,
-        scheduledAt: selectedBooking?.start_time ?? selectedLead.scheduled_at,
+        leadName:
+          selectedBooking.first_name?.trim() ||
+          selectedBooking.name.trim() ||
+          selectedLead?.first_name ||
+          null,
+        company: selectedBooking.company ?? selectedLead?.company ?? null,
+        scheduledAt: selectedBooking.start_time ?? selectedLead?.scheduled_at ?? null,
       }
     : null;
 

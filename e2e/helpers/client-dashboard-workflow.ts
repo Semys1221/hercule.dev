@@ -1,6 +1,7 @@
 import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 import {
+  advancePreviewWizardToCheckout,
   enableDashboardDeveloperMode,
   navigateToStripeCheckout,
 } from "./stripe-checkout";
@@ -32,10 +33,7 @@ export async function runPreviewWizardToCheckout(page: Page): Promise<void> {
   expect(body.dashboardMode).toBe("onboarding_preview");
   expect(body.statut).toBe("MEETING_BOOKED");
 
-  for (let step = 0; step < 4; step += 1) {
-    await page.getByRole("button", { name: "Suivant" }).click();
-  }
-  await page.getByRole("button", { name: "Procéder au paiement" }).click();
+  await advancePreviewWizardToCheckout(page);
   await expect(page.locator('iframe[name="embedded-checkout"]')).toBeVisible({ timeout: 60_000 });
 }
 
@@ -88,7 +86,11 @@ export async function runLivePaymentAndOnboarding(
 
 export async function assertActiveDashboardUi(page: Page): Promise<void> {
   await page.goto(DASHBOARD_PATH, { waitUntil: "domcontentloaded" });
-  await expect(page.getByText(/chronologie|livraison|timeline/i).first()).toBeVisible({
+  await expect(
+    page.getByRole("heading", { name: /Chronologie/i }).or(
+      page.getByText(/chronologie|livraison|timeline|Suivi de votre parcours/i).first(),
+    ),
+  ).toBeVisible({
     timeout: 30_000,
   });
 }

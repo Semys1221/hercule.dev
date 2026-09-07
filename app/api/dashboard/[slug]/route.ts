@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 
 import { hasSucceededPayment } from "@/lib/dashboard/payments";
 import { loadDeliveryContext } from "@/lib/dashboard/load-delivery-context";
+import { isFormSparse, resolvePreviewForm } from "@/lib/dashboard/resolve-preview-form";
+import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
 import { isSeedSlug } from "@/lib/admin/clients/seed";
+import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import {
+  createOnboardingClient,
+  prefillAgenceFormFromQualification,
+} from "@/lib/admin/onboarding/supabase";
 import { transitionToInDeliverance } from "@/lib/product/transitions";
 import type { DashboardFaqItem, DashboardFormData } from "@/lib/dashboard/types";
 import {
@@ -10,6 +17,10 @@ import {
   findLeadByLink,
 } from "@/lib/link-tracking/supabase";
 import { dashboardLinkFor } from "@/lib/link-tracking/urls";
+import {
+  createSalesCallsClient,
+  findLatestSalesCallByAgenceId,
+} from "@/lib/sales-calls/supabase";
 
 type RouteParams = {
   params: Promise<{ slug: string }>;
@@ -22,9 +33,9 @@ function timelineFromProfile(profile: Record<string, unknown> | null) {
     return timeline;
   }
   return [
-    { id: "confirmed", label: "Commande confirmée", status: "done" },
+    { id: "confirmed", label: "Profil confirmé", status: "done" },
     { id: "setup", label: "Mise en place", status: "pending" },
-    { id: "preparation", label: "Première livraison en préparation", status: "pending" },
+    { id: "preparation", label: "Mise en relation", status: "pending" },
     { id: "delivery", label: "Première demande attribuée", status: "pending" },
   ];
 }
@@ -38,14 +49,17 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
   try {
     const client = createLinkTrackingClient();
-    const lookup = await findLeadByLink(client, normalizedSlug);
+    let lookup = await ensureSalesTestSessionLead(client, normalizedSlug);
+    if (!lookup) {
+      lookup = await findLeadByLink(client, normalizedSlug);
+    }
     if (!lookup || lookup.category !== "agence") {
       return NextResponse.json({ error: "Dashboard not found" }, { status: 404 });
     }
 
     const lead = lookup.lead;
     const profile = (lead.profile ?? {}) as Record<string, unknown>;
-    const form = (profile.form ?? {}) as DashboardFormData;
+    const profileForm = (profile.form ?? {}) as DashboardFormData;
     const closing = (profile.dashboard ?? {}) as Record<string, unknown>;
     const isPaid = await hasSucceededPayment(client, lead.id);
     const isOnboarded = Boolean(lead.onboarding_completed_at);
@@ -55,6 +69,34 @@ export async function GET(_request: Request, { params }: RouteParams) {
       : !isOnboarded
         ? "dashboard_state"
         : "dashboard_active";
+
+    let resolvedForm = profileForm;
+    if (dashboardMode === "onboarding_preview") {
+      const salesClient = createSalesCallsClient();
+      const salesCall = await findLatestSalesCallByAgenceId(salesClient, lead.id);
+      const qualification = salesCall?.notes?.qualification as
+        | Partial<SalesQualificationValues>
+        | undefined;
+
+      if (qualification && typeof qualification === "object") {
+        resolvedForm = resolvePreviewForm(profileForm, qualification);
+
+        if (isFormSparse(profileForm)) {
+          const formPatch = resolvePreviewForm({}, qualification);
+          if (!isFormSparse(formPatch)) {
+            const onboardingClient = createOnboardingClient();
+            prefillAgenceFormFromQualification(onboardingClient, lead.id, formPatch).catch(
+              (err: unknown) => {
+                console.error(
+                  "[dashboard/slug] prefillAgenceForm failed:",
+                  err instanceof Error ? err.message : err,
+                );
+              },
+            );
+          }
+        }
+      }
+    }
 
     const rawFaq = Array.isArray(profile.faq) ? profile.faq : [];
     const faq = rawFaq.filter(
@@ -83,7 +125,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
       timeline: timelineFromProfile(profile),
       onboardingCompleted: isOnboarded,
       tieDownAccepted: Boolean(closing.tie_down_accepted),
-      form,
+      form: resolvedForm,
       faq,
       isPaid,
       dashboardMode,

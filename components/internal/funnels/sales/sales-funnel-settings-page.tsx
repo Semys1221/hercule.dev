@@ -25,7 +25,6 @@ import {
 import type { SalesSessionSettingsDocument } from "@/lib/admin/funnels/sales-session-settings-types";
 import { SALES_TEST_SESSION_SLUG } from "@/lib/admin/funnels/sales-test-session-preset";
 import {
-  SESSION_BACK_CTA,
   SESSION_DEVELOPER_MODE_DESCRIPTION,
   SESSION_DEVELOPER_MODE_OFF,
   SESSION_DEVELOPER_MODE_ON,
@@ -331,9 +330,6 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
         </Tabs>
       )}
 
-      <Button asChild variant="outline" className="w-fit">
-        <Link href={funnelHref}>{SESSION_BACK_CTA}</Link>
-      </Button>
     </div>
   );
 }
