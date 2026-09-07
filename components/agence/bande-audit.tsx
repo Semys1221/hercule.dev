@@ -11,7 +11,7 @@ export function BandeAudit() {
               Demandez votre audit de compatibilité
             </h2>
             <p className="mt-4 text-zinc-400 max-w-lg">
-              Des demandes qualifiées attendent une agence compatible. Vérifions ensemble si votre profil correspond
+              Des contrats attendent une agence compatible. Vérifions ensemble si votre profil correspond
               à nos attributions en cours.
             </p>
           </div>

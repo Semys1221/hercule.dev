@@ -11,7 +11,7 @@ import type { DashboardFaqItem } from "@/lib/dashboard/types";
 const DEFAULT_FAQ: DashboardFaqItem[] = [
   {
     q: "Comment fonctionne la mise en relation ?",
-    a: "Hercule vous attribue 5 demandes qualifiées selon vos critères d'éligibilité. 0 % de commission sur vos ventes. Si aucune signature n'est conclue, la garantie Starter prévoit 5 rendez-vous supplémentaires.",
+    a: "Hercule vous attribue 5 contrats selon vos critères d'éligibilité. 0 % de commission sur vos ventes. Si aucune signature n'est conclue, la garantie Starter prévoit 5 rendez-vous supplémentaires.",
   },
   {
     q: "Puis-je modifier mes critères ?",

@@ -129,7 +129,7 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
           devenu la plateforme que nous présentons aujourd&apos;hui.
         </p>
         <p>
-          Aujourd&apos;hui, nous générons plus de 20 demandes clients qualifiées par mois dans
+          Aujourd&apos;hui, nous générons plus de 20 contrats par mois dans
           différents secteurs. Nous auditons et qualifions les agences partenaires pour mettre en
           relation ces demandes avec les profils les plus compatibles.
         </p>

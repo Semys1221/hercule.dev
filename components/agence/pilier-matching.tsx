@@ -51,7 +51,7 @@ export function PilierMatching() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-zinc-400 leading-relaxed"
             >
-              Hercule met en relation des demandes qualifiées avec les agences web compatibles. Chaque attribution
+              Hercule met en relation des contrats avec les agences web compatibles. Chaque attribution
               repose sur un audit préalable et une distribution en exclusivité.
             </motion.p>
           </div>

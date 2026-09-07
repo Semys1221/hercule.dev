@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { resolveLeadFromBatchMaps } from "@/lib/calendly/list-bookings";
+import { resolveLeadFromBatchMaps, isUpcomingBooking } from "@/lib/calendly/list-bookings";
 import type { LeadLookup, LinkTrackingLead } from "@/lib/link-tracking/types";
 
 function lead(id: string, email: string): LinkTrackingLead {
@@ -74,5 +74,9 @@ assert.equal(
   resolveLeadFromBatchMaps(candidate, new Map(), new Map(), new Map()),
   null,
 );
+
+const now = new Date("2026-09-07T12:00:00.000Z");
+assert.equal(isUpcomingBooking("2026-09-07T13:00:00.000Z", now), true);
+assert.equal(isUpcomingBooking("2026-09-07T11:00:00.000Z", now), false);
 
 console.log("list-bookings.test.ts: ok");

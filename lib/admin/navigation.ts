@@ -27,7 +27,7 @@ export const AUDIENCE_ICONS: Record<Audience, string> = {
 };
 
 export const AUDIENCE_CAPTIONS: Record<Audience, string> = {
-  agence: "Buyer — agences partenaires qui reçoivent des demandes qualifiées.",
+  agence: "Buyer — agences partenaires qui reçoivent des contrats.",
   entreprise: "Seller — entreprises qui recherchent une agence.",
 };
 

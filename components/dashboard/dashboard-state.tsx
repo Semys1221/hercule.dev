@@ -137,7 +137,7 @@ export function DashboardState({ data, onOnboardingComplete }: DashboardStatePro
               Complétez votre onboarding
             </CardTitle>
             <CardDescription>
-              Renseignez votre profil agence pour activer la recherche de demandes qualifiées.
+              Renseignez votre profil agence pour activer la recherche de contrats.
               Moins de 3 minutes.
             </CardDescription>
           </CardHeader>

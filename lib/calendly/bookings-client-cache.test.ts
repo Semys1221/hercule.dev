@@ -84,24 +84,31 @@ assert.equal(
 const storage = new MemoryStorage();
 const booking = sampleBooking("https://api.calendly.com/scheduled_events/EVT/invitees/INV");
 
-writeBookingsClientCache("agence", [booking], now, storage);
+writeBookingsClientCache("agence", [booking], 0, now, storage);
 
-const cached = readBookingsClientCache("agence", now, storage);
+const cached = readBookingsClientCache("agence", 0, now, storage);
 assert.ok(cached);
 assert.equal(cached.bookings.length, 1);
 assert.equal(cached.bookings[0]?.invitee_uri, booking.invitee_uri);
 
 const expired = readBookingsClientCache(
   "agence",
+  0,
   now + BOOKINGS_CACHE_REVALIDATE_SECONDS * 1000 + 1,
   storage,
 );
 assert.equal(expired, null);
-assert.equal(storage.getItem("hercule:calendly-bookings:agence"), null);
+assert.equal(storage.getItem("hercule:calendly-bookings:agence:0"), null);
 
-writeBookingsClientCache("agence", [booking], now, storage);
+writeBookingsClientCache("agence", [booking], 0, now, storage);
 const malformed: BookingsClientCacheEntry = { fetchedAt: now, bookings: [] };
-storage.setItem("hercule:calendly-bookings:entreprise", "{not-json");
-assert.equal(readBookingsClientCache("entreprise", now, storage), null);
+storage.setItem("hercule:calendly-bookings:entreprise:0", "{not-json");
+assert.equal(readBookingsClientCache("entreprise", 0, now, storage), null);
+
+writeBookingsClientCache("agence", [booking], 30, now, storage);
+const salesCached = readBookingsClientCache("agence", 30, now, storage);
+assert.ok(salesCached);
+assert.equal(salesCached.bookings[0]?.invitee_uri, booking.invitee_uri);
+assert.equal(readBookingsClientCache("agence", 0, now, storage)?.bookings.length, 1);
 
 console.log("bookings-client-cache.test.ts: ok");

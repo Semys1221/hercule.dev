@@ -13,10 +13,12 @@ export type FetchEnrichedBookingsResult = {
 
 export async function fetchEnrichedBookings(
   audience: Audience,
-  options?: { fresh?: boolean },
+  options?: { fresh?: boolean; daysBehind?: number },
 ): Promise<FetchEnrichedBookingsResult> {
+  const daysBehind = options?.daysBehind ?? 0;
+
   if (!options?.fresh) {
-    const cached = readBookingsClientCache(audience);
+    const cached = readBookingsClientCache(audience, daysBehind);
     if (cached) {
       return { bookings: cached.bookings, error: null, fromCache: true };
     }
@@ -25,6 +27,9 @@ export async function fetchEnrichedBookings(
   const params = new URLSearchParams({ category: audience });
   if (options?.fresh) {
     params.set("fresh", "1");
+  }
+  if (daysBehind > 0) {
+    params.set("daysBehind", String(daysBehind));
   }
   const response = await fetch(`/api/admin/calendly/bookings?${params.toString()}`);
   const body = (await response.json()) as {
@@ -40,7 +45,7 @@ export async function fetchEnrichedBookings(
   }
 
   const bookings = body.bookings ?? [];
-  writeBookingsClientCache(audience, bookings);
+  writeBookingsClientCache(audience, bookings, daysBehind);
 
   return { bookings, error: null, fromCache: false };
 }

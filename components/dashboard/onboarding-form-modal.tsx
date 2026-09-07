@@ -32,7 +32,7 @@ export function OnboardingFormModal({
         <DialogHeader>
           <DialogTitle>Compléter votre onboarding</DialogTitle>
           <DialogDescription>
-            Ces informations permettent à Hercule de calibrer la recherche de demandes qualifiées.
+            Ces informations permettent à Hercule de calibrer la recherche de contrats.
           </DialogDescription>
         </DialogHeader>
 

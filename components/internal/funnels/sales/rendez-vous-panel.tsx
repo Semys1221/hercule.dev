@@ -40,6 +40,7 @@ import {
 } from "./sales-intro-script";
 
 const DEFAULT_MEETING_NAME = "No meetings";
+const SALES_FUNNEL_DAYS_BEHIND = 30;
 
 type ScriptTab = "intro" | "declarative";
 
@@ -130,7 +131,7 @@ export function RendezVousPanel({
   }, [selectedBooking, onMeetingNameChange]);
 
   useEffect(() => {
-    const cached = readBookingsClientCache(audience);
+    const cached = readBookingsClientCache(audience, SALES_FUNNEL_DAYS_BEHIND);
     if (cached && cached.bookings.length > 0) {
       setBookings(cached.bookings);
     }
@@ -147,6 +148,7 @@ export function RendezVousPanel({
       try {
         const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
           fresh,
+          daysBehind: SALES_FUNNEL_DAYS_BEHIND,
         });
         if (fetchError) {
           throw new Error(fetchError);
@@ -154,7 +156,7 @@ export function RendezVousPanel({
 
         setBookings(rows);
         if (rows.length === 0) {
-          setError("Aucun rendez-vous Calendly à venir pour cette audience.");
+          setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
         }
       } catch (fetchError) {
         setBookings([]);

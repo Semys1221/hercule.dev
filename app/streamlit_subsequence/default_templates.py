@@ -10,7 +10,7 @@ DEFAULT_E1_BODY_HTML = (
     "Pour réaliser l'audit de compatibilité de votre agence, cliquez ici :"
     "<br/><a href=\"{{reservation_agence_link}}\">Mon agence est compatible</a>"
     "<br/><br/>"
-    "Pour voir davantage de profils :"
+    "Pour comprendre nos modalités de facturation :"
     "<br/><a href=\"https://hercule.dev\">hercule.dev</a>"
     "<br/><br/>"
     "Cordialement,<br/>Béatrice Meyer"

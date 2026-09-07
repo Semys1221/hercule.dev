@@ -74,7 +74,7 @@ Le processus comprend notamment :
 
 1. **Capture** — identification de signaux et de demandes entreprises dans la niche ciblée ;
 2. **Filter (Live Qualification)** — validation téléphonique du besoin, du budget et de la compatibilité ;
-3. **Deliver** — attribution exclusive de la demande qualifiée et planification du RDV dans l'agenda du Client.
+3. **Deliver** — attribution exclusive du contrat et planification du RDV dans l'agenda du Client.
 
 Hercule met à disposition, ou mettra à disposition, une **page de suivi** permettant au Client de consulter l'avancement de son service (roadmap produit).
 

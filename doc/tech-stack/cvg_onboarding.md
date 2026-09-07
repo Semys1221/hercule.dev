@@ -16,9 +16,9 @@ do_not:
 
 ## Résumé (11 points)
 
-1. **Objet** — Hercule met en relation votre agence avec des **demandes clients qualifiées**, après validation téléphonique. Obligation de **moyens**, pas de garantie de vente.
+1. **Objet** — Hercule met en relation votre agence avec des **contrats**, après validation téléphonique. Obligation de **moyens**, pas de garantie de vente.
 2. **Formules** — **1 489 € TTC / mois** sans engagement · **ou** **989 € × 3 = 2 967 € TTC** pour **15 Attributions**. **0 % de commission**. L’offre 2 500 €/mois est une vitrine, non souscriptible.
-3. **Attribution** — Demande qualifiée + mise en relation exclusive + RDV **planifié**. Un RDV honoré = présence décideur visio ≥ 15 min. Une vente **ne clôt pas** le pack / le mois.
+3. **Attribution** — Contrat + mise en relation exclusive + RDV **planifié**. Un RDV honoré = présence décideur visio ≥ 15 min. Une vente **ne clôt pas** le pack / le mois.
 4. **Démarrage** — Onboarding sous **48 h** · Activation dès **paiement + onboarding** · Premier RDV honoré sous **21 j** @ 30 inbox (28 j si contraint), file d’attente +15 j max.
 5. **Volume** — Mensuel : **3–4 RDV honorés / mois** en allocation standard · Pack : **15 Attributions** / 3 mois.
 6. **No-show** — Prospect absent malgré relance H-24 : **attribution recréditée**, remplacement sous **14 jours ouvrés**. Signalement sous 48 h.

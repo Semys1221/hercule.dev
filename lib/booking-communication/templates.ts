@@ -113,7 +113,7 @@ Votre tableau de bord : {{dashboardLink}}`,
 
 Votre paiement a bien été reçu. Votre accès Hercule est maintenant actif.
 
-Prochaine étape : complétez votre onboarding pour démarrer la recherche de demandes qualifiées.
+Prochaine étape : complétez votre onboarding pour démarrer la recherche de contrats.
 
 Accédez à votre tableau de bord :
 {{dashboardLink}}
@@ -126,7 +126,7 @@ L'équipe Hercule`,
     subject: "Offre Hercule — 1 489 € ou pack 3 mois",
     body: `{{firstNameLine}}
 
-Suite à notre échange, voici les deux formules pour activer Hercule et recevoir des demandes qualifiées.
+Suite à notre échange, voici les deux formules pour activer Hercule et recevoir des contrats.
 
 Formule mensuelle : 1 489 € / mois, sans engagement.
 Pack 3 mois : 989 € / mois (soit 2 967 € payés d'avance, 15 Attributions).
@@ -154,7 +154,7 @@ L'équipe Hercule`,
     subject: "Dernier rappel — offre Hercule",
     body: `{{firstNameLine}}
 
-Dernier rappel pour activer Hercule et démarrer la réception de demandes qualifiées.
+Dernier rappel pour activer Hercule et démarrer la réception de contrats.
 
 Formule mensuelle : 1 489 € / mois.
 Pack 3 mois : 989 € / mois (2 967 €, 15 Attributions).
@@ -191,7 +191,7 @@ L'équipe Hercule`,
     subject: "Dernier rappel — accès Hercule",
     body: `{{firstNameLine}}
 
-Dernier rappel : votre lien de paiement reste actif pour lancer l'onboarding et recevoir vos premières demandes qualifiées.
+Dernier rappel : votre lien de paiement reste actif pour lancer l'onboarding et recevoir vos premiers contrats.
 
 {{dashboardLink}}
 
@@ -239,7 +239,7 @@ L'équipe Hercule`,
     subject: "Bienvenue — votre onboarding Hercule est activé",
     body: `{{firstNameLine}}
 
-Votre onboarding est bien enregistré. Nous configurons votre espace et préparons la réception de vos premières demandes qualifiées.
+Votre onboarding est bien enregistré. Nous configurons votre espace et préparons la réception de vos premiers contrats.
 
 Votre tableau de bord :
 {{dashboardLink}}
@@ -262,7 +262,7 @@ L'équipe Hercule`,
     subject: "Suivi J+1 — activation Hercule",
     body: `{{firstNameLine}}
 
-Nous suivons l'activation de votre compte. Votre première demande qualifiée est en préparation : surveillez votre boîte mail et votre tableau de bord pour ne rien manquer.
+Nous suivons l'activation de votre compte. Votre premier contrat est en préparation : surveillez votre boîte mail et votre tableau de bord pour ne rien manquer.
 
 {{dashboardLink}}
 

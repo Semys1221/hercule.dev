@@ -9,8 +9,8 @@ export type BookingsClientCacheEntry = {
 
 type CacheStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
-function cacheKey(audience: Audience): string {
-  return `hercule:calendly-bookings:${audience}`;
+function cacheKey(audience: Audience, daysBehind = 0): string {
+  return `hercule:calendly-bookings:${audience}:${daysBehind}`;
 }
 
 function getSessionStorage(): CacheStorage | null {
@@ -33,6 +33,7 @@ export function isBookingsClientCacheEntryValid(
 
 export function readBookingsClientCache(
   audience: Audience,
+  daysBehind = 0,
   now = Date.now(),
   storage: CacheStorage | null = getSessionStorage(),
 ): BookingsClientCacheEntry | null {
@@ -40,7 +41,7 @@ export function readBookingsClientCache(
     return null;
   }
 
-  const raw = storage.getItem(cacheKey(audience));
+  const raw = storage.getItem(cacheKey(audience, daysBehind));
   if (!raw) {
     return null;
   }
@@ -57,13 +58,13 @@ export function readBookingsClientCache(
 
     const ageMs = now - parsed.fetchedAt;
     if (!isBookingsClientCacheEntryValid(parsed, now)) {
-      storage.removeItem(cacheKey(audience));
+      storage.removeItem(cacheKey(audience, daysBehind));
       return null;
     }
 
     return parsed;
   } catch {
-    storage.removeItem(cacheKey(audience));
+    storage.removeItem(cacheKey(audience, daysBehind));
     return null;
   }
 }
@@ -71,6 +72,7 @@ export function readBookingsClientCache(
 export function writeBookingsClientCache(
   audience: Audience,
   bookings: EnrichedCalendlyBooking[],
+  daysBehind = 0,
   fetchedAt = Date.now(),
   storage: CacheStorage | null = getSessionStorage(),
 ): void {
@@ -80,16 +82,16 @@ export function writeBookingsClientCache(
 
   const entry: BookingsClientCacheEntry = { fetchedAt, bookings };
   try {
-    storage.setItem(cacheKey(audience), JSON.stringify(entry));
+    storage.setItem(cacheKey(audience, daysBehind), JSON.stringify(entry));
   } catch {
     // sessionStorage full or unavailable — ignore
   }
 }
 
-export function clearBookingsClientCache(audience: Audience): void {
+export function clearBookingsClientCache(audience: Audience, daysBehind = 0): void {
   const storage = getSessionStorage();
   if (!storage) {
     return;
   }
-  storage.removeItem(cacheKey(audience));
+  storage.removeItem(cacheKey(audience, daysBehind));
 }

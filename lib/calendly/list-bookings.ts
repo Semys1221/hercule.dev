@@ -294,11 +294,16 @@ export function isUpcomingBooking(startTime: string, now = new Date()): boolean 
 async function fetchEventInvitees(
   event: Record<string, unknown>,
   now: Date,
+  includePast = false,
 ): Promise<ParsedEventInvitee[]> {
   const eventUri = String(event.uri ?? "");
   const eventUuid = eventUri.replace(/\/$/, "").split("/").pop() ?? "";
   const eventStart = String(event.start_time ?? "");
-  if (!eventUuid || !eventStart || !isUpcomingBooking(eventStart, now)) {
+  if (
+    !eventUuid ||
+    !eventStart ||
+    (!includePast && !isUpcomingBooking(eventStart, now))
+  ) {
     return [];
   }
 
@@ -316,25 +321,29 @@ async function fetchEventInvitees(
 
 export async function listUpcomingBookings(options: {
   daysAhead?: number;
+  daysBehind?: number;
   category?: LeadCategory;
   now?: Date;
 }): Promise<CalendlyBookingRow[]> {
   const daysAhead = options.daysAhead ?? 30;
+  const daysBehind = options.daysBehind ?? 0;
+  const includePast = daysBehind > 0;
   const now = options.now ?? new Date();
   const userUri = await getCurrentUserUri();
+  const minTime = new Date(now.getTime() - daysBehind * 24 * 60 * 60 * 1000);
   const maxTime = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
 
   const events = await paginate("/scheduled_events", {
     user: userUri,
     status: "active",
-    min_start_time: now.toISOString(),
+    min_start_time: minTime.toISOString(),
     max_start_time: maxTime.toISOString(),
     count: "100",
   });
 
   const parsedInvitees = (
     await mapWithConcurrency(events, INVITEE_FETCH_CONCURRENCY, (event) =>
-      fetchEventInvitees(event, now),
+      fetchEventInvitees(event, now, includePast),
     )
   ).flat();
 
