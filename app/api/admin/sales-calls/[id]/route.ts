@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import type { SalesCallSequenceResult } from "@/lib/admin/bookings/sales-call-sequence";
 import { mapQualificationToForm } from "@/lib/admin/onboarding/qualification-mapper";
 import {
   createOnboardingClient,
@@ -97,6 +98,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
+    let sequence: SalesCallSequenceResult | undefined;
+
     if (parsed.data.status && parsed.data.status !== salesCall.status) {
       salesCall = await updateSalesCallStatus(client, id, parsed.data.status);
       if (parsed.data.status === "completed") {
@@ -111,30 +114,32 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         });
       }
       if (parsed.data.status === "not_paid") {
+        if (!salesCall.agence_id) {
+          return NextResponse.json(
+            { error: "Lead introuvable pour la séquence" },
+            { status: 422 },
+          );
+        }
         const { startCloseIndecisSequence } = await import(
           "@/lib/close-indecis-sequence/orchestrator"
         );
-        await startCloseIndecisSequence(salesCall).catch((err: unknown) => {
-          console.error(
-            "[sales-calls/id] close-indecis sequence failed:",
-            err instanceof Error ? err.message : err,
-          );
-        });
+        sequence = await startCloseIndecisSequence(salesCall, salesCall.agence_id);
       }
       if (parsed.data.status === "no_show") {
+        if (!salesCall.agence_id) {
+          return NextResponse.json(
+            { error: "Lead introuvable pour la séquence" },
+            { status: 422 },
+          );
+        }
         const { startNoShowSequence } = await import(
           "@/lib/no-show-sequence/orchestrator"
         );
-        await startNoShowSequence(salesCall).catch((err: unknown) => {
-          console.error(
-            "[sales-calls/id] no-show sequence failed:",
-            err instanceof Error ? err.message : err,
-          );
-        });
+        sequence = await startNoShowSequence(salesCall, salesCall.agence_id);
       }
     }
 
-    return NextResponse.json({ salesCall });
+    return NextResponse.json({ salesCall, sequence });
   } catch (error) {
     const message = error instanceof Error ? error.message : "sales_calls update failed";
     console.error("[admin/sales-calls/id]", message);

@@ -27,19 +27,23 @@ async function main() {
   assert.equal(bookingRowActionState("no_show").badge, "NO SHOW");
   assert.equal(bookingRowActionState("not_paid").badge, "NON PAYÉ");
 
-  const missingLead = await startNoShowSequence({
-    id: "00000000-0000-0000-0000-000000000000",
-    agence_id: null,
-    email: MOCK_EMAIL,
-    calendly_invitee_uri: MOCK_INVITEE,
-    scheduled_at: new Date().toISOString(),
-    status: "scheduled",
-    notes: {},
-    forecast_cents: null,
-    created_at: new Date().toISOString(),
-  } satisfies SalesCall);
+  const missingLead = await startNoShowSequence(
+    {
+      id: "00000000-0000-0000-0000-000000000000",
+      agence_id: null,
+      email: MOCK_EMAIL,
+      calendly_invitee_uri: MOCK_INVITEE,
+      scheduled_at: new Date().toISOString(),
+      status: "scheduled",
+      notes: {},
+      forecast_cents: null,
+      created_at: new Date().toISOString(),
+    } satisfies SalesCall,
+    "00000000-0000-0000-0000-000000000000",
+  );
   assert.equal(missingLead.started, false);
-  assert.equal(missingLead.reason, "missing_agence_id");
+  assert.equal(missingLead.reason, "lead_not_found");
+  assert.equal(missingLead.dispatched, false);
 
   const client = createSalesCallsClient();
   const salesCall = await upsertSalesCallFromBooking(client, {

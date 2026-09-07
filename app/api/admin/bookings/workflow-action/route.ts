@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { resolveBookingLead } from "@/lib/admin/bookings/resolve-booking-lead";
+import type { SalesCallSequenceResult } from "@/lib/admin/bookings/sales-call-sequence";
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 import {
   createSalesCallsClient,
@@ -17,16 +19,20 @@ const bodySchema = z.object({
   status: z.enum(["no_show", "not_paid"]),
 });
 
-async function startSequenceForStatus(salesCall: SalesCall, status: "no_show" | "not_paid") {
+async function startSequenceForStatus(
+  salesCall: SalesCall,
+  leadId: string,
+  status: "no_show" | "not_paid",
+): Promise<SalesCallSequenceResult> {
   if (status === "not_paid") {
     const { startCloseIndecisSequence } = await import(
       "@/lib/close-indecis-sequence/orchestrator"
     );
-    return startCloseIndecisSequence(salesCall);
+    return startCloseIndecisSequence(salesCall, leadId);
   }
 
   const { startNoShowSequence } = await import("@/lib/no-show-sequence/orchestrator");
-  return startNoShowSequence(salesCall);
+  return startNoShowSequence(salesCall, leadId);
 }
 
 export async function POST(request: Request) {
@@ -43,9 +49,19 @@ export async function POST(request: Request) {
   }
 
   try {
+    const lead = await resolveBookingLead({
+      leadId: parsed.data.leadId,
+      email: parsed.data.email,
+      inviteeUri: parsed.data.inviteeUri,
+    });
+
+    if (!lead) {
+      return NextResponse.json({ error: "Lead introuvable" }, { status: 404 });
+    }
+
     const client = createSalesCallsClient();
     let salesCall = await upsertSalesCallFromBooking(client, {
-      agenceId: parsed.data.leadId ?? null,
+      agenceId: lead.id,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
       scheduledAt: parsed.data.startTime ?? null,
@@ -59,21 +75,31 @@ export async function POST(request: Request) {
       });
     }
 
-    if (salesCall.status !== parsed.data.status) {
+    const statusChanged = salesCall.status !== parsed.data.status;
+    if (statusChanged) {
       salesCall = await updateSalesCallStatus(client, salesCall.id, parsed.data.status);
-      await startSequenceForStatus(salesCall, parsed.data.status).catch((err: unknown) => {
-        console.error(
-          "[admin/bookings/workflow-action] sequence failed:",
-          err instanceof Error ? err.message : err,
-        );
-      });
     }
 
+    const sequence = await startSequenceForStatus(salesCall, lead.id, parsed.data.status);
+
     revalidateBookingsCache();
+
+    if (statusChanged && !sequence.started) {
+      return NextResponse.json(
+        {
+          salesCallId: salesCall.id,
+          status: salesCall.status,
+          sequence,
+          error: "Séquence non démarrée",
+        },
+        { status: 422 },
+      );
+    }
 
     return NextResponse.json({
       salesCallId: salesCall.id,
       status: salesCall.status,
+      sequence,
     });
   } catch (error) {
     const message =

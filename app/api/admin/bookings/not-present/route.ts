@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import {
+  NOT_PRESENT_SUBJECT,
+  resolveNotPresentResendMail,
+} from "@/lib/admin/bookings/not-present-send";
+import { resolveBookingLead } from "@/lib/admin/bookings/resolve-booking-lead";
 import { getThreadContext } from "@/lib/booking-communication/jobs";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
-import { buildReplySubject, buildThreadHeaders } from "@/lib/booking-communication/threading";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 import { getInstantlyApiKey, replyToEmail } from "@/lib/instantly-bypass/client";
 import { resolveThreadForReply } from "@/lib/instantly-bypass/thread-resolver";
-import {
-  createLinkTrackingClient,
-  findLeadByCalendlyInviteeUri,
-  findLeadByEmail,
-  findLeadById,
-} from "@/lib/link-tracking/supabase";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 
 const bodySchema = z.object({
@@ -29,9 +27,12 @@ const RESEND_THREAD_TYPES: BookingEmailType[] = [
   "h20_cancel",
 ];
 
-const NOT_PRESENT_SUBJECT = "Votre rendez-vous avec Hercule";
-
 type ChannelStatus = "sent" | "skipped" | "error";
+
+type ChannelResult = {
+  status: ChannelStatus;
+  error?: string;
+};
 
 function formatParisTime(iso: string | null | undefined): string {
   if (!iso?.trim()) {
@@ -70,64 +71,47 @@ Votre rendez-vous avec Hercule était prévu à ${heure}.
   return { text, html };
 }
 
-async function loadLead(params: {
-  leadId?: string | null;
-  email: string;
-  inviteeUri: string;
-}): Promise<LinkTrackingLead | null> {
-  const client = createLinkTrackingClient();
-
-  if (params.leadId) {
-    const byId = await findLeadById(client, "agence", params.leadId);
-    if (byId) {
-      return byId;
-    }
-  }
-
-  const byEmail = await findLeadByEmail(client, params.email);
-  if (byEmail?.lead) {
-    return byEmail.lead;
-  }
-
-  const byInvitee = await findLeadByCalendlyInviteeUri(client, params.inviteeUri);
-  return byInvitee?.lead ?? null;
-}
-
 async function sendResendNotPresent(params: {
   lead: LinkTrackingLead;
   email: string;
   startTime: string | null | undefined;
   inviteeUri: string;
-}): Promise<ChannelStatus> {
-  const thread = await getThreadContext(params.lead.id, RESEND_THREAD_TYPES);
-  const hasThread =
-    Boolean(thread.threadSubject?.trim()) && thread.messageIds.length > 0;
+}): Promise<ChannelResult> {
+  let mail = resolveNotPresentResendMail({
+    threadSubject: null,
+    messageIds: [],
+  });
+
+  try {
+    const thread = await getThreadContext(params.lead.id, RESEND_THREAD_TYPES);
+    mail = resolveNotPresentResendMail(thread);
+  } catch (error) {
+    console.warn(
+      "[admin/bookings/not-present] Thread lookup failed, standalone send:",
+      error instanceof Error ? error.message : error,
+    );
+  }
 
   const { text, html } = buildNotPresentEmail(
     resolveFirstName(params.lead, params.email),
     params.startTime,
   );
 
-  const subject = hasThread
-    ? buildReplySubject(thread.threadSubject!)
-    : NOT_PRESENT_SUBJECT;
-  const headers = hasThread ? buildThreadHeaders(thread.messageIds) : undefined;
-
   const result = await sendBookingEmail({
     to: params.email,
-    subject,
+    subject: mail.subject,
     text,
     html,
     idempotencyKey: `not-present:resend:${params.inviteeUri}:${Date.now()}`,
-    headers,
+    headers: mail.headers,
   });
 
   if (!result.ok) {
     console.error("[admin/bookings/not-present] Resend failed:", result.error);
-    return "error";
+    return { status: "error", error: result.error };
   }
 
-  return "sent";
+  return { status: "sent" };
 }
 
 async function sendInstantlyNotPresent(params: {
@@ -191,7 +175,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const lead = await loadLead({
+    const lead = await resolveBookingLead({
       leadId: parsed.data.leadId,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
@@ -215,8 +199,16 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    const resend: ChannelStatus =
-      resendResult.status === "fulfilled" ? resendResult.value : "error";
+    const resendChannel: ChannelResult =
+      resendResult.status === "fulfilled"
+        ? resendResult.value
+        : {
+            status: "error",
+            error:
+              resendResult.reason instanceof Error
+                ? resendResult.reason.message
+                : "Resend send failed",
+          };
     const instantly: ChannelStatus =
       instantlyResult.status === "fulfilled" ? instantlyResult.value : "error";
 
@@ -230,6 +222,7 @@ export async function POST(request: Request) {
       );
     }
 
+    const resend = resendChannel.status;
     const sentCount = [resend, instantly].filter((status) => status === "sent").length;
     if (sentCount === 0) {
       return NextResponse.json(
@@ -237,12 +230,17 @@ export async function POST(request: Request) {
           error: "Aucun email envoyé",
           resend,
           instantly,
+          resendError: resendChannel.error,
         },
         { status: 422 },
       );
     }
 
-    return NextResponse.json({ resend, instantly });
+    return NextResponse.json({
+      resend,
+      instantly,
+      resendError: resendChannel.error,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "not-present send failed";
     console.error("[admin/bookings/not-present]", message);

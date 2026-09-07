@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
+import {
+  formatWorkflowFeedback,
+  type WorkflowAction,
+} from "@/lib/admin/bookings/workflow-feedback";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,8 +36,6 @@ import type { SalesCallStatus } from "@/lib/sales-calls/types";
 type BookingsTableProps = {
   audience: Audience;
 };
-
-type WorkflowAction = "no_show" | "not_paid";
 
 type ChannelStatus = "sent" | "skipped" | "error";
 
@@ -176,14 +178,16 @@ function BookingRowActionsMenu({
   );
 }
 
-function formatNotPresentFeedback(resend: ChannelStatus, instantly: ChannelStatus): string {
+function formatNotPresentFeedback(
+  resend: ChannelStatus,
+  instantly: ChannelStatus,
+  resendError?: string,
+): string {
   const parts: string[] = [];
   if (resend === "sent") {
     parts.push("Resend");
-  } else if (resend === "skipped") {
-    parts.push("Resend ignoré (pas de fil)");
   } else if (resend === "error") {
-    parts.push("Resend en échec");
+    parts.push(resendError ? `Resend en échec : ${resendError}` : "Resend en échec");
   }
 
   if (instantly === "sent") {
@@ -199,7 +203,7 @@ function formatNotPresentFeedback(resend: ChannelStatus, instantly: ChannelStatu
     return "Email envoyé (Resend + Instantly)";
   }
   if (sentCount === 1) {
-    return `Email envoyé (${parts.filter((part) => !part.includes("ignoré") && !part.includes("échec")).join(" + ")})`;
+    return `Email envoyé (${parts.filter((part) => !part.includes("échec") && !part.includes("ignoré")).join(" + ")})`;
   }
   return parts.join(" · ");
 }
@@ -214,6 +218,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
   );
   const [actionError, setActionError] = useState<string | null>(null);
   const [notPresentMessage, setNotPresentMessage] = useState<string | null>(null);
+  const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
 
   const isAgenceScope = audience === "agence";
 
@@ -262,6 +267,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
     async (row: EnrichedCalendlyBooking, status: WorkflowAction) => {
       const previousStatus = row.sales_call_status;
       setActionError(null);
+      setWorkflowMessage(null);
       setPendingInvitee(row.invitee_uri);
       setRows((current) =>
         current.map((item) =>
@@ -286,8 +292,24 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         const body = (await response.json()) as {
           status?: SalesCallStatus;
           error?: string;
+          sequence?: {
+            started?: boolean;
+            reason?: string;
+            dispatched?: boolean;
+          };
         };
         if (!response.ok) {
+          if (body.sequence) {
+            setRows((current) =>
+              current.map((item) =>
+                item.invitee_uri === row.invitee_uri
+                  ? { ...item, sales_call_status: previousStatus }
+                  : item,
+              ),
+            );
+            setActionError(formatWorkflowFeedback(status, body.sequence));
+            return;
+          }
           throw new Error(body.error ?? "Action impossible");
         }
         if (body.status) {
@@ -298,6 +320,9 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                 : item,
             ),
           );
+        }
+        if (body.sequence) {
+          setWorkflowMessage(formatWorkflowFeedback(status, body.sequence));
         }
       } catch (err) {
         setRows((current) =>
@@ -334,19 +359,24 @@ export function BookingsTable({ audience }: BookingsTableProps) {
       const body = (await response.json()) as {
         resend?: ChannelStatus;
         instantly?: ChannelStatus;
+        resendError?: string;
         error?: string;
       };
 
       if (!response.ok) {
         if (body.resend && body.instantly) {
-          setActionError(formatNotPresentFeedback(body.resend, body.instantly));
+          setActionError(
+            formatNotPresentFeedback(body.resend, body.instantly, body.resendError),
+          );
           return;
         }
         throw new Error(body.error ?? "Envoi impossible");
       }
 
       if (body.resend && body.instantly) {
-        setNotPresentMessage(formatNotPresentFeedback(body.resend, body.instantly));
+        setNotPresentMessage(
+          formatNotPresentFeedback(body.resend, body.instantly, body.resendError),
+        );
       }
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Envoi impossible");
@@ -382,6 +412,9 @@ export function BookingsTable({ audience }: BookingsTableProps) {
       {actionError ? <InternalStatusAlert variant="error" message={actionError} /> : null}
       {notPresentMessage ? (
         <InternalStatusAlert variant="success" message={notPresentMessage} />
+      ) : null}
+      {workflowMessage ? (
+        <InternalStatusAlert variant="success" message={workflowMessage} />
       ) : null}
 
       {isAgenceScope && rows.length > 0 ? (

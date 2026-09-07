@@ -247,7 +247,7 @@ export async function dispatchDueBookingEmails(limit = 50): Promise<{
   return { processed: jobs.length, sent, failed, linksRetry };
 }
 
-async function dispatchDueJobsForLead(leadId: string): Promise<void> {
+export async function dispatchDueJobsForLead(leadId: string): Promise<void> {
   const jobs = (await listDueJobs(100)).filter((job) => job.lead_id === leadId);
   for (const job of jobs) {
     await processJob(job);
