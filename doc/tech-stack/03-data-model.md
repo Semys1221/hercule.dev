@@ -44,7 +44,7 @@ RLS on, 0 policy. Service role serveur.
 | `estimated_completion_at` | timestamptz | **D** capacity |
 | `active_match_id` | uuid nullable | **D** match `open` |
 | `credits_remaining` | int nullable | **D** pour pack_989x3 ; null si monthly |
-| `offer_type` | text nullable | `monthly_1489` \| `pack_989x3` |
+| `offer_type` | text nullable | `starter_1489_5` \| `monthly_1489` \| `pack_989x3` |
 
 `profile` JSONB **reste** (DB-02) : `form`, `communication.delays` (produit), `display.timeline`, `capacity`, `offers` (flags CTA, **pas** 898).
 

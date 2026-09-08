@@ -34,6 +34,9 @@ export async function runBookingsTableSmoke(page: Page): Promise<void> {
   ]);
   expect(bookingsRes.ok()).toBeTruthy();
   await expect(page.getByRole("heading", { name: "Bookings" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Bookings" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Confirm sequence" })).toBeVisible();
+  await expect(page.getByText("Total booked")).toBeVisible();
 
   const [refreshRes] = await Promise.all([
     page.waitForResponse(

@@ -22,8 +22,8 @@ for path in (str(_REPO_ROOT), str(_SUBSEQUENCE_DIR), str(_SCRAPER_DIR)):
 
 load_dotenv(_REPO_ROOT / ".env")
 
-COMPTABLE_CAMPAIGN_ID = "a32c814b-2c9c-4015-935d-da15bdea2373"
-COMPTABLE_SUBSEQUENCE_ID = "e2358943-266b-44a0-b883-cdd5c67ac495"
+COMPTABLE_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6"
+COMPTABLE_SUBSEQUENCE_ID = "7105ed91-f2b7-4316-96c9-76a3c374cd6e"
 
 _REPLACEMENTS = (
     ("{{reservation_agence_link}}", "{{reservation_entreprise_link}}"),

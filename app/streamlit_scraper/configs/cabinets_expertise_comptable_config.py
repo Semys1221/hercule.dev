@@ -6,8 +6,8 @@ PRESET_ID = "cabinets_expertise_comptable"
 PRESET_LABEL = "Cabinets expertise comptable (France)"
 
 _LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c"
-_CAMPAIGN_ID = "a32c814b-2c9c-4015-935d-da15bdea2373"
-_SUBSEQUENCE_ID = "e2358943-266b-44a0-b883-cdd5c67ac495"
+_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6"
+_SUBSEQUENCE_ID = "7105ed91-f2b7-4316-96c9-76a3c374cd6e"
 
 CABINETS_EXPERTISE_COMPTABLE_CONFIG = {
     "OUTSCRAPER_API_KEY": "",

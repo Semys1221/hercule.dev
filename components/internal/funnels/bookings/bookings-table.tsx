@@ -5,13 +5,18 @@ import { ExternalLink } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { BookingReminderStatus } from "@/components/internal/funnels/bookings/booking-reminder-status";
+import { BookingRowToggles } from "@/components/internal/funnels/bookings/booking-row-toggles";
+import { BookingsStatsBar } from "@/components/internal/funnels/bookings/bookings-stats-bar";
 import type { BookingEmailJobSummary } from "@/lib/admin/bookings/email-jobs";
+import {
+  buildReminderLines,
+  sequenceIsLive,
+} from "@/lib/admin/bookings/reminder-status";
 import {
   formatWorkflowFeedback,
   type WorkflowAction,
 } from "@/lib/admin/bookings/workflow-feedback";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,20 +98,6 @@ function CalendlyLinkRow({
   );
 }
 
-function SalesCallStatusBadge({ status }: { status: SalesCallStatus | null }) {
-  const { badge } = bookingRowActionState(status);
-  if (badge === "PAID") {
-    return <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">PAID</Badge>;
-  }
-  if (badge === "NO SHOW") {
-    return <Badge variant="secondary">NO SHOW</Badge>;
-  }
-  if (badge === "NON PAYÉ") {
-    return <Badge variant="destructive">NON PAYÉ</Badge>;
-  }
-  return null;
-}
-
 function SalesCallStatusHint({
   salesCallStatus,
   leadStatut,
@@ -133,25 +124,14 @@ function BookingRowActionsMenu({
   actions,
   pending,
   pendingNotPresent,
-  pendingReset,
-  onWorkflow,
   onNotPresent,
-  onResetNoShow,
 }: {
   actions: BookingRowActionState;
   pending: boolean;
   pendingNotPresent: boolean;
-  pendingReset: boolean;
-  onWorkflow: (action: WorkflowAction) => void;
   onNotPresent: () => void;
-  onResetNoShow: () => void;
 }) {
-  const hasActions =
-    actions.showNoShow ||
-    actions.showNotPaid ||
-    actions.showNotPresent ||
-    actions.showResetNoShow;
-  if (!hasActions) {
+  if (!actions.showNotPresent) {
     return null;
   }
 
@@ -163,29 +143,14 @@ function BookingRowActionsMenu({
           variant="ghost"
           size="icon"
           className="size-8"
-          disabled={pending || pendingNotPresent || pendingReset}
+          disabled={pending || pendingNotPresent}
           aria-label="Actions"
         >
           <span className="text-base leading-none" aria-hidden="true">…</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {actions.showNoShow ? (
-          <DropdownMenuItem onSelect={() => onWorkflow("no_show")}>
-            No Show
-          </DropdownMenuItem>
-        ) : null}
-        {actions.showNotPaid ? (
-          <DropdownMenuItem onSelect={() => onWorkflow("not_paid")}>
-            Non Payé
-          </DropdownMenuItem>
-        ) : null}
-        {actions.showNotPresent ? (
-          <DropdownMenuItem onSelect={() => onNotPresent()}>Absent ?</DropdownMenuItem>
-        ) : null}
-        {actions.showResetNoShow ? (
-          <DropdownMenuItem onSelect={() => onResetNoShow()}>Reset</DropdownMenuItem>
-        ) : null}
+        <DropdownMenuItem onSelect={() => onNotPresent()}>Absent ?</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -229,11 +194,12 @@ export function BookingsTable({ audience }: BookingsTableProps) {
   const [pendingNotPresentInvitee, setPendingNotPresentInvitee] = useState<string | null>(
     null,
   );
-  const [pendingResetInvitee, setPendingResetInvitee] = useState<string | null>(null);
+  const [pendingConfirmInvitee, setPendingConfirmInvitee] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [notPresentMessage, setNotPresentMessage] = useState<string | null>(null);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
   const [jobsByLeadId, setJobsByLeadId] = useState<
     Record<string, BookingEmailJobSummary[]>
   >({});
@@ -442,7 +408,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
     const previousStatus = row.sales_call_status;
     setActionError(null);
     setResetMessage(null);
-    setPendingResetInvitee(row.invitee_uri);
+    setPendingInvitee(row.invitee_uri);
     setRows((current) =>
       current.map((item) =>
         item.invitee_uri === row.invitee_uri
@@ -478,6 +444,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
           ? "1 email en attente annulé"
           : `${cancelledJobs} emails en attente annulés`;
       setResetMessage(`No-show annulé · ${jobsLabel}`);
+      void fetchBookings(false);
     } catch (err) {
       setRows((current) =>
         current.map((item) =>
@@ -488,9 +455,58 @@ export function BookingsTable({ audience }: BookingsTableProps) {
       );
       setActionError(err instanceof Error ? err.message : "Reset impossible");
     } finally {
-      setPendingResetInvitee(null);
+      setPendingInvitee(null);
     }
-  }, []);
+  }, [fetchBookings]);
+
+  const handleNoShowChange = useCallback(
+    (row: EnrichedCalendlyBooking, checked: boolean) => {
+      if (checked) {
+        void runWorkflowAction(row, "no_show");
+        return;
+      }
+      void runResetNoShow(row);
+    },
+    [runResetNoShow, runWorkflowAction],
+  );
+
+  const runStartConfirmSequence = useCallback(
+    async (row: EnrichedCalendlyBooking) => {
+      setActionError(null);
+      setConfirmMessage(null);
+      setPendingConfirmInvitee(row.invitee_uri);
+
+      try {
+        const response = await fetch("/api/admin/bookings/start-confirm-sequence", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            inviteeUri: row.invitee_uri,
+            leadId: row.lead_id,
+            email: row.email,
+            startTime: row.start_time,
+          }),
+        });
+        const body = (await response.json()) as {
+          started?: boolean;
+          reason?: string;
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(body.error ?? body.reason ?? "Séquence impossible");
+        }
+
+        setConfirmMessage("Séquence de confirmation démarrée");
+        void fetchBookings(false);
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : "Séquence impossible");
+      } finally {
+        setPendingConfirmInvitee(null);
+      }
+    },
+    [fetchBookings],
+  );
 
   const sortedRows = useMemo(
     () => rows.slice().sort((a, b) => b.start_time.localeCompare(a.start_time)),
@@ -531,9 +547,14 @@ export function BookingsTable({ audience }: BookingsTableProps) {
       {resetMessage ? (
         <InternalStatusAlert variant="success" message={resetMessage} />
       ) : null}
+      {confirmMessage ? (
+        <InternalStatusAlert variant="success" message={confirmMessage} />
+      ) : null}
 
       {isAgenceScope && sortedRows.length > 0 ? (
-        <div className="rounded-md border border-border">
+        <>
+          <BookingsStatsBar rows={sortedRows} />
+          <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -541,6 +562,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                 <TableHead>RDV</TableHead>
                 <TableHead>Statut CRM</TableHead>
                 <TableHead>Relances</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead>Actions</TableHead>
                 <TableHead>Réservation</TableHead>
                 <TableHead>Confirmation</TableHead>
@@ -553,7 +575,13 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                 const actions = bookingRowActionState(row.sales_call_status);
                 const pending = pendingInvitee === row.invitee_uri;
                 const pendingNotPresent = pendingNotPresentInvitee === row.invitee_uri;
-                const pendingReset = pendingResetInvitee === row.invitee_uri;
+                const pendingConfirm = pendingConfirmInvitee === row.invitee_uri;
+                const reminderLines = buildReminderLines({
+                  scheduledAt: row.start_time,
+                  category: row.lead_category ?? "agence",
+                  jobs: row.lead_id ? jobsByLeadId[row.lead_id] ?? [] : [],
+                });
+                const canConfirm = row.lead_matched && !sequenceIsLive(reminderLines);
                 return (
                   <TableRow key={row.invitee_uri}>
                     <TableCell>
@@ -581,17 +609,32 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                         jobs={row.lead_id ? jobsByLeadId[row.lead_id] ?? [] : []}
                       />
                     </TableCell>
+                    <TableCell className="min-w-[6rem]">
+                      <BookingRowToggles
+                        inviteeUri={row.invitee_uri}
+                        salesCallStatus={row.sales_call_status}
+                        pendingNoShow={pending}
+                        onNoShowChange={(checked) => handleNoShowChange(row, checked)}
+                      />
+                    </TableCell>
                     <TableCell className="min-w-[10rem]">
                       <div className="flex flex-wrap items-center gap-2">
-                        <SalesCallStatusBadge status={row.sales_call_status} />
+                        {canConfirm ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={pendingConfirm}
+                            onClick={() => void runStartConfirmSequence(row)}
+                          >
+                            {pendingConfirm ? "…" : "Confirmer"}
+                          </Button>
+                        ) : null}
                         <BookingRowActionsMenu
                           actions={actions}
                           pending={pending}
                           pendingNotPresent={pendingNotPresent}
-                          pendingReset={pendingReset}
-                          onWorkflow={(status) => void runWorkflowAction(row, status)}
                           onNotPresent={() => void sendNotPresentEmail(row)}
-                          onResetNoShow={() => void runResetNoShow(row)}
                         />
                       </div>
                       <SalesCallStatusHint
@@ -633,6 +676,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
             {tableCaption}
           </p>
         </div>
+        </>
       ) : null}
     </div>
   );

@@ -1,5 +1,5 @@
 import { ClientsTable } from "@/components/internal/clients/clients-table";
-import { BookingsTable } from "@/components/internal/funnels/bookings/bookings-table";
+import { BookingsShell } from "@/components/internal/funnels/bookings/bookings-shell";
 import { FaqManagementShell } from "@/components/internal/funnels/faq-management-shell";
 import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
 import { PricingEditor } from "@/components/internal/funnels/pricing-editor";
@@ -25,7 +25,7 @@ export function FunnelLeafContent({
         />
       );
     }
-    return <BookingsTable audience={audience} />;
+    return <BookingsShell audience={audience} />;
   }
 
   if (leafKey === "clients_hub") {

@@ -56,7 +56,7 @@
     "smoke-instantly-bypass-webhook": "tsx --env-file=.env ./scripts/instantly-bypass/smokeInterestedWebhook.ts",
     "register-instantly-interested-webhook": "tsx --env-file=.env ./scripts/instantly-bypass/registerInterestedWebhook.ts",
     "backfill-streamlit-subsequence-step0": "python3 ./scripts/streamlit_subsequence/backfillStep0E1.py",
-    "audit-streamlit-duplicate-e1": "python3 ./scripts/streamlit_subsequence/auditDuplicateE1.py --campaign-id 2cd03978-93b3-4462-ad88-f0fb0f35d59c",
+    "audit-streamlit-duplicate-e1": "python3 ./scripts/streamlit_subsequence/auditDuplicateE1.py --campaign-id e4c58718-ca00-4e27-b714-68e522fe4db6",
     "smoke-instantly-bypass-send-window": "tsx ./scripts/instantly-bypass/smokeSendWindow.ts",
     "smoke-instantly-bypass-e1-thread-guard": "tsx ./scripts/instantly-bypass/smokeE1ThreadGuard.ts",
     "smoke-instantly-bypass-e1-human-delay": "tsx ./scripts/instantly-bypass/smokeE1HumanDelay.ts",

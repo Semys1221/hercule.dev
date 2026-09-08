@@ -45,8 +45,13 @@ Phase bootstrap = **+7j** de marge implicite + mention « montée en charge infr
 
 ## 4. Rythme mensuel (client actif)
 
-| Allocation | Promesse U4/mois | Modèle prédit |
-|------------|------------------|---------------|
+| Formule | Promesse volume | Notes |
+|---------|-----------------|-------|
+| **Starter 1 489 €** | **5 Attributions** sur la durée du pack | Entrée one-shot — pas un rythme /mois |
+| **Mensuel 1 489 €** | **3–4 honorés / mois** @ 30 inbox | Renouvellement post-Starter ou upsell |
+
+| Allocation | Promesse U4/mois (mensuel) | Modèle prédit |
+|------------|----------------------------|---------------|
 | **30 inbox** | **3–4 honorés / mois** | ~7 |
 | **15 inbox** (constrained) | **2–3 honorés / mois** | ~3,6 |
 

@@ -6,20 +6,21 @@ audience: coding-agent
 decisions: INT-02 EML-05
 do_not:
   - Contredire cvg_master.md / constants-commercial.md sur les prix
+  - Mentionner 898 € ou offre 2 500 € souscriptible
 ```
 
-> Source condensée pour les réponses email **ops**. Prix : [constants-commercial.md](./constants-commercial.md).
+> Source condensée pour les réponses email **ops**. Prix : [/cvg/constants-commercial](/cvg/constants-commercial).
 
 ## Produit Hercule
 
-
 - Hercule met en relation des **entreprises** (PME, TPE) avec des **agences web** partenaires.
-- **Agence (buyer)** : paiement à l'entrée (~1 500 €) ; renouvellement / nouveau cycle **1 489 €**.
+- **Agence (buyer)** — entrée : **Starter 1 489 €** pour **5 Attributions** (montant net, TVA non applicable). Renouvellement optionnel : **1 489 € / mois** ou **pack 989×3 = 2 967 €** (15 Attributions).
 - **Entreprise (seller)** : service **100 % gratuit** — jamais de frais, **aucune commission**, **aucun upsell** après mise en relation.
 
 ## Promesse agence (capacity)
 
-- Environ **3 à 4 RDV honorés / mois** par agence à allocation standard (30 inbox).
+- **Starter** : 5 Attributions sur la durée du pack.
+- **Mensuel** (renouvellement) : environ **3 à 4 RDV honorés / mois** @ allocation standard (30 inbox).
 
 ## Process entreprise (seller)
 
@@ -39,13 +40,13 @@ do_not:
 ## Agence — post-RDV (résumé)
 
 - Question survey agence : « Avez-vous fait la vente ? »
-- Renouvellement typique **1 489 €** ; offre alternative **898 €** (3 RDV) sur page survey uniquement si refus.
+- Renouvellement typique : **mensuel 1 489 €** ou **pack 989×3** — proposition **optionnelle** in-page ou par ops. **Pas d'offre 898 €.**
 
 ## Contact & légal (résumé)
 
 - Contact : **contact@hercule.dev**
+- Tarifs détaillés : renvoyer vers **hercule.dev/cvg** sans reciter les montants dans l'email sauf demande explicite.
 - Données personnelles : traitement conforme RGPD (voir politique confidentialité site).
-- Hébergement mentionné sur le site : **Vercel** ; autorité CNIL pour réclamations privacy.
 - Ne pas promettre de délais, prix ou garanties non listés ici.
 
 ## Règle d'abstention

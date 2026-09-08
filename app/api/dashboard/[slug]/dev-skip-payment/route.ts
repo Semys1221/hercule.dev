@@ -33,7 +33,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
     const { error: paymentError } = await client.from("payments").upsert(
       {
         agence_id: agenceId,
-        offer_type: "monthly_1489",
+        offer_type: "starter_1489_5",
         amount_cents: 148900,
         status: "succeeded",
         stripe_checkout_session_id: stripeCheckoutSessionId,

@@ -51,7 +51,7 @@ Ordre vertical fixe sur `/suivi/[category]/[link]`. Page **read-only** (sauf ren
 | 3 | **Bandeau d'état** (conditionnel) | Selon `statut` — voir tableau ci-dessous |
 | 4 | **FAQ** | Accordion, ancre `#faq`, contenu filtré par `category` |
 | 5 | **Support** | Bloc texte, ancre `#support`, **sans bouton ni lien CTA stylé** |
-| 6 | **Footer minimal** | Lien CGV futur `/cvg` (cohérent avec [cvg_site-sync.md](../cvg_site-sync.md)) |
+| 6 | **Footer minimal** | Lien CGV `/cvg` (cohérent avec [/cvg/site-sync](/cvg/site-sync)) |
 
 ### Bandeau d'état (conditionnel)
 
@@ -79,7 +79,7 @@ Une seule section FAQ sur la page. Contenu **filtré par `category`** (`agence` 
 **Règles :**
 
 - Pas de bouton d'action dans les réponses (sauf mention « consultez votre email »)
-- Copy alignée CGV — no-show **14 jours ouvrés**, pas « sans délai » ([cvg_site-sync.md](../cvg_site-sync.md))
+- Copy alignée CGV — no-show **14 jours ouvrés**, pas « sans délai » ([/cvg/site-sync](/cvg/site-sync))
 - Pas de widget Calendly interactif dans la FAQ
 
 ### Questions agence
@@ -90,7 +90,7 @@ Une seule section FAQ sur la page. Contenu **filtré par `category`** (`agence` 
 | A2 | D'où viennent les demandes clients ? | Hercule détecte en continu des signaux d'intention sur plus de 1 000 sites : recrutements, développements, changements d'activité, etc. Les entreprises sont qualifiées par Hercule (besoin, budget, attentes). Une fois confirmées, les demandes rejoignent notre réseau et sont proposées à l'agence la plus compatible. |
 | A3 | Comment Hercule choisit-il les attributions ? | Hercule évalue la compatibilité client-agence sur cinq critères : prestations, secteur d'excellence, taille, tarifs et positionnement. Objectif : aligner budget, structure et mode d'accompagnement. |
 | A4 | Que se passe-t-il quand une entreprise me est proposée ? | Votre statut passe en « proposition de match ». Vous recevez un email avec les informations de l'entreprise. La réservation du rendez-vous se fait via le lien Calendly dans cet email — pas depuis cette page. |
-| A5 | Combien coûte Hercule ? | Starter : 1 489 € pour 5 attributions qualifiées. Growth : 2 500 €/mois pour jusqu'à 4 nouveaux clients signés par mois. 0 % de commission sur vos ventes. Détail : [cvg_master.md §5](../cvg_master.md). |
+| A5 | Combien coûte Hercule ? | Starter : 1 489 € pour 5 attributions qualifiées. Renouvellement optionnel : 1 489 €/mois ou pack 989×3 = 2 967 € (15 Attributions). L'offre 2 500 €/mois affichée sur le site est une vitrine non souscriptible. 0 % de commission sur vos ventes. Détail : [/cvg §5](/cvg). |
 | A12 | Le tarif affiché inclut-il la TVA ? | Le tarif indiqué est net de taxe. En raison d'une restructuration juridique liée à la forte croissance de notre plateforme Hercule, nos prestations sont actuellement facturées sans TVA (TVA non applicable, art. 293 B du CGI). Ce que cela change pour votre agence : c'est un avantage immédiat pour votre trésorerie. Le montant affiché est le montant exact que vous payez. Vous n'avez aucune avance de TVA à faire ce mois-ci, ce qui vous évite d'attendre son remboursement par l'État. Détail : [cvg_master.md §5](../cvg_master.md). |
 | A6 | Ai-je un délai de rétractation ? | Oui. Après souscription, vous disposez d'un délai de 4 jours calendaires pour vous rétracter. Détail : [cvg_master.md §8](../cvg_master.md). |
 | A7 | Comment fonctionnent les emails Hercule ? | Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Le domaine principal de la société et de la plateforme est hercule.dev. |

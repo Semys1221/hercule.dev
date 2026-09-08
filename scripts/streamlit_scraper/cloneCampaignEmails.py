@@ -22,7 +22,7 @@ if str(_SCRAPER_DIR) not in sys.path:
 load_dotenv(_REPO_ROOT / ".env")
 
 BIGGY_SOURCE_CAMPAIGN_ID = "2cd03978-93b3-4462-ad88-f0fb0f35d59c"
-COMPTABLE_TARGET_CAMPAIGN_ID = "a32c814b-2c9c-4015-935d-da15bdea2373"
+COMPTABLE_TARGET_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6"
 
 _LINK_REPLACEMENTS = (
     ("{{reservation_agence_link}}", "{{reservation_entreprise_link}}"),

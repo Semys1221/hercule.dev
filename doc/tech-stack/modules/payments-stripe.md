@@ -12,7 +12,7 @@ do_not:
 
 Étapes **4–5**.
 
-1. Ops : `POST /api/internal/payments/checkout` avec `offer_type` `monthly_1489` | `pack_989x3`.
+1. Ops : `POST /api/internal/payments/checkout` avec `offer_type` `starter_1489_5` | `monthly_1489` | `pack_989x3`.
 2. Row `payments.pending` + URL Stripe.
 3. Webhook `checkout.session.completed` (ou `payment_intent.succeeded`) → `succeeded` → transition délivrance + cancel nurture.
 

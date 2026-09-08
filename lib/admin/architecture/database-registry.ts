@@ -56,7 +56,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     id: "payments",
     label: "Payments",
     domain: "product",
-    purpose: "Paiements Stripe — agence (monthly_1489/pack_989x3) et comptable (monthly_1499/pack_3x1499). Gate délivrance, idempotence stripe_event_id.",
+    purpose: "Paiements Stripe — agence (starter_1489_5/monthly_1489/pack_989x3) et comptable (monthly_1499/pack_3x1499). Gate délivrance, idempotence stripe_event_id.",
     keyColumns: "id, agence_id, entreprise_id, offer_type, amount_cents, status, stripe_checkout_session_id, stripe_event_id, succeeded_at",
     writers: ["webhook", "admin"],
     readers: ["admin", "client"],

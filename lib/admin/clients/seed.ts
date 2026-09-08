@@ -134,7 +134,7 @@ export async function seedFakeClients(
       const { error } = await client.from("payments").upsert(
         {
           agence_id: id,
-          offer_type: "monthly_1489",
+          offer_type: "starter_1489_5",
           amount_cents: 148900,
           status: "succeeded",
           stripe_checkout_session_id: `seed_session_${agence.slug}`,

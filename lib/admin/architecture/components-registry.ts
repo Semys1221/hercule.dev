@@ -585,7 +585,7 @@ const RAW_COMPONENTS: ComponentEntry[] = [
     domain: "marketing",
     role: "recipient",
     actor: "client",
-    route: "app/cvg/page.tsx",
+    route: "app/cvg/page.tsx|app/cvg/[doc]/page.tsx",
     dataIn: "CGV markdown",
     dataOut: "—",
     sideEffects: "—",

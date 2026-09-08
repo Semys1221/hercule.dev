@@ -45,7 +45,7 @@ const PREPARE = process.argv.includes("--prepare");
 const KEEP = process.argv.includes("--keep");
 
 const DEFAULT_LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c";
-const DEFAULT_CAMPAIGN_ID = "a32c814b-2c9c-4015-935d-da15bdea2373";
+const DEFAULT_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6";
 const DEFAULT_CATEGORY = "entreprise";
 
 const INTERESTED_STATUS = 1;

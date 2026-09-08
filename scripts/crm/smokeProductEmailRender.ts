@@ -9,7 +9,7 @@ import {
 } from "@/lib/booking-communication/templates";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 
-const FORBIDDEN_COPY_SNIPPETS = ["898", "1 500 €", "1500€", "4 jours", "MEETING_10"] as const;
+const FORBIDDEN_COPY_SNIPPETS = ["898", "1 500 €", "1500€", "MEETING_10"] as const;
 
 const PRODUCT_TYPES: BookingEmailType[] = [
   "upsell_email_1",

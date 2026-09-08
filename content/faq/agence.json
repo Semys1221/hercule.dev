@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "agence",
-  "updatedAt": "2026-09-06T11:00:00.000Z",
+  "updatedAt": "2026-09-08T12:00:00.000Z",
   "entries": [
     {
       "id": "faq-ag-001",
@@ -26,7 +26,7 @@
     {
       "id": "faq-ag-005",
       "question": "Combien coûte Hercule ?",
-      "answer": "Starter : 1 489 € pour 5 attributions qualifiées. Hercule récurrent : 2 500 €/mois — jusqu'à 4 clients signés par mois. Hercule qualifie et signe ses propres contrats déjà disponibles pour votre agence, à vos tarifs (0 % commission). Offre éligible sur profil uniquement, proposée après validation de compatibilité. 0 % de commission sur vos ventes.",
+      "answer": "Starter : 1 489 € pour 5 attributions qualifiées. Renouvellement optionnel : 1 489 €/mois (3–4 RDV honorés/mois) ou pack 989×3 = 2 967 € (15 attributions). L'offre 2 500 €/mois affichée sur le site est une vitrine non souscriptible. 0 % de commission sur vos ventes.",
       "cvgLink": true
     },
     {

@@ -17,8 +17,13 @@ import {
 // ---------------------------------------------------------------------------
 
 describe("COMMERCIAL constants", () => {
-  it("monthlyPriceCents is 148 900", () => {
-    expect(COMMERCIAL.monthlyPriceCents).toBe(148_900);
+  it("starterPriceCents equals monthlyPriceCents", () => {
+    expect(COMMERCIAL.starterPriceCents).toBe(COMMERCIAL.monthlyPriceCents);
+    expect(COMMERCIAL.starterPriceCents).toBe(148_900);
+  });
+
+  it("retractationDays is 4", () => {
+    expect(COMMERCIAL.retractationDays).toBe(4);
   });
 
   it("pack989x3TotalCents equals unit × 3", () => {
@@ -81,6 +86,7 @@ describe("VITRINE_ONLY", () => {
 
 describe("OFFER_TYPES", () => {
   it("matches Supabase CHECK constraint values", () => {
+    expect(OFFER_TYPES.starter1489_5).toBe("starter_1489_5");
     expect(OFFER_TYPES.monthly1489).toBe("monthly_1489");
     expect(OFFER_TYPES.pack989x3).toBe("pack_989x3");
   });

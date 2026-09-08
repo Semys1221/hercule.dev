@@ -34,7 +34,12 @@ from supabase_repo import (
 )
 from config import send_window_tz
 from send_window import format_paris_slot, is_within_send_window, next_send_slot
-from unibox_classify import email_timestamp, extract_email_text, is_hercule_email
+from unibox_classify import (
+    email_timestamp,
+    extract_email_text,
+    is_hercule_email,
+    match_flows,
+)
 
 PipelineStep = Literal["step_0", "step_1", "step_2", "step_3", "step_4", "replies_to_handle"]
 Flow = Literal["interested_email1", "interested_email2", "interested_email3"]
@@ -861,12 +866,33 @@ def dispatch_conversation_reply(
         return {"ok": False, "error": str(exc), "lead_email": lead_email}
 
 
+def thread_already_has_e1(
+    client: InstantlyClient,
+    *,
+    lead_email: str,
+    campaign_id: str,
+) -> bool:
+    """True when a Hercule E1 (comptable fingerprint) is already in the Unibox thread."""
+    sent_items = client.list_emails(
+        search=lead_email,
+        campaign_id=campaign_id,
+        email_type="sent",
+        limit=50,
+    )
+    for item in sent_items:
+        text, _ = extract_email_text(item)
+        if "interested_email1" in match_flows(text, allowed_flows=["interested_email1"]):
+            return True
+    return False
+
+
 def dispatch_bulk(
     *,
     campaign_id: str,
     flow: Flow,
     leads: list[dict[str, Any]],
     dry_run: bool = False,
+    force_immediate: bool = False,
     on_progress: Callable[[str], None] | None = None,
 ) -> BulkSendResult:
     api_key = get_api_key()
@@ -887,6 +913,7 @@ def dispatch_bulk(
             campaign_id=campaign_id,
             lead=lead,
             dry_run=dry_run,
+            force_immediate=force_immediate,
         )
 
         if dispatch_result.get("skipped"):

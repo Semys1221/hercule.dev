@@ -41,24 +41,33 @@ Compteur = agrégat `appointments` (voir data-model). **Jamais** un statut `MEET
 
 ## Offres commercialisées (MVP)
 
-### A — Mensuel sans engagement
+### A — Starter (entrée)
+
+- **1 489 €** one-shot
+- **5 Attributions**
+- Garantie : si MRR via Hercule **&lt; 1 500 €** après 5 Attributions → jusqu’à **5 remplacements**
+- `payments.offer_type` = **`starter_1489_5`**
+
+### B — Mensuel sans engagement (renouvellement)
 
 - **1 489 € / mois**
 - SLA volume : **3–4 RDV honorés / mois** @ allocation 30 inbox (CAP-01 / C-02)
 - Résiliation : crédits non utilisés **perdus** sauf RDV déjà planifiés à honorer (BIZ-10)
+- `payments.offer_type` = **`monthly_1489`**
 
-### B — Pack 3 mois
+### C — Pack 3 mois (renouvellement)
 
 - **989 € × 3 = 2 967 €** (réglable en une fois)
 - **15 attributions**
 - Garantie : si CA généré via Hercule **&lt; 4 500 €** sur 3 mois → jusqu’à **15 remplacements** (mêmes règles Attribution)
 - Vente pendant le pack **n’éteint pas** les crédits restants
+- `payments.offer_type` = **`pack_989x3`**
 
 ### Non commercialisé
 
-- 2 500 €/mois (vitrine)
+- 2 500 €/mois (vitrine — footnote site, non souscriptible)
 - 898 €
-- 1 500 € one-shot / pack 5 attributions
+- 1 500 € forfait d’entrée historique
 
 ---
 

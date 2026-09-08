@@ -40,6 +40,7 @@ function buildDeliveryPlan(
   matches: MatchRow[],
 ): DashboardDeliveryPlan {
   const isPack = offerType === OFFER_TYPES.pack989x3;
+  // starter_1489_5 and legacy monthly_1489 (pre-migration Starter checkouts) → 5 attributions
   const attributionsTotal = isPack
     ? COMMERCIAL.pack989x3Attributions
     : COMMERCIAL.starterAttributions;
@@ -167,7 +168,7 @@ export async function loadDeliveryContext(
     mapMatchRow(row as Record<string, unknown>),
   );
   const deliveryPlan = buildDeliveryPlan(
-    (payment?.offer_type as string | null) ?? OFFER_TYPES.monthly1489,
+    (payment?.offer_type as string | null) ?? OFFER_TYPES.starter1489_5,
     matches,
   );
 

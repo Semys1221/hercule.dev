@@ -9,12 +9,15 @@
  */
 
 export const COMMERCIAL = {
-  /** Mensuel sans engagement — 1 489 €/mois */
-  monthlyPriceCents: 148_900,
-
   /** Hercule Starter — 1 489 € one-shot, 5 attributions */
+  starterPriceCents: 148_900,
   starterAttributions: 5,
   starterFormulaLabel: "5 rendez-vous qualifiés",
+  starterGuaranteeMrrCents: 150_000,
+  starterGuaranteeMaxReplacements: 5,
+
+  /** Mensuel sans engagement — 1 489 €/mois (renouvellement) */
+  monthlyPriceCents: 148_900,
 
   /** Pack 3 mois — 989 €/mois × 3 */
   pack989x3UnitCents: 98_900,
@@ -40,7 +43,7 @@ export const COMMERCIAL = {
   firstHonoredDaysStandard: 21,
   firstHonoredDaysConstrained: 28,
 
-  /** SLA volume honoré / mois @ allocation 30 inbox */
+  /** SLA volume honoré / mois @ allocation 30 inbox (mensuel) */
   volumeHonoredPerMonthStandard: { min: 3, max: 4 } as const,
 
   /** Accès onboarding après paiement */
@@ -48,6 +51,9 @@ export const COMMERCIAL = {
 
   /** Liste d'attente max */
   waitingListMaxDays: 15,
+
+  /** Rétractation commerciale (CGV §8) */
+  retractationDays: 4,
 } as const;
 
 /**
@@ -55,11 +61,20 @@ export const COMMERCIAL = {
  * Must match CHECK constraint in Supabase migrations.
  */
 export const OFFER_TYPES = {
+  starter1489_5: "starter_1489_5",
   monthly1489: "monthly_1489",
   pack989x3: "pack_989x3",
 } as const;
 
 export type OfferType = (typeof OFFER_TYPES)[keyof typeof OFFER_TYPES];
+
+/** Legacy `monthly_1489` rows were one-shot Starter checkouts before starter_1489_5 existed. */
+export function isStarterLikeOfferType(offerType: string | null | undefined): boolean {
+  return (
+    offerType === OFFER_TYPES.starter1489_5 ||
+    offerType === OFFER_TYPES.monthly1489
+  );
+}
 
 /**
  * Offer types used in payments.offer_type — comptable offers.
@@ -88,7 +103,6 @@ export const FORBIDDEN_COPY = [
   "898",
   "1 500 €",
   "1500€",
-  "4 jours",
   "MEETING_10",
 ] as const;
 

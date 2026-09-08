@@ -20,6 +20,26 @@ const nextConfig = {
         destination: "/",
         permanent: false,
       },
+      {
+        source: "/cvg_onboarding.md",
+        destination: "/cvg/onboarding",
+        permanent: true,
+      },
+      {
+        source: "/cvg_site-sync.md",
+        destination: "/cvg/site-sync",
+        permanent: true,
+      },
+      {
+        source: "/capacity/03-sla-client.md",
+        destination: "/cvg/sla-client",
+        permanent: true,
+      },
+      {
+        source: "/constants-commercial.md",
+        destination: "/cvg/constants-commercial",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {

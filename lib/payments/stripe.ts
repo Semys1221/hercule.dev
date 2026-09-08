@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 
-const STARTER_OFFER_TYPE = "monthly_1489";
+const STARTER_OFFER_TYPE = "starter_1489_5";
 
 export function getStripeClient(): Stripe {
   const secretKey = process.env.STRIPE_SECRET_KEY?.trim();

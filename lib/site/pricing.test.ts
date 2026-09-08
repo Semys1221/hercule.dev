@@ -8,6 +8,8 @@ const plans = getPricingPlans("agence");
 assert.equal(plans.length, 2);
 assert.equal(plans[0].id, "plan-starter");
 assert.match(plans[0].price, /1 489/);
+assert.match(plans[1].summary ?? "", /vitrine/i);
+assert.match(plans[1].footer ?? "", /souscription/i);
 
 const comptablePlans = getPricingPlans("comptable");
 assert.equal(comptablePlans.length, 2);

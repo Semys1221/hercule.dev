@@ -439,13 +439,15 @@ def build_email_sequence_steps(
         body = str(email.get("body") or "").strip()
         if not subject or not body:
             raise ValueError(f"Email step {idx + 1} needs subject and body")
-        steps.append(
-            {
-                "type": "email",
-                "delay": 0 if idx == 0 else default_delay_days,
-                "variants": [{"subject": subject, "body": body}],
-            }
-        )
+        step: dict[str, Any] = {
+            "type": "email",
+            "delay": 0 if idx == 0 else default_delay_days,
+            "variants": [{"subject": subject, "body": body}],
+        }
+        if idx == 0:
+            step["pre_delay"] = 0
+            step["pre_delay_unit"] = "minutes"
+        steps.append(step)
     return steps
 
 
