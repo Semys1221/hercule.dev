@@ -99,6 +99,18 @@ function addParisCalendarDays(dateKey: string, deltaDays: number): string {
   return parisDateKey(getParisParts(utc));
 }
 
+export function parisDateKeyForInstant(instant: Date): string {
+  return parisDateKey(getParisParts(instant));
+}
+
+export function addDaysToParisDateKey(dateKey: string, days: number): string {
+  return addParisCalendarDays(dateKey, days);
+}
+
+export function parisAtHourOnDateKey(dateKey: string, hour: number): Date {
+  return parisAtHour(dateKey, hour);
+}
+
 export function isWeekdayParis(dt: Date = new Date()): boolean {
   return getParisParts(dt).weekday < 5;
 }

@@ -24,6 +24,7 @@
     "repair-missing-booking-sequences": "tsx --env-file=.env ./scripts/crm/repairMissingBookingSequences.ts",
     "audit-modalites-not-booked": "tsx --env-file=.env ./scripts/crm/repairModalitesNotBookedLeads.ts -- --audit",
     "repair-modalites-not-booked": "tsx --env-file=.env ./scripts/crm/repairModalitesNotBookedLeads.ts",
+    "schedule-compta-nova-apology": "tsx --env-file=.env ./scripts/crm/scheduleComptaNovaLinkFixedEmail.ts",
     "overwrite-modalites-24h": "tsx --env-file=.env ./scripts/crm/overwriteModalitesSchedule24h.ts",
     "smoke-booking-confirm-guard": "tsx --env-file=.env ./scripts/crm/smokeBookingConfirmGuard.ts",
     "smoke-link-provisioning-e2e": "tsx --env-file=.env ./scripts/crm/smokeLinkProvisioningE2e.ts",

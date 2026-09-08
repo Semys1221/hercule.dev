@@ -1,3 +1,4 @@
+import { renderComptaNovaApologyEmail, COMPTA_NOVA_APOLOGY_IDEMPOTENCY_KEY } from "@/lib/modalites-campaign/compta-nova-apology";
 import {
   createLinkTrackingClient,
   markLeadCancelled,
@@ -299,6 +300,7 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
 
   if (
     lead.statut === "CONFIRMED" &&
+    job.idempotency_key !== COMPTA_NOVA_APOLOGY_IDEMPOTENCY_KEY &&
     FOLLOW_UP_TYPES.includes(job.email_type)
   ) {
     await cancelJob(job.id);
@@ -316,6 +318,11 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
 
   if (job.email_type === "modalites_enforce_cancel") {
     return processModalitesEnforceCancelJob(job, lead);
+  }
+
+  if (job.idempotency_key === COMPTA_NOVA_APOLOGY_IDEMPOTENCY_KEY) {
+    const rendered = await renderComptaNovaApologyEmail(lead);
+    return sendAndMarkJob(job, lead, rendered);
   }
 
   const rendered = await renderJobEmail(job, lead);
