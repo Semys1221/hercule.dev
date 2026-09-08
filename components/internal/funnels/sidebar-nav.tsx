@@ -7,6 +7,7 @@ import {
   CalendarCheck,
   ChevronDown,
   ChevronRight,
+  ClipboardCheck,
   Database,
   Globe,
   Home,
@@ -53,6 +54,7 @@ import { cn } from "@/lib/utils";
 
 const GLOBAL_NAV = [
   { href: "/internal/funnels", label: "Accueil", icon: Home, exact: false },
+  { href: "/internal/modalites", label: "Modalités", icon: ClipboardCheck, exact: false },
   { href: "/internal/components", label: "Composants", icon: Boxes, exact: false },
   { href: "/internal/database", label: "Database", icon: Database, exact: false },
   { href: "/", label: "Site public", icon: Globe, exact: true },

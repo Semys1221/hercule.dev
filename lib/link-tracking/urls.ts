@@ -4,6 +4,8 @@ const DEFAULT_TRACKING_BASE_AGENCE =
   "https://www.hercule.dev/reservation.html";
 const DEFAULT_TRACKING_BASE_ENTREPRISE =
   "https://www.hercule.dev/reservation-entreprise.html";
+const DEFAULT_TRACKING_BASE_COMPTABLE =
+  "https://www.hercule.dev/reservation-entreprise.html";
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_DASHBOARD_BASE = "https://www.hercule.dev/dashboard";
@@ -20,6 +22,12 @@ export type EntrepriseLeadUrls = LeadUrls & {
   post_booking_link: string;
 };
 
+export type ComptableLeadUrls = {
+  reservation_comptable_link: string;
+  confirmation_comptable_link: string;
+  dashboard_link: string;
+};
+
 export type InstantlyCanonicalVariables = LeadUrls & {
   statut: string;
   link: string;
@@ -34,6 +42,12 @@ export function getTrackingBaseUrl(category: LeadCategory): string {
       process.env.TRACKING_BASE_URL_AGENCE?.trim().replace(/\/$/, "") ??
       process.env.TRACKING_BASE_URL?.trim().replace(/\/$/, "") ??
       DEFAULT_TRACKING_BASE_AGENCE
+    );
+  }
+  if (category === "comptable") {
+    return (
+      process.env.TRACKING_BASE_URL_COMPTABLE?.trim().replace(/\/$/, "") ??
+      DEFAULT_TRACKING_BASE_COMPTABLE
     );
   }
   return (
@@ -62,6 +76,12 @@ export function getEntreprisePostBookingBaseUrl(): string {
     DEFAULT_ENTREPRISE_POST_BASE
   );
 }
+
+export {
+  buildModalitesConfirmUrl,
+  getModalitesConfirmBaseUrl,
+  modalitesConfirmUrlFor,
+} from "@/lib/modalites-campaign/urls";
 
 export function buildTrackingUrl(slug: string, category: LeadCategory): string {
   return `${getTrackingBaseUrl(category)}/${slug}`;
@@ -102,6 +122,25 @@ export function buildEntrepriseLeadUrls(
   return {
     ...buildLeadUrls(slug, email),
     post_booking_link: buildEntreprisePostBookingUrl(slug, email),
+  };
+}
+
+export function buildConfirmationComptableLink(slug: string, email: string): string {
+  const url = new URL(`${getConfirmBaseUrl()}/${slug}`);
+  if (email.trim()) {
+    url.searchParams.set("email", email.trim().toLowerCase());
+  }
+  return url.toString();
+}
+
+export function buildComptableLeadUrls(
+  slug: string,
+  email: string,
+): ComptableLeadUrls {
+  return {
+    reservation_comptable_link: buildTrackingUrl(slug, "comptable"),
+    confirmation_comptable_link: buildConfirmationComptableLink(slug, email),
+    dashboard_link: buildDashboardUrl(slug),
   };
 }
 
@@ -157,12 +196,42 @@ export function postBookingLinkFor(
   return buildEntreprisePostBookingUrl(slug, lead.email);
 }
 
+export function reservationComptableLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "email" | "reservation_comptable_link">,
+): string {
+  const stored = lead.reservation_comptable_link?.trim();
+  if (stored) return stored;
+  const slug = lead.slug?.trim();
+  if (!slug) return "";
+  return buildTrackingUrl(slug, "comptable");
+}
+
+export function confirmationComptableLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "email" | "confirmation_comptable_link">,
+): string {
+  const stored = lead.confirmation_comptable_link?.trim();
+  if (stored) return stored;
+  return buildConfirmationComptableLink(lead.slug, lead.email);
+}
+
 export function buildInstantlyCustomVariables(
   slug: string,
   email: string,
   statut: string,
   category: LeadCategory = "entreprise",
 ): InstantlyCanonicalVariables {
+  if (category === "comptable") {
+    const comptableUrls = buildComptableLeadUrls(slug, email);
+    return {
+      reservation_agence_link: "",
+      reservation_entreprise_link: comptableUrls.reservation_comptable_link,
+      confirmation_agence_link: comptableUrls.confirmation_comptable_link,
+      statut,
+      link: "",
+      confirm_link: "",
+      tracking_url: "",
+    };
+  }
   const urls =
     category === "entreprise"
       ? buildEntrepriseLeadUrls(slug, email)

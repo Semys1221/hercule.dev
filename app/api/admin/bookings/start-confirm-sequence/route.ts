@@ -4,7 +4,6 @@ import { z } from "zod";
 import { resolveBookingLead } from "@/lib/admin/bookings/resolve-booking-lead";
 import { startSequenceForBookedLead } from "@/lib/booking-communication/route-sequence";
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
-import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
 
 const bodySchema = z.object({
   inviteeUri: z.string().min(1),
@@ -37,15 +36,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Lead introuvable" }, { status: 404 });
     }
 
-    const client = createLinkTrackingClient();
-    const lead = await findLeadById(client, "agence", resolved.id);
-    if (!lead) {
-      return NextResponse.json({ error: "Lead introuvable" }, { status: 404 });
-    }
-
     const sequence = await startSequenceForBookedLead({
-      category: "agence",
-      lead,
+      category: resolved.category,
+      lead: resolved.lead,
       triggeredBy: "manual",
     });
 

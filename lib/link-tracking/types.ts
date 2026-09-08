@@ -1,4 +1,4 @@
-export type LeadCategory = "agence" | "entreprise";
+export type LeadCategory = "agence" | "comptable" | "entreprise";
 
 export type LeadStatut =
   | "NOTBOOKED"
@@ -14,10 +14,12 @@ export type LinkTrackingLead = {
   email: string;
   statut: LeadStatut;
   slug: string;
-  reservation_agence_link: string;
-  reservation_entreprise_link: string;
-  confirmation_agence_link: string;
-  post_booking_link: string | null;
+  reservation_agence_link?: string | null;
+  reservation_entreprise_link?: string | null;
+  confirmation_agence_link?: string | null;
+  reservation_comptable_link?: string | null;
+  confirmation_comptable_link?: string | null;
+  post_booking_link?: string | null;
   dashboard_link: string | null;
   instantly_lead_id: string | null;
   instantly_campaign_id: string | null;

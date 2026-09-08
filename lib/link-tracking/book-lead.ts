@@ -8,7 +8,7 @@ import {
   markInstantlySynced,
   markLeadBooked,
 } from "./supabase";
-import { isMeetingBookedStatus, type LeadLookup } from "./types";
+import { isMeetingBookedStatus, type LeadCategory, type LeadLookup } from "./types";
 
 export type BookLeadFromCalendlyParams = {
   email: string;
@@ -48,18 +48,19 @@ async function syncInstantlyForBookedLead(lookup: LeadLookup): Promise<{
   return { instantlySynced };
 }
 
-async function persistAgenceBookingSideEffects(
+async function persistBookingSideEffects(
   lookup: LeadLookup,
   params: BookLeadFromCalendlyParams,
 ): Promise<LeadLookup> {
-  if (lookup.category !== "agence") {
+  if (lookup.category !== "agence" && lookup.category !== "comptable") {
     return lookup;
   }
 
   const client = createLinkTrackingClient();
   try {
     await upsertSalesCallFromBooking(client, {
-      agenceId: lookup.lead.id,
+      agenceId: lookup.category === "agence" ? lookup.lead.id : null,
+      comptableId: lookup.category === "comptable" ? lookup.lead.id : null,
       email: lookup.lead.email,
       inviteeUri: params.invitee.inviteeUri,
       scheduledAt: params.scheduledAt ?? lookup.lead.scheduled_at,
@@ -99,7 +100,7 @@ export async function bookLeadFromCalendly(
   let lookup = result.lookup;
 
   if (result.updated || isMeetingBookedStatus(lookup.lead.statut)) {
-    lookup = await persistAgenceBookingSideEffects(lookup, params);
+    lookup = await persistBookingSideEffects(lookup, params);
   }
 
   try {
@@ -154,7 +155,7 @@ export async function bookLeadFromCalendly(
 }
 
 export async function syncBookedLeadToInstantlyById(
-  category: "agence" | "entreprise",
+  category: LeadCategory,
   leadId: string,
 ): Promise<{ ok: boolean; reason?: string }> {
   const client = createLinkTrackingClient();

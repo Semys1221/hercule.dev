@@ -50,7 +50,7 @@ export function GrilleOffres() {
           {hero.intro}
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr] gap-6 mb-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-start">
           {plans.map((plan, index) => (
             <PricingCard
               key={plan.id}

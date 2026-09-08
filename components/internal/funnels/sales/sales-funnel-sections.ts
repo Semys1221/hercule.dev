@@ -118,7 +118,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Offre 1 499 €/mois, pack 3 598 €, garantie 15 RDV / 90 jours — et les missions que vous souhaitez prioriser.",
+      "Starter 999 €, Formule Croissance 1 499 €/mois, pack 3 598 € — garantie MRR Croissance — et les missions que vous souhaitez prioriser.",
   },
 ];
 

@@ -42,6 +42,7 @@
     "smoke-product-email-render": "tsx ./scripts/crm/smokeProductEmailRender.ts",
     "test-booking-email-resolve": "tsx ./lib/booking-communication/resolve-template.test.ts",
     "test-booking-send-window": "tsx ./lib/booking-communication/send-window.test.ts",
+    "test-modalites-campaign": "tsx ./lib/modalites-campaign/campaign.test.ts",
     "audit-email-templates": "tsx --env-file=.env ./scripts/audit/emailTemplateAudit.ts",
     "repair-stale-booking-templates": "tsx --env-file=.env ./scripts/audit/repairStaleBookingTemplates.ts",
     "repair-dated-bypass-e1": "tsx --env-file=.env ./scripts/audit/repairDatedBypassE1.ts",

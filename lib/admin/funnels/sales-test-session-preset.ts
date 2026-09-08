@@ -5,6 +5,7 @@ import { SEED_PREFIX } from "@/lib/admin/clients/seed";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
 import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 import type { DashboardFormData } from "@/lib/dashboard/types";
 import { E2E_TEST_EMAIL } from "@/lib/test/e2e-identity";
 
@@ -104,7 +105,7 @@ export type SalesTestSessionPreset = {
   qualification: SalesQualificationValues;
   closing: SalesClosingValues;
   profileForm: DashboardFormData;
-  leadCategory: "agence" | "entreprise";
+  leadCategory: LeadCategory;
 };
 
 export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionPreset {
@@ -117,7 +118,7 @@ export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionP
       qualification: SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
       closing: SALES_TEST_SESSION_CLOSING,
       profileForm: {},
-      leadCategory: "entreprise",
+      leadCategory: "comptable",
     };
   }
 

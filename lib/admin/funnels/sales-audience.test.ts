@@ -7,7 +7,7 @@ import {
 
 assert.equal(salesAudienceToLeadCategory("agence"), "agence");
 assert.equal(salesAudienceToLeadCategory("entreprise"), "entreprise");
-assert.equal(salesAudienceToLeadCategory("comptable"), "entreprise");
+assert.equal(salesAudienceToLeadCategory("comptable"), "comptable");
 assert.equal(isComptableSalesAudience("comptable"), true);
 assert.equal(isComptableSalesAudience("agence"), false);
 

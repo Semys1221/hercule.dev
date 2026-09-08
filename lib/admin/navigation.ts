@@ -89,7 +89,7 @@ export function isAudience(value: string): value is Audience {
 }
 
 export function isLeadCategory(value: string): value is LeadCategory {
-  return value === "agence" || value === "entreprise";
+  return value === "agence" || value === "comptable" || value === "entreprise";
 }
 
 export function getModulesForAudience(audience: Audience): Record<string, NavNode> {

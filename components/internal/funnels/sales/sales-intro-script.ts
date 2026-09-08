@@ -52,6 +52,7 @@ const BUDGET_KEYS_COMPTABLE = [
   "tarif",
   "prix",
   "honoraire",
+  "999",
   "1499",
   "1 499",
   "formule",
@@ -79,7 +80,7 @@ function budgetConfirmedFromAnswer(answer: string | null, audience: Audience): b
     return false;
   }
   if (isComptableSalesAudience(audience)) {
-    return /1[\s.]?499|1499|plus de|compatible/i.test(answer);
+    return /9[\s.]?99|999|1[\s.]?499|1499|plus de|compatible/i.test(answer);
   }
   return /1[\s.]?500|1500|plus de/i.test(answer);
 }

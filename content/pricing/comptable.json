@@ -1,71 +1,92 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-08T00:00:00.000Z",
+  "updatedAt": "2026-09-08T12:00:00.000Z",
   "hero": {
     "eyebrow": "Tarification",
-    "title": "Accès aux missions TPE. Mensuel sans engagement. Pack 3 mois −20 %.",
-    "intro": "Chaque formule ouvre l'accès à des missions de tenue qualifiées, attribuées après audit de compatibilité. Une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement."
+    "title": "Accès aux missions PME. Starter en entrée. Formule Croissance recommandée.",
+    "intro": "Chaque formule ouvre l'accès à des missions de tenue qualifiées, attribuées après audit de compatibilité. Une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement mensuel en Formule Croissance."
   },
   "plans": [
     {
-      "id": "plan-comptable-monthly",
-      "name": "Hercule Comptable",
-      "label": "Offre mensuelle",
+      "id": "plan-comptable-croissance",
+      "name": "Formule Croissance",
+      "label": "Recommandé pour les cabinets",
       "price": "1 499 €",
       "priceSuffix": "/mois",
       "tagline": "1 mission annuelle de tenue à 3 600 € d'honoraires",
-      "summary": "5 missions par mois. Premier RDV sous 15 jours. 0 % de commission. Pas de garantie de signature.",
-      "footer": "Garantie volume : 15 rendez-vous en 90 jours ou continuité sans frais.",
+      "summary": "10 missions PME par mois. Premier RDV sous 15 jours. 0 % de commission. Garantie MRR sur lettres de mission signées.",
+      "footer": "Garantie MRR : 3 000 € cumulés après 10 missions, ou 10 missions de remplacement offertes.",
       "featured": true,
       "profileOnly": false,
       "highlight": null,
       "features": [
-        "5 missions TPE qualifiées par mois (tenue, fiscal, obligations administratives).",
+        "10 missions PME qualifiées par mois (tenue, fiscal, obligations administratives).",
         "Premier rendez-vous planifié sous 15 jours après activation.",
         "Attribution exclusive à votre cabinet.",
         "0 % de commission sur vos honoraires signés.",
         "Calendly Pro et Zoom Pro provisionnés par Hercule.",
-        "Garantie volume : 15 RDV en 90 jours ou continuité sans frais supplémentaires."
+        "Garantie MRR : 3 000 € de revenus récurrents cumulés après vos 10 missions, ou 10 missions de remplacement offertes."
       ]
     },
     {
       "id": "plan-comptable-pack3",
-      "name": "Pack 3 mois",
+      "name": "Pack 3 mois Croissance",
       "label": "Engagement 3 mois",
       "price": "3 598 €",
       "priceSuffix": "TTC",
-      "tagline": "1 499 € × 3 − 20 % + 5 RDV offerts",
-      "summary": "Même rythme et garantie volume que l'offre mensuelle, sur 3 mois de service actif.",
-      "footer": null,
+      "tagline": "1 499 € × 3 − 20 %",
+      "summary": "10 missions PME par mois sur 3 mois de service actif. Même garantie MRR que la Formule Croissance, étendue au pack.",
+      "footer": "Garantie MRR pack : 9 000 € cumulés à l'issue du pack, ou jusqu'à 30 missions de remplacement.",
       "featured": false,
       "profileOnly": false,
-      "highlight": "+ 5 RDV offerts",
+      "highlight": "− 20 %",
       "features": [
-        "3 mois de service actif au rythme de l'offre mensuelle.",
-        "5 rendez-vous offerts en sus du volume contractuel.",
+        "3 mois de service actif au rythme de la Formule Croissance (10 missions / mois).",
+        "30 missions PME qualifiées sur la durée du pack.",
         "0 % de commission sur vos honoraires.",
-        "Garantie volume : 15 RDV en 90 jours ou continuité sans frais.",
+        "Garantie MRR pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 30 missions de remplacement.",
         "Calendly Pro et Zoom Pro provisionnés par Hercule."
+      ]
+    },
+    {
+      "id": "plan-comptable-starter",
+      "name": "Hercule Starter",
+      "label": "Offre d'entrée",
+      "price": "999 €",
+      "priceSuffix": "TTC",
+      "tagline": "5 missions PME à votre portée",
+      "summary": "Cinq missions PME sélectionnées selon votre activité et votre capacité. Paiement unique. Aucune garantie MRR.",
+      "footer": "Renouvellement optionnel : Formule Croissance 1 499 €/mois ou Pack 3 mois 3 598 €.",
+      "featured": false,
+      "profileOnly": false,
+      "highlight": null,
+      "features": [
+        "5 missions PME qualifiées (tenue, fiscal, obligations administratives).",
+        "Attribution exclusive à votre cabinet.",
+        "Remplacement de toute mission lorsque le dirigeant est absent au rendez-vous, sous 14 jours ouvrés.",
+        "0 % de commission sur vos honoraires signés.",
+        "Pas de garantie MRR — uniquement la garantie no-show."
       ]
     }
   ],
   "gatedTeaserFeatures": [
-    "5 missions TPE qualifiées par mois.",
+    "10 missions PME qualifiées par mois en Formule Croissance.",
     "0 % de commission — honoraires conservés.",
     "Premier RDV sous 15 jours."
   ],
   "gatedGhostFeatures": [
-    "Garantie 15 RDV / 90 jours",
+    "Garantie MRR 3 000 €",
     "Provisionnement Calendly / Zoom",
     "Pack 3 mois −20 %"
   ],
   "guaranteeSection": {
-    "title": "Garantie volume Hercule Comptable",
+    "title": "Garantie Formule Croissance",
     "items": [
-      "1 499 €/mois — 5 missions qualifiées, 0 % de commission",
+      "1 499 €/mois — 10 missions qualifiées, 0 % de commission sur vos honoraires",
       "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
-      "Moins de 15 RDV planifiés en 90 jours ? Continuité du service sans frais supplémentaires"
+      "Moins de 3 000 € de MRR cumulé après vos 10 missions ? 10 missions de remplacement offertes",
+      "Hercule Starter (999 €) : aucune garantie MRR — uniquement la garantie no-show"
     ]
   }
 }

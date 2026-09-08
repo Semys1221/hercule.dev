@@ -30,25 +30,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const lead = await resolveBookingLead({
+    const resolved = await resolveBookingLead({
       leadId: parsed.data.leadId,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
     });
 
-    if (!lead) {
+    if (!resolved) {
       return NextResponse.json({ error: "Lead introuvable" }, { status: 404 });
     }
 
     const client = createSalesCallsClient();
     const salesCall = await upsertSalesCallFromBooking(client, {
-      agenceId: lead.id,
+      agenceId: resolved.lead.id,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
       scheduledAt: parsed.data.startTime ?? null,
     });
 
-    const result = await resetNoShowForLead(salesCall, lead.id);
+    const result = await resetNoShowForLead(salesCall, resolved.lead.id);
 
     if (!result.ok) {
       const message =

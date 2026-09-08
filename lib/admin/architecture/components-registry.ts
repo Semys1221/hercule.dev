@@ -1012,6 +1012,20 @@ const RAW_COMPONENTS: ComponentEntry[] = [
     storage: "supabase",
     status: "built",
   },
+  {
+    id: "modalites-campaign-page",
+    name: "Campagne modalités Hercule",
+    kind: "component",
+    domain: "dashboard_internal",
+    role: "trigger",
+    actor: "admin",
+    route: "/internal/modalites",
+    dataIn: "Calendly upcoming bookings, agence|entreprise leads",
+    dataOut: "booking_email_jobs modalites_ask/cancel, unique confirm URLs",
+    sideEffects: "Resend send, Calendly cancel after 24h if unconfirmed",
+    storage: "supabase",
+    status: "wip",
+  },
 ];
 
 export const COMPONENTS_REGISTRY = componentsRegistrySchema.parse(RAW_COMPONENTS);

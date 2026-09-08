@@ -61,12 +61,45 @@ export async function GET(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Dashboard not found" }, { status: 404 });
     }
 
-    // ── Comptable dashboard (entreprise category) ───────────────────────────
+    // ── Comptable dashboard (comptable table) ───────────────────────────────
+    if (lookup.category === "comptable") {
+      const lead = lookup.lead;
+      const isPaid = await hasSucceededPaymentComptable(client, lead.id, "comptable");
+      const paymentDetails = isPaid
+        ? await getComptablePaymentDetails(client, lead.id, "comptable")
+        : null;
+
+      return NextResponse.json({
+        slug: lead.slug,
+        email: lead.email,
+        firstName: lead.first_name,
+        company: lead.company,
+        statut: lead.statut,
+        productStatut: "NONE",
+        scheduledAt: lead.scheduled_at,
+        dashboardLink: dashboardLinkFor(lead),
+        timeline: [],
+        onboardingCompleted: false,
+        tieDownAccepted: false,
+        form: {},
+        faq: [],
+        isPaid,
+        dashboardMode: isPaid ? "comptable_active" : "comptable_pending",
+        deliveryPlan: null,
+        enterpriseBrief: null,
+        comptable: {
+          offerType: paymentDetails?.offerType ?? null,
+          succeededAt: paymentDetails?.succeededAt ?? null,
+        },
+      });
+    }
+
+    // ── Legacy comptable dashboard (entreprise table, pre-migration rows) ───
     if (lookup.category === "entreprise") {
       const lead = lookup.lead;
-      const isPaid = await hasSucceededPaymentComptable(client, lead.id);
+      const isPaid = await hasSucceededPaymentComptable(client, lead.id, "entreprise");
       const paymentDetails = isPaid
-        ? await getComptablePaymentDetails(client, lead.id)
+        ? await getComptablePaymentDetails(client, lead.id, "entreprise")
         : null;
 
       return NextResponse.json({

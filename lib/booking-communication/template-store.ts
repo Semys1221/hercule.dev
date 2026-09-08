@@ -1,5 +1,6 @@
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import { confirmationAgenceLinkFor } from "@/lib/link-tracking/urls";
+import { modalitesConfirmUrlFor } from "@/lib/modalites-campaign/urls";
 import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
 
 import {
@@ -59,6 +60,8 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "survey_rdv_agence_followup",
   "sold_check_j7",
   "payment_notification_client",
+  "modalites_ask",
+  "modalites_cancel",
 ];
 
 const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
@@ -76,6 +79,8 @@ const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
   "sold_check_j7",
   "payment_notification_client",
   "product_payment_welcome",
+  "modalites_ask",
+  "modalites_cancel",
 ];
 
 function emailTypesForCategory(category: LeadCategory): BookingEmailType[] {
@@ -230,6 +235,8 @@ const SAMPLE_CONFIRM_URL =
   "https://www.hercule.dev/confirm-reservation.html/exemple-slug?email=jean@example.com";
 const SAMPLE_TEMPORARY_URL =
   "https://www.hercule.dev/temporary-reservation.html/exemple-slug?email=jean@example.com";
+const SAMPLE_MODALITES_URL =
+  "https://www.hercule.dev/modalites-hercule.html/exemple-slug?email=jean@example.com";
 
 export function buildBookingEmailVars(params: {
   firstName: string | null;
@@ -291,7 +298,11 @@ export function sampleBookingEmailVars(
   emailType: BookingEmailType,
 ): Record<string, string> {
   const confirmUrl =
-    emailType === "role_seq_24" ? SAMPLE_TEMPORARY_URL : SAMPLE_CONFIRM_URL;
+    emailType === "role_seq_24"
+      ? SAMPLE_TEMPORARY_URL
+      : emailType === "modalites_ask" || emailType === "modalites_cancel"
+        ? SAMPLE_MODALITES_URL
+        : SAMPLE_CONFIRM_URL;
   const vars = buildBookingEmailVars({
     firstName: "Jean",
     scheduledAt: "2026-09-10T09:00:00+02:00",
@@ -315,6 +326,9 @@ export function confirmUrlForLead(
   emailType: BookingEmailType,
   category: LeadCategory = "agence",
 ): string {
+  if (emailType === "modalites_ask" || emailType === "modalites_cancel") {
+    return modalitesConfirmUrlFor(lead);
+  }
   if (emailType === "role_seq_24") {
     return buildTemporaryConfirmUrl(lead.slug, lead.email);
   }

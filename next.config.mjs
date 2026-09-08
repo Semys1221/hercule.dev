@@ -54,6 +54,10 @@ const nextConfig = {
           source: "/dashboard.html/:slug",
           destination: "/dashboard/:slug",
         },
+        {
+          source: "/modalites-hercule.html/:slug",
+          destination: "/modalites-hercule.html?code=:slug",
+        },
       ],
     };
   },

@@ -56,8 +56,19 @@ describe("COMMERCIAL constants", () => {
 });
 
 describe("COMMERCIAL_COMPTABLE constants", () => {
-  it("monthlyPriceCents is 149 900", () => {
-    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(149_900);
+  it("starterPriceCents is 99 900", () => {
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_900);
+  });
+
+  it("starterMissions is 5", () => {
+    expect(COMMERCIAL_COMPTABLE.starterMissions).toBe(5);
+  });
+
+  it("growthMonthlyPriceCents equals monthlyPriceCents alias", () => {
+    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(149_900);
+    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(
+      COMMERCIAL_COMPTABLE.growthMonthlyPriceCents,
+    );
   });
 
   it("pack3TotalCents is 359 800 (1499 × 3 − 20 %, rounded)", () => {
@@ -68,13 +79,23 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.firstRdvDays).toBe(15);
   });
 
-  it("guarantee is 15 RDV in 90 days", () => {
-    expect(COMMERCIAL_COMPTABLE.guaranteeRdvCount).toBe(15);
-    expect(COMMERCIAL_COMPTABLE.guaranteeDays).toBe(90);
+  it("growthMissionsPerMonth is 10", () => {
+    expect(COMMERCIAL_COMPTABLE.growthMissionsPerMonth).toBe(10);
   });
 
-  it("missionsPerMonth is 5", () => {
-    expect(COMMERCIAL_COMPTABLE.missionsPerMonth).toBe(5);
+  it("growth MRR guarantee is 3 000 € after 10 missions", () => {
+    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents).toBe(300_000);
+    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements).toBe(10);
+    expect(
+      COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents /
+        COMMERCIAL_COMPTABLE.mrrPerSignedMissionCents,
+    ).toBe(COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements);
+  });
+
+  it("pack MRR guarantee is 9 000 € after 30 missions", () => {
+    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMrrCents).toBe(900_000);
+    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(30);
+    expect(COMMERCIAL_COMPTABLE.pack3MissionsTotal).toBe(30);
   });
 });
 
@@ -94,6 +115,7 @@ describe("OFFER_TYPES", () => {
 
 describe("OFFER_TYPES_COMPTABLE", () => {
   it("matches Supabase CHECK constraint values (20261010120000_payments_comptable)", () => {
+    expect(OFFER_TYPES_COMPTABLE.starter999_5).toBe("starter_999_5");
     expect(OFFER_TYPES_COMPTABLE.monthly1499).toBe("monthly_1499");
     expect(OFFER_TYPES_COMPTABLE.pack3x1499).toBe("pack_3x1499");
   });
@@ -106,6 +128,10 @@ describe("OFFER_TYPES_COMPTABLE", () => {
   it("pack3x1499 amount matches COMMERCIAL_COMPTABLE.pack3TotalCents", () => {
     // 3 598 € = 359 800 cents (1499 × 3 − 20 %, rounded)
     expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
+  });
+
+  it("starter999_5 amount matches COMMERCIAL_COMPTABLE.starterPriceCents", () => {
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_900);
   });
 });
 

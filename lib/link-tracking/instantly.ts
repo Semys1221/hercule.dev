@@ -36,7 +36,7 @@ async function patchStatutVariable(
     await patchLeadCustomVariables(
       apiKey,
       lead.instantly_lead_id,
-      buildInstantlyCustomVariables(slug, lead.email, statut, category),
+      buildInstantlyCustomVariables(slug, lead.email, statut, _category),
     );
   } catch (err) {
     console.warn(

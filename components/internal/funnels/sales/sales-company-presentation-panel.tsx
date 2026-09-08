@@ -168,8 +168,8 @@ const MODEL_HIGHLIGHTS = [
 
 const COMPTABLE_MODEL_HIGHLIGHTS = [
   {
-    title: "15 RDV",
-    description: "garantis en 90 jours ou continuité sans frais — volume de rendez-vous planifiés, pas de signature.",
+    title: "3 000 €",
+    description: "de MRR garanti en Formule Croissance après 10 missions — lettres de mission signées, pas une promesse de volume seul.",
   },
   {
     title: "Audit partenaire",

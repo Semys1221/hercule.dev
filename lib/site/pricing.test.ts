@@ -12,9 +12,11 @@ assert.match(plans[1].summary ?? "", /vitrine/i);
 assert.match(plans[1].footer ?? "", /souscription/i);
 
 const comptablePlans = getPricingPlans("comptable");
-assert.equal(comptablePlans.length, 2);
-assert.equal(comptablePlans[0].id, "plan-comptable-monthly");
+assert.equal(comptablePlans.length, 3);
+assert.equal(comptablePlans[0].id, "plan-comptable-croissance");
 assert.match(comptablePlans[0].price, /1 499/);
+assert.equal(comptablePlans[2].id, "plan-comptable-starter");
+assert.match(comptablePlans[2].price, /999/);
 
 const document = getPricingDocument("agence");
 assert.ok(document);

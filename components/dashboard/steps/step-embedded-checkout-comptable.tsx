@@ -20,20 +20,28 @@ type OfferOption = {
   label: string;
   price: string;
   description: string;
+  featured?: boolean;
 };
 
 const OFFER_OPTIONS: OfferOption[] = [
   {
+    offerType: OFFER_TYPES_COMPTABLE.starter999_5,
+    label: "Hercule Starter",
+    price: "999 € TTC",
+    description: "5 missions PME · 1er RDV sous 15 j · 0 % commission · pas de garantie MRR",
+  },
+  {
     offerType: OFFER_TYPES_COMPTABLE.monthly1499,
-    label: "Mensuel sans engagement",
+    label: "Formule Croissance",
     price: "1 499 €/mois",
-    description: "5 missions TPE/mois · 1er RDV sous 15 j · 0 % commission",
+    description: "10 missions PME/mois · garantie 3 000 € MRR · recommandé cabinets",
+    featured: true,
   },
   {
     offerType: OFFER_TYPES_COMPTABLE.pack3x1499,
-    label: "Pack 3 mois −20 %",
+    label: "Pack 3 mois Croissance",
     price: "3 598 € TTC",
-    description: "Même rythme + 5 RDV offerts · Garantie volume",
+    description: "10 missions/mois × 3 · −20 % · garantie 9 000 € MRR pack",
   },
 ];
 
@@ -90,7 +98,7 @@ export function StepEmbeddedCheckoutComptable({
       <p className="text-sm text-muted-foreground">
         Sélectionnez votre formule pour finaliser votre accès Hercule Comptable.
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
         {OFFER_OPTIONS.map((offer) => (
           <Card
             key={offer.offerType}
@@ -102,7 +110,14 @@ export function StepEmbeddedCheckoutComptable({
             onClick={() => setSelectedOffer(offer.offerType)}
           >
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">{offer.label}</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {offer.label}
+                {offer.featured ? (
+                  <span className="ml-2 text-[10px] font-normal text-muted-foreground">
+                    Recommandé
+                  </span>
+                ) : null}
+              </CardTitle>
               <p className="text-lg font-semibold">{offer.price}</p>
             </CardHeader>
             <CardContent>

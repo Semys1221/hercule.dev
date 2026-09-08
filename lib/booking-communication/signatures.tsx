@@ -14,6 +14,7 @@ export const HERCULE_LOGO_URL =
 
 export const SIGNATURE_TAGLINES: Record<LeadCategory, string> = {
   agence: "Courtage de projets Web & Tech",
+  comptable: "Missions de tenue comptable · cabinets",
   entreprise: "Missions de tenue comptable · TPE",
 };
 
@@ -93,6 +94,9 @@ function confirmButtonLabel(
   body?: string,
   confirmUrl?: string,
 ): string {
+  if (emailType === "modalites_ask") {
+    return "Confirmer le rendez-vous";
+  }
   return usesConsulterLinkLabel(emailType, confirmUrl ?? "", body)
     ? "Consulter"
     : "Confirmer ma présence";

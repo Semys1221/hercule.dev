@@ -4,7 +4,10 @@ import { findLeadByLink } from "@/lib/link-tracking/supabase";
 import type { LeadLookup } from "@/lib/link-tracking/types";
 
 import { provisionTestMeeting } from "./provision-test-meeting";
-import { isSalesTestSessionSlug } from "./sales-test-session-preset";
+import {
+  isSalesTestSessionSlug,
+  SALES_TEST_SESSION_COMPTABLE_SLUG,
+} from "./sales-test-session-preset";
 
 export async function ensureSalesTestSessionLead(
   client: SupabaseClient,
@@ -20,6 +23,8 @@ export async function ensureSalesTestSessionLead(
     return null;
   }
 
-  await provisionTestMeeting(client);
+  const audience =
+    normalizedSlug === SALES_TEST_SESSION_COMPTABLE_SLUG ? "comptable" : "agence";
+  await provisionTestMeeting(client, audience);
   return findLeadByLink(client, normalizedSlug);
 }

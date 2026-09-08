@@ -28,7 +28,7 @@ Montants = `COMMERCIAL.*` uniquement. Idempotence `stripe_event_id`.
 | `STRIPE_WEBHOOK_SECRET` | Signature webhook `checkout.session.completed` |
 | `NEXT_PUBLIC_APP_URL` | `return_url` après paiement (ex. `https://www.hercule.dev`) |
 
-Comptable (optionnel) : `STRIPE_PRICE_COMPTABLE_MONTHLY`, `STRIPE_PRICE_COMPTABLE_PACK3`.
+Comptable (optionnel) : `STRIPE_PRICE_COMPTABLE_STARTER`, `STRIPE_PRICE_COMPTABLE_MONTHLY`, `STRIPE_PRICE_COMPTABLE_PACK3`.
 
 Configurer sur **Vercel** (Production + Preview) et redéployer après ajout — les env vars ne sont pas rechargées sur un déploiement existant.
 

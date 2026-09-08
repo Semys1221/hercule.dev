@@ -48,9 +48,10 @@ export async function POST(request: Request) {
   const paymentId = session.metadata?.payment_id;
   const agenceId = session.metadata?.agence_id;
   const entrepriseId = session.metadata?.entreprise_id;
+  const comptableId = session.metadata?.comptable_id;
   const stripeEventId = event.id;
 
-  if (!paymentId || (!agenceId && !entrepriseId)) {
+  if (!paymentId || (!agenceId && !entrepriseId && !comptableId)) {
     return NextResponse.json({ ok: true, ignored: "missing_metadata" });
   }
 
@@ -85,7 +86,107 @@ export async function POST(request: Request) {
       throw new Error(paymentError.message);
     }
 
-    // ── Comptable path (entreprise_id) ──────────────────────────────────────
+    // ── Comptable path (comptable_id) ───────────────────────────────────────
+    if (comptableId) {
+      revalidateBookingsCache();
+
+      try {
+        const { data: comptableLead } = await client
+          .from("comptable")
+          .select("id, email, first_name, company, slug")
+          .eq("id", comptableId)
+          .single();
+
+        if (comptableLead) {
+          const emailType = "product_payment_welcome" as const;
+          const idempotencyKey = `payment:welcome:comptable:${comptableId}`;
+          const dashboardLink = buildDashboardUrl(comptableLead.slug);
+
+          const template = await resolveBookingEmailTemplate({
+            category: "comptable",
+            emailType,
+          });
+
+          const rendered = await renderCustomBookingEmail({
+            subject: template.subject,
+            body: template.body,
+            category: "comptable",
+            emailType,
+            firstName: comptableLead.first_name,
+            scheduledAt: null,
+            confirmUrl: "",
+            dashboardLink,
+            company: comptableLead.company,
+            email: comptableLead.email,
+            useHtml: defaultUseHtml(emailType),
+          });
+
+          const now = new Date();
+          const job = await insertJob({
+            category: "comptable",
+            leadId: comptableLead.id,
+            emailType,
+            scheduledFor: now,
+            triggeredBy: "stripe_payment",
+            idempotencyKey,
+            useHtml: defaultUseHtml(emailType),
+          });
+
+          const threaded = await prepareThreadedSend(
+            { email_type: emailType, lead_id: comptableLead.id },
+            rendered,
+          );
+
+          const sendResult = await sendBookingEmail({
+            to: comptableLead.email,
+            subject: threaded.subject,
+            text: rendered.text,
+            html: rendered.html,
+            idempotencyKey,
+            headers: threaded.headers,
+          });
+
+          if (sendResult.ok && job) {
+            await markJobSent(job.id, sendResult.id, {
+              messageId: sendResult.messageId,
+              threadSubject: threaded.threadSubject,
+            });
+          } else if (!sendResult.ok && job) {
+            await markJobFailed(job.id, sendResult.error);
+          }
+
+          const opsEmail = process.env.NOTIFICATION_OPS_EMAIL?.trim();
+          if (opsEmail) {
+            try {
+              const { getResendClient } = await import("@/lib/resend");
+              const { getBookingFromAddress } = await import(
+                "@/lib/booking-communication/templates"
+              );
+              await getResendClient().emails.send({
+                from: getBookingFromAddress(),
+                to: [opsEmail],
+                subject: `Paiement reçu (comptable) — ${comptableLead.company ?? comptableLead.email}`,
+                text: `Paiement confirmé pour ${comptableLead.email} (${comptableLead.company ?? "—"})\nDashboard: ${dashboardLink}\n\nAction requise : provisionner Calendly Pro + Zoom Pro pour ce cabinet.`,
+              });
+            } catch (opsError) {
+              console.error(
+                "[stripe/webhook] ops comptable notification failed:",
+                opsError instanceof Error ? opsError.message : opsError,
+              );
+            }
+          }
+        }
+      } catch (emailError) {
+        console.error(
+          "[stripe/webhook] comptable payment welcome email failed:",
+          emailError instanceof Error ? emailError.message : emailError,
+        );
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── Legacy comptable path (entreprise_id) ───────────────────────────────
     if (entrepriseId) {
       revalidateBookingsCache();
 

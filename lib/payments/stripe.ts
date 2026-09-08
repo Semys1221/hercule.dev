@@ -39,6 +39,11 @@ export function getComptablePack3PriceId(): string {
   return requireEnv(priceId ?? "", "STRIPE_PRICE_COMPTABLE_PACK3");
 }
 
+export function getComptableStarterPriceId(): string {
+  const priceId = process.env.STRIPE_PRICE_COMPTABLE_STARTER?.trim();
+  return requireEnv(priceId ?? "", "STRIPE_PRICE_COMPTABLE_STARTER");
+}
+
 export function getStripeWebhookSecret(): string {
   return requireEnv(getStripeWebhookSecretFromEnv(), "STRIPE_WEBHOOK_SECRET");
 }

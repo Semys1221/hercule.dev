@@ -263,6 +263,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         body: JSON.stringify({
           agenceId: booking.lead_category === "agence" ? booking.lead_id : null,
           entrepriseId: booking.lead_category === "entreprise" ? booking.lead_id : null,
+          comptableId: booking.lead_category === "comptable" ? booking.lead_id : null,
           email: booking.email,
           inviteeUri: booking.invitee_uri,
           scheduledAt: booking.start_time,

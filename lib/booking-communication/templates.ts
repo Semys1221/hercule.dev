@@ -3,6 +3,12 @@ import {
   getConfirmBaseUrl,
   getEntreprisePostBookingBaseUrl,
 } from "@/lib/link-tracking/urls";
+import type { LeadCategory } from "@/lib/link-tracking/types";
+import {
+  modalitesAskBody,
+  modalitesCancelBody,
+  MODALITES_SUBJECT,
+} from "@/lib/modalites-campaign/copy";
 
 import type { BookingEmailType } from "./types";
 
@@ -447,6 +453,14 @@ J'ai le plaisir de vous confirmer que les contrats d'agence présentés lors de 
 
 Un aperçu du déroulé de votre entretien est disponible ici : {{confirmLink}}`,
   },
+  modalites_ask: {
+    subject: MODALITES_SUBJECT,
+    body: modalitesAskBody("agence"),
+  },
+  modalites_cancel: {
+    subject: "",
+    body: modalitesCancelBody(),
+  },
 };
 
 export const ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES: Partial<
@@ -486,13 +500,21 @@ Retrouvez votre espace cabinet :
 
 L'équipe Hercule`,
   },
+  modalites_ask: {
+    subject: MODALITES_SUBJECT,
+    body: modalitesAskBody("entreprise"),
+  },
+  modalites_cancel: {
+    subject: "",
+    body: modalitesCancelBody(),
+  },
 };
 
 export function defaultBookingEmailTemplate(
-  category: "agence" | "entreprise",
+  category: LeadCategory,
   emailType: BookingEmailTemplateType,
 ): Omit<BookingEmailTemplateRecord, "email_type"> {
-  if (category === "entreprise") {
+  if (category === "entreprise" || category === "comptable") {
     const override = ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES[emailType];
     if (override) {
       return override;
@@ -526,7 +548,9 @@ export function buildFirstNameLine(
     emailType.startsWith("match_") ||
     emailType.startsWith("survey_") ||
     emailType === "sold_check_j7" ||
-    emailType === "payment_notification_client"
+    emailType === "payment_notification_client" ||
+    emailType === "modalites_ask" ||
+    emailType === "modalites_cancel"
   ) {
     return trimmed ? `Bonjour ${trimmed},` : "Bonjour,";
   }

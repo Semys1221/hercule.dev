@@ -81,6 +81,7 @@ export function isStarterLikeOfferType(offerType: string | null | undefined): bo
  * Must match CHECK constraint in Supabase migrations (20261010120000_payments_comptable).
  */
 export const OFFER_TYPES_COMPTABLE = {
+  starter999_5: "starter_999_5",
   monthly1499: "monthly_1499",
   pack3x1499: "pack_3x1499",
 } as const;
@@ -108,26 +109,34 @@ export const FORBIDDEN_COPY = [
 
 /**
  * Cabinets d'expertise comptable — separate commercial terms.
- * Stripe offer types: OFFER_TYPES_COMPTABLE (monthly_1499 / pack_3x1499).
+ * Stripe offer types: OFFER_TYPES_COMPTABLE (starter_999_5 / monthly_1499 / pack_3x1499).
  */
 export const COMMERCIAL_COMPTABLE = {
-  /** Mensuel sans engagement — 1 499 €/mois */
+  /** Hercule Starter — 999 € one-shot, 5 missions, aucune garantie MRR */
+  starterPriceCents: 99_900,
+  starterMissions: 5,
+
+  /** Formule Croissance — mensuel sans engagement — 1 499 €/mois, 10 missions */
+  growthMonthlyPriceCents: 149_900,
+  /** Alias — même offre que growthMonthlyPriceCents (offer type monthly_1499) */
   monthlyPriceCents: 149_900,
+  growthMissionsPerMonth: 10,
+  growthGuaranteeMrrCents: 300_000,
+  growthGuaranteeMaxReplacements: 10,
 
-  /** Pack 3 mois — 1 499 € × 3 − 20 %, arrondi */
+  /** Pack 3 mois Croissance — 1 499 € × 3 − 20 %, arrondi */
   pack3TotalCents: 359_800,
-  pack3BonusRdv: 5,
+  pack3MissionsTotal: 30,
+  pack3GuaranteeMrrCents: 900_000,
+  pack3GuaranteeMaxReplacements: 30,
 
-  /** Rythme opérationnel */
-  missionsPerMonth: 5,
   billingCycleDays: 30,
 
   /** SLA livraison */
   firstRdvDays: 15,
 
-  /** Garantie volume RDV (pas de garantie de signature) */
-  guaranteeRdvCount: 15,
-  guaranteeDays: 90,
+  /** MRR par lettre de mission signée (3 600 € honoraires annuels / 12) */
+  mrrPerSignedMissionCents: 30_000,
 
   /** Vitrine marketing — honoraires annuels typiques d'une mission de tenue */
   valueShowcaseAnnualHonorairesCents: 360_000,

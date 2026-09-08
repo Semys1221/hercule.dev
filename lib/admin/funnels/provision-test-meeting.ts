@@ -9,7 +9,7 @@ import {
 import type { CalendlyBookingRow } from "@/lib/calendly/list-bookings";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
-import { buildDashboardUrl, buildEntrepriseLeadUrls, buildLeadUrls } from "@/lib/link-tracking/urls";
+import { buildDashboardUrl, buildComptableLeadUrls, buildEntrepriseLeadUrls, buildLeadUrls } from "@/lib/link-tracking/urls";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import {
   createSalesCallsClient,
@@ -41,9 +41,11 @@ export async function provisionTestMeeting(
   const preset = getSalesTestSessionPreset(audience);
   const table = preset.leadCategory;
   const urls =
-    table === "entreprise"
-      ? buildEntrepriseLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
-      : buildLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL);
+    table === "comptable"
+      ? buildComptableLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
+      : table === "entreprise"
+        ? buildEntrepriseLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
+        : buildLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL);
   const scheduledAt = scheduledAtOneHourFromNow();
 
   const { data: existingLead, error: existingError } = await client
@@ -65,6 +67,24 @@ export async function provisionTestMeeting(
       .eq("agence_id", leadId);
     if (paymentsError) {
       throw new Error(`payments reset failed: ${paymentsError.message}`);
+    }
+  }
+
+  if (leadId && table === "comptable") {
+    const { error: paymentsError } = await client
+      .from("payments")
+      .delete()
+      .eq("comptable_id", leadId);
+    if (paymentsError) {
+      throw new Error(`payments reset failed: ${paymentsError.message}`);
+    }
+
+    const { error: salesCallsError } = await client
+      .from("sales_calls")
+      .delete()
+      .eq("comptable_id", leadId);
+    if (salesCallsError) {
+      throw new Error(`sales_calls reset failed: ${salesCallsError.message}`);
     }
   }
 
@@ -110,7 +130,7 @@ export async function provisionTestMeeting(
 
   const { data: upserted, error: upsertError } = await client
     .from(table)
-    .upsert(row, { onConflict: "slug" })
+    .upsert(row as Record<string, unknown>, { onConflict: "slug" })
     .select("*")
     .single();
 
@@ -124,6 +144,7 @@ export async function provisionTestMeeting(
   const salesCall = await upsertSalesCallFromBooking(salesClient, {
     agenceId: table === "agence" ? leadId : null,
     entrepriseId: table === "entreprise" ? leadId : null,
+    comptableId: table === "comptable" ? leadId : null,
     email: SALES_TEST_SESSION_EMAIL,
     inviteeUri: preset.inviteeUri,
     scheduledAt,

@@ -52,6 +52,9 @@ export const REMINDER_EMAIL_LABELS: Record<BookingEmailType, string> = {
   survey_rdv_agence_followup: "survey_rdv_agence_followup",
   sold_check_j7: "sold_check_j7",
   payment_notification_client: "payment_notification_client",
+  modalites_ask: "Modalités Hercule — confirmation",
+  modalites_cancel: "Modalités Hercule — rappel H-3",
+  modalites_enforce_cancel: "Modalités Hercule — annulation H-1",
 };
 
 export type ReminderLineStatus =

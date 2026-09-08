@@ -12,13 +12,15 @@ const postSchema = z
   .object({
     agenceId: z.string().uuid().nullable().optional(),
     entrepriseId: z.string().uuid().nullable().optional(),
+    comptableId: z.string().uuid().nullable().optional(),
     email: z.string().email(),
     inviteeUri: z.string().min(1),
     scheduledAt: z.string().datetime().nullable().optional(),
   })
   .refine(
-    (data) => Boolean(data.agenceId) || Boolean(data.entrepriseId),
-    { message: "agenceId or entrepriseId is required" },
+    (data) =>
+      Boolean(data.agenceId) || Boolean(data.entrepriseId) || Boolean(data.comptableId),
+    { message: "agenceId, entrepriseId, or comptableId is required" },
   );
 
 export async function POST(request: Request) {
@@ -39,6 +41,7 @@ export async function POST(request: Request) {
     const salesCall = await upsertSalesCallFromBooking(client, {
       agenceId: parsed.data.agenceId ?? null,
       entrepriseId: parsed.data.entrepriseId ?? null,
+      comptableId: parsed.data.comptableId ?? null,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
       scheduledAt: parsed.data.scheduledAt ?? null,

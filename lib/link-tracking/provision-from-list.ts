@@ -14,6 +14,7 @@ import {
 import { allocateSlugs, loadSlugSet } from "@/lib/link-tracking/slug";
 import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
 import {
+  buildComptableLeadUrls,
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
   buildInstantlyCustomVariables,
@@ -64,7 +65,7 @@ function readConfig(): {
     process.env.LINK_PROVISIONING_CAMPAIGN_ID?.trim() || DEFAULT_CAMPAIGN_ID;
   const categoryRaw =
     process.env.LINK_PROVISIONING_CATEGORY?.trim() || DEFAULT_CATEGORY;
-  if (categoryRaw !== "agence" && categoryRaw !== "entreprise") {
+  if (categoryRaw !== "agence" && categoryRaw !== "comptable" && categoryRaw !== "entreprise") {
     throw new Error(`Invalid LINK_PROVISIONING_CATEGORY: ${categoryRaw}`);
   }
   return { listId, campaignId, category: categoryRaw };
@@ -110,6 +111,9 @@ function urlFieldsForCategory(
   slug: string,
   email: string,
 ): Record<string, string> {
+  if (category === "comptable") {
+    return buildComptableLeadUrls(slug, email);
+  }
   return category === "entreprise"
     ? buildEntrepriseLeadUrls(slug, email)
     : buildLeadUrls(slug, email);
@@ -125,6 +129,11 @@ function needsProvision(
   if (existing.category !== category) return false;
   const row = existing.lead;
   const slug = leadSlug(row);
+  if (category === "comptable") {
+    const reservationLink = row.reservation_comptable_link?.trim();
+    const confirmLink = row.confirmation_comptable_link?.trim();
+    return !slug || !reservationLink || !confirmLink;
+  }
   const entrepriseLink = row.reservation_entreprise_link?.trim();
   const confirmLink = row.confirmation_agence_link?.trim();
   const postBookingLink =

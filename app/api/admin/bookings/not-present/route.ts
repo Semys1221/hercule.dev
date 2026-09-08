@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { renderNotPresentEmail } from "@/lib/admin/bookings/not-present-email";
 import {
   NOT_PRESENT_SUBJECT,
   resolveNotPresentResendMail,
@@ -11,7 +12,7 @@ import { sendBookingEmail } from "@/lib/booking-communication/send";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 import { getInstantlyApiKey, replyToEmail } from "@/lib/instantly-bypass/client";
 import { resolveThreadForReply } from "@/lib/instantly-bypass/thread-resolver";
-import type { LinkTrackingLead } from "@/lib/link-tracking/types";
+import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
 
 const bodySchema = z.object({
   inviteeUri: z.string().min(1),
@@ -34,20 +35,6 @@ type ChannelResult = {
   error?: string;
 };
 
-function formatParisTime(iso: string | null | undefined): string {
-  if (!iso?.trim()) {
-    return "l'heure prévue";
-  }
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-  return new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    timeStyle: "short",
-  }).format(date);
-}
-
 function resolveFirstName(lead: LinkTrackingLead | null, email: string): string {
   const fromLead = lead?.first_name?.trim();
   if (fromLead) {
@@ -57,22 +44,9 @@ function resolveFirstName(lead: LinkTrackingLead | null, email: string): string 
   return localPart || "Bonjour";
 }
 
-function buildNotPresentEmail(firstName: string, startTime: string | null | undefined) {
-  const greeting = firstName === "Bonjour" ? "Bonjour" : `Bonjour ${firstName}`;
-  const heure = formatParisTime(startTime);
-  const text = `${greeting},
-
-Votre rendez-vous avec Hercule était prévu à ${heure}.
-
-Êtes-vous toujours disponible pour notre échange ?`;
-  const html = `<p>${greeting},</p>
-<p>Votre rendez-vous avec Hercule était prévu à ${heure}.</p>
-<p>Êtes-vous toujours disponible pour notre échange ?</p>`;
-  return { text, html };
-}
-
 async function sendResendNotPresent(params: {
   lead: LinkTrackingLead;
+  category: LeadCategory;
   email: string;
   startTime: string | null | undefined;
   inviteeUri: string;
@@ -92,10 +66,11 @@ async function sendResendNotPresent(params: {
     );
   }
 
-  const { text, html } = buildNotPresentEmail(
-    resolveFirstName(params.lead, params.email),
-    params.startTime,
-  );
+  const { text, html } = await renderNotPresentEmail({
+    firstName: resolveFirstName(params.lead, params.email),
+    startTime: params.startTime,
+    category: params.category,
+  });
 
   const result = await sendBookingEmail({
     to: params.email,
@@ -116,6 +91,7 @@ async function sendResendNotPresent(params: {
 
 async function sendInstantlyNotPresent(params: {
   lead: LinkTrackingLead;
+  category: LeadCategory;
   email: string;
   startTime: string | null | undefined;
 }): Promise<ChannelStatus> {
@@ -138,10 +114,11 @@ async function sendInstantlyNotPresent(params: {
     return "error";
   }
 
-  const { html } = buildNotPresentEmail(
-    resolveFirstName(params.lead, params.email),
-    params.startTime,
-  );
+  const { html } = await renderNotPresentEmail({
+    firstName: resolveFirstName(params.lead, params.email),
+    startTime: params.startTime,
+    category: params.category,
+  });
   const subject = thread.subject?.trim() || NOT_PRESENT_SUBJECT;
 
   try {
@@ -175,25 +152,27 @@ export async function POST(request: Request) {
   }
 
   try {
-    const lead = await resolveBookingLead({
+    const resolved = await resolveBookingLead({
       leadId: parsed.data.leadId,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
     });
 
-    if (!lead) {
+    if (!resolved) {
       return NextResponse.json({ error: "Lead introuvable" }, { status: 404 });
     }
 
     const [resendResult, instantlyResult] = await Promise.allSettled([
       sendResendNotPresent({
-        lead,
+        lead: resolved.lead,
+        category: resolved.category,
         email: parsed.data.email,
         startTime: parsed.data.startTime,
         inviteeUri: parsed.data.inviteeUri,
       }),
       sendInstantlyNotPresent({
-        lead,
+        lead: resolved.lead,
+        category: resolved.category,
         email: parsed.data.email,
         startTime: parsed.data.startTime,
       }),

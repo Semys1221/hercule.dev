@@ -178,6 +178,8 @@ const FOLLOW_UP_EMAIL_TYPES: BookingEmailType[] = [
   "h24_relance",
   "h20_cancel",
   "role_seq_24",
+  "modalites_cancel",
+  "modalites_enforce_cancel",
 ];
 
 export async function cancelPendingJobsForLead(

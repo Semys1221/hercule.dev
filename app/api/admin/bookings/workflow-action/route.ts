@@ -49,19 +49,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const lead = await resolveBookingLead({
+    const resolved = await resolveBookingLead({
       leadId: parsed.data.leadId,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
     });
 
-    if (!lead) {
+    if (!resolved) {
       return NextResponse.json({ error: "Lead introuvable" }, { status: 404 });
     }
 
     const client = createSalesCallsClient();
     let salesCall = await upsertSalesCallFromBooking(client, {
-      agenceId: lead.id,
+      agenceId: resolved.lead.id,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
       scheduledAt: parsed.data.startTime ?? null,
@@ -80,7 +80,11 @@ export async function POST(request: Request) {
       salesCall = await updateSalesCallStatus(client, salesCall.id, parsed.data.status);
     }
 
-    const sequence = await startSequenceForStatus(salesCall, lead.id, parsed.data.status);
+    const sequence = await startSequenceForStatus(
+      salesCall,
+      resolved.lead.id,
+      parsed.data.status,
+    );
 
     revalidateBookingsCache();
 

@@ -3,7 +3,10 @@ import type { LeadCategory } from "@/lib/link-tracking/types";
 
 /** Maps funnel session audience to CRM / Calendly lead category. */
 export function salesAudienceToLeadCategory(audience: Audience): LeadCategory {
-  if (audience === "comptable" || audience === "entreprise") {
+  if (audience === "comptable") {
+    return "comptable";
+  }
+  if (audience === "entreprise") {
     return "entreprise";
   }
   return "agence";

@@ -12,12 +12,14 @@ import {
   getAppBaseUrl,
   getComptableMonthlyPriceId,
   getComptablePack3PriceId,
+  getComptableStarterPriceId,
   getStripeClient,
 } from "@/lib/payments/stripe";
 
 const bodySchema = z.object({
   slug: z.string().min(1),
   offerType: z.enum([
+    OFFER_TYPES_COMPTABLE.starter999_5,
     OFFER_TYPES_COMPTABLE.monthly1499,
     OFFER_TYPES_COMPTABLE.pack3x1499,
   ]),
@@ -27,6 +29,9 @@ function priceIdForOffer(offerType: OfferTypeComptable): string {
   if (offerType === OFFER_TYPES_COMPTABLE.pack3x1499) {
     return getComptablePack3PriceId();
   }
+  if (offerType === OFFER_TYPES_COMPTABLE.starter999_5) {
+    return getComptableStarterPriceId();
+  }
   return getComptableMonthlyPriceId();
 }
 
@@ -34,7 +39,10 @@ function amountCentsForOffer(offerType: OfferTypeComptable): number {
   if (offerType === OFFER_TYPES_COMPTABLE.pack3x1499) {
     return COMMERCIAL_COMPTABLE.pack3TotalCents;
   }
-  return COMMERCIAL_COMPTABLE.monthlyPriceCents;
+  if (offerType === OFFER_TYPES_COMPTABLE.starter999_5) {
+    return COMMERCIAL_COMPTABLE.starterPriceCents;
+  }
+  return COMMERCIAL_COMPTABLE.growthMonthlyPriceCents;
 }
 
 export async function POST(request: Request) {
@@ -56,7 +64,7 @@ export async function POST(request: Request) {
     const client = createLinkTrackingClient();
 
     const { data: lead, error: leadError } = await client
-      .from("entreprise")
+      .from("comptable")
       .select("id, email, slug")
       .eq("slug", slug.trim())
       .maybeSingle();
@@ -76,7 +84,7 @@ export async function POST(request: Request) {
     const { data: paymentRow, error: paymentError } = await client
       .from("payments")
       .insert({
-        entreprise_id: lead.id,
+        comptable_id: lead.id,
         offer_type: offerType,
         amount_cents: amountCents,
         status: "pending",
@@ -101,7 +109,7 @@ export async function POST(request: Request) {
         },
       },
       metadata: {
-        entreprise_id: lead.id,
+        comptable_id: lead.id,
         payment_id: paymentRow.id,
         slug: lead.slug,
         offer_type: offerType,

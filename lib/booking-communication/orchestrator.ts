@@ -6,6 +6,7 @@ import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import {
   cancelScheduledEvent,
   extractEventUuidFromPayload,
+  parseEventAndInviteeUuids,
 } from "@/lib/calendly";
 import { syncLeadStatutToInstantly } from "@/lib/link-tracking/instantly";
 
@@ -28,6 +29,7 @@ import { meetingActionLinksForRender, retryUnsyncedMeetingLinks } from "./meetin
 import { buildTemporaryConfirmUrl, buildEntreprisePostBookingUrl } from "./templates";
 import { defaultUseHtml } from "./signatures";
 import { confirmationAgenceLinkFor } from "@/lib/link-tracking/urls";
+import { modalitesConfirmUrlFor } from "@/lib/modalites-campaign/urls";
 import { prepareThreadedSend } from "./threaded-send";
 import { bypassesSendWindow, isWithinSendWindow, nextSendSlot } from "./send-window";
 import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
@@ -38,6 +40,8 @@ const FOLLOW_UP_TYPES: BookingEmailType[] = [
   "h24_relance",
   "h20_cancel",
   "role_seq_24",
+  "modalites_cancel",
+  "modalites_enforce_cancel",
 ];
 
 const MAIN_AGENCE_TYPES: BookingEmailType[] = [
@@ -309,32 +313,27 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
     return processH20CancelJob(job, lead);
   }
 
+  if (job.email_type === "modalites_enforce_cancel") {
+    return processModalitesEnforceCancelJob(job, lead);
+  }
+
   const rendered = await renderJobEmail(job, lead);
   return sendAndMarkJob(job, lead, rendered);
 }
 
-async function processH20CancelJob(
+async function executeCalendlyAutoCancel(
   job: BookingEmailJob,
   lead: LinkTrackingLead,
-): Promise<boolean> {
-  if (lead.statut === "CONFIRMED" || lead.statut === "CANCELLED") {
-    await cancelJob(job.id);
-    return true;
-  }
-
-  const rendered = await renderJobEmail(job, lead);
-  const sent = await sendAndMarkJob(job, lead, rendered);
-  if (!sent) {
-    return false;
-  }
-
-  const eventUuid = extractEventUuidFromPayload(lead.calendly_payload);
+  reason: string,
+): Promise<void> {
+  const eventUuid =
+    extractEventUuidFromPayload(lead.calendly_payload) ??
+    (lead.calendly_invitee_uri
+      ? parseEventAndInviteeUuids(lead.calendly_invitee_uri)?.eventUuid ?? null
+      : null);
   if (eventUuid) {
     try {
-      await cancelScheduledEvent(
-        eventUuid,
-        "Annulation automatique — absence de confirmation de présence.",
-      );
+      await cancelScheduledEvent(eventUuid, reason);
     } catch (err) {
       console.error("[booking-communication] Calendly cancel failed:", err);
     }
@@ -358,6 +357,46 @@ async function processH20CancelJob(
   } catch (err) {
     console.error("[booking-communication] Instantly cancel sync failed:", err);
   }
+}
+
+async function processModalitesEnforceCancelJob(
+  job: BookingEmailJob,
+  lead: LinkTrackingLead,
+): Promise<boolean> {
+  if (lead.statut === "CONFIRMED" || lead.statut === "CANCELLED") {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  await executeCalendlyAutoCancel(
+    job,
+    lead,
+    "Annulation automatique — absence de confirmation des modalités Hercule.",
+  );
+  await markJobSent(job.id, `modalites-enforce/${job.id}`);
+  return true;
+}
+
+async function processH20CancelJob(
+  job: BookingEmailJob,
+  lead: LinkTrackingLead,
+): Promise<boolean> {
+  if (lead.statut === "CONFIRMED" || lead.statut === "CANCELLED") {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  const rendered = await renderJobEmail(job, lead);
+  const sent = await sendAndMarkJob(job, lead, rendered);
+  if (!sent) {
+    return false;
+  }
+
+  await executeCalendlyAutoCancel(
+    job,
+    lead,
+    "Annulation automatique — absence de confirmation de présence.",
+  );
 
   return true;
 }
@@ -393,6 +432,9 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
 }
 
 function confirmUrlForJob(job: BookingEmailJob, lead: LinkTrackingLead): string {
+  if (job.email_type === "modalites_ask" || job.email_type === "modalites_cancel") {
+    return modalitesConfirmUrlFor(lead);
+  }
   if (job.email_type === "role_seq_24") {
     return buildTemporaryConfirmUrl(lead.slug, lead.email);
   }

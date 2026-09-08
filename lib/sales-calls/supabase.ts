@@ -11,6 +11,7 @@ export function createSalesCallsClient(): SupabaseClient {
 export type UpsertSalesCallParams = {
   agenceId?: string | null;
   entrepriseId?: string | null;
+  comptableId?: string | null;
   email: string;
   inviteeUri: string;
   scheduledAt?: string | null;
@@ -40,6 +41,9 @@ export async function upsertSalesCallFromBooking(
     if (params.entrepriseId && !existing.entreprise_id) {
       patch.entreprise_id = params.entrepriseId;
     }
+    if (params.comptableId && !existing.comptable_id) {
+      patch.comptable_id = params.comptableId;
+    }
     if (params.scheduledAt) {
       patch.scheduled_at = params.scheduledAt;
     }
@@ -65,6 +69,7 @@ export async function upsertSalesCallFromBooking(
     .insert({
       agence_id: params.agenceId ?? null,
       entreprise_id: params.entrepriseId ?? null,
+      comptable_id: params.comptableId ?? null,
       email: normalizedEmail,
       calendly_invitee_uri: params.inviteeUri,
       scheduled_at: params.scheduledAt ?? null,

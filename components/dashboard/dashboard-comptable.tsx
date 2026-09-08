@@ -17,8 +17,9 @@ type DashboardComptableProps = {
 };
 
 function offerLabel(offerType: string | null): string {
-  if (offerType === "pack_3x1499") return "Pack 3 mois — 3 598 € TTC";
-  return "Mensuel — 1 499 €/mois";
+  if (offerType === "starter_999_5") return "Hercule Starter — 999 € TTC";
+  if (offerType === "pack_3x1499") return "Pack 3 mois Croissance — 3 598 € TTC";
+  return "Formule Croissance — 1 499 €/mois";
 }
 
 export function DashboardComptable({

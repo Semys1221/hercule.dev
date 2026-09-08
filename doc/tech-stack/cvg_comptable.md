@@ -7,7 +7,7 @@ depends_on: constants-commercial.md
 decisions: CVG-01 CPY-01 CPY-04 BIZ-10 CAP-01
 vertical: comptable
 do_not:
-  - Réintroduire 898 €, 4 jours de rétractation, garantie MRR, 2 500 € vitrine
+  - Réintroduire 898 €, 4 jours de rétractation, 2 500 € vitrine
 ```
 
 > **Version :** 2026-09-08  
@@ -49,6 +49,7 @@ Elles prévalent sur tout document contradictoire du Client, sauf dérogation ex
 | **Attribution consommée** | Attribution dont le RDV a été planifié dans l'agenda du Client. En cas de no-show (article 10.1), l'Attribution est recréditée. |
 | **Demande TPE qualifiée** | Besoin d'un indépendant ou dirigeant de TPE validé par Hercule : reprise de comptabilité, échéances fiscales, déclarations, obligations administratives. |
 | **Mission** | Contrat annuel de tenue comptable et fiscale que le cabinet peut proposer au dirigeant rencontré via Hercule. |
+| **MRR** | Revenu récurrent mensuel généré par le Client auprès du dirigeant rencontré via Hercule, au titre d'une lettre de mission signée post-RDV (honoraires mensualisés). |
 | **RDV planifié** | Créneau réservé dans l'agenda du Client avec le dirigeant ou mandataire habilité, confirmé via l'outil Calendly provisionné par Hercule. |
 | **RDV honoré** | RDV planifié au cours duquel le dirigeant est **effectivement présent** en visioconférence pendant au moins **15 minutes**. |
 | **No-show** | Absence du prospect qualifié au RDV planifié, malgré relance H-24. |
@@ -92,30 +93,39 @@ Les prix sont indiqués en **euros TTC**. Franchise en base de TVA (article 293 
 
 Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no-show recrédite l'Attribution conformément à l'article 10.1.
 
-### 5.1 Offre mensuelle sans engagement
+### 5.1 Hercule Starter (offre d'entrée)
+
+| Élément | Détail |
+|---------|--------|
+| **Prix** | **999 € TTC** (paiement unique) |
+| **Contenu** | **5 missions PME** qualifiées |
+| **Premier RDV** | Sous **15 jours** après Activation |
+| **Commission Hercule** | **0 %** sur les honoraires signés |
+| **Garantie MRR** | **Aucune** — uniquement garantie no-show (article 10.1) |
+
+### 5.2 Formule Croissance (mensuelle sans engagement)
 
 | Élément | Détail |
 |---------|--------|
 | **Prix** | **1 499 € / mois** |
-| **Contenu** | Service actif de mise en relation ; **5 missions / mois** ; cycle **30 jours** |
+| **Contenu** | Service actif de mise en relation ; **10 missions PME / mois** ; cycle **30 jours** |
 | **Premier RDV** | Sous **15 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Engagement** | Aucun. Résiliation : article 13 |
 
-**Garantie volume :** **15 rendez-vous planifiés en 90 jours** à compter de l'Activation, ou **continuité du service sans frais supplémentaires** jusqu'à atteinte de ce volume, sous réserve du respect des obligations du Client (article 11). Cette garantie ne couvre **pas** la signature d'un mandat par le dirigeant rencontré.
+**Garantie MRR :** si, à l'issue des **10 Attributions** consommées du cycle en cours, le **MRR cumulé** généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **10 Attributions de remplacement**, sous réserve des obligations du Client (article 11). Cette garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
 
-### 5.2 Pack 3 mois
+### 5.3 Pack 3 mois Croissance
 
 | Élément | Détail |
 |---------|--------|
 | **Prix** | **3 598 € TTC** (payable en une fois) |
-| **Contenu** | **3 mois** de service actif au rythme de l'article 5.1 |
-| **Bonus** | **5 RDV offerts** en sus du volume contractuel |
+| **Contenu** | **3 mois** de service actif au rythme de l'article 5.2 (**10 missions / mois**) |
 | **Commission Hercule** | **0 %** |
 
-Même garantie volume (15 RDV / 90 jours) et exclusions que l'article 5.1.
+**Garantie MRR pack :** si, à l'issue des **30 Attributions** du pack, le **MRR cumulé** est inférieur à **9 000 €**, Hercule attribue jusqu'à **30 Attributions de remplacement**, sous les mêmes exclusions que l'article 5.2.
 
-### 5.3 Offres non commercialisées
+### 5.4 Offres non commercialisées
 
 Ne font pas l'objet des présentes : offres agence web (1 489 €, 2 500 € vitrine, etc.) décrites dans [cvg_master.md](./cvg_master.md).
 
@@ -151,8 +161,10 @@ Le Client est un **professionnel**. Aucun délai de rétractation de 4 jours n'e
 |-------|-------|
 | Accès onboarding après paiement | **48 heures** |
 | Premier RDV planifié | **≤ 15 jours** |
-| Rythme en service actif | **5 missions / mois** (cycle 30 jours) |
-| Garantie volume | **15 RDV en 90 jours** ou continuité sans frais |
+| Rythme Starter | **5 missions** (paiement unique) |
+| Rythme Formule Croissance | **10 missions PME / mois** (cycle 30 jours) |
+| Garantie MRR Croissance | **3 000 €** cumulés après 10 missions, ou remplacements |
+| Garantie MRR pack | **9 000 €** cumulés après 30 missions, ou remplacements |
 
 ---
 
@@ -162,11 +174,19 @@ Le Client est un **professionnel**. Aucun délai de rétractation de 4 jours n'e
 
 Prospect absent malgré relance H-24 : Attribution recréditée ; remplacement sous **14 jours ouvrés**. Signalement no-show sous **48 h**.
 
-### 10.2 Garantie volume (15 RDV / 90 jours)
+### 10.2 Garantie MRR (Formule Croissance et Pack)
 
-Si, à l'issue de **90 jours** de service actif, moins de **15 RDV** ont été planifiés du fait de Hercule (hors manquements Client), Hercule prolonge le service **sans frais supplémentaires** jusqu'à atteinte de 15 RDV planifiés.
+**Formule Croissance :** si, à l'issue des 10 Attributions consommées du cycle en cours, le MRR cumulé généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **10 Attributions de remplacement**.
 
-**Exclusions :** absence Client, refus de recevoir une Demande pour motif autre que non-qualification, informations erronées à l'onboarding, force majeure.
+**Pack 3 mois Croissance :** si, à l'issue des 30 Attributions du pack, le MRR cumulé est inférieur à **9 000 €**, Hercule attribue jusqu'à **30 Attributions de remplacement**.
+
+Conditions communes :
+
+- le Client a honoré les RDV et respecté ses obligations (article 11) ;
+- les lettres de mission signées sont déclarées à Hercule sur demande ;
+- la garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
+
+**Hercule Starter :** aucune garantie MRR.
 
 ### 10.3 Absence de garantie de signature
 
@@ -223,4 +243,5 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
-| 2026-09-08 | 8 sept. 2026 | Création CGV vertical comptable — 1 499 €/mois, pack 3 598 €, 15 RDV/90 j, provisionnement Calendly/Zoom |
+| 2026-09-08 | 8 sept. 2026 | Grille 3 offres — Starter 999 €, Croissance 1 499 € (10 missions), pack 3 598 €, garantie MRR |
+| 2026-09-08 | 8 sept. 2026 | Création CGV vertical comptable — provisionnement Calendly/Zoom |

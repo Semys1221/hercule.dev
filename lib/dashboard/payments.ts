@@ -18,14 +18,21 @@ export async function hasSucceededPayment(
   return (data?.length ?? 0) > 0;
 }
 
+export type ComptablePaymentOwner = "comptable" | "entreprise";
+
+function paymentOwnerColumn(owner: ComptablePaymentOwner): "comptable_id" | "entreprise_id" {
+  return owner === "comptable" ? "comptable_id" : "entreprise_id";
+}
+
 export async function hasSucceededPaymentComptable(
   client: SupabaseClient,
-  entrepriseId: string,
+  leadId: string,
+  owner: ComptablePaymentOwner = "comptable",
 ): Promise<boolean> {
   const { data, error } = await client
     .from("payments")
     .select("id, offer_type")
-    .eq("entreprise_id", entrepriseId)
+    .eq(paymentOwnerColumn(owner), leadId)
     .eq("status", "succeeded")
     .limit(1);
 
@@ -38,12 +45,13 @@ export async function hasSucceededPaymentComptable(
 
 export async function getComptablePaymentDetails(
   client: SupabaseClient,
-  entrepriseId: string,
+  leadId: string,
+  owner: ComptablePaymentOwner = "comptable",
 ): Promise<{ offerType: string; succeededAt: string } | null> {
   const { data, error } = await client
     .from("payments")
     .select("offer_type, succeeded_at")
-    .eq("entreprise_id", entrepriseId)
+    .eq(paymentOwnerColumn(owner), leadId)
     .eq("status", "succeeded")
     .order("succeeded_at", { ascending: false })
     .limit(1)

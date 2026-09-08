@@ -29,6 +29,8 @@ export const SEQUENCE_THREAD_FAMILIES: readonly BookingEmailType[][] = [
   ["survey_rdv_agence", "survey_rdv_agence_followup"],
   ["sold_check_j7"],
   ["payment_notification_client"],
+  ["modalites_ask", "modalites_cancel"],
+  ["modalites_enforce_cancel"],
 ];
 
 const familyByType = new Map<BookingEmailType, BookingEmailType[]>();

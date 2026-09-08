@@ -38,6 +38,9 @@ export const BOOKING_EMAIL_TYPE_VALUES = [
   "survey_rdv_agence_followup",
   "sold_check_j7",
   "payment_notification_client",
+  "modalites_ask",
+  "modalites_cancel",
+  "modalites_enforce_cancel",
 ] as const;
 
 export type BookingEmailType = (typeof BOOKING_EMAIL_TYPE_VALUES)[number];
@@ -63,6 +66,7 @@ export const SEQUENCE_TRIGGERED_BY_VALUES = [
   "stripe_payment_notification",
   "deliverance_admin",
   "admin_complete_appt",
+  "admin_modalites",
 ] as const;
 
 export type SequenceTriggeredBy = (typeof SEQUENCE_TRIGGERED_BY_VALUES)[number];

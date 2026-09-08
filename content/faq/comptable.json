@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-08T00:00:00.000Z",
+  "updatedAt": "2026-09-08T12:00:00.000Z",
   "entries": [
     {
       "id": "faq-cp-001",
@@ -18,7 +18,7 @@
     {
       "id": "faq-cp-003",
       "question": "Combien coûte Hercule ?",
-      "answer": "Offre mensuelle : 1 499 €/mois — une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement. 0 % de commission sur vos honoraires. Pack 3 mois : 3 598 € TTC (−20 %) + 5 RDV offerts. Garantie volume : 15 rendez-vous en 90 jours ou continuité sans frais. Pas de garantie de signature.",
+      "answer": "Hercule Starter : 999 € TTC one-shot — 5 missions PME, aucune garantie MRR. Formule Croissance : 1 499 €/mois — 10 missions PME par mois, garantie 3 000 € de MRR cumulé ou 10 missions de remplacement. Pack 3 mois Croissance : 3 598 € TTC (−20 %) — 10 missions/mois sur 3 mois, garantie 9 000 € de MRR cumulé ou jusqu'à 30 remplacements. 0 % de commission sur vos honoraires.",
       "cvgLink": true
     },
     {
@@ -30,7 +30,7 @@
     {
       "id": "faq-cp-005",
       "question": "Y a-t-il une garantie de signature ?",
-      "answer": "Non. Hercule garantit le volume de rendez-vous planifiés (15 en 90 jours ou continuité sans frais), pas la conclusion d'un mandat avec le dirigeant rencontré.",
+      "answer": "La Formule Croissance et le Pack 3 mois incluent une garantie MRR : si le revenu récurrent mensuel cumulé issu des lettres de mission signées est inférieur au seuil contractuel (3 000 € ou 9 000 € selon la formule), Hercule attribue des missions de remplacement. Le Hercule Starter n'inclut pas de garantie MRR. Aucune formule ne garantit la conclusion d'un mandat.",
       "cvgLink": true
     },
     {

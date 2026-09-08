@@ -8,6 +8,8 @@ import type { SalesCall } from "@/lib/sales-calls/types";
 const baseSalesCall = {
   id: "00000000-0000-0000-0000-000000000001",
   agence_id: null,
+  entreprise_id: null,
+  comptable_id: null,
   email: "test@example.com",
   calendly_invitee_uri: "https://api.calendly.com/scheduled_events/test/invitees/1",
   scheduled_at: new Date().toISOString(),

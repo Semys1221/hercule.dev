@@ -6,7 +6,15 @@ const SLUG_ALPHABET =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const SLUG_LENGTH = 6;
 const MAX_ATTEMPTS = 20;
-const TABLES: LeadCategory[] = ["agence", "entreprise"];
+const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise"];
+
+function isMissingRelationError(message: string): boolean {
+  return (
+    message.includes("schema cache") ||
+    message.includes("does not exist") ||
+    message.includes("Could not find the table")
+  );
+}
 
 export function generateSlug(): string {
   const bytes = new Uint8Array(SLUG_LENGTH);
@@ -22,6 +30,9 @@ export async function loadSlugSet(client: SupabaseClient): Promise<Set<string>> 
   for (const table of TABLES) {
     const { data, error } = await client.from(table).select("slug");
     if (error) {
+      if (isMissingRelationError(error.message)) {
+        continue;
+      }
       throw new Error(`Failed to load slugs from ${table}: ${error.message}`);
     }
     for (const row of data ?? []) {

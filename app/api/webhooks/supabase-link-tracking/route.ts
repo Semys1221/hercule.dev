@@ -4,7 +4,9 @@ import { syncBookedLeadToInstantlyById } from "@/lib/link-tracking/book-lead";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 function verifySecret(request: Request): boolean {
-  const expected = process.env.LINK_TRACKING_WEBHOOK_SECRET?.trim();
+  const expected =
+    process.env.LINK_TRACKING_WEBHOOK_SECRET?.trim() ||
+    process.env.CRON_SECRET?.trim();
   if (!expected) {
     return false;
   }
@@ -31,7 +33,7 @@ type SupabaseWebhookPayload = {
 };
 
 function isLeadCategory(table: string | undefined): table is LeadCategory {
-  return table === "agence" || table === "entreprise";
+  return table === "agence" || table === "comptable" || table === "entreprise";
 }
 
 /** Option B: Supabase Database Webhook → sync Instantly when statut becomes BOOKED. */

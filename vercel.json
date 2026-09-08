@@ -19,6 +19,10 @@
     {
       "source": "/post-booking-entreprise.html/:slug",
       "destination": "/post-booking-entreprise.html?code=:slug"
+    },
+    {
+      "source": "/modalites-hercule.html/:slug",
+      "destination": "/modalites-hercule.html?code=:slug"
     }
   ]
 }

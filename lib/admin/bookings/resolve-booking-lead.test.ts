@@ -57,14 +57,15 @@ async function main() {
     email: "unknown@example.com",
     inviteeUri,
   });
-  assert.equal(byId?.id, sample.id);
+  assert.equal(byId?.lead.id, sample.id);
+  assert.equal(byId?.category, "agence");
 
   const byEmail = await resolveBookingLead({
     leadId: null,
     email: sample.email,
     inviteeUri: "https://api.calendly.com/scheduled_events/smoke/invitees/missing",
   });
-  assert.equal(byEmail?.id, sample.id);
+  assert.equal(byEmail?.lead.id, sample.id);
 
   if (sample.calendly_invitee_uri) {
     const byInvitee = await resolveBookingLead({
@@ -72,7 +73,7 @@ async function main() {
       email: "unknown@example.com",
       inviteeUri: sample.calendly_invitee_uri,
     });
-    assert.equal(byInvitee?.id, sample.id);
+    assert.equal(byInvitee?.lead.id, sample.id);
   }
 
   const missing = await resolveBookingLead({

@@ -9,7 +9,8 @@ import {
 } from "./types";
 import { buildDashboardUrl } from "./urls";
 
-const TABLES: LeadCategory[] = ["agence", "entreprise"];
+// Lookup order: agence → comptable → entreprise (deterministic, no ambiguous matches).
+const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise"];
 
 function getServiceRoleKey(): string {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -25,6 +26,14 @@ function getSupabaseUrl(): string {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL is not set");
   }
   return url;
+}
+
+export function isMissingRelationError(message: string): boolean {
+  return (
+    message.includes("schema cache") ||
+    message.includes("does not exist") ||
+    message.includes("Could not find the table")
+  );
 }
 
 export function createLinkTrackingClient(): SupabaseClient {
@@ -49,6 +58,9 @@ export async function findLeadByLink(
       .maybeSingle();
 
     if (error) {
+      if (isMissingRelationError(error.message)) {
+        continue;
+      }
       throw new Error(`Supabase lookup failed on ${category}: ${error.message}`);
     }
     if (data) {
@@ -71,6 +83,9 @@ export async function findLeadByEmail(
       .maybeSingle();
 
     if (error) {
+      if (isMissingRelationError(error.message)) {
+        continue;
+      }
       throw new Error(`Supabase lookup failed on ${category}: ${error.message}`);
     }
     if (data) {
@@ -97,6 +112,9 @@ export async function findLeadByCalendlyInviteeUri(
       .maybeSingle();
 
     if (error) {
+      if (isMissingRelationError(error.message)) {
+        continue;
+      }
       throw new Error(`Supabase lookup failed on ${category}: ${error.message}`);
     }
     if (data) {
@@ -122,6 +140,9 @@ async function findLeadsInTableByColumn(
 
   const { data, error } = await client.from(category).select("*").in(column, values);
   if (error) {
+    if (isMissingRelationError(error.message)) {
+      return [];
+    }
     throw new Error(`Supabase bulk lookup failed on ${category}.${column}: ${error.message}`);
   }
 
@@ -238,7 +259,10 @@ async function ensureDashboardLink(
   client: SupabaseClient,
   lookup: LeadLookup,
 ): Promise<LeadLookup> {
-  if (lookup.category !== "agence" || lookup.lead.dashboard_link?.trim()) {
+  if (lookup.category !== "agence" && lookup.category !== "comptable") {
+    return lookup;
+  }
+  if (lookup.lead.dashboard_link?.trim()) {
     return lookup;
   }
 
@@ -558,6 +582,9 @@ export async function listLeadsWithUnsyncedMeetingLinks(
       .limit(limit);
 
     if (error) {
+      if (isMissingRelationError(error.message)) {
+        continue;
+      }
       throw new Error(
         `Failed to list unsynced meeting links on ${category}: ${error.message}`,
       );
