@@ -5,21 +5,21 @@ import { Target, CircleDollarSign, Handshake } from "lucide-react"
 
 const benefits = [
   {
-    title: "Sélection sur mesure",
+    title: "Demandes déjà qualifiées",
     description:
-      "Nous sélectionnons les agences adaptées à votre projet — budget, délais, stack technique — plutôt qu'une liste générique de prestataires.",
+      "Indépendants et dirigeants de TPE en reprise de comptabilité, fiscal et obligations administratives — pas une liste froide à prospecter.",
     icon: Target,
   },
   {
-    title: "Zéro frais pour vous",
+    title: "0 % de commission",
     description:
-      "Le service de matching est entièrement gratuit pour les entreprises. Vous bénéficiez d'une sélection qualifiée sans payer d'intermédiaire.",
+      "Vous conservez vos honoraires. Hercule ne prélève aucune commission sur les mandats signés avec les dirigeants rencontrés.",
     icon: CircleDollarSign,
   },
   {
-    title: "Mise en relation organisée",
+    title: "Attribution exclusive",
     description:
-      "Après qualification, nous organisons l'échange avec l'agence retenue. Vous gagnez du temps et évitez de comparer des dizaines de profils seuls.",
+      "Chaque demande est confiée à un seul cabinet sélectionné selon votre profil, votre zone et votre capacité à absorber de nouveaux dossiers.",
     icon: Handshake,
   },
 ]
@@ -42,7 +42,7 @@ export function TrioAvantages() {
                 lineHeight: 1.1,
               }}
             >
-              Pourquoi passer par Hercule plutôt que de chercher seul ?
+              Pourquoi passer par Hercule plutôt que de chasser seul ?
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -51,8 +51,8 @@ export function TrioAvantages() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-zinc-400 leading-relaxed"
             >
-              Choisir une agence parmi des dizaines de prestataires qui prétendent tous être les meilleurs est
-              chronophage et peu rassurant. Hercule qualifie votre besoin et sélectionne les agences compatibles.
+              Les TPE arrivent avec un besoin concret de reprise. Hercule qualifie le dirigeant, vérifie la
+              compatibilité avec votre cabinet et organise la mise en relation.
             </motion.p>
           </div>
 

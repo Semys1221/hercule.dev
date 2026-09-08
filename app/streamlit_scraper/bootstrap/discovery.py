@@ -37,15 +37,14 @@ def _expected_module_name(preset_id: str) -> str:
 
 
 def _iter_config_files() -> list[tuple[str, str]]:
-    """Return (filename, absolute path) for root then configs/ presets."""
+    """Return (filename, absolute path) for presets under configs/ only."""
     found: list[tuple[str, str]] = []
-    for directory in (_LIB_DIR, _CONFIGS_DIR):
-        if not os.path.isdir(directory):
+    if not os.path.isdir(_CONFIGS_DIR):
+        return found
+    for filename in sorted(os.listdir(_CONFIGS_DIR)):
+        if not filename.endswith("_config.py") or filename.startswith("._"):
             continue
-        for filename in sorted(os.listdir(directory)):
-            if not filename.endswith("_config.py"):
-                continue
-            found.append((filename, os.path.join(directory, filename)))
+        found.append((filename, os.path.join(_CONFIGS_DIR, filename)))
     return found
 
 
@@ -124,14 +123,8 @@ def invalidate_preset_cache() -> None:
 
 
 def preset_config_path(preset_id: str) -> str:
-    """Existing file path, or the configs/ path for a new preset."""
-    root_path = os.path.join(_LIB_DIR, f"{preset_id}_config.py")
-    configs_path = os.path.join(_CONFIGS_DIR, f"{preset_id}_config.py")
-    if os.path.isfile(root_path):
-        return root_path
-    if os.path.isfile(configs_path):
-        return configs_path
-    return configs_path
+    """Path for a preset config file (always under configs/)."""
+    return os.path.join(_CONFIGS_DIR, f"{preset_id}_config.py")
 
 
 def configs_dir() -> str:
@@ -164,38 +157,20 @@ def presets_in_group(group_id: str, *, use_cache: bool = True) -> list[str]:
 
 
 def all_dedup_list_ids(preset_id: str, *, use_cache: bool = True) -> list[str]:
-    """Union of Instantly list IDs for all presets in the same niche group."""
+    """List IDs for dedup — own preset only (flat presets, no niche groups)."""
     presets = discover_presets(use_cache=use_cache)
     meta = presets.get(preset_id)
     if meta is None:
         return []
-
-    seen: set[str] = set()
-    result: list[str] = []
-    for sibling in presets.values():
-        if sibling.niche_group != meta.niche_group:
-            continue
-        list_id = _uuid(sibling.loader().get("INSTANTLY_LIST_ID"))
-        if list_id and list_id not in seen:
-            seen.add(list_id)
-            result.append(list_id)
-    return result
+    list_id = _uuid(meta.loader().get("INSTANTLY_LIST_ID"))
+    return [list_id] if list_id else []
 
 
 def all_dedup_campaign_ids(preset_id: str, *, use_cache: bool = True) -> list[str]:
-    """Union of Instantly campaign IDs for all presets in the same niche group."""
+    """Campaign IDs for dedup — own preset only."""
     presets = discover_presets(use_cache=use_cache)
     meta = presets.get(preset_id)
     if meta is None:
         return []
-
-    seen: set[str] = set()
-    result: list[str] = []
-    for sibling in presets.values():
-        if sibling.niche_group != meta.niche_group:
-            continue
-        campaign_id = _uuid(sibling.loader().get("INSTANTLY_CAMPAIGN_ID"))
-        if campaign_id and campaign_id not in seen:
-            seen.add(campaign_id)
-            result.append(campaign_id)
-    return result
+    campaign_id = _uuid(meta.loader().get("INSTANTLY_CAMPAIGN_ID"))
+    return [campaign_id] if campaign_id else []

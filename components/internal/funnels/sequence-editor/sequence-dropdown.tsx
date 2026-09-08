@@ -172,15 +172,21 @@ export function SequenceDropdown({ title, description, adapter }: SequenceDropdo
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pb-4">
               {step.id !== "prompt" ? (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Objet</label>
-                  <Input
-                    value={step.subject}
-                    onChange={(event) =>
-                      updateStep(index, { subject: event.target.value })
-                    }
-                  />
-                </div>
+                step.subjectManaged ? (
+                  <p className="text-sm text-muted-foreground">
+                    Objet géré automatiquement à l&apos;envoi (Re: …).
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Objet</label>
+                    <Input
+                      value={step.subject}
+                      onChange={(event) =>
+                        updateStep(index, { subject: event.target.value })
+                      }
+                    />
+                  </div>
+                )
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Niche : {step.subject}

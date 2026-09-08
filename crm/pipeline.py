@@ -103,6 +103,7 @@ def _result_row(
         "reservation_agence_link": db_row.get("reservation_agence_link"),
         "reservation_entreprise_link": db_row.get("reservation_entreprise_link"),
         "confirmation_agence_link": db_row.get("confirmation_agence_link"),
+        "post_booking_link": db_row.get("post_booking_link"),
         "statut": db_row.get("statut") or "NOTBOOKED",
         "category": category,
         "instantly_lead_id": db_row.get("instantly_lead_id"),
@@ -278,6 +279,7 @@ def provision_from_instantly_leads(
                     str(existing_row["id"]),
                     build_refresh_patch(
                         existing_row,
+                        category=category,
                         instantly_lead_id=parsed.instantly_lead_id or None,
                         instantly_campaign_id=campaign_id or None,
                     ),
@@ -346,6 +348,7 @@ def provision_from_instantly_leads(
                         lead_slug(db_row),
                         parsed.email,
                         str(db_row.get("statut") or "NOTBOOKED"),
+                        category,
                     ),
                     parsed.email,
                 )
@@ -454,6 +457,7 @@ def provision_from_csv(
                         lead_slug(db_row),
                         email,
                         str(db_row.get("statut") or "NOTBOOKED"),
+                        category,
                     ),
                 }
             )

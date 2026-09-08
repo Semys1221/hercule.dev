@@ -77,11 +77,16 @@ SENDABLE_FLOWS: list[Flow] = [
 ]
 
 EMAIL_SIGNATURE = "Béatrice Meyer"
-RESERVATION_LINK_PLACEHOLDER = "{{reservation_agence_link}}"
+RESERVATION_AGENCE_PLACEHOLDER = "{{reservation_agence_link}}"
+RESERVATION_ENTREPRISE_PLACEHOLDER = "{{reservation_entreprise_link}}"
 
 
 def template_requires_reservation_link(body_html: str) -> bool:
-    return RESERVATION_LINK_PLACEHOLDER in (body_html or "")
+    text = body_html or ""
+    return (
+        RESERVATION_AGENCE_PLACEHOLDER in text
+        or RESERVATION_ENTREPRISE_PLACEHOLDER in text
+    )
 
 
 def campaign_requires_reservation_link(campaign_id: str) -> bool:
@@ -297,7 +302,8 @@ def _render_template(body_html: str, vars_map: dict[str, str]) -> str:
 
 def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
     payload = lead.get("payload") if isinstance(lead.get("payload"), dict) else {}
-    reservation_link = lead_custom_var(lead, "reservation_agence_link") or ""
+    reservation_agence_link = lead_custom_var(lead, "reservation_agence_link") or ""
+    reservation_entreprise_link = lead_custom_var(lead, "reservation_entreprise_link") or ""
     first = str(
         lead.get("first_name") or payload.get("firstName") or payload.get("first_name") or ""
     )
@@ -308,7 +314,8 @@ def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
         "first_name": first,
         "last_name": str(lead.get("last_name") or payload.get("lastName") or ""),
         "company_name": company,
-        "reservation_agence_link": reservation_link,
+        "reservation_agence_link": reservation_agence_link,
+        "reservation_entreprise_link": reservation_entreprise_link,
     }
 
 
@@ -343,8 +350,17 @@ def _interest_label(lead: dict[str, Any]) -> str:
     return str(status)
 
 
-def _missing_reservation_link(lead: dict[str, Any]) -> bool:
-    return not bool(lead_custom_var(lead, "reservation_agence_link"))
+def _missing_reservation_link(lead: dict[str, Any], body_html: str = "") -> bool:
+    text = body_html or ""
+    needs_agence = RESERVATION_AGENCE_PLACEHOLDER in text
+    needs_entreprise = RESERVATION_ENTREPRISE_PLACEHOLDER in text
+    if not needs_agence and not needs_entreprise:
+        return False
+    if needs_agence and not lead_custom_var(lead, "reservation_agence_link"):
+        return True
+    if needs_entreprise and not lead_custom_var(lead, "reservation_entreprise_link"):
+        return True
+    return False
 
 
 def _coerce_step(value: str | None) -> PipelineStep:
@@ -537,7 +553,11 @@ def fetch_pipeline_leads(
                 interest_label=_interest_label(lead),
                 last_sent_at=last_sent_at,
                 replied_since_last_send=replied_since_last_send,
-                missing_reservation_link=requires_link and _missing_reservation_link(lead),
+                missing_reservation_link=requires_link
+                and not (
+                    bool(lead_custom_var(lead, "reservation_agence_link"))
+                    or bool(lead_custom_var(lead, "reservation_entreprise_link"))
+                ),
                 sent_flows=sent_flows,
                 step=step,
                 envoyer=not replied_since_last_send,
@@ -678,7 +698,7 @@ def dispatch_one(
         return {"ok": False, "error": "template_empty", "lead_email": lead_email}
 
     if template_requires_reservation_link(template["body_html"]) and _missing_reservation_link(
-        lead
+        lead, template["body_html"]
     ):
         record_event(
             {
@@ -688,7 +708,7 @@ def dispatch_one(
                 "lead_email": lead_email,
                 "lead_id": lead_id or None,
                 "status": "failed",
-                "error_message": "Missing reservation_agence_link on lead",
+                "error_message": "Missing reservation link on lead",
             }
         )
         return {"ok": False, "error": "missing_reservation_link", "lead_email": lead_email}
@@ -779,7 +799,9 @@ def dispatch_conversation_reply(
     except RuntimeError:
         return {"ok": False, "error": "template_empty", "lead_email": lead_email}
 
-    if template_requires_reservation_link(body_html) and _missing_reservation_link(lead):
+    if template_requires_reservation_link(body_html) and _missing_reservation_link(
+        lead, body_html
+    ):
         return {"ok": False, "error": "missing_reservation_link", "lead_email": lead_email}
 
     if dry_run:

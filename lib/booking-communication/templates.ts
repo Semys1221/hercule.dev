@@ -1,12 +1,19 @@
+import {
+  buildEntreprisePostBookingUrl,
+  getConfirmBaseUrl,
+  getEntreprisePostBookingBaseUrl,
+} from "@/lib/link-tracking/urls";
+
 import type { BookingEmailType } from "./types";
 
-const DEFAULT_CONFIRM_BASE =
-  "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_TEMPORARY_BASE =
   "https://www.hercule.dev/temporary-reservation.html";
-const DEFAULT_ENTREPRISE_POST_BASE =
-  "https://www.hercule.dev/post-booking-entreprise.html";
 const DEFAULT_FROM = "Hercule <contact@hercule.dev>";
+
+export {
+  buildEntreprisePostBookingUrl,
+  getEntreprisePostBookingBaseUrl,
+};
 
 export type BookingEmailTemplateType = BookingEmailType;
 
@@ -40,7 +47,7 @@ Votre rendez-vous avec Hercule est bien prévu le {{date}} à {{heure}}.
 Les informations de connexion vous seront transmises directement par email via Calendly.`,
   },
   h48_confirm: {
-    subject: "Confirmation requise — Votre rendez-vous avec Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Nous avons le plaisir de vous informer que les profils présentés lors de votre rendez-vous contiendront des contrats de conseil financier.
@@ -51,7 +58,7 @@ Afin de maintenir votre créneau, merci de confirmer votre présence :
 Sans confirmation sous 24 heures, votre place pourra être réattribué à une autre agence.`,
   },
   h24_relance: {
-    subject: "Confirmation requise — Votre rendez-vous avec Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Nous n'avons pas encore reçu votre confirmation de présence.
@@ -62,7 +69,7 @@ Si vous souhaitez maintenir le rendez-vous, merci de nous confirmer votre prése
 {{confirmation_agence_link}}`,
   },
   h20_cancel: {
-    subject: "Votre rendez-vous avec Hercule est annulé",
+    subject: "",
     body: `{{firstNameLine}}
 
 Faute de confirmation de votre part, votre rendez-vous prévu le {{date}} à {{heure}} a été annulé.
@@ -96,7 +103,7 @@ En attendant, vous pouvez consulter votre tableau de bord ici :
 L'équipe Hercule`,
   },
   product_calendly_reminder: {
-    subject: "Rappel — acceptez votre invitation Calendly",
+    subject: "",
     body: `{{firstNameLine}}
 
 Nous n'avons pas encore vu votre invitation Calendly acceptée pour {{email}}.
@@ -137,7 +144,7 @@ Finalisez depuis votre tableau de bord :
 L'équipe Hercule`,
   },
   upsell_email_2: {
-    subject: "Rappel — activer Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Un rappel concernant les formules évoquées lors de notre échange :
@@ -151,7 +158,7 @@ Votre tableau de bord reste disponible pour finaliser votre choix :
 L'équipe Hercule`,
   },
   upsell_email_3: {
-    subject: "Dernier rappel — offre Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Dernier rappel pour activer Hercule et démarrer la réception de contrats.
@@ -176,7 +183,7 @@ Si vous avez une question avant de valider, répondez simplement à cet email.
 L'équipe Hercule`,
   },
   close_indecis_2: {
-    subject: "Rappel — finaliser votre paiement Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Votre accès Hercule est prêt à être activé. Il ne reste plus qu'à finaliser le paiement depuis votre tableau de bord :
@@ -188,7 +195,7 @@ Nous restons disponibles si vous souhaitez éclaircir un point avant de valider.
 L'équipe Hercule`,
   },
   close_indecis_3: {
-    subject: "Dernier rappel — accès Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Dernier rappel : votre lien de paiement reste actif pour lancer l'onboarding et recevoir vos premiers contrats.
@@ -198,41 +205,34 @@ Dernier rappel : votre lien de paiement reste actif pour lancer l'onboarding et 
 L'équipe Hercule`,
   },
   no_show_indecis_1: {
-    subject: "Bienvenue chez Hercule — reprenez votre parcours",
+    subject: "Absence — reprenez un créneau avec Hercule",
     body: `{{firstNameLine}}
 
-Vous êtes déjà entré dans le parcours Hercule — merci pour votre confiance.
+Nous n'avons pas pu vous joindre lors de votre rendez-vous avec Hercule.
 
-Chez Hercule, notre mission est d'orienter chaque agence vers des demandes réellement adaptées à son activité, sans perdre de temps sur des opportunités hors cible.
-
-Pour activer votre calendrier et terminer votre parcours, reprenez ici :
+Pour en planifier un nouveau, utilisez votre lien personnel :
 {{reservation_agence_link}}
 
-À très vite,
 L'équipe Hercule`,
   },
   no_show_indecis_2: {
-    subject: "Rappel — votre place dans le parcours Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
-Vous avez déjà entamé votre parcours chez Hercule. Votre lien de réservation reste actif pour reprendre là où vous vous étiez arrêté.
+Petit rappel : votre lien de réservation reste actif si vous souhaitez fixer un nouveau créneau.
 
-Pour activer votre calendrier et terminer votre parcours :
 {{reservation_agence_link}}
 
-À très vite,
 L'équipe Hercule`,
   },
   no_show_indecis_3: {
-    subject: "Dernier rappel — finalisez votre inscription Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
-Dernier rappel : votre place dans le parcours Hercule est toujours disponible.
+Dernier rappel : vous pouvez toujours reprendre rendez-vous via ce lien :
 
-Pour activer votre calendrier et terminer votre parcours :
 {{reservation_agence_link}}
 
-À très vite,
 L'équipe Hercule`,
   },
   onboarding_j0: {
@@ -247,7 +247,7 @@ Votre tableau de bord :
 L'équipe Hercule`,
   },
   onboarding_j0_bis: {
-    subject: "Hercule — configuration terminée",
+    subject: "",
     body: `{{firstNameLine}}
 
 Petit point en fin de journée : votre compte Hercule est configuré, votre calendrier de livraison est enregistré et les demandes correspondant à vos critères peuvent désormais vous être transmises.
@@ -259,7 +259,7 @@ Aucune action n'est requise de votre part pour le moment — nous vous préviend
 L'équipe Hercule`,
   },
   onboarding_j1: {
-    subject: "Suivi J+1 — activation Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Nous suivons l'activation de votre compte. Votre premier contrat est en préparation : surveillez votre boîte mail et votre tableau de bord pour ne rien manquer.
@@ -269,7 +269,7 @@ Nous suivons l'activation de votre compte. Votre premier contrat est en prépara
 L'équipe Hercule`,
   },
   onboarding_reminder_m10: {
-    subject: "Rappel J-10 — première livraison Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Rappel : la première date de livraison estimée est le {{estimatedFirstBookingDate}}.
@@ -280,7 +280,7 @@ Votre tableau de bord reste le point central pour suivre l'avancement :
 L'équipe Hercule`,
   },
   onboarding_reminder_m5: {
-    subject: "Rappel J-5 — première livraison Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Rappel J-5 : la livraison estimée approche ({{estimatedFirstBookingDate}}).
@@ -291,7 +291,7 @@ Consultez votre tableau de bord pour le détail :
 L'équipe Hercule`,
   },
   onboarding_reminder_p5: {
-    subject: "Rappel J+5 — suivi première livraison",
+    subject: "",
     body: `{{firstNameLine}}
 
 Point J+5 après la date estimée ({{estimatedFirstBookingDate}}) : nous vérifions que tout se déroule comme prévu.
@@ -311,7 +311,7 @@ La recherche de mise en relation a bien été lancée. Vous pouvez suivre l'avan
 L'équipe Hercule`,
   },
   deliverance_d7_update: {
-    subject: "Mise à jour J+7 — recherche Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Mise à jour J+7 : la recherche progresse. Consultez votre tableau de bord pour le détail des actions en cours.
@@ -321,7 +321,7 @@ Mise à jour J+7 : la recherche progresse. Consultez votre tableau de bord pour 
 L'équipe Hercule`,
   },
   deliverance_milestone: {
-    subject: "Avancement — étape de délivrance Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Une nouvelle étape de votre recherche vient d'être franchie. Retrouvez le détail sur votre tableau de bord.
@@ -331,7 +331,7 @@ Une nouvelle étape de votre recherche vient d'être franchie. Retrouvez le dét
 L'équipe Hercule`,
   },
   deliverance_waitlist: {
-    subject: "File d'attente — Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 Votre dossier est actuellement en file d'attente. Nous vous préviendrons dès qu'un créneau de livraison se libère.
@@ -354,7 +354,7 @@ Réservez un créneau pour échanger avec elle :
 L'équipe Hercule`,
   },
   match_proposal_followup: {
-    subject: "Rappel — réserver votre rendez-vous agence",
+    subject: "",
     body: `{{firstNameLine}}
 
 Nous n'avons pas encore reçu de réservation pour le rendez-vous proposé avec l'agence ci-dessous.
@@ -389,7 +389,7 @@ Pouvez-vous nous indiquer si l'embarquement avec l'agence s'est bien passé ? Vo
 L'équipe Hercule`,
   },
   survey_rdv_entreprise_followup: {
-    subject: "Rappel — questionnaire post-rendez-vous",
+    subject: "",
     body: `{{firstNameLine}}
 
 Nous n'avons pas encore reçu votre retour sur le rendez-vous avec l'agence. Quelques minutes suffisent pour compléter le questionnaire :
@@ -409,7 +409,7 @@ Avez-vous conclu une vente suite au rendez-vous ? Indiquez-le via le questionnai
 L'équipe Hercule`,
   },
   survey_rdv_agence_followup: {
-    subject: "Rappel — retour après rendez-vous",
+    subject: "",
     body: `{{firstNameLine}}
 
 Nous n'avons pas encore reçu votre retour après le rendez-vous. Merci de nous indiquer si une vente a été conclue :
@@ -440,7 +440,7 @@ Retrouvez le détail sur votre tableau de bord :
 L'équipe Hercule`,
   },
   role_seq_24: {
-    subject: "Confirmer votre créneau — Hercule",
+    subject: "",
     body: `{{firstNameLine}}
 
 J'ai le plaisir de vous confirmer que les contrats d'agence présentés lors de votre entretien concerneront des cabinets de conseil financier situés en région Aquitaine et PACA.
@@ -452,13 +452,39 @@ Un aperçu du déroulé de votre entretien est disponible ici : {{confirmLink}}`
 export const ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES: Partial<
   Record<BookingEmailTemplateType, Omit<BookingEmailTemplateRecord, "email_type">>
 > = {
+  immediate: {
+    subject: "Votre audit de compatibilité Hercule est confirmé",
+    body: `{{firstNameLine}}
+
+Votre rendez-vous d'audit de compatibilité avec Hercule est bien confirmé le {{date}} à {{heure}}.
+
+Nous reviendrons ensemble sur votre cabinet, votre zone d'intervention et vos disponibilités pour recevoir de nouvelles missions de tenue TPE.
+
+Les informations de connexion vous seront transmises directement par Calendly.`,
+  },
   h48_confirm: {
-    subject: "Préparez votre rendez-vous avec Hercule",
+    subject: "Préparez votre audit de compatibilité · Hercule",
     body: ENTREPRISE_H48_BODY,
   },
   h24_relance: {
-    subject: "Rappel — Votre rendez-vous avec Hercule approche",
+    subject: "Votre audit Hercule approche",
     body: ENTREPRISE_H24_BODY,
+  },
+  product_payment_welcome: {
+    subject: "Votre accès Hercule Comptable est activé",
+    body: `{{firstNameLine}}
+
+Votre paiement a bien été reçu. Votre accès Hercule Comptable est maintenant actif.
+
+L'équipe Hercule configure votre espace dans les prochaines 48 heures :
+- Provisionnement de votre compte Calendly Pro
+- Provisionnement de votre compte Zoom Pro
+- Premier rendez-vous TPE planifié sous 15 jours
+
+Retrouvez votre espace cabinet :
+{{dashboardLink}}
+
+L'équipe Hercule`,
   },
 };
 
@@ -508,23 +534,13 @@ export function buildFirstNameLine(
 }
 
 export function getBookingConfirmBaseUrl(): string {
-  return (
-    process.env.BOOKING_CONFIRM_BASE_URL?.trim().replace(/\/$/, "") ??
-    DEFAULT_CONFIRM_BASE
-  );
+  return getConfirmBaseUrl();
 }
 
 export function getTemporaryReservationBaseUrl(): string {
   return (
     process.env.BOOKING_TEMPORARY_BASE_URL?.trim().replace(/\/$/, "") ??
     DEFAULT_TEMPORARY_BASE
-  );
-}
-
-export function getEntreprisePostBookingBaseUrl(): string {
-  return (
-    process.env.BOOKING_ENTREPRISE_POST_BASE_URL?.trim().replace(/\/$/, "") ??
-    DEFAULT_ENTREPRISE_POST_BASE
   );
 }
 
@@ -544,12 +560,6 @@ export function buildConfirmUrl(slug: string, email: string): string {
 
 export function buildTemporaryConfirmUrl(slug: string, email: string): string {
   const url = new URL(`${getTemporaryReservationBaseUrl()}/${slug}`);
-  url.searchParams.set("email", email);
-  return url.toString();
-}
-
-export function buildEntreprisePostBookingUrl(slug: string, email: string): string {
-  const url = new URL(`${getEntreprisePostBookingBaseUrl()}/${slug}`);
   url.searchParams.set("email", email);
   return url.toString();
 }

@@ -16,6 +16,17 @@ Le code suit [`tech-stack/13-implementation-roadmap.md`](./tech-stack/13-impleme
 
 ---
 
+## AI agents (complément path-specific)
+
+Pour le code Next.js (`app/`, `components/`, `lib/`, etc.), lire en plus :
+
+1. [`.cursor/skills/hercule-nextjs`](../.cursor/skills/hercule-nextjs/SKILL.md) — router par domaine
+2. [`.cursor/rules/nextjs-hercule.mdc`](../.cursor/rules/nextjs-hercule.mdc) — enforcement Cursor
+
+Ce fichier reste la **source de vérité** pour décisions métier, machines d'état et roadmap. Les skills Next.js résument les workflows agent par chemin — ils ne remplacent pas `tech-stack/*`.
+
+---
+
 ## Ordre de lecture obligatoire
 
 1. [`tech-stack/00-decisions.md`](./tech-stack/00-decisions.md) — tags CONFIRMED / REJECTED / DEPRECATED / NEW / UNCHANGED / MIGRATION REQUIRED

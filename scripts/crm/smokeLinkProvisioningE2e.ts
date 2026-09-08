@@ -13,7 +13,7 @@
  *   CRM_BACKEND_URL          click/confirm API (default http://localhost:3000)
  */
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
-import { buildLeadUrls, buildInstantlyCustomVariables } from "@/lib/link-tracking/urls";
+import { buildEntrepriseLeadUrls, buildLeadUrls, buildInstantlyCustomVariables } from "@/lib/link-tracking/urls";
 import { DEFAULT_BOOKING_EMAIL_TEMPLATES, renderTemplate } from "@/lib/booking-communication/templates";
 import { E2E_RESEND_FROM, E2E_TEST_EMAIL } from "@/lib/test/e2e-identity";
 
@@ -72,6 +72,7 @@ const CANONICAL_KEYS = [
   "reservation_agence_link",
   "reservation_entreprise_link",
   "confirmation_agence_link",
+  "post_booking_link",
   "statut",
 ] as const;
 
@@ -92,7 +93,8 @@ function dryRunUrls(): void {
   const slug = "abc123";
   const email = "jean@example.com";
   const urls = buildLeadUrls(slug, email);
-  const vars = buildInstantlyCustomVariables(slug, email, "NOTBOOKED");
+  const entrepriseUrls = buildEntrepriseLeadUrls(slug, email);
+  const vars = buildInstantlyCustomVariables(slug, email, "NOTBOOKED", "entreprise");
 
   assert(
     urls.reservation_agence_link ===
@@ -112,6 +114,11 @@ function dryRunUrls(): void {
   assert(
     !urls.confirmation_agence_link.includes("/reservation.html/"),
     "confirmation URL must not use reservation.html",
+  );
+  assert(
+    entrepriseUrls.post_booking_link ===
+      `https://www.hercule.dev/post-booking-entreprise.html/${slug}?email=${encodeURIComponent(email)}`,
+    `post_booking_link mismatch: ${entrepriseUrls.post_booking_link}`,
   );
 
   for (const key of CANONICAL_KEYS) {
@@ -150,6 +157,7 @@ function dryRunUrls(): void {
   console.log(`  reservation_agence_link      ${urls.reservation_agence_link}`);
   console.log(`  reservation_entreprise_link  ${urls.reservation_entreprise_link}`);
   console.log(`  confirmation_agence_link     ${urls.confirmation_agence_link}`);
+  console.log(`  post_booking_link          ${entrepriseUrls.post_booking_link}`);
 }
 
 async function getPage(path: string): Promise<number> {
@@ -236,7 +244,7 @@ async function verifyInstantlyReplace(
     return;
   }
 
-  const payload = buildInstantlyCustomVariables(slug, email, statut);
+  const payload = buildInstantlyCustomVariables(slug, email, statut, "entreprise");
   const patch = await fetch(`https://api.instantly.ai/api/v2/leads/${leadId}`, {
     method: "PATCH",
     headers: {

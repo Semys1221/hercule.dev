@@ -12,16 +12,42 @@ Répondez simplement oui ou non afin que je sache si je dois vous transmettre le
 
 Reply
 
-Bonjour {{firstName}},
+E1
 
-Parfait.
+Voici plus de précisions.
 
-Les demandes concernent principalement des indépendants et dirigeants de TPE recherchant un accompagnement pour leur comptabilité, leurs déclarations fiscales et la gestion de leur activité.
+Les demandes concernent principalement des indépendants et dirigeants de TPE qui n'arrivent plus à suivre seuls leur comptabilité, leurs échéances fiscales, leurs déclarations et leurs obligations administratives, et qui cherchent un cabinet pour reprendre ces sujets en main.
 
-Il s’agit de demandes que nous recevons actuellement pour nos cabinets partenaires.
+Ces demandes sont transmises à nos cabinets partenaires.
 
-Si vous souhaitez pouvoir recevoir des demandes de profils similaires, vous pouvez proposer votre cabinet ici :
+Pour recevoir ce type de contrat, votre cabinet doit compter plus de 3 associés ou collaborateurs.
 
 → Proposer mon cabinet
+
+{{accountSignature}}
+
+
+E2
+
+Bonjour,
+
+Je reviens vers vous concernant les demandes de contrat annuel en attente que nous recevons actuellement.
+
+Si vous souhaitez postuler pour recevoir ces demandes mensuellement pour votre cabinet :
+
+→ Proposer mon cabinet
+
+{{accountSignature}}
+
+
+E3
+
+Bonjour {{firstName}},
+
+N'ayant pas reçu de retour de votre part, je me dois de clôturer nos échanges ici.
+
+Si le sujet devient pertinent pour votre cabinet à l'avenir, vous pourrez simplement revenir vers moi.
+
+Bonne continuation,
 
 {{accountSignature}}

@@ -18,13 +18,14 @@ from instantly_client import (
     purge_leads_from_list,
     push_csv_to_instantly,
 )
+from audit_filter import run_audit
 from core_logic import (
     clear_local_leads,
     output_paths,
     run_filter_audit,
     run_scraper_pipeline,
 )
-from scrape_state import detect_recoverable_run
+from scrape_state import detect_recoverable_run, load_scrape_state, target_mode, target_progress_value
 
 app = typer.Typer(help="Streamlit Scraper CLI")
 
@@ -60,6 +61,22 @@ def _metrics(scraped: int, enriched: int, pushed: int) -> None:
         f"   -> Scraped: {scraped} | Enriched valid: {enriched} | Instantly: {pushed} pushed",
         fg=typer.colors.CYAN,
     )
+
+
+def _metrics_throttled(scraped: int, enriched: int, pushed: int) -> None:
+    """Limit journal spam during long enrich batches."""
+    import time
+
+    if not hasattr(_metrics_throttled, "_last_ts"):
+        _metrics_throttled._last_ts = 0.0  # type: ignore[attr-defined]
+        _metrics_throttled._last_scraped = -1  # type: ignore[attr-defined]
+    now = time.time()
+    last_ts = float(_metrics_throttled._last_ts)  # type: ignore[attr-defined]
+    last_scraped = int(_metrics_throttled._last_scraped)  # type: ignore[attr-defined]
+    if scraped - last_scraped >= 25 or now - last_ts >= 10.0:
+        _metrics(scraped, enriched, pushed)
+        _metrics_throttled._last_ts = now  # type: ignore[attr-defined]
+        _metrics_throttled._last_scraped = scraped  # type: ignore[attr-defined]
 
 
 @app.command()
@@ -114,6 +131,35 @@ def filter_audit_cmd(
         f"({summary['acceptance_rate']:.1f}%) → {summary['audit_path']}",
         fg=typer.colors.GREEN,
     )
+
+
+@app.command("audit-filter")
+def audit_filter_cmd(
+    preset: str = PresetOption,
+    out_dir: str = typer.Option(
+        "",
+        "--out-dir",
+        help="Override output directory (default: output/{preset})",
+    ),
+    json_out: bool = typer.Option(False, "--json", help="Write audit_filter_report.json"),
+) -> None:
+    """Analyze filter_audit.csv — reason breakdown and taxonomy bucket report."""
+    preset = _validate_preset(preset)
+    try:
+        report = run_audit(
+            preset,
+            out_dir=out_dir.strip() or None,
+            write_review=True,
+            write_json=json_out,
+        )
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(report["text"])
+    if report.get("borderline_rows"):
+        typer.secho(
+            f"Borderline review → {report['review_csv_path']}",
+            fg=typer.colors.GREEN,
+        )
 
 
 @app.command()
@@ -321,6 +367,219 @@ def scrape(
     typer.secho(msg, fg=typer.colors.GREEN)
 
 
+@app.command("worker-loop")
+def worker_loop_cmd(
+    preset: str = PresetOption,
+    target: int = typer.Option(0, help="Target leads (0 = use config or checkpoint)"),
+    push_instantly: bool = typer.Option(
+        True,
+        "--push-instantly/--no-push-instantly",
+        help="Push enriched leads to Instantly",
+    ),
+    sleep_s: int = typer.Option(30, help="Seconds between scrape iterations"),
+) -> None:
+    """Run scrape/resume in a loop until target progress reaches goal."""
+    import time
+
+    from scrape_metrics import fetch_instantly_live, touch_worker_heartbeat
+    from scrape_state import count_csv_leads, load_scrape_state
+
+    preset = _validate_preset(preset)
+    paths = output_paths(preset)
+    config = load_config(preset)
+    if target > 0:
+        config["TARGET_LEADS"] = target
+    elif os.path.isfile(paths.scrape_state):
+        saved = load_scrape_state(paths.scrape_state)
+        if saved and saved.get("target"):
+            config["TARGET_LEADS"] = int(saved["target"])
+
+    goal = int(config["TARGET_LEADS"])
+    mode = target_mode(config)
+    _log(f"Worker loop start — preset={preset}, target={goal}, mode={mode}")
+
+    def _loop_progress() -> int:
+        state = (
+            load_scrape_state(paths.scrape_state)
+            if os.path.isfile(paths.scrape_state)
+            else None
+        )
+        pushed = int(state.get("instantly_pushed", 0)) if state else 0
+        live = fetch_instantly_live(config, use_cache=True)
+        saved = count_csv_leads(paths.csv)
+        return target_progress_value(
+            mode,
+            instantly_pushed=pushed,
+            leads_saved=saved,
+            instantly_live=live,
+        )
+
+    while True:
+        touch_worker_heartbeat(paths.out_dir, preset=preset, status="running")
+        progress = _loop_progress()
+        if progress >= goal:
+            touch_worker_heartbeat(paths.out_dir, preset=preset, status="complete")
+            _log(f"Target reached — progress {progress}/{goal} ({mode}).")
+            break
+
+        recovery = detect_recoverable_run(
+            config,
+            paths.csv,
+            state_path=paths.scrape_state,
+        )
+        should_resume = recovery.has_leftover_work or recovery.can_resume
+        live = fetch_instantly_live(config, use_cache=True)
+        state_before = (
+            load_scrape_state(paths.scrape_state)
+            if os.path.isfile(paths.scrape_state)
+            else None
+        )
+        pushed_before = int(state_before.get("instantly_pushed", 0)) if state_before else 0
+        _log(
+            f"Scrape iteration — resume={should_resume}, "
+            f"progress={progress}, live={live if live is not None else '?'}, "
+            f"checkpoint={recovery.instantly_pushed}"
+        )
+        try:
+            summary = asyncio.run(
+                run_scraper_pipeline(
+                    config,
+                    log_cb=_log,
+                    progress_cb=_progress,
+                    metric_cb=_metrics_throttled,
+                    push_to_instantly=push_instantly,
+                    resume=should_resume,
+                    preset=preset,
+                )
+            )
+        except SystemExit as exc:
+            touch_worker_heartbeat(paths.out_dir, preset=preset, status="blocked")
+            _log(f"Worker blocked — {exc}")
+            time.sleep(min(max(sleep_s, 10), 60))
+            continue
+
+        progress_after = _loop_progress()
+        state_after = (
+            load_scrape_state(paths.scrape_state)
+            if os.path.isfile(paths.scrape_state)
+            else None
+        )
+        pushed_after = int(state_after.get("instantly_pushed", 0)) if state_after else 0
+        pushed_delta = pushed_after - pushed_before
+        live_after = fetch_instantly_live(config, use_cache=True)
+        _log(
+            f"Iteration done — checkpoint pushed {int(summary.get('instantly_pushed', 0))}, "
+            f"delta={pushed_delta}, progress={progress_after}, "
+            f"live={live_after if live_after is not None else '?'}"
+        )
+        if progress_after >= goal:
+            touch_worker_heartbeat(paths.out_dir, preset=preset, status="complete")
+            break
+        geo_reload_exhausted = bool(summary.get("geo_reload_exhausted")) or bool(
+            state_after and state_after.get("geo_reload_exhausted")
+        )
+        if geo_reload_exhausted and progress_after <= progress and pushed_delta <= 0:
+            _log("Geo reload exhausted — waiting before next heal check.")
+            if sleep_s > 0:
+                time.sleep(sleep_s)
+            continue
+        if progress_after <= progress and pushed_delta <= 0:
+            _log("No progress this iteration — retrying immediately (geo continuation).")
+            continue
+        if sleep_s > 0:
+            time.sleep(sleep_s)
+
+
+@app.command("heal")
+def heal_cmd(
+    preset: str = PresetOption,
+    stale_minutes: int = typer.Option(3, help="Heartbeat stale threshold (minutes)"),
+) -> None:
+    """Watchdog — restart systemd worker when stalled and under target."""
+    import subprocess
+
+    from scrape_metrics import (
+        append_cron_event,
+        fetch_instantly_live,
+        heartbeat_age_seconds,
+        load_worker_heartbeat,
+    )
+
+    preset = _validate_preset(preset)
+    paths = output_paths(preset)
+    config = load_config(preset, require_keys=False)
+    goal = int(config.get("TARGET_LEADS", 0))
+    service = os.getenv("VPS_SCRAPER_SERVICE", "hercule-scraper").strip()
+    recovery = detect_recoverable_run(
+        config,
+        paths.csv,
+        state_path=paths.scrape_state,
+    )
+    progress_before = recovery.headline_progress
+    live_before = fetch_instantly_live(config, use_cache=False)
+    heartbeat = load_worker_heartbeat(paths.out_dir)
+    age = heartbeat_age_seconds(heartbeat)
+
+    if progress_before >= goal > 0:
+        append_cron_event(
+            paths.out_dir,
+            {
+                "action": "noop_at_target",
+                "progress": progress_before,
+                "live": live_before,
+                "target": goal,
+            },
+        )
+        _log(f"Heal noop — at target (progress {progress_before}/{goal}).")
+        return
+
+    active = (
+        subprocess.run(
+            ["systemctl", "is-active", service],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout.strip()
+        == "active"
+    )
+
+    if not active:
+        _log(f"Heal — starting inactive worker {service}.")
+        subprocess.run(["systemctl", "start", service], check=False)
+        append_cron_event(
+            paths.out_dir,
+            {
+                "action": "heal_start",
+                "service": service,
+                "progress": progress_before,
+                "target": goal,
+            },
+        )
+        return
+
+    if age is not None and age < stale_minutes * 60:
+        append_cron_event(
+            paths.out_dir,
+            {"action": "noop_healthy", "heartbeat_age_s": age},
+        )
+        _log(f"Heal noop — worker healthy ({int(age)}s ago).")
+        return
+
+    _log(f"Heal — restarting stale worker {service} (heartbeat {int(age or 0)}s).")
+    subprocess.run(["systemctl", "restart", service], check=False)
+    append_cron_event(
+        paths.out_dir,
+        {
+            "action": "heal_restart",
+            "service": service,
+            "heartbeat_age_s": age,
+            "progress_before": progress_before,
+            "live_before": live_before,
+            "target": goal,
+        },
+    )
+
+
 @app.command("enrich-csv")
 def enrich_csv_cmd(
     preset: str = PresetOption,
@@ -403,6 +662,38 @@ def push_instantly_cmd(
         + (f", {summary['failed']} failed" if summary["failed"] else ""),
         fg=typer.colors.GREEN,
     )
+
+
+@app.command("sirene-build")
+def sirene_build_cmd(
+    check: bool = typer.Option(False, "--check", help="Only verify index presence/age"),
+    dest: str = typer.Option("", "--dest", help="Override SQLite output path"),
+    max_rows: int = typer.Option(0, "--max-rows", help="Limit rows (0 = full import)"),
+    url: str = typer.Option("", "--url", help="Override StockEtablissement download URL"),
+) -> None:
+    """Download INSEE StockEtablissement and build local SIRENE SQLite index."""
+    from company_registry.sirene_build import build_index, check_index, sirene_db_path
+
+    path = dest or sirene_db_path()
+    if check:
+        status = check_index(path)
+        if not status.get("exists"):
+            typer.secho(f"SIRENE index missing at {path}", fg=typer.colors.RED)
+            raise typer.Exit(1)
+        typer.secho(
+            f"SIRENE index OK — {status['rows']:,} rows, age {status.get('age_days')} day(s)",
+            fg=typer.colors.GREEN,
+        )
+        return
+
+    _log(f"Building SIRENE index at {path}…")
+    result = build_index(
+        dest_path=path,
+        log_cb=_log,
+        max_rows=max_rows if max_rows > 0 else None,
+        source_url=url or None,
+    )
+    typer.secho(f"SIRENE index built → {result}", fg=typer.colors.GREEN)
 
 
 if __name__ == "__main__":

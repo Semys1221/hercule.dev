@@ -6,6 +6,7 @@ import { HERCULE_CONTACT_EMAIL, HERCULE_WEBSITE_URL } from "@/emails/constants";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 import type { MeetingActionLinks } from "./meeting-links";
+import { isSequenceRoot } from "./sequence-pattern";
 import type { BookingEmailType } from "./types";
 
 export const HERCULE_LOGO_URL =
@@ -13,7 +14,7 @@ export const HERCULE_LOGO_URL =
 
 export const SIGNATURE_TAGLINES: Record<LeadCategory, string> = {
   agence: "Courtage de projets Web & Tech",
-  entreprise: "Mise en relation de projets Web & Tech",
+  entreprise: "Missions de tenue comptable · TPE",
 };
 
 export function signatureTagline(category: LeadCategory): string {
@@ -29,11 +30,9 @@ export function buildPlainSignature(category: LeadCategory): string {
   ].join("\n");
 }
 
-const PLAIN_TEXT_ONLY: BookingEmailType[] = ["immediate", "role_seq_48"];
-
 /** First email in each sequence uses plain text only; follow-ups use React HTML. */
 export function defaultUseHtml(emailType: BookingEmailType): boolean {
-  return !PLAIN_TEXT_ONLY.includes(emailType);
+  return !isSequenceRoot(emailType);
 }
 
 const LEGACY_CLOSING_PATTERN = /\n*Cordialement,?\s*$/i;
@@ -152,7 +151,7 @@ export async function finalizeRenderedEmail(params: {
 }): Promise<{ subject: string; text: string; html?: string }> {
   const cleanedBody = stripLegacyClosing(params.body);
   const confirmUrl = params.confirmUrl?.trim() || "";
-  const useHtml = PLAIN_TEXT_ONLY.includes(params.emailType)
+  const useHtml = isSequenceRoot(params.emailType)
     ? false
     : (params.useHtml ?? defaultUseHtml(params.emailType));
   const meetingActionsLine = params.meetingActionLinks

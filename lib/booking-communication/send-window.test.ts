@@ -40,6 +40,8 @@ function main() {
   assert.equal(bypassesSendWindow("h48_confirm"), false);
   assert.equal(bypassesSendWindow("h24_relance"), false);
   assert.equal(bypassesSendWindow("h20_cancel"), false);
+  assert.equal(bypassesSendWindow("role_seq_48"), true);
+  assert.equal(bypassesSendWindow("role_seq_24"), true);
 
   const tuesday10h = parisInstant(2026, 9, 8, 10);
   const monday6h = parisInstant(2026, 9, 7, 6);

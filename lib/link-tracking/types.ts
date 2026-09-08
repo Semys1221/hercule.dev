@@ -17,6 +17,7 @@ export type LinkTrackingLead = {
   reservation_agence_link: string;
   reservation_entreprise_link: string;
   confirmation_agence_link: string;
+  post_booking_link: string | null;
   dashboard_link: string | null;
   instantly_lead_id: string | null;
   instantly_campaign_id: string | null;

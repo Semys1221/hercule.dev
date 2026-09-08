@@ -1,19 +1,25 @@
 import { NextResponse } from "next/server";
 
 import { readPricingDocument, writePricingDocument } from "@/lib/site/pricing-server";
-import { pricingDocumentSchema } from "@/lib/site/pricing-types";
+import { pricingAudienceSchema, pricingDocumentSchema } from "@/lib/site/pricing-types";
+
+function parsePricingAudience(value: string) {
+  const parsed = pricingAudienceSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ audience: string }> },
 ) {
-  const { audience } = await context.params;
-  if (audience !== "agence") {
-    return NextResponse.json({ error: "Pricing is only available for agence" }, { status: 400 });
+  const { audience: rawAudience } = await context.params;
+  const audience = parsePricingAudience(rawAudience);
+  if (!audience) {
+    return NextResponse.json({ error: "Invalid pricing audience" }, { status: 400 });
   }
 
   try {
-    const document = readPricingDocument("agence");
+    const document = readPricingDocument(audience);
     return NextResponse.json({ document });
   } catch {
     return NextResponse.json({ error: "Pricing document not found" }, { status: 404 });
@@ -24,16 +30,17 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ audience: string }> },
 ) {
-  const { audience } = await context.params;
-  if (audience !== "agence") {
-    return NextResponse.json({ error: "Pricing is only available for agence" }, { status: 400 });
+  const { audience: rawAudience } = await context.params;
+  const audience = parsePricingAudience(rawAudience);
+  if (!audience) {
+    return NextResponse.json({ error: "Invalid pricing audience" }, { status: 400 });
   }
 
   const body = (await request.json()) as unknown;
   const parsed = pricingDocumentSchema.safeParse({
     ...(typeof body === "object" && body !== null ? body : {}),
     schemaVersion: 1,
-    audience: "agence",
+    audience,
     updatedAt: new Date().toISOString(),
   });
 

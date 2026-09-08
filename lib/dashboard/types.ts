@@ -1,4 +1,4 @@
-export type DashboardMode = "onboarding_preview" | "dashboard_state" | "dashboard_active";
+export type DashboardMode = "onboarding_preview" | "dashboard_state" | "dashboard_active" | "comptable_active" | "comptable_pending";
 
 export type TimelineStep = {
   id: string;
@@ -58,4 +58,8 @@ export type DashboardData = {
   dashboardMode: DashboardMode;
   deliveryPlan: DashboardDeliveryPlan | null;
   enterpriseBrief: DashboardEnterpriseBrief | null;
+  comptable?: {
+    offerType: string;
+    succeededAt: string;
+  } | null;
 };

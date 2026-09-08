@@ -27,11 +27,17 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import type { PricingDocument, PricingPlan } from "@/lib/site/pricing-types";
+import type { Audience } from "@/lib/admin/navigation";
+import type { PricingAudience, PricingDocument, PricingPlan } from "@/lib/site/pricing-types";
+import { getPricingDocument } from "@/lib/site/pricing-data";
 
 type PricingEditorProps = {
-  audience: "agence" | "entreprise";
+  audience: Audience;
 };
+
+function isPricingAudience(audience: Audience): audience is PricingAudience {
+  return audience === "agence" || audience === "comptable";
+}
 
 function PricingEditorSkeleton() {
   return (
@@ -61,7 +67,7 @@ export function PricingEditor({ audience }: PricingEditorProps) {
   const [success, setSuccess] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (audience !== "agence") {
+    if (!isPricingAudience(audience)) {
       setLoading(false);
       return;
     }
@@ -129,11 +135,11 @@ export function PricingEditor({ audience }: PricingEditorProps) {
     }
   }
 
-  if (audience !== "agence") {
+  if (!isPricingAudience(audience)) {
     return (
       <FunnelPlaceholder
         title="Pricing"
-        detail="Aucune tarification pour l'audience entreprise — le service est gratuit."
+        detail="Aucune tarification éditable pour l'audience entreprise — le service est gratuit."
       />
     );
   }

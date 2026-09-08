@@ -34,8 +34,79 @@ def target_mode(config: dict) -> str:
     return str(config.get("TARGET_MODE") or "csv_saved").strip()
 
 
+CHECKPOINT_PUSH_MODES = frozenset({"instantly_pushed", "instantly_pushed_run"})
+LIVE_LIST_TARGET_MODES = frozenset({"instantly_pushed"})
+VALID_TARGET_MODES = frozenset({"csv_saved", "instantly_pushed", "instantly_pushed_run"})
+
+
+def target_uses_live_list(mode: str) -> bool:
+    return mode in LIVE_LIST_TARGET_MODES
+
+
+def target_uses_checkpoint_push(mode: str) -> bool:
+    return mode in CHECKPOINT_PUSH_MODES
+
+
+def is_instantly_push_mode(mode: str) -> bool:
+    return mode in CHECKPOINT_PUSH_MODES
+
+
+def target_progress_value(
+    mode: str,
+    *,
+    instantly_pushed: int = 0,
+    leads_saved: int = 0,
+    instantly_live: int | None = None,
+) -> int:
+    if mode in CHECKPOINT_PUSH_MODES:
+        if target_uses_live_list(mode) and instantly_live is not None:
+            return instantly_live
+        return instantly_pushed
+    return leads_saved
+
+
+def build_config_identity_fingerprint(config: dict) -> str:
+    """Identity hash for resume — keywords, gates, taxonomy (excludes tuning/speed knobs)."""
+    parts = [
+        "|".join(sorted(config.get("KEYWORDS", []))),
+        "|".join(sorted(config.get("EXPANSION_KEYWORDS", []))),
+        "|".join(sorted(config.get("LOCATIONS", []))),
+        "|".join(sorted(config.get("EXPANSION_LOCATIONS", []))),
+        "|".join(sorted(config.get("EXCLUDE_DOMAINS", []))),
+        str(config.get("ENRICH_ENABLED", "")),
+        "|".join(sorted(config.get("ENRICH_INCLUDED_KEYWORDS", []))),
+        "|".join(sorted(config.get("ENRICH_HARD_EXCLUDED_KEYWORDS", []))),
+        "|".join(sorted(config.get("ENRICH_SOFT_EXCLUDED_KEYWORDS", []))),
+        str(config.get("TAXONOMY_GATE_ENABLED", "")),
+        "|".join(sorted(config.get("TAXONOMY_INCLUDED_KEYWORDS", []))),
+        str(config.get("SERVICE_DEFAULT", "")),
+        "|".join(
+            f"{rule.get('label', '')}:{','.join(sorted(rule.get('keywords') or []))}"
+            for rule in (config.get("SERVICE_RULES") or [])
+            if isinstance(rule, dict)
+        ),
+        target_mode(config),
+        str(config.get("PAPPERS_ENABLED", "")),
+        str(config.get("PAPPERS_MIN_EMPLOYEES", "")),
+        str(config.get("PAPPERS_MIN_SCORE", "")),
+        str(config.get("PAPPERS_SCORING_ENABLED", "")),
+        str(config.get("PAPPERS_ON_UNKNOWN", "")),
+        str(config.get("SIRENE_INDEX_ENABLED", "")),
+        str(config.get("REGISTRY_DEEP_ENRICH", "")),
+        str(config.get("REJECT_HOLDINGS", "")),
+        "|".join(sorted(str(item) for item in (config.get("PAPPERS_NAF_PREFIXES") or []))),
+    ]
+    payload = "\n".join(parts)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
 def build_config_fingerprint(config: dict) -> str:
-    """Stable hash of scrape-defining config fields (excludes TARGET_LEADS)."""
+    """Resume fingerprint — tuning knobs (concurrency, poll, batch) intentionally excluded."""
+    return build_config_identity_fingerprint(config)
+
+
+def build_config_legacy_fingerprint(config: dict) -> str:
+    """Pre-overnight-fix fingerprint (includes tuning keys) for resume migration."""
     parts = [
         "|".join(sorted(config.get("KEYWORDS", []))),
         "|".join(sorted(config.get("EXPANSION_KEYWORDS", []))),
@@ -49,6 +120,8 @@ def build_config_fingerprint(config: dict) -> str:
         "|".join(sorted(config.get("ENRICH_INCLUDED_KEYWORDS", []))),
         "|".join(sorted(config.get("ENRICH_HARD_EXCLUDED_KEYWORDS", []))),
         "|".join(sorted(config.get("ENRICH_SOFT_EXCLUDED_KEYWORDS", []))),
+        str(config.get("TAXONOMY_GATE_ENABLED", "")),
+        "|".join(sorted(config.get("TAXONOMY_INCLUDED_KEYWORDS", []))),
         str(config.get("SERVICE_DEFAULT", "")),
         "|".join(
             f"{rule.get('label', '')}:{','.join(sorted(rule.get('keywords') or []))}"
@@ -59,11 +132,26 @@ def build_config_fingerprint(config: dict) -> str:
         target_mode(config),
         str(config.get("PAPPERS_ENABLED", "")),
         str(config.get("PAPPERS_MIN_EMPLOYEES", "")),
+        str(config.get("PAPPERS_MIN_SCORE", "")),
+        str(config.get("PAPPERS_SCORING_ENABLED", "")),
         str(config.get("PAPPERS_ON_UNKNOWN", "")),
+        str(config.get("SIRENE_INDEX_ENABLED", "")),
+        str(config.get("REGISTRY_DEEP_ENRICH", "")),
+        str(config.get("REJECT_HOLDINGS", "")),
+        str(config.get("SCRAPE_START_QUERY_PASS", "")),
         "|".join(sorted(str(item) for item in (config.get("PAPPERS_NAF_PREFIXES") or []))),
     ]
     payload = "\n".join(parts)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def config_fingerprint_compatible(saved: str | None, config: dict) -> bool:
+    if not saved:
+        return True
+    current = build_config_fingerprint(config)
+    if saved == current:
+        return True
+    return saved == build_config_legacy_fingerprint(config)
 
 
 def count_csv_leads(csv_path: str) -> int:
@@ -157,6 +245,8 @@ def new_scrape_state(
     leads_enriched_rejected: int = 0,
     instantly_pushed: int = 0,
     query_pass: int = 0,
+    geo_phase: str = "pass",
+    skip_places: int = 0,
     last_completed_batch_index: int = -1,
     last_submitted_batch_index: int = -1,
     inflight_tasks: list[dict[str, Any]] | None = None,
@@ -173,6 +263,8 @@ def new_scrape_state(
         "queries_total": queries_total,
         "batches_total": batches_total,
         "query_pass": query_pass,
+        "geo_phase": geo_phase,
+        "skip_places": skip_places,
         "last_completed_batch_index": last_completed_batch_index,
         "last_submitted_batch_index": last_submitted_batch_index,
         "inflight_tasks": inflight_tasks or [],
@@ -181,6 +273,8 @@ def new_scrape_state(
         "leads_enriched_rejected": leads_enriched_rejected,
         "instantly_pushed": instantly_pushed,
         "instantly_skipped_duplicate": 0,
+        "reload_round": 0,
+        "reload_round_pushed_start": instantly_pushed,
         "started_at": now,
         "last_updated": now,
     }
@@ -197,11 +291,12 @@ def _inflight_count(state: dict[str, Any] | None) -> int:
 
 def _progress_value(state: dict[str, Any] | None, config: dict, csv_path: str) -> int:
     mode = target_mode(config)
-    if mode == "instantly_pushed" and state is not None:
-        return int(state.get("instantly_pushed", 0))
-    if mode == "instantly_pushed":
-        return 0
-    return count_csv_leads(csv_path)
+    instantly_pushed = int(state.get("instantly_pushed", 0)) if state else 0
+    return target_progress_value(
+        mode,
+        instantly_pushed=instantly_pushed,
+        leads_saved=count_csv_leads(csv_path),
+    )
 
 
 @dataclass
@@ -225,13 +320,24 @@ class RecoverableRun:
     has_checkpoint: bool = False
     config_mismatch: bool = False
     inflight_count: int = 0
+    instantly_live: int | None = None
     message: str = ""
 
     @property
     def progress(self) -> int:
-        if self.target_mode == "instantly_pushed":
+        if target_uses_checkpoint_push(self.target_mode):
             return self.instantly_pushed
         return self.leads_saved
+
+    @property
+    def headline_progress(self) -> int:
+        """Best progress for UI: Instantly live when available, else checkpoint."""
+        return target_progress_value(
+            self.target_mode,
+            instantly_pushed=self.instantly_pushed,
+            leads_saved=self.leads_saved,
+            instantly_live=self.instantly_live,
+        )
 
     @property
     def is_recoverable(self) -> bool:
@@ -258,7 +364,17 @@ def detect_recoverable_run(
     instantly_pushed = int(state.get("instantly_pushed", 0)) if state else 0
     leads_enriched_valid = int(state.get("leads_enriched_valid", 0)) if state else 0
     leads_enriched_rejected = int(state.get("leads_enriched_rejected", 0)) if state else 0
-    progress = instantly_pushed if mode == "instantly_pushed" else leads_saved
+    instantly_live: int | None = None
+    if target_uses_live_list(mode):
+        from scrape_metrics import fetch_instantly_live
+
+        instantly_live = fetch_instantly_live(config)
+    progress = target_progress_value(
+        mode,
+        instantly_pushed=instantly_pushed,
+        leads_saved=leads_saved,
+        instantly_live=instantly_live,
+    )
 
     if progress >= target > 0:
         if state and state.get("status") not in (STATUS_COMPLETED, STATUS_INCOMPLETE):
@@ -268,7 +384,7 @@ def detect_recoverable_run(
                 instantly_pushed=instantly_pushed,
                 path=state_path,
             )
-        if leads_saved > 0 or inflight_count > 0 or instantly_pushed > 0:
+        if leads_saved > 0 or inflight_count > 0 or instantly_pushed > 0 or (instantly_live or 0) > 0:
             return RecoverableRun(
                 has_leftover_work=True,
                 can_resume=False,
@@ -276,13 +392,12 @@ def detect_recoverable_run(
                 leads_enriched_valid=leads_enriched_valid,
                 leads_enriched_rejected=leads_enriched_rejected,
                 instantly_pushed=instantly_pushed,
+                instantly_live=instantly_live,
                 target=target,
                 target_mode=mode,
                 inflight_count=inflight_count,
                 pending_push=pending_push,
-                message=(
-                    "Target reached — abort and restart to scrape again from scratch."
-                ),
+                message="Target reached on Instantly — scrape complete.",
             )
         return RecoverableRun(
             leads_saved=leads_saved,
@@ -296,7 +411,7 @@ def detect_recoverable_run(
     config_mismatch = bool(
         state
         and state.get("config_fingerprint")
-        and state["config_fingerprint"] != fingerprint
+        and not config_fingerprint_compatible(str(state["config_fingerprint"]), config)
     )
 
     has_leftover_work = (
@@ -316,24 +431,72 @@ def detect_recoverable_run(
     if config_mismatch:
         return RecoverableRun(
             has_leftover_work=True,
-            can_resume=False,
+            can_resume=True,
             leads_saved=leads_saved,
             leads_enriched_valid=leads_enriched_valid,
             leads_enriched_rejected=leads_enriched_rejected,
             instantly_pushed=instantly_pushed,
+            instantly_live=instantly_live,
             target=target,
             target_mode=mode,
-            config_mismatch=True,
-            inflight_count=inflight_count,
+            batches_total=int(state.get("batches_total", 0)) if state else 0,
+            query_pass=int(state.get("query_pass", 0)) if state else 0,
+            last_completed_batch_index=int(state.get("last_completed_batch_index", -1))
+            if state
+            else -1,
             pending_push=pending_push,
+            push_to_instantly=bool(state.get("push_to_instantly", False)) if state else False,
+            last_updated=str(state.get("last_updated", "")) if state else "",
+            has_checkpoint=int(state.get("last_completed_batch_index", -1)) >= 0 if state else False,
+            inflight_count=inflight_count,
+            config_mismatch=True,
             message=(
-                "Saved run used a different config — abort Outscraper jobs and "
-                "delete local leads before starting again."
+                "Config fingerprint changed — soft-resuming with migrated checkpoint "
+                "(wipe local only if keywords/locations/gates changed intentionally)."
             ),
         )
 
     if state:
-        if state.get("status") in (STATUS_COMPLETED, STATUS_INCOMPLETE):
+        status = str(state.get("status") or "")
+        if status in (STATUS_COMPLETED, STATUS_INCOMPLETE):
+            saved_target = int(state.get("target", target))
+            saved_mode = str(state.get("target_mode", mode))
+            live_progress = target_progress_value(
+                saved_mode,
+                instantly_pushed=int(state.get("instantly_pushed", 0)),
+                leads_saved=leads_saved,
+                instantly_live=instantly_live,
+            )
+            under_target = live_progress < saved_target
+            if under_target or inflight_count > 0:
+                return RecoverableRun(
+                    has_leftover_work=True,
+                    can_resume=True,
+                    leads_saved=leads_saved,
+                    leads_enriched_valid=leads_enriched_valid,
+                    leads_enriched_rejected=leads_enriched_rejected,
+                    instantly_pushed=instantly_pushed,
+                    instantly_live=instantly_live,
+                    target=saved_target,
+                    target_mode=saved_mode,
+                    batches_total=int(state.get("batches_total", 0)),
+                    query_pass=int(state.get("query_pass", 0)),
+                    last_completed_batch_index=int(state.get("last_completed_batch_index", -1)),
+                    pending_push=pending_push,
+                    push_to_instantly=bool(state.get("push_to_instantly", False)),
+                    last_updated=str(state.get("last_updated", "")),
+                    has_checkpoint=int(state.get("last_completed_batch_index", -1)) >= 0,
+                    inflight_count=inflight_count,
+                    message=(
+                        f"{inflight_count} Outscraper job(s) still in flight."
+                        if inflight_count
+                        else (
+                            "Under target — continue to resume scraping and city expansion."
+                            if status == STATUS_INCOMPLETE
+                            else "Continue scraping toward target."
+                        )
+                    ),
+                )
             return RecoverableRun(
                 has_leftover_work=True,
                 can_resume=False,
@@ -341,29 +504,32 @@ def detect_recoverable_run(
                 leads_enriched_valid=leads_enriched_valid,
                 leads_enriched_rejected=leads_enriched_rejected,
                 instantly_pushed=instantly_pushed,
-                target=target,
-                target_mode=mode,
+                instantly_live=instantly_live,
+                target=saved_target,
+                target_mode=saved_mode,
                 inflight_count=inflight_count,
                 pending_push=pending_push,
-                message="Previous run finished — abort and restart for a new scrape.",
+                message="Run finished at target — wipe local data only if starting a new campaign.",
             )
 
         batches_total = int(state.get("batches_total", 0))
         last_batch = int(state.get("last_completed_batch_index", -1))
         saved_target = int(state.get("target", target))
         saved_mode = str(state.get("target_mode", mode))
-        saved_progress = (
-            int(state.get("instantly_pushed", 0))
-            if saved_mode == "instantly_pushed"
-            else leads_saved
+        live_progress = target_progress_value(
+            saved_mode,
+            instantly_pushed=int(state.get("instantly_pushed", 0)),
+            leads_saved=leads_saved,
+            instantly_live=instantly_live,
         )
         return RecoverableRun(
             has_leftover_work=True,
-            can_resume=saved_progress < saved_target,
+            can_resume=live_progress < saved_target or inflight_count > 0,
             leads_saved=leads_saved,
             leads_enriched_valid=leads_enriched_valid,
             leads_enriched_rejected=leads_enriched_rejected,
             instantly_pushed=instantly_pushed,
+            instantly_live=instantly_live,
             target=saved_target,
             target_mode=saved_mode,
             batches_total=batches_total,

@@ -9,8 +9,10 @@ assert.equal(plans.length, 2);
 assert.equal(plans[0].id, "plan-starter");
 assert.match(plans[0].price, /1 489/);
 
-const entreprisePlans = getPricingPlans("entreprise");
-assert.equal(entreprisePlans.length, 0);
+const comptablePlans = getPricingPlans("comptable");
+assert.equal(comptablePlans.length, 2);
+assert.equal(comptablePlans[0].id, "plan-comptable-monthly");
+assert.match(comptablePlans[0].price, /1 499/);
 
 const document = getPricingDocument("agence");
 assert.ok(document);

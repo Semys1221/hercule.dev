@@ -17,7 +17,7 @@ import {
 } from "@/lib/admin/navigation";
 import { LANDING_DESCRIPTION, PRODUCT_ROOT_LABEL } from "@/lib/admin/funnels/ui-copy";
 
-const AUDIENCES: Audience[] = ["agence", "entreprise"];
+const AUDIENCES: Audience[] = ["agence", "entreprise", "comptable"];
 
 export function FunnelLanding() {
   return (

@@ -17,7 +17,12 @@ from config import (
     supabase_batch_max_retries,
     supabase_insert_batch_size,
 )
-from slug import build_lead_urls, generate_unique_slug, lead_slug
+from slug import (
+    build_entreprise_lead_urls,
+    build_lead_urls,
+    generate_unique_slug,
+    lead_slug,
+)
 
 LeadCategory = Literal["agence", "entreprise"]
 LeadStatut = Literal[
@@ -221,12 +226,13 @@ def load_slug_set(client: Client | None = None) -> set[str]:
 def build_refresh_patch(
     lead: dict[str, Any],
     *,
+    category: LeadCategory,
     instantly_lead_id: str | None = None,
     instantly_campaign_id: str | None = None,
 ) -> dict[str, Any]:
     slug = lead_slug(lead)
     email = normalize_email(str(lead.get("email") or ""))
-    patch: dict[str, Any] = _url_fields(slug, email)
+    patch: dict[str, Any] = _url_fields(slug, email, category)
     if instantly_lead_id:
         patch["instantly_lead_id"] = instantly_lead_id
     if instantly_campaign_id:
@@ -250,7 +256,7 @@ def build_insert_row(
         "email": normalized,
         "statut": "MEETING_BOOKED" if statut == "BOOKED" else statut,
         "slug": slug,
-        **_url_fields(slug, normalized),
+        **_url_fields(slug, normalized, category),
         "instantly_lead_id": instantly_lead_id,
         "instantly_campaign_id": instantly_campaign_id,
         "first_name": first_name,
@@ -356,7 +362,9 @@ def list_all_leads(client: Client | None = None) -> list[dict[str, Any]]:
     return rows
 
 
-def _url_fields(slug: str, email: str) -> dict[str, str]:
+def _url_fields(slug: str, email: str, category: LeadCategory) -> dict[str, str]:
+    if category == "entreprise":
+        return build_entreprise_lead_urls(slug, email)
     return build_lead_urls(slug, email)
 
 
@@ -384,7 +392,7 @@ def insert_lead(
         "email": normalized,
         "statut": "MEETING_BOOKED" if statut == "BOOKED" else statut,
         "slug": slug,
-        **_url_fields(slug, normalized),
+        **_url_fields(slug, normalized, category),
         "instantly_lead_id": instantly_lead_id,
         "instantly_campaign_id": instantly_campaign_id,
         "first_name": first_name,
@@ -525,7 +533,7 @@ def refresh_lead_urls(
 ) -> dict[str, Any]:
     slug = lead_slug(lead)
     email = normalize_email(str(lead.get("email") or ""))
-    patch: dict[str, Any] = _url_fields(slug, email)
+    patch: dict[str, Any] = _url_fields(slug, email, category)
     if instantly_lead_id:
         patch["instantly_lead_id"] = instantly_lead_id
     if instantly_campaign_id:
@@ -562,7 +570,7 @@ def provision_or_update_role_recovery_lead(
         "calendly_payload": calendly_payload,
         "calendly_questions": calendly_questions or {},
         "slug": resolved,
-        **_url_fields(resolved, normalized),
+        **_url_fields(resolved, normalized, "agence"),
     }
     if booked_at is not None:
         patch["booked_at"] = booked_at

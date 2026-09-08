@@ -77,7 +77,11 @@ function main() {
           : "agence";
 
     const template = defaultBookingEmailTemplate(category, emailType);
-    assert.ok(template.subject.trim(), `${emailType} subject must not be empty`);
+    const threadedNoShowFollowUp =
+      emailType === "no_show_indecis_2" || emailType === "no_show_indecis_3";
+    if (!threadedNoShowFollowUp) {
+      assert.ok(template.subject.trim(), `${emailType} subject must not be empty`);
+    }
     assert.ok(template.body.trim(), `${emailType} body must not be empty`);
     assert.ok(
       template.body.length >= 80,

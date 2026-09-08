@@ -3,7 +3,14 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { COMMERCIAL, FORBIDDEN_COPY, OFFER_TYPES, VITRINE_ONLY } from "./constants";
+import {
+  COMMERCIAL,
+  COMMERCIAL_COMPTABLE,
+  FORBIDDEN_COPY,
+  OFFER_TYPES,
+  OFFER_TYPES_COMPTABLE,
+  VITRINE_ONLY,
+} from "./constants";
 
 // ---------------------------------------------------------------------------
 // Snapshot — ensure constants never drift silently
@@ -43,6 +50,29 @@ describe("COMMERCIAL constants", () => {
   });
 });
 
+describe("COMMERCIAL_COMPTABLE constants", () => {
+  it("monthlyPriceCents is 149 900", () => {
+    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(149_900);
+  });
+
+  it("pack3TotalCents is 359 800 (1499 × 3 − 20 %, rounded)", () => {
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
+  });
+
+  it("firstRdvDays is 15", () => {
+    expect(COMMERCIAL_COMPTABLE.firstRdvDays).toBe(15);
+  });
+
+  it("guarantee is 15 RDV in 90 days", () => {
+    expect(COMMERCIAL_COMPTABLE.guaranteeRdvCount).toBe(15);
+    expect(COMMERCIAL_COMPTABLE.guaranteeDays).toBe(90);
+  });
+
+  it("missionsPerMonth is 5", () => {
+    expect(COMMERCIAL_COMPTABLE.missionsPerMonth).toBe(5);
+  });
+});
+
 describe("VITRINE_ONLY", () => {
   it("hercule2500MonthlyCents is 250 000", () => {
     expect(VITRINE_ONLY.hercule2500MonthlyCents).toBe(250_000);
@@ -53,6 +83,23 @@ describe("OFFER_TYPES", () => {
   it("matches Supabase CHECK constraint values", () => {
     expect(OFFER_TYPES.monthly1489).toBe("monthly_1489");
     expect(OFFER_TYPES.pack989x3).toBe("pack_989x3");
+  });
+});
+
+describe("OFFER_TYPES_COMPTABLE", () => {
+  it("matches Supabase CHECK constraint values (20261010120000_payments_comptable)", () => {
+    expect(OFFER_TYPES_COMPTABLE.monthly1499).toBe("monthly_1499");
+    expect(OFFER_TYPES_COMPTABLE.pack3x1499).toBe("pack_3x1499");
+  });
+
+  it("monthly1499 amount matches COMMERCIAL_COMPTABLE.monthlyPriceCents", () => {
+    // 1 499 € = 149 900 cents
+    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(149_900);
+  });
+
+  it("pack3x1499 amount matches COMMERCIAL_COMPTABLE.pack3TotalCents", () => {
+    // 3 598 € = 359 800 cents (1499 × 3 − 20 %, rounded)
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
   });
 });
 

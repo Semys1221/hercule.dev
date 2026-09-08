@@ -34,6 +34,9 @@ next-env.d.ts
 /blob-report/
 /playwright/.cache/
 
+# Frontend audit CLI cache
+app/react_doctor/.cache/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -63,6 +66,8 @@ app/streamlit_clean/data/*.json
 
 # streamlit_scraper runtime output
 app/streamlit_scraper/output/
+app/streamlit_scraper/data/sirene.db
+app/streamlit_scraper/data/sirene.db.tmp
 
 # Unibox export for CRM classification (PII)
 tmp/unibox_export/

@@ -1,25 +1,33 @@
 # Streamlit Scraper
 
-Config-driven Outscraper pipeline for French B2B leads. Supports multiple bootstrap presets with isolated output directories.
+## AI agents
+
+Before editing this app, read:
+1. [`.cursor/rules/streamlit-tools.mdc`](../../.cursor/rules/streamlit-tools.mdc)
+2. [`.cursor/skills/hercule-streamlit/SKILL.md`](../../.cursor/skills/hercule-streamlit/SKILL.md)
+3. [`.cursor/skills/hercule-streamlit-scraper/SKILL.md`](../../.cursor/skills/hercule-streamlit-scraper/SKILL.md)
+
+## Architecture
 
 ```
-repo .env  →  config_loader.py  →  *_config.py + configs/*_config.py
+repo .env  →  config_loader.py  →  configs/{preset}_config.py
                                         ↓
                                    core_logic.py
                                     ↙         ↘
-                              main.py      app.py
-                             (Typer CLI)   (Streamlit)
+                              main.py      app.py (st.navigation)
                                         ↓
                           output/{preset}/outscraper_leads.csv
-                          output/{preset}/enrich_audit.csv
-                          output/{preset}/scrape_state.json
+                          output/{preset}/onboarding_state.json
 ```
+
+Presets are **flat** (no niche groups). Each preset lives in [`configs/`](configs/) as `{preset_id}_config.py`.
 
 ## Setup
 
 ```bash
 cd app/streamlit_scraper
 pip install -r requirements.txt
+pnpm streamlit-scraper
 ```
 
 Required in repo root [`.env`](../../.env):
@@ -27,211 +35,162 @@ Required in repo root [`.env`](../../.env):
 | Variable | Purpose |
 |----------|---------|
 | `OUTSCRAPER_API_KEY` | Outscraper Google Maps API |
-| `INSTANTLY_API_KEY` | Instantly push (native duplicate skip) |
-| `INSTANTLY_LIST_ID` | Optional override for **biggy_agency** preset only |
-| `INSTANTLY_LIST_ID_CONSEILLERS_FINANCIERS` | Optional override for conseillers_financiers preset |
-| `INSTANTLY_LIST_ID_COMPTABLES` | Optional override for comptables preset |
+| `INSTANTLY_API_KEY` | Instantly list/campaign/push |
+| `CRON_SECRET` / `INSTANTLY_BYPASS_WEBHOOK_SECRET` | Subsequence webhook (tab 5) |
 
-## Presets
+Optional VPS remote control (Scrape page):
 
-Presets are auto-discovered from `*_config.py` in this folder and [`configs/`](configs/). The Streamlit UI uses a **two-level selector**: niche group → sub-niche.
+| Variable | Purpose |
+|----------|---------|
+| `VPS_HOST` | SSH host for scrape worker |
+| `VPS_USER` | SSH user (e.g. `root`) |
+| `VPS_SSH_PASSWORD` | Password (optional if SSH keys work) |
+| `VPS_REPO_ROOT` | Repo path on VPS (default `/root/hercule.dev`) |
+| `HERCULE_DATA_ROOT` | Persistent data dir (default `/var/lib/hercule`) |
+| `VPS_SCRAPER_SERVICE` | systemd unit name (default `hercule-scraper`) |
 
-### Root presets (unchanged)
+## Onboarding (Streamlit UI)
 
-| Preset ID | UI label |
-|-----------|----------|
-| `biggy_agency` | Biggy Agency (France) |
-| `conseillers_financiers` | Conseillers Financiers (France) |
-| `comptables` | Comptables (France) |
+Two sidebar pages via **`st.navigation`** in [`app.py`](app.py) — **Onboarding** and **Scrape** (sidebar navigation).
 
-### B2B niche groups (`configs/`)
+### Onboarding (tabs 1–6)
 
-Each group has 3 sub-niche presets (own keywords, enrich rules, Instantly list + campaign + interested bypass subsequence):
+| Tab | Action |
+|-----|--------|
+| **1 Config** | Select existing or **Create new** — full form, Save writes `configs/{id}_config.py` (no Instantly IDs yet) |
+| **2 Liste** | Select or create Instantly lead list |
+| **3 Campagne** | Select or create Instantly campaign (stays **draft**) |
+| **4 2 emails** | Write 2 cold-email steps → PATCH campaign sequences |
+| **5 E1–E3** | Write subsequence emails → Instantly + Supabase templates + webhook init |
+| **6 Prompt buyer** | Write reply-agent buyer prompt → file + Supabase when campaign is active |
 
-| Group | Sub-niche preset IDs |
-|-------|----------------------|
-| BTP Second Œuvre & Rénovation | `btp_reno_energie`, `btp_reno_menuiserie`, `btp_reno_promotion` |
-| PME B2B & Industrie | `pme_industrie_aero`, `pme_industrie_usinage`, `pme_industrie_equipements` |
-| Cliniques Vétérinaires & Médical Privé | `cliniques_veto`, `cliniques_imagerie`, `cliniques_dentaire_sante` |
-| Transport, Logistique & Déménagement B2B | `transport_routier`, `logistique_entreposage`, `demenagement_transfert` |
-| Expertise Comptable & Conseil | `expertise_comptable`, `conseil_gestion`, `audit_patrimoine` |
-| Formation, Écoles Privées & CFA | `formation_continue`, `ecole_privee`, `cfa_apprentissage` |
-| Services aux Bâtiments (FM) | `services_fm` (single preset, active scrape) |
+When tab 6 completes onboarding, a caption points to the **Scrape** page in the sidebar.
 
-Shared tuning per group lives in [`configs/_bases/`](configs/_bases/). Cross-subniche dedup uses all list IDs in the same `NICHE_GROUP`.
+Technical defaults (Outscraper batch, SIRENE, target 5 000) come from [`configs/_bases/common.py`](configs/_bases/common.py).
 
-Output files are isolated per preset under `output/{preset_id}/`.
+### Scrape page (always accessible)
 
-## Creating a new preset
+- Own preset dropdown — lists only presets with **completed onboarding** (tabs 1–6)
+- If no preset is ready, the page stays open with an info message
+- **Contrôles** bar at top: **Démarrer / Continuer**, **Pause**, **Actualiser** (worker start/stop via SSH/systemd or local)
+- Live metrics panel auto-refreshes every 5s
+- Read-only config summary (collapsed by default)
+- **Push CSV to Instantly** and **Wipe local** in secondary sections
 
-Interactive wizard (recommended):
+## CLI
 
 ```bash
-cd app/streamlit_scraper
-python -m bootstrap create      # step-by-step prompts
-python -m bootstrap list          # show discovered presets
-python -m bootstrap validate      # schema + load check on all presets
+python -m bootstrap list
+python -m bootstrap validate
 python -m bootstrap validate my_preset --dry-run
-python -m bootstrap provision-instantly                    # all sub-niche configs/
-python -m bootstrap provision-instantly btp_reno_energie
-python -m bootstrap provision-instantly --with-subsequence # + interested bypass subsequence
-python -m bootstrap cleanup-instantly --all-deprecated     # dry-run delete old monolithic lists
-python -m bootstrap cleanup-instantly btp_reno --execute   # actually delete deprecated resources
-
-# Or via main CLI:
-python main.py bootstrap create
-python main.py bootstrap list
-python main.py bootstrap provision-instantly
+python -m bootstrap cleanup-empty-instantly          # dry-run: delete 0-lead lists/campaigns
+python -m bootstrap cleanup-empty-instantly --execute
+python main.py dry-run --preset <id>
+python main.py scrape --preset <id> --target 5000 --push-instantly --resume
+python main.py worker-loop --preset <id> --push-instantly   # loop until target progress ≥ TARGET_LEADS
+python main.py heal --preset <id>                           # cron watchdog (resume if stale)
+python main.py audit-filter --preset cabinets_expertise_comptable_vol   # analyze filter_audit.csv
+python main.py sirene-build --check
 ```
 
-After creation, no manual registry edit is needed — the new `{preset_id}_config.py` is picked up automatically.
-
-```bash
-python main.py dry-run --preset <new_id>
-python main.py scrape --preset <new_id> --target 5000 --push-instantly
-```
-
-### Biggy Agency (France)
-
-17 keywords × 400 locations (+ expansion pass). Targets French marketing agencies (Google Ads, SEO, digital marketing).
-
-Config: [`biggy_agency_config.py`](biggy_agency_config.py)
-
-### Conseillers Financiers (France)
-
-15 keywords × 400 locations (+ expansion pass). Targets CGP / wealth management / patrimoine advisors.
-
-Config: [`conseillers_financiers_config.py`](conseillers_financiers_config.py)
-
-- **Instantly list:** `4a616678-06a0-44d2-a27c-f9248a4c34bf`
-- **Instantly campaign:** `cb5ce1d8-8a45-47c8-8630-3099dad06e71`
-- **Scrape keywords:** conseiller en gestion de patrimoine, CGP, family office, wealth management, etc.
-- **Enrich included:** gestion de patrimoine, assurance-vie, transmission, PER, immobilier locatif, etc.
-- **Enrich hard excluded:** agence immobilière, expert-comptable, notaire, assurance auto, etc.
-
-### Comptables (France)
-
-14 keywords × 400 locations (+ expansion pass). Targets cabinets d'expertise comptable, fiduciaires, commissaires aux comptes.
-
-Config: [`comptables_config.py`](comptables_config.py)
-
-- **Instantly list:** `a3cd8ff6-34e6-4864-9ed7-c066a8ca20c9`
-- **Instantly campaign:** `affdc6cf-1e4d-496b-a0b2-cf3a02f073aa`
-- **Scrape keywords:** expert-comptable, cabinet comptable, commissaire aux comptes, Cerfrance, etc.
-- **Enrich included:** expertise comptable, tenue de comptabilité, liasse fiscale, paie, bilan, etc.
-- **Enrich hard excluded:** gestion de patrimoine, CGP, agence de communication, notaire, etc.
-
-### Niche sub-niches (`configs/`)
-
-18 B2B sub-niche presets with Pappers effectif >= 10. Provision Instantly list + draft campaign + optional interested bypass subsequence (idempotent, name `Hercule — {label}`):
-
-```bash
-python -m bootstrap provision-instantly --with-subsequence
-```
-
-Subsequence onboarding seeds Supabase templates + `lead_interested` webhook via [`app/streamlit_subsequence/`](../streamlit_subsequence/) when prod env vars are set.
+`cleanup-empty-instantly` scans the **whole Instantly workspace** for lists/campaigns with 0 leads. Review dry-run output before `--execute`.
 
 ## Pipeline
 
-1. **Scrape (Outscraper)** — minimal gates: valid email, website present, dedup, exclude domains
-2. **Enrich (HTTP + BeautifulSoup)** — inline batches of 50; keyword include/exclude on fetched website HTML text. Hard exclusions always reject; soft exclusions only reject when no included keyword matches.
-3. **SIRET / effectif** — overlapped with website enrich (no extra homepage fetch). BeautifulSoup extracts SIRET from the site; official no-key JSON (`recherche-entreprises.api.gouv.fr`) returns tranche d'effectif. Annuaire HTML is fallback only. Reject `REJECT_EMPLOYEE_COUNT` when tranche is under 10 salariés (or EI without staff).
-4. **Push (Instantly)** — only leads marked **Valide** post-enrich + SIRET; target **5,000 pushed**
+1. **Scrape (Outscraper)** — email + website gates, dedup; optional **taxonomy gate** (`type` / `category` / `subtypes`); empty batches retry up to 3×
+2. **Enrich** — website keyword include/exclude (skipped when `ENRICH_ENABLED=false`)
+3. **SIRET / effectif** — `company_registry` (skipped when `PAPPERS_ENABLED=false`)
+4. **Push (Instantly)** — target `TARGET_LEADS` (default 5 000)
 
-Set `ENRICH_ENABLED=false` in config to skip website enrich. SIRET lookup still runs when `PAPPERS_ENABLED=true`. No Pappers API key is required.
+Pass 2+ expands communes via [`commune_passes.py`](commune_passes.py).
 
-## Commands
+**TARGET_MODE** (see [`scrape_state.py`](scrape_state.py)):
 
-```bash
-python main.py ui                          # Streamlit dashboard
-streamlit run app.py                       # same UI directly
-python main.py dry-run --preset conseillers_financiers
-python main.py scrape --preset conseillers_financiers --target 5000 --push-instantly
-python main.py scrape --preset biggy_agency --target 100 --reset
-python main.py clear-leads --preset conseillers_financiers
-python main.py scrape --preset conseillers_financiers --resume --push-instantly
-python main.py push-instantly --preset conseillers_financiers
-python main.py enrich-csv --preset conseillers_financiers
-python main.py filter-audit --preset conseillers_financiers --batches 1
-python main.py remediate --preset conseillers_financiers --execute
-```
+| Mode | Progress / worker stop |
+|------|------------------------|
+| `csv_saved` | Rows in `outscraper_leads.csv` |
+| `instantly_pushed` | **Instantly live** list count (API) — pipe A comptable |
+| `instantly_pushed_run` | **Checkpoint** `instantly_pushed` in `scrape_state.json` — pipe vol (shared list) |
 
-Default preset is `biggy_agency` when `--preset` is omitted.
+Checkpoint `instantly_pushed` = pushes credited to **this preset run** only.
 
-## Resume / abort after interruption
+### Dual pipeline comptable (VPS)
 
-If Streamlit or the CLI stops mid-scrape, reopen the dashboard or run `--resume`:
+Two workers can run in parallel on the same Instantly list:
 
-- **`output/{preset}/scrape_state.json`** — checkpoint (batch index, scraped/enriched/pushed counts, in-flight task IDs)
-- **`output/{preset}/outscraper_leads.csv`** — leads that passed scrape gates
-- **`output/{preset}/enrich_audit.csv`** — leads rejected by website keyword check
+| systemd unit | Preset | Filtering | Target |
+|--------------|--------|-----------|--------|
+| `hercule-scraper` | `cabinets_expertise_comptable` | Website enrich + registry | `instantly_pushed` (live list) |
+| `hercule-scraper-comptable-vol` | `cabinets_expertise_comptable_vol` | Outscraper taxonomy only (`taxonomy_gate.py`) | `instantly_pushed_run` (10K checkpoint) |
 
-On reopen, the Streamlit dashboard shows a **Previous scrape data detected** panel when local CSV, checkpoint, or Outscraper jobs remain:
+Volume preset filters métier on Outscraper columns **`type`**, **`category`**, **`subtypes`** (concatenated via `category_filter.taxonomy_text`). No BeautifulSoup, no effectif gate. Same `INSTANTLY_LIST_ID`; dedup via `INSTANTLY_DEDUP_LIST_IDS` + `INSTANTLY_SKIP_IF_IN_LIST`.
 
-1. **Continue scraping** — resumes from the last completed batch (disabled if config changed)
-2. **Push to Instantly** — uploads CSV rows (Instantly skips duplicates server-side)
-3. **Abort + clear local** — cancel Outscraper jobs, remove CSV + checkpoint + enrich audit
-4. **Abort Outscraper + restart from scratch** — cancel remote jobs, clear local files, start fresh
-
-**Start Engine** is disabled while leftover work exists — continue or abort first.
-
-**Config change:** if keywords, locations, enrich keywords, or filters changed since the saved run, resume is blocked — use **Abort + restart**.
-
-## Instantly push
-
-When `--push-instantly` is enabled (or auto-push checkbox during scrape):
-
-1. Scrapes leads to CSV (email + website gates)
-2. Enriches in batches of **50** (`ENRICH_BATCH_SIZE`) via HTTP fetch + BeautifulSoup
-3. Pushes to Instantly every **100** enriched-valid leads (`INSTANTLY_PUSH_EVERY`), plus final flush
-4. Instantly skips leads already in any campaign or list (upload flags `skip_if_in_*`)
-
-**Local dedup before enrich:** when push is enabled, the scraper loads emails from `INSTANTLY_DEDUP_LIST_IDS` and `INSTANTLY_DEDUP_CAMPAIGN_IDS` (preset config) and skips scrape/enrich for those addresses. Results are cached for **6 hours** at `output/<preset>/workspace_emails.json` (scope + `complete` flag must match). Override slow list queries with env `INSTANTLY_READ_TIMEOUT_S` (default **180** seconds).
-
-Instantly custom variables per lead: `city`, `service`, `niche`, `subniche`, `type`, `category`, `subtypes`, `siret`, `siren`, `effectif`, `naf`, `forme_juridique`, `annee_creation`, `chiffre_affaires`.
-
-CSV columns: `Email`, `Company`, `Website`, `Service`, `Niche`, `Subniche`, `City`, `Type`, `Category`, `Subtypes`, plus Pappers fields (`Siret`, `Siren`, `Effectif`, `TrancheEffectif`, `Naf`, `FormeJuridique`, `AnneeCreation`, `ChiffreAffaires`).
-
-## Enrich tuning
-
-| Key | Default | Purpose |
-|-----|---------|---------|
-| `ENRICH_ENABLED` | `true` | Toggle website keyword check |
-| `ENRICH_BATCH_SIZE` | 50 | Scraped leads before enrich batch |
-| `ENRICH_CONCURRENCY` | 20 | Parallel HTTP requests |
-| `ENRICH_TIMEOUT_MS` | 10000 | HTTP request timeout |
-| `ENRICH_INCLUDED_KEYWORDS` | preset-specific | Must match on website |
-| `ENRICH_HARD_EXCLUDED_KEYWORDS` | preset-specific | Always reject if matched |
-| `ENRICH_SOFT_EXCLUDED_KEYWORDS` | preset-specific | Reject only when no included match |
-| `PAPPERS_ENABLED` | `true` | SIRET / effectif via site + Annuaire (no API key) |
-| `PAPPERS_MIN_EMPLOYEES` | 10 | Hard floor (INSEE tranche 11+) |
-| `PAPPERS_ON_UNKNOWN` | `reject` | Fail closed when effectif is missing |
-| `PAPPERS_NAF_PREFIXES` | preset-specific | Optional APE prefix filter |
-| `PAPPERS_CONCURRENCY` | 20 | Parallel SIRET lookups |
-
-Pappers reject reasons in `enrich_audit.csv`: `REJECT_EMPLOYEE_COUNT`, `REJECT_NAF`, `REJECT_PAPPERS_NOT_FOUND`, `REJECT_UNKNOWN_EFFECTIF`, `REJECT_PAPPERS_UNAVAILABLE`.
-
-### Outscraper performance tuning
-
-Override via repo [`.env`](../../.env):
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `OUTSCRAPER_BATCH_SIZE` | 200 | Queries per API request |
-| `OUTSCRAPER_CONCURRENCY` | 6 | In-flight async tasks |
-| `OUTSCRAPER_LIMIT_PER_QUERY` | 30 | Places per query |
-| `OUTSCRAPER_POLL_TIMEOUT_S` | 600 | Task timeout (10 min) |
-
-## Remediation
+Install volume worker:
 
 ```bash
-python main.py remediate --preset conseillers_financiers --dry-run
-python main.py remediate --preset conseillers_financiers --execute
-python main.py remediate --preset conseillers_financiers --execute --target 500
+sudo VPS_SCRAPER_SERVICE=hercule-scraper-comptable-vol \
+     SCRAPER_PRESET=cabinets_expertise_comptable_vol \
+     bash scripts/vps/install-scraper.sh
+sudo systemctl start hercule-scraper-comptable-vol
 ```
 
-Output files: `output/{preset}/enrich_audit.csv`, `output/{preset}/filter_audit.csv`, `output/{preset}/outscraper_raw.jsonl`, `output/{preset}/remediation_report.json`.
+Output is isolated per preset under `$HERCULE_DATA_ROOT/streamlit_scraper/output/{preset_id}/`. Heal cron is per-preset (`heal-{preset}.log`).
+
+#### Funnel vol — taux d'acceptation et taxonomy
+
+Le pipe vol peut afficher un **creux batch ~9–15%** (`accepted / (accepted + rejected)` dans `scrape.log`) alors que le **taux global** reste ~20–35%. Ce n'est en général **pas** un problème de taxonomy :
+
+| Rejet (typique vol) | Part du total | Cause |
+|---------------------|---------------|-------|
+| `duplicate company (domain) or email` | ~50–55% | Dedup scrape + chevauchement pipe A (même requêtes / même liste Instantly) |
+| `invalid or missing email` | ~15–20% | Données Google Maps incomplètes |
+| `taxonomy_mismatch` | **~3–5%** | Gate métier sur `type` / `category` / `subtypes` uniquement |
+| Autres | &lt;1% | Domaines exclus (Facebook, PagesJaunes…) |
+
+**Taxonomy gate** ([`taxonomy_gate.py`](taxonomy_gate.py)) : les **CAC seuls** (`Commissaire aux comptes` sans mot-clé EC) restent **exclus volontairement**. La majorité des `taxonomy_mismatch` sont du bruit (huissier, assurance, recrutement, école, avocat).
+
+Audit reproductible :
+
+```bash
+python main.py audit-filter --preset cabinets_expertise_comptable_vol
+# → breakdown Reason, buckets taxonomy, taxonomy_review.csv (borderline), batch rates
+```
+
+Revue manuelle échantillon : [`docs/taxonomy_review_manual.md`](docs/taxonomy_review_manual.md).
+
+**Throughput (si creux batch persistant)** — leviers hors taxonomy :
+
+1. Laisser le vol avancer vers **pass communes** (`SCRAPE_START_QUERY_PASS: 2` → chunks `commune_passes`) pour réduire le chevauchement avec pipe A (pass 0–1).
+2. `INSTANTLY_SKIP_IF_IN_LIST: true` réduit le ratio pushed/scraped quand la liste est déjà peuplée par pipe A — comportement attendu avec liste partagée.
+3. Ne pas assouplir la taxonomy sur le **nom Google** ; les faux positifs recrutement / agence web restent fréquents.
+
+## Resume / checkpoint
+
+- `output/{preset}/scrape_state.json` — batch checkpoint
+- `output/{preset}/scrape.log` — persistent worker log
+- `output/{preset}/worker_heartbeat.json` — worker liveness (stale → heal)
+- `incomplete` runs are **resumable** — use Continue / worker-loop
+- Resume blocked only if config fingerprint changed (wipe local first)
+
+## VPS worker
+
+On the VPS (once repo is deployed):
+
+```bash
+export SCRAPER_PRESET=cabinets_expertise_comptable
+export HERCULE_DATA_ROOT=/var/lib/hercule
+sudo bash scripts/vps/install-scraper.sh
+sudo systemctl start hercule-scraper
+```
+
+From your Mac: open sidebar **Scrape** → **Continue / Start worker**. Progress uses Instantly live count and won't reset to 0 on rerun.
+
+Helper scripts: [`scripts/vps/install-scraper.sh`](../../scripts/vps/install-scraper.sh), `heal-scraper.sh`, `run-worker-loop.sh`.
+
+## Output per preset
+
+`output/{preset_id}/` — CSVs, audits, `scrape_state.json`, `scrape.log`, `worker_heartbeat.json`, `cron_events.jsonl`, `onboarding_state.json`
 
 ## Legacy
 
-Older implementations live in [`app/scrapper/`](../scrapper/) (`agence_pipeline.py`, `streamlite_agence_pipeline.py`). This folder is the consolidated entrypoint.
+Older group-based presets and Typer `bootstrap create` wizard were removed. Use the Streamlit tabs for all new presets.

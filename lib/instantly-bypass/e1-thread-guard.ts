@@ -2,16 +2,15 @@ import { listEmails } from "./client";
 
 import type { InstantlyEmailRecord } from "./types";
 
-const MANDATAIRES_MARKER = "mandataires";
+const PARTNER_CABINETS_MARKER = "cabinets partenaires";
 
 const E1_FINGERPRINTS = [
-  "voici les precisions",
-  "l un des groupes de clients",
-  "audit de compatibilite",
-  "mon agence est compatible",
-  "deposer la candidature",
-  "premiers echanges entre cabinets",
-  MANDATAIRES_MARKER,
+  "voici plus de precisions",
+  "cabinets partenaires",
+  "plus de 3 associes",
+  "proposer mon cabinet",
+  "reprendre ces sujets en main",
+  PARTNER_CABINETS_MARKER,
 ] as const;
 
 function stripAccents(text: string): string {
@@ -74,7 +73,7 @@ export function countMandatairesInSentEmails(items: InstantlyEmailRecord[]): num
     if (!isHerculeEmail(text)) {
       continue;
     }
-    if (normalizeEmailText(text).includes(MANDATAIRES_MARKER)) {
+    if (normalizeEmailText(text).includes(PARTNER_CABINETS_MARKER)) {
       count += 1;
     }
   }

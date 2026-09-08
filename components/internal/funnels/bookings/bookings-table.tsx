@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExternalLink } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
+import { BookingReminderStatus } from "@/components/internal/funnels/bookings/booking-reminder-status";
+import type { BookingEmailJobSummary } from "@/lib/admin/bookings/email-jobs";
 import {
   formatWorkflowFeedback,
   type WorkflowAction,
@@ -131,17 +133,24 @@ function BookingRowActionsMenu({
   actions,
   pending,
   pendingNotPresent,
+  pendingReset,
   onWorkflow,
   onNotPresent,
+  onResetNoShow,
 }: {
   actions: BookingRowActionState;
   pending: boolean;
   pendingNotPresent: boolean;
+  pendingReset: boolean;
   onWorkflow: (action: WorkflowAction) => void;
   onNotPresent: () => void;
+  onResetNoShow: () => void;
 }) {
   const hasActions =
-    actions.showNoShow || actions.showNotPaid || actions.showNotPresent;
+    actions.showNoShow ||
+    actions.showNotPaid ||
+    actions.showNotPresent ||
+    actions.showResetNoShow;
   if (!hasActions) {
     return null;
   }
@@ -154,7 +163,7 @@ function BookingRowActionsMenu({
           variant="ghost"
           size="icon"
           className="size-8"
-          disabled={pending || pendingNotPresent}
+          disabled={pending || pendingNotPresent || pendingReset}
           aria-label="Actions"
         >
           <span className="text-base leading-none" aria-hidden="true">…</span>
@@ -173,6 +182,9 @@ function BookingRowActionsMenu({
         ) : null}
         {actions.showNotPresent ? (
           <DropdownMenuItem onSelect={() => onNotPresent()}>Absent ?</DropdownMenuItem>
+        ) : null}
+        {actions.showResetNoShow ? (
+          <DropdownMenuItem onSelect={() => onResetNoShow()}>Reset</DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
@@ -217,11 +229,49 @@ export function BookingsTable({ audience }: BookingsTableProps) {
   const [pendingNotPresentInvitee, setPendingNotPresentInvitee] = useState<string | null>(
     null,
   );
+  const [pendingResetInvitee, setPendingResetInvitee] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [notPresentMessage, setNotPresentMessage] = useState<string | null>(null);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [jobsByLeadId, setJobsByLeadId] = useState<
+    Record<string, BookingEmailJobSummary[]>
+  >({});
 
   const isAgenceScope = audience === "agence";
+
+  const fetchEmailJobs = useCallback(async (bookings: EnrichedCalendlyBooking[]) => {
+    const leadIds = [
+      ...new Set(
+        bookings.map((booking) => booking.lead_id?.trim() ?? "").filter(Boolean),
+      ),
+    ];
+
+    if (leadIds.length === 0) {
+      setJobsByLeadId({});
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/bookings/email-jobs?leadIds=${encodeURIComponent(leadIds.join(","))}`,
+      );
+      const body = (await response.json()) as {
+        jobsByLeadId?: Record<string, BookingEmailJobSummary[]>;
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(body.error ?? "Impossible de charger les relances email");
+      }
+      setJobsByLeadId(body.jobsByLeadId ?? {});
+    } catch (fetchError) {
+      console.error(
+        "[bookings-table] email jobs fetch failed:",
+        fetchError instanceof Error ? fetchError.message : fetchError,
+      );
+      setJobsByLeadId({});
+    }
+  }, []);
 
   const fetchBookings = useCallback(
     async (fresh = false) => {
@@ -244,6 +294,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         }
 
         setRows(bookings);
+        await fetchEmailJobs(bookings);
         if (bookings.length === 0) {
           setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
         }
@@ -258,7 +309,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         setLoading(false);
       }
     },
-    [audience, isAgenceScope],
+    [audience, fetchEmailJobs, isAgenceScope],
   );
 
   useEffect(() => {
@@ -387,6 +438,60 @@ export function BookingsTable({ audience }: BookingsTableProps) {
     }
   }, []);
 
+  const runResetNoShow = useCallback(async (row: EnrichedCalendlyBooking) => {
+    const previousStatus = row.sales_call_status;
+    setActionError(null);
+    setResetMessage(null);
+    setPendingResetInvitee(row.invitee_uri);
+    setRows((current) =>
+      current.map((item) =>
+        item.invitee_uri === row.invitee_uri
+          ? { ...item, sales_call_status: "scheduled" }
+          : item,
+      ),
+    );
+
+    try {
+      const response = await fetch("/api/admin/bookings/reset-no-show", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inviteeUri: row.invitee_uri,
+          leadId: row.lead_id,
+          email: row.email,
+          startTime: row.start_time,
+        }),
+      });
+      const body = (await response.json()) as {
+        status?: SalesCallStatus;
+        cancelledJobs?: number;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        throw new Error(body.error ?? "Reset impossible");
+      }
+
+      const cancelledJobs = body.cancelledJobs ?? 0;
+      const jobsLabel =
+        cancelledJobs === 1
+          ? "1 email en attente annulé"
+          : `${cancelledJobs} emails en attente annulés`;
+      setResetMessage(`No-show annulé · ${jobsLabel}`);
+    } catch (err) {
+      setRows((current) =>
+        current.map((item) =>
+          item.invitee_uri === row.invitee_uri
+            ? { ...item, sales_call_status: previousStatus }
+            : item,
+        ),
+      );
+      setActionError(err instanceof Error ? err.message : "Reset impossible");
+    } finally {
+      setPendingResetInvitee(null);
+    }
+  }, []);
+
   const sortedRows = useMemo(
     () => rows.slice().sort((a, b) => b.start_time.localeCompare(a.start_time)),
     [rows],
@@ -423,6 +528,9 @@ export function BookingsTable({ audience }: BookingsTableProps) {
       {workflowMessage ? (
         <InternalStatusAlert variant="success" message={workflowMessage} />
       ) : null}
+      {resetMessage ? (
+        <InternalStatusAlert variant="success" message={resetMessage} />
+      ) : null}
 
       {isAgenceScope && sortedRows.length > 0 ? (
         <div className="rounded-md border border-border">
@@ -432,6 +540,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                 <TableHead>Prospect</TableHead>
                 <TableHead>RDV</TableHead>
                 <TableHead>Statut CRM</TableHead>
+                <TableHead>Relances</TableHead>
                 <TableHead>Actions</TableHead>
                 <TableHead>Réservation</TableHead>
                 <TableHead>Confirmation</TableHead>
@@ -444,6 +553,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                 const actions = bookingRowActionState(row.sales_call_status);
                 const pending = pendingInvitee === row.invitee_uri;
                 const pendingNotPresent = pendingNotPresentInvitee === row.invitee_uri;
+                const pendingReset = pendingResetInvitee === row.invitee_uri;
                 return (
                   <TableRow key={row.invitee_uri}>
                     <TableCell>
@@ -454,11 +564,6 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                           </div>
                           <div className="text-xs text-muted-foreground">{row.email}</div>
                         </div>
-                        {row.provisioned ? (
-                          <Badge variant="secondary" className="text-xs">
-                            Provisionné
-                          </Badge>
-                        ) : null}
                       </div>
                       {row.warning ? (
                         <p className="mt-1 text-xs text-muted-foreground">{row.warning}</p>
@@ -468,6 +573,14 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                       {formatParisDateTime(row.start_time)}
                     </TableCell>
                     <TableCell className="text-sm">{row.statut ?? "—"}</TableCell>
+                    <TableCell>
+                      <BookingReminderStatus
+                        leadId={row.lead_id}
+                        scheduledAt={row.start_time}
+                        category={row.lead_category ?? "agence"}
+                        jobs={row.lead_id ? jobsByLeadId[row.lead_id] ?? [] : []}
+                      />
+                    </TableCell>
                     <TableCell className="min-w-[10rem]">
                       <div className="flex flex-wrap items-center gap-2">
                         <SalesCallStatusBadge status={row.sales_call_status} />
@@ -475,8 +588,10 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                           actions={actions}
                           pending={pending}
                           pendingNotPresent={pendingNotPresent}
+                          pendingReset={pendingReset}
                           onWorkflow={(status) => void runWorkflowAction(row, status)}
                           onNotPresent={() => void sendNotPresentEmail(row)}
+                          onResetNoShow={() => void runResetNoShow(row)}
                         />
                       </div>
                       <SalesCallStatusHint

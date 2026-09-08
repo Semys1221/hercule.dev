@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { Audience } from "@/lib/admin/navigation";
 import {
   buildDefaultProfile,
   onboardingTimestamp,
@@ -99,7 +98,7 @@ async function insertLead(
 }
 
 export async function createOnboardingFiche(params: {
-  category: Audience;
+  category: LeadCategory;
   email: string;
   firstName: string;
   company: string;

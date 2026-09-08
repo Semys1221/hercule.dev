@@ -15,6 +15,7 @@ const TARGETS = [
   { path: "/api/cron/instantly-bypass-jobs", label: "instantly-bypass-jobs" },
   { path: "/api/cron/instantly-bypass-pipeline", label: "instantly-bypass-pipeline" },
   { path: "/api/cron/ai-reply-agent-jobs", label: "ai-reply-agent-jobs" },
+  { path: "/api/cron/link-provisioning", label: "link-provisioning" },
 ] as const;
 
 function env(name: string): string {

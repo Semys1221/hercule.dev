@@ -1,0 +1,50 @@
+---
+description: Obligatoire pour tout travail Next.js Hercule (hors Streamlit)
+globs: "{app/api/**,app/internal/**,app/dashboard/**,app/survey/**,app/**/page.tsx,app/layout.tsx,app/globals.css,components/**,lib/**,emails/**,content/**}"
+alwaysApply: false
+---
+
+# Next.js Hercule — skill obligatoire
+
+## Exception Streamlit
+
+Si le chemin est sous `app/streamlit_*`, suivre [streamlit-tools.mdc](streamlit-tools.mdc) à la place.
+
+## Avant toute modification
+
+1. Lire [`.cursor/skills/hercule-nextjs/SKILL.md`](../skills/hercule-nextjs/SKILL.md) (router).
+2. Lire le sub-skill du domaine concerné (table dans le router).
+3. Pour tout changement non trivial : respecter l'ordre de lecture de [doc/README.md](../../doc/README.md) — au minimum `00-decisions`, `02-state-machines`, `03-data-model`, étape courante du roadmap.
+
+## UI
+
+- Composants : MCP `plugin-shadcn-shadcn` (voir [shadcn-mcp.mdc](shadcn-mcp.mdc)).
+- Admin `/internal/**` : tokens `.internal` (voir [internal-design.mdc](internal-design.mdc)).
+
+## MCP routing
+
+| Sujet | MCP / skill |
+|-------|-------------|
+| UI shadcn | `plugin-shadcn-shadcn` |
+| Supabase (tables, migrations) | `plugin-supabase-supabase` |
+| Instantly | `user-instantly` |
+| Calendly | `plugin-calendly-calendly` |
+| Resend / emails | `plugin-resend-resend` |
+| Stripe / paiements | `plugin-stripe-stripe` |
+| Déploiement Vercel | `plugin-vercel-vercel` |
+
+## Interdictions
+
+- Skills personnels `scrapping` / `smartlead` — autre stack.
+- Inngest / n8n — pas de nouveau runtime job.
+- Second design system — shadcn uniquement dans Next.
+- Boutons/inputs HTML bruts dans Next — shadcn rule.
+- Login admin sur `/internal` — voir [app/internal/README.md](../../app/internal/README.md).
+
+## Orchestrateurs
+
+Pattern actuel : **webhook → table job → cron** (`CRON_SECRET` sur `/api/cron/*`). Ne pas introduire un autre runtime.
+
+Secrets dans le `.env` à la racine — ne jamais committer de clés API.
+
+Les skills **ne remplacent pas** `doc/tech-stack/*` pour les décisions métier.

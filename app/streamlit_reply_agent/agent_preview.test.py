@@ -8,6 +8,7 @@ from unittest.mock import patch
 from agent_preview import (
     assemble_system_prompt,
     build_global_rules,
+    generate_reply_preview,
     truncate_inbound_text,
 )
 
@@ -32,6 +33,11 @@ class BuildGlobalRulesTests(unittest.TestCase):
     def test_requires_french_reply_text(self) -> None:
         rules = build_global_rules(max_sentences=2)
         self.assertIn("Rédige reply_text en français.", rules)
+
+    def test_skips_not_interested_tag(self) -> None:
+        rules = build_global_rules(max_sentences=2)
+        self.assertIn("Not interested", rules)
+        self.assertIn("should_reply à false", rules)
 
 
 class AssembleSystemPromptTests(unittest.TestCase):
@@ -84,6 +90,25 @@ class TruncateInboundTests(unittest.TestCase):
         result = truncate_inbound_text(long_text, max_chars=2000)
         self.assertEqual(len(result), 2000)
         self.assertTrue(result.endswith("…"))
+
+
+class GenerateReplyPreviewTests(unittest.TestCase):
+    def test_skips_not_interested_without_calling_grok(self) -> None:
+        config = {
+            "prompt_snapshot": "Campaign prompt",
+            "target_type": "buyer",
+            "niche_preset_id": "comptables",
+        }
+        with patch("agent_preview._generate_with_models") as mock_grok:
+            preview = generate_reply_preview(
+                config,
+                "Hello",
+                "lead@example.com",
+                interest_label="Not interested",
+            )
+        mock_grok.assert_not_called()
+        self.assertFalse(preview["should_reply"])
+        self.assertIn("Not interested", preview["reason"])
 
 
 if __name__ == "__main__":

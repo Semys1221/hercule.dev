@@ -309,8 +309,4 @@ def provision_targets(preset_id: str = "") -> list[str]:
         if preset_id not in presets:
             raise KeyError(preset_id)
         return [preset_id]
-    return [
-        pid
-        for pid, meta in sorted(presets.items())
-        if is_configs_preset(pid) and meta.niche_group != meta.preset_id
-    ]
+    return sorted(presets.keys())

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const faqAudienceSchema = z.enum(["agence", "entreprise"]);
+export const faqAudienceSchema = z.enum(["agence", "entreprise", "comptable"]);
 export type FaqAudience = z.infer<typeof faqAudienceSchema>;
 
 export const faqEntrySchema = z.object({

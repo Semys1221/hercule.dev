@@ -30,14 +30,14 @@ function sent(body: string): InstantlyEmailRecord & Record<string, unknown> {
 
 function run(): void {
   const e1Body =
-    "Voici les precisions. L'un des groupes de clients est constitue de cabinets comptables de 3 a 12 mandataires. hercule.dev Beatrice Meyer";
+    "Voici plus de precisions. Ces demandes sont transmises a nos cabinets partenaires. Proposer mon cabinet Beatrice Meyer";
   const single = [sent(e1Body)];
-  assert(countMandatairesInSentEmails(single) === 1, "single mandataires message");
+  assert(countMandatairesInSentEmails(single) === 1, "single E1 partner-cabinets message");
   assert(countE1MarkersInSentEmails(single) === 1, "single E1 marker");
   assert(!isDuplicateE1Thread(single), "single is not duplicate");
 
   const duplicate = [sent(e1Body), sent(e1Body.replace("Voici", "Encore voici"))];
-  assert(countMandatairesInSentEmails(duplicate) === 2, "duplicate mandataires count");
+  assert(countMandatairesInSentEmails(duplicate) === 2, "duplicate E1 partner-cabinets count");
   assert(isDuplicateE1Thread(duplicate), "duplicate thread detected");
 
   assert(

@@ -2,6 +2,16 @@
 
 Site Hercule (landing agence/entreprise) + CRM backend (link tracking, Calendly, Resend, Instantly).
 
+## AI agents
+
+Before editing Next.js code (`app/`, `components/`, `lib/`, `emails/`, `content/`), read:
+
+1. [`.cursor/rules/nextjs-hercule.mdc`](.cursor/rules/nextjs-hercule.mdc) (enforced when matching paths are open)
+2. [`.cursor/skills/hercule-nextjs/SKILL.md`](.cursor/skills/hercule-nextjs/SKILL.md) (router)
+3. The domain sub-skill for your area (internal, marketing, sales-funnel, dashboard, crm, communication, product)
+
+Canon: [doc/README.md](doc/README.md) reading order for business rules. Streamlit tools: [hercule-streamlit](.cursor/skills/hercule-streamlit/SKILL.md).
+
 ## Development
 
 ```bash

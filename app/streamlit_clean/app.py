@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from checkpoint import list_checkpoints, partial_verified_path
+from paths import data_dir
 from core_logic import get_api_key
 from instantly_client import (
     count_leads_in_campaign,
@@ -188,9 +189,6 @@ def _reset_funnel() -> None:
     st.rerun()
 
 
-_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-
-
 def _render_resume_panel(*, show_push: bool) -> None:
     checkpoints = list_checkpoints()
     if not checkpoints:
@@ -212,7 +210,7 @@ def _render_resume_panel(*, show_push: bool) -> None:
     selected_label = st.selectbox("Interrupted job", list(options.keys()))
     selected = options[selected_label]
 
-    quick_clean_path = os.path.join(_DATA_DIR, f"{selected['prefix']}_quick_clean.csv")
+    quick_clean_path = os.path.join(data_dir(), f"{selected['prefix']}_quick_clean.csv")
     source_artifact = selected.get("source_artifact") or quick_clean_path
     if not os.path.isfile(source_artifact):
         st.warning(f"Source list not found: `{source_artifact}`")

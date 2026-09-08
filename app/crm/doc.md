@@ -2,6 +2,16 @@
 
 Link tracking, Calendly booking, and Resend confirmation sequence for **agence** / **entreprise** leads.
 
+## AI agents
+
+**Streamlit:** [hercule-streamlit](../../.cursor/skills/hercule-streamlit/SKILL.md) — enforced via [streamlit-tools.mdc](../../.cursor/rules/streamlit-tools.mdc).
+
+**Next.js CRM / communication:**
+
+1. [nextjs-hercule.mdc](../../.cursor/rules/nextjs-hercule.mdc)
+2. [hercule-nextjs](../../.cursor/skills/hercule-nextjs/SKILL.md) (router)
+3. Domain skills: [crm](../../.cursor/skills/hercule-nextjs-crm/SKILL.md) (link tracking, webhooks), [communication](../../.cursor/skills/hercule-nextjs-communication/SKILL.md) (booking emails, bypass, crons)
+
 ## Next.js (site + API)
 
 ```bash
@@ -90,6 +100,21 @@ Vercel Hobby only allows daily crons, so use [cron-job.org](https://cron-job.org
 4. Custom request header: `Authorization: Bearer <CRON_SECRET>`
 
 Or run `pnpm configure-instantly-bypass-cron` after adding `CRON_JOB_ORG_API_KEY` to `.env`.
+
+## Link provisioning cron
+
+`GET /api/cron/link-provisioning` — provisions new Instantly list leads with slug + tracking URLs (Bookings tab links) and PATCHes Instantly `custom_variables`. Schedule: hourly.
+
+Or run `pnpm configure-link-provisioning-cron` after adding `CRON_JOB_ORG_API_KEY` to `.env`.
+
+Manual run: `pnpm provision-list-links` (or `--dry-run`, `--email lead@example.com`).
+
+E2E smoke (comptable list → links → subsequence → reply agent):
+
+```bash
+pnpm smoke-comptable-flow-e2e --dry-run
+pnpm smoke-comptable-flow-e2e --execute --prepare
+```
 
 Expect `200` with `{"ok":true,"processed":…}`. `401` means the header does not match Vercel `CRON_SECRET`. `404` means the route is not deployed yet.
 

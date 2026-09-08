@@ -110,6 +110,8 @@ def validate_config_schema(config: dict[str, Any], *, preset_id: str) -> Validat
     list_id = str(config.get("INSTANTLY_LIST_ID", "")).strip()
     if list_id and not UUID_RE.fullmatch(list_id):
         result.add_error(f"INSTANTLY_LIST_ID is not a valid UUID: {list_id!r}")
+    elif not list_id:
+        result.add_warning("INSTANTLY_LIST_ID is empty (link list in onboarding)")
 
     campaign_id = str(config.get("INSTANTLY_CAMPAIGN_ID", "")).strip()
     if campaign_id and not UUID_RE.fullmatch(campaign_id):
@@ -126,6 +128,15 @@ def validate_config_schema(config: dict[str, Any], *, preset_id: str) -> Validat
     target = config.get("TARGET_LEADS")
     if target is not None and int(target) <= 0:
         result.add_error("TARGET_LEADS must be positive")
+
+    mode = str(config.get("TARGET_MODE") or "csv_saved").strip()
+    if config.get("TARGET_MODE") is not None:
+        from scrape_state import VALID_TARGET_MODES
+
+        if mode not in VALID_TARGET_MODES:
+            result.add_error(
+                f"TARGET_MODE must be one of {sorted(VALID_TARGET_MODES)}: {mode!r}"
+            )
 
     service_default = config.get("SERVICE_DEFAULT")
     if service_default is not None and not str(service_default).strip():
@@ -164,6 +175,47 @@ def validate_config_schema(config: dict[str, Any], *, preset_id: str) -> Validat
     naf = config.get("PAPPERS_NAF_PREFIXES")
     if naf is not None and not isinstance(naf, list):
         result.add_error("PAPPERS_NAF_PREFIXES must be a list")
+
+    min_score = config.get("PAPPERS_MIN_SCORE")
+    if min_score is not None:
+        try:
+            if int(min_score) < 0:
+                result.add_error("PAPPERS_MIN_SCORE must be >= 0")
+        except (TypeError, ValueError):
+            result.add_error("PAPPERS_MIN_SCORE must be an integer")
+
+    if "PAPPERS_SCORING_ENABLED" in config and not isinstance(
+        config.get("PAPPERS_SCORING_ENABLED"), bool
+    ):
+        result.add_error("PAPPERS_SCORING_ENABLED must be a bool")
+
+    if "SIRENE_INDEX_ENABLED" in config and not isinstance(
+        config.get("SIRENE_INDEX_ENABLED"), bool
+    ):
+        result.add_error("SIRENE_INDEX_ENABLED must be a bool")
+
+    if "REGISTRY_DEEP_ENRICH" in config and not isinstance(
+        config.get("REGISTRY_DEEP_ENRICH"), bool
+    ):
+        result.add_error("REGISTRY_DEEP_ENRICH must be a bool")
+
+    if "REJECT_HOLDINGS" in config and not isinstance(config.get("REJECT_HOLDINGS"), bool):
+        result.add_error("REJECT_HOLDINGS must be a bool")
+
+    if "TAXONOMY_GATE_ENABLED" in config and not isinstance(
+        config.get("TAXONOMY_GATE_ENABLED"), bool
+    ):
+        result.add_error("TAXONOMY_GATE_ENABLED must be a bool")
+
+    taxonomy_keywords = config.get("TAXONOMY_INCLUDED_KEYWORDS")
+    if taxonomy_keywords is not None and not isinstance(taxonomy_keywords, list):
+        result.add_error("TAXONOMY_INCLUDED_KEYWORDS must be a list")
+    if config.get("TAXONOMY_GATE_ENABLED") and not (
+        isinstance(taxonomy_keywords, list) and taxonomy_keywords
+    ):
+        result.add_error(
+            "TAXONOMY_INCLUDED_KEYWORDS must be a non-empty list when TAXONOMY_GATE_ENABLED"
+        )
 
     metadata = config.get("NICHE_METADATA")
     if metadata is not None and not isinstance(metadata, dict):

@@ -29,9 +29,19 @@ Règles quand should_reply est true :
 - Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
 
 Sécurité :
+- Si le tag Instantly du lead est « Not interested », mets should_reply à false et indique dans reason que le lead a été marqué non intéressé — ne jamais relancer une conversation.
 - Si la réponse n'est PAS clairement couverte par le pack de connaissances, mets should_reply à false et explique dans reason (en français).
 - N'invente jamais de prix, délais, garanties ou fonctionnalités.
 - Utilise uniquement le lien CTA fourni — n'invente jamais d'URL.`;
+}
+
+const NOT_INTERESTED_LABEL = "Not interested";
+
+export function interestLabelFromStatus(status: number | null | undefined): string {
+  if (status === 1) return "Interested";
+  if (status === -1) return NOT_INTERESTED_LABEL;
+  if (status === -4) return "No show";
+  return "Lead";
 }
 
 function assembleSystemPrompt(params: {
@@ -157,11 +167,26 @@ export async function generateReplyDecision(params: {
   targetType: AiReplyTargetType;
   maxSentences?: number;
   customDirective?: string;
+  interestLabel?: string | null;
 }): Promise<{
   decision: GroqReplyDecision;
   model: string;
   costUsdTicks: number | null;
 }> {
+  const interestLabel = (params.interestLabel ?? "Lead").trim() || "Lead";
+  if (interestLabel === NOT_INTERESTED_LABEL) {
+    return {
+      decision: {
+        should_reply: false,
+        reply_text: null,
+        reason:
+          "Lead marqué Not interested dans Instantly — ne pas relancer.",
+      },
+      model: "skipped-not-interested",
+      costUsdTicks: null,
+    };
+  }
+
   const primaryModel = resolveModel("GROK_PRIMARY_MODEL", PRIMARY_MODEL);
   const fallbackModel = resolveModel("GROK_FALLBACK_MODEL", FALLBACK_MODEL);
 
@@ -181,6 +206,7 @@ export async function generateReplyDecision(params: {
 
   const userPrompt = [
     `Email du lead : ${params.leadEmail}`,
+    `Tag Instantly du lead : ${interestLabel}`,
     "",
     `Lien CTA (utilise exactement cette URL dans reply_text) : ${ctaLink}`,
     "",

@@ -3,7 +3,7 @@ import Stripe from "stripe";
 
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
-import { dashboardLinkFor } from "@/lib/link-tracking/urls";
+import { buildDashboardUrl, dashboardLinkFor } from "@/lib/link-tracking/urls";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/payments/stripe";
 import {
   insertJob,
@@ -16,6 +16,7 @@ import {
   resolveBookingEmailTemplate,
 } from "@/lib/booking-communication/template-store";
 import { defaultUseHtml } from "@/lib/booking-communication/signatures";
+import { prepareThreadedSend } from "@/lib/booking-communication/threaded-send";
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -46,9 +47,10 @@ export async function POST(request: Request) {
   const session = event.data.object as Stripe.Checkout.Session;
   const paymentId = session.metadata?.payment_id;
   const agenceId = session.metadata?.agence_id;
+  const entrepriseId = session.metadata?.entreprise_id;
   const stripeEventId = event.id;
 
-  if (!paymentId || !agenceId) {
+  if (!paymentId || (!agenceId && !entrepriseId)) {
     return NextResponse.json({ ok: true, ignored: "missing_metadata" });
   }
 
@@ -83,6 +85,107 @@ export async function POST(request: Request) {
       throw new Error(paymentError.message);
     }
 
+    // ── Comptable path (entreprise_id) ──────────────────────────────────────
+    if (entrepriseId) {
+      revalidateBookingsCache();
+
+      try {
+        const { data: entrepriseLead } = await client
+          .from("entreprise")
+          .select("id, email, first_name, company, slug")
+          .eq("id", entrepriseId)
+          .single();
+
+        if (entrepriseLead) {
+          const emailType = "product_payment_welcome" as const;
+          const idempotencyKey = `payment:welcome:comptable:${entrepriseId}`;
+          const dashboardLink = buildDashboardUrl(entrepriseLead.slug);
+
+          const template = await resolveBookingEmailTemplate({
+            category: "entreprise",
+            emailType,
+          });
+
+          const rendered = await renderCustomBookingEmail({
+            subject: template.subject,
+            body: template.body,
+            category: "entreprise",
+            emailType,
+            firstName: entrepriseLead.first_name,
+            scheduledAt: null,
+            confirmUrl: "",
+            dashboardLink,
+            company: entrepriseLead.company,
+            email: entrepriseLead.email,
+            useHtml: defaultUseHtml(emailType),
+          });
+
+          const now = new Date();
+          const job = await insertJob({
+            category: "entreprise",
+            leadId: entrepriseLead.id,
+            emailType,
+            scheduledFor: now,
+            triggeredBy: "stripe_payment",
+            idempotencyKey,
+            useHtml: defaultUseHtml(emailType),
+          });
+
+          const threaded = await prepareThreadedSend(
+            { email_type: emailType, lead_id: entrepriseLead.id },
+            rendered,
+          );
+
+          const sendResult = await sendBookingEmail({
+            to: entrepriseLead.email,
+            subject: threaded.subject,
+            text: rendered.text,
+            html: rendered.html,
+            idempotencyKey,
+            headers: threaded.headers,
+          });
+
+          if (sendResult.ok && job) {
+            await markJobSent(job.id, sendResult.id, {
+              messageId: sendResult.messageId,
+              threadSubject: threaded.threadSubject,
+            });
+          } else if (!sendResult.ok && job) {
+            await markJobFailed(job.id, sendResult.error);
+          }
+
+          const opsEmail = process.env.NOTIFICATION_OPS_EMAIL?.trim();
+          if (opsEmail) {
+            try {
+              const { getResendClient } = await import("@/lib/resend");
+              const { getBookingFromAddress } = await import(
+                "@/lib/booking-communication/templates"
+              );
+              await getResendClient().emails.send({
+                from: getBookingFromAddress(),
+                to: [opsEmail],
+                subject: `Paiement reçu (comptable) — ${entrepriseLead.company ?? entrepriseLead.email}`,
+                text: `Paiement confirmé pour ${entrepriseLead.email} (${entrepriseLead.company ?? "—"})\nDashboard: ${dashboardLink}\n\nAction requise : provisionner Calendly Pro + Zoom Pro pour ce cabinet.`,
+              });
+            } catch (opsError) {
+              console.error(
+                "[stripe/webhook] ops comptable notification failed:",
+                opsError instanceof Error ? opsError.message : opsError,
+              );
+            }
+          }
+        }
+      } catch (emailError) {
+        console.error(
+          "[stripe/webhook] comptable payment welcome email failed:",
+          emailError instanceof Error ? emailError.message : emailError,
+        );
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
+    // ── Agence path (agenceId) ──────────────────────────────────────────────
     // Set intermediate statut: paid but onboarding not yet complete
     await client
       .from("agence")
@@ -159,18 +262,24 @@ export async function POST(request: Request) {
           useHtml: defaultUseHtml(emailType),
         });
 
+        const threaded = await prepareThreadedSend(
+          { email_type: emailType, lead_id: agenceLead.id },
+          rendered,
+        );
+
         const sendResult = await sendBookingEmail({
           to: agenceLead.email,
-          subject: rendered.subject,
+          subject: threaded.subject,
           text: rendered.text,
           html: rendered.html,
           idempotencyKey,
+          headers: threaded.headers,
         });
 
         if (sendResult.ok && job) {
           await markJobSent(job.id, sendResult.id, {
             messageId: sendResult.messageId,
-            threadSubject: rendered.subject.trim() || null,
+            threadSubject: threaded.threadSubject,
           });
         } else if (!sendResult.ok && job) {
           await markJobFailed(job.id, sendResult.error);

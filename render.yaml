@@ -1,0 +1,94 @@
+# Render Blueprint — Hercule outreach pipelines (scraper + clean).
+#
+# Cron jobs on Render cannot attach persistent disks. We use background workers
+# running supercronic so scheduled jobs can write to /var/data (see doc/render-outreach.md).
+#
+# Deploy: push render.yaml, then open Blueprint in Dashboard or run:
+#   render blueprints validate render.yaml
+#   https://dashboard.render.com/blueprint/new?repo=https://github.com/Semys1221/hercule.dev
+#
+# Secrets: fill sync:false keys in Dashboard env group "hercule-outreach" after Apply.
+
+envVarGroups:
+  - name: hercule-outreach
+    envVars:
+      - key: OUTSCRAPER_API_KEY
+        sync: false
+      - key: INSTANTLY_API_KEY
+        sync: false
+      - key: MYEMAILVERIFIER_API_KEY
+        sync: false
+
+services:
+  - type: worker
+    name: hercule-scraper-worker
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements-outreach.txt
+    startCommand: bash scripts/render/worker-entrypoint.sh
+    envVars:
+      - fromGroup: hercule-outreach
+      - key: HERCULE_DATA_ROOT
+        value: /var/data
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: WORKER_CRONTAB
+        value: scraper-crontab
+      - key: SCRAPER_PRESET
+        sync: false
+      - key: SCRAPER_TARGET
+        value: "5000"
+      - key: SCRAPER_PUSH_INSTANTLY
+        value: "1"
+    disk:
+      name: hercule-scraper-data
+      mountPath: /var/data
+      sizeGB: 10
+
+  - type: worker
+    name: hercule-clean-worker
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements-outreach.txt
+    startCommand: bash scripts/render/worker-entrypoint.sh
+    envVars:
+      - fromGroup: hercule-outreach
+      - key: HERCULE_DATA_ROOT
+        value: /var/data
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: WORKER_CRONTAB
+        value: clean-crontab
+      - key: CLEAN_MODE
+        value: test_50
+      - key: CLEAN_LIST_ID
+        sync: false
+      - key: CLEAN_CAMPAIGN_ID
+        sync: false
+    disk:
+      name: hercule-clean-data
+      mountPath: /var/data
+      sizeGB: 2
+
+  # Optional ops dashboard — suspend in Render if not needed.
+  - type: web
+    name: hercule-outreach-ui
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements-outreach.txt
+    startCommand: >-
+      bash -c 'cd app/${STREAMLIT_APP:-streamlit_scraper} &&
+      streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
+      --server.headless=true'
+    envVars:
+      - fromGroup: hercule-outreach
+      - key: HERCULE_DATA_ROOT
+        value: /var/data
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+      - key: STREAMLIT_APP
+        value: streamlit_scraper
+    disk:
+      name: hercule-ui-data
+      mountPath: /var/data
+      sizeGB: 2

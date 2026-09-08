@@ -22,6 +22,8 @@ const SEND_WINDOW_BYPASS_TYPES: BookingEmailType[] = [
   "deliverance_waitlist",
   "product_calendly_welcome",
   "product_payment_welcome",
+  "role_seq_48",
+  "role_seq_24",
 ];
 
 /** Mail 1 sends immediately, even outside the Paris weekday send window. */

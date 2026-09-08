@@ -248,7 +248,7 @@ async def _fetch_and_qualify(
     assert siret_sema is not None
     async with siret_sema:
         verdict = await siret_validator.validate_lead(record, client)
-    record.update(verdict.company.as_lead_fields())
+    record.update(verdict.as_lead_fields())
     if not verdict.accepted:
         record["Statut_Lead"] = "Non Valide"
         record["Enrich_Reason"] = verdict.reason
@@ -357,10 +357,12 @@ async def enrich_leads(
     siret_sema = None
     siret_timeout = 5.0
     if siret_config and bool(siret_config.get("PAPPERS_ENABLED", False)):
-        from pappers_validator import build_validator, pappers_settings
+        from company_registry import build_validator, pappers_settings
+        from company_registry.validate import _cache_path_for_config
 
         settings = pappers_settings(siret_config)
-        siret_validator = build_validator(siret_config)
+        cache_path = _cache_path_for_config(siret_config)
+        siret_validator = build_validator(siret_config, cache_path=cache_path)
         siret_sema = asyncio.Semaphore(settings["concurrency"])
         siret_timeout = settings["timeout_s"]
         if log_cb:
@@ -420,10 +422,10 @@ async def enrich_leads(
         )
         rejected.append(record)
 
-    if log_cb:
-        log_cb(
-            f"Website enrich done — {len(valid)} valid, {len(rejected)} rejected"
-            + (f" (SIRET rejected {siret_rejected})" if siret_validator else "")
-        )
+    if siret_validator is not None:
+        siret_validator.flush_cache()
+
+    if log_cb and siret_rejected:
+        log_cb(f"Enrich: {siret_rejected} lead(s) rejected by SIRET/registry gate.")
 
     return valid, rejected

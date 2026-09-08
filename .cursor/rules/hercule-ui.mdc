@@ -1,0 +1,29 @@
+---
+description: UI Hercule — lire hercule-ui skill + shadcn MCP avant tout composant React
+globs: "{components/**,app/**/page.tsx,app/**/layout.tsx,app/**/loading.tsx,app/**/error.tsx,emails/**,hooks/**}"
+alwaysApply: false
+---
+
+# Hercule UI — skill obligatoire
+
+## Exceptions
+
+- `app/streamlit_*` — Python Streamlit, pas de shadcn
+- Ne pas refactorer `components/agence/*` / `components/entreprise/*` vers tokens sans demande explicite
+
+## Avant toute UI React
+
+1. Lire [`.cursor/skills/hercule-ui/SKILL.md`](../skills/hercule-ui/SKILL.md) (tokens, internal vs marketing, exemplars).
+2. Utiliser le MCP `plugin-shadcn-shadcn` (voir [shadcn-mcp.mdc](shadcn-mcp.mdc)).
+3. Admin `/internal/**` : tokens `.internal` (voir [internal-design.mdc](internal-design.mdc)).
+
+## Forms
+
+`react-hook-form` + shadcn `Field` / `FieldGroup` — pas d'inputs HTML bruts.
+
+## Avant commit UI
+
+```bash
+pnpm doctor
+pnpm doctor:design   # pages marketing
+```

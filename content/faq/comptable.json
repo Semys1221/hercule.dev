@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "audience": "comptable",
+  "updatedAt": "2026-09-08T00:00:00.000Z",
+  "entries": [
+    {
+      "id": "faq-cp-001",
+      "question": "D'où proviennent les demandes ?",
+      "answer": "Hercule reçoit des demandes d'indépendants et de dirigeants de TPE en reprise de comptabilité, échéances fiscales, déclarations et obligations administratives. Chaque demande est qualifiée avant attribution à un cabinet partenaire.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-002",
+      "question": "Qui peut postuler ?",
+      "answer": "Pour recevoir ce type de contrat, votre cabinet doit compter plus de 3 associés ou collaborateurs. L'éligibilité est confirmée lors de l'audit de compatibilité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-003",
+      "question": "Combien coûte Hercule ?",
+      "answer": "Offre mensuelle : 1 499 €/mois — une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement. 0 % de commission sur vos honoraires. Pack 3 mois : 3 598 € TTC (−20 %) + 5 RDV offerts. Garantie volume : 15 rendez-vous en 90 jours ou continuité sans frais. Pas de garantie de signature.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-004",
+      "question": "Comment se passe la mise en relation ?",
+      "answer": "Après souscription, le premier RDV est planifié sous 15 jours. Calendly Pro et Zoom Pro sont provisionnés par Hercule pour organiser vos rendez-vous avec les dirigeants TPE.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-005",
+      "question": "Y a-t-il une garantie de signature ?",
+      "answer": "Non. Hercule garantit le volume de rendez-vous planifiés (15 en 90 jours ou continuité sans frais), pas la conclusion d'un mandat avec le dirigeant rencontré.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-006",
+      "question": "Comment fonctionnent les emails Hercule ?",
+      "answer": "Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Le domaine principal de la société et de la plateforme est hercule.dev."
+    },
+    {
+      "id": "faq-cp-007",
+      "question": "Mon prospect ne s'est pas présenté (no-show)",
+      "answer": "L'attribution n'est pas consommée. Un rendez-vous de remplacement est planifié sous 14 jours ouvrés.",
+      "cvgLink": true
+    }
+  ]
+}

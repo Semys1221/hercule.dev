@@ -1,13 +1,12 @@
 import { createBypassClient } from "./supabase";
 
+import { templateRequiresReservationLink } from "./reservation-links";
+
 import type { BypassConfig, BypassTemplate, BypassTemplateKey, TemplateVariables } from "./types";
 
-const EMAIL_SIGNATURE = "Béatrice Meyer";
-const RESERVATION_LINK_PLACEHOLDER = "{{reservation_agence_link}}";
+export { templateRequiresReservationLink } from "./reservation-links";
 
-export function templateRequiresReservationLink(bodyHtml: string): boolean {
-  return bodyHtml.includes(RESERVATION_LINK_PLACEHOLDER);
-}
+const EMAIL_SIGNATURE = "Béatrice Meyer";
 
 export function isTemplateBodyEmpty(bodyHtml: string | null | undefined): boolean {
   return !bodyHtml?.trim();
@@ -115,6 +114,7 @@ export function buildTemplateVariables(
     company_name: read("company_name", "companyName"),
     subject: read("subject", "reply_subject") || "your message",
     reservation_agence_link: read("reservation_agence_link"),
+    reservation_entreprise_link: read("reservation_entreprise_link"),
   };
 }
 

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
+  followUpRequiresEmptySubject,
+} from "@/lib/booking-communication/sequence-pattern";
+import {
   getBookingEmailTemplates,
   upsertBookingEmailTemplates,
 } from "@/lib/booking-communication/template-store";
@@ -13,11 +16,31 @@ const categorySchema = z.enum(["agence", "entreprise"]);
 
 const emailTypeSchema = z.enum(BOOKING_EMAIL_TYPE_VALUES);
 
-const templateSchema = z.object({
-  email_type: emailTypeSchema,
-  subject: z.string().min(1),
-  body: z.string().min(1),
-});
+const templateSchema = z
+  .object({
+    email_type: emailTypeSchema,
+    subject: z.string(),
+    body: z.string().min(1),
+  })
+  .superRefine((template, ctx) => {
+    if (followUpRequiresEmptySubject(template.email_type)) {
+      if (template.subject.trim().length > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Follow-up emails must have an empty subject",
+          path: ["subject"],
+        });
+      }
+      return;
+    }
+    if (!template.subject.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Root email subject is required",
+        path: ["subject"],
+      });
+    }
+  });
 
 const putBodySchema = z.object({
   templates: z.array(templateSchema).min(1),

@@ -11,25 +11,10 @@ import {
   hasPendingBypassJob,
   insertBypassJob,
 } from "./scheduled-jobs";
-import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate, templateRequiresReservationLink } from "./templates";
+import { readReservationLink, templateRequiresReservationLink } from "./reservation-links";
+import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate } from "./templates";
 
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
-
-function readReservationLink(
-  lead?: { payload?: Record<string, unknown> | null },
-  payload?: Record<string, unknown>,
-): string | null {
-  const fromPayload = payload?.reservation_agence_link;
-  if (typeof fromPayload === "string" && fromPayload.trim()) {
-    return fromPayload.trim();
-  }
-  const leadPayload = lead?.payload ?? {};
-  const fromLead = leadPayload.reservation_agence_link;
-  if (typeof fromLead === "string" && fromLead.trim()) {
-    return fromLead.trim();
-  }
-  return null;
-}
 
 export async function handleLeadInterested(
   payload: InstantlyWebhookPayload,
@@ -93,7 +78,7 @@ export async function handleLeadInterested(
         leadId: lead?.id,
         webhookReceivedAt,
         status: "failed",
-        errorMessage: "Missing reservation_agence_link on lead",
+        errorMessage: "Missing reservation link on lead",
       });
       return { ok: false, error: "missing_reservation_link" };
     }

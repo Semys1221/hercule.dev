@@ -13,6 +13,7 @@ import requests
 
 from config import grok_api_key
 from lead_links import apply_prompt_link_variables, resolve_lead_cta_link
+from lead_tags import TAG_LABELS, TAG_NOT_INTERESTED
 from legal_content import build_knowledge_pack_cached
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -51,6 +52,7 @@ Règles quand should_reply est true :
 - Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
 
 Sécurité :
+- Si le tag Instantly du lead est « Not interested », mets should_reply à false et indique dans reason que le lead a été marqué non intéressé — ne jamais relancer une conversation.
 - Si la réponse n'est PAS clairement couverte par le pack de connaissances, mets should_reply à false et explique dans reason (en français).
 - N'invente jamais de prix, délais, garanties ou fonctionnalités.
 - Utilise uniquement le lien CTA fourni — n'invente jamais d'URL."""
@@ -215,6 +217,11 @@ def _max_sentences_from_config(config: dict[str, Any], override: int | None = No
     return max(1, min(10, value))
 
 
+NOT_INTERESTED_SKIP_REASON = (
+    "Lead marqué Not interested dans Instantly — ne pas relancer."
+)
+
+
 def generate_reply_preview(
     config: dict[str, Any],
     inbound_text: str,
@@ -223,6 +230,7 @@ def generate_reply_preview(
     prompt_override: str | None = None,
     max_sentences: int | None = None,
     custom_directive: str | None = None,
+    interest_label: str | None = None,
 ) -> dict[str, Any]:
     prompt_snapshot = (
         prompt_override
@@ -231,6 +239,16 @@ def generate_reply_preview(
     ).strip()
     if not prompt_snapshot:
         raise ValueError("Missing prompt_snapshot on campaign config")
+
+    tag_label = (interest_label or TAG_LABELS["lead"]).strip()
+    if tag_label == TAG_LABELS[TAG_NOT_INTERESTED]:
+        return {
+            "should_reply": False,
+            "reply_text": None,
+            "reason": NOT_INTERESTED_SKIP_REASON,
+            "model": None,
+            "cost_usd_ticks": None,
+        }
 
     target_type = _target_type_from_config(config)
     cta_link = resolve_lead_cta_link(lead_email, target_type)
@@ -250,6 +268,7 @@ def generate_reply_preview(
     user_prompt = "\n".join(
         [
             f"Email du lead : {lead_email}",
+            f"Tag Instantly du lead : {tag_label}",
             "",
             f"Lien CTA (utilise exactement cette URL dans reply_text) : {cta_link}",
             "",

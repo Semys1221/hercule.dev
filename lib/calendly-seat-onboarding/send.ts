@@ -5,6 +5,7 @@ import { dashboardLinkFor } from "@/lib/link-tracking/urls";
 import { defaultUseHtml } from "@/lib/booking-communication/signatures";
 import { insertJob, markJobFailed, markJobSent } from "@/lib/booking-communication/jobs";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
+import { prepareThreadedSend } from "@/lib/booking-communication/threaded-send";
 import {
   confirmUrlForLead,
   renderCustomBookingEmail,
@@ -61,12 +62,18 @@ export async function sendCalendlySeatEmail(params: {
     idempotencyKey: params.idempotencyKey,
   });
 
+  const threaded = await prepareThreadedSend(
+    { email_type: emailType, lead_id: lead.id },
+    rendered,
+  );
+
   const result = await sendBookingEmail({
     to: lead.email,
-    subject: rendered.subject,
+    subject: threaded.subject,
     text: rendered.text,
     html: rendered.html,
     idempotencyKey: params.idempotencyKey,
+    headers: threaded.headers,
   });
 
   if (!result.ok) {
@@ -79,7 +86,7 @@ export async function sendCalendlySeatEmail(params: {
   if (job) {
     await markJobSent(job.id, result.id, {
       messageId: result.messageId,
-      threadSubject: rendered.subject.trim() || null,
+      threadSubject: threaded.threadSubject,
     });
   }
 

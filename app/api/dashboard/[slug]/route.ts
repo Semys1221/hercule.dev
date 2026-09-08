@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { hasSucceededPayment } from "@/lib/dashboard/payments";
+import {
+  hasSucceededPayment,
+  hasSucceededPaymentComptable,
+  getComptablePaymentDetails,
+} from "@/lib/dashboard/payments";
 import { loadDeliveryContext } from "@/lib/dashboard/load-delivery-context";
 import { isFormSparse, resolvePreviewForm } from "@/lib/dashboard/resolve-preview-form";
 import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
@@ -53,7 +57,45 @@ export async function GET(_request: Request, { params }: RouteParams) {
     if (!lookup) {
       lookup = await findLeadByLink(client, normalizedSlug);
     }
-    if (!lookup || lookup.category !== "agence") {
+    if (!lookup) {
+      return NextResponse.json({ error: "Dashboard not found" }, { status: 404 });
+    }
+
+    // ── Comptable dashboard (entreprise category) ───────────────────────────
+    if (lookup.category === "entreprise") {
+      const lead = lookup.lead;
+      const isPaid = await hasSucceededPaymentComptable(client, lead.id);
+      const paymentDetails = isPaid
+        ? await getComptablePaymentDetails(client, lead.id)
+        : null;
+
+      return NextResponse.json({
+        slug: lead.slug,
+        email: lead.email,
+        firstName: lead.first_name,
+        company: lead.company,
+        statut: lead.statut,
+        productStatut: "NONE",
+        scheduledAt: lead.scheduled_at,
+        dashboardLink: dashboardLinkFor(lead),
+        timeline: [],
+        onboardingCompleted: false,
+        tieDownAccepted: false,
+        form: {},
+        faq: [],
+        isPaid,
+        dashboardMode: isPaid ? "comptable_active" : "comptable_pending",
+        deliveryPlan: null,
+        enterpriseBrief: null,
+        comptable: {
+          offerType: paymentDetails?.offerType ?? null,
+          succeededAt: paymentDetails?.succeededAt ?? null,
+        },
+      });
+    }
+
+    // ── Agence dashboard ─────────────────────────────────────────────────────
+    if (lookup.category !== "agence") {
       return NextResponse.json({ error: "Dashboard not found" }, { status: 404 });
     }
 
@@ -156,6 +198,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const client = createLinkTrackingClient();
     const lookup = await findLeadByLink(client, normalizedSlug);
+    // PATCH is agence-only; comptable leads have no onboarding form
     if (!lookup || lookup.category !== "agence") {
       return NextResponse.json({ error: "Dashboard not found" }, { status: 404 });
     }

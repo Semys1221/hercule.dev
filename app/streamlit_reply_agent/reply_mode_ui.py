@@ -86,6 +86,7 @@ def render_custom_ai_panel(
     config: dict[str, Any],
     inbound_body: str,
     on_generated: Callable[[str], None],
+    interest_label: str | None = None,
 ) -> None:
     """Toggle Custom AI panel and run Grok regeneration on demand."""
     from agent_preview import generate_reply_preview
@@ -136,6 +137,7 @@ def render_custom_ai_panel(
                     lead_email,
                     custom_directive=trimmed_directive or None,
                     max_sentences=sentence_count,
+                    interest_label=interest_label,
                 )
             except Exception as exc:
                 st.error(str(exc))

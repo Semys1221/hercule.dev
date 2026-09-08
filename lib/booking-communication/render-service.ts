@@ -10,6 +10,7 @@ import {
   resolveBookingEmailTemplate,
 } from "./template-store";
 import { insertJob, markJobFailed, markJobSent } from "./jobs";
+import { prepareThreadedSend } from "./threaded-send";
 import type { BookingEmailType, RenderedBookingEmail } from "./types";
 
 const SAMPLE_CONFIRM_URL =
@@ -179,12 +180,18 @@ export async function sendBookingEmailOnce(params: {
     useHtml,
   });
 
+  const threaded = await prepareThreadedSend(
+    { email_type: emailType, lead_id: lead.id },
+    rendered,
+  );
+
   const result = await sendBookingEmail({
     to: lead.email,
-    subject: rendered.subject,
+    subject: threaded.subject,
     text: rendered.text,
     html: rendered.html,
     idempotencyKey,
+    headers: threaded.headers,
   });
 
   if (!result.ok) {
@@ -197,7 +204,7 @@ export async function sendBookingEmailOnce(params: {
   if (job) {
     await markJobSent(job.id, result.id, {
       messageId: result.messageId,
-      threadSubject: rendered.subject.trim() || null,
+      threadSubject: threaded.threadSubject,
     });
   }
 

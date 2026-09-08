@@ -251,7 +251,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
   {
     id: "sales-call-no-show",
     slug: "sales-call-no-show",
-    name: "Close — Indécis no-show",
+    name: "Close — Absence no-show",
     phase: "close",
     category: "Closing",
     stepCount: 3,
@@ -259,7 +259,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     provider: "resend",
     audiences: ["agence"],
     description:
-      "Séquence déclenchée via le bouton No Show dans Bookings (ou le statut no_show). Accueil + valeurs Hercule ; CTA = lien de réservation pour reprendre le parcours.",
+      "Séquence déclenchée via le bouton No Show dans Bookings (ou le statut no_show). Email 1 : objet « Absence — » ; emails 2 et 3 en réponse dans le même fil. CTA = lien de réservation tracké.",
     steps: [
       { id: "email1", label: "Email 1", delay: "Immédiat", emailType: "no_show_indecis_1" },
       { id: "email2", label: "Email 2", delay: "+24h", emailType: "no_show_indecis_2" },
@@ -475,6 +475,7 @@ const LEGACY_EMAIL_PATH_REDIRECTS_BY_AUDIENCE: Record<
   entreprise: {
     "emails/pre_close/booking": "meeting-entreprise",
   },
+  comptable: {},
 };
 
 export function resolveLegacyEmailSlugForAudience(

@@ -71,9 +71,9 @@ st.title("Streamlit Subsequence")
 st.caption("CRM étapes 0–4 → Unibox reply → E1 webhook auto (+2 min), E2/E3/step_4 via cron 15 min.")
 
 FLOW_LABELS: dict[Flow, str] = {
-    "interested_email1": "Email 1 — Précisions + audit (webhook auto ou manuel)",
-    "interested_email2": "Email 2 — Confirmation Calendly",
-    "interested_email3": "Email 3 — Retrait de liste",
+    "interested_email1": "Email 1 — Précisions + candidature (webhook auto ou manuel)",
+    "interested_email2": "Email 2 — Relance contrat annuel",
+    "interested_email3": "Email 3 — Clôture",
 }
 
 STEP_LABELS: dict[PipelineStep, str] = {

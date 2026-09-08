@@ -1,5 +1,15 @@
 # Internal — politique d'accès
 
+## AI agents
+
+Before editing, read:
+
+1. [`.cursor/rules/nextjs-hercule.mdc`](../../.cursor/rules/nextjs-hercule.mdc) (enforced when matching paths are open)
+2. [`.cursor/skills/hercule-nextjs/SKILL.md`](../../.cursor/skills/hercule-nextjs/SKILL.md) (router)
+3. [`.cursor/skills/hercule-nextjs-internal/SKILL.md`](../../.cursor/skills/hercule-nextjs-internal/SKILL.md) (this domain)
+
+Canon: [doc/README.md](../../doc/README.md) reading order for business rules.
+
 L'espace `/internal` (Funnel Builder, inventaire composants, inventaire database) est un **outil interne sans authentification applicative**.
 
 ## Ce qu'on ne veut pas

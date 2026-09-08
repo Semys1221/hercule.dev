@@ -75,6 +75,7 @@ const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
   "survey_rdv_entreprise_followup",
   "sold_check_j7",
   "payment_notification_client",
+  "product_payment_welcome",
 ];
 
 function emailTypesForCategory(category: LeadCategory): BookingEmailType[] {

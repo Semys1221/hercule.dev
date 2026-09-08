@@ -8,7 +8,9 @@ const DOC_DIR = join(process.cwd(), "doc/tech-stack");
 
 function filenameForDoc(docType: LegalDocType, audience: LegalAudience): string {
   if (docType === "cgv") {
-    return audience === "entreprise" ? "cvg_entreprise.md" : "cvg_master.md";
+    if (audience === "entreprise") return "cvg_entreprise.md";
+    if (audience === "comptable") return "cvg_comptable.md";
+    return "cvg_master.md";
   }
   if (docType === "mentions") {
     return "mentions_legales.md";

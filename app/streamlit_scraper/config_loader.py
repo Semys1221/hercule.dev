@@ -170,6 +170,7 @@ def load_config(preset: str = DEFAULT_PRESET, *, require_keys: bool = True) -> d
         raise SystemExit(f"Unknown preset {preset!r}. Available: {known}")
 
     config = deepcopy(loader())
+    config["PRESET_ID"] = preset
     return _inject_secrets(config, require_keys=require_keys, preset=preset)
 
 

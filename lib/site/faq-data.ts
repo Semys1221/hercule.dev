@@ -1,4 +1,5 @@
 import agenceFaqData from "@/content/faq/agence.json";
+import comptableFaqData from "@/content/faq/comptable.json";
 import entrepriseFaqData from "@/content/faq/entreprise.json";
 import type { FaqAudience, FaqComponentConfig, FaqDocument, FaqEntry } from "@/lib/site/faq-types";
 import { faqDocumentSchema } from "@/lib/site/faq-types";
@@ -6,6 +7,7 @@ import { faqDocumentSchema } from "@/lib/site/faq-types";
 const BUNDLED_FAQ: Record<FaqAudience, FaqDocument> = {
   agence: faqDocumentSchema.parse(agenceFaqData),
   entreprise: faqDocumentSchema.parse(entrepriseFaqData),
+  comptable: faqDocumentSchema.parse(comptableFaqData),
 };
 
 export function getFaqEntries(audience: FaqAudience): FaqEntry[] {
@@ -26,8 +28,14 @@ export function resolveFaqForComponent(
   return [...visible, ...config.localEntries];
 }
 
+const FAQ_TITLES: Record<FaqAudience, string> = {
+  agence: "FAQ agence",
+  entreprise: "FAQ entreprise",
+  comptable: "FAQ comptable",
+};
+
 export function faqEntriesToMarkdown(audience: FaqAudience, entries: FaqEntry[]): string {
-  const title = audience === "agence" ? "FAQ agence" : "FAQ entreprise";
+  const title = FAQ_TITLES[audience];
   const lines = [`# ${title}`, ""];
   for (const entry of entries) {
     lines.push(`## ${entry.question}`, "", entry.answer, "");
@@ -35,8 +43,14 @@ export function faqEntriesToMarkdown(audience: FaqAudience, entries: FaqEntry[])
   return lines.join("\n").trim();
 }
 
+const FAQ_ID_PREFIX: Record<FaqAudience, string> = {
+  agence: "faq-ag",
+  entreprise: "faq-en",
+  comptable: "faq-cp",
+};
+
 export function generateFaqEntryId(audience: FaqAudience, entries: FaqEntry[]): string {
-  const prefix = audience === "agence" ? "faq-ag" : "faq-en";
+  const prefix = FAQ_ID_PREFIX[audience];
   let max = 0;
   for (const entry of entries) {
     const match = entry.id.match(new RegExp(`^${prefix}-(\\d+)$`));

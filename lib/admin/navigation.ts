@@ -1,3 +1,4 @@
+import type { LeadCategory } from "@/lib/link-tracking/types";
 import {
   CLIENTS_MODULE_CAPTION,
   CLIENTS_MODULE_LABEL,
@@ -7,7 +8,10 @@ import {
   SESSION_MODULE_LABEL,
 } from "@/lib/admin/funnels/ui-copy";
 
-export type Audience = "agence" | "entreprise";
+export type { LeadCategory };
+
+/** Funnel / legal / FAQ audiences — includes verticals without CRM tables. */
+export type Audience = LeadCategory | "comptable";
 
 export type NavNode = {
   label: string;
@@ -19,17 +23,22 @@ export type NavNode = {
 export const AUDIENCE_LABELS: Record<Audience, string> = {
   agence: "Agence",
   entreprise: "Entreprise",
+  comptable: "Comptable",
 };
 
 export const AUDIENCE_ICONS: Record<Audience, string> = {
   agence: "🏢",
   entreprise: "🏭",
+  comptable: "📊",
 };
 
 export const AUDIENCE_CAPTIONS: Record<Audience, string> = {
   agence: "Buyer — agences partenaires qui reçoivent des contrats.",
   entreprise: "Seller — entreprises qui recherchent une agence.",
+  comptable: "Buyer — cabinets d'expertise comptable partenaires.",
 };
+
+const ALL_AUDIENCES: Audience[] = ["agence", "entreprise", "comptable"];
 
 function legalTree(): Record<string, NavNode> {
   return {
@@ -41,7 +50,7 @@ function legalTree(): Record<string, NavNode> {
   };
 }
 
-export const MODULES: Record<string, NavNode> = {
+const FULL_MODULES: Record<string, NavNode> = {
   sales: {
     label: SESSION_MODULE_LABEL,
     caption: SESSION_MODULE_CAPTION,
@@ -68,8 +77,26 @@ export const MODULES: Record<string, NavNode> = {
   },
 };
 
+const COMPTABLE_MODULES: Record<string, NavNode> = {
+  sales: FULL_MODULES.sales,
+  legal: FULL_MODULES.legal,
+};
+
+export const MODULES = FULL_MODULES;
+
 export function isAudience(value: string): value is Audience {
+  return ALL_AUDIENCES.includes(value as Audience);
+}
+
+export function isLeadCategory(value: string): value is LeadCategory {
   return value === "agence" || value === "entreprise";
+}
+
+export function getModulesForAudience(audience: Audience): Record<string, NavNode> {
+  if (audience === "comptable") {
+    return COMPTABLE_MODULES;
+  }
+  return FULL_MODULES;
 }
 
 export function nodeIsLeaf(node: NavNode): boolean {
@@ -86,7 +113,7 @@ export function normalizePath(path: string[]): string[] {
     return [audience];
   }
 
-  let currentChildren: Record<string, NavNode> = MODULES;
+  let currentChildren = getModulesForAudience(audience);
   const normalized: string[] = [audience];
 
   for (const segment of path.slice(1)) {
@@ -106,7 +133,12 @@ export function resolveNode(path: string[]): NavNode | null {
     return null;
   }
 
-  let node: NavNode | undefined = MODULES[path[1]];
+  const audience = path[0];
+  if (!isAudience(audience)) {
+    return null;
+  }
+
+  let node: NavNode | undefined = getModulesForAudience(audience)[path[1]];
   for (const segment of path.slice(2)) {
     if (!node) {
       return null;
@@ -119,7 +151,7 @@ export function resolveNode(path: string[]): NavNode | null {
 
 export function getChildren(path: string[]): Record<string, NavNode> {
   if (path.length === 1 && isAudience(path[0])) {
-    return MODULES;
+    return getModulesForAudience(path[0]);
   }
 
   const node = resolveNode(path);
@@ -163,7 +195,8 @@ export function breadcrumb(path: string[]): string {
     labels.push(path[0]);
   }
 
-  let currentChildren = MODULES;
+  const audience = isAudience(path[0]) ? path[0] : null;
+  let currentChildren = audience ? getModulesForAudience(audience) : MODULES;
   for (const segment of path.slice(1)) {
     const node = currentChildren[segment];
     if (!node) {

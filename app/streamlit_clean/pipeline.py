@@ -16,15 +16,10 @@ from checkpoint import (
     save_checkpoint,
     save_partial_verified_csv,
 )
-
-_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
-_DATA_DIR = os.path.join(_LIB_DIR, "data")
-
+from paths import data_dir
 from quick_verifier import quick_verify_dataframe
 
 from instantly_client import push_leads_to_campaign, purge_leads_from_list
-
-os.makedirs(_DATA_DIR, exist_ok=True)
 
 RUN_MODE_DRY = "dry_run"
 RUN_MODE_TEST_50 = "test_50"
@@ -97,7 +92,7 @@ def _timestamp_prefix() -> str:
 
 
 def _save_csv(df: pd.DataFrame, prefix: str, suffix: str) -> str:
-    path = os.path.join(_DATA_DIR, f"{prefix}_{suffix}.csv")
+    path = os.path.join(data_dir(), f"{prefix}_{suffix}.csv")
     export = df.copy()
     if "custom_variables" in export.columns:
         export["custom_variables"] = export["custom_variables"].apply(
@@ -202,7 +197,7 @@ def run_cleaning_pipeline(
             prefix,
             status_map,
             total_target=total_emails,
-            source_artifact=os.path.join(_DATA_DIR, f"{prefix}_quick_clean.csv"),
+            source_artifact=os.path.join(data_dir(), f"{prefix}_quick_clean.csv"),
         )
         save_partial_verified_csv(prefix, limited_df, email_col, status_map)
 
@@ -286,8 +281,8 @@ def run_cleaning_pipeline(
             "quick_clean": quick_path,
             "verified": verified_path,
             "final_clean": final_path,
-            "checkpoint": os.path.join(_DATA_DIR, f"{prefix}_checkpoint.json"),
-            "verified_partial": os.path.join(_DATA_DIR, f"{prefix}_verified_partial.csv"),
+            "checkpoint": os.path.join(data_dir(), f"{prefix}_checkpoint.json"),
+            "verified_partial": os.path.join(data_dir(), f"{prefix}_verified_partial.csv"),
         },
         quick_stats=quick_stats,
         status_counts=status_counts,

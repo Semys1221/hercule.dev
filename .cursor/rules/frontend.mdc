@@ -1,0 +1,17 @@
+---
+description: Checklist frontend Hercule — design, shadcn MCP, react-doctor
+alwaysApply: true
+---
+
+# Frontend checklist (Hercule)
+
+Avant d'écrire ou de committer du UI React (hors `app/streamlit_*` et templates email) :
+
+1. **Design** — Lire [hercule-ui/SKILL.md](../skills/hercule-ui/SKILL.md) (tokens `.internal`, internal vs marketing, exemplars).
+2. **Composition** — MCP `plugin-shadcn-shadcn` : search → examples → audit checklist ([shadcn-mcp.mdc](shadcn-mcp.mdc)).
+3. **Domaine** — Sub-skill si pertinent : internal, marketing, dashboard, [hercule-forms](../skills/hercule-forms/SKILL.md), [hercule-tables](../skills/hercule-tables/SKILL.md).
+4. **Qualité** — `pnpm doctor` ; pages marketing aussi `pnpm doctor:design`.
+5. **Rétroactif** — legacy UI : `pnpm frontend-audit scan` puis `bundle` ([hercule-frontend-audit](../skills/hercule-frontend-audit/SKILL.md)).
+6. **Visuel** — Après changement UI visible : snapshot navigateur (MCP `cursor-ide-browser`) ou `pnpm e2e:visual` si les snapshots Playwright sont concernés.
+
+Config scanner : [`doctor.config.ts`](../../doctor.config.ts) à la racine.

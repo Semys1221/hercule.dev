@@ -310,11 +310,10 @@ export async function getThreadContext(
     .map((row) => row.resend_message_id?.trim())
     .filter((value): value is string => Boolean(value));
 
-  const rootType = threadTypes.includes("immediate")
-    ? "immediate"
-    : threadTypes.includes("role_seq_48")
-      ? "role_seq_48"
-      : threadTypes[0];
+  const rootType = threadTypes[0];
+  if (!rootType) {
+    return { threadSubject: null, messageIds };
+  }
   const root = rows.find((row) => row.email_type === rootType);
   const threadSubject = root?.thread_subject?.trim() || null;
 

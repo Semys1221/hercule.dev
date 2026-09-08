@@ -4,7 +4,7 @@ import { loadClientCockpit } from "@/lib/admin/clients/load-cockpit";
 import { deleteSeedClient, isSeedSlug } from "@/lib/admin/clients/seed";
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import type { LeadCategory } from "@/lib/link-tracking/types";
-import { isAudience } from "@/lib/admin/navigation";
+import { isLeadCategory } from "@/lib/admin/navigation";
 
 type RouteParams = {
   params: Promise<{ category: string; slug: string }>;
@@ -12,7 +12,7 @@ type RouteParams = {
 
 export async function GET(_request: Request, { params }: RouteParams) {
   const { category, slug } = await params;
-  if (!isAudience(category)) {
+  if (!isLeadCategory(category)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
@@ -31,7 +31,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   const { category, slug } = await params;
-  if (!isAudience(category)) {
+  if (!isLeadCategory(category)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 

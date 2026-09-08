@@ -59,7 +59,9 @@ export function AccueilScene() {
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 mb-8"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="text-emerald-300 text-sm font-medium">Service gratuit pour les entreprises</span>
+                <span className="text-emerald-300 text-sm font-medium">
+                  Demandes TPE en attente d&apos;attribution
+                </span>
               </motion.div>
 
               <motion.h1
@@ -68,7 +70,7 @@ export function AccueilScene() {
                 transition={{ duration: 0.6, delay: 0.05 }}
                 className="text-4xl md:text-5xl lg:text-[56px] font-medium text-white leading-[1.1] text-balance"
               >
-                Trouvez la bonne agence, sans frais.
+                Proposez votre cabinet. Recevez des missions de tenue.
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -76,8 +78,17 @@ export function AccueilScene() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="mt-6 text-lg text-zinc-400 max-w-2xl"
               >
-                Décrivez votre besoin. Hercule qualifie votre projet et sélectionne les agences les plus adaptées à
-                votre situation.
+                Indépendants et dirigeants de TPE qui ne suivent plus seuls leur comptabilité, leurs échéances
+                fiscales, leurs déclarations et leurs obligations administratives. Ces demandes sont transmises à
+                nos cabinets partenaires.
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="mt-4 text-sm text-zinc-500 max-w-2xl"
+              >
+                Ouvert aux cabinets de plus de 3 associés ou collaborateurs.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -89,7 +100,7 @@ export function AccueilScene() {
                   href={CALENDLY_ENTREPRISE_URL}
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 >
-                  Trouver mon agence
+                  Proposer mon cabinet
                 </a>
                 <a
                   href="#methode"

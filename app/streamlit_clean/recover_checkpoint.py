@@ -12,6 +12,7 @@ if _LIB_DIR not in sys.path:
     sys.path.insert(0, _LIB_DIR)
 
 from checkpoint import recover_checkpoint_from_log  # noqa: E402
+from paths import data_dir  # noqa: E402
 
 
 def main() -> None:
@@ -43,7 +44,7 @@ def main() -> None:
 
     source_artifact = args.source_artifact
     if source_artifact is None:
-        candidate = os.path.join(_LIB_DIR, "data", f"{args.prefix}_quick_clean.csv")
+        candidate = os.path.join(data_dir(), f"{args.prefix}_quick_clean.csv")
         if os.path.isfile(candidate):
             source_artifact = candidate
 

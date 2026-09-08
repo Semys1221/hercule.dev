@@ -10,9 +10,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from bulk_verifier import normalize_status
-
-_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
-_DATA_DIR = os.path.join(_LIB_DIR, "data")
+from paths import data_dir
 
 CHECKPOINT_SUFFIX = "_checkpoint.json"
 PARTIAL_VERIFIED_SUFFIX = "_verified_partial.csv"
@@ -22,11 +20,11 @@ LEGACY_LOG_PATTERN = re.compile(
 
 
 def checkpoint_path(prefix: str) -> str:
-    return os.path.join(_DATA_DIR, f"{prefix}{CHECKPOINT_SUFFIX}")
+    return os.path.join(data_dir(), f"{prefix}{CHECKPOINT_SUFFIX}")
 
 
 def partial_verified_path(prefix: str) -> str:
-    return os.path.join(_DATA_DIR, f"{prefix}{PARTIAL_VERIFIED_SUFFIX}")
+    return os.path.join(data_dir(), f"{prefix}{PARTIAL_VERIFIED_SUFFIX}")
 
 
 def save_checkpoint(
@@ -36,7 +34,7 @@ def save_checkpoint(
     total_target: int | None = None,
     source_artifact: str | None = None,
 ) -> str:
-    os.makedirs(_DATA_DIR, exist_ok=True)
+    os.makedirs(data_dir(), exist_ok=True)
     path = checkpoint_path(prefix)
     payload = {
         "artifact_prefix": prefix,
@@ -69,11 +67,11 @@ def load_checkpoint(prefix: str) -> tuple[dict[str, str], dict[str, Any]] | None
 
 
 def list_checkpoints() -> list[dict[str, Any]]:
-    if not os.path.isdir(_DATA_DIR):
+    if not os.path.isdir(data_dir()):
         return []
 
     checkpoints: list[dict[str, Any]] = []
-    for name in os.listdir(_DATA_DIR):
+    for name in os.listdir(data_dir()):
         if not name.endswith(CHECKPOINT_SUFFIX):
             continue
         prefix = name[: -len(CHECKPOINT_SUFFIX)]

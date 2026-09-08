@@ -39,7 +39,16 @@ export const FAQ_LIVE_INSTANCES: FaqLiveInstance[] = [
     sourcePath: "content/faq/entreprise.json",
   },
   {
-    id: "funnel-faq-widget-agence",
+    id: "master-comptable",
+    name: "FAQ master comptable",
+    title: "Questions fréquentes — audience comptable",
+    location: "/internal/funnels/comptable/legal/faq",
+    audience: "comptable",
+    kind: "master",
+    sourcePath: "content/faq/comptable.json",
+  },
+  {
+    id: "funnel-faq-widget-comptable",
     name: "Widget FAQ funnel agence",
     title: "Blocs FAQ des étapes funnel agence",
     location: "components/funnels/widgets/faq-widget.tsx",

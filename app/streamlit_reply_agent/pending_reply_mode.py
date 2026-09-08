@@ -159,6 +159,7 @@ def _render_reply_mode_lead_card(
                 lead_email=row.lead_email,
                 config=config,
                 inbound_body=inbound_body,
+                interest_label=row.interest_label,
                 on_generated=lambda text, lead_email=row.lead_email: queue_draft_update(
                     campaign_id, lead_email, text
                 ),

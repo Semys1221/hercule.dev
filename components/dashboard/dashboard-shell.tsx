@@ -7,6 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import type { DashboardData } from "@/lib/dashboard/types";
 
 import { DashboardActive } from "./dashboard-active";
+import { DashboardComptable } from "./dashboard-comptable";
 import { DashboardState } from "./dashboard-state";
 import { OnboardingPreviewWizard } from "./onboarding-preview-wizard";
 import {
@@ -85,6 +86,24 @@ export function DashboardShell({ slug, paidQuery }: DashboardShellProps) {
   // Transition overlay takes priority over any mode
   if (showTransition) {
     return <OnboardingTransition onDone={handleTransitionDone} />;
+  }
+
+  if (
+    data.dashboardMode === "comptable_active" ||
+    data.dashboardMode === "comptable_pending"
+  ) {
+    const comptableData = data as typeof data & {
+      comptable?: { offerType: string | null; succeededAt: string | null };
+    };
+    return (
+      <DashboardComptable
+        slug={data.slug}
+        isPaid={data.isPaid}
+        firstName={data.firstName}
+        company={data.company}
+        offerType={comptableData.comptable?.offerType ?? null}
+      />
+    );
   }
 
   if (data.dashboardMode === "dashboard_active") {

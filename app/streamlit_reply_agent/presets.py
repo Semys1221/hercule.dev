@@ -40,12 +40,28 @@ def build_campaign_preset_index() -> dict[str, str]:
     """Map Instantly campaign UUIDs to scraper preset_id."""
     from config_loader import PRESETS, load_config
 
+    def _assign(index: dict[str, str], campaign_id: str, preset_id: str) -> None:
+        cid = campaign_id.strip()
+        if not cid:
+            return
+        existing = index.get(cid)
+        if not existing:
+            index[cid] = preset_id
+            return
+        # Dual comptable workers share one campaign — prefer main preset over *_vol.
+        if existing.endswith("_vol") and not preset_id.endswith("_vol"):
+            index[cid] = preset_id
+        elif not existing.endswith("_vol") and preset_id.endswith("_vol"):
+            return
+        else:
+            index[cid] = preset_id
+
     index: dict[str, str] = {}
     for preset_id in PRESETS:
         config = load_config(preset_id, require_keys=False)
         primary = str(config.get("INSTANTLY_CAMPAIGN_ID") or "").strip()
         if primary:
-            index[primary] = preset_id
+            _assign(index, primary, preset_id)
 
     for preset_id in PRESETS:
         config = load_config(preset_id, require_keys=False)

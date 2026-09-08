@@ -12,11 +12,9 @@ import pandas as pd
 import requests
 
 from core_logic import get_api_key
+from paths import data_dir
 
 RUN_MODE_DRY = "dry_run"
-
-_LIB_DIR = os.path.dirname(os.path.abspath(__file__))
-_DATA_DIR = os.path.join(_LIB_DIR, "data")
 
 _BASE_URL = "https://client.myemailverifier.com"
 _UPLOAD_URL = f"{_BASE_URL}/verifier/upload_file"
@@ -244,8 +242,8 @@ def _format_bulk_progress(file_info: dict) -> tuple[str, float]:
 
 
 def _write_upload_csv(emails: list[str], prefix: str, chunk_index: int) -> str:
-    os.makedirs(_DATA_DIR, exist_ok=True)
-    path = os.path.join(_DATA_DIR, f"{prefix}_mev_upload_{chunk_index}.csv")
+    os.makedirs(data_dir(), exist_ok=True)
+    path = os.path.join(data_dir(), f"{prefix}_mev_upload_{chunk_index}.csv")
     upload_df = pd.DataFrame({"email": emails})
     upload_df.to_csv(path, index=False)
     return path

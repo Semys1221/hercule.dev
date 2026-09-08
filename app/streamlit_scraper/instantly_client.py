@@ -52,6 +52,10 @@ CSV_COLUMNS = [
     "FormeJuridique",
     "AnneeCreation",
     "ChiffreAffaires",
+    "TailleEntreprise",
+    "LeadScore",
+    "RegistrySource",
+    "RegistryFetchedAt",
 ]
 _REQUIRED_CSV_COLUMNS = ["Email", "Company", "Website", "Service", "City"]
 
@@ -363,6 +367,59 @@ def ensure_campaign(api_key: str, name: str) -> dict[str, Any]:
     return client.create_campaign(name)
 
 
+DEFAULT_INTERESTED_CONDITIONS: dict[str, Any] = {"crm_status": [1]}
+
+
+def _normalize_subsequence_conditions(
+    conditions: dict[str, Any] | None,
+) -> dict[str, tuple[str, ...]]:
+    raw = conditions if conditions else DEFAULT_INTERESTED_CONDITIONS
+    normalized: dict[str, tuple[str, ...]] = {}
+    for key, value in sorted(raw.items()):
+        key_str = str(key)
+        if isinstance(value, list):
+            normalized[key_str] = tuple(sorted(str(item) for item in value))
+        else:
+            normalized[key_str] = (str(value),)
+    return normalized
+
+
+def subsequence_conditions_equal(
+    left: dict[str, Any] | None,
+    right: dict[str, Any] | None,
+) -> bool:
+    """True when ``left`` matches all trigger keys in ``right``.
+
+    Instantly stores default empty fields (``lead_activity``, ``reply_contains``) that we
+    omit on create — compare only the keys we care about, not full dict equality.
+    """
+    if not isinstance(left, dict):
+        return False
+    target = right if right is not None else DEFAULT_INTERESTED_CONDITIONS
+    left_norm = _normalize_subsequence_conditions(left)
+    right_norm = _normalize_subsequence_conditions(target)
+    return all(left_norm.get(key) == vals for key, vals in right_norm.items())
+
+
+def find_subsequence(
+    items: list[dict[str, Any]],
+    *,
+    name: str = "",
+    conditions: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    """Match by name first, then by trigger conditions (Instantly allows one per condition set)."""
+    needle = name.strip().lower()
+    if needle:
+        for item in items:
+            if str(item.get("name") or "").strip().lower() == needle:
+                return item
+    target = conditions if conditions is not None else DEFAULT_INTERESTED_CONDITIONS
+    for item in items:
+        if subsequence_conditions_equal(item.get("conditions"), target):
+            return item
+    return None
+
+
 def list_subsequences(api_key: str, campaign_id: str) -> list[dict[str, Any]]:
     client = InstantlyClient(api_key)
     suffix = f"?parent_campaign={campaign_id.strip()}&limit=100"
@@ -370,41 +427,119 @@ def list_subsequences(api_key: str, campaign_id: str) -> list[dict[str, Any]]:
     return page.get("items") or [] if isinstance(page, dict) else []
 
 
+def build_email_sequence_steps(
+    emails: list[dict[str, str]],
+    *,
+    default_delay_days: int = 3,
+) -> list[dict[str, Any]]:
+    """Build Instantly sequence steps from [{subject, body}, ...]."""
+    steps: list[dict[str, Any]] = []
+    for idx, email in enumerate(emails):
+        subject = str(email.get("subject") or "").strip()
+        body = str(email.get("body") or "").strip()
+        if not subject or not body:
+            raise ValueError(f"Email step {idx + 1} needs subject and body")
+        steps.append(
+            {
+                "type": "email",
+                "delay": 0 if idx == 0 else default_delay_days,
+                "variants": [{"subject": subject, "body": body}],
+            }
+        )
+    return steps
+
+
+def patch_campaign_sequences(
+    api_key: str,
+    campaign_id: str,
+    emails: list[dict[str, str]],
+    *,
+    default_delay_days: int = 3,
+) -> dict[str, Any]:
+    """PATCH campaign with cold-email sequence steps (stays draft until activated)."""
+    client = InstantlyClient(api_key)
+    steps = build_email_sequence_steps(emails, default_delay_days=default_delay_days)
+    body = {"sequences": [{"steps": steps}]}
+    data = client._fetch(
+        f"/campaigns/{campaign_id.strip()}",
+        method="PATCH",
+        body=body,
+    )
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Instantly patch campaign returned unexpected payload: {data!r}")
+    return data
+
+
+def get_campaign(api_key: str, campaign_id: str) -> dict[str, Any]:
+    client = InstantlyClient(api_key)
+    data = client._fetch(f"/campaigns/{campaign_id.strip()}", method="GET")
+    return data if isinstance(data, dict) else {}
+
+
+def campaign_has_sequence_emails(api_key: str, campaign_id: str, min_steps: int = 2) -> bool:
+    data = get_campaign(api_key, campaign_id)
+    sequences = data.get("sequences") or []
+    if not sequences or not isinstance(sequences, list):
+        return False
+    steps = sequences[0].get("steps") if isinstance(sequences[0], dict) else []
+    if not isinstance(steps, list):
+        return False
+    count = 0
+    for step in steps:
+        if not isinstance(step, dict) or step.get("type") != "email":
+            continue
+        variants = step.get("variants") or []
+        if variants and str(variants[0].get("body") or "").strip():
+            count += 1
+    return count >= min_steps
+
+
 def create_subsequence(
     api_key: str,
     *,
     parent_campaign_id: str,
     name: str,
+    emails: list[dict[str, str]] | None = None,
     conditions: dict[str, Any] | None = None,
+    default_delay_days: int = 1,
 ) -> dict[str, Any]:
     client = InstantlyClient(api_key)
+    if emails:
+        steps = build_email_sequence_steps(emails, default_delay_days=default_delay_days)
+    else:
+        steps = build_email_sequence_steps(
+            [{"subject": "Suite à votre intérêt", "body": "Bonjour,<br/><br/>Merci pour votre intérêt."}]
+        )
     body: dict[str, Any] = {
         "parent_campaign": parent_campaign_id.strip(),
         "name": name,
-        "conditions": conditions or {"crm_status": [1]},
+        "conditions": conditions or DEFAULT_INTERESTED_CONDITIONS,
         "subsequence_schedule": DEFAULT_CAMPAIGN_SCHEDULE,
-        "sequences": [
-            {
-                "steps": [
-                    {
-                        "type": "email",
-                        "delay": 0,
-                        "pre_delay": 0,
-                        "pre_delay_unit": "minutes",
-                        "variants": [
-                            {
-                                "subject": "Suite à votre intérêt",
-                                "body": "Bonjour,<br/><br/>Merci pour votre intérêt.",
-                            }
-                        ],
-                    }
-                ]
-            }
-        ],
+        "sequences": [{"steps": steps}],
     }
     data = client._fetch("/subsequences", method="POST", body=body)
     if not isinstance(data, dict) or not data.get("id"):
         raise RuntimeError(f"Instantly create subsequence returned no id: {data!r}")
+    return data
+
+
+def patch_subsequence_sequences(
+    api_key: str,
+    subsequence_id: str,
+    emails: list[dict[str, str]],
+    *,
+    default_delay_days: int = 1,
+) -> dict[str, Any]:
+    client = InstantlyClient(api_key)
+    steps = build_email_sequence_steps(emails, default_delay_days=default_delay_days)
+    body = {"sequences": [{"steps": steps}]}
+    data = client._fetch(
+        f"/subsequences/{subsequence_id.strip()}",
+        method="PATCH",
+        body=body,
+    )
+    if not isinstance(data, dict):
+        raise RuntimeError(f"Instantly patch subsequence returned unexpected payload: {data!r}")
     return data
 
 
@@ -413,17 +548,68 @@ def ensure_subsequence(
     *,
     parent_campaign_id: str,
     name: str = "Interested bypass",
+    conditions: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    target_conditions = conditions if conditions is not None else DEFAULT_INTERESTED_CONDITIONS
     existing_items = list_subsequences(api_key, parent_campaign_id)
-    needle = name.strip().lower()
-    for item in existing_items:
-        if str(item.get("name") or "").strip().lower() == needle:
-            return item
-    return create_subsequence(
+    match = find_subsequence(existing_items, name=name, conditions=target_conditions)
+    if match:
+        return match
+    try:
+        return create_subsequence(
+            api_key,
+            parent_campaign_id=parent_campaign_id,
+            name=name,
+            conditions=target_conditions,
+        )
+    except RuntimeError as exc:
+        if "same trigger conditions" not in str(exc).lower():
+            raise
+        refreshed = list_subsequences(api_key, parent_campaign_id)
+        match = find_subsequence(refreshed, conditions=target_conditions)
+        if match:
+            return match
+        if len(refreshed) == 1:
+            return refreshed[0]
+        raise
+
+
+def ensure_subsequence_sequences(
+    api_key: str,
+    *,
+    parent_campaign_id: str,
+    name: str,
+    emails: list[dict[str, str]],
+    conditions: dict[str, Any] | None = None,
+    default_delay_days: int = 1,
+) -> dict[str, Any]:
+    """Find or create Interested subsequence, then PATCH E1–E3 steps."""
+    sub = ensure_subsequence(
         api_key,
         parent_campaign_id=parent_campaign_id,
         name=name,
+        conditions=conditions,
     )
+    sub_id = str(sub.get("id") or "").strip()
+    if not sub_id:
+        raise RuntimeError(f"Instantly subsequence has no id: {sub!r}")
+    patched = patch_subsequence_sequences(
+        api_key,
+        sub_id,
+        emails,
+        default_delay_days=default_delay_days,
+    )
+    if isinstance(patched, dict) and patched.get("id"):
+        return patched
+    return {**sub, "id": sub_id}
+
+
+def list_all_lead_lists(api_key: str) -> list[dict[str, Any]]:
+    return InstantlyClient(api_key).list_all_lead_lists()
+
+
+def list_all_campaigns(api_key: str) -> list[dict[str, Any]]:
+    return InstantlyClient(api_key).list_all_campaigns()
 
 
 def delete_lead_list(api_key: str, list_id: str) -> None:
@@ -567,6 +753,26 @@ def _read_job_id(data: Any) -> str | None:
         if isinstance(job_id, str) and job_id.strip():
             return job_id.strip()
     return None
+
+
+def has_leads_in_list(api_key: str, list_id: str) -> bool:
+    return _has_any_leads(InstantlyClient(api_key), {"list_id": list_id.strip()})
+
+
+def has_leads_in_campaign(api_key: str, campaign_id: str) -> bool:
+    return _has_any_leads(InstantlyClient(api_key), {"campaign": campaign_id.strip()})
+
+
+def _has_any_leads(client: InstantlyClient, scope: dict[str, str]) -> bool:
+    body: dict[str, Any] = {**scope, "limit": 1}
+    page = client._fetch(
+        "/leads/list",
+        method="POST",
+        body=body,
+        timeout=_HTTP_TIMEOUT_LEADS_LIST,
+    )
+    items = page.get("items") or [] if isinstance(page, dict) else []
+    return bool(items)
 
 
 def _count_leads(client: InstantlyClient, scope: dict[str, str]) -> int:
@@ -780,6 +986,9 @@ def _lead_payload(row: dict[str, str], list_id: str) -> dict[str, Any]:
             "forme_juridique": row.get("FormeJuridique") or "",
             "annee_creation": row.get("AnneeCreation") or "",
             "chiffre_affaires": row.get("ChiffreAffaires") or "",
+            "taille_entreprise": row.get("TailleEntreprise") or "",
+            "lead_score": row.get("LeadScore") or "",
+            "tranche_effectif": row.get("TrancheEffectif") or "",
         },
     }
 
@@ -807,43 +1016,61 @@ async def _upload_batch(
     api_key: str,
     list_id: str,
     batch: list[dict[str, Any]],
+    skip_if_in_campaign: bool = True,
+    skip_if_in_list: bool = True,
     log_cb: Callable[[str], None] | None = None,
+    max_attempts: int = 3,
 ) -> dict[str, int]:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     batch_size = len(batch)
-    try:
-        response = await client.post(
-            f"{INSTANTLY_API_BASE}/leads/add",
-            headers=headers,
-            json={
-                "list_id": list_id.strip(),
-                "leads": batch,
-                "skip_if_in_campaign": True,
-                "skip_if_in_list": True,
-            },
-        )
-        if response.status_code in (200, 201):
-            data = response.json() if response.text else {}
-            stats = _parse_add_response(data, batch_size)
+    last_stats = {"pushed": 0, "skipped_duplicate": 0, "failed": batch_size}
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            response = await client.post(
+                f"{INSTANTLY_API_BASE}/leads/add",
+                headers=headers,
+                json={
+                    "list_id": list_id.strip(),
+                    "leads": batch,
+                    "skip_if_in_campaign": skip_if_in_campaign,
+                    "skip_if_in_list": skip_if_in_list,
+                },
+            )
+            if response.status_code in (200, 201):
+                data = response.json() if response.text else {}
+                stats = _parse_add_response(data, batch_size)
+                last_stats = stats
+                if stats["failed"] <= 0 or attempt >= max_attempts:
+                    if log_cb:
+                        log_cb(
+                            f"Instantly batch: {stats['pushed']} uploaded, "
+                            f"{stats['skipped_duplicate']} skipped (duplicate)"
+                            + (f", {stats['failed']} failed" if stats["failed"] else "")
+                        )
+                    return stats
+                if log_cb:
+                    log_cb(
+                        f"Instantly batch partial fail ({stats['failed']}/{batch_size}) "
+                        f"— retry {attempt}/{max_attempts}"
+                    )
+                await asyncio.sleep(_BACKOFF_BASE**attempt)
+                continue
             if log_cb:
                 log_cb(
-                    f"Instantly batch: {stats['pushed']} uploaded, "
-                    f"{stats['skipped_duplicate']} skipped (duplicate)"
+                    f"Instantly batch failed ({response.status_code}): "
+                    f"{response.text[:200]}"
                 )
-            return stats
-        if log_cb:
-            log_cb(
-                f"Instantly batch failed ({response.status_code}): "
-                f"{response.text[:200]}"
-            )
-        return {"pushed": 0, "skipped_duplicate": 0, "failed": batch_size}
-    except Exception as exc:
-        if log_cb:
-            log_cb(f"Instantly batch error: {exc}")
-        return {"pushed": 0, "skipped_duplicate": 0, "failed": batch_size}
+        except Exception as exc:
+            if log_cb:
+                log_cb(f"Instantly batch error: {exc}")
+        if attempt < max_attempts:
+            await asyncio.sleep(_BACKOFF_BASE**attempt)
+
+    return last_stats
 
 
 async def push_leads_to_list(
@@ -851,6 +1078,8 @@ async def push_leads_to_list(
     list_id: str,
     leads: list[dict[str, str]],
     *,
+    skip_if_in_campaign: bool = True,
+    skip_if_in_list: bool = True,
     log_cb: Callable[[str], None] | None = None,
 ) -> dict[str, int]:
     """Upload leads to a list; Instantly skips duplicates via skip_if_in_* flags."""
@@ -898,6 +1127,8 @@ async def push_leads_to_list(
                     api_key=api_key,
                     list_id=list_id,
                     batch=batch,
+                    skip_if_in_campaign=skip_if_in_campaign,
+                    skip_if_in_list=skip_if_in_list,
                     log_cb=log_cb,
                 )
                 for batch in batches

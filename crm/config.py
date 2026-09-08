@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     )
     confirm_base_url: str = "https://www.hercule.dev/confirm-reservation.html"
     temporary_base_url: str = "https://www.hercule.dev/temporary-reservation.html"
+    post_booking_base_url: str = "https://www.hercule.dev/post-booking-entreprise.html"
     crm_backend_url: str = "http://localhost:3000"
     link_tracking_webhook_secret: str = ""
     instantly_campaign_id_agence: str = ""
@@ -85,6 +86,10 @@ class Settings(BaseSettings):
             self.confirm_base_url = _env("BOOKING_CONFIRM_BASE_URL").rstrip("/")
         if _env("BOOKING_TEMPORARY_BASE_URL"):
             self.temporary_base_url = _env("BOOKING_TEMPORARY_BASE_URL").rstrip("/")
+        if _env("BOOKING_ENTREPRISE_POST_BASE_URL"):
+            self.post_booking_base_url = _env("BOOKING_ENTREPRISE_POST_BASE_URL").rstrip(
+                "/"
+            )
         if _env("BOOKING_GO_LIVE_AT"):
             self.booking_go_live_at = _env("BOOKING_GO_LIVE_AT")
         raw_concurrency = _env("INSTANTLY_PATCH_CONCURRENCY")

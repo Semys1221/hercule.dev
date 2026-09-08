@@ -191,6 +191,35 @@ def compute_total_limit(target: int, progress: int, buffer: int) -> int | None:
     return remaining * buffer
 
 
+def outscraper_filters(config: dict) -> list[str]:
+    raw = config.get("OUTSCRAPER_FILTERS") or []
+    return [str(item).strip() for item in raw if str(item).strip()]
+
+
+def outscraper_request_language(config: dict) -> str:
+    """Outscraper quick filters require language=en."""
+    if outscraper_filters(config):
+        return "en"
+    return str(config.get("OUTSCRAPER_LANGUAGE") or "fr").strip() or "fr"
+
+
+def website_required_for_scrape(config: dict) -> bool:
+    if config.get("ENRICH_ENABLED"):
+        return True
+    return "only_with_website" not in outscraper_filters(config)
+
+
+DUPLICATE_GEO_ADVANCE_RATE = 0.45
+DUPLICATE_GEO_MIN_SAMPLES = 10
+
+
+def batch_duplicate_saturated(accepted: int, rejected: int, duplicate_rejects: int) -> bool:
+    total = accepted + rejected
+    if total < DUPLICATE_GEO_MIN_SAMPLES:
+        return False
+    return duplicate_rejects / total > DUPLICATE_GEO_ADVANCE_RATE
+
+
 def _target_mode(config: dict) -> str:
     from scrape_state import target_mode
 
@@ -203,7 +232,9 @@ def _progress_value(
     leads_saved: int,
     instantly_pushed: int,
 ) -> int:
-    if target_mode == "instantly_pushed":
+    from scrape_state import target_uses_checkpoint_push
+
+    if target_uses_checkpoint_push(target_mode):
         return instantly_pushed
     return leads_saved
 
@@ -216,12 +247,19 @@ def _is_target_reached(
     instantly_pushed: int,
     config: dict | None = None,
 ) -> bool:
-    if target_mode == "instantly_pushed" and config:
-        from scrape_metrics import fetch_instantly_live
+    from scrape_state import target_uses_live_list
 
-        live = fetch_instantly_live(config)
-        if live is not None and live >= target:
-            return True
+    if target_uses_live_list(target_mode) and config:
+        near_target = instantly_pushed >= target - 50 or instantly_pushed >= int(
+            target * 0.95
+        )
+        if near_target:
+            from scrape_metrics import fetch_instantly_live
+
+            live = fetch_instantly_live(config, use_cache=True)
+            if live is not None and live >= target:
+                return True
+        return instantly_pushed >= target
     return _progress_value(
         target_mode=target_mode,
         leads_saved=leads_saved,
@@ -229,8 +267,29 @@ def _is_target_reached(
     ) >= target
 
 
-def _query_pass_lists(config: dict, query_pass: int) -> tuple[list[str], list[str]]:
+def _query_pass_lists(
+    config: dict,
+    query_pass: int,
+    *,
+    geo_phase: str = "pass",
+) -> tuple[list[str], list[str]]:
     import commune_passes
+
+    if geo_phase == commune_passes.GEO_PHASE_DEPARTMENT:
+        return commune_passes.combined_keywords(config), list(commune_passes.FRENCH_DEPARTEMENTS)
+
+    if geo_phase == commune_passes.GEO_PHASE_SKIP:
+        keywords = commune_passes.combined_keywords(config)
+        locations: list[str] = []
+        seen: set[str] = set()
+        for pass_idx in range(commune_passes.max_location_pass_index(config) + 1):
+            kws, locs = _query_pass_lists(config, pass_idx, geo_phase=commune_passes.GEO_PHASE_PASS)
+            for loc in locs:
+                norm = loc.strip().lower()
+                if norm and norm not in seen:
+                    seen.add(norm)
+                    locations.append(loc)
+        return keywords, locations
 
     if query_pass <= 0:
         return list(config.get("KEYWORDS") or []), list(config.get("LOCATIONS") or [])
@@ -251,11 +310,21 @@ def _query_pass_lists(config: dict, query_pass: int) -> tuple[list[str], list[st
 def max_query_passes(config: dict) -> int:
     import commune_passes
 
-    return commune_passes.max_query_pass_index(config)
+    return commune_passes.max_location_pass_index(config)
 
 
-def build_queries(config: dict, query_pass: int = 0) -> list[str]:
-    keywords, locations = _query_pass_lists(config, query_pass)
+def initial_query_pass(config: dict) -> int:
+    """First query pass for a fresh scrape run (0 = primary KEYWORDS/LOCATIONS)."""
+    return max(int(config.get("SCRAPE_START_QUERY_PASS", 0) or 0), 0)
+
+
+def build_queries(
+    config: dict,
+    query_pass: int = 0,
+    *,
+    geo_phase: str = "pass",
+) -> list[str]:
+    keywords, locations = _query_pass_lists(config, query_pass, geo_phase=geo_phase)
     if not keywords or not locations:
         return []
     return [f"{kw} in {loc}, France" for kw in keywords for loc in locations]
@@ -382,18 +451,25 @@ class OutscraperClient:
         limit: int,
         *,
         total_limit: int | None = None,
+        skip_places: int = 0,
+        filters: list[str] | None = None,
+        language: str = "fr",
     ) -> str | None:
         payload: dict[str, Any] = {
             "query": queries,
             "limit": limit,
             "async": True,
             "dropDuplicates": True,
-            "language": "fr",
+            "language": language,
             "region": "FR",
             "extractContacts": True,
         }
         if total_limit is not None:
             payload["totalLimit"] = total_limit
+        if skip_places > 0:
+            payload["skipPlaces"] = skip_places
+        if filters:
+            payload["filters"] = filters
 
         endpoint = f"{_OUTSCRAPER_CLOUD}/google-maps-search"
         response = await self._request_with_retry("POST", endpoint, json=payload)
@@ -406,18 +482,36 @@ class OutscraperClient:
             except ValueError:
                 pass
 
-        return await self._send_async_tasks_legacy(queries, limit)
+        return await self._send_async_tasks_legacy(
+            queries,
+            limit,
+            skip_places=skip_places,
+            filters=filters,
+            language=language,
+        )
 
-    async def _send_async_tasks_legacy(self, queries: list[str], limit: int) -> str | None:
+    async def _send_async_tasks_legacy(
+        self,
+        queries: list[str],
+        limit: int,
+        *,
+        skip_places: int = 0,
+        filters: list[str] | None = None,
+        language: str = "fr",
+    ) -> str | None:
         endpoint = f"{_OUTSCRAPER_LEGACY}/maps/search-v2"
         params: list[tuple[str, str | int | bool]] = [
             ("limit", limit),
             ("async", "true"),
             ("dropDuplicates", "true"),
-            ("language", "fr"),
+            ("language", language),
             ("region", "FR"),
             ("extractContacts", "true"),
         ]
+        if skip_places > 0:
+            params.append(("skipPlaces", skip_places))
+        if filters:
+            params.extend(("filters", item) for item in filters)
         params.extend(("query", q) for q in queries)
         response = await self._request_with_retry("GET", endpoint, params=params)
         if response is None:
@@ -605,6 +699,9 @@ async def _poll_until_ready(
     job: InflightBatch,
     settings: OutscraperSettings,
     log_cb: Callable[[str], None],
+    *,
+    out_dir: str = "",
+    preset: str = "",
 ) -> list | None:
     while True:
         status, results = await _poll_once(client, job, settings)
@@ -613,7 +710,13 @@ async def _poll_until_ready(
         if status == "failed":
             log_cb(f"Task [{job.task_id}] timed out after {int(time.time() - job.submitted_at)}s.")
             return []
-        await asyncio.sleep(_seconds_until_next_poll([job], settings, time.time()))
+        wait_s = _seconds_until_next_poll([job], settings, time.time())
+        if out_dir and preset:
+            from scrape_metrics import sleep_with_heartbeat
+
+            await sleep_with_heartbeat(wait_s, out_dir, preset=preset)
+        else:
+            await asyncio.sleep(wait_s)
 
 def _append_lead_row(row: dict[str, str]) -> None:
     write_header = not os.path.exists(_active.csv) or os.path.getsize(_active.csv) == 0
@@ -765,7 +868,7 @@ async def _maybe_enrich_and_push(
         if batches_total:
             progress_cb(
                 min(instantly_pushed / target, 1.0)
-                if target_mode == "instantly_pushed"
+                if target_mode in ("instantly_pushed", "instantly_pushed_run")
                 else (last_completed + 1) / batches_total
             )
         log_cb(
@@ -807,7 +910,7 @@ def _process_business(
         }
         return None, audit
 
-    if not web:
+    if not web and website_required_for_scrape(config):
         audit = {
             "Email": email,
             "Company": company,
@@ -837,6 +940,20 @@ def _process_business(
             "Reason": "duplicate company (domain) or email",
         }
         return None, audit
+
+    if config.get("TAXONOMY_GATE_ENABLED"):
+        from taxonomy_gate import matches_taxonomy
+
+        ok, _ = matches_taxonomy(b, config.get("TAXONOMY_INCLUDED_KEYWORDS") or [])
+        if not ok:
+            audit = {
+                "Email": email,
+                "Company": company,
+                "Category": category_display,
+                "Verdict": "rejected",
+                "Reason": "taxonomy_mismatch",
+            }
+            return None, audit
 
     tax = taxonomy_text(b)
     service = detect_service(tax, config)
@@ -909,6 +1026,8 @@ async def _flush_instantly_buffer(
         config["INSTANTLY_API_KEY"],
         config["INSTANTLY_LIST_ID"],
         pending,
+        skip_if_in_campaign=bool(config.get("INSTANTLY_SKIP_IF_IN_CAMPAIGN", True)),
+        skip_if_in_list=bool(config.get("INSTANTLY_SKIP_IF_IN_LIST", True)),
         log_cb=log_cb,
     )
     pending.clear()
@@ -1018,6 +1137,7 @@ async def _process_batch_results(
     with_email = 0
     accepted = 0
     rejected = 0
+    duplicate_rejects = 0
     started = time.time()
     target_reached = False
 
@@ -1037,6 +1157,9 @@ async def _process_batch_results(
                     accepted += 1
                 else:
                     rejected += 1
+                    reason = str(audit.get("Reason") or "")
+                    if "duplicate" in reason.lower():
+                        duplicate_rejects += 1
                     _append_filter_audit_row(audit)
             if not row:
                 continue
@@ -1095,6 +1218,7 @@ async def _process_batch_results(
             "with_email": with_email,
             "accepted": accepted,
             "rejected": rejected,
+            "duplicate_rejects": duplicate_rejects,
             "leads_saved": leads_saved,
             "leads_enriched_valid": leads_enriched_valid,
             "leads_enriched_rejected": leads_enriched_rejected,
@@ -1106,7 +1230,21 @@ async def _process_batch_results(
         f"Scrape stats — places={raw_places}, emails={with_email}, "
         f"accepted={accepted}, rejected={rejected}, enriched_valid={leads_enriched_valid}"
     )
-    return leads_saved, leads_enriched_valid, leads_enriched_rejected, instantly_pushed, target_reached
+    duplicate_saturated = batch_duplicate_saturated(accepted, rejected, duplicate_rejects)
+    if duplicate_saturated:
+        rate = duplicate_rejects / max(accepted + rejected, 1) * 100
+        log_cb(
+            f"Geo advance — duplicate saturation on batch "
+            f"({duplicate_rejects}/{accepted + rejected} = {rate:.0f}%)."
+        )
+    return (
+        leads_saved,
+        leads_enriched_valid,
+        leads_enriched_rejected,
+        instantly_pushed,
+        target_reached,
+        duplicate_saturated,
+    )
 
 
 _EMPTY_BATCH_MAX_RETRIES = 3
@@ -1138,16 +1276,23 @@ async def _run_concurrent_scrape(
     progress_cb: Callable[[float], None],
     metric_cb: Callable[[int, int, int], None],
     instantly_pushed: int,
-) -> tuple[int, int, int, int, int, bool]:
+    skip_places: int = 0,
+    preset: str = "",
+    out_dir: str = "",
+) -> tuple[int, int, int, int, int, bool, bool]:
     inflight: dict[str, InflightBatch] = {job.task_id: job for job in resume_inflight}
-    next_submit_idx = start_batch
-    if run_state is not None:
-        submitted = int(run_state.get("last_submitted_batch_index", start_batch - 1))
-        next_submit_idx = max(next_submit_idx, submitted + 1)
-
+    out_filters = outscraper_filters(config)
+    out_language = outscraper_request_language(config)
     last_completed = start_batch - 1
     if run_state is not None:
         last_completed = int(run_state.get("last_completed_batch_index", start_batch - 1))
+
+    # Resume from first incomplete batch. Do not skip ahead to submitted+1 when
+    # inflight was lost (submitted > completed with empty inflight_tasks).
+    next_submit_idx = last_completed + 1
+    if run_state is not None and resume_inflight:
+        submitted = int(run_state.get("last_submitted_batch_index", last_completed))
+        next_submit_idx = max(next_submit_idx, submitted + 1)
 
     if resume_inflight:
         log_cb(f"Resuming poll for {len(resume_inflight)} in-flight Outscraper task(s).")
@@ -1155,7 +1300,10 @@ async def _run_concurrent_scrape(
     last_inflight_log = 0.0
     last_logged_inflight_count = -1
     target_reached = False
+    duplicate_geo_advance = False
     batch_empty_retries: dict[int, int] = {}
+    process_lock = asyncio.Lock()
+    processing_tasks: set[asyncio.Task] = set()
 
     def _progress() -> int:
         return _progress_value(
@@ -1164,111 +1312,11 @@ async def _run_concurrent_scrape(
             instantly_pushed=instantly_pushed,
         )
 
-    while not target_reached and _progress() < target and (
-        next_submit_idx < len(batches) or inflight
-    ):
-        while (
-            len(inflight) < settings.concurrency
-            and next_submit_idx < len(batches)
-            and _progress() < target
-            and not target_reached
-        ):
-            batch = batches[next_submit_idx]
-            total_limit = compute_total_limit(target, _progress(), settings.total_limit_buffer)
-            log_cb(
-                f"Sending batch {next_submit_idx + 1}/{len(batches)} "
-                f"({len(batch)} queries, in-flight {len(inflight)}/{settings.concurrency})..."
-            )
-            task_id = await client.send_async_tasks(
-                batch,
-                settings.limit_per_query,
-                total_limit=total_limit,
-            )
-            if task_id:
-                inflight[task_id] = InflightBatch(
-                    batch_index=next_submit_idx,
-                    task_id=task_id,
-                    submitted_at=time.time(),
-                )
-                log_cb(f"Task [{task_id}] submitted.")
-            else:
-                log_cb(f"Failed to submit batch {next_submit_idx + 1}.")
+    async def _process_completed(job: InflightBatch, results: list | None) -> bool:
+        nonlocal leads_saved, leads_enriched_valid, leads_enriched_rejected
+        nonlocal instantly_pushed, last_completed, target_reached, duplicate_geo_advance
 
-            _persist_run_state(
-                run_state,
-                leads_saved=leads_saved,
-                leads_enriched_valid=leads_enriched_valid,
-                leads_enriched_rejected=leads_enriched_rejected,
-                instantly_pushed=instantly_pushed,
-                last_completed_batch_index=last_completed,
-                last_submitted_batch_index=next_submit_idx,
-                inflight=inflight,
-            )
-            next_submit_idx += 1
-
-        if not inflight:
-            break
-
-        if target_mode == "instantly_pushed":
-            progress_cb(min(instantly_pushed / target, 1.0) if target else 0.0)
-        else:
-            progress_cb((last_completed + 1) / len(batches) if batches else 0.0)
-
-        now = time.time()
-        if (
-            now - last_inflight_log >= 30.0
-            or len(inflight) != last_logged_inflight_count
-        ):
-            log_cb(f"In-flight: {len(inflight)}/{settings.concurrency}")
-            last_logged_inflight_count = len(inflight)
-            last_inflight_log = now
-
-        now = time.time()
-        ready_jobs = [
-            job
-            for job in inflight.values()
-            if _poll_interval_for_job(job, settings, now) is not None
-            or now - job.submitted_at >= settings.poll_timeout_s
-        ]
-        if not ready_jobs:
-            await asyncio.sleep(_seconds_until_next_poll(list(inflight.values()), settings, now))
-            continue
-
-        completed_jobs: list[tuple[InflightBatch, list | None]] = []
-        for job in ready_jobs:
-            if job.task_id not in inflight:
-                continue
-            status, results = await _poll_once(client, job, settings)
-            if status == "pending":
-                continue
-            if status == "failed":
-                log_cb(
-                    f"Task [{job.task_id}] timed out after "
-                    f"{int(time.time() - job.submitted_at)}s."
-                )
-                results = []
-            completed_jobs.append((job, results))
-
-        def _persist_now(ls: int, lev: int, ip: int) -> None:
-            _persist_run_state(
-                run_state,
-                leads_saved=ls,
-                leads_enriched_valid=lev,
-                leads_enriched_rejected=leads_enriched_rejected,
-                instantly_pushed=ip,
-                last_completed_batch_index=last_completed,
-                last_submitted_batch_index=max(
-                    next_submit_idx - 1,
-                    int(run_state.get("last_submitted_batch_index", -1))
-                    if run_state
-                    else -1,
-                ),
-                inflight=inflight,
-            )
-
-        for job, results in completed_jobs:
-            inflight.pop(job.task_id, None)
-
+        async with process_lock:
             if not results:
                 attempt = batch_empty_retries.get(job.batch_index, 0) + 1
                 if attempt < _EMPTY_BATCH_MAX_RETRIES and job.batch_index < len(batches):
@@ -1283,6 +1331,9 @@ async def _run_concurrent_scrape(
                         retry_batch,
                         settings.limit_per_query,
                         total_limit=total_limit,
+                        skip_places=skip_places,
+                        filters=out_filters or None,
+                        language=out_language,
                     )
                     if task_id:
                         inflight[task_id] = InflightBatch(
@@ -1291,7 +1342,7 @@ async def _run_concurrent_scrape(
                             submitted_at=time.time(),
                         )
                         log_cb(f"Task [{task_id}] resubmitted.")
-                    continue
+                    return False
                 log_cb(f"Batch {job.batch_index + 1} returned no results.")
                 last_completed = max(last_completed, job.batch_index)
                 _persist_run_state(
@@ -1309,7 +1360,24 @@ async def _run_concurrent_scrape(
                     ),
                     inflight=inflight,
                 )
-                continue
+                return False
+
+            def _persist_now(ls: int, lev: int, ip: int) -> None:
+                _persist_run_state(
+                    run_state,
+                    leads_saved=ls,
+                    leads_enriched_valid=lev,
+                    leads_enriched_rejected=leads_enriched_rejected,
+                    instantly_pushed=ip,
+                    last_completed_batch_index=last_completed,
+                    last_submitted_batch_index=max(
+                        next_submit_idx - 1,
+                        int(run_state.get("last_submitted_batch_index", -1))
+                        if run_state
+                        else -1,
+                    ),
+                    inflight=inflight,
+                )
 
             (
                 leads_saved,
@@ -1317,6 +1385,7 @@ async def _run_concurrent_scrape(
                 leads_enriched_rejected,
                 instantly_pushed,
                 batch_target_reached,
+                duplicate_saturated,
             ) = await _process_batch_results(
                 results,
                 config,
@@ -1347,7 +1416,6 @@ async def _run_concurrent_scrape(
                 f"Scraped: {leads_saved} | Enriched: {leads_enriched_valid} | "
                 f"Instantly: {instantly_pushed}/{target}"
             )
-
             _persist_run_state(
                 run_state,
                 leads_saved=leads_saved,
@@ -1361,10 +1429,140 @@ async def _run_concurrent_scrape(
                 ),
                 inflight=inflight,
             )
-
             if batch_target_reached:
                 target_reached = True
-                break
+            if duplicate_saturated:
+                duplicate_geo_advance = True
+                return True
+            return batch_target_reached
+
+    while (
+        not target_reached
+        and not duplicate_geo_advance
+        and _progress() < target
+        and (next_submit_idx < len(batches) or inflight or processing_tasks)
+    ):
+        while (
+            len(inflight) < settings.concurrency
+            and next_submit_idx < len(batches)
+            and _progress() < target
+            and not target_reached
+        ):
+            batch = batches[next_submit_idx]
+            total_limit = compute_total_limit(target, _progress(), settings.total_limit_buffer)
+            skip_label = f", skipPlaces={skip_places}" if skip_places else ""
+            log_cb(
+                f"Sending batch {next_submit_idx + 1}/{len(batches)} "
+                f"({len(batch)} queries, in-flight {len(inflight)}/{settings.concurrency}{skip_label})..."
+            )
+            task_id = await client.send_async_tasks(
+                batch,
+                settings.limit_per_query,
+                total_limit=total_limit,
+                skip_places=skip_places,
+                filters=out_filters or None,
+                language=out_language,
+            )
+            if task_id:
+                inflight[task_id] = InflightBatch(
+                    batch_index=next_submit_idx,
+                    task_id=task_id,
+                    submitted_at=time.time(),
+                )
+                log_cb(f"Task [{task_id}] submitted.")
+            else:
+                log_cb(f"Failed to submit batch {next_submit_idx + 1}.")
+
+            _persist_run_state(
+                run_state,
+                leads_saved=leads_saved,
+                leads_enriched_valid=leads_enriched_valid,
+                leads_enriched_rejected=leads_enriched_rejected,
+                instantly_pushed=instantly_pushed,
+                last_completed_batch_index=last_completed,
+                last_submitted_batch_index=next_submit_idx,
+                inflight=inflight,
+            )
+            next_submit_idx += 1
+
+        if not inflight and not processing_tasks:
+            break
+
+        if target_mode in ("instantly_pushed", "instantly_pushed_run"):
+            progress_cb(min(instantly_pushed / target, 1.0) if target else 0.0)
+        else:
+            progress_cb((last_completed + 1) / len(batches) if batches else 0.0)
+
+        now = time.time()
+        if (
+            now - last_inflight_log >= 30.0
+            or len(inflight) != last_logged_inflight_count
+        ):
+            log_cb(f"In-flight: {len(inflight)}/{settings.concurrency}")
+            last_logged_inflight_count = len(inflight)
+            last_inflight_log = now
+
+        if not inflight:
+            if processing_tasks:
+                await asyncio.gather(*processing_tasks)
+                processing_tasks.clear()
+            continue
+
+        now = time.time()
+        ready_jobs = [
+            job
+            for job in inflight.values()
+            if _poll_interval_for_job(job, settings, now) is not None
+            or now - job.submitted_at >= settings.poll_timeout_s
+        ]
+        if not ready_jobs:
+            wait_s = _seconds_until_next_poll(list(inflight.values()), settings, now)
+            if out_dir and preset:
+                from scrape_metrics import sleep_with_heartbeat
+
+                await sleep_with_heartbeat(wait_s, out_dir, preset=preset)
+            else:
+                await asyncio.sleep(wait_s)
+            continue
+
+        completed_jobs: list[tuple[InflightBatch, list | None]] = []
+        for job in ready_jobs:
+            if job.task_id not in inflight:
+                continue
+            status, results = await _poll_once(client, job, settings)
+            if status == "pending":
+                continue
+            if status == "failed":
+                await client.cancel_task(job.task_id)
+                log_cb(
+                    f"Task [{job.task_id}] timed out after "
+                    f"{int(time.time() - job.submitted_at)}s — cancelled."
+                )
+                results = []
+            completed_jobs.append((job, results))
+
+        for job, results in completed_jobs:
+            inflight.pop(job.task_id, None)
+            task = asyncio.create_task(_process_completed(job, results))
+            processing_tasks.add(task)
+            task.add_done_callback(processing_tasks.discard)
+
+        if processing_tasks:
+            done, _pending = await asyncio.wait(
+                processing_tasks,
+                timeout=0,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for finished in done:
+                try:
+                    if await finished:
+                        break
+                except Exception as exc:
+                    log_cb(f"Batch processing error: {exc}")
+
+    if processing_tasks:
+        await asyncio.gather(*processing_tasks, return_exceptions=True)
+        processing_tasks.clear()
 
     if inflight and target_reached:
         for job in list(inflight.values()):
@@ -1393,6 +1591,7 @@ async def _run_concurrent_scrape(
         instantly_pushed,
         last_completed,
         pass_complete or target_reached,
+        duplicate_geo_advance,
     )
 
 
@@ -1410,12 +1609,15 @@ async def run_scraper_pipeline(
 ) -> dict[str, Any]:
     from scrape_state import (
         build_config_fingerprint,
+        config_fingerprint_compatible,
+        is_instantly_push_mode,
         load_scrape_state,
         mark_scrape_completed,
         mark_scrape_incomplete,
         new_scrape_state,
         save_scrape_state,
         target_mode,
+        target_uses_checkpoint_push,
     )
 
     paths = activate_output_paths(preset)
@@ -1456,6 +1658,7 @@ async def run_scraper_pipeline(
         "instantly_pushed": 0,
         "instantly_skipped_duplicate": 0,
         "query_passes_run": 0,
+        "geo_reload_exhausted": False,
         "resumed": resume,
         "preset": preset,
     }
@@ -1498,11 +1701,11 @@ async def run_scraper_pipeline(
             log_cb("WARNING: OUTSCRAPER_API_KEY is missing")
         else:
             log_cb("OUTSCRAPER_API_KEY present (dry-run — no API calls)")
-        if mode == "instantly_pushed":
+        if is_instantly_push_mode(mode):
             if push_to_instantly and config.get("INSTANTLY_API_KEY") and config.get("INSTANTLY_LIST_ID"):
-                log_cb("Instantly push enabled — target metric is instantly_pushed")
+                log_cb(f"Instantly push enabled — target metric is {mode}")
             else:
-                log_cb("WARNING: TARGET_MODE=instantly_pushed requires Instantly keys + push")
+                log_cb(f"WARNING: TARGET_MODE={mode} requires Instantly keys + push")
         log_cb("Dry-run complete — zero Outscraper requests made.")
         summary["queries_total"] = len(pass0_queries) + len(pass1_queries)
         progress_cb(1.0)
@@ -1511,22 +1714,25 @@ async def run_scraper_pipeline(
     if not config.get("OUTSCRAPER_API_KEY"):
         raise SystemExit("OUTSCRAPER_API_KEY is required for live scrape")
 
-    if mode == "instantly_pushed":
+    if is_instantly_push_mode(mode):
         if not push_to_instantly:
             push_to_instantly = True
-            log_cb("Auto-enabling Instantly push (target metric = instantly_pushed).")
+            log_cb(f"Auto-enabling Instantly push (target metric = {mode}).")
         if not config.get("INSTANTLY_API_KEY") or not config.get("INSTANTLY_LIST_ID"):
             raise SystemExit(
-                "TARGET_MODE=instantly_pushed requires INSTANTLY_API_KEY and INSTANTLY_LIST_ID"
+                f"TARGET_MODE={mode} requires INSTANTLY_API_KEY and INSTANTLY_LIST_ID"
             )
 
     from scrape_state import detect_recoverable_run
 
     existing_state = load_scrape_state(paths.scrape_state)
     if resume:
-        if existing_state and existing_state.get("config_fingerprint") != fingerprint:
-            raise SystemExit(
-                "Cannot resume — config changed since last run. Use reset/start fresh."
+        if existing_state and not config_fingerprint_compatible(
+            str(existing_state.get("config_fingerprint") or ""),
+            config,
+        ):
+            log_cb(
+                "Config fingerprint changed — migrating checkpoint and continuing resume."
             )
         if existing_state and existing_state.get("push_to_instantly") and not push_to_instantly:
             push_to_instantly = True
@@ -1572,7 +1778,7 @@ async def run_scraper_pipeline(
             f"({len(seen_em)} total)."
         )
 
-    query_pass = 0
+    query_pass = initial_query_pass(config)
     start_batch = 0
     resume_inflight: list[InflightBatch] = []
     run_state: dict[str, Any] | None = None
@@ -1582,11 +1788,16 @@ async def run_scraper_pipeline(
     leads_enriched_rejected = 0
 
     if resume and existing_state:
-        if existing_state.get("config_fingerprint") != fingerprint:
-            raise SystemExit(
-                "Cannot resume — config changed since last run. Use reset/start fresh."
+        if not config_fingerprint_compatible(
+            str(existing_state.get("config_fingerprint") or ""),
+            config,
+        ):
+            log_cb(
+                "Config fingerprint changed — migrating checkpoint and continuing resume."
             )
         query_pass = int(existing_state.get("query_pass", 0))
+        geo_phase = str(existing_state.get("geo_phase") or "pass")
+        skip_places = int(existing_state.get("skip_places", 0) or 0)
         instantly_pushed = int(existing_state.get("instantly_pushed", 0))
         instantly_skipped = int(existing_state.get("instantly_skipped_duplicate", 0))
         leads_enriched_valid = int(existing_state.get("leads_enriched_valid", 0))
@@ -1597,14 +1808,23 @@ async def run_scraper_pipeline(
                 resume_inflight.append(InflightBatch.from_state(item))
         run_state = existing_state
         run_state["status"] = "running"
+        run_state["config_fingerprint"] = fingerprint
+        if not run_state.get("geo_phase"):
+            run_state["geo_phase"] = "pass"
+        if run_state.get("skip_places") is None:
+            run_state["skip_places"] = 0
         run_state["push_to_instantly"] = push_to_instantly
+        if run_state.get("reload_round") is None:
+            run_state["reload_round"] = 0
+        if run_state.get("reload_round_pushed_start") is None:
+            run_state["reload_round_pushed_start"] = instantly_pushed
         if leads_saved > int(run_state.get("leads_saved", 0) or 0):
             run_state["leads_saved"] = leads_saved
         save_scrape_state(run_state, path=_active.scrape_state)
-        progress = instantly_pushed if mode == "instantly_pushed" else leads_saved
+        progress = instantly_pushed if target_uses_checkpoint_push(mode) else leads_saved
         log_cb(
-            f"Resuming pass {query_pass + 1}, batch {start_batch + 1} "
-            f"({progress}/{target} {mode})."
+            f"Resuming geo={geo_phase}, pass {query_pass + 1}, batch {start_batch + 1}, "
+            f"skip={skip_places} ({progress}/{target} {mode})."
         )
     elif resume:
         if leads_saved == 0:
@@ -1617,7 +1837,7 @@ async def run_scraper_pipeline(
             batches_total=0,
             leads_saved=leads_saved,
             instantly_pushed=0,
-            query_pass=0,
+            query_pass=initial_query_pass(config),
             last_completed_batch_index=-1,
         )
         save_scrape_state(run_state, path=_active.scrape_state)
@@ -1631,11 +1851,18 @@ async def run_scraper_pipeline(
             batches_total=0,
             leads_saved=leads_saved,
             instantly_pushed=0,
-            query_pass=0,
+            query_pass=initial_query_pass(config),
             last_completed_batch_index=-1,
         )
         save_scrape_state(run_state, path=_active.scrape_state)
-        log_cb(f"Starting engine — target {target} ({mode}).")
+        start_pass = initial_query_pass(config)
+        if start_pass > 0:
+            log_cb(
+                f"Starting engine — target {target} ({mode}), "
+                f"query pass {start_pass + 1}/{max_query_passes(config) + 1}."
+            )
+        else:
+            log_cb(f"Starting engine — target {target} ({mode}).")
 
     pending_scraped: list[dict[str, str]] = []
     pending_instantly: list[dict[str, str]] = []
@@ -1643,9 +1870,51 @@ async def run_scraper_pipeline(
     enrich_enabled = enrich_cfg["enabled"]
     enrich_batch_size = enrich_cfg["batch_size"]
     out_client = OutscraperClient(config["OUTSCRAPER_API_KEY"])
-    max_pass = max_query_passes(config)
+    import commune_passes
+
+    geo_phase = commune_passes.GEO_PHASE_PASS
+    skip_places = 0
+    if run_state is not None:
+        geo_phase = str(run_state.get("geo_phase") or commune_passes.GEO_PHASE_PASS)
+        skip_places = int(run_state.get("skip_places", 0) or 0)
     total_queries = 0
     total_batches = 0
+
+    def _reset_pass_checkpoint() -> None:
+        nonlocal start_batch, resume_inflight
+        start_batch = 0
+        resume_inflight = []
+        if run_state is not None:
+            run_state["last_completed_batch_index"] = -1
+            run_state["last_submitted_batch_index"] = -1
+            run_state["inflight_tasks"] = []
+            save_scrape_state(run_state, path=_active.scrape_state)
+
+    def _handle_geo_exhausted() -> bool:
+        """Try geo reload cycle; return True if outer loop should continue."""
+        nonlocal geo_phase, query_pass, skip_places, initial_resume
+        log_cb("All geo phases exhausted.")
+        if run_state is None:
+            summary["geo_reload_exhausted"] = True
+            return False
+        started, new_geo = commune_passes.maybe_begin_reload_round(
+            config,
+            run_state,
+            instantly_pushed=instantly_pushed,
+            target=target,
+            target_mode=mode,
+            log_cb=log_cb,
+        )
+        if not started or new_geo is None:
+            summary["geo_reload_exhausted"] = True
+            run_state["geo_reload_exhausted"] = True
+            save_scrape_state(run_state, path=_active.scrape_state)
+            return False
+        geo_phase, query_pass, skip_places = new_geo
+        _reset_pass_checkpoint()
+        initial_resume = False
+        save_scrape_state(run_state, path=_active.scrape_state)
+        return True
 
     try:
         if instantly_enabled:
@@ -1654,10 +1923,32 @@ async def run_scraper_pipeline(
         metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
 
         initial_resume = resume
-        while query_pass <= max_pass:
-            queries = build_queries(config, query_pass)
+        while True:
+            queries = build_queries(config, query_pass, geo_phase=geo_phase)
             if not queries:
-                break
+                nxt = commune_passes.next_geo_phase(
+                    config,
+                    geo_phase=geo_phase,
+                    query_pass=query_pass,
+                    skip_places=skip_places,
+                    limit_per_query=settings.limit_per_query,
+                )
+                if nxt is None:
+                    if _handle_geo_exhausted():
+                        continue
+                    break
+                geo_phase, query_pass, skip_places = nxt
+                _reset_pass_checkpoint()
+                if run_state is not None:
+                    run_state["geo_phase"] = geo_phase
+                    run_state["query_pass"] = query_pass
+                    run_state["skip_places"] = skip_places
+                    save_scrape_state(run_state, path=_active.scrape_state)
+                log_cb(
+                    f"Advancing geo — phase={geo_phase}, pass={query_pass + 1}, "
+                    f"skipPlaces={skip_places}"
+                )
+                continue
 
             batches = chunk_batches(queries, settings.batch_size)
             total_queries += len(queries)
@@ -1665,14 +1956,16 @@ async def run_scraper_pipeline(
 
             if run_state is not None:
                 run_state["query_pass"] = query_pass
+                run_state["geo_phase"] = geo_phase
+                run_state["skip_places"] = skip_places
                 run_state["queries_total"] = len(queries)
                 run_state["batches_total"] = len(batches)
                 save_scrape_state(run_state, path=_active.scrape_state)
 
-            if query_pass > 0:
+            if geo_phase != commune_passes.GEO_PHASE_PASS or query_pass > 0:
                 log_cb(
-                    f"Starting expansion pass {query_pass + 1}/{max_pass + 1} — "
-                    f"{len(queries)} queries, {len(batches)} batches."
+                    f"Geo {geo_phase} pass {query_pass + 1} — "
+                    f"{len(queries)} queries, {len(batches)} batches, skip={skip_places}."
                 )
 
             if _is_target_reached(
@@ -1684,18 +1977,22 @@ async def run_scraper_pipeline(
             ):
                 break
 
-            if initial_resume and query_pass == int(run_state.get("query_pass", 0) if run_state else 0):
+            if (
+                initial_resume
+                and geo_phase == str(run_state.get("geo_phase") if run_state else geo_phase)
+                and query_pass == int(run_state.get("query_pass", 0) if run_state else query_pass)
+                and skip_places == int(run_state.get("skip_places", 0) if run_state else skip_places)
+            ):
                 pass_start_batch = start_batch
                 pass_resume_inflight = resume_inflight
                 initial_resume = False
             else:
                 pass_start_batch = 0
                 pass_resume_inflight = []
-                if run_state is not None and query_pass > 0:
-                    run_state["last_completed_batch_index"] = -1
-                    run_state["last_submitted_batch_index"] = -1
-                    run_state["inflight_tasks"] = []
-                    save_scrape_state(run_state, path=_active.scrape_state)
+                if run_state is not None and (
+                    geo_phase != commune_passes.GEO_PHASE_PASS or query_pass > 0 or skip_places > 0
+                ):
+                    _reset_pass_checkpoint()
 
             (
                 leads_saved,
@@ -1704,6 +2001,7 @@ async def run_scraper_pipeline(
                 instantly_pushed,
                 _last_batch_idx,
                 pass_done,
+                duplicate_geo_advance,
             ) = await _run_concurrent_scrape(
                 client=out_client,
                 batches=batches,
@@ -1729,6 +2027,9 @@ async def run_scraper_pipeline(
                 progress_cb=progress_cb,
                 metric_cb=metric_cb,
                 instantly_pushed=instantly_pushed,
+                skip_places=skip_places,
+                preset=preset,
+                out_dir=paths.out_dir,
             )
 
             summary["query_passes_run"] = query_pass + 1
@@ -1742,16 +2043,63 @@ async def run_scraper_pipeline(
             ):
                 log_cb(
                     f"Target reached — "
-                    f"{instantly_pushed if mode == 'instantly_pushed' else leads_saved}/{target}."
+                    f"{instantly_pushed if target_uses_checkpoint_push(mode) else leads_saved}/{target}."
                 )
                 break
 
-            if pass_done and query_pass < max_pass:
-                query_pass += 1
+            if pass_done or duplicate_geo_advance:
+                nxt = commune_passes.next_geo_phase(
+                    config,
+                    geo_phase=geo_phase,
+                    query_pass=query_pass,
+                    skip_places=skip_places,
+                    limit_per_query=settings.limit_per_query,
+                )
+                if nxt is None:
+                    if _handle_geo_exhausted():
+                        continue
+                    break
+                geo_phase, query_pass, skip_places = nxt
+                _reset_pass_checkpoint()
+                if run_state is not None:
+                    run_state["geo_phase"] = geo_phase
+                    run_state["query_pass"] = query_pass
+                    run_state["skip_places"] = skip_places
+                    save_scrape_state(run_state, path=_active.scrape_state)
+                log_cb(
+                    f"{'Duplicate saturation' if duplicate_geo_advance else 'Pass complete'} — "
+                    f"advancing to geo={geo_phase}, "
+                    f"pass={query_pass + 1}, skipPlaces={skip_places}"
+                )
                 continue
 
-            if query_pass >= max_pass:
-                log_cb("All query passes exhausted.")
+            if (
+                run_state is not None
+                and not run_state.get("inflight_tasks")
+                and int(run_state.get("last_completed_batch_index", -1))
+                >= int(run_state.get("batches_total", 0) or 0) - 1
+                and int(run_state.get("batches_total", 0) or 0) > 0
+            ):
+                nxt = commune_passes.next_geo_phase(
+                    config,
+                    geo_phase=geo_phase,
+                    query_pass=query_pass,
+                    skip_places=skip_places,
+                    limit_per_query=settings.limit_per_query,
+                )
+                if nxt is not None:
+                    geo_phase, query_pass, skip_places = nxt
+                    _reset_pass_checkpoint()
+                    run_state["geo_phase"] = geo_phase
+                    run_state["query_pass"] = query_pass
+                    run_state["skip_places"] = skip_places
+                    save_scrape_state(run_state, path=_active.scrape_state)
+                    log_cb(
+                        f"Pass batches done — advancing to geo={geo_phase}, "
+                        f"pass={query_pass + 1}, skipPlaces={skip_places}"
+                    )
+                    continue
+
             break
 
     finally:
@@ -1815,7 +2163,11 @@ async def run_scraper_pipeline(
         instantly_pushed=instantly_pushed,
         config=config,
     )
-    progress_cb(min(instantly_pushed / target, 1.0) if mode == "instantly_pushed" and target else 1.0)
+    progress_cb(
+        min(instantly_pushed / target, 1.0)
+        if target_uses_checkpoint_push(mode) and target
+        else 1.0
+    )
 
     if run_state is not None:
         run_state["instantly_skipped_duplicate"] = instantly_skipped
@@ -1904,6 +2256,8 @@ async def run_filter_audit(
             task_id = await out_client.send_async_tasks(
                 batch,
                 settings.limit_per_query,
+                filters=outscraper_filters(config) or None,
+                language=outscraper_request_language(config),
             )
             if not task_id:
                 log_cb(f"Failed to submit batch {idx + 1}.")

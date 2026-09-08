@@ -44,9 +44,11 @@ import {
 } from "./sales-closing-sections";
 import { SalesFunnelProgress } from "./sales-funnel-progress";
 import {
-  SALES_FUNNEL_SECTIONS,
+  getSalesFunnelSections,
+  type SalesFunnelSection,
   type SalesFunnelSectionId,
 } from "./sales-funnel-sections";
+import type { Audience } from "@/lib/admin/navigation";
 
 const SECTION_ICONS: Record<SalesFunnelSectionId, LucideIcon> = {
   "rendez-vous": Calendar,
@@ -70,6 +72,7 @@ export type MeetingInfo = {
 };
 
 type SalesFunnelSidebarProps = {
+  audience: Audience;
   name: string;
   progress: number;
   progressLabel: string;
@@ -90,6 +93,7 @@ type SalesFunnelSidebarProps = {
 };
 
 export function SalesFunnelSidebar({
+  audience,
   name,
   progress,
   progressLabel,
@@ -108,8 +112,9 @@ export function SalesFunnelSidebar({
   onBackToQualification,
   onSectionChange,
 }: SalesFunnelSidebarProps) {
+  const qualificationSections = getSalesFunnelSections(audience);
   const sections =
-    contentPhase === "pitch" ? SALES_CLOSING_SECTIONS : SALES_FUNNEL_SECTIONS;
+    contentPhase === "pitch" ? SALES_CLOSING_SECTIONS : qualificationSections;
   const sidebarGroupLabel =
     contentPhase === "pitch" ? SESSION_SIDEBAR_STEPS : SESSION_SIDEBAR_QUALIFICATION;
   const showForwardArrow =
@@ -119,7 +124,7 @@ export function SalesFunnelSidebar({
   const phaseLabel = phase === "closing" ? SESSION_PHASE_INSTITUTIONAL : "Hercule";
 
   function renderSectionMenu(
-    menuSections: typeof SALES_FUNNEL_SECTIONS | typeof SALES_CLOSING_SECTIONS,
+    menuSections: SalesFunnelSection[] | typeof SALES_CLOSING_SECTIONS,
     variant: "qualification" | "pitch",
   ) {
     return (

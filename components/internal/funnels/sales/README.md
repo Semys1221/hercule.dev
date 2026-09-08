@@ -1,5 +1,15 @@
 # Session client — parcours live
 
+## AI agents
+
+Before editing, read:
+
+1. [`.cursor/rules/nextjs-hercule.mdc`](../../../../.cursor/rules/nextjs-hercule.mdc)
+2. [`.cursor/skills/hercule-nextjs/SKILL.md`](../../../../.cursor/skills/hercule-nextjs/SKILL.md) (router)
+3. [`.cursor/skills/hercule-nextjs-sales-funnel/SKILL.md`](../../../../.cursor/skills/hercule-nextjs-sales-funnel/SKILL.md) (this domain)
+
+Canon: [doc/README.md](../../../../doc/README.md).
+
 Ce dossier héberge la **session client** utilisée en production, pas l'éditeur de parcours admin.
 
 ## Route

@@ -29,18 +29,20 @@ ALL_HERCULE_FLOWS: list[Flow] = [*INTERESTED_FLOWS, *NO_SHOW_FLOWS]
 
 FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
     "interested_email1": [
-        "voici les precisions",
-        "audit de compatibilite",
-        "mon agence est compatible",
-        "deposer la candidature",
-        "premiers echanges entre cabinets",
-        "l un des groupes de clients",
-        "calendly.com/hercule-connect",
+        "voici plus de precisions",
+        "cabinets partenaires",
+        "plus de 3 associes",
+        "proposer mon cabinet",
+        "reprendre ces sujets en main",
     ],
     "interested_email2": [
+        "contrat annuel en attente",
+        "mensuellement",
         "confirmer que votre reservation calendly",
     ],
     "interested_email3": [
+        "cloturer nos echanges",
+        "bonne continuation",
         "retirer de notre liste",
     ],
     "no_show_email1": [

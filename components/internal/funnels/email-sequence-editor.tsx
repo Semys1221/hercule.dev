@@ -212,7 +212,11 @@ function buildAdapter(
 ): SequenceEditorAdapter | null {
   if (sequence.editorKind === "booking") {
     const emailTypes = bookingSequenceTypesFor(sequence.slug, audience);
-    const category = sequence.bookingCategory ?? audience;
+    const rawCategory = sequence.bookingCategory ?? audience;
+    if (rawCategory !== "agence" && rawCategory !== "entreprise") {
+      return null;
+    }
+    const category = rawCategory;
     const typedSteps = sequence.steps.filter(
       (step) => step.emailType && emailTypes.includes(step.emailType),
     );

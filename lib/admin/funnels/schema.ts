@@ -81,7 +81,7 @@ export type FaqComponentConfig = z.infer<typeof faqComponentConfigSchema>;
 export type StepComponents = z.infer<typeof stepComponentsSchema>;
 
 export const stepContextSchema = z.object({
-  audience: z.enum(["agence", "entreprise"]),
+  audience: z.enum(["agence", "entreprise", "comptable"]),
   kind: funnelKindSchema,
   stage: venteStageSchema.nullable(),
   layoutId: z.string().nullable(),
@@ -113,7 +113,7 @@ export const funnelDocumentSchema = z.object({
   schemaVersion: z.literal(FUNNEL_SCHEMA_VERSION),
   slug: funnelSlugSchema,
   displayName: displayNameSchema,
-  audience: z.enum(["agence", "entreprise"]),
+  audience: z.enum(["agence", "entreprise", "comptable"]),
   kind: funnelKindSchema,
   stage: venteStageSchema.nullable(),
   status: funnelStatusSchema,
@@ -128,14 +128,14 @@ export type FunnelDocument = z.infer<typeof funnelDocumentSchema>;
 export type FunnelStep = z.infer<typeof funnelStepSchema>;
 
 export const createFunnelBodySchema = z.object({
-  audience: z.enum(["agence", "entreprise"]),
+  audience: z.enum(["agence", "entreprise", "comptable"]),
   kind: funnelKindSchema,
   stage: venteStageSchema.nullable().optional(),
   displayName: displayNameSchema.optional(),
 });
 
 export const listFunnelsQuerySchema = z.object({
-  audience: z.enum(["agence", "entreprise"]),
+  audience: z.enum(["agence", "entreprise", "comptable"]),
   kind: funnelKindSchema,
   stage: venteStageSchema.nullable().optional(),
 });
@@ -178,7 +178,7 @@ export const editTicketSchema = z.object({
   status: editTicketStatusSchema,
   createdAt: z.string().datetime(),
   funnelRef: z.object({
-    audience: z.enum(["agence", "entreprise"]),
+    audience: z.enum(["agence", "entreprise", "comptable"]),
     kind: funnelKindSchema,
     stage: venteStageSchema.nullable(),
     slug: funnelSlugSchema,
@@ -197,7 +197,7 @@ export const editTicketSchema = z.object({
 export type EditTicket = z.infer<typeof editTicketSchema>;
 
 export const createEditTicketBodySchema = z.object({
-  audience: z.enum(["agence", "entreprise"]),
+  audience: z.enum(["agence", "entreprise", "comptable"]),
   kind: funnelKindSchema,
   stage: venteStageSchema.nullable().optional(),
   funnelSlug: funnelSlugSchema,

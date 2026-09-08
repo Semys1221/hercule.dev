@@ -2,9 +2,9 @@ import type { Metadata } from "next"
 import { AccueilScene } from "@/components/entreprise/scene-accueil"
 
 export const metadata: Metadata = {
-  title: "Trouver une agence — Hercule",
+  title: "Proposer votre cabinet — Hercule",
   description:
-    "Service gratuit de matching B2B. Décrivez votre besoin, Hercule qualifie votre projet et sélectionne les agences adaptées.",
+    "Hercule reçoit des demandes d'indépendants et de dirigeants de TPE. Les cabinets partenaires éligibles reçoivent ces missions de tenue, fiscales et administratives.",
 }
 
 export default function EntreprisePage() {

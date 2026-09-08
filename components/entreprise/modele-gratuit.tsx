@@ -33,7 +33,7 @@ export function ModeleGratuit() {
           className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-8"
           style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
         >
-          Un service gratuit pour vous. Un modèle transparent.
+          Vous accédez aux demandes. Le TPE ne paie rien.
         </motion.h2>
 
         <motion.p
@@ -43,9 +43,8 @@ export function ModeleGratuit() {
           transition={{ delay: 0.15 }}
           className="text-zinc-400 max-w-2xl mb-12 leading-relaxed"
         >
-          Hercule est une marketplace B2B : vous obtenez une sélection qualifiée d&apos;agences sans payer
-          d&apos;intermédiaire. Les agences partenaires financent l&apos;accès aux opportunités commerciales et au
-          service de mise en relation.
+          Hercule qualifie les dirigeants, puis attribue chaque mission à un cabinet partenaire. Le cabinet finance
+          l&apos;accès au service. L&apos;indépendant ou le dirigeant de TPE n&apos;est pas facturé par Hercule.
         </motion.p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -57,12 +56,12 @@ export function ModeleGratuit() {
             className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-[30px]"
           >
             <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
-              <Building2 className="w-5 h-5 text-emerald-400" />
+              <Briefcase className="w-5 h-5 text-emerald-400" />
             </div>
-            <h3 className="text-white font-medium text-xl mb-3">Entreprise</h3>
+            <h3 className="text-white font-medium text-xl mb-3">Cabinet</h3>
             <p className="text-zinc-400 text-sm leading-relaxed">
-              Service de matching gratuit. Vous décrivez votre besoin, nous qualifions votre projet et sélectionnons
-              une agence adaptée à votre situation.
+              Accès payant aux missions qualifiées. 0 % de commission sur vos honoraires. Une mission annuelle de tenue
+              à 3 600 € d&apos;honoraires, pour 1 499 € d&apos;investissement.
             </p>
           </motion.div>
 
@@ -74,12 +73,12 @@ export function ModeleGratuit() {
             className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-[30px]"
           >
             <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-6">
-              <Briefcase className="w-5 h-5 text-indigo-400" />
+              <Building2 className="w-5 h-5 text-indigo-400" />
             </div>
-            <h3 className="text-white font-medium text-xl mb-3">Agence</h3>
+            <h3 className="text-white font-medium text-xl mb-3">TPE / indépendant</h3>
             <p className="text-zinc-400 text-sm leading-relaxed">
-              Paie pour accéder aux opportunités et au service commercial. Ce modèle permet de vous proposer une
-              sélection qualifiée, sans frais de votre côté.
+              Qualification et mise en relation gratuites. Hercule ne facture jamais le dirigeant pour le matching avec
+              un cabinet adapté.
             </p>
           </motion.div>
         </div>

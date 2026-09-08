@@ -3,14 +3,20 @@ import { join } from "path"
 
 const DOC_DIR = join(process.cwd(), "doc/tech-stack")
 
-export type LegalAudience = "agence" | "entreprise"
+export type LegalAudience = "agence" | "entreprise" | "comptable"
 
 function readDocFile(filename: string): string {
   return readFileSync(join(DOC_DIR, filename), "utf-8")
 }
 
+function cvgFilenameForAudience(audience: LegalAudience): string {
+  if (audience === "entreprise") return "cvg_entreprise.md"
+  if (audience === "comptable") return "cvg_comptable.md"
+  return "cvg_master.md"
+}
+
 export function getCvgMarkdown(audience: LegalAudience = "agence"): string {
-  return readDocFile(audience === "entreprise" ? "cvg_entreprise.md" : "cvg_master.md")
+  return readDocFile(cvgFilenameForAudience(audience))
 }
 
 export function getMentionsLegalesMarkdown(): string {

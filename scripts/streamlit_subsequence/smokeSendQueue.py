@@ -554,14 +554,13 @@ def test_dispatch_one_passes_email_account_fallback() -> None:
 
 def test_bootstrap_normalize_and_match_interested_e1() -> None:
     html = (
-        "Pour faire simple,<br/>"
-        "Pour réaliser l'audit de compatibilité de votre agence, cliquez ici :<br/>"
-        "Mon agence est compatible<br/>"
-        "Cordialement,<br/>Béatrice Meyer<br/>"
-        '<a href="https://hercule.dev">hercule.dev</a>'
+        "Voici plus de precisions.<br/>"
+        "Ces demandes sont transmises a nos cabinets partenaires.<br/>"
+        "<a href=\"https://example.com\">Proposer mon cabinet</a><br/>"
+        "Béatrice Meyer"
     )
     normalized = normalize_email_text(html)
-    assert "pour faire simple" in normalized
+    assert "voici plus de precisions" in normalized
     flows = match_flows(html, allowed_flows=["interested_email1", "interested_email2"])
     assert flows == {"interested_email1"}
     assert derive_step_from_flows(flows, is_no_show=False) == "step_1"
@@ -870,8 +869,8 @@ def test_classify_thread_e1_variant() -> None:
             {
                 "direction": "sent",
                 "body_plain": (
-                    "Voici les precisions. Pour deposer la candidature de votre agence "
-                    "https://calendly.com/hercule-connect/30min hercule.dev Beatrice Meyer"
+                    "Voici plus de precisions. Ces demandes sont transmises a nos cabinets "
+                    "partenaires. Proposer mon cabinet hercule.dev Beatrice Meyer"
                 ),
             }
         ]

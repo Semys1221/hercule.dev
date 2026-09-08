@@ -6,12 +6,12 @@ import {
 import { flowIdempotencyKey, hasBypassEvent, recordBypassEvent } from "./jobs";
 import { upsertPipelineStep, type PipelineStep } from "./pipeline";
 import { resolveThreadForReply } from "./thread-resolver";
+import { readReservationLink, templateRequiresReservationLink } from "./reservation-links";
 import {
   buildTemplateVariables,
   isTemplateBodyEmpty,
   loadTemplate,
   renderTemplate,
-  templateRequiresReservationLink,
 } from "./templates";
 
 import type {
@@ -31,15 +31,6 @@ const SENDABLE_FLOWS = new Set<BypassFlow>([
   "interested_email2",
   "interested_email3",
 ]);
-
-function readReservationLink(lead?: InstantlyLeadRecord | null): string | null {
-  const payload = lead?.payload ?? {};
-  const value = payload.reservation_agence_link;
-  if (typeof value === "string" && value.trim()) {
-    return value.trim();
-  }
-  return null;
-}
 
 function readEmailAccount(lead?: InstantlyLeadRecord | null): string | undefined {
   if (!lead) return undefined;
@@ -121,7 +112,7 @@ export async function executeBypassFlow(
 
   if (
     templateRequiresReservationLink(customBodyHtml ?? template.body_html) &&
-    !readReservationLink(lead ?? undefined)
+    !readReservationLink(lead ?? undefined, params.webhookPayload ?? undefined)
   ) {
     await recordBypassEvent({
       idempotencyKey,
@@ -131,7 +122,7 @@ export async function executeBypassFlow(
       leadId: params.leadId ?? lead?.id,
       webhookReceivedAt: params.webhookReceivedAt ?? null,
       status: "failed",
-      errorMessage: "Missing reservation_agence_link on lead",
+      errorMessage: "Missing reservation link on lead",
     });
     return { ok: false, error: "missing_reservation_link" };
   }

@@ -72,17 +72,16 @@ def render_preset_config(
     tuning: dict[str, Any],
 ) -> str:
     var_name = _config_var_name(preset_id)
-    campaign_block = ""
-    if campaign_id:
-        campaign_block = f'\n_CAMPAIGN_ID = "{campaign_id}"'
-        campaign_ref = "_CAMPAIGN_ID"
-        dedup_campaign = f"[_CAMPAIGN_ID]"
-    else:
-        campaign_ref = '""'
-        dedup_campaign = "[]"
 
-    dedup_lists = f'["{list_id}"]' if list_id else "[]"
-    subseq_block = f'\n_SUBSEQUENCE_ID = "{subsequence_id}"' if subsequence_id else ""
+    list_block = f'_LIST_ID = "{list_id}"' if list_id else '_LIST_ID = ""'
+    list_ref = "_LIST_ID"
+    campaign_block = f'\n_CAMPAIGN_ID = "{campaign_id}"' if campaign_id else '\n_CAMPAIGN_ID = ""'
+    campaign_ref = "_CAMPAIGN_ID"
+    dedup_campaign = "[_CAMPAIGN_ID]"
+    dedup_lists = "[_LIST_ID]"
+    subseq_block = (
+        f'\n_SUBSEQUENCE_ID = "{subsequence_id}"' if subsequence_id else '\n_SUBSEQUENCE_ID = ""'
+    )
     group_exports = ""
     if niche_group:
         group_exports = (
@@ -91,7 +90,7 @@ def render_preset_config(
             f'SUBNICHE_LABEL = "{subniche_label.replace(chr(34), chr(92)+chr(34))}"\n'
         )
 
-    subseq_ref = "_SUBSEQUENCE_ID" if subsequence_id else '""'
+    subseq_ref = "_SUBSEQUENCE_ID"
 
     return f'''"""{label} scraper preset — static rules; secrets come from config_loader."""
 
@@ -100,12 +99,12 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 PRESET_ID = "{preset_id}"
 PRESET_LABEL = "{label.replace(chr(34), chr(92)+chr(34))}"
 {group_exports}
-_LIST_ID = "{list_id}"{campaign_block}{subseq_block}
+{list_block}{campaign_block}{subseq_block}
 
 {var_name} = {{
     "OUTSCRAPER_API_KEY": "",
     "INSTANTLY_API_KEY": "",
-    "INSTANTLY_LIST_ID": _LIST_ID,
+    "INSTANTLY_LIST_ID": {list_ref},
     "INSTANTLY_CAMPAIGN_ID": {campaign_ref},
     "INSTANTLY_SUBSEQUENCE_ID": {subseq_ref},
     "INSTANTLY_DEDUP_LIST_IDS": {dedup_lists},
@@ -126,7 +125,7 @@ _LIST_ID = "{list_id}"{campaign_block}{subseq_block}
     "OUTSCRAPER_POLL_SLOW_S": {tuning.get("OUTSCRAPER_POLL_SLOW_S", 10)},
     "OUTSCRAPER_POLL_TIMEOUT_S": {tuning.get("OUTSCRAPER_POLL_TIMEOUT_S", 600)},
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": {tuning.get("OUTSCRAPER_TOTAL_LIMIT_BUFFER", 8)},
-    "TARGET_LEADS": {target_leads:,},
+    "TARGET_LEADS": {target_leads},
     "TARGET_MODE": "instantly_pushed",
     "SERVICE_DEFAULT": "{service_default.replace(chr(34), chr(92)+chr(34))}",
     "SERVICE_RULES": {_format_service_rules(service_rules, indent=4)},
@@ -136,10 +135,16 @@ _LIST_ID = "{list_id}"{campaign_block}{subseq_block}
     "EXPANSION_LOCATIONS": FRENCH_EXPANSION_LOCATIONS,
     "EXCLUDE_DOMAINS": {_format_string_list(list(tuning.get("EXCLUDE_DOMAINS") or []), indent=8)},
     "PAPPERS_ENABLED": {tuning.get("PAPPERS_ENABLED", True)!r},
-    "PAPPERS_MIN_EMPLOYEES": {int(tuning.get("PAPPERS_MIN_EMPLOYEES", 10))},
+    "PAPPERS_MIN_EMPLOYEES": {int(tuning.get("PAPPERS_MIN_EMPLOYEES", 3))},
+    "PAPPERS_MIN_SCORE": {int(tuning.get("PAPPERS_MIN_SCORE", 55))},
+    "PAPPERS_SCORING_ENABLED": {tuning.get("PAPPERS_SCORING_ENABLED", True)!r},
     "PAPPERS_ON_UNKNOWN": "{str(tuning.get("PAPPERS_ON_UNKNOWN") or "reject")}",
-    "PAPPERS_CONCURRENCY": {int(tuning.get("PAPPERS_CONCURRENCY", 20))},
+    "PAPPERS_CONCURRENCY": {int(tuning.get("PAPPERS_CONCURRENCY", 50))},
     "PAPPERS_NAF_PREFIXES": {_format_string_list(list(tuning.get("PAPPERS_NAF_PREFIXES") or []), indent=8)},
+    "SIRENE_INDEX_ENABLED": {tuning.get("SIRENE_INDEX_ENABLED", True)!r},
+    "SIRENE_INDEX_PATH": "{str(tuning.get("SIRENE_INDEX_PATH") or "data/sirene.db")}",
+    "REGISTRY_DEEP_ENRICH": {tuning.get("REGISTRY_DEEP_ENRICH", False)!r},
+    "REJECT_HOLDINGS": {tuning.get("REJECT_HOLDINGS", True)!r},
     "NICHE_METADATA": {_format_niche_metadata(tuning.get("NICHE_METADATA"), indent=8)},
 }}
 

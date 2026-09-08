@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { ClientCockpit } from "@/components/internal/clients/cockpit/cockpit-shell";
 import { loadClientCockpit } from "@/lib/admin/clients/load-cockpit";
-import { isAudience } from "@/lib/admin/navigation";
+import { isLeadCategory } from "@/lib/admin/navigation";
 
 type PageProps = {
   params: Promise<{ category: string; slug: string }>;
@@ -10,7 +10,7 @@ type PageProps = {
 
 export default async function ClientCockpitPage({ params }: PageProps) {
   const { category, slug } = await params;
-  if (!isAudience(category)) {
+  if (!isLeadCategory(category)) {
     notFound();
   }
 

@@ -51,7 +51,7 @@ export const COMMERCIAL = {
 } as const;
 
 /**
- * Offer types used in payments.offer_type.
+ * Offer types used in payments.offer_type — agence (Web/Tech) offers.
  * Must match CHECK constraint in Supabase migrations.
  */
 export const OFFER_TYPES = {
@@ -60,6 +60,17 @@ export const OFFER_TYPES = {
 } as const;
 
 export type OfferType = (typeof OFFER_TYPES)[keyof typeof OFFER_TYPES];
+
+/**
+ * Offer types used in payments.offer_type — comptable offers.
+ * Must match CHECK constraint in Supabase migrations (20261010120000_payments_comptable).
+ */
+export const OFFER_TYPES_COMPTABLE = {
+  monthly1499: "monthly_1499",
+  pack3x1499: "pack_3x1499",
+} as const;
+
+export type OfferTypeComptable = (typeof OFFER_TYPES_COMPTABLE)[keyof typeof OFFER_TYPES_COMPTABLE];
 
 /**
  * Vitrine-only pricing — display in marketing copy only.
@@ -80,3 +91,38 @@ export const FORBIDDEN_COPY = [
   "4 jours",
   "MEETING_10",
 ] as const;
+
+/**
+ * Cabinets d'expertise comptable — separate commercial terms.
+ * Stripe offer types: OFFER_TYPES_COMPTABLE (monthly_1499 / pack_3x1499).
+ */
+export const COMMERCIAL_COMPTABLE = {
+  /** Mensuel sans engagement — 1 499 €/mois */
+  monthlyPriceCents: 149_900,
+
+  /** Pack 3 mois — 1 499 € × 3 − 20 %, arrondi */
+  pack3TotalCents: 359_800,
+  pack3BonusRdv: 5,
+
+  /** Rythme opérationnel */
+  missionsPerMonth: 5,
+  billingCycleDays: 30,
+
+  /** SLA livraison */
+  firstRdvDays: 15,
+
+  /** Garantie volume RDV (pas de garantie de signature) */
+  guaranteeRdvCount: 15,
+  guaranteeDays: 90,
+
+  /** Vitrine marketing — honoraires annuels typiques d'une mission de tenue */
+  valueShowcaseAnnualHonorairesCents: 360_000,
+  valueShowcaseAnnualHonorairesLabel: "3 600 €",
+
+  /** Seuil d'éligibilité cabinet */
+  minAssociatesOrCollaborators: 3,
+
+  /** No-show : recrédit + remplacement (aligné agence) */
+  noshowReplaceWorkingDays: 14,
+  honorMinutesMin: 15,
+} as const;

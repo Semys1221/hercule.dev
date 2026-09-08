@@ -147,19 +147,25 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!invitee.utmContent) {
-    return NextResponse.json({ ok: true, ignored: "missing_utm_content" });
-  }
-
   const questions: Record<string, string> = {};
   for (const qa of invitee.questionsAndAnswers) {
     if (qa.question) questions[qa.question] = qa.answer ?? "";
   }
 
+  let bookingSlug = invitee.utmContent.trim();
+  if (!bookingSlug) {
+    const client = createLinkTrackingClient();
+    const lookup = await findLeadByEmail(client, invitee.email);
+    if (!lookup) {
+      return NextResponse.json({ ok: true, ignored: "missing_utm_content" });
+    }
+    bookingSlug = lookup.lead.slug;
+  }
+
   try {
     const result = await bookLeadFromCalendly({
       email: invitee.email,
-      slug: invitee.utmContent,
+      slug: bookingSlug,
       invitee,
       firstName: firstNameFromFullName(invitee.name),
       company: companyFromQuestions(invitee.questionsAndAnswers),

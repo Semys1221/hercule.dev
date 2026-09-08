@@ -242,7 +242,7 @@ def upsert_booked_lead(
         "calendly_payload": payload,
         "calendly_questions": questions,
         "slug": resolved_slug,
-        **_url_fields(resolved_slug, email),
+        **_url_fields(resolved_slug, email, category),
     }
 
     if existing:

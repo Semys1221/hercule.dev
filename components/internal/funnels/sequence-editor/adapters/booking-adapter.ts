@@ -1,4 +1,5 @@
 import type { BookingEmailType } from "@/lib/booking-communication/types";
+import { followUpRequiresEmptySubject } from "@/lib/booking-communication/sequence-pattern";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 import type { SequenceEditorAdapter, SequenceStep } from "../types";
@@ -93,13 +94,16 @@ export function createBookingAdapter(options: BookingAdapterOptions): SequenceEd
           subject: row?.subject ?? "",
           body: row?.body ?? "",
           bodyFormat: "text",
+          subjectManaged: followUpRequiresEmptySubject(emailType),
         };
       });
     },
     async save(steps: SequenceStep[]) {
       const templates = steps.map((step, index) => ({
         email_type: emailTypes[index],
-        subject: step.subject,
+        subject: followUpRequiresEmptySubject(emailTypes[index])
+          ? ""
+          : step.subject,
         body: step.body,
       }));
       const response = await fetch(`/api/admin/booking-templates/${category}`, {

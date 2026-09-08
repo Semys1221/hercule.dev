@@ -7,6 +7,7 @@ export type BookingRowActionState = {
   showNoShow: boolean;
   showNotPaid: boolean;
   showNotPresent: boolean;
+  showResetNoShow: boolean;
 };
 
 export function bookingRowActionState(
@@ -18,6 +19,7 @@ export function bookingRowActionState(
       showNoShow: false,
       showNotPaid: false,
       showNotPresent: false,
+      showResetNoShow: false,
     };
   }
   if (status === "no_show") {
@@ -26,6 +28,7 @@ export function bookingRowActionState(
       showNoShow: false,
       showNotPaid: false,
       showNotPresent: false,
+      showResetNoShow: true,
     };
   }
   if (status === "not_paid") {
@@ -34,7 +37,14 @@ export function bookingRowActionState(
       showNoShow: false,
       showNotPaid: false,
       showNotPresent: false,
+      showResetNoShow: false,
     };
   }
-  return { badge: null, showNoShow: true, showNotPaid: true, showNotPresent: true };
+  return {
+    badge: null,
+    showNoShow: true,
+    showNotPaid: true,
+    showNotPresent: true,
+    showResetNoShow: false,
+  };
 }

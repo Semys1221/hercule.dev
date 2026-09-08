@@ -1,7 +1,7 @@
 import { upsertLeadReply } from "./lead-replies";
 import { isAutoSendEnabled, isCampaignConfigReady, loadAiReplyConfig } from "./config";
 import { isHandledReplyAgentEvent, isOooReplyEvent } from "./events";
-import { generateReplyDecision } from "./grok";
+import { generateReplyDecision, interestLabelFromStatus } from "./grok";
 import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack } from "./knowledge";
 import {
@@ -21,6 +21,7 @@ import type {
 } from "./types";
 
 const INTERESTED_STATUS = 1;
+const NOT_INTERESTED_STATUS = -1;
 
 function stripHtml(html: string): string {
   return html
@@ -113,6 +114,19 @@ export async function handleInstantlyReply(
   const apiKey = getInstantlyApiKey();
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
+  if (interestStatus === NOT_INTERESTED_STATUS) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_not_interested",
+      "Lead marked Not interested in Instantly",
+    );
+    return {
+      ok: true,
+      skipped: "not_interested",
+      aiStatus: "skipped_not_interested",
+      latencyMs: Date.now() - started,
+    };
+  }
   if (interestStatus !== INTERESTED_STATUS) {
     await updateInboundStatus(
       inbound.id,
@@ -153,6 +167,7 @@ export async function handleInstantlyReply(
       leadEmail,
       targetType: config.target_type,
       maxSentences,
+      interestLabel: interestLabelFromStatus(interestStatus),
     });
     decision = groq.decision;
     model = groq.model;

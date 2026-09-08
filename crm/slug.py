@@ -19,6 +19,7 @@ INSTANTLY_CANONICAL_KEYS = (
     "reservation_agence_link",
     "reservation_entreprise_link",
     "confirmation_agence_link",
+    "post_booking_link",
     "statut",
 )
 INSTANTLY_DEPRECATED_KEYS = ("link", "confirm_link", "tracking_url")
@@ -91,6 +92,10 @@ def build_confirm_url(
     return url
 
 
+def build_post_booking_url(slug: str, email: str | None = None) -> str:
+    return build_confirm_url(settings.post_booking_base_url, slug, email)
+
+
 def build_lead_urls(slug: str, email: str | None = None) -> dict[str, str]:
     trimmed = (email or "").strip()
     return {
@@ -106,14 +111,27 @@ def build_lead_urls(slug: str, email: str | None = None) -> dict[str, str]:
     }
 
 
+def build_entreprise_lead_urls(slug: str, email: str | None = None) -> dict[str, str]:
+    return {
+        **build_lead_urls(slug, email),
+        "post_booking_link": build_post_booking_url(slug, email),
+    }
+
+
 def build_instantly_custom_variables(
     slug: str,
     email: str | None,
     statut: str,
+    category: str = "entreprise",
 ) -> dict[str, str]:
     """Canonical Instantly custom_variables plus empty legacy keys (API merges)."""
+    urls = (
+        build_entreprise_lead_urls(slug, email)
+        if category == "entreprise"
+        else build_lead_urls(slug, email)
+    )
     payload = {
-        **build_lead_urls(slug, email),
+        **urls,
         "statut": statut,
     }
     for key in INSTANTLY_DEPRECATED_KEYS:

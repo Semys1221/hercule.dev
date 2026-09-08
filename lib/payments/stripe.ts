@@ -24,6 +24,22 @@ export function getStarterOfferType(): string {
   return STARTER_OFFER_TYPE;
 }
 
+export function getComptableMonthlyPriceId(): string {
+  const priceId = process.env.STRIPE_PRICE_COMPTABLE_MONTHLY?.trim();
+  if (!priceId) {
+    throw new Error("STRIPE_PRICE_COMPTABLE_MONTHLY is not set");
+  }
+  return priceId;
+}
+
+export function getComptablePack3PriceId(): string {
+  const priceId = process.env.STRIPE_PRICE_COMPTABLE_PACK3?.trim();
+  if (!priceId) {
+    throw new Error("STRIPE_PRICE_COMPTABLE_PACK3 is not set");
+  }
+  return priceId;
+}
+
 export function getStripeWebhookSecret(): string {
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
   if (!secret) {

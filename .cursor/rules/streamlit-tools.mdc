@@ -1,0 +1,36 @@
+---
+description: Obligatoire pour tout travail sur les outils Streamlit Hercule
+globs: app/streamlit_*/**
+alwaysApply: false
+---
+
+# Streamlit tools — skill obligatoire
+
+Avant toute lecture, modification ou commande sous `app/streamlit_*/**` :
+
+1. Lire et suivre [`.cursor/skills/hercule-streamlit/SKILL.md`](../skills/hercule-streamlit/SKILL.md) (router).
+2. Lire le sub-skill de l'app concernée (table dans le router).
+3. Utiliser le MCP adapté au sujet (voir ci-dessous).
+
+## MCP routing
+
+| Sujet | MCP / skill |
+|-------|-------------|
+| Instantly (listes, campagnes, push, provision) | `user-instantly` |
+| Supabase (tables CRM, templates, jobs) | `plugin-supabase-supabase` |
+| Calendly (bookings, webhooks) | `plugin-calendly-calendly` |
+| Resend (séquences booking) | `plugin-resend-resend` |
+| MyEmailVerifier (validation email) | [`.cursor/skills/myemailverifier/SKILL.md`](../skills/myemailverifier/SKILL.md) |
+| Outscraper (Google Maps scrape, async requests) | [`.cursor/skills/outscraper/SKILL.md`](../skills/outscraper/SKILL.md) |
+
+## Interdictions
+
+- Ne pas utiliser le skill personnel `scrapping` — il documente `apps/b2b-scraper/` (autre stack).
+- Ne pas utiliser le skill `smartlead` — Hercule utilise Instantly.
+- shadcn MCP ne s'applique pas ici (déjà exempté dans `shadcn-mcp.mdc`).
+
+## Conventions
+
+- Préférer les scripts `pnpm streamlit-*` de [`package.json`](../../package.json) plutôt qu'un `streamlit run` ad hoc.
+- Secrets dans le `.env` à la racine du repo — ne jamais committer de clés API.
+- Docs humaines exhaustives : `README.md` de chaque app ; les skills résument les workflows agent.

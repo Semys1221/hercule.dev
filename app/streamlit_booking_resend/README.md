@@ -1,5 +1,14 @@
 # Booking Resend (Streamlit)
 
+## AI agents
+
+Before editing this app, read:
+1. [`.cursor/rules/streamlit-tools.mdc`](../../.cursor/rules/streamlit-tools.mdc) (enforced when this path is open)
+2. [`.cursor/skills/hercule-streamlit/SKILL.md`](../../.cursor/skills/hercule-streamlit/SKILL.md) (router)
+3. [`.cursor/skills/hercule-streamlit-booking-resend/SKILL.md`](../../.cursor/skills/hercule-streamlit-booking-resend/SKILL.md) (this app)
+
+Human reference: sections below.
+
 Outil dédié aux réservations Calendly et aux séquences email Resend.
 
 ```bash

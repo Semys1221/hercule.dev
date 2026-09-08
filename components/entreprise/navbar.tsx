@@ -24,7 +24,7 @@ export function Navbar() {
               Contact
             </a>
             <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-              Espace agence →
+              Espace agences web →
             </Link>
           </div>
           <div className="flex items-center gap-4">
@@ -32,7 +32,7 @@ export function Navbar() {
               href={CALENDLY_ENTREPRISE_URL}
               className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors"
             >
-              Trouver mon agence
+              Proposer mon cabinet
             </a>
           </div>
         </div>

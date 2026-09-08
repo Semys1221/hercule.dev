@@ -1,0 +1,2 @@
+-r app/streamlit_scraper/requirements.txt
+-r app/streamlit_clean/requirements.txt

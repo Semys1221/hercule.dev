@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "audience": "comptable",
+  "updatedAt": "2026-09-08T00:00:00.000Z",
+  "hero": {
+    "eyebrow": "Tarification",
+    "title": "Accès aux missions TPE. Mensuel sans engagement. Pack 3 mois −20 %.",
+    "intro": "Chaque formule ouvre l'accès à des missions de tenue qualifiées, attribuées après audit de compatibilité. Une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement."
+  },
+  "plans": [
+    {
+      "id": "plan-comptable-monthly",
+      "name": "Hercule Comptable",
+      "label": "Offre mensuelle",
+      "price": "1 499 €",
+      "priceSuffix": "/mois",
+      "tagline": "1 mission annuelle de tenue à 3 600 € d'honoraires",
+      "summary": "5 missions par mois. Premier RDV sous 15 jours. 0 % de commission. Pas de garantie de signature.",
+      "footer": "Garantie volume : 15 rendez-vous en 90 jours ou continuité sans frais.",
+      "featured": true,
+      "profileOnly": false,
+      "highlight": null,
+      "features": [
+        "5 missions TPE qualifiées par mois (tenue, fiscal, obligations administratives).",
+        "Premier rendez-vous planifié sous 15 jours après activation.",
+        "Attribution exclusive à votre cabinet.",
+        "0 % de commission sur vos honoraires signés.",
+        "Calendly Pro et Zoom Pro provisionnés par Hercule.",
+        "Garantie volume : 15 RDV en 90 jours ou continuité sans frais supplémentaires."
+      ]
+    },
+    {
+      "id": "plan-comptable-pack3",
+      "name": "Pack 3 mois",
+      "label": "Engagement 3 mois",
+      "price": "3 598 €",
+      "priceSuffix": "TTC",
+      "tagline": "1 499 € × 3 − 20 % + 5 RDV offerts",
+      "summary": "Même rythme et garantie volume que l'offre mensuelle, sur 3 mois de service actif.",
+      "footer": null,
+      "featured": false,
+      "profileOnly": false,
+      "highlight": "+ 5 RDV offerts",
+      "features": [
+        "3 mois de service actif au rythme de l'offre mensuelle.",
+        "5 rendez-vous offerts en sus du volume contractuel.",
+        "0 % de commission sur vos honoraires.",
+        "Garantie volume : 15 RDV en 90 jours ou continuité sans frais.",
+        "Calendly Pro et Zoom Pro provisionnés par Hercule."
+      ]
+    }
+  ],
+  "gatedTeaserFeatures": [
+    "5 missions TPE qualifiées par mois.",
+    "0 % de commission — honoraires conservés.",
+    "Premier RDV sous 15 jours."
+  ],
+  "gatedGhostFeatures": [
+    "Garantie 15 RDV / 90 jours",
+    "Provisionnement Calendly / Zoom",
+    "Pack 3 mois −20 %"
+  ],
+  "guaranteeSection": {
+    "title": "Garantie volume Hercule Comptable",
+    "items": [
+      "1 499 €/mois — 5 missions qualifiées, 0 % de commission",
+      "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
+      "Moins de 15 RDV planifiés en 90 jours ? Continuité du service sans frais supplémentaires"
+    ]
+  }
+}

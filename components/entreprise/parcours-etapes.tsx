@@ -6,24 +6,27 @@ import { ChevronRight } from "lucide-react"
 const steps = [
   {
     number: "01",
-    title: "Vous nous décrivez votre besoin",
-    description: "Site web, refonte, e-commerce, SEO — vous exposez votre projet et vos contraintes.",
+    title: "Vous proposez votre cabinet",
+    description:
+      "Vous exposez la taille de votre équipe, votre zone, vos honoraires et votre capacité à prendre de nouveaux dossiers.",
   },
   {
     number: "02",
-    title: "Nous qualifions votre projet par téléphone",
-    description: "Un échange rapide pour comprendre votre contexte, vos priorités et votre calendrier.",
+    title: "Nous auditons la compatibilité",
+    description:
+      "Un échange pour valider l'éligibilité (> 3 associés ou collaborateurs), votre typologie de missions et votre capacité opérationnelle.",
   },
   {
     number: "03",
-    title: "Nous identifions les agences adaptées",
+    title: "Nous vous présentons les demandes éligibles",
     description:
-      "Nous sélectionnons les agences correspondant à votre budget, vos délais et vos objectifs — pas une liste générique.",
+      "Indépendants et dirigeants de TPE en reprise de comptabilité, fiscal, déclarations et obligations administratives — contrats annuels, flux mensuel.",
   },
   {
     number: "04",
-    title: "Nous organisons la mise en relation",
-    description: "Vous échangez directement avec l'agence retenue, sans intermédiaire payant de votre côté.",
+    title: "Nous attribuons et planifions",
+    description:
+      "Les rendez-vous sont planifiés dans votre agenda. Calendly et visio sont provisionnés par Hercule.",
   },
 ]
 
@@ -50,7 +53,7 @@ export function ParcoursEtapes() {
           className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-16"
           style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
         >
-          Une agence adaptée à votre besoin, en quatre étapes.
+          Un cabinet éligible, en quatre étapes.
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -39,10 +39,6 @@ class BulkTryAgentConcurrencyTests(unittest.TestCase):
         _mock_upsert: MagicMock,
     ) -> None:
         mock_resolve.return_value = "inbound"
-        mock_generate.side_effect = lambda *_a, **_k: {
-            "should_reply": True,
-            "reply_text": "Draft",
-        }
 
         def slow_generate(*_args, **_kwargs):
             time.sleep(0.15)
@@ -85,7 +81,7 @@ class BulkTryAgentConcurrencyTests(unittest.TestCase):
     ) -> None:
         mock_resolve.return_value = "inbound"
 
-        def generate(_config, _body, email: str) -> dict:
+        def generate(_config, _body, email: str, **_kwargs) -> dict:
             if email == "bad@example.com":
                 raise RuntimeError("grok failed")
             return {"should_reply": True, "reply_text": "OK"}
@@ -128,6 +124,41 @@ class BulkTryAgentConcurrencyTests(unittest.TestCase):
             "camp-1",
         )
         self.assertEqual(result.skipped, [("lead@example.com", "Brouillon déjà présent")])
+        mock_generate.assert_not_called()
+
+    @patch("pending_bulk_actions.upsert_lead_reply")
+    @patch("pending_bulk_actions.generate_reply_preview")
+    @patch("pending_bulk_actions.get_lead_reply", return_value="")
+    @patch("pending_bulk_actions.bulk_try_agent_concurrency", return_value=1)
+    def test_skips_not_interested_even_when_interested_only_false(
+        self,
+        _mock_concurrency: MagicMock,
+        _mock_get_reply: MagicMock,
+        mock_generate: MagicMock,
+        _mock_upsert: MagicMock,
+    ) -> None:
+        row = PendingReplyRow(
+            lead_email="gone@example.com",
+            last_reply_at="",
+            last_reply_subject="Re: test",
+            last_reply_preview="No thanks",
+            last_reply_id="",
+            thread_id="",
+            interest_status=-1,
+            interest_label="Not interested",
+        )
+        result = bulk_try_agent(
+            MagicMock(api_key="test-key"),
+            {"prompt_snapshot": "x", "target_type": "buyer"},
+            [row],
+            {"gone@example.com"},
+            "camp-1",
+            interested_only=False,
+        )
+        self.assertEqual(
+            result.skipped,
+            [("gone@example.com", "Lead marqué Not interested dans Instantly")],
+        )
         mock_generate.assert_not_called()
 
 

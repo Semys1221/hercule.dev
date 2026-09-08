@@ -1,17 +1,3 @@
 """Default Instantly bypass email copy for new campaign bootstrap."""
 
-DEFAULT_E1_BODY_HTML = (
-    "Pour faire simple,<br/><br/>"
-    "L'un des groupes de clients que nous avons actuellement est constitué de cabinets comptables "
-    "de 3 à 12 mandataires, disposant d'un budget mensuel dédié au développement marketing."
-    "<br/><br/>"
-    "L'expertise recherchée porte sur l'acquisition organique et/ou payante."
-    "<br/><br/>"
-    "Pour réaliser l'audit de compatibilité de votre agence, cliquez ici :"
-    "<br/><a href=\"{{reservation_agence_link}}\">Mon agence est compatible</a>"
-    "<br/><br/>"
-    "Pour comprendre nos modalités de facturation :"
-    "<br/><a href=\"https://hercule.dev\">hercule.dev</a>"
-    "<br/><br/>"
-    "Cordialement,<br/>Béatrice Meyer"
-)
+DEFAULT_E1_BODY_HTML = """<p>Voici plus de précisions.<br/><br/>Les demandes concernent principalement des indépendants et dirigeants de TPE qui n'arrivent plus à suivre seuls leur comptabilité, leurs échéances fiscales, leurs déclarations et leurs obligations administratives, et qui cherchent un cabinet pour reprendre ces sujets en main.<br/><br/>Ces demandes sont transmises à nos cabinets partenaires.<br/><br/>Pour recevoir ce type de contrat, votre cabinet doit compter plus de 3 associés ou collaborateurs.<br/><br/><a href="{{reservation_entreprise_link}}">Proposer mon cabinet</a><br/><br/>{{accountSignature}}</p>"""

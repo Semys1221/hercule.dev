@@ -12,7 +12,7 @@ from agent_preview import generate_reply_preview
 from config import bulk_try_agent_concurrency
 from inbox import dispatch_unibox_reply
 from lead_links import TargetType
-from lead_tags import INTERESTED_STATUS
+from lead_tags import INTERESTED_STATUS, NOT_INTERESTED_STATUS
 from pending_fetch import PendingReplyRow, resolve_inbound_body
 from pending_table_state import clear_checkbox
 from shared.instantly_client import InstantlyClient
@@ -47,6 +47,12 @@ def _process_one_lead(
     interested_only: bool,
 ) -> _LeadTryOutcome:
     normalized = row.lead_email.strip().lower()
+    if row.interest_status == NOT_INTERESTED_STATUS:
+        return _LeadTryOutcome(
+            normalized,
+            "skipped",
+            "Lead marqué Not interested dans Instantly",
+        )
     if interested_only and row.interest_status != INTERESTED_STATUS:
         return _LeadTryOutcome(normalized, "skipped", "Lead non tagué Interested")
 
@@ -58,7 +64,12 @@ def _process_one_lead(
     client = InstantlyClient(api_key)
     try:
         inbound_body = resolve_inbound_body(client, row)
-        preview = generate_reply_preview(config, inbound_body, row.lead_email)
+        preview = generate_reply_preview(
+            config,
+            inbound_body,
+            row.lead_email,
+            interest_label=row.interest_label,
+        )
         if preview.get("should_reply") and preview.get("reply_text"):
             upsert_lead_reply(
                 campaign_id,

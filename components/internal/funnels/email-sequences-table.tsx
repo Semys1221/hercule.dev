@@ -25,6 +25,10 @@ import {
   type EmailSequenceEntry,
   type EmailSequencePhase,
 } from "@/lib/admin/email-sequences/registry";
+import {
+  evaluateSequenceSafety,
+  SAFETY_LABELS,
+} from "@/lib/admin/email-sequences/safety";
 import type { Audience } from "@/lib/admin/navigation";
 
 const PROVIDER_LABELS: Record<EmailSequenceEntry["provider"], string> = {
@@ -113,8 +117,23 @@ export function EmailSequencesTable({ audience }: EmailSequencesTableProps) {
         header: "Provider",
         cell: ({ row }) => PROVIDER_LABELS[row.original.provider],
       },
+      {
+        id: "safety",
+        header: "Safety",
+        cell: ({ row }) => {
+          const safety = evaluateSequenceSafety(row.original, audience);
+          if (safety === null) {
+            return <span className="text-muted-foreground">—</span>;
+          }
+          return (
+            <Badge variant={safety === "on" ? "default" : "destructive"}>
+              {SAFETY_LABELS[safety]}
+            </Badge>
+          );
+        },
+      },
     ],
-    [],
+    [audience],
   );
 
   const phaseToolbar = (

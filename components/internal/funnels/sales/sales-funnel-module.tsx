@@ -40,7 +40,7 @@ import { SalesCompanyPresentationPanel } from "./sales-company-presentation-pane
 import { SalesFunnelSectionPage } from "./sales-funnel-section-page";
 import {
   getSalesFunnelSection,
-  SALES_FUNNEL_SECTIONS,
+  getSalesFunnelSections,
   type SalesFunnelSectionId,
 } from "./sales-funnel-sections";
 import { SalesFunnelSidebar, type MeetingInfo } from "./sales-funnel-sidebar";
@@ -110,8 +110,10 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     [activeClosingId, closingValues, visitedClosingSectionIds],
   );
 
+  const funnelSections = useMemo(() => getSalesFunnelSections(audience), [audience]);
+
   const completedSectionIds = useMemo(() => {
-    const qualificationCompleted = SALES_FUNNEL_SECTIONS.filter((section) =>
+    const qualificationCompleted = funnelSections.filter((section) =>
       isSalesSectionComplete(section.id, watchedValues),
     ).map((section) => section.id);
 
@@ -120,7 +122,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     ).map((section) => section.id);
 
     return [...qualificationCompleted, ...closingCompleted];
-  }, [closingCompletionContext, watchedValues]);
+  }, [closingCompletionContext, funnelSections, watchedValues]);
 
   const { progress, progressLabel } = useMemo(() => {
     if (phase === "closing") {
@@ -144,7 +146,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   }, [closingCompletionContext, phase, watchedValues]);
 
   const canEnterClosing = isSalesQualificationComplete(watchedValues);
-  const activeQualificationSection = getSalesFunnelSection(activeQualificationId);
+  const activeQualificationSection = getSalesFunnelSection(activeQualificationId, audience);
 
   const meetingInfo: MeetingInfo | null = selectedBooking
     ? {
@@ -348,6 +350,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     <Form {...form}>
       <SidebarProvider className="flex h-svh min-h-0 w-full overflow-hidden">
         <SalesFunnelSidebar
+          audience={audience}
           name={meetingName}
           progress={progress}
           progressLabel={progressLabel}

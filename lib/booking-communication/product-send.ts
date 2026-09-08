@@ -5,6 +5,7 @@ import type { LeadCategory } from "@/lib/link-tracking/types";
 import { insertJob, markJobFailed, markJobSent } from "./jobs";
 import { sendBookingEmail } from "./send";
 import { defaultUseHtml } from "./signatures";
+import { prepareThreadedSend } from "./threaded-send";
 import {
   confirmUrlForLead,
   renderCustomBookingEmail,
@@ -115,12 +116,18 @@ export async function sendProductEmailNow(params: {
     useHtml: defaultUseHtml(params.emailType),
   });
 
+  const threaded = await prepareThreadedSend(
+    { email_type: params.emailType, lead_id: params.leadId },
+    rendered,
+  );
+
   const result = await sendBookingEmail({
     to: lead.email,
-    subject: rendered.subject,
+    subject: threaded.subject,
     text: rendered.text,
     html: rendered.html,
     idempotencyKey: params.idempotencyKey,
+    headers: threaded.headers,
   });
 
   if (!result.ok) {
@@ -131,7 +138,7 @@ export async function sendProductEmailNow(params: {
   if (job) {
     await markJobSent(job.id, result.id, {
       messageId: result.messageId,
-      threadSubject: rendered.subject.trim() || null,
+      threadSubject: threaded.threadSubject,
     });
   }
 

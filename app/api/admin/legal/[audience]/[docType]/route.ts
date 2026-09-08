@@ -7,7 +7,7 @@ import type { LegalAudience } from "@/lib/site/legal-content";
 const EDITABLE_DOC_TYPES = new Set<LegalDocType>(["cgv", "mentions", "confidentialite"]);
 
 function parseAudience(value: string): LegalAudience | null {
-  if (value === "agence" || value === "entreprise") {
+  if (value === "agence" || value === "entreprise" || value === "comptable") {
     return value;
   }
   return null;

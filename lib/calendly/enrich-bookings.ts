@@ -3,10 +3,11 @@ import { mapWithConcurrency } from "@/lib/calendly/map-with-concurrency";
 import type { CalendlyBookingRow } from "@/lib/calendly/list-bookings";
 import {
   createLinkTrackingClient,
+  findLeadByCalendlyInviteeUri,
+  findLeadByEmail,
   findLeadById,
   persistCalendlyMeetingLinks,
 } from "@/lib/link-tracking/supabase";
-import { provisionRoleRecoveryLead } from "@/lib/link-tracking/provision-role-recovery-lead";
 import type { LeadLookup, LeadStatut, LinkTrackingLead } from "@/lib/link-tracking/types";
 import {
   createSalesCallsClient,
@@ -189,56 +190,44 @@ async function persistMeetingLinksIfNeeded(
   }
 }
 
+async function resolveBookingLeadLookup(
+  client: ReturnType<typeof createLinkTrackingClient>,
+  booking: CalendlyBookingRow,
+): Promise<LeadLookup | null> {
+  if (booking.lead_id && booking.lead_category) {
+    const lead = await findLeadById(client, booking.lead_category, booking.lead_id);
+    if (lead) {
+      return { category: booking.lead_category, lead };
+    }
+  }
+
+  const byEmail = await findLeadByEmail(client, booking.email);
+  if (byEmail) {
+    return byEmail;
+  }
+
+  if (booking.invitee_uri) {
+    return findLeadByCalendlyInviteeUri(client, booking.invitee_uri);
+  }
+
+  return null;
+}
+
+const UNTRACKED_AGENCE_WARNING =
+  "Réservation sans lead CRM — séquence email non démarrée. Utiliser bootstrap-untracked-booking.";
+
 async function enrichSingleBooking(
   booking: CalendlyBookingRow,
 ): Promise<EnrichedCalendlyBooking> {
   const client = createLinkTrackingClient();
-  let lookup: LeadLookup | null = null;
-  let provisioned = false;
-  let warning: string | null = null;
-  let provisionResolvedSlug: string | null = booking.slug?.trim() || null;
-
-  if (booking.lead_id && booking.lead_category) {
-    const lead = await findLeadById(client, booking.lead_category, booking.lead_id);
-    if (lead) {
-      lookup = { category: booking.lead_category, lead };
-    }
-  }
-
-  if (!lookup && booking.booking_category === "agence") {
-    const result = await provisionRoleRecoveryLead({
-      email: booking.email,
-      firstName: booking.first_name,
-      company: booking.company,
-      scheduledAt: booking.start_time,
-      calendlyInviteeUri: booking.invitee_uri,
-      calendlyPayload: {
-        invitee_uri: booking.invitee_uri,
-        event_uri: booking.event_uri,
-      },
-      calendlyQuestions: booking.questions,
-      slug: booking.slug,
-    });
-
-    if (result.ok) {
-      lookup = result.lookup;
-      provisioned = result.created;
-      provisionResolvedSlug = result.resolvedSlug;
-    } else if (result.reason === "entreprise_email_collision") {
-      warning = "Email existant en entreprise — liens CRM non provisionnés.";
-    } else if (result.reason === "insert_failed") {
-      provisionResolvedSlug = result.resolvedSlug;
-      console.error(
-        "[enrich-bookings] provision failed for",
-        booking.email,
-        result.errorMessage ?? "unknown",
-      );
-      warning = "CRM non enregistré — liens affichés à titre indicatif.";
-    }
-  }
+  let lookup = await resolveBookingLeadLookup(client, booking);
+  const warning =
+    !lookup && booking.booking_category === "agence"
+      ? UNTRACKED_AGENCE_WARNING
+      : null;
 
   const resolvedSlug =
-    lookup?.lead.slug?.trim() || provisionResolvedSlug || null;
+    lookup?.lead.slug?.trim() || booking.slug?.trim() || null;
 
   let meetingLinks = mergeMeetingLinks(booking, lookup?.lead ?? null);
   meetingLinks = await fetchMeetingLinksFallback(booking.invitee_uri, meetingLinks);
@@ -263,7 +252,7 @@ async function enrichSingleBooking(
     sales_call_status: null,
     links,
     lead_matched: Boolean(lead),
-    provisioned,
+    provisioned: false,
     warning,
   };
 }

@@ -9,9 +9,9 @@ export function Footer() {
       { label: "Notre modèle", href: "#modele" },
       { label: "Contact", href: "#contact" },
     ],
-    Hercule: [{ label: "Espace agence", href: "/" }],
+    Hercule: [{ label: "Espace agences web", href: "/" }],
     Légal: [
-      { label: "CGV", href: "/cvg" },
+      { label: "CGV", href: "/cvg/comptable" },
       { label: "Mentions légales", href: "/mentions-legales" },
       { label: "Confidentialité", href: "/confidentialite" },
     ],
@@ -24,7 +24,7 @@ export function Footer() {
           <div>
             <p className="text-white font-semibold text-lg mb-2">Hercule</p>
             <p className="text-zinc-500 text-sm max-w-xs">
-              Service gratuit de matching B2B entre entreprises et agences web.
+              Mise en relation B2B entre TPE et cabinets d&apos;expertise comptable.
             </p>
           </div>
 

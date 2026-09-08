@@ -1,5 +1,14 @@
 # Streamlit Subsequence
 
+## AI agents
+
+Before editing this app, read:
+1. [`.cursor/rules/streamlit-tools.mdc`](../../.cursor/rules/streamlit-tools.mdc) (enforced when this path is open)
+2. [`.cursor/skills/hercule-streamlit/SKILL.md`](../../.cursor/skills/hercule-streamlit/SKILL.md) (router)
+3. [`.cursor/skills/hercule-streamlit-subsequence/SKILL.md`](../../.cursor/skills/hercule-streamlit-subsequence/SKILL.md) (this app)
+
+Human reference: sections below.
+
 Operator dashboard for Instantly Interested follow-ups — CRM steps + Unibox reply sends. Multi-campaign: pick an Instantly campaign, **Initialiser** if needed, fill E1–E3, then use the same CRM.
 
 ## Onboarding
@@ -9,7 +18,12 @@ Operator dashboard for Instantly Interested follow-ups — CRM steps + Unibox re
 3. Fill Email 1 / 2 / 3 (Setup or Templates) and save.
 4. **Envois** is the same CRM as before. Send is disabled until Email 1 has a body.
 
-Copy and webhook pause are **per campaign**. `instantly_bypass_settings` remains a global emergency kill-switch.
+Run once after applying migration `20261008120000_comptable_subsequence_copy.sql`:
+
+```bash
+python scripts/streamlit_subsequence/syncComptableSubsequence.py
+python scripts/streamlit_subsequence/syncComptableSubsequence.py --dry-run
+```
 
 ## CRM pipeline
 
@@ -55,6 +69,6 @@ pnpm smoke-streamlit-subsequence
 
 ## Template variables
 
-`{{reservation_agence_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`
+`{{reservation_agence_link}}`, `{{reservation_entreprise_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`
 
-`{{reservation_agence_link}}` is required on send **only if** the template HTML contains that placeholder.
+`{{reservation_agence_link}}` or `{{reservation_entreprise_link}}` is required on send **only if** the template HTML contains that placeholder.

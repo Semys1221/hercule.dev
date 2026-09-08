@@ -58,5 +58,20 @@ export default defineConfig({
       name: "journey",
       grep: /@journey/,
     },
+    {
+      name: "visual",
+      grep: /@visual/,
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: process.env.CI
+          ? undefined
+          : {
+              executablePath:
+                process.env.PLAYWRIGHT_CHROME_PATH ||
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+              args: ["--headless=new", "--disable-extensions"],
+            },
+      },
+    },
   ],
 });

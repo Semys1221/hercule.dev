@@ -5,6 +5,8 @@ export type SequenceStep = {
   subject: string;
   body: string;
   bodyFormat?: "text" | "html";
+  /** When true, subject is set at send time (Re: root subject). */
+  subjectManaged?: boolean;
 };
 
 export type SequenceEditorAdapter = {

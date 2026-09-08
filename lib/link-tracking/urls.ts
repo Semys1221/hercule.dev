@@ -7,6 +7,8 @@ const DEFAULT_TRACKING_BASE_ENTREPRISE =
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_DASHBOARD_BASE = "https://www.hercule.dev/dashboard";
+const DEFAULT_ENTREPRISE_POST_BASE =
+  "https://www.hercule.dev/post-booking-entreprise.html";
 
 export type LeadUrls = {
   reservation_agence_link: string;
@@ -14,11 +16,16 @@ export type LeadUrls = {
   confirmation_agence_link: string;
 };
 
+export type EntrepriseLeadUrls = LeadUrls & {
+  post_booking_link: string;
+};
+
 export type InstantlyCanonicalVariables = LeadUrls & {
   statut: string;
   link: string;
   confirm_link: string;
   tracking_url: string;
+  post_booking_link?: string;
 };
 
 export function getTrackingBaseUrl(category: LeadCategory): string {
@@ -49,12 +56,27 @@ export function getDashboardBaseUrl(): string {
   );
 }
 
+export function getEntreprisePostBookingBaseUrl(): string {
+  return (
+    process.env.BOOKING_ENTREPRISE_POST_BASE_URL?.trim().replace(/\/$/, "") ??
+    DEFAULT_ENTREPRISE_POST_BASE
+  );
+}
+
 export function buildTrackingUrl(slug: string, category: LeadCategory): string {
   return `${getTrackingBaseUrl(category)}/${slug}`;
 }
 
 export function buildConfirmationAgenceLink(slug: string, email: string): string {
   const url = new URL(`${getConfirmBaseUrl()}/${slug}`);
+  if (email.trim()) {
+    url.searchParams.set("email", email.trim().toLowerCase());
+  }
+  return url.toString();
+}
+
+export function buildEntreprisePostBookingUrl(slug: string, email: string): string {
+  const url = new URL(`${getEntreprisePostBookingBaseUrl()}/${slug}`);
   if (email.trim()) {
     url.searchParams.set("email", email.trim().toLowerCase());
   }
@@ -70,6 +92,16 @@ export function buildLeadUrls(slug: string, email: string): LeadUrls {
     reservation_agence_link: buildTrackingUrl(slug, "agence"),
     reservation_entreprise_link: buildTrackingUrl(slug, "entreprise"),
     confirmation_agence_link: buildConfirmationAgenceLink(slug, email),
+  };
+}
+
+export function buildEntrepriseLeadUrls(
+  slug: string,
+  email: string,
+): EntrepriseLeadUrls {
+  return {
+    ...buildLeadUrls(slug, email),
+    post_booking_link: buildEntreprisePostBookingUrl(slug, email),
   };
 }
 
@@ -109,9 +141,14 @@ export function buildInstantlyCustomVariables(
   slug: string,
   email: string,
   statut: string,
+  category: LeadCategory = "entreprise",
 ): InstantlyCanonicalVariables {
+  const urls =
+    category === "entreprise"
+      ? buildEntrepriseLeadUrls(slug, email)
+      : buildLeadUrls(slug, email);
   return {
-    ...buildLeadUrls(slug, email),
+    ...urls,
     statut,
     link: "",
     confirm_link: "",

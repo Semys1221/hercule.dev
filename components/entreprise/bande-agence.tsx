@@ -6,13 +6,12 @@ export function BandeAgence() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
-            <p className="text-sm text-emerald-400 mb-3 font-medium">Service gratuit pour les entreprises</p>
+            <p className="text-sm text-emerald-400 mb-3 font-medium">Plus de 3 associés ou collaborateurs</p>
             <h2 className="text-3xl md:text-4xl lg:text-[42px] font-medium text-white tracking-tight">
-              Décrivez votre besoin, nous trouvons une agence adaptée.
+              Proposez votre cabinet pour recevoir ces missions chaque mois.
             </h2>
             <p className="mt-4 text-zinc-400 max-w-lg">
-              Vous n&apos;avez rien à perdre à essayer : qualification gratuite, sélection sur mesure, mise en
-              relation organisée.
+              Audit de compatibilité gratuit, attribution sur mesure, 0 % de commission sur vos honoraires.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -26,7 +25,7 @@ export function BandeAgence() {
               href={CALENDLY_ENTREPRISE_URL}
               className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
             >
-              Trouver mon agence
+              Proposer mon cabinet
             </a>
           </div>
         </div>

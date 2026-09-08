@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { isAudience } from "@/lib/admin/navigation";
+import { isLeadCategory } from "@/lib/admin/navigation";
 import {
   createOnboardingFiche,
   DuplicateEmailError,
@@ -34,7 +34,7 @@ export async function POST(
   context: { params: Promise<{ category: string }> },
 ) {
   const { category } = await context.params;
-  if (!isAudience(category)) {
+  if (!isLeadCategory(category)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
   }
 
