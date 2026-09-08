@@ -49,7 +49,9 @@ function sampleBooking(inviteeUri: string): EnrichedCalendlyBooking {
     links: {
       reservation_agence_link: null,
       reservation_entreprise_link: null,
+      reservation_comptable_link: null,
       confirmation_agence_link: null,
+      confirmation_comptable_link: null,
       dashboard_link: null,
       calendly_join_url: null,
       calendly_reschedule_url: null,

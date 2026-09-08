@@ -146,12 +146,12 @@ export function buildCrmLinks(
   return {
     reservation_agence_link: urls.reservation_agence_link,
     reservation_entreprise_link: urls.reservation_entreprise_link,
-    reservation_comptable_link: urls.reservation_comptable_link ?? null,
+    reservation_comptable_link: null,
     confirmation_agence_link:
       category === "entreprise"
         ? buildEntreprisePostBookingUrl(resolvedSlug, email)
         : urls.confirmation_agence_link,
-    confirmation_comptable_link: urls.confirmation_comptable_link ?? null,
+    confirmation_comptable_link: null,
     dashboard_link: buildDashboardUrl(resolvedSlug),
   };
 }

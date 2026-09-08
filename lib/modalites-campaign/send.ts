@@ -207,7 +207,7 @@ export async function runModalitesCampaign(params: {
       subject: `[TEST] ${preview.subject}`,
       text: preview.text,
       html: preview.html,
-      idempotencyKey: `modalites-test/${prepared.lead.id}/${to}`,
+      idempotencyKey: `modalites-test/${prepared.lead.id}/${to}/${Date.now()}`,
     });
     if (!sent.ok) {
       throw new Error(sent.error);
