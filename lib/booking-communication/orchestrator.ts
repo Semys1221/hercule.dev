@@ -433,7 +433,7 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
 
 function confirmUrlForJob(job: BookingEmailJob, lead: LinkTrackingLead): string {
   if (job.email_type === "modalites_ask" || job.email_type === "modalites_cancel") {
-    return modalitesConfirmUrlFor(lead);
+    return modalitesConfirmUrlFor(lead, { autoConfirm: true });
   }
   if (job.email_type === "role_seq_24") {
     return buildTemporaryConfirmUrl(lead.slug, lead.email);

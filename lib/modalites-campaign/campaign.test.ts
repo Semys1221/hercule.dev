@@ -100,6 +100,12 @@ function main() {
   const url = buildModalitesConfirmUrl("AbC123", "Lead@Example.com");
   assert.match(url, /modalites-hercule\.html\/AbC123/);
   assert.match(url, /email=lead%40example\.com/);
+  assert.doesNotMatch(url, /confirm=1/);
+
+  const autoUrl = buildModalitesConfirmUrl("AbC123", "Lead@Example.com", {
+    autoConfirm: true,
+  });
+  assert.match(autoUrl, /confirm=1/);
 
   assert.equal(MODALITES_SUBJECT, "Modalités d'Hercule");
   assert.equal(MODALITES_AGENCE_GROWTH_TTC_CENTS, 149_800);

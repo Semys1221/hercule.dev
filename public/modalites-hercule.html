@@ -83,33 +83,6 @@
 
         .formula-detail { margin: 0; }
 
-        .confirm-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 14px 20px;
-            border: 0;
-            border-radius: 10px;
-            background: var(--foreground);
-            color: var(--background);
-            font-family: var(--font-sans);
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .confirm-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .warning {
-            margin-top: 16px;
-            font-size: 13px;
-            color: var(--muted-foreground);
-        }
-
         .status { margin-top: 12px; font-size: 15px; }
         .status.ok { color: var(--success); }
         .status.error { color: var(--error); }
@@ -132,8 +105,6 @@
         <p class="intro" id="intro">Chargement de votre rendez-vous…</p>
         <p class="meeting is-hidden" id="meeting"></p>
         <div class="formulas is-hidden" id="formulas"></div>
-        <button class="confirm-btn is-hidden" type="button" id="confirmBtn">Confirmer le rendez-vous</button>
-        <p class="warning is-hidden" id="warning">Attention : Sans confirmation avant votre rendez-vous, celui-ci sera automatiquement annulé une heure avant l'horaire prévu.</p>
         <p id="status" class="status pending" aria-live="polite"></p>
     </div>
 
@@ -143,20 +114,17 @@
         var slug = params.get('code') || params.get('slug') || (pathMatch ? pathMatch[1] : '') || '';
         var email = params.get('email') || '';
         var alreadyConfirmed = params.get('confirmed') === '1';
+        var autoConfirm = params.get('confirm') === '1';
 
         var introEl = document.getElementById('intro');
         var meetingEl = document.getElementById('meeting');
         var formulasEl = document.getElementById('formulas');
-        var confirmBtn = document.getElementById('confirmBtn');
-        var warningEl = document.getElementById('warning');
         var statusEl = document.getElementById('status');
 
         function showSuccess(already) {
             introEl.textContent = '';
             meetingEl.classList.add('is-hidden');
             formulasEl.classList.add('is-hidden');
-            confirmBtn.classList.add('is-hidden');
-            warningEl.classList.add('is-hidden');
             statusEl.textContent = already
                 ? 'Votre rendez-vous était déjà confirmé. Merci.'
                 : 'Votre créneau a bien été confirmé. Merci.';
@@ -164,6 +132,9 @@
         }
 
         function showError(message) {
+            introEl.textContent = '';
+            meetingEl.classList.add('is-hidden');
+            formulasEl.classList.add('is-hidden');
             statusEl.textContent = message;
             statusEl.className = 'status error';
         }
@@ -171,10 +142,34 @@
         function markConfirmedInUrl() {
             var next = new URL(window.location.href);
             next.searchParams.set('confirmed', '1');
+            next.searchParams.delete('confirm');
             if (slug && !next.searchParams.get('code') && !next.searchParams.get('slug')) {
                 next.searchParams.set('code', slug);
             }
             window.history.replaceState({}, '', next.toString());
+        }
+
+        function renderContext(data) {
+            introEl.textContent = data.intro || '';
+            meetingEl.textContent = data.date && data.heure
+                ? 'Votre rendez-vous est prévu le ' + data.date + ' à ' + data.heure + ' (heure de Paris).'
+                : '';
+            meetingEl.classList.remove('is-hidden');
+            formulasEl.innerHTML = '';
+            (data.formulas || []).forEach(function (formula) {
+                var card = document.createElement('div');
+                card.className = 'formula';
+                var name = document.createElement('p');
+                name.className = 'formula-name';
+                name.textContent = formula.name + (formula.recommended ? ' — recommandé' : '');
+                var detail = document.createElement('p');
+                detail.className = 'formula-detail';
+                detail.textContent = formula.detail;
+                card.appendChild(name);
+                card.appendChild(detail);
+                formulasEl.appendChild(card);
+            });
+            formulasEl.classList.remove('is-hidden');
         }
 
         async function confirmPresence() {
@@ -182,7 +177,6 @@
                 showError('Lien invalide : identifiant manquant. Ouvrez ce lien depuis l\'email.');
                 return;
             }
-            confirmBtn.disabled = true;
             statusEl.textContent = 'Confirmation en cours…';
             statusEl.className = 'status pending';
             try {
@@ -198,14 +192,12 @@
                 markConfirmedInUrl();
                 showSuccess(Boolean(data.alreadyConfirmed));
             } catch (err) {
-                confirmBtn.disabled = false;
                 showError(err instanceof Error ? err.message : 'Impossible de confirmer.');
             }
         }
 
         async function loadContext() {
             if (!slug && !email) {
-                introEl.textContent = '';
                 showError('Lien invalide : identifiant manquant. Ouvrez ce lien depuis l\'email.');
                 return;
             }
@@ -223,7 +215,6 @@
                     throw new Error(data.error || data.reason || 'Lien introuvable');
                 }
                 if (data.cancelled) {
-                    introEl.textContent = '';
                     showError('Ce rendez-vous a déjà été annulé.');
                     return;
                 }
@@ -231,39 +222,18 @@
                     showSuccess(true);
                     return;
                 }
-                introEl.textContent = data.intro || '';
-                meetingEl.textContent = data.date && data.heure
-                    ? 'Votre rendez-vous est prévu le ' + data.date + ' à ' + data.heure + ' (heure de Paris).'
-                    : '';
-                meetingEl.classList.remove('is-hidden');
-                formulasEl.innerHTML = '';
-                (data.formulas || []).forEach(function (formula) {
-                    var card = document.createElement('div');
-                    card.className = 'formula';
-                    var name = document.createElement('p');
-                    name.className = 'formula-name';
-                    name.textContent = formula.name + (formula.recommended ? ' — recommandé' : '');
-                    var detail = document.createElement('p');
-                    detail.className = 'formula-detail';
-                    detail.textContent = formula.detail;
-                    card.appendChild(name);
-                    card.appendChild(detail);
-                    formulasEl.appendChild(card);
-                });
-                formulasEl.classList.remove('is-hidden');
-                confirmBtn.textContent = data.buttonLabel || 'Confirmer le rendez-vous';
-                confirmBtn.classList.remove('is-hidden');
-                warningEl.classList.remove('is-hidden');
+                if (autoConfirm) {
+                    await confirmPresence();
+                    return;
+                }
+                renderContext(data);
                 statusEl.textContent = '';
+                statusEl.className = 'status';
             } catch (err) {
-                introEl.textContent = '';
                 showError(err instanceof Error ? err.message : 'Impossible de charger cette page.');
             }
         }
 
-        confirmBtn.addEventListener('click', function () {
-            void confirmPresence();
-        });
         void loadContext();
     </script>
 </body>

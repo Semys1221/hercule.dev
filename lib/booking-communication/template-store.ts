@@ -327,7 +327,7 @@ export function confirmUrlForLead(
   category: LeadCategory = "agence",
 ): string {
   if (emailType === "modalites_ask" || emailType === "modalites_cancel") {
-    return modalitesConfirmUrlFor(lead);
+    return modalitesConfirmUrlFor(lead, { autoConfirm: true });
   }
   if (emailType === "role_seq_24") {
     return buildTemporaryConfirmUrl(lead.slug, lead.email);

@@ -83,7 +83,7 @@ async function prepareLeadForSend(params: {
   return {
     lookup,
     lead,
-    confirmUrl: modalitesConfirmUrlFor(lead),
+    confirmUrl: modalitesConfirmUrlFor(lead, { autoConfirm: true }),
   };
 }
 
@@ -157,7 +157,7 @@ export async function runModalitesCampaign(params: {
           modalitesConfirmUrlFor({
             slug: lookup.lead.slug || "slug",
             email: lookup.lead.email,
-          });
+          }, { autoConfirm: true });
         preview = await renderAskEmail(
           {
             ...lookup,
