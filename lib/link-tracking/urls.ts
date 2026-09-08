@@ -137,6 +137,26 @@ export function reservationAgenceLinkFor(
   return buildTrackingUrl(slug, "agence");
 }
 
+export function reservationEntrepriseLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "reservation_entreprise_link">,
+): string {
+  const stored = lead.reservation_entreprise_link?.trim();
+  if (stored) return stored;
+  const slug = lead.slug?.trim();
+  if (!slug) return "";
+  return buildTrackingUrl(slug, "entreprise");
+}
+
+export function postBookingLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "email" | "post_booking_link">,
+): string | null {
+  const stored = lead.post_booking_link?.trim();
+  if (stored) return stored;
+  const slug = lead.slug?.trim();
+  if (!slug) return null;
+  return buildEntreprisePostBookingUrl(slug, lead.email);
+}
+
 export function buildInstantlyCustomVariables(
   slug: string,
   email: string,

@@ -94,12 +94,12 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                   Voir les projets disponibles
                 </a>
                 <Link
-                  href="/entreprise"
+                  href="/"
                   className="text-zinc-300 font-medium hover:text-white transition-colors flex items-center gap-2 text-sm"
                 >
-                  Vous êtes une entreprise ?
+                  Vous êtes un cabinet ?
                   <span aria-hidden="true">→</span>
-                  Trouver une agence
+                  Proposer mon cabinet
                 </Link>
               </motion.div>
             </div>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { DemandeFlipCard } from "@/components/demandes/demande-flip-card";
+import { COMPTABLE_DEMANDE_VERSO_CRITERIA } from "@/lib/commercial/qualification-criteria";
 import { HerculeMark } from "@/components/hercule-mark";
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ import {
   scoreAgencyPresets,
   type AgencyPresetResult,
 } from "@/lib/admin/funnels/sales-preset-scoring";
+import type { Audience } from "@/lib/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { DemandeMetaRow } from "@/components/demandes/demande-meta-row";
 import { MaskedContactLine } from "@/components/demandes/masked-contact-line";
@@ -36,13 +38,20 @@ const REVEAL = {
 type RevealPhase = "loading" | "logo" | "copy" | "cards";
 
 type SalesEligiblePanelProps = {
+  audience: Audience;
   qualificationValues: SalesQualificationValues;
   reglesAccepted: boolean;
   developerMode?: boolean;
 };
 
-export function SalesPresetSummary({ result }: { result: AgencyPresetResult }) {
-  const preset = getAgencyPreset(result.id);
+export function SalesPresetSummary({
+  audience = "agence",
+  result,
+}: {
+  audience?: Audience;
+  result: AgencyPresetResult;
+}) {
+  const preset = getAgencyPreset(result.id, audience);
   const Icon = preset.icon;
 
   return (
@@ -76,10 +85,19 @@ type OpportunityCardProps = {
   show: boolean;
   reducedMotion: boolean;
   isBlurred: boolean;
+  versoCriteria?: typeof COMPTABLE_DEMANDE_VERSO_CRITERIA;
   onFlipChange: (flipped: boolean) => void;
 };
 
-function OpportunityCard({ card, index, show, reducedMotion, isBlurred, onFlipChange }: OpportunityCardProps) {
+function OpportunityCard({
+  card,
+  index,
+  show,
+  reducedMotion,
+  isBlurred,
+  versoCriteria,
+  onFlipChange,
+}: OpportunityCardProps) {
   const windowLabel = formatContractWindow(card);
   const { icon: Icon, badgeClass, iconClass, iconBoxClass } = getSecteurConfig(
     card.secteur,
@@ -108,6 +126,7 @@ function OpportunityCard({ card, index, show, reducedMotion, isBlurred, onFlipCh
         variant="internal"
         className="h-full min-h-[260px] shadow-none"
         onFlipChange={onFlipChange}
+        versoCriteria={versoCriteria}
         versoFields={{
           dureeSouhaitee: card.dureeSouhaitee,
           horizonResultat: card.horizonResultat,
@@ -166,6 +185,7 @@ function OpportunityCard({ card, index, show, reducedMotion, isBlurred, onFlipCh
 }
 
 export function SalesEligiblePanel({
+  audience,
   qualificationValues,
   reglesAccepted,
   developerMode = false,
@@ -174,14 +194,18 @@ export function SalesEligiblePanel({
   const [phase, setPhase] = useState<RevealPhase>("loading");
   const [flippedIndex, setFlippedIndex] = useState<number | null>(null);
 
+  const isComptable = audience === "comptable";
+  const cardLabel = isComptable ? "mission" : "opportunité";
+  const versoCriteria = isComptable ? COMPTABLE_DEMANDE_VERSO_CRITERIA : undefined;
+
   const result = useMemo(
-    () => scoreAgencyPresets(qualificationValues),
-    [qualificationValues],
+    () => scoreAgencyPresets(qualificationValues, audience),
+    [audience, qualificationValues],
   );
-  const preset = getAgencyPreset(result.id);
+  const preset = getAgencyPreset(result.id, audience);
   const cards = useMemo(
-    () => composeOpportunityCards(qualificationValues, result.id),
-    [qualificationValues, result.id],
+    () => composeOpportunityCards(qualificationValues, result.id, audience),
+    [audience, qualificationValues, result.id],
   );
 
   useEffect(() => {
@@ -271,7 +295,8 @@ export function SalesEligiblePanel({
             className="max-w-xl space-y-2 text-center"
           >
             <h2 className="text-base font-medium text-foreground">
-              {cards.length} opportunité{cards.length > 1 ? "s" : ""} sélectionnée
+              {cards.length} {cardLabel}
+              {cards.length > 1 ? "s" : ""} sélectionnée
               {cards.length > 1 ? "s" : ""} pour votre profil {preset.name}
             </h2>
             <p className="text-sm text-muted-foreground">{preset.tagline}</p>
@@ -283,7 +308,11 @@ export function SalesEligiblePanel({
         <InternalStatusAlert
           variant="info"
           title="Règles de traitement"
-          message="Avant d'accéder à vos opportunités, confirmez vos règles de traitement."
+          message={
+            isComptable
+              ? "Avant d'accéder à vos missions TPE, confirmez vos règles de traitement."
+              : "Avant d'accéder à vos opportunités, confirmez vos règles de traitement."
+          }
           className="max-w-xl text-left"
         />
       ) : null}
@@ -302,6 +331,7 @@ export function SalesEligiblePanel({
             show={showCards}
             reducedMotion={reducedMotion ?? false}
             isBlurred={flippedIndex !== null && flippedIndex !== index}
+            versoCriteria={versoCriteria}
             onFlipChange={(flipped) => setFlippedIndex(flipped ? index : null)}
           />
         ))}

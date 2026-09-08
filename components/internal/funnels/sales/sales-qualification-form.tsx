@@ -13,6 +13,8 @@ import {
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
 
+import type { Audience } from "@/lib/admin/navigation";
+
 import {
   SalesConditionalSliderField,
   SalesMultiChoiceField,
@@ -28,20 +30,26 @@ const COMPACT_CARD_CLASS = `${RESERVATION_SURFACE} gap-0 py-0 shadow-none`;
 const COMPACT_ROW_CLASS = "px-5 py-5 md:px-6 md:py-6";
 
 type SalesQualificationFormProps = {
+  audience: Audience;
   section: SalesFunnelSection;
   form: UseFormReturn<SalesQualificationValues>;
 };
 
-export function SalesQualificationForm({ section, form }: SalesQualificationFormProps) {
+export function SalesQualificationForm({
+  audience,
+  section,
+  form,
+}: SalesQualificationFormProps) {
   const watchedValues = mergeSalesQualificationValues(
     useWatch({ control: form.control }) as Partial<SalesQualificationValues>,
+    audience,
   );
 
   if (section.id === "rendez-vous" || section.id === "introduction") {
     return null;
   }
 
-  const questions = getSalesQuestionsForSection(section.id);
+  const questions = getSalesQuestionsForSection(section.id, audience);
 
   return (
     <Card className={COMPACT_CARD_CLASS}>

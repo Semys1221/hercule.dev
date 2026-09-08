@@ -3,6 +3,7 @@ import {
   readBookingsClientCache,
   writeBookingsClientCache,
 } from "@/lib/calendly/bookings-client-cache";
+import { salesAudienceToLeadCategory } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 
 export type FetchEnrichedBookingsResult = {
@@ -24,7 +25,9 @@ export async function fetchEnrichedBookings(
     }
   }
 
-  const params = new URLSearchParams({ category: audience });
+  const params = new URLSearchParams({
+    category: salesAudienceToLeadCategory(audience),
+  });
   if (options?.fresh) {
     params.set("fresh", "1");
   }

@@ -14,11 +14,14 @@ import {
 } from "@/components/ui/collapsible";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { RESERVATION_BODY_TEXT, RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
-import { ENTERPRISE_QUALIFICATION_CRITERIA } from "@/lib/commercial/qualification-criteria";
+import { getEnterpriseQualificationCriteria } from "@/lib/commercial/qualification-criteria";
+import type { Audience } from "@/lib/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { cn } from "@/lib/utils";
 
-import { PRESENTATION_CONFIRMATION_TEXT } from "./sales-funnel-sections";
+import {
+  getPresentationConfirmationText,
+} from "./sales-funnel-sections";
 import { SalesConfirmationCard } from "./sales-confirmation-card";
 import { CompanyOriginTimeline } from "./company-origin-timeline";
 import { TeamImageFrame } from "./team-image-frame";
@@ -91,6 +94,63 @@ const TEAM: TeamMember[] = [
   },
 ];
 
+const COMPTABLE_TEAM: TeamMember[] = [
+  {
+    name: "Evan",
+    role: "Développeur senior — direction technique.",
+    history: [
+      {
+        highlight: "Mandat d'auditeur principal",
+        text: "— dialogue de pair technique sur compatibilité cabinet-TPE et livraison.",
+      },
+      {
+        highlight: "Critères de performance",
+        text: "— pérennité des mandats et minimisation des incompatibilités mission.",
+      },
+      {
+        highlight: "Disponibilités limitées",
+        text: "— admission ou refus du dossier traitée de manière neutre.",
+      },
+    ],
+  },
+  {
+    name: "Béatrice",
+    role: "Qualification des demandes TPE et relation avec les cabinets partenaires.",
+    history: [
+      {
+        highlight: "Premier filtre",
+        text: "— qualification de chaque demande TPE avant transmission au réseau de cabinets.",
+      },
+      {
+        highlight: "Relation partenaires",
+        text: "— suivi des cabinets et alignement sur les critères de compatibilité.",
+      },
+      {
+        highlight: "Interface dirigeants",
+        text: "— premier contact humain avant passage au commercial.",
+      },
+    ],
+  },
+  {
+    name: "Thomas",
+    role: "Produit et opérations techniques.",
+    history: [
+      {
+        highlight: "Plateforme produit",
+        text: "— conception et évolution des outils d'attribution des missions TPE.",
+      },
+      {
+        highlight: "Opérations techniques",
+        text: "— fiabilité des parcours cabinet-dirigeant et maintenance des systèmes.",
+      },
+      {
+        highlight: "Automatisation",
+        text: "— réduction des délais de traitement via des processus outillés.",
+      },
+    ],
+  },
+];
+
 const MODEL_HIGHLIGHTS = [
   {
     title: "20+",
@@ -106,17 +166,43 @@ const MODEL_HIGHLIGHTS = [
   },
 ] as const;
 
+const COMPTABLE_MODEL_HIGHLIGHTS = [
+  {
+    title: "15 RDV",
+    description: "garantis en 90 jours ou continuité sans frais — volume de rendez-vous planifiés, pas de signature.",
+  },
+  {
+    title: "Audit partenaire",
+    description: "avant toute attribution pour garantir la compatibilité cabinet-dirigeant TPE.",
+  },
+  {
+    title: "0 %",
+    description: "de commission sur vos honoraires — vous facturez à vos tarifs.",
+  },
+] as const;
+
 type SalesCompanyPresentationPanelProps = {
+  audience?: Audience;
   form: UseFormReturn<SalesQualificationValues>;
 };
 
-export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentationPanelProps) {
+export function SalesCompanyPresentationPanel({
+  audience = "agence",
+  form,
+}: SalesCompanyPresentationPanelProps) {
+  const isComptable = audience === "comptable";
+  const teamMembers = isComptable ? COMPTABLE_TEAM : TEAM;
+  const modelHighlights = isComptable ? COMPTABLE_MODEL_HIGHLIGHTS : MODEL_HIGHLIGHTS;
+  const qualificationCriteria = getEnterpriseQualificationCriteria(audience);
+  const cvgHref = isComptable ? "/cvg/comptable" : "/cvg";
   return (
     <div className="mx-auto w-full max-w-3xl space-y-12 text-left">
       <div className="flex justify-center">
         <div className="flex items-center gap-3">
           <HerculeMark variant="dual" className="size-10 text-foreground" />
-          <span className="text-2xl font-semibold text-foreground">Hercule</span>
+          <span className="text-2xl font-semibold text-foreground">
+            {isComptable ? "Hercule Comptable" : "Hercule"}
+          </span>
         </div>
       </div>
 
@@ -124,23 +210,23 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
 
       <div className={cn("space-y-5 text-[15px] leading-[1.65]", RESERVATION_BODY_TEXT)}>
         <p>
-          Hercule est l&apos;évolution d&apos;un outil interne que nous utilisons depuis 2018 pour
-          notre propre activité de développement backend. Renommé Hercule en 2025, ce socle est
-          devenu la plateforme que nous présentons aujourd&apos;hui.
+          {isComptable
+            ? "Hercule Comptable met en relation des dirigeants TPE en reprise comptable, fiscale et administrative avec des cabinets d'expertise comptable partenaires éligibles."
+            : "Hercule est l'évolution d'un outil interne que nous utilisons depuis 2018 pour notre propre activité de développement backend. Renommé Hercule en 2025, ce socle est devenu la plateforme que nous présentons aujourd'hui."}
         </p>
         <p>
-          Aujourd&apos;hui, nous générons plus de 20 contrats par mois dans
-          différents secteurs. Nous auditons et qualifions les agences partenaires pour mettre en
-          relation ces demandes avec les profils les plus compatibles.
+          {isComptable
+            ? "Nous qualifions chaque demande par Live Qualification, provisionnons Calendly Pro et Zoom Pro pour vos RDV, et garantissons 15 rendez-vous planifiés en 90 jours — sans commission sur vos honoraires."
+            : "Aujourd'hui, nous générons plus de 20 contrats par mois dans différents secteurs. Nous auditons et qualifions les agences partenaires pour mettre en relation ces demandes avec les profils les plus compatibles."}
         </p>
       </div>
 
-      <CompanyOriginTimeline />
+      <CompanyOriginTimeline audience={audience} />
 
       <section className="space-y-5">
         <h2 className="text-xl font-medium tracking-tight text-foreground">Notre modèle</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {MODEL_HIGHLIGHTS.map((item) => (
+          {modelHighlights.map((item) => (
             <Card key={item.title} className={cn(RESERVATION_SURFACE, "shadow-none")}>
               <CardContent className="space-y-2 p-5">
                 <p className="text-lg font-semibold text-foreground">{item.title}</p>
@@ -157,13 +243,14 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
             Critères de qualification
           </h2>
           <p className={cn("text-[15px] leading-[1.65]", RESERVATION_BODY_TEXT)}>
-            Chaque demande entreprise est validée par appel téléphonique (Live Qualification) selon
-            les cinq critères définis dans nos CGV avant toute attribution à une agence partenaire.
+            {isComptable
+              ? "Chaque demande TPE est validée par appel téléphonique (Live Qualification) selon les cinq critères définis dans nos CGV avant toute attribution à un cabinet partenaire."
+              : "Chaque demande entreprise est validée par appel téléphonique (Live Qualification) selon les cinq critères définis dans nos CGV avant toute attribution à une agence partenaire."}
           </p>
         </div>
         <Card className={cn(RESERVATION_SURFACE, "shadow-none")}>
           <CardContent className="divide-y divide-border p-0">
-            {ENTERPRISE_QUALIFICATION_CRITERIA.map((criterion) => (
+            {qualificationCriteria.map((criterion) => (
               <div key={criterion.title} className="space-y-1 px-5 py-4 md:px-6 md:py-5">
                 <p className="font-medium text-foreground">{criterion.title}</p>
                 <p className="text-sm leading-relaxed text-muted-foreground">
@@ -178,7 +265,7 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
       <section className="space-y-5">
         <h2 className="text-xl font-medium tracking-tight text-foreground">L&apos;équipe</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {TEAM.map((member) => (
+          {teamMembers.map((member) => (
             <Collapsible key={member.name} className="group/collapsible">
               <Card className={cn(RESERVATION_SURFACE, "shadow-none")}>
                 <CardContent className="p-5">
@@ -217,7 +304,7 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
 
       <div className="flex flex-wrap gap-3">
         <Button variant="outline" asChild>
-          <Link href="/cvg" target="_blank" rel="noopener noreferrer">
+          <Link href={cvgHref} target="_blank" rel="noopener noreferrer">
             Lire les CGV
           </Link>
         </Button>
@@ -235,7 +322,7 @@ export function SalesCompanyPresentationPanel({ form }: SalesCompanyPresentation
           <FormItem>
             <SalesConfirmationCard
               id="sales-presentation-confirmed"
-              label={PRESENTATION_CONFIRMATION_TEXT}
+              label={getPresentationConfirmationText(audience)}
               description="Cette étape est requise avant de poursuivre la qualification."
               checked={field.value}
               onCheckedChange={field.onChange}

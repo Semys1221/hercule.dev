@@ -16,7 +16,7 @@ const config = {
     overrides: [
       {
         // Marketing landings intentionally use inline #09090B — see hercule-ui skill.
-        files: ["components/agence/**", "components/entreprise/**"],
+        files: ["components/agence/**", "components/comptable/**"],
         rules: [
           "react-doctor/no-low-contrast-inline-style",
           "react-doctor/no-decorative-blur-orb",

@@ -14,11 +14,11 @@ import {
   subscribePitchSidebarEnabled,
 } from "@/lib/admin/funnels/sales-funnel-settings";
 import {
+  getSalesQualificationDefaultValues,
   getSalesQualificationProgress,
   isSalesQualificationComplete,
   isSalesSectionComplete,
   mergeSalesQualificationValues,
-  salesQualificationDefaultValues,
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
@@ -29,9 +29,9 @@ import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { RendezVousPanel } from "./rendez-vous-panel";
 import { SalesClosingPanel } from "./sales-closing-panel";
 import {
+  getSalesClosingSections,
   isSalesClosingSectionComplete,
   isSalesClosingSectionId,
-  SALES_CLOSING_SECTIONS,
   salesClosingDefaultValues,
   type SalesClosingSectionId,
   type SalesClosingValues,
@@ -88,13 +88,19 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     getDeveloperModeEnabledServerSnapshot,
   );
 
+  const defaultQualificationValues = useMemo(
+    () => getSalesQualificationDefaultValues(audience),
+    [audience],
+  );
+
   const form = useForm<SalesQualificationValues>({
-    defaultValues: salesQualificationDefaultValues,
+    defaultValues: defaultQualificationValues,
     mode: "onChange",
   });
 
   const watchedValues = mergeSalesQualificationValues(
     useWatch({ control: form.control }) as Partial<SalesQualificationValues>,
+    audience,
   );
 
   const exitHref = pathToHref([audience, "sales"]);
@@ -110,26 +116,31 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     [activeClosingId, closingValues, visitedClosingSectionIds],
   );
 
+  const closingSections = useMemo(
+    () => getSalesClosingSections(audience),
+    [audience],
+  );
+
   const funnelSections = useMemo(() => getSalesFunnelSections(audience), [audience]);
 
   const completedSectionIds = useMemo(() => {
     const qualificationCompleted = funnelSections.filter((section) =>
-      isSalesSectionComplete(section.id, watchedValues),
+      isSalesSectionComplete(section.id, watchedValues, audience),
     ).map((section) => section.id);
 
-    const closingCompleted = SALES_CLOSING_SECTIONS.filter((section) =>
+    const closingCompleted = closingSections.filter((section) =>
       isSalesClosingSectionComplete(section.id, closingCompletionContext),
     ).map((section) => section.id);
 
     return [...qualificationCompleted, ...closingCompleted];
-  }, [closingCompletionContext, funnelSections, watchedValues]);
+  }, [audience, closingCompletionContext, funnelSections, watchedValues]);
 
   const { progress, progressLabel } = useMemo(() => {
     if (phase === "closing") {
-      const completed = SALES_CLOSING_SECTIONS.filter((section) =>
+      const completed = closingSections.filter((section) =>
         isSalesClosingSectionComplete(section.id, closingCompletionContext),
       ).length;
-      const total = SALES_CLOSING_SECTIONS.length;
+      const total = closingSections.length;
       return {
         progress: Math.round((completed / total) * 100),
         progressLabel: `${completed}/${total}`,
@@ -137,15 +148,15 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     }
 
     const { completedSections, totalSections, percent } =
-      getSalesQualificationProgress(watchedValues);
+      getSalesQualificationProgress(watchedValues, audience);
 
     return {
       progress: percent,
       progressLabel: `${completedSections}/${totalSections}`,
     };
-  }, [closingCompletionContext, phase, watchedValues]);
+  }, [audience, closingCompletionContext, phase, watchedValues]);
 
-  const canEnterClosing = isSalesQualificationComplete(watchedValues);
+  const canEnterClosing = isSalesQualificationComplete(watchedValues, audience);
   const activeQualificationSection = getSalesFunnelSection(activeQualificationId, audience);
 
   const meetingInfo: MeetingInfo | null = selectedBooking
@@ -250,7 +261,8 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          agenceId: booking.lead_id,
+          agenceId: booking.lead_category === "agence" ? booking.lead_id : null,
+          entrepriseId: booking.lead_category === "entreprise" ? booking.lead_id : null,
           email: booking.email,
           inviteeUri: booking.invitee_uri,
           scheduledAt: booking.start_time,
@@ -381,7 +393,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           <header className="flex h-12 shrink-0 items-center border-b border-border px-4 md:px-6">
             <p className="truncate text-sm text-muted-foreground">
               {phase === "closing"
-                ? SALES_CLOSING_SECTIONS.find((section) => section.id === activeClosingId)
+                ? closingSections.find((section) => section.id === activeClosingId)
                     ?.label
                 : activeQualificationSection?.title ?? SESSION_PHASE_QUALIFICATION}
             </p>
@@ -389,6 +401,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           <div className="flex-1 overflow-auto p-3 md:p-4">
             {phase === "closing" ? (
               <SalesClosingPanel
+                audience={audience}
                 sectionId={activeClosingId}
                 qualificationForm={form}
                 closingValues={closingValues}
@@ -410,9 +423,13 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
                 onApplyTestPreset={applyTestPreset}
               />
             ) : activeQualificationId === "presentation-societe" ? (
-              <SalesCompanyPresentationPanel form={form} />
+              <SalesCompanyPresentationPanel audience={audience} form={form} />
             ) : activeQualificationSection ? (
-              <SalesFunnelSectionPage section={activeQualificationSection} form={form} />
+              <SalesFunnelSectionPage
+                audience={audience}
+                section={activeQualificationSection}
+                form={form}
+              />
             ) : null}
           </div>
         </div>

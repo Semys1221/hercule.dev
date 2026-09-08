@@ -1,4 +1,6 @@
 import { SALES_SKIP_VALUE, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import type { Audience } from "@/lib/admin/navigation";
+import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export const AGENCY_PRESET_IDS = [
   "serial",
@@ -165,14 +167,17 @@ const SCORERS: Record<
   premium: scorePremium,
 };
 
-export function scoreAgencyPresets(values: SalesQualificationValues): AgencyPresetResult {
+export function scoreAgencyPresets(
+  values: SalesQualificationValues,
+  audience: Audience = "agence",
+): AgencyPresetResult {
   const scores = {} as AgencyPresetScores;
   const reasonsByPreset = {} as Record<AgencyPresetId, string[]>;
 
   for (const id of AGENCY_PRESET_IDS) {
     const result = SCORERS[id](values);
     scores[id] = result.score;
-    reasonsByPreset[id] = result.reasons;
+    reasonsByPreset[id] = localizePresetReasons(result.reasons, audience);
   }
 
   const winner = AGENCY_PRESET_IDS.reduce((current, candidate) =>
@@ -186,6 +191,68 @@ export function scoreAgencyPresets(values: SalesQualificationValues): AgencyPres
   };
 }
 
-export function scoreAgency(values: SalesQualificationValues): AgencyPresetId {
-  return scoreAgencyPresets(values).id;
+export const COMPTABLE_PRESET_REASONS: Record<string, string> = {
+  "capacité ≥ 5 projets / mois": "capacité ≥ 5 dossiers TPE / mois",
+  "ticket ponctuel ≤ 3 000 €": "honoraires ponctuels ≤ 3 000 €",
+  "capacité Hercule ≥ 3 projets / mois": "capacité Hercule ≥ 3 dossiers / mois",
+  "offre acquisition / SEO": "offre fiscal / social / tenue",
+  "expertise paid ou organique": "expertise fiscal ou social",
+  "priorité aux missions récurrentes d'acquisition": "priorité aux missions récurrentes de tenue",
+  "budget Paid Ads déclaré": "budget mission fiscale déclaré",
+  "offre développement / no-code / Shopify": "offre outillage / portail / intégrations",
+  "expertise technique": "expertise outillage cabinet",
+  "appétit pour les projets techniques": "appétit pour les dossiers réglementaires",
+  "priorité aux missions de développement": "priorité aux missions juridiques / outillage",
+  "projets complexes ou techniques": "dossiers complexes ou réglementaires",
+  "ticket ponctuel ≥ 3 500 €": "honoraires ponctuels ≥ 3 500 €",
+  "priorité aux projets à forte valeur": "priorité aux dossiers à honoraires élevés",
+  "ticket ponctuel ≥ 5 000 €": "honoraires ponctuels ≥ 5 000 €",
+  "récurrent 12 mois ≥ 5 000 € / mois": "tenue récurrente 12 mois ≥ 5 000 € / mois",
+  "appétit pour les projets complexes": "appétit pour les dossiers complexes",
+  "disponibilité élevée ou modérée": "capacité disponible élevée ou modérée",
+  "processus standardisés": "processus cabinet standardisés",
+  "périmètre d'expertise étroit": "périmètre de missions étroit",
+  "cible PME / ETI": "cible TPE / PME dirigeants",
+  "volume volontairement limité": "volume dossiers volontairement limité",
+  "cible ETI / grandes entreprises": "cible PME structurée / multi-établissements",
+};
+
+export const AGENCY_PRESET_REASON_STRINGS = [
+  "capacité ≥ 5 projets / mois",
+  "disponibilité élevée ou modérée",
+  "ticket ponctuel ≤ 3 000 €",
+  "processus standardisés",
+  "capacité Hercule ≥ 3 projets / mois",
+  "offre acquisition / SEO",
+  "expertise paid ou organique",
+  "priorité aux missions récurrentes d'acquisition",
+  "budget Paid Ads déclaré",
+  "offre développement / no-code / Shopify",
+  "expertise technique",
+  "appétit pour les projets techniques",
+  "priorité aux missions de développement",
+  "périmètre d'expertise étroit",
+  "projets complexes ou techniques",
+  "ticket ponctuel ≥ 3 500 €",
+  "cible PME / ETI",
+  "priorité aux projets à forte valeur",
+  "volume volontairement limité",
+  "ticket ponctuel ≥ 5 000 €",
+  "récurrent 12 mois ≥ 5 000 € / mois",
+  "cible ETI / grandes entreprises",
+  "appétit pour les projets complexes",
+] as const;
+
+function localizePresetReasons(reasons: string[], audience: Audience): string[] {
+  if (!isComptableSalesAudience(audience)) {
+    return reasons;
+  }
+  return reasons.map((reason) => COMPTABLE_PRESET_REASONS[reason] ?? reason);
+}
+
+export function scoreAgency(
+  values: SalesQualificationValues,
+  audience: Audience = "agence",
+): AgencyPresetId {
+  return scoreAgencyPresets(values, audience).id;
 }

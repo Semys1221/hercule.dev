@@ -7,6 +7,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { Audience } from "@/lib/admin/navigation";
+import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+
 import type { BudgetKind } from "@/lib/admin/funnels/opportunity-card-formulas";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 
@@ -81,7 +84,43 @@ export const AGENCY_PRESETS: Record<AgencyPresetId, AgencyPreset> = {
   },
 };
 
-export function getAgencyPreset(id: AgencyPresetId): AgencyPreset {
+const COMPTABLE_AGENCY_PRESETS: Record<AgencyPresetId, AgencyPreset> = {
+  serial: {
+    ...AGENCY_PRESETS.serial,
+    tagline: "Volume élevé, processus documentés, honoraires accessibles.",
+    description:
+      "Votre cabinet dispose d'une forte capacité de production, avec des processus documentés et un volume de dossiers TPE élevé. Les missions les plus adaptées sont des reprises de tenue récurrentes, à honoraires cadrés et démarrage rapide.",
+  },
+  growth: {
+    ...AGENCY_PRESETS.growth,
+    tagline: "Fiscal et social récurrents, dossiers TPE stables.",
+    description:
+      "Votre cabinet est orienté missions récurrentes — tenue, fiscal, social. Les demandes ciblées sont des dirigeants TPE avec un besoin de continuité et un horizon de mission clair.",
+  },
+  architect: {
+    ...AGENCY_PRESETS.architect,
+    tagline: "Outils digitaux, intégrations et dossiers structurés.",
+    description:
+      "Votre cabinet est outillé. Portails clients, automatisation ou intégrations : vous structurez la relation dirigeant-cabinet. Les missions ciblées demandent un interlocuteur capable de cadrer un périmètre technique.",
+  },
+  specialist: {
+    ...AGENCY_PRESETS.specialist,
+    tagline: "Expertise étroite, dossiers complexes, honoraires premium.",
+    description:
+      "Votre cabinet est spécialisé. Peu de verticales, un haut niveau d'exigence, des honoraires plus élevés. Les missions ciblées sont des dossiers à forte composante réglementaire ou sectorielle.",
+  },
+  premium: {
+    ...AGENCY_PRESETS.premium,
+    tagline: "Faible volume, haute valeur, structures exigeantes.",
+    description:
+      "Votre cabinet est à faible volume et honoraires élevés. Vous sélectionnez vos mandats. Les missions ciblées sont des PME / ETI avec un besoin stratégique et un ticket à la hauteur.",
+  },
+};
+
+export function getAgencyPreset(id: AgencyPresetId, audience: Audience = "agence"): AgencyPreset {
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_AGENCY_PRESETS[id];
+  }
   return AGENCY_PRESETS[id];
 }
 

@@ -1,7 +1,8 @@
 import {
-  OPPORTUNITY_CARD_BLUEPRINTS,
+  getOpportunityCardBlueprints,
   type OpportunityCardBlueprint,
 } from "@/lib/admin/funnels/opportunity-card-blueprints";
+import type { Audience } from "@/lib/admin/navigation";
 import {
   budgetKindFromPrestationType,
   computeBudgetTiers,
@@ -107,8 +108,10 @@ function hasUniqueCopy(
 function selectBlueprints(
   values: SalesQualificationValues,
   presetId: AgencyPresetId,
+  audience: Audience = "agence",
 ): OpportunityCardBlueprint[] {
-  const scored = OPPORTUNITY_CARD_BLUEPRINTS.map((blueprint) =>
+  const blueprints = getOpportunityCardBlueprints(audience);
+  const scored = blueprints.map((blueprint) =>
     classifyBlueprint(blueprint, values, presetId),
   );
 
@@ -223,9 +226,10 @@ function blueprintToCard(
 export function composeOpportunityCards(
   values: SalesQualificationValues,
   presetId: AgencyPresetId,
+  audience: Audience = "agence",
 ): PresetOpportunityCard[] {
-  const blueprints = selectBlueprints(values, presetId);
-  const floorCents = resolveBudgetFloorCents(values, presetId);
+  const blueprints = selectBlueprints(values, presetId, audience);
+  const floorCents = resolveBudgetFloorCents(values, presetId, audience);
   const budgetTiers = computeBudgetTiers(floorCents);
   const delayedIndex = pickDelayedIndex(blueprints);
 
@@ -276,9 +280,6 @@ export function validateOpportunityCardSet(
   }
 
   const budgets = cards.map((card) => card.budgetCents);
-  if (budgets.some((cents) => cents < HERCULE_FLOOR_CENTS)) {
-    throw new Error("Budget below Hercule floor");
-  }
   if (budgets.some((cents) => cents < floorCents)) {
     throw new Error("Budget below resolved floor");
   }

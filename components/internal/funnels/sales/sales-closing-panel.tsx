@@ -24,8 +24,9 @@ import {
 } from "@/components/ui/item";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import type { Audience } from "@/lib/admin/navigation";
 import {
-  SALES_QUESTIONS,
+  getSalesQuestions,
   formatSliderLabel,
   type SalesQuestion,
 } from "@/components/internal/funnels/sales/sales-questions";
@@ -45,6 +46,7 @@ import { SalesCalendrierPanel } from "./sales-calendrier-panel";
 import { SalesEligiblePanel, SalesPresetSummary } from "./sales-eligible-panel";
 
 type SalesClosingPanelProps = {
+  audience: Audience;
   sectionId: SalesClosingSectionId;
   qualificationForm: UseFormReturn<SalesQualificationValues>;
   closingValues: SalesClosingValues;
@@ -110,7 +112,7 @@ type TreatmentRule = {
   icon: LucideIcon;
 };
 
-const TREATMENT_RULES: TreatmentRule[] = [
+const AGENCE_TREATMENT_RULES: TreatmentRule[] = [
   {
     id: "reactivite",
     title: "Réactivité",
@@ -138,22 +140,76 @@ const TREATMENT_RULES: TreatmentRule[] = [
   },
 ];
 
-const DASHBOARD_FEATURES = [
+const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
+  {
+    id: "reactivite",
+    title: "Réactivité",
+    description: "Répondre à toute mission TPE proposée sous 24h ouvrées.",
+    icon: Clock,
+  },
+  {
+    id: "traitement",
+    title: "Traitement",
+    description: "Chaque mission TPE est traitée avec sérieux dans un délai raisonnable.",
+    icon: ClipboardCheck,
+  },
+  {
+    id: "no-show",
+    title: "No-show",
+    description:
+      "Signaler tout no-show dirigeant TPE sous 48h → remplacement ≤ 14 jours.",
+    icon: UserX,
+  },
+  {
+    id: "disponibilite",
+    title: "Disponibilité",
+    description: "Informer Hercule en cas d'indisponibilité avant la date prévue.",
+    icon: CalendarOff,
+  },
+];
+
+function getTreatmentRules(audience: Audience): TreatmentRule[] {
+  return audience === "comptable" ? COMPTABLE_TREATMENT_RULES : AGENCE_TREATMENT_RULES;
+}
+
+const AGENCE_DASHBOARD_FEATURES = [
   "Le suivi de vos demandes en cours et leur statut",
   "L'historique de vos matches et résultats",
   "Les informations liées à votre offre et votre facturation",
 ] as const;
 
-const DASHBOARD_NEXT_STEPS = [
+const COMPTABLE_DASHBOARD_FEATURES = [
+  "Le suivi de vos missions TPE en cours et leur statut",
+  "L'historique de vos mises en relation et résultats",
+  "Les informations liées à votre offre et votre facturation",
+] as const;
+
+const AGENCE_DASHBOARD_NEXT_STEPS = [
   "Accès onboarding — sous 48h après réception du lien",
   "Activation — premier matching lancé dès l'onboarding complété",
   "Proposition de match — RDV livraison planifié sous 5–10 jours ouvrés",
   "Premier RDV honoré — ≤ 21 jours après activation",
 ] as const;
 
+const COMPTABLE_DASHBOARD_NEXT_STEPS = [
+  "Accès onboarding — sous 48h après réception du lien",
+  "Activation — première mission TPE lancée dès l'onboarding complété",
+  "Proposition de mission — RDV dirigeant planifié sous 5–10 jours ouvrés",
+  "Premier RDV honoré — ≤ 21 jours après activation",
+] as const;
+
+function getDashboardFeatures(audience: Audience): readonly string[] {
+  return audience === "comptable" ? COMPTABLE_DASHBOARD_FEATURES : AGENCE_DASHBOARD_FEATURES;
+}
+
+function getDashboardNextSteps(audience: Audience): readonly string[] {
+  return audience === "comptable" ? COMPTABLE_DASHBOARD_NEXT_STEPS : AGENCE_DASHBOARD_NEXT_STEPS;
+}
+
 const DEV_PREVIEW_DASHBOARD_LINK = buildDashboardUrl("dev-preview");
 
 export function SalesClosingPanel({
+  audience,
   sectionId,
   qualificationForm,
   closingValues,
@@ -164,8 +220,9 @@ export function SalesClosingPanel({
   onRefreshLead,
   onPersistClosing,
 }: SalesClosingPanelProps) {
-  const section = getSalesClosingSection(sectionId);
+  const section = getSalesClosingSection(sectionId, audience);
   const qualificationValues = qualificationForm.getValues();
+  const salesQuestions = useMemo(() => getSalesQuestions(audience), [audience]);
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -186,9 +243,12 @@ export function SalesClosingPanel({
   const usingFakeDashboardLink = developerMode && !leadDashboardLink;
 
   const presetResult = useMemo(
-    () => scoreAgencyPresets(qualificationValues),
-    [qualificationValues],
+    () => scoreAgencyPresets(qualificationValues, audience),
+    [audience, qualificationValues],
   );
+  const treatmentRules = useMemo(() => getTreatmentRules(audience), [audience]);
+  const dashboardFeatures = useMemo(() => getDashboardFeatures(audience), [audience]);
+  const dashboardNextSteps = useMemo(() => getDashboardNextSteps(audience), [audience]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -246,13 +306,13 @@ export function SalesClosingPanel({
 
       {sectionId === "recap" ? (
         <div className="space-y-6">
-          <SalesPresetSummary result={presetResult} />
+          <SalesPresetSummary audience={audience} result={presetResult} />
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Réponses qualification</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              {SALES_QUESTIONS.map((question) => (
+              {salesQuestions.map((question) => (
                 <div key={question.id} className="grid gap-1 border-b border-border pb-3 last:border-0">
                   <p className="font-medium">{question.prompt}</p>
                   <p className="text-muted-foreground">
@@ -269,7 +329,7 @@ export function SalesClosingPanel({
         <Card>
           <CardContent className="space-y-5 pt-6 text-sm">
             <ItemGroup className="gap-3">
-              {TREATMENT_RULES.map((rule) => {
+              {treatmentRules.map((rule) => {
                 const Icon = rule.icon;
                 return (
                   <Item key={rule.id} variant="outline" size="default">
@@ -305,6 +365,7 @@ export function SalesClosingPanel({
 
       {sectionId === "demandes-eligibles" ? (
         <SalesEligiblePanel
+          audience={audience}
           qualificationValues={qualificationValues}
           reglesAccepted={closingValues.reglesAccepted}
           developerMode={developerMode}
@@ -313,6 +374,7 @@ export function SalesClosingPanel({
 
       {sectionId === "calendrier" ? (
         <SalesCalendrierPanel
+          audience={audience}
           qualificationValues={qualificationValues}
           closingValues={closingValues}
           saving={saving}
@@ -326,13 +388,13 @@ export function SalesClosingPanel({
             <div className="space-y-3 text-sm">
               <p className="font-medium">Votre dashboard vous donne accès à :</p>
               <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-                {DASHBOARD_FEATURES.map((item) => (
+                {dashboardFeatures.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
               <p className="font-medium">Prochaines étapes :</p>
               <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
-                {DASHBOARD_NEXT_STEPS.map((item) => (
+                {dashboardNextSteps.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ol>
@@ -358,7 +420,11 @@ export function SalesClosingPanel({
 
             {showDashboardLinkBlock ? (
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Lien dashboard client :</p>
+                <p className="text-sm text-muted-foreground">
+                  {audience === "comptable"
+                    ? "Lien dashboard cabinet :"
+                    : "Lien dashboard client :"}
+                </p>
                 <code className="block break-all rounded-md border border-border bg-muted/30 p-3 text-sm">
                   {dashboardLink}
                 </code>

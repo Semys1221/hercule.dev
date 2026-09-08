@@ -45,4 +45,9 @@ assert.match(breadcrumb(["agence", "sales", "funnel"]), /Session/);
 assert.doesNotMatch(breadcrumb(["agence", "sales", "funnel"]), /funnel/i);
 assert.doesNotMatch(breadcrumb(["agence", "sales"]), /Sales/i);
 
+assert.equal(
+  salesFunnelHref("comptable"),
+  "/internal/funnels/comptable/sales/funnel",
+);
+
 console.log("navigation.test.ts: ok");

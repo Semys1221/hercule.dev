@@ -9,7 +9,7 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800 bg-[#09090B]/80 backdrop-blur-md">
       <div className="w-full flex justify-center px-6 py-4">
         <div className="w-full max-w-4xl flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/agence" className="flex items-center gap-2">
             <HerculeMark variant="dual" className="w-5 h-5 text-white" />
             <span className="text-white font-semibold">Hercule</span>
           </Link>
@@ -26,8 +26,8 @@ export function Navbar() {
             <a href="#contact" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Contact
             </a>
-            <Link href="/entreprise" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-              Trouver une agence →
+            <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+              Espace cabinets comptables →
             </Link>
           </div>
           <div className="flex items-center gap-4">

@@ -16,6 +16,11 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/entreprise",
+        destination: "/",
+        permanent: true,
+      },
+      {
         source: "/dashboard.html",
         destination: "/",
         permanent: false,

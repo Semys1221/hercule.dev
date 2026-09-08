@@ -31,7 +31,7 @@ export function AgenceFaqPage() {
       <Navbar />
       <main className="pt-28 pb-24 px-6">
         <div className="max-w-3xl mx-auto">
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-8 inline-block">
+          <Link href="/agence" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-8 inline-block">
             ← Retour à l&apos;accueil
           </Link>
 

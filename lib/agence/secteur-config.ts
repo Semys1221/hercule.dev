@@ -139,6 +139,7 @@ export const SECTEUR_CONFIG: Record<string, SecteurConfig> = {
     iconClass: "text-zinc-400",
     iconBoxClass: "border-zinc-700 bg-zinc-800",
   },
+  "Santé libérale": withIcon(Stethoscope, TONES.rose),
   Artisanat: withIcon(Hammer, TONES.amber),
   Restauration: withIcon(UtensilsCrossed, TONES.orange),
   "Ressources humaines": withIcon(Users, TONES.blue),

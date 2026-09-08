@@ -6,6 +6,7 @@ import { fr } from "date-fns/locale";
 
 import { composeOpportunityCards } from "@/lib/admin/funnels/compose-opportunity-cards";
 import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
+import type { Audience } from "@/lib/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -56,6 +57,7 @@ const CALENDAR_CLASS_NAMES = {
 } as const;
 
 type SalesCalendrierPanelProps = {
+  audience: Audience;
   qualificationValues: SalesQualificationValues;
   closingValues: SalesClosingValues;
   saving: boolean;
@@ -63,6 +65,7 @@ type SalesCalendrierPanelProps = {
 };
 
 export function SalesCalendrierPanel({
+  audience,
   qualificationValues,
   closingValues,
   saving,
@@ -82,13 +85,13 @@ export function SalesCalendrierPanel({
   }, []);
 
   const presetResult = useMemo(
-    () => scoreAgencyPresets(qualificationValues),
-    [qualificationValues],
+    () => scoreAgencyPresets(qualificationValues, audience),
+    [audience, qualificationValues],
   );
 
   const cards = useMemo(
-    () => composeOpportunityCards(qualificationValues, presetResult.id),
-    [qualificationValues, presetResult.id],
+    () => composeOpportunityCards(qualificationValues, presetResult.id, audience),
+    [audience, qualificationValues, presetResult.id],
   );
 
   const blockedDays = useMemo(
@@ -208,6 +211,7 @@ export function SalesCalendrierPanel({
       <CalendrierDataContext.Provider value={dataValue}>
         <div className="flex flex-col gap-6">
           <SalesCalendrierBookingLegend
+            audience={audience}
             cards={cards}
             meetings={meetings}
             today={today}

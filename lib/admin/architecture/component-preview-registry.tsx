@@ -154,7 +154,8 @@ function EditorStubPreview({
 
 const PAGE_HREF_BY_ID: Partial<Record<string, string>> = {
   "mkt-home": "/",
-  "mkt-entreprise": "/entreprise",
+  "mkt-entreprise": "/",
+  "mkt-agence": "/agence",
   "mkt-faq": "/faq",
   "mkt-cvg": "/cvg",
   "int-home": "/internal",

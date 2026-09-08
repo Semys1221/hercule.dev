@@ -6,6 +6,7 @@ import {
   createLinkTrackingClient,
 } from "@/lib/link-tracking/supabase";
 import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
+import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
 import {
   getAppBaseUrl,
   getStarterOfferType,
@@ -111,8 +112,7 @@ export async function POST(request: Request) {
       sessionId: session.id,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Checkout creation failed";
-    console.error("[payments/checkout]", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const { body, status } = checkoutErrorResponse(error, "payments/checkout");
+    return NextResponse.json(body, { status });
   }
 }

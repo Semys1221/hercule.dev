@@ -14,9 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
+import { primaryReservationLink } from "@/lib/calendly/enrich-bookings";
 import { readBookingsClientCache } from "@/lib/calendly/bookings-client-cache";
 import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
+import { salesAudienceToLeadCategory } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 import { setDeveloperModeEnabled } from "@/lib/admin/funnels/sales-funnel-settings";
 import {
@@ -30,14 +32,14 @@ import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualifi
 import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode";
 import type { SalesClosingValues } from "@/components/internal/funnels/sales/sales-closing-sections";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
-import { dashboardLinkFor } from "@/lib/link-tracking/urls";
+import { dashboardLinkFor, postBookingLinkFor, reservationEntrepriseLinkFor } from "@/lib/link-tracking/urls";
 import { cn } from "@/lib/utils";
 
 import { SalesIntroChecklist } from "./sales-intro-checklist";
 import { SalesScriptContent } from "./sales-script-content";
 import {
   buildSalesIntroChecklist,
-  SALES_DECLARATIVE_SCRIPT,
+  getSalesDeclarativeScript,
 } from "./sales-intro-script";
 
 const DEFAULT_MEETING_NAME = "No meetings";
@@ -118,8 +120,9 @@ export function RendezVousPanel({
   );
 
   const introChecklist = useMemo(
-    () => (selectedBooking ? buildSalesIntroChecklist(selectedBooking) : null),
-    [selectedBooking],
+    () =>
+      selectedBooking ? buildSalesIntroChecklist(selectedBooking, audience) : null,
+    [audience, selectedBooking],
   );
 
   useEffect(() => {
@@ -225,6 +228,36 @@ export function RendezVousPanel({
   }, [audience, onApplyTestPreset, onBookingSelect]);
 
   const dashboardLink = selectedLead ? dashboardLinkFor(selectedLead) : null;
+  const leadCategory =
+    selectedBooking?.lead_category ??
+    selectedBooking?.booking_category ??
+    salesAudienceToLeadCategory(audience);
+  const reservationLink = useMemo(() => {
+    if (selectedLead) {
+      if (leadCategory === "entreprise") {
+        return reservationEntrepriseLinkFor(selectedLead) || null;
+      }
+      return selectedLead.reservation_agence_link || null;
+    }
+    if (!selectedBooking?.links) {
+      return null;
+    }
+    return primaryReservationLink(selectedBooking.links, leadCategory);
+  }, [leadCategory, selectedBooking?.links, selectedLead]);
+
+  const confirmationLink = useMemo(() => {
+    if (leadCategory === "entreprise") {
+      if (selectedLead) {
+        return postBookingLinkFor(selectedLead);
+      }
+      return selectedBooking?.links.confirmation_agence_link ?? null;
+    }
+    return (
+      selectedLead?.confirmation_agence_link ??
+      selectedBooking?.links.confirmation_agence_link ??
+      null
+    );
+  }, [leadCategory, selectedBooking?.links.confirmation_agence_link, selectedLead]);
 
   return (
     <div className="space-y-6 text-left">
@@ -309,20 +342,8 @@ export function RendezVousPanel({
                     <span className="text-muted-foreground">Statut :</span>{" "}
                     {selectedLead?.statut ?? selectedBooking.statut ?? "—"}
                   </p>
-                  <LinkRow
-                    label="Réservation"
-                    href={
-                      selectedLead?.reservation_agence_link ??
-                      selectedBooking.links.reservation_agence_link
-                    }
-                  />
-                  <LinkRow
-                    label="Confirmation"
-                    href={
-                      selectedLead?.confirmation_agence_link ??
-                      selectedBooking.links.confirmation_agence_link
-                    }
-                  />
+                  <LinkRow label="Réservation" href={reservationLink} />
+                  <LinkRow label="Confirmation" href={confirmationLink} />
                   <LinkRow
                     label="Dashboard"
                     href={dashboardLink ?? selectedBooking.links.dashboard_link}
@@ -391,7 +412,7 @@ export function RendezVousPanel({
                 />
               ) : null}
               {scriptTab === "declarative" ? (
-                <SalesScriptContent text={SALES_DECLARATIVE_SCRIPT} />
+                <SalesScriptContent text={getSalesDeclarativeScript(audience)} />
               ) : null}
             </CardContent>
           </Card>

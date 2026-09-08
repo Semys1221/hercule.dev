@@ -5,7 +5,7 @@ import { provisionTestMeeting } from "@/lib/admin/funnels/provision-test-meeting
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 
 const postSchema = z.object({
-  audience: z.literal("agence"),
+  audience: z.enum(["agence", "comptable"]).optional(),
 });
 
 export async function POST(request: Request) {
@@ -18,12 +18,14 @@ export async function POST(request: Request) {
 
   const parsed = postSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Only agence audience is supported" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid audience" }, { status: 400 });
   }
+
+  const audience = parsed.data.audience ?? "agence";
 
   try {
     const client = createLinkTrackingClient();
-    const result = await provisionTestMeeting(client);
+    const result = await provisionTestMeeting(client, audience);
     return NextResponse.json({
       ok: true,
       booking: result.booking,

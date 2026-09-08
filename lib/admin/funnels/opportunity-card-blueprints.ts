@@ -7,6 +7,8 @@ import type {
 } from "@/lib/admin/funnels/opportunity-card-formulas";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 import contactPool from "@/lib/admin/funnels/contact-pool.json";
+import type { Audience } from "@/lib/admin/navigation";
+import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export type { BudgetKind };
 
@@ -845,3 +847,101 @@ export const OPPORTUNITY_CARD_BLUEPRINTS: OpportunityCardBlueprint[] = RAW_BLUEP
     contactPhone: contactPool[i % contactPool.length].phone,
   }),
 );
+
+const COMPTABLE_RAW_BLUEPRINTS: Omit<
+  OpportunityCardBlueprint,
+  "contactEmail" | "contactPhone"
+>[] = [
+  {
+    id: "bp-ec-restauration",
+    secteur: "Restauration",
+    services: ["web_creation", "google_ads"],
+    operations: ["one_off", "recurring"],
+    presetAffinity: ["serial", "growth"],
+    prestationType: "tenue_comptable",
+    timingClass: "fast",
+    tailleClass: "tpe",
+    prestation: "Reprise tenue + déclarations TVA — brasserie 12 couverts",
+    historiqueAgences: "Gestion interne — dirigeant saturé",
+    zone: "Lyon",
+    companyNameBlurred: "Brasserie ****",
+    domainBlurred: "****.fr",
+  },
+  {
+    id: "bp-ec-artisanat",
+    secteur: "Artisanat",
+    services: ["google_ads", "maintenance"],
+    operations: ["recurring", "one_off"],
+    presetAffinity: ["serial", "specialist"],
+    prestationType: "fiscal_liasse",
+    timingClass: "normal",
+    tailleClass: "tpe",
+    prestation: "Liasse fiscale + TVA — artisan BTP local",
+    historiqueAgences: "Expert-comptable indépendant — départ retraite",
+    zone: "Nantes",
+    companyNameBlurred: "Sarl ****",
+    domainBlurred: "****.artisan",
+  },
+  {
+    id: "bp-ec-btp",
+    secteur: "BTP / rénovation",
+    services: ["seo", "web_creation"],
+    operations: ["recurring"],
+    presetAffinity: ["growth", "serial"],
+    prestationType: "social_paie",
+    timingClass: "normal",
+    tailleClass: "pme_small",
+    prestation: "Mission social / paie récurrente — TPE 8 salariés",
+    historiqueAgences: "Gestion interne — charge sociale croissante",
+    zone: "Bordeaux",
+    companyNameBlurred: "**** BTP",
+    domainBlurred: "****.pro",
+  },
+  {
+    id: "bp-ec-ecommerce",
+    secteur: "E-commerce",
+    services: ["ecommerce", "web_creation"],
+    operations: ["recurring", "one_off"],
+    presetAffinity: ["growth", "architect"],
+    prestationType: "tenue_comptable",
+    timingClass: "fast",
+    tailleClass: "tpe",
+    prestation: "Tenue e-commerce + TVA marketplace — boutique en ligne",
+    historiqueAgences: "Cabinet précédent — suivi insuffisant",
+    zone: "Paris",
+    companyNameBlurred: "**** Shop",
+    domainBlurred: "****.store",
+  },
+  {
+    id: "bp-ec-sante",
+    secteur: "Santé libérale",
+    services: ["consulting", "google_ads"],
+    operations: ["one_off", "high_value"],
+    presetAffinity: ["premium", "specialist"],
+    prestationType: "reprise_dossier",
+    timingClass: "slow",
+    tailleClass: "freelancers",
+    prestation: "Reprise dossier structuré + obligations fiscales — profession libérale",
+    historiqueAgences: "Première externalisation comptable",
+    zone: "Île-de-France",
+    companyNameBlurred: "Cabinet ****",
+    domainBlurred: "****.med",
+  },
+];
+
+export const COMPTABLE_OPPORTUNITY_CARD_BLUEPRINTS: OpportunityCardBlueprint[] =
+  COMPTABLE_RAW_BLUEPRINTS.map((bp, i) => ({
+    ...bp,
+    contactEmail: contactPool[i % contactPool.length].email,
+    contactPhone: contactPool[i % contactPool.length].phone,
+  }));
+
+export function getOpportunityCardBlueprints(
+  audience: Audience = "agence",
+): OpportunityCardBlueprint[] {
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_OPPORTUNITY_CARD_BLUEPRINTS;
+  }
+
+  return OPPORTUNITY_CARD_BLUEPRINTS;
+}

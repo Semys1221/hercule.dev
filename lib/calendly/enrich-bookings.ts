@@ -17,13 +17,18 @@ import type { SalesCallStatus } from "@/lib/sales-calls/types";
 import {
   buildDashboardUrl,
   buildLeadUrls,
+  buildEntreprisePostBookingUrl,
   confirmationAgenceLinkFor,
   dashboardLinkFor,
+  postBookingLinkFor,
   reservationAgenceLinkFor,
+  reservationEntrepriseLinkFor,
 } from "@/lib/link-tracking/urls";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 
 export type BookingDisplayLinks = {
   reservation_agence_link: string | null;
+  reservation_entreprise_link: string | null;
   confirmation_agence_link: string | null;
   dashboard_link: string | null;
   calendly_join_url: string | null;
@@ -77,15 +82,25 @@ export function buildCrmLinks(
   lead: LinkTrackingLead | null,
   slug: string | null,
   email: string,
+  leadCategory: LeadCategory | null = null,
 ): Pick<
   BookingDisplayLinks,
-  "reservation_agence_link" | "confirmation_agence_link" | "dashboard_link"
+  | "reservation_agence_link"
+  | "reservation_entreprise_link"
+  | "confirmation_agence_link"
+  | "dashboard_link"
 > {
   if (lead) {
-    const reservation = reservationAgenceLinkFor(lead);
+    const reservationAgence = reservationAgenceLinkFor(lead);
+    const reservationEntreprise = reservationEntrepriseLinkFor(lead);
+    const confirmationLink =
+      leadCategory === "entreprise"
+        ? postBookingLinkFor(lead)
+        : confirmationAgenceLinkFor(lead);
     return {
-      reservation_agence_link: reservation || null,
-      confirmation_agence_link: confirmationAgenceLinkFor(lead),
+      reservation_agence_link: reservationAgence || null,
+      reservation_entreprise_link: reservationEntreprise || null,
+      confirmation_agence_link: confirmationLink,
       dashboard_link: dashboardLinkFor(lead),
     };
   }
@@ -94,17 +109,36 @@ export function buildCrmLinks(
   if (!resolvedSlug) {
     return {
       reservation_agence_link: null,
+      reservation_entreprise_link: null,
       confirmation_agence_link: null,
       dashboard_link: null,
     };
   }
 
   const urls = buildLeadUrls(resolvedSlug, email);
+  const category = leadCategory ?? "agence";
   return {
     reservation_agence_link: urls.reservation_agence_link,
-    confirmation_agence_link: urls.confirmation_agence_link,
+    reservation_entreprise_link: urls.reservation_entreprise_link,
+    confirmation_agence_link:
+      category === "entreprise"
+        ? buildEntreprisePostBookingUrl(resolvedSlug, email)
+        : urls.confirmation_agence_link,
     dashboard_link: buildDashboardUrl(resolvedSlug),
   };
+}
+
+export function primaryReservationLink(
+  links: Pick<
+    BookingDisplayLinks,
+    "reservation_agence_link" | "reservation_entreprise_link"
+  >,
+  leadCategory: LeadCategory | null,
+): string | null {
+  if (leadCategory === "entreprise") {
+    return links.reservation_entreprise_link ?? links.reservation_agence_link;
+  }
+  return links.reservation_agence_link ?? links.reservation_entreprise_link;
 }
 
 export function buildDisplayLinks(
@@ -112,7 +146,12 @@ export function buildDisplayLinks(
   lead: LinkTrackingLead | null,
 ): BookingDisplayLinks {
   const meeting = mergeMeetingLinks(booking, lead);
-  const crm = buildCrmLinks(lead, booking.slug ?? lead?.slug ?? null, booking.email);
+  const crm = buildCrmLinks(
+    lead,
+    booking.slug ?? lead?.slug ?? null,
+    booking.email,
+    booking.lead_category ?? booking.booking_category,
+  );
 
   return { ...crm, ...meeting };
 }

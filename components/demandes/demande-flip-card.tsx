@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import {
   DEMANDE_VERSO_CRITERIA,
   type DemandeVersoFields,
+  type QualificationCriterion,
 } from "@/lib/commercial/qualification-criteria";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ type DemandeFlipCardProps = {
   variant: DemandeFlipCardVariant;
   recto: ReactNode;
   versoFields: DemandeVersoFields;
+  versoCriteria?: readonly QualificationCriterion[];
   className?: string;
   disabled?: boolean;
   onFlipChange?: (flipped: boolean) => void;
@@ -32,9 +34,11 @@ function getVersoValue(
 function VersoContent({
   variant,
   versoFields,
+  versoCriteria,
 }: {
   variant: DemandeFlipCardVariant;
   versoFields: DemandeVersoFields;
+  versoCriteria: readonly QualificationCriterion[];
 }) {
   const isMarketing = variant === "marketing";
 
@@ -64,7 +68,7 @@ function VersoContent({
         </p>
       </div>
       <div className="flex flex-1 flex-col divide-y overflow-y-auto">
-        {DEMANDE_VERSO_CRITERIA.map((criterion) => (
+        {versoCriteria.map((criterion) => (
           <div key={criterion.key} className="space-y-1 px-5 py-4">
             <p
               className={cn(
@@ -101,6 +105,7 @@ export function DemandeFlipCard({
   variant,
   recto,
   versoFields,
+  versoCriteria = DEMANDE_VERSO_CRITERIA,
   className,
   disabled = false,
   onFlipChange,
@@ -179,7 +184,7 @@ export function DemandeFlipCard({
             )}
             aria-hidden={!flipped}
           >
-            <VersoContent variant={variant} versoFields={versoFields} />
+            <VersoContent variant={variant} versoFields={versoFields} versoCriteria={versoCriteria} />
             {!disabled ? (
               <Button
                 type="button"

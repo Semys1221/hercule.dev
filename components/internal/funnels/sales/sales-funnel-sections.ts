@@ -131,6 +131,24 @@ export const INTRO_CONFIRMATION_TEXT =
 export const PRESENTATION_CONFIRMATION_TEXT =
   "J'ai pris connaissance de la présentation de la société Hercule et des conditions générales de vente.";
 
+const COMPTABLE_INTRO_CONFIRMATION_TEXT =
+  "Je confirme fournir des réponses honnêtes et précises afin que les missions TPE qui me sont proposées correspondent au mieux à mon expertise, ma capacité et mes conditions de collaboration.";
+
+const COMPTABLE_PRESENTATION_CONFIRMATION_TEXT =
+  "J'ai pris connaissance de la présentation de Hercule Comptable et des conditions générales de vente.";
+
+export function getIntroConfirmationText(audience: Audience = "agence"): string {
+  return audience === "comptable"
+    ? COMPTABLE_INTRO_CONFIRMATION_TEXT
+    : INTRO_CONFIRMATION_TEXT;
+}
+
+export function getPresentationConfirmationText(audience: Audience = "agence"): string {
+  return audience === "comptable"
+    ? COMPTABLE_PRESENTATION_CONFIRMATION_TEXT
+    : PRESENTATION_CONFIRMATION_TEXT;
+}
+
 export function getSalesFunnelSections(audience: Audience): SalesFunnelSection[] {
   if (audience === "comptable") {
     return COMPTABLE_SALES_FUNNEL_SECTIONS;

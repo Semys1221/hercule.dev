@@ -28,6 +28,26 @@ function main() {
   assert.equal(fields.activities, "le Trafic Payant et le Dev Front-end");
   assert.equal(fields.budgetConfirmed, true);
 
+  const comptableBooking = {
+    first_name: "Paul",
+    name: "Paul Martin",
+    questions: {
+      "Combien d'associés ou collaborateurs compte votre cabinet ?": "5 collaborateurs",
+      "Quelles missions proposez-vous ?": "Tenue comptable et fiscal",
+      "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+    },
+  };
+
+  const comptableFields = extractSalesIntroFields(comptableBooking, "comptable");
+  assert.equal(comptableFields.budgetConfirmed, true);
+
+  const comptableScript = buildSalesIntroScript(comptableBooking, "comptable");
+  assert.match(comptableScript, /Hercule Comptable/);
+  assert.match(comptableScript, /missions TPE qui vous sont éligibles/);
+
+  const comptableChecklist = buildSalesIntroChecklist(comptableBooking, "comptable");
+  assert.match(comptableChecklist[0], /Hercule Comptable/);
+
   const script = buildSalesIntroScript(booking);
   assert.match(script, /Marie, ravi de t'avoir en ligne/);
   assert.match(script, /2 à 5/);

@@ -6,13 +6,15 @@ import {
   BOOKINGS_CACHE_REVALIDATE_SECONDS,
   BOOKINGS_CACHE_TAG,
 } from "@/lib/calendly/bookings-cache";
+import { salesAudienceToLeadCategory } from "@/lib/admin/funnels/sales-audience";
 import { enrichBookingsForAdmin } from "@/lib/calendly/enrich-bookings";
 import { listUpcomingBookings } from "@/lib/calendly/list-bookings";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 
 const querySchema = z.object({
   daysAhead: z.coerce.number().int().min(1).max(90).optional(),
   daysBehind: z.coerce.number().int().min(0).max(90).optional(),
-  category: z.enum(["agence", "entreprise"]).optional(),
+  category: z.enum(["agence", "entreprise", "comptable"]).optional(),
   fresh: z.enum(["1", "true"]).optional(),
 });
 
@@ -24,7 +26,12 @@ async function loadEnrichedBookings(
   const bookings = await listUpcomingBookings({
     daysAhead,
     daysBehind,
-    category: category === "all" ? undefined : (category as "agence" | "entreprise"),
+    category:
+      category === "all"
+        ? undefined
+        : (salesAudienceToLeadCategory(
+            category as "agence" | "entreprise" | "comptable",
+          ) as LeadCategory),
   });
   return enrichBookingsForAdmin(bookings);
 }

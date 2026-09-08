@@ -8,10 +8,10 @@ export function Footer() {
       { label: "Méthode", href: "#methode" },
       { label: "Tarification", href: "#pricing" },
       { label: "Garanties", href: "#garanties" },
-      { label: "FAQ", href: "/faq" },
+      { label: "FAQ", href: "/agence/faq" },
       { label: "Contact", href: "#contact" },
     ],
-    Hercule: [{ label: "Trouver une agence", href: "/entreprise" }],
+    Hercule: [{ label: "Espace cabinets comptables", href: "/" }],
     Légal: [
       { label: "CGV", href: "/cvg" },
       { label: "Mentions légales", href: "/mentions-legales" },

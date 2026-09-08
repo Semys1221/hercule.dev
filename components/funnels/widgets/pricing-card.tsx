@@ -97,6 +97,8 @@ export type PricingCardProps = {
   animated?: boolean;
   ctaLabel?: string;
   onCtaClick?: () => void;
+  ctaHref?: string;
+  ctaLinkLabel?: string;
 };
 
 export function PricingCard({
@@ -108,6 +110,8 @@ export function PricingCard({
   animated = true,
   ctaLabel,
   onCtaClick,
+  ctaHref = CALENDLY_AGENCE_URL,
+  ctaLinkLabel = "Soumettre ma candidature",
 }: PricingCardProps) {
   const [open, setOpen] = useState(false);
 
@@ -220,10 +224,10 @@ export function PricingCard({
               </button>
             ) : plan.featured && !compact ? (
               <a
-                href={CALENDLY_AGENCE_URL}
+                href={ctaHref}
                 className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
               >
-                Soumettre ma candidature
+                {ctaLinkLabel}
                 <ArrowRight className="size-4" />
               </a>
             ) : null}

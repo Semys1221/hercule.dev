@@ -9,7 +9,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'Hercule',
-  description: 'Nous trouvons les bonnes agences pour nos demandes de clients — apports d\'affaires qualifiés et audit de compatibilité.',
+  description: 'Mise en relation B2B entre TPE et cabinets d\'expertise comptable — missions qualifiées et audit de compatibilité.',
 }
 
 export default function RootLayout({

@@ -23,7 +23,7 @@ import {
   subscribePitchSidebarEnabled,
 } from "@/lib/admin/funnels/sales-funnel-settings";
 import type { SalesSessionSettingsDocument } from "@/lib/admin/funnels/sales-session-settings-types";
-import { SALES_TEST_SESSION_SLUG } from "@/lib/admin/funnels/sales-test-session-preset";
+import { salesTestSessionSlugForAudience } from "@/lib/admin/funnels/sales-test-session-preset";
 import {
   SESSION_DEVELOPER_MODE_DESCRIPTION,
   SESSION_DEVELOPER_MODE_OFF,
@@ -185,7 +185,7 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
     setDeveloperModeEnabled(audience, true);
     setDashboardDeveloperModeEnabled(true);
     window.open(
-      `/dashboard/${encodeURIComponent(SALES_TEST_SESSION_SLUG)}`,
+      `/dashboard/${encodeURIComponent(salesTestSessionSlugForAudience(audience))}`,
       "_blank",
       "noopener,noreferrer",
     );

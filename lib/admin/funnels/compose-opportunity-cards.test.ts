@@ -56,7 +56,6 @@ function assertCardSetConstraints(
 
   for (const card of cards) {
     assert.ok(SECTEUR_CONFIG[card.secteur]);
-    assert.ok(card.budgetCents >= HERCULE_FLOOR_CENTS);
     assert.ok(card.budgetCents >= floorCents);
     assert.ok(card.minDaysOffset >= 7);
     assert.ok(card.maxDaysOffset <= 35);
@@ -202,6 +201,19 @@ function main() {
     const cards = composeOpportunityCards(values, id);
     assertCardSetConstraints(cards, floorCents);
   }
+
+  const comptableValues = {
+    ...salesQualificationDefaultValues,
+    q1: ["web_creation", "google_ads", "seo"],
+    q19: ["one_off", "recurring", "acquisition"],
+    q13: 1499,
+    q14: { months3: 1499, months6: 1499, months12: 1499 },
+  };
+  const comptableFloor = resolveBudgetFloorCents(comptableValues, "serial", "comptable");
+  assert.equal(comptableFloor, 149_900);
+  const comptableCards = composeOpportunityCards(comptableValues, "serial", "comptable");
+  assertCardSetConstraints(comptableCards, comptableFloor);
+  assert.equal(new Set(comptableCards.map((card) => card.secteur)).size, 5);
 
   console.log("OK lib/admin/funnels/compose-opportunity-cards.test.ts");
 }

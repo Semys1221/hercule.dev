@@ -7,6 +7,7 @@ import {
   OFFER_TYPES_COMPTABLE,
   type OfferTypeComptable,
 } from "@/lib/commercial/constants";
+import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
 import {
   getAppBaseUrl,
   getComptableMonthlyPriceId,
@@ -117,8 +118,7 @@ export async function POST(request: Request) {
       sessionId: session.id,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Checkout creation failed";
-    console.error("[payments/checkout-comptable]", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    const { body, status } = checkoutErrorResponse(error, "payments/checkout-comptable");
+    return NextResponse.json(body, { status });
   }
 }

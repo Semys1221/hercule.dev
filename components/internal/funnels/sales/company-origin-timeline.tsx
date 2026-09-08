@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { LEGAL_ENTITY } from "@/lib/constants";
+import type { Audience } from "@/lib/admin/navigation";
 import { cn } from "@/lib/utils";
 
 type CompanyOriginStep = {
@@ -9,7 +10,7 @@ type CompanyOriginStep = {
   description: string;
 };
 
-const COMPANY_ORIGIN_STEPS: CompanyOriginStep[] = [
+const AGENCE_COMPANY_ORIGIN_STEPS: CompanyOriginStep[] = [
   {
     year: "2018",
     title: "Outil interne backend",
@@ -29,15 +30,48 @@ const COMPANY_ORIGIN_STEPS: CompanyOriginStep[] = [
   },
 ];
 
-export function CompanyOriginTimeline() {
+const COMPTABLE_COMPANY_ORIGIN_STEPS: CompanyOriginStep[] = [
+  {
+    year: "2018",
+    title: "Outil interne backend",
+    description:
+      "Création de l'outil pour notre propre activité de développement backend.",
+  },
+  {
+    year: "2025",
+    title: "Renommage Hercule",
+    description:
+      "L'outil interne devient Hercule et structure la plateforme commerciale actuelle.",
+  },
+  {
+    year: "2026",
+    title: "Hercule Comptable",
+    description:
+      "Extension du modèle Hercule aux cabinets d'expertise comptable : Live Qualification TPE, provision Calendly/Zoom, 0 % commission sur les honoraires.",
+  },
+];
+
+function getCompanyOriginSteps(audience: Audience): CompanyOriginStep[] {
+  return audience === "comptable"
+    ? COMPTABLE_COMPANY_ORIGIN_STEPS
+    : AGENCE_COMPANY_ORIGIN_STEPS;
+}
+
+type CompanyOriginTimelineProps = {
+  audience?: Audience;
+};
+
+export function CompanyOriginTimeline({ audience = "agence" }: CompanyOriginTimelineProps) {
+  const steps = getCompanyOriginSteps(audience);
+
   return (
     <section className="flex flex-col gap-4">
       <h2 className="text-xl font-medium tracking-tight text-foreground">Chronologie</h2>
       <Card className="border-border bg-card/40 shadow-none">
         <CardContent className="p-5">
           <ol className="flex flex-col">
-            {COMPANY_ORIGIN_STEPS.map((step, index) => {
-              const isLast = index === COMPANY_ORIGIN_STEPS.length - 1;
+            {steps.map((step, index) => {
+              const isLast = index === steps.length - 1;
 
               return (
                 <li key={step.year} className="flex gap-4">

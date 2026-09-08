@@ -37,9 +37,9 @@ export function classifySurface(relPath: string): Surface {
   }
   if (
     rel.startsWith("components/agence/") ||
-    rel.startsWith("components/entreprise/") ||
+    rel.startsWith("components/comptable/") ||
     rel === "app/page.tsx" ||
-    rel.startsWith("app/entreprise/")
+    rel.startsWith("app/agence/")
   ) {
     return "marketing";
   }

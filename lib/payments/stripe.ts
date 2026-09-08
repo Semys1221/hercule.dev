@@ -1,23 +1,28 @@
 import Stripe from "stripe";
 
+import {
+  getStripeSecretKey,
+  getStripeStarterPriceId,
+  getStripeWebhookSecret as getStripeWebhookSecretFromEnv,
+} from "@/lib/env";
+
 const STARTER_OFFER_TYPE = "starter_1489_5";
 
-export function getStripeClient(): Stripe {
-  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
-  if (!secretKey) {
-    throw new Error("STRIPE_SECRET_KEY is not set");
+function requireEnv(value: string, name: string): string {
+  if (!value) {
+    throw new Error(`${name} is not set`);
   }
+  return value;
+}
+
+export function getStripeClient(): Stripe {
+  const secretKey = requireEnv(getStripeSecretKey(), "STRIPE_SECRET_KEY");
   return new Stripe(secretKey);
 }
 
 export function getStarterPriceId(): string {
-  const priceId =
-    process.env.STRIPE_PRICE_STARTER?.trim() ||
-    process.env.STRIPE_PRICE_MONTHLY_1489?.trim();
-  if (!priceId) {
-    throw new Error("STRIPE_PRICE_STARTER is not set");
-  }
-  return priceId;
+  const priceId = getStripeStarterPriceId();
+  return requireEnv(priceId, "STRIPE_PRICE_STARTER");
 }
 
 export function getStarterOfferType(): string {
@@ -26,26 +31,16 @@ export function getStarterOfferType(): string {
 
 export function getComptableMonthlyPriceId(): string {
   const priceId = process.env.STRIPE_PRICE_COMPTABLE_MONTHLY?.trim();
-  if (!priceId) {
-    throw new Error("STRIPE_PRICE_COMPTABLE_MONTHLY is not set");
-  }
-  return priceId;
+  return requireEnv(priceId ?? "", "STRIPE_PRICE_COMPTABLE_MONTHLY");
 }
 
 export function getComptablePack3PriceId(): string {
   const priceId = process.env.STRIPE_PRICE_COMPTABLE_PACK3?.trim();
-  if (!priceId) {
-    throw new Error("STRIPE_PRICE_COMPTABLE_PACK3 is not set");
-  }
-  return priceId;
+  return requireEnv(priceId ?? "", "STRIPE_PRICE_COMPTABLE_PACK3");
 }
 
 export function getStripeWebhookSecret(): string {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
-  if (!secret) {
-    throw new Error("STRIPE_WEBHOOK_SECRET is not set");
-  }
-  return secret;
+  return requireEnv(getStripeWebhookSecretFromEnv(), "STRIPE_WEBHOOK_SECRET");
 }
 
 export function getAppBaseUrl(): string {

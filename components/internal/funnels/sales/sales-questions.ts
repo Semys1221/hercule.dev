@@ -150,6 +150,7 @@ export function formatSliderRange(config: SalesSliderConfig): string {
   return `${formatSliderLabel(config.min, config.unit)} – ${formatSliderLabel(config.max, config.unit)}`;
 }
 
+/** @deprecated Use getSalesQuestions(audience) */
 export const SALES_QUESTIONS: SalesQuestion[] = [
   {
     id: "q1",
@@ -437,12 +438,36 @@ export const SALES_QUESTIONS: SalesQuestion[] = [
   },
 ];
 
-export function getSalesQuestionsForSection(
-  sectionId: Exclude<SalesFunnelSectionId, "rendez-vous">,
-): SalesQuestion[] {
-  return SALES_QUESTIONS.filter((question) => question.sectionId === sectionId);
+import type { Audience } from "@/lib/admin/navigation";
+import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import {
+  COMPTABLE_MONTHLY_MIN,
+  COMPTABLE_SALES_QUESTIONS,
+  COMPTABLE_SLIDER_CONFIGS,
+} from "./sales-questions-comptable";
+
+export function getHerculeMonthlyMin(audience: Audience = "agence"): number {
+  return isComptableSalesAudience(audience) ? COMPTABLE_MONTHLY_MIN : HERCULE_MONTHLY_MIN;
 }
 
-export function getSalesQuestionById(id: string): SalesQuestion | undefined {
-  return SALES_QUESTIONS.find((question) => question.id === id);
+export function getSliderConfigs(audience: Audience = "agence") {
+  return isComptableSalesAudience(audience) ? COMPTABLE_SLIDER_CONFIGS : SLIDER_CONFIGS;
+}
+
+export function getSalesQuestions(audience: Audience = "agence"): SalesQuestion[] {
+  return isComptableSalesAudience(audience) ? COMPTABLE_SALES_QUESTIONS : SALES_QUESTIONS;
+}
+
+export function getSalesQuestionsForSection(
+  sectionId: Exclude<SalesFunnelSectionId, "rendez-vous">,
+  audience: Audience = "agence",
+): SalesQuestion[] {
+  return getSalesQuestions(audience).filter((question) => question.sectionId === sectionId);
+}
+
+export function getSalesQuestionById(
+  id: string,
+  audience: Audience = "agence",
+): SalesQuestion | undefined {
+  return getSalesQuestions(audience).find((question) => question.id === id);
 }

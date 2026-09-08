@@ -4,12 +4,14 @@ import { FooterLegalBar } from "@/components/site/footer-legal-bar"
 
 export function Footer() {
   const footerLinks: Record<string, { label: string; href: string }[]> = {
-    Service: [
-      { label: "Comment ça marche", href: "#methode" },
-      { label: "Notre modèle", href: "#modele" },
+    Offre: [
+      { label: "Méthode", href: "#methode" },
+      { label: "Tarification", href: "#pricing" },
+      { label: "Garanties", href: "#garanties" },
+      { label: "FAQ", href: "/faq" },
       { label: "Contact", href: "#contact" },
     ],
-    Hercule: [{ label: "Espace agences web", href: "/" }],
+    Hercule: [{ label: "Espace agences web", href: "/agence" }],
     Légal: [
       { label: "CGV", href: "/cvg/comptable" },
       { label: "Mentions légales", href: "/mentions-legales" },

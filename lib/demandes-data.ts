@@ -3,6 +3,12 @@ export type DemandeNiche =
   | "conseil-financier"
   | "renovation"
   | "grossiste"
+  | "artisan"
+  | "freelance"
+  | "commerce"
+  | "services"
+  | "restauration"
+  | "btp"
   | "a-venir"
 
 export type DemandeStatus = "available" | "assigned"

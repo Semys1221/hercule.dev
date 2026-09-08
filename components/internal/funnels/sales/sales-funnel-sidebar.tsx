@@ -38,8 +38,9 @@ import { cn } from "@/lib/utils";
 import { SESSION_DEVELOPER_MODE_BADGE, SESSION_ENTER_INSTITUTIONAL_CTA, SESSION_PHASE_INSTITUTIONAL, SESSION_SETTINGS_LABEL, SESSION_SIDEBAR_QUALIFICATION, SESSION_SIDEBAR_STEPS } from "@/lib/admin/funnels/ui-copy";
 
 import {
-  SALES_CLOSING_SECTIONS,
+  getSalesClosingSections,
   SALES_CLOSING_SECTION_ICONS,
+  type SalesClosingSection,
   type SalesClosingSectionId,
 } from "./sales-closing-sections";
 import { SalesFunnelProgress } from "./sales-funnel-progress";
@@ -113,8 +114,9 @@ export function SalesFunnelSidebar({
   onSectionChange,
 }: SalesFunnelSidebarProps) {
   const qualificationSections = getSalesFunnelSections(audience);
+  const closingSections = getSalesClosingSections(audience);
   const sections =
-    contentPhase === "pitch" ? SALES_CLOSING_SECTIONS : qualificationSections;
+    contentPhase === "pitch" ? closingSections : qualificationSections;
   const sidebarGroupLabel =
     contentPhase === "pitch" ? SESSION_SIDEBAR_STEPS : SESSION_SIDEBAR_QUALIFICATION;
   const showForwardArrow =
@@ -124,7 +126,7 @@ export function SalesFunnelSidebar({
   const phaseLabel = phase === "closing" ? SESSION_PHASE_INSTITUTIONAL : "Hercule";
 
   function renderSectionMenu(
-    menuSections: SalesFunnelSection[] | typeof SALES_CLOSING_SECTIONS,
+    menuSections: SalesFunnelSection[] | SalesClosingSection[],
     variant: "qualification" | "pitch",
   ) {
     return (

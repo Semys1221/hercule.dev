@@ -48,6 +48,7 @@ function sampleBooking(inviteeUri: string): EnrichedCalendlyBooking {
     sales_call_status: null,
     links: {
       reservation_agence_link: null,
+      reservation_entreprise_link: null,
       confirmation_agence_link: null,
       dashboard_link: null,
       calendly_join_url: null,

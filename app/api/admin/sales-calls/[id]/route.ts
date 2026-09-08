@@ -114,7 +114,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         });
       }
       if (parsed.data.status === "not_paid") {
-        if (!salesCall.agence_id) {
+        const leadId = salesCall.agence_id ?? salesCall.entreprise_id;
+        if (!leadId) {
           return NextResponse.json(
             { error: "Lead introuvable pour la séquence" },
             { status: 422 },
@@ -123,10 +124,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         const { startCloseIndecisSequence } = await import(
           "@/lib/close-indecis-sequence/orchestrator"
         );
-        sequence = await startCloseIndecisSequence(salesCall, salesCall.agence_id);
+        sequence = await startCloseIndecisSequence(salesCall, leadId);
       }
       if (parsed.data.status === "no_show") {
-        if (!salesCall.agence_id) {
+        const leadId = salesCall.agence_id ?? salesCall.entreprise_id;
+        if (!leadId) {
           return NextResponse.json(
             { error: "Lead introuvable pour la séquence" },
             { status: 422 },
@@ -135,7 +137,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         const { startNoShowSequence } = await import(
           "@/lib/no-show-sequence/orchestrator"
         );
-        sequence = await startNoShowSequence(salesCall, salesCall.agence_id);
+        sequence = await startNoShowSequence(salesCall, leadId);
       }
     }
 

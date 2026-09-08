@@ -6,12 +6,13 @@ import type { UseFormReturn } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
+import type { Audience } from "@/lib/admin/navigation";
 import { RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { cn } from "@/lib/utils";
 
 import { SalesConfirmationCard } from "./sales-confirmation-card";
-import { INTRO_CONFIRMATION_TEXT, type SalesFunnelSection } from "./sales-funnel-sections";
+import { getIntroConfirmationText, type SalesFunnelSection } from "./sales-funnel-sections";
 
 const INTRO_BENEFITS = [
   "Des opportunités compatibles avec vos expertises et vos tarifs",
@@ -20,12 +21,22 @@ const INTRO_BENEFITS = [
   "Une relation durable fondée sur la transparence mutuelle",
 ] as const;
 
+const COMPTABLE_INTRO_BENEFITS = [
+  "Des missions TPE compatibles avec vos expertises et vos honoraires",
+  "Moins de temps perdu sur des dossiers hors-profil",
+  "Un scoring de compatibilité ajusté à votre capacité réelle",
+  "Une relation durable fondée sur la transparence mutuelle",
+] as const;
+
 type SalesIntroSectionProps = {
+  audience: Audience;
   section: SalesFunnelSection;
   form: UseFormReturn<SalesQualificationValues>;
 };
 
-export function SalesIntroSection({ section, form }: SalesIntroSectionProps) {
+export function SalesIntroSection({ audience, section, form }: SalesIntroSectionProps) {
+  const benefits =
+    audience === "comptable" ? COMPTABLE_INTRO_BENEFITS : INTRO_BENEFITS;
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8 text-left">
       <div className="space-y-3">
@@ -47,7 +58,7 @@ export function SalesIntroSection({ section, form }: SalesIntroSectionProps) {
         <h2 className="text-sm font-medium text-foreground">Pourquoi cet audit</h2>
         <Card className={cn(RESERVATION_SURFACE, "shadow-none")}>
           <CardContent className="divide-y divide-border p-0">
-            {INTRO_BENEFITS.map((benefit) => (
+            {benefits.map((benefit) => (
               <div
                 key={benefit}
                 className="flex items-start gap-3 px-5 py-4 md:px-6 md:py-5"
@@ -72,7 +83,7 @@ export function SalesIntroSection({ section, form }: SalesIntroSectionProps) {
           <FormItem>
             <SalesConfirmationCard
               id="sales-intro-confirmed"
-              label={INTRO_CONFIRMATION_TEXT}
+              label={getIntroConfirmationText(audience)}
               description="Cette étape est requise avant de commencer la qualification."
               checked={field.value}
               onCheckedChange={field.onChange}

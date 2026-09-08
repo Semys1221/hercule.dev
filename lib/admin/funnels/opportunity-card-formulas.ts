@@ -1,8 +1,18 @@
 import { HERCULE_MONTHLY_MIN } from "@/components/internal/funnels/sales/sales-questions";
+import { COMPTABLE_MONTHLY_MIN } from "@/components/internal/funnels/sales/sales-questions-comptable";
+import type { Audience } from "@/lib/admin/navigation";
+import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 
 export type BudgetKind = "one_off" | "monthly";
+
+export function getHerculeFloorCents(audience: Audience = "agence"): number {
+  const min = isComptableSalesAudience(audience)
+    ? COMPTABLE_MONTHLY_MIN
+    : HERCULE_MONTHLY_MIN;
+  return min * 100;
+}
 
 export const HERCULE_FLOOR_CENTS = HERCULE_MONTHLY_MIN * 100;
 
@@ -19,7 +29,11 @@ export type PrestationType =
   | "portail_metier"
   | "acquisition_paid"
   | "seo_organique"
-  | "maintenance";
+  | "maintenance"
+  | "tenue_comptable"
+  | "social_paie"
+  | "fiscal_liasse"
+  | "reprise_dossier";
 
 export type TimingClass = "fast" | "normal" | "slow";
 
@@ -51,6 +65,24 @@ export const PRESET_FLOOR_OVERRIDE_CENTS: Record<AgencyPresetId, number> = {
   premium: 500_000,
 };
 
+const COMPTABLE_PRESET_FLOOR_OVERRIDE_CENTS: Record<AgencyPresetId, number> = {
+  serial: 149_900,
+  growth: 149_900,
+  architect: 200_000,
+  specialist: 350_000,
+  premium: 500_000,
+};
+
+export function getPresetFloorOverrideCents(
+  presetId: AgencyPresetId,
+  audience: Audience = "agence",
+): number {
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_PRESET_FLOOR_OVERRIDE_CENTS[presetId];
+  }
+  return PRESET_FLOOR_OVERRIDE_CENTS[presetId];
+}
+
 export const PRESET_TAILLE_FALLBACKS: Record<AgencyPresetId, TailleClass[]> = {
   serial: ["tpe", "pme_small"],
   growth: ["pme_small", "pme_medium"],
@@ -77,6 +109,8 @@ const MONTHLY_PRESTATION_TYPES = new Set<PrestationType>([
   "acquisition_paid",
   "seo_organique",
   "maintenance",
+  "tenue_comptable",
+  "social_paie",
 ]);
 
 const HORIZON_COPY: Record<PrestationType, readonly [string, string, string, string, string]> = {
@@ -136,6 +170,34 @@ const HORIZON_COPY: Record<PrestationType, readonly [string, string, string, str
     "Continuité technique tenue sur l'année",
     "Astreinte et mises à jour calées après audit initial",
   ],
+  tenue_comptable: [
+    "Tenue opérationnelle dès le 1er mois",
+    "Clôtures périodiques stabilisées au 2e mois",
+    "Suivi récurrent cadré dès le 3e trimestre",
+    "Dossier tenu sur l'exercice en cours",
+    "Reprise calée après validation du dirigeant TPE",
+  ],
+  social_paie: [
+    "Bulletins et DSN stabilisés dès le 1er mois",
+    "Paie récurrente opérationnelle au 2e mois",
+    "Social suivi dès le 3e mois",
+    "DSN et charges calées sur l'exercice",
+    "Reprise sociale après audit du dossier",
+  ],
+  fiscal_liasse: [
+    "Liasse et TVA cadrées sous 45 jours",
+    "Obligations fiscales stabilisées sous 60 jours",
+    "Déclarations calées avant fin de trimestre",
+    "Mission fiscale livrée avant clôture annuelle",
+    "Reprise fiscale après validation du périmètre",
+  ],
+  reprise_dossier: [
+    "Reprise dossier cadrée sous 30 jours",
+    "Historique consolidé sous 45 jours",
+    "Mission de reprise avant fin de trimestre",
+    "Dossier opérationnel avant échéance fiscale",
+    "Reprise calée après audit initial du dirigeant",
+  ],
 };
 
 const TAILLE_CLASS_IDS = new Set<string>([
@@ -162,15 +224,22 @@ export function roundToBand(cents: number): number {
 }
 
 export function computeBudgetTiers(floorCents: number): number[] {
-  return TIER_MULTIPLIERS.map((multiplier) =>
-    Math.max(floorCents, roundToBand(floorCents * multiplier)),
-  );
+  return TIER_MULTIPLIERS.map((multiplier, index) => {
+    if (index === 0) {
+      return floorCents;
+    }
+    return Math.max(floorCents, roundToBand(floorCents * multiplier));
+  });
 }
 
 export function resolveBudgetFloorCents(
   values: SalesQualificationValues,
   presetId: AgencyPresetId,
+  audience: Audience = "agence",
 ): number {
+  const floorMin = isComptableSalesAudience(audience)
+    ? COMPTABLE_MONTHLY_MIN
+    : HERCULE_MONTHLY_MIN;
   const candidates = [
     values.q13,
     values.q14?.months3,
@@ -179,12 +248,12 @@ export function resolveBudgetFloorCents(
   ].filter((value): value is number => typeof value === "number" && value > 0);
 
   const declaredMinEur =
-    candidates.length > 0 ? Math.min(...candidates) : HERCULE_MONTHLY_MIN;
+    candidates.length > 0 ? Math.min(...candidates) : floorMin;
 
   return Math.max(
-    HERCULE_FLOOR_CENTS,
+    getHerculeFloorCents(audience),
     declaredMinEur * 100,
-    PRESET_FLOOR_OVERRIDE_CENTS[presetId],
+    getPresetFloorOverrideCents(presetId, audience),
   );
 }
 
@@ -228,6 +297,52 @@ export function computeDuration(
       "12 mois avec mises à jour trimestrielles",
       "12 mois minimum — infogérance",
       "12 mois avec suivi trimestriel — maintenance",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "tenue_comptable") {
+    const months = typeof values.q15 === "number" && values.q15 > 0 ? values.q15 : 12;
+    const labels = [
+      `${Math.min(12, Math.max(6, months))} mois minimum — tenue`,
+      "12 mois renouvelable — tenue comptable",
+      "12 mois récurrent — déclarations périodiques",
+      "12 mois minimum — tenue + clôtures",
+      "12 mois avec suivi trimestriel — tenue",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "social_paie") {
+    const months = typeof values.q17 === "number" && values.q17 > 0 ? values.q17 : 12;
+    const labels = [
+      `${Math.min(12, Math.max(6, months))} mois minimum — social / paie`,
+      "12 mois renouvelable — bulletins et DSN",
+      "12 mois récurrent — paie",
+      "12 mois minimum — social",
+      "12 mois avec suivi trimestriel — paie",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "fiscal_liasse") {
+    const labels = [
+      "Mission fiscale (4–6 semaines)",
+      "Liasse et TVA (6–8 semaines)",
+      "Obligations fiscales (8–10 semaines)",
+      "Mission fiscale (10–12 semaines)",
+      "Reprise fiscale (12–14 semaines)",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "reprise_dossier") {
+    const labels = [
+      "Reprise dossier (3–5 semaines)",
+      "Reprise tenue (4–6 semaines)",
+      "Mission de reprise (5–7 semaines)",
+      "Reprise structurée (6–8 semaines)",
+      "Reprise complexe (8–10 semaines)",
     ];
     return labels[slot];
   }

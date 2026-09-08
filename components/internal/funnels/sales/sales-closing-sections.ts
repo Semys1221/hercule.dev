@@ -7,6 +7,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import type { Audience } from "@/lib/admin/navigation";
+
 import type { SalesFunnelSectionId } from "./sales-funnel-sections";
 
 export type SalesClosingSectionId =
@@ -56,6 +58,45 @@ export const SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
   },
 ];
 
+const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
+  {
+    id: "recap",
+    label: "Récapitulatif",
+    title: "Votre récapitulatif",
+    subtitle: "Synthèse des réponses de qualification avant le closing.",
+  },
+  {
+    id: "regles-traitement",
+    label: "Règles de traitement",
+    title: "Vos règles de traitement",
+    subtitle: "Confirmez que vous acceptez nos règles de traitement des missions TPE.",
+  },
+  {
+    id: "demandes-eligibles",
+    label: "Missions éligibles",
+    title: "Vos missions TPE éligibles",
+    subtitle: "Profils sélectionnés selon votre questionnaire de qualification cabinet.",
+  },
+  {
+    id: "calendrier",
+    label: "Calendrier de collaboration",
+    title: "Votre calendrier",
+    subtitle: "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants TPE.",
+  },
+  {
+    id: "envoi-dashboard",
+    label: "Lien dashboard",
+    title: "Accès dashboard",
+    subtitle: "Copiez et envoyez le lien de suivi dashboard au cabinet.",
+  },
+];
+
+export function getSalesClosingSections(audience: Audience = "agence"): SalesClosingSection[] {
+  return audience === "comptable"
+    ? COMPTABLE_SALES_CLOSING_SECTIONS
+    : SALES_CLOSING_SECTIONS;
+}
+
 export const SALES_CLOSING_SECTION_ICONS: Record<SalesClosingSectionId, LucideIcon> = {
   recap: FileText,
   "regles-traitement": ShieldCheck,
@@ -76,8 +117,9 @@ export const salesClosingDefaultValues: SalesClosingValues = {
 
 export function getSalesClosingSection(
   id: SalesClosingSectionId,
+  audience: Audience = "agence",
 ): SalesClosingSection | undefined {
-  return SALES_CLOSING_SECTIONS.find((section) => section.id === id);
+  return getSalesClosingSections(audience).find((section) => section.id === id);
 }
 
 const CLOSING_SECTION_IDS = new Set<SalesClosingSectionId>(

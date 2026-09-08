@@ -8,7 +8,9 @@ import {
 } from "@/lib/calendly/enrich-bookings";
 import type { CalendlyBookingRow } from "@/lib/calendly/list-bookings";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
-import { buildDashboardUrl, buildLeadUrls } from "@/lib/link-tracking/urls";
+import type { Audience } from "@/lib/admin/navigation";
+import { buildDashboardUrl, buildEntrepriseLeadUrls, buildLeadUrls } from "@/lib/link-tracking/urls";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 import {
   createSalesCallsClient,
   replaceSalesCallNotesSection,
@@ -16,15 +18,9 @@ import {
 } from "@/lib/sales-calls/supabase";
 
 import {
-  SALES_TEST_SESSION_CALENDLY_QUESTIONS,
-  SALES_TEST_SESSION_CLOSING,
-  SALES_TEST_SESSION_COMPANY,
+  getSalesTestSessionPreset,
   SALES_TEST_SESSION_EMAIL,
   SALES_TEST_SESSION_FIRST_NAME,
-  SALES_TEST_SESSION_INVITEE_URI,
-  SALES_TEST_SESSION_PROFILE_FORM,
-  SALES_TEST_SESSION_QUALIFICATION,
-  SALES_TEST_SESSION_SLUG,
 } from "./sales-test-session-preset";
 
 export type ProvisionTestMeetingResult = {
@@ -40,68 +36,96 @@ function scheduledAtOneHourFromNow(): string {
 
 export async function provisionTestMeeting(
   client: SupabaseClient,
+  audience: Audience = "agence",
 ): Promise<ProvisionTestMeetingResult> {
-  const urls = buildLeadUrls(SALES_TEST_SESSION_SLUG, SALES_TEST_SESSION_EMAIL);
+  const preset = getSalesTestSessionPreset(audience);
+  const table = preset.leadCategory;
+  const urls =
+    table === "entreprise"
+      ? buildEntrepriseLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
+      : buildLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL);
   const scheduledAt = scheduledAtOneHourFromNow();
 
   const { data: existingLead, error: existingError } = await client
-    .from("agence")
+    .from(table)
     .select("id")
-    .eq("slug", SALES_TEST_SESSION_SLUG)
+    .eq("slug", preset.slug)
     .maybeSingle();
 
   if (existingError) {
-    throw new Error(`agence lookup failed: ${existingError.message}`);
+    throw new Error(`${table} lookup failed: ${existingError.message}`);
   }
 
-  let agenceId = existingLead?.id as string | undefined;
+  let leadId = existingLead?.id as string | undefined;
 
-  if (agenceId) {
+  if (leadId && table === "agence") {
     const { error: paymentsError } = await client
       .from("payments")
       .delete()
-      .eq("agence_id", agenceId);
+      .eq("agence_id", leadId);
     if (paymentsError) {
       throw new Error(`payments reset failed: ${paymentsError.message}`);
     }
   }
 
-  const profile = {
-    form: SALES_TEST_SESSION_PROFILE_FORM,
-    display: { timeline: DEFAULT_TIMELINE },
-  };
+  if (leadId && table === "entreprise") {
+    const { error: paymentsError } = await client
+      .from("payments")
+      .delete()
+      .eq("entreprise_id", leadId);
+    if (paymentsError) {
+      throw new Error(`payments reset failed: ${paymentsError.message}`);
+    }
+
+    const { error: salesCallsError } = await client
+      .from("sales_calls")
+      .delete()
+      .eq("entreprise_id", leadId);
+    if (salesCallsError) {
+      throw new Error(`sales_calls reset failed: ${salesCallsError.message}`);
+    }
+  }
+
+  const profile =
+    Object.keys(preset.profileForm).length > 0
+      ? {
+          form: preset.profileForm,
+          display: { timeline: DEFAULT_TIMELINE },
+        }
+      : {};
 
   const row = {
     email: SALES_TEST_SESSION_EMAIL,
     statut: "MEETING_BOOKED",
-    slug: SALES_TEST_SESSION_SLUG,
+    slug: preset.slug,
     first_name: SALES_TEST_SESSION_FIRST_NAME,
-    company: SALES_TEST_SESSION_COMPANY,
+    company: preset.company,
     product_statut: "NONE",
     onboarding_completed_at: null,
     scheduled_at: scheduledAt,
-    dashboard_link: buildDashboardUrl(SALES_TEST_SESSION_SLUG),
+    dashboard_link: buildDashboardUrl(preset.slug),
     profile,
     ...urls,
   };
 
   const { data: upserted, error: upsertError } = await client
-    .from("agence")
+    .from(table)
     .upsert(row, { onConflict: "slug" })
     .select("*")
     .single();
 
   if (upsertError || !upserted) {
-    throw new Error(`agence upsert failed: ${upsertError?.message ?? "no row"}`);
+    throw new Error(`${table} upsert failed: ${upsertError?.message ?? "no row"}`);
   }
 
-  agenceId = upserted.id as string;
+  leadId = upserted.id as string;
 
   const salesClient = createSalesCallsClient();
   const salesCall = await upsertSalesCallFromBooking(salesClient, {
-    agenceId,
+    agenceId: table === "agence" ? leadId : null,
+    entrepriseId: table === "entreprise" ? leadId : null,
     email: SALES_TEST_SESSION_EMAIL,
-    inviteeUri: SALES_TEST_SESSION_INVITEE_URI,
+    inviteeUri: preset.inviteeUri,
     scheduledAt,
     status: "scheduled",
   });
@@ -110,13 +134,13 @@ export async function provisionTestMeeting(
     salesClient,
     salesCall.id,
     "qualification",
-    SALES_TEST_SESSION_QUALIFICATION as unknown as Record<string, unknown>,
+    preset.qualification as unknown as Record<string, unknown>,
   );
   await replaceSalesCallNotesSection(
     salesClient,
     salesCall.id,
     "closing",
-    SALES_TEST_SESSION_CLOSING as unknown as Record<string, unknown>,
+    preset.closing as unknown as Record<string, unknown>,
   );
 
   await salesClient
@@ -124,28 +148,27 @@ export async function provisionTestMeeting(
     .update({ status: "scheduled" })
     .eq("id", salesCall.id);
 
+  const leadCategory = preset.leadCategory as LeadCategory;
+
   const bookingRow: CalendlyBookingRow = {
     email: SALES_TEST_SESSION_EMAIL,
     name: `${SALES_TEST_SESSION_FIRST_NAME} Test`,
     first_name: SALES_TEST_SESSION_FIRST_NAME,
-    company: SALES_TEST_SESSION_COMPANY,
+    company: preset.company,
     start_time: scheduledAt,
-    invitee_uri: SALES_TEST_SESSION_INVITEE_URI,
+    invitee_uri: preset.inviteeUri,
     event_uri: "https://api.calendly.com/scheduled_events/test-session",
-    questions: SALES_TEST_SESSION_CALENDLY_QUESTIONS,
-    slug: SALES_TEST_SESSION_SLUG,
-    lead_id: agenceId,
-    lead_category: "agence",
-    booking_category: "agence",
+    questions: preset.calendlyQuestions,
+    slug: preset.slug,
+    lead_id: leadId,
+    lead_category: leadCategory,
+    booking_category: leadCategory,
     calendly_join_url: null,
     calendly_reschedule_url: null,
     calendly_cancel_url: null,
   };
 
-  const lead = {
-    ...upserted,
-    category: "agence" as const,
-  };
+  const lead = upserted;
 
   const links = buildDisplayLinks(bookingRow, lead);
 
@@ -161,8 +184,8 @@ export async function provisionTestMeeting(
 
   return {
     booking,
-    qualification: SALES_TEST_SESSION_QUALIFICATION,
-    closing: SALES_TEST_SESSION_CLOSING,
-    agenceId,
+    qualification: preset.qualification,
+    closing: preset.closing,
+    agenceId: leadId,
   };
 }

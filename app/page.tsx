@@ -1,15 +1,23 @@
-import { AccueilScene } from "@/components/agence/scene-accueil"
+import type { Metadata } from "next"
+
+import { AccueilScene } from "@/components/comptable/scene-accueil"
 import {
-  fetchDemandeTeaser,
-  fetchDemandesForCarousel,
-} from "@/lib/agence/demandes-repo"
+  fetchComptableDemandeTeaser,
+  fetchComptableDemandesForCarousel,
+} from "@/lib/comptable/demandes-repo"
+
+export const metadata: Metadata = {
+  title: "Proposer votre cabinet — Hercule",
+  description:
+    "Hercule reçoit des demandes d'indépendants et de dirigeants de TPE. Les cabinets partenaires éligibles reçoivent ces missions de tenue, fiscales et administratives.",
+}
 
 export const revalidate = 60
 
 export default async function Home() {
   const [demandes, teaser] = await Promise.all([
-    fetchDemandesForCarousel(),
-    fetchDemandeTeaser(),
+    fetchComptableDemandesForCarousel(),
+    fetchComptableDemandeTeaser(),
   ])
 
   return (

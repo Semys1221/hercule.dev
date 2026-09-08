@@ -8,12 +8,18 @@ import {
   upsertSalesCallFromBooking,
 } from "@/lib/sales-calls/supabase";
 
-const postSchema = z.object({
-  agenceId: z.string().uuid().nullable().optional(),
-  email: z.string().email(),
-  inviteeUri: z.string().min(1),
-  scheduledAt: z.string().datetime().nullable().optional(),
-});
+const postSchema = z
+  .object({
+    agenceId: z.string().uuid().nullable().optional(),
+    entrepriseId: z.string().uuid().nullable().optional(),
+    email: z.string().email(),
+    inviteeUri: z.string().min(1),
+    scheduledAt: z.string().datetime().nullable().optional(),
+  })
+  .refine(
+    (data) => Boolean(data.agenceId) || Boolean(data.entrepriseId),
+    { message: "agenceId or entrepriseId is required" },
+  );
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -32,6 +38,7 @@ export async function POST(request: Request) {
     const client = createSalesCallsClient();
     const salesCall = await upsertSalesCallFromBooking(client, {
       agenceId: parsed.data.agenceId ?? null,
+      entrepriseId: parsed.data.entrepriseId ?? null,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
       scheduledAt: parsed.data.scheduledAt ?? null,

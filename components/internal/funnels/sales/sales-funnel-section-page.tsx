@@ -3,6 +3,7 @@
 import type { UseFormReturn } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";
+import type { Audience } from "@/lib/admin/navigation";
 import { RESERVATION_BODY_TEXT } from "@/lib/admin/funnels/reservation-surface";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 
@@ -11,13 +12,18 @@ import { SalesQualificationForm } from "./sales-qualification-form";
 import type { SalesFunnelSection } from "./sales-funnel-sections";
 
 type SalesFunnelSectionPageProps = {
+  audience: Audience;
   section: SalesFunnelSection;
   form: UseFormReturn<SalesQualificationValues>;
 };
 
-export function SalesFunnelSectionPage({ section, form }: SalesFunnelSectionPageProps) {
+export function SalesFunnelSectionPage({
+  audience,
+  section,
+  form,
+}: SalesFunnelSectionPageProps) {
   if (section.id === "introduction") {
-    return <SalesIntroSection section={section} form={form} />;
+    return <SalesIntroSection audience={audience} section={section} form={form} />;
   }
 
   return (
@@ -35,7 +41,7 @@ export function SalesFunnelSectionPage({ section, form }: SalesFunnelSectionPage
           <p className={RESERVATION_BODY_TEXT}>{section.subtitle}</p>
         ) : null}
       </div>
-      <SalesQualificationForm section={section} form={form} />
+      <SalesQualificationForm audience={audience} section={section} form={form} />
     </div>
   );
 }

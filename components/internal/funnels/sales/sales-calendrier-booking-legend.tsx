@@ -2,6 +2,7 @@
 
 import type { PresetOpportunityCard } from "@/lib/admin/funnels/sales-preset-registry";
 import { formatContractWindow } from "@/lib/admin/funnels/sales-preset-registry";
+import type { Audience } from "@/lib/admin/navigation";
 import { getSecteurConfig } from "@/lib/agence/secteur-config";
 import {
   Item,
@@ -16,6 +17,7 @@ import type { CalendarMeeting } from "./sales-calendrier-dates";
 import { phaseAtLeast, type RevealPhase } from "./sales-calendrier-reveal";
 
 type SalesCalendrierBookingLegendProps = {
+  audience?: Audience;
   cards: PresetOpportunityCard[];
   meetings: CalendarMeeting[];
   today: Date;
@@ -23,6 +25,7 @@ type SalesCalendrierBookingLegendProps = {
 };
 
 export function SalesCalendrierBookingLegend({
+  audience = "agence",
   cards,
   meetings,
   today,
@@ -39,7 +42,11 @@ export function SalesCalendrierBookingLegend({
       <div
         className="space-y-2"
         aria-live={showBookingLive ? "polite" : undefined}
-        aria-label="Rendez-vous planifiés par opportunité"
+        aria-label={
+          audience === "comptable"
+            ? "Rendez-vous planifiés par mission TPE"
+            : "Rendez-vous planifiés par opportunité"
+        }
       >
         {meetings.map((meeting) => {
           const card = cardById.get(meeting.cardId);
