@@ -3,7 +3,9 @@
 import assert from "node:assert/strict";
 
 import {
+  computeBookingRate,
   computeBookingStats,
+  computeExtendedBookingStats,
   formatBookingPercent,
 } from "@/lib/admin/bookings/stats";
 
@@ -36,6 +38,18 @@ function main() {
   assert.equal(emptyPast.pastBooked, 0);
   assert.equal(emptyPast.noShowPercent, null);
   assert.equal(emptyPast.soldPercent, null);
+
+  assert.equal(computeBookingRate(29, 3600), 1);
+  assert.equal(computeBookingRate(29, 0), null);
+
+  const extended = computeExtendedBookingStats(
+    [{ startTime: "2026-09-01T10:00:00.000Z", salesCallStatus: null }],
+    { sent: 100, replies: 10, interested: 5 },
+    NOW,
+  );
+  assert.equal(extended.bookingRate, 1);
+  assert.equal(extended.replyPercent, 10);
+  assert.equal(extended.positivePercent, 5);
 
   console.log("booking stats tests passed");
 }

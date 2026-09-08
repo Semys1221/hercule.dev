@@ -3,11 +3,14 @@
 import assert from "node:assert/strict";
 
 import {
+  bookingsHref,
   breadcrumb,
   isHub,
   leafKey,
+  nicheFromPathname,
   normalizePath,
   salesFunnelHref,
+  sessionHubHref,
 } from "@/lib/admin/navigation";
 import {
   PRODUCT_ROOT_LABEL,
@@ -36,6 +39,13 @@ assert.equal(
   salesFunnelHref("agence"),
   "/internal/funnels/agence/sales/funnel",
 );
+
+assert.equal(sessionHubHref("agence"), "/internal/funnels/session/agence");
+assert.equal(bookingsHref("comptable"), "/internal/funnels/bookings/comptable");
+
+assert.equal(nicheFromPathname("/internal/funnels/bookings/comptable"), "comptable");
+assert.equal(nicheFromPathname("/internal/funnels/agence/bookings"), "agence");
+assert.equal(nicheFromPathname("/internal/funnels/comptable/sales/funnel"), "comptable");
 
 assert.match(
   breadcrumb(["agence", "sales"]),

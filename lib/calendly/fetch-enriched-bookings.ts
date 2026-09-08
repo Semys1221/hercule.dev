@@ -3,31 +3,34 @@ import {
   readBookingsClientCache,
   writeBookingsClientCache,
 } from "@/lib/calendly/bookings-client-cache";
-import { salesAudienceToLeadCategory } from "@/lib/admin/funnels/sales-audience";
-import type { Audience } from "@/lib/admin/navigation";
+import type { Niche } from "@/lib/admin/navigation";
 
 export type FetchEnrichedBookingsResult = {
   bookings: EnrichedCalendlyBooking[];
   error: string | null;
   fromCache?: boolean;
+  calendlyConfigured?: boolean;
+  campaignLinked?: boolean;
 };
 
 export async function fetchEnrichedBookings(
-  audience: Audience,
-  options?: { fresh?: boolean; daysBehind?: number },
+  niche: Niche,
+  options?: { fresh?: boolean; daysBehind?: number; legacyCategory?: boolean },
 ): Promise<FetchEnrichedBookingsResult> {
   const daysBehind = options?.daysBehind ?? 0;
 
   if (!options?.fresh) {
-    const cached = readBookingsClientCache(audience, daysBehind);
+    const cached = readBookingsClientCache(niche, daysBehind);
     if (cached) {
       return { bookings: cached.bookings, error: null, fromCache: true };
     }
   }
 
-  const params = new URLSearchParams({
-    category: salesAudienceToLeadCategory(audience),
-  });
+  const params = new URLSearchParams({ niche });
+  if (options?.legacyCategory) {
+    params.delete("niche");
+    params.set("category", niche);
+  }
   if (options?.fresh) {
     params.set("fresh", "1");
   }
@@ -38,6 +41,10 @@ export async function fetchEnrichedBookings(
   const body = (await response.json()) as {
     bookings?: EnrichedCalendlyBooking[];
     error?: string;
+    outreach?: {
+      calendly_configured?: boolean;
+      campaign_linked?: boolean;
+    };
   };
 
   if (!response.ok) {
@@ -48,7 +55,13 @@ export async function fetchEnrichedBookings(
   }
 
   const bookings = body.bookings ?? [];
-  writeBookingsClientCache(audience, bookings, daysBehind);
+  writeBookingsClientCache(niche, bookings, daysBehind);
 
-  return { bookings, error: null, fromCache: false };
+  return {
+    bookings,
+    error: null,
+    fromCache: false,
+    calendlyConfigured: body.outreach?.calendly_configured,
+    campaignLinked: body.outreach?.campaign_linked,
+  };
 }

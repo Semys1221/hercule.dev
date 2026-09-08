@@ -19,9 +19,11 @@ export async function resolveBookingLead(params: {
   const client = createLinkTrackingClient();
 
   if (params.leadId) {
-    const byId = await findLeadById(client, "agence", params.leadId);
-    if (byId) {
-      return { lead: byId, category: "agence" };
+    for (const category of ["agence", "comptable", "entreprise"] as const) {
+      const byId = await findLeadById(client, category, params.leadId);
+      if (byId) {
+        return { lead: byId, category };
+      }
     }
   }
 

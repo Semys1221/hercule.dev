@@ -17,15 +17,7 @@ export function FunnelLeafContent({
   leafKey,
 }: FunnelLeafContentProps) {
   if (leafKey === "bookings_hub") {
-    if (audience !== "agence") {
-      return (
-        <FunnelPlaceholder
-          title="Bookings"
-          detail="Disponible pour l'audience agence uniquement."
-        />
-      );
-    }
-    return <BookingsShell audience={audience} />;
+    return <BookingsShell niche={audience} />;
   }
 
   if (leafKey === "clients_hub") {

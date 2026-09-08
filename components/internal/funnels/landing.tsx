@@ -13,6 +13,7 @@ import {
   AUDIENCE_CAPTIONS,
   AUDIENCE_ICONS,
   AUDIENCE_LABELS,
+  sessionHubHref,
   type Audience,
 } from "@/lib/admin/navigation";
 import { LANDING_DESCRIPTION, PRODUCT_ROOT_LABEL } from "@/lib/admin/funnels/ui-copy";
@@ -38,7 +39,7 @@ export function FunnelLanding() {
             </CardHeader>
             <CardContent>
               <Button asChild className="w-full">
-                <Link href={`/internal/funnels/${audience}`}>
+                <Link href={sessionHubHref(audience)}>
                   Ouvrir {AUDIENCE_LABELS[audience]}
                 </Link>
               </Button>

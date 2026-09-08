@@ -18,6 +18,7 @@ import {
   isAudience,
   isHub,
   pathToHref,
+  sessionHubHref,
 } from "@/lib/admin/navigation";
 
 export default async function FunnelWorkspacePage({
@@ -37,7 +38,7 @@ export default async function FunnelWorkspacePage({
     redirect(CLIENTS_LIST_HREF);
   }
   if (path[0] === "onboarding") {
-    redirect(pathToHref([audience, "sales"]));
+    redirect(sessionHubHref(audience));
   }
 
   const parsed = parseWorkspacePath(audience, path);

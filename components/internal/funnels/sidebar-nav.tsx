@@ -3,15 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Boxes,
   CalendarCheck,
   ChevronDown,
-  ChevronRight,
   ClipboardCheck,
-  Database,
   Globe,
   Home,
-  LayoutGrid,
   Mail,
   Scale,
   TrendingUp,
@@ -41,44 +37,74 @@ import {
   SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
 import {
-  AUDIENCE_LABELS,
   MODULES,
-  isAudience,
-  pathToHref,
-  type Audience,
-  type NavNode,
+  bookingsHref,
+  clientsHubHref,
+  emailsHref,
+  legalHref,
+  nicheFromPathname,
+  sessionHubHref,
+  type LegalDocSegment,
+  type Niche,
 } from "@/lib/admin/navigation";
+import { readStoredNiche } from "@/lib/admin/niche-storage";
 import { ADMIN_ROOT_LABEL } from "@/lib/admin/funnels/ui-copy";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 const GLOBAL_NAV = [
   { href: "/internal/funnels", label: "Accueil", icon: Home, exact: false },
   { href: "/internal/modalites", label: "Modalités", icon: ClipboardCheck, exact: false },
-  { href: "/internal/components", label: "Composants", icon: Boxes, exact: false },
-  { href: "/internal/database", label: "Database", icon: Database, exact: false },
   { href: "/", label: "Site public", icon: Globe, exact: true },
 ] as const;
 
-const MODULE_ICONS: Record<string, LucideIcon> = {
-  sales: TrendingUp,
-  bookings: CalendarCheck,
-  clients: Users2,
-  legal: Scale,
-  emails: Mail,
-};
-
-function audienceFromPathname(pathname: string): Audience {
-  const funnelMatch = pathname.match(/^\/internal\/funnels\/(agence|entreprise)/);
-  if (funnelMatch && isAudience(funnelMatch[1])) {
-    return funnelMatch[1];
-  }
-  const cockpitMatch = pathname.match(/^\/internal\/clients\/(agence|entreprise)/);
-  if (cockpitMatch && isAudience(cockpitMatch[1])) {
-    return cockpitMatch[1];
-  }
-  return "agence";
-}
+const PARCOURS_MODULES: Array<{
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  href: (niche: Niche) => string;
+  children?: Array<{ id: LegalDocSegment; label: string }>;
+}> = [
+  {
+    id: "session",
+    label: MODULES.sales.label,
+    icon: TrendingUp,
+    href: sessionHubHref,
+  },
+  {
+    id: "bookings",
+    label: MODULES.bookings.label,
+    icon: CalendarCheck,
+    href: bookingsHref,
+  },
+  {
+    id: "clients",
+    label: MODULES.clients.label,
+    icon: Users2,
+    href: clientsHubHref,
+  },
+  {
+    id: "legal",
+    label: MODULES.legal.label,
+    icon: Scale,
+    href: legalHref,
+    children: [
+      { id: "cgv", label: "CGV" },
+      { id: "mentions", label: "Mentions légales" },
+      { id: "confidentialite", label: "Confidentialité" },
+      { id: "faq", label: "FAQ" },
+      { id: "pricing", label: "Pricing" },
+    ],
+  },
+  {
+    id: "emails",
+    label: MODULES.emails.label,
+    icon: Mail,
+    href: emailsHref,
+  },
+];
 
 function isPathActive(pathname: string, href: string, exact = false): boolean {
   if (exact) {
@@ -87,162 +113,21 @@ function isPathActive(pathname: string, href: string, exact = false): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function isPathInBranch(pathname: string, path: string[]): boolean {
-  const href = pathToHref(path);
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function NavLeafItem({
-  href,
-  label,
-  pathname,
-  tooltip,
-}: {
-  href: string;
-  label: string;
-  pathname: string;
-  tooltip?: string;
-}) {
-  const active = isPathActive(pathname, href);
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={active} tooltip={tooltip ?? label}>
-        <Link href={href}>
-          <span>{label}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-}
-
-function NavSubLeafItem({
-  href,
-  label,
-  pathname,
-}: {
-  href: string;
-  label: string;
-  pathname: string;
-}) {
-  const active = isPathActive(pathname, href);
-  return (
-    <SidebarMenuSubItem>
-      <SidebarMenuSubButton asChild isActive={active}>
-        <Link href={href}>{label}</Link>
-      </SidebarMenuSubButton>
-    </SidebarMenuSubItem>
-  );
-}
-
-function renderNavNodes(
-  pathname: string,
-  basePath: string[],
-  nodes: Record<string, NavNode>,
-): React.ReactNode {
-  return Object.entries(nodes).map(([nodeId, node]) => {
-    const path = [...basePath, nodeId];
-    const href = pathToHref(path);
-    const hasChildren = node.children && Object.keys(node.children).length > 0;
-
-    if (!hasChildren) {
-      return (
-        <NavLeafItem
-          key={href}
-          href={href}
-          label={node.label}
-          pathname={pathname}
-        />
-      );
-    }
-
-    const branchOpen = isPathInBranch(pathname, path);
-
-    return (
-      <SidebarMenuItem key={href}>
-        <Collapsible defaultOpen={branchOpen} className="group/nested">
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip={node.label}>
-              <span>{node.label}</span>
-              <ChevronRight
-                className={cn(
-                  "ml-auto transition-transform duration-200",
-                  "group-data-[state=open]/nested:rotate-90",
-                )}
-              />
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {Object.entries(node.children!).map(([childId, child]) => {
-                const childPath = [...path, childId];
-                const childHref = pathToHref(childPath);
-                const childHasChildren =
-                  child.children && Object.keys(child.children).length > 0;
-
-                if (!childHasChildren) {
-                  return (
-                    <NavSubLeafItem
-                      key={childHref}
-                      href={childHref}
-                      label={child.label}
-                      pathname={pathname}
-                    />
-                  );
-                }
-
-                const childBranchOpen = isPathInBranch(pathname, childPath);
-
-                return (
-                  <SidebarMenuSubItem key={childHref}>
-                    <Collapsible
-                      defaultOpen={childBranchOpen}
-                      className="group/subnested"
-                    >
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuSubButton>
-                          <span>{child.label}</span>
-                          <ChevronRight
-                            className={cn(
-                              "ml-auto size-3 transition-transform duration-200",
-                              "group-data-[state=open]/subnested:rotate-90",
-                            )}
-                          />
-                        </SidebarMenuSubButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {Object.entries(child.children!).map(
-                            ([grandchildId, grandchild]) => {
-                              const grandchildPath = [...childPath, grandchildId];
-                              const grandchildHref = pathToHref(grandchildPath);
-                              return (
-                                <NavSubLeafItem
-                                  key={grandchildHref}
-                                  href={grandchildHref}
-                                  label={grandchild.label}
-                                  pathname={pathname}
-                                />
-                              );
-                            },
-                          )}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </SidebarMenuSubItem>
-                );
-              })}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </Collapsible>
-      </SidebarMenuItem>
-    );
-  });
+function resolveSidebarNiche(pathname: string): Niche {
+  const fromPath = nicheFromPathname(pathname);
+  if (fromPath !== "agence" || pathname.includes("/agence")) {
+    return fromPath;
+  }
+  return readStoredNiche() ?? fromPath;
 }
 
 export function InternalAppSidebar() {
   const pathname = usePathname();
-  const audience = audienceFromPathname(pathname);
-  const audienceHref = pathToHref([audience]);
+  const [niche, setNiche] = useState<Niche>(() => resolveSidebarNiche(pathname));
+
+  useEffect(() => {
+    setNiche(resolveSidebarNiche(pathname));
+  }, [pathname]);
 
   return (
     <Sidebar collapsible="icon">
@@ -284,34 +169,20 @@ export function InternalAppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>
-            Parcours · {AUDIENCE_LABELS[audience]}
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>Parcours</SidebarGroupLabel>
           <SidebarGroupContent>
+            <div className="px-2 pb-3">
+              <NicheSwitcher className="w-full justify-start" />
+            </div>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === audienceHref}
-                  tooltip="Modules"
-                >
-                  <Link href={audienceHref}>
-                    <LayoutGrid className="size-4" />
-                    <span>Modules</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {Object.entries(MODULES).map(([moduleId, module]) => {
-                const path = [audience, moduleId];
-                const href = pathToHref(path);
-                const Icon = MODULE_ICONS[moduleId] ?? LayoutGrid;
-                const hasChildren =
-                  module.children && Object.keys(module.children).length > 0;
+              {PARCOURS_MODULES.map((module) => {
+                const href = module.href(niche);
+                const Icon = module.icon;
+                const hasChildren = Boolean(module.children?.length);
 
                 if (!hasChildren) {
                   return (
-                    <SidebarMenuItem key={moduleId}>
+                    <SidebarMenuItem key={module.id}>
                       <SidebarMenuButton
                         asChild
                         isActive={isPathActive(pathname, href)}
@@ -326,11 +197,11 @@ export function InternalAppSidebar() {
                   );
                 }
 
-                const branchOpen = isPathInBranch(pathname, path);
+                const branchOpen = isPathActive(pathname, href);
 
                 return (
                   <Collapsible
-                    key={moduleId}
+                    key={module.id}
                     defaultOpen={branchOpen}
                     className="group/collapsible"
                   >
@@ -349,7 +220,19 @@ export function InternalAppSidebar() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {renderNavNodes(pathname, path, module.children!)}
+                          {module.children!.map((child) => {
+                            const childHref = legalHref(niche, child.id);
+                            return (
+                              <SidebarMenuSubItem key={child.id}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isPathActive(pathname, childHref)}
+                                >
+                                  <Link href={childHref}>{child.label}</Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
                         </SidebarMenuSub>
                       </CollapsibleContent>
                     </SidebarMenuItem>

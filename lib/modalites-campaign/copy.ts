@@ -1,8 +1,13 @@
 import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import type { LeadCategory } from "@/lib/link-tracking/types";
+import type { FaqAudience } from "@/lib/site/faq-types";
 
 export function isModalitesCabinetAudience(audience: LeadCategory): boolean {
   return audience === "entreprise" || audience === "comptable";
+}
+
+export function modalitesFaqAudience(category: LeadCategory): FaqAudience {
+  return category === "agence" ? "agence" : "comptable";
 }
 
 /** Campaign-only agence prices — do not write to payments.offer_type. */

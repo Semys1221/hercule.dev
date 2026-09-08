@@ -38,11 +38,15 @@ import {
 import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
-import type { Audience } from "@/lib/admin/navigation";
+import {
+  primaryConfirmationLink,
+  primaryReservationLink,
+} from "@/lib/calendly/enrich-bookings";
+import type { Niche } from "@/lib/admin/navigation";
 import type { SalesCallStatus } from "@/lib/sales-calls/types";
 
 type BookingsTableProps = {
-  audience: Audience;
+  niche: Niche;
 };
 
 type ChannelStatus = "sent" | "skipped" | "error";
@@ -186,7 +190,7 @@ function formatNotPresentFeedback(
   return parts.join(" · ");
 }
 
-export function BookingsTable({ audience }: BookingsTableProps) {
+export function BookingsTable({ niche }: BookingsTableProps) {
   const [rows, setRows] = useState<EnrichedCalendlyBooking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,7 +208,8 @@ export function BookingsTable({ audience }: BookingsTableProps) {
     Record<string, BookingEmailJobSummary[]>
   >({});
 
-  const isAgenceScope = audience === "agence";
+  const [campaignLinked, setCampaignLinked] = useState(false);
+  const [calendlyConfigured, setCalendlyConfigured] = useState(true);
 
   const fetchEmailJobs = useCallback(async (bookings: EnrichedCalendlyBooking[]) => {
     const leadIds = [
@@ -241,27 +246,28 @@ export function BookingsTable({ audience }: BookingsTableProps) {
 
   const fetchBookings = useCallback(
     async (fresh = false) => {
-      if (!isAgenceScope) {
-        setRows([]);
-        setError("Le module Bookings est disponible pour l'audience agence uniquement.");
-        return;
-      }
-
       setLoading(true);
       setError(null);
 
       try {
-        const { bookings, error: fetchError } = await fetchEnrichedBookings(audience, {
+        const {
+          bookings,
+          error: fetchError,
+          calendlyConfigured: configured,
+          campaignLinked: linked,
+        } = await fetchEnrichedBookings(niche, {
           fresh,
           daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
         });
+        setCalendlyConfigured(configured ?? true);
+        setCampaignLinked(linked ?? false);
         if (fetchError) {
           throw new Error(fetchError);
         }
 
         setRows(bookings);
         await fetchEmailJobs(bookings);
-        if (bookings.length === 0) {
+        if (bookings.length === 0 && configured) {
           setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
         }
       } catch (fetchError) {
@@ -275,7 +281,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         setLoading(false);
       }
     },
-    [audience, fetchEmailJobs, isAgenceScope],
+    [niche, fetchEmailJobs],
   );
 
   useEffect(() => {
@@ -530,7 +536,7 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         <Button
           type="button"
           onClick={() => void fetchBookings(true)}
-          disabled={loading || !isAgenceScope}
+          disabled={loading}
         >
           {loading ? "Chargement…" : "Rafraîchir"}
         </Button>
@@ -551,9 +557,27 @@ export function BookingsTable({ audience }: BookingsTableProps) {
         <InternalStatusAlert variant="success" message={confirmMessage} />
       ) : null}
 
-      {isAgenceScope && sortedRows.length > 0 ? (
+      {!calendlyConfigured ? (
+        <InternalStatusAlert
+          variant="error"
+          message={
+            niche === "comptable"
+              ? "Event Calendly comptable non configuré — renseignez l'URI dans l'onglet DB ou CALENDLY_EVENT_TYPE_URI_COMPTABLE."
+              : `Event Calendly ${niche} non configuré — renseignez l'URI dans l'onglet DB.`
+          }
+        />
+      ) : null}
+
+      {calendlyConfigured ? (
+        <BookingsStatsBar
+          niche={niche}
+          rows={sortedRows}
+          campaignLinked={campaignLinked}
+        />
+      ) : null}
+
+      {sortedRows.length > 0 ? (
         <>
-          <BookingsStatsBar rows={sortedRows} />
           <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
@@ -644,13 +668,19 @@ export function BookingsTable({ audience }: BookingsTableProps) {
                     </TableCell>
                     <TableCell className="min-w-[7rem]">
                       <LinkActions
-                        href={row.links.reservation_agence_link}
+                        href={primaryReservationLink(
+                          row.links,
+                          row.lead_category ?? row.booking_category,
+                        )}
                         label="Réservation"
                       />
                     </TableCell>
                     <TableCell className="min-w-[7rem]">
                       <LinkActions
-                        href={row.links.confirmation_agence_link}
+                        href={primaryConfirmationLink(
+                          row.links,
+                          row.lead_category ?? row.booking_category,
+                        )}
                         label="Confirmation"
                       />
                     </TableCell>

@@ -22,7 +22,7 @@ import {
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
-import { pathToHref, type Audience } from "@/lib/admin/navigation";
+import { sessionHubHref, pathToHref, type Audience } from "@/lib/admin/navigation";
 import { SESSION_PHASE_QUALIFICATION } from "@/lib/admin/funnels/ui-copy";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 
@@ -103,7 +103,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     audience,
   );
 
-  const exitHref = pathToHref([audience, "sales"]);
+  const exitHref = sessionHubHref(audience);
   const settingsHref = pathToHref([audience, "sales", "funnel", "settings"]);
   const activeSectionId = phase === "closing" ? activeClosingId : activeQualificationId;
 

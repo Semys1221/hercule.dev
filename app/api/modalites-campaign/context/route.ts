@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { formatMeetingDateTime } from "@/lib/booking-communication/templates";
 import {
   modalitesFormulas,
+  modalitesFaqAudience,
   modalitesIntro,
   MODALITES_CONFIRM_BUTTON_LABEL,
 } from "@/lib/modalites-campaign/copy";
@@ -11,6 +12,7 @@ import {
   findLeadByEmail,
   findLeadByLink,
 } from "@/lib/link-tracking/supabase";
+import { getFaqEntries } from "@/lib/site/faq";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,6 +34,7 @@ export async function GET(request: Request) {
     }
 
     const { date, heure } = formatMeetingDateTime(lookup.lead.scheduled_at);
+    const faqAudience = modalitesFaqAudience(lookup.category);
     return NextResponse.json({
       ok: true,
       audience: lookup.category,
@@ -45,6 +48,12 @@ export async function GET(request: Request) {
       intro: modalitesIntro(lookup.category),
       formulas: modalitesFormulas(lookup.category),
       buttonLabel: MODALITES_CONFIRM_BUTTON_LABEL,
+      faq: getFaqEntries(faqAudience).map(({ id, question, answer, cvgLink }) => ({
+        id,
+        question,
+        answer,
+        cvgLink: cvgLink ?? false,
+      })),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

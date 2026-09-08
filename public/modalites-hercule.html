@@ -54,7 +54,7 @@
             letter-spacing: -0.02em;
         }
 
-        .intro, .meeting, .formula-detail {
+        .intro, .meeting, .formula-detail, .success-message, .meeting-recap {
             color: var(--muted-foreground);
             font-size: 15px;
             margin: 0 0 16px;
@@ -88,6 +88,61 @@
         .status.error { color: var(--error); }
         .status.pending { color: var(--muted-foreground); }
 
+        .faq { border-top: 1px solid var(--border); padding-top: 24px; margin-top: 32px; }
+        .section-title {
+            margin: 0 0 16px;
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted-foreground);
+        }
+        .accordion { margin: 0; padding: 0; list-style: none; }
+        .accordion-item { border-bottom: 1px solid var(--border); }
+        .accordion-trigger {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 0;
+            background: none;
+            border: 0;
+            color: var(--foreground);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: left;
+            line-height: 1.45;
+            cursor: pointer;
+        }
+        .accordion-chevron {
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+            color: var(--muted-foreground);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+        .accordion-item.is-open .accordion-chevron { transform: rotate(180deg); }
+        .accordion-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.25s ease; }
+        .accordion-item.is-open .accordion-panel { grid-template-rows: 1fr; }
+        .accordion-panel-inner { overflow: hidden; }
+        .accordion-panel-inner p {
+            color: var(--muted-foreground);
+            font-size: 14px;
+            line-height: 1.65;
+            margin: 0 0 12px;
+            text-align: left;
+        }
+        .accordion-panel-inner p:last-child { margin-bottom: 16px; }
+        .accordion-panel-inner a {
+            color: var(--foreground);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .accordion-panel-inner a:hover { color: var(--accent); }
+
         .is-hidden { display: none !important; }
     </style>
 </head>
@@ -101,11 +156,23 @@
             <span>Hercule</span>
         </div>
 
-        <h1>Modalités d'Hercule</h1>
-        <p class="intro" id="intro">Chargement de votre rendez-vous…</p>
-        <p class="meeting is-hidden" id="meeting"></p>
-        <div class="formulas is-hidden" id="formulas"></div>
-        <p id="status" class="status pending" aria-live="polite"></p>
+        <div id="previewView">
+            <h1>Modalités d'Hercule</h1>
+            <p class="intro" id="intro">Chargement de votre rendez-vous…</p>
+            <p class="meeting is-hidden" id="meeting"></p>
+            <div class="formulas is-hidden" id="formulas"></div>
+            <p id="status" class="status pending" aria-live="polite"></p>
+        </div>
+
+        <div id="successView" class="is-hidden">
+            <h1>Votre rendez-vous a été confirmé</h1>
+            <p class="success-message" id="successMessage"></p>
+            <p class="meeting-recap is-hidden" id="meetingRecap"></p>
+            <div class="faq">
+                <p class="section-title">FAQ</p>
+                <ul class="accordion" id="faq"></ul>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -116,22 +183,116 @@
         var alreadyConfirmed = params.get('confirmed') === '1';
         var autoConfirm = params.get('confirm') === '1';
 
+        var previewViewEl = document.getElementById('previewView');
+        var successViewEl = document.getElementById('successView');
         var introEl = document.getElementById('intro');
         var meetingEl = document.getElementById('meeting');
         var formulasEl = document.getElementById('formulas');
         var statusEl = document.getElementById('status');
+        var successMessageEl = document.getElementById('successMessage');
+        var meetingRecapEl = document.getElementById('meetingRecap');
+        var faqEl = document.getElementById('faq');
 
-        function showSuccess(already) {
-            introEl.textContent = '';
-            meetingEl.classList.add('is-hidden');
-            formulasEl.classList.add('is-hidden');
-            statusEl.textContent = already
+        var lastContext = null;
+
+        function initAccordionGroup(container, itemSelector) {
+            if (!container) return;
+            var items = container.querySelectorAll(itemSelector);
+            items.forEach(function(item) {
+                var trigger = item.querySelector('[data-accordion-trigger]');
+                if (!trigger) return;
+                trigger.addEventListener('click', function() {
+                    var isOpen = item.classList.contains('is-open');
+                    items.forEach(function(other) {
+                        other.classList.remove('is-open');
+                        var otherTrigger = other.querySelector('[data-accordion-trigger]');
+                        if (otherTrigger) otherTrigger.setAttribute('aria-expanded', 'false');
+                    });
+                    if (!isOpen) {
+                        item.classList.add('is-open');
+                        trigger.setAttribute('aria-expanded', 'true');
+                    }
+                });
+            });
+        }
+
+        function renderFaq(entries) {
+            faqEl.innerHTML = '';
+            (entries || []).forEach(function(entry) {
+                var item = document.createElement('li');
+                item.className = 'accordion-item';
+
+                var trigger = document.createElement('button');
+                trigger.className = 'accordion-trigger';
+                trigger.type = 'button';
+                trigger.setAttribute('data-accordion-trigger', '');
+                trigger.setAttribute('aria-expanded', 'false');
+
+                var question = document.createElement('span');
+                question.textContent = entry.question;
+                trigger.appendChild(question);
+
+                var chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                chevron.setAttribute('class', 'accordion-chevron');
+                chevron.setAttribute('viewBox', '0 0 24 24');
+                chevron.setAttribute('fill', 'none');
+                chevron.setAttribute('stroke', 'currentColor');
+                chevron.setAttribute('stroke-width', '2');
+                chevron.setAttribute('aria-hidden', 'true');
+                var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M6 9l6 6 6-6');
+                chevron.appendChild(path);
+                trigger.appendChild(chevron);
+
+                var panel = document.createElement('div');
+                panel.className = 'accordion-panel';
+
+                var panelInner = document.createElement('div');
+                panelInner.className = 'accordion-panel-inner';
+
+                var answer = document.createElement('p');
+                answer.textContent = entry.answer;
+                panelInner.appendChild(answer);
+
+                if (entry.cvgLink) {
+                    var cvg = document.createElement('p');
+                    var link = document.createElement('a');
+                    link.href = '/cvg';
+                    link.textContent = 'Voir les CGV';
+                    cvg.appendChild(link);
+                    panelInner.appendChild(cvg);
+                }
+
+                panel.appendChild(panelInner);
+                item.appendChild(trigger);
+                item.appendChild(panel);
+                faqEl.appendChild(item);
+            });
+            initAccordionGroup(faqEl, '.accordion-item');
+        }
+
+        function showConfirmedPage(context, already) {
+            previewViewEl.classList.add('is-hidden');
+            successViewEl.classList.remove('is-hidden');
+
+            successMessageEl.textContent = already
                 ? 'Votre rendez-vous était déjà confirmé. Merci.'
-                : 'Votre créneau a bien été confirmé. Merci.';
-            statusEl.className = 'status ok';
+                : 'Merci.';
+
+            if (context && context.date && context.heure) {
+                meetingRecapEl.textContent =
+                    'Votre rendez-vous est prévu le ' + context.date + ' à ' + context.heure + ' (heure de Paris).';
+                meetingRecapEl.classList.remove('is-hidden');
+            } else {
+                meetingRecapEl.classList.add('is-hidden');
+            }
+
+            renderFaq(context && context.faq ? context.faq : []);
         }
 
         function showError(message) {
+            previewViewEl.classList.remove('is-hidden');
+            successViewEl.classList.add('is-hidden');
             introEl.textContent = '';
             meetingEl.classList.add('is-hidden');
             formulasEl.classList.add('is-hidden');
@@ -172,6 +333,19 @@
             formulasEl.classList.remove('is-hidden');
         }
 
+        async function fetchContext() {
+            var query = new URLSearchParams();
+            if (slug) query.set('slug', slug);
+            if (email) query.set('email', email);
+            var res = await fetch('/api/modalites-campaign/context?' + query.toString());
+            var data = await res.json();
+            if (!res.ok || data.ok === false) {
+                throw new Error(data.error || data.reason || 'Lien introuvable');
+            }
+            lastContext = data;
+            return data;
+        }
+
         async function confirmPresence() {
             if (!slug && !email) {
                 showError('Lien invalide : identifiant manquant. Ouvrez ce lien depuis l\'email.');
@@ -190,7 +364,7 @@
                     throw new Error(data.error || data.reason || 'Échec');
                 }
                 markConfirmedInUrl();
-                showSuccess(Boolean(data.alreadyConfirmed));
+                showConfirmedPage(lastContext, Boolean(data.alreadyConfirmed));
             } catch (err) {
                 showError(err instanceof Error ? err.message : 'Impossible de confirmer.');
             }
@@ -201,25 +375,14 @@
                 showError('Lien invalide : identifiant manquant. Ouvrez ce lien depuis l\'email.');
                 return;
             }
-            if (alreadyConfirmed) {
-                showSuccess(true);
-                return;
-            }
             try {
-                var query = new URLSearchParams();
-                if (slug) query.set('slug', slug);
-                if (email) query.set('email', email);
-                var res = await fetch('/api/modalites-campaign/context?' + query.toString());
-                var data = await res.json();
-                if (!res.ok || data.ok === false) {
-                    throw new Error(data.error || data.reason || 'Lien introuvable');
-                }
+                var data = await fetchContext();
                 if (data.cancelled) {
                     showError('Ce rendez-vous a déjà été annulé.');
                     return;
                 }
-                if (data.alreadyConfirmed) {
-                    showSuccess(true);
+                if (data.alreadyConfirmed || alreadyConfirmed) {
+                    showConfirmedPage(data, true);
                     return;
                 }
                 if (autoConfirm) {

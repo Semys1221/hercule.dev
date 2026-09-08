@@ -448,7 +448,7 @@ export function isEmailSequenceSlug(slug: string): boolean {
 }
 
 export function emailSequenceHref(audience: Audience, slug: string): string {
-  return `/internal/funnels/${audience}/emails/${slug}`;
+  return `/internal/funnels/emails/${audience}/${slug}`;
 }
 
 export function emailsHubHref(audience: Audience): string {

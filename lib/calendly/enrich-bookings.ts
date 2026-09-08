@@ -15,13 +15,16 @@ import {
 } from "@/lib/sales-calls/supabase";
 import type { SalesCallStatus } from "@/lib/sales-calls/types";
 import {
+  buildComptableLeadUrls,
   buildDashboardUrl,
   buildLeadUrls,
   buildEntreprisePostBookingUrl,
   confirmationAgenceLinkFor,
+  confirmationComptableLinkFor,
   dashboardLinkFor,
   postBookingLinkFor,
   reservationAgenceLinkFor,
+  reservationComptableLinkFor,
   reservationEntrepriseLinkFor,
 } from "@/lib/link-tracking/urls";
 import type { LeadCategory } from "@/lib/link-tracking/types";
@@ -29,7 +32,9 @@ import type { LeadCategory } from "@/lib/link-tracking/types";
 export type BookingDisplayLinks = {
   reservation_agence_link: string | null;
   reservation_entreprise_link: string | null;
+  reservation_comptable_link: string | null;
   confirmation_agence_link: string | null;
+  confirmation_comptable_link: string | null;
   dashboard_link: string | null;
   calendly_join_url: string | null;
   calendly_reschedule_url: string | null;
@@ -87,20 +92,28 @@ export function buildCrmLinks(
   BookingDisplayLinks,
   | "reservation_agence_link"
   | "reservation_entreprise_link"
+  | "reservation_comptable_link"
   | "confirmation_agence_link"
+  | "confirmation_comptable_link"
   | "dashboard_link"
 > {
   if (lead) {
     const reservationAgence = reservationAgenceLinkFor(lead);
     const reservationEntreprise = reservationEntrepriseLinkFor(lead);
+    const reservationComptable = reservationComptableLinkFor(lead);
     const confirmationLink =
       leadCategory === "entreprise"
         ? postBookingLinkFor(lead)
-        : confirmationAgenceLinkFor(lead);
+        : leadCategory === "comptable"
+          ? confirmationComptableLinkFor(lead)
+          : confirmationAgenceLinkFor(lead);
     return {
       reservation_agence_link: reservationAgence || null,
       reservation_entreprise_link: reservationEntreprise || null,
+      reservation_comptable_link: reservationComptable || null,
       confirmation_agence_link: confirmationLink,
+      confirmation_comptable_link:
+        leadCategory === "comptable" ? confirmationLink : confirmationComptableLinkFor(lead),
       dashboard_link: dashboardLinkFor(lead),
     };
   }
@@ -110,20 +123,35 @@ export function buildCrmLinks(
     return {
       reservation_agence_link: null,
       reservation_entreprise_link: null,
+      reservation_comptable_link: null,
       confirmation_agence_link: null,
+      confirmation_comptable_link: null,
       dashboard_link: null,
     };
   }
 
   const urls = buildLeadUrls(resolvedSlug, email);
   const category = leadCategory ?? "agence";
+  if (category === "comptable") {
+    const comptableUrls = buildComptableLeadUrls(resolvedSlug, email);
+    return {
+      reservation_agence_link: urls.reservation_agence_link,
+      reservation_entreprise_link: urls.reservation_entreprise_link,
+      reservation_comptable_link: comptableUrls.reservation_comptable_link,
+      confirmation_agence_link: urls.confirmation_agence_link,
+      confirmation_comptable_link: comptableUrls.confirmation_comptable_link,
+      dashboard_link: comptableUrls.dashboard_link,
+    };
+  }
   return {
     reservation_agence_link: urls.reservation_agence_link,
     reservation_entreprise_link: urls.reservation_entreprise_link,
+    reservation_comptable_link: urls.reservation_comptable_link ?? null,
     confirmation_agence_link:
       category === "entreprise"
         ? buildEntreprisePostBookingUrl(resolvedSlug, email)
         : urls.confirmation_agence_link,
+    confirmation_comptable_link: urls.confirmation_comptable_link ?? null,
     dashboard_link: buildDashboardUrl(resolvedSlug),
   };
 }
@@ -131,14 +159,30 @@ export function buildCrmLinks(
 export function primaryReservationLink(
   links: Pick<
     BookingDisplayLinks,
-    "reservation_agence_link" | "reservation_entreprise_link"
+    "reservation_agence_link" | "reservation_entreprise_link" | "reservation_comptable_link"
   >,
   leadCategory: LeadCategory | null,
 ): string | null {
   if (leadCategory === "entreprise") {
     return links.reservation_entreprise_link ?? links.reservation_agence_link;
   }
+  if (leadCategory === "comptable") {
+    return links.reservation_comptable_link ?? links.reservation_agence_link;
+  }
   return links.reservation_agence_link ?? links.reservation_entreprise_link;
+}
+
+export function primaryConfirmationLink(
+  links: Pick<
+    BookingDisplayLinks,
+    "confirmation_agence_link" | "confirmation_comptable_link"
+  >,
+  leadCategory: LeadCategory | null,
+): string | null {
+  if (leadCategory === "comptable") {
+    return links.confirmation_comptable_link ?? links.confirmation_agence_link;
+  }
+  return links.confirmation_agence_link ?? links.confirmation_comptable_link;
 }
 
 export function buildDisplayLinks(

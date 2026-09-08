@@ -10,8 +10,11 @@ import {
 
 export type { LeadCategory };
 
-/** Funnel / legal / FAQ audiences — includes verticals without CRM tables. */
-export type Audience = LeadCategory | "comptable";
+/** Transversal niche axis (spec §2.3). */
+export type Niche = LeadCategory;
+
+/** @deprecated Use Niche — kept for transitional imports. */
+export type Audience = Niche;
 
 export type NavNode = {
   label: string;
@@ -20,25 +23,49 @@ export type NavNode = {
   leaf?: string;
 };
 
-export const AUDIENCE_LABELS: Record<Audience, string> = {
+export const NICHE_LABELS: Record<Niche, string> = {
   agence: "Agence",
   entreprise: "Entreprise",
   comptable: "Comptable",
 };
 
-export const AUDIENCE_ICONS: Record<Audience, string> = {
+/** @deprecated Use NICHE_LABELS */
+export const AUDIENCE_LABELS = NICHE_LABELS;
+
+export const NICHE_ICONS: Record<Niche, string> = {
   agence: "🏢",
   entreprise: "🏭",
   comptable: "📊",
 };
 
-export const AUDIENCE_CAPTIONS: Record<Audience, string> = {
+/** @deprecated Use NICHE_ICONS */
+export const AUDIENCE_ICONS = NICHE_ICONS;
+
+export const NICHE_CAPTIONS: Record<Niche, string> = {
   agence: "Buyer — agences partenaires qui reçoivent des contrats.",
   entreprise: "Seller — entreprises qui recherchent une agence.",
   comptable: "Buyer — cabinets d'expertise comptable partenaires.",
 };
 
-const ALL_AUDIENCES: Audience[] = ["agence", "entreprise", "comptable"];
+/** @deprecated Use NICHE_CAPTIONS */
+export const AUDIENCE_CAPTIONS = NICHE_CAPTIONS;
+
+export const ALL_NICHES: Niche[] = ["agence", "entreprise", "comptable"];
+
+/** @deprecated Use ALL_NICHES */
+const ALL_AUDIENCES = ALL_NICHES;
+
+export const NICHE_STORAGE_KEY = "hercule:niche";
+
+export const LEGAL_DOC_SEGMENTS = [
+  "cgv",
+  "mentions",
+  "confidentialite",
+  "faq",
+  "pricing",
+] as const;
+
+export type LegalDocSegment = (typeof LEGAL_DOC_SEGMENTS)[number];
 
 function legalTree(): Record<string, NavNode> {
   return {
@@ -67,7 +94,7 @@ const FULL_MODULES: Record<string, NavNode> = {
   },
   legal: {
     label: "CVG & légal",
-    caption: "Documents légaux par audience.",
+    caption: "Documents légaux par niche.",
     children: legalTree(),
   },
   emails: {
@@ -77,25 +104,31 @@ const FULL_MODULES: Record<string, NavNode> = {
   },
 };
 
-const COMPTABLE_MODULES: Record<string, NavNode> = {
-  sales: FULL_MODULES.sales,
-  legal: FULL_MODULES.legal,
-};
-
 export const MODULES = FULL_MODULES;
 
+export function isNiche(value: string): value is Niche {
+  return ALL_NICHES.includes(value as Niche);
+}
+
+/** @deprecated Use isNiche */
 export function isAudience(value: string): value is Audience {
-  return ALL_AUDIENCES.includes(value as Audience);
+  return isNiche(value);
 }
 
 export function isLeadCategory(value: string): value is LeadCategory {
   return value === "agence" || value === "comptable" || value === "entreprise";
 }
 
+export function isLegalDocSegment(value: string): value is LegalDocSegment {
+  return (LEGAL_DOC_SEGMENTS as readonly string[]).includes(value);
+}
+
 export function getModulesForAudience(audience: Audience): Record<string, NavNode> {
-  if (audience === "comptable") {
-    return COMPTABLE_MODULES;
-  }
+  return FULL_MODULES;
+}
+
+/** @deprecated Use getModulesForAudience — all niches share the same module set. */
+export function getModulesForNiche(niche: Niche): Record<string, NavNode> {
   return FULL_MODULES;
 }
 
@@ -109,11 +142,11 @@ export function normalizePath(path: string[]): string[] {
   }
 
   const audience = path[0];
-  if (!isAudience(audience)) {
+  if (!isNiche(audience)) {
     return [audience];
   }
 
-  let currentChildren = getModulesForAudience(audience);
+  let currentChildren = getModulesForNiche(audience);
   const normalized: string[] = [audience];
 
   for (const segment of path.slice(1)) {
@@ -134,11 +167,11 @@ export function resolveNode(path: string[]): NavNode | null {
   }
 
   const audience = path[0];
-  if (!isAudience(audience)) {
+  if (!isNiche(audience)) {
     return null;
   }
 
-  let node: NavNode | undefined = getModulesForAudience(audience)[path[1]];
+  let node: NavNode | undefined = getModulesForNiche(audience)[path[1]];
   for (const segment of path.slice(2)) {
     if (!node) {
       return null;
@@ -150,8 +183,8 @@ export function resolveNode(path: string[]): NavNode | null {
 }
 
 export function getChildren(path: string[]): Record<string, NavNode> {
-  if (path.length === 1 && isAudience(path[0])) {
-    return getModulesForAudience(path[0]);
+  if (path.length === 1 && isNiche(path[0])) {
+    return getModulesForNiche(path[0]);
   }
 
   const node = resolveNode(path);
@@ -163,7 +196,7 @@ export function getChildren(path: string[]): Record<string, NavNode> {
 }
 
 export function isHub(path: string[]): boolean {
-  if (path.length === 1 && isAudience(path[0])) {
+  if (path.length === 1 && isNiche(path[0])) {
     return true;
   }
 
@@ -189,14 +222,14 @@ export function breadcrumb(path: string[]): string {
     return labels.join(" › ");
   }
 
-  if (isAudience(path[0])) {
-    labels.push(AUDIENCE_LABELS[path[0]]);
+  if (isNiche(path[0])) {
+    labels.push(NICHE_LABELS[path[0]]);
   } else {
     labels.push(path[0]);
   }
 
-  const audience = isAudience(path[0]) ? path[0] : null;
-  let currentChildren = audience ? getModulesForAudience(audience) : MODULES;
+  const audience = isNiche(path[0]) ? path[0] : null;
+  let currentChildren = audience ? getModulesForNiche(audience) : MODULES;
   for (const segment of path.slice(1)) {
     const node = currentChildren[segment];
     if (!node) {
@@ -217,12 +250,88 @@ export function pathToHref(path: string[]): string {
   return `/internal/funnels/${path.join("/")}`;
 }
 
-export function salesFunnelHref(audience: Audience): string {
-  return pathToHref([audience, "sales", "funnel"]);
+/** Live session funnel — URL unchanged (spec §2.2). */
+export function salesFunnelHref(niche: Niche): string {
+  return pathToHref([niche, "sales", "funnel"]);
 }
 
-export function clientsHubHref(audience: Audience = "agence"): string {
-  return pathToHref([audience, "clients"]);
+export function sessionHubHref(niche: Niche): string {
+  return `/internal/funnels/session/${niche}`;
+}
+
+export function bookingsHref(niche: Niche): string {
+  return `/internal/funnels/bookings/${niche}`;
+}
+
+export function clientsHubHref(niche: Niche = "agence"): string {
+  return `/internal/funnels/clients/${niche}`;
+}
+
+export function legalHref(niche: Niche, doc?: LegalDocSegment): string {
+  if (!doc) {
+    return `/internal/funnels/legal/${niche}`;
+  }
+  return `/internal/funnels/legal/${niche}/${doc}`;
+}
+
+export function emailsHref(niche: Niche, slug?: string): string {
+  if (!slug) {
+    return `/internal/funnels/emails/${niche}`;
+  }
+  return `/internal/funnels/emails/${niche}/${slug}`;
+}
+
+const MODULE_FIRST_PATTERNS: Array<{ module: string; pattern: RegExp }> = [
+  { module: "session", pattern: /^\/internal\/funnels\/session\/(agence|comptable|entreprise)/ },
+  { module: "bookings", pattern: /^\/internal\/funnels\/bookings\/(agence|comptable|entreprise)/ },
+  { module: "clients", pattern: /^\/internal\/funnels\/clients\/(agence|comptable|entreprise)/ },
+  { module: "legal", pattern: /^\/internal\/funnels\/legal\/(agence|comptable|entreprise)/ },
+  { module: "emails", pattern: /^\/internal\/funnels\/emails\/(agence|comptable|entreprise)/ },
+];
+
+/**
+ * Extract niche from pathname — supports module-first and legacy audience-first URLs.
+ */
+export function nicheFromPathname(pathname: string): Niche {
+  for (const { pattern } of MODULE_FIRST_PATTERNS) {
+    const match = pathname.match(pattern);
+    if (match?.[1] && isNiche(match[1])) {
+      return match[1];
+    }
+  }
+
+  const legacyFunnel = pathname.match(
+    /^\/internal\/funnels\/(agence|comptable|entreprise)/,
+  );
+  if (legacyFunnel?.[1] && isNiche(legacyFunnel[1])) {
+    return legacyFunnel[1];
+  }
+
+  const cockpitMatch = pathname.match(
+    /^\/internal\/clients\/(agence|comptable|entreprise)/,
+  );
+  if (cockpitMatch?.[1] && isNiche(cockpitMatch[1])) {
+    return cockpitMatch[1];
+  }
+
+  return "agence";
+}
+
+export function moduleFromPathname(pathname: string): string | null {
+  for (const { module, pattern } of MODULE_FIRST_PATTERNS) {
+    if (pattern.test(pathname)) {
+      return module;
+    }
+  }
+
+  const legacy = pathname.match(
+    /^\/internal\/funnels\/(agence|comptable|entreprise)\/([^/]+)/,
+  );
+  if (legacy?.[2]) {
+    return legacy[2];
+  }
+
+  return null;
 }
 
 export function hubTitle(path: string[]): string {

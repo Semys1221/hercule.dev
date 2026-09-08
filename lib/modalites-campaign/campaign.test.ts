@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 
 import {
   modalitesAskBody,
+  modalitesFaqAudience,
   modalitesFormulas,
   MODALITES_AGENCE_GROWTH_TTC_CENTS,
   MODALITES_AGENCE_LAUNCH_TTC_CENTS,
@@ -106,6 +107,10 @@ function main() {
     autoConfirm: true,
   });
   assert.match(autoUrl, /confirm=1/);
+
+  assert.equal(modalitesFaqAudience("agence"), "agence");
+  assert.equal(modalitesFaqAudience("entreprise"), "comptable");
+  assert.equal(modalitesFaqAudience("comptable"), "comptable");
 
   assert.equal(MODALITES_SUBJECT, "Modalités d'Hercule");
   assert.equal(MODALITES_AGENCE_GROWTH_TTC_CENTS, 149_800);

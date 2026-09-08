@@ -15,6 +15,7 @@ import {
   findLeadsBySlugs,
   normalizeEmail,
 } from "@/lib/link-tracking/supabase";
+import { resolveCalendlyEventTypeUri } from "@/lib/admin/niches/outreach-config";
 import type { LeadCategory, LeadLookup } from "@/lib/link-tracking/types";
 
 const CALENDLY_API = "https://api.calendly.com";
@@ -322,6 +323,9 @@ async function fetchEventInvitees(
 export async function listUpcomingBookings(options: {
   daysAhead?: number;
   daysBehind?: number;
+  /** Bookings CRM: filter by Calendly event type URI for this niche. */
+  niche?: LeadCategory;
+  /** Legacy: post-filter by resolved lead category (non-CRM callers). */
   category?: LeadCategory;
   now?: Date;
 }): Promise<CalendlyBookingRow[]> {
@@ -333,13 +337,23 @@ export async function listUpcomingBookings(options: {
   const minTime = new Date(now.getTime() - daysBehind * 24 * 60 * 60 * 1000);
   const maxTime = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
 
-  const events = await paginate("/scheduled_events", {
+  const listParams: Record<string, string> = {
     user: userUri,
     status: "active",
     min_start_time: minTime.toISOString(),
     max_start_time: maxTime.toISOString(),
     count: "100",
-  });
+  };
+
+  if (options.niche) {
+    const eventTypeUri = await resolveCalendlyEventTypeUri(options.niche);
+    if (!eventTypeUri) {
+      return [];
+    }
+    listParams.event_type = eventTypeUri;
+  }
+
+  const events = await paginate("/scheduled_events", listParams);
 
   const parsedInvitees = (
     await mapWithConcurrency(events, INVITEE_FETCH_CONCURRENCY, (event) =>
@@ -382,7 +396,7 @@ export async function listUpcomingBookings(options: {
     const lookup = lookupByKey.get(lookupKey) ?? null;
     const bookingCategory = resolveBookingCategory(utmContent, lookup);
 
-    if (options.category && bookingCategory !== options.category) {
+    if (!options.niche && options.category && bookingCategory !== options.category) {
       continue;
     }
 

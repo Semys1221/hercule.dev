@@ -14,6 +14,19 @@ export type BookingStats = {
   soldPercent: number | null;
 };
 
+export type OutreachStatsInput = {
+  sent: number;
+  replies?: number;
+  interested?: number;
+};
+
+export type ExtendedBookingStats = BookingStats & {
+  bookingRate: number | null;
+  sent: number | null;
+  replyPercent: number | null;
+  positivePercent: number | null;
+};
+
 function isPastBooking(startTime: string, now = Date.now()): boolean {
   const scheduledAt = new Date(startTime).getTime();
   if (Number.isNaN(scheduledAt)) {
@@ -22,11 +35,15 @@ function isPastBooking(startTime: string, now = Date.now()): boolean {
   return scheduledAt < now;
 }
 
-function percent(count: number, total: number): number | null {
+export function percent(count: number, total: number): number | null {
   if (total <= 0) {
     return null;
   }
   return Math.round((count / total) * 100);
+}
+
+export function computeBookingRate(booked: number, sent: number): number | null {
+  return percent(booked, sent);
 }
 
 export function computeBookingStats(
@@ -49,9 +66,44 @@ export function computeBookingStats(
   };
 }
 
+export function computeExtendedBookingStats(
+  rows: BookingStatsInput[],
+  outreach?: OutreachStatsInput | null,
+  now = Date.now(),
+): ExtendedBookingStats {
+  const base = computeBookingStats(rows, now);
+  const sent = outreach?.sent ?? null;
+  const replyPercent =
+    outreach && sent !== null
+      ? percent(outreach.replies ?? 0, sent)
+      : null;
+  const positivePercent =
+    outreach && sent !== null
+      ? percent(outreach.interested ?? 0, sent)
+      : null;
+
+  return {
+    ...base,
+    bookingRate: sent !== null ? computeBookingRate(base.totalBooked, sent) : null,
+    sent,
+    replyPercent,
+    positivePercent,
+  };
+}
+
 export function formatBookingPercent(value: number | null): string {
   if (value === null) {
     return "—";
   }
   return `${value} %`;
+}
+
+export function formatBookingRateLabel(
+  booked: number,
+  rate: number | null,
+): string {
+  if (rate === null) {
+    return String(booked);
+  }
+  return `${booked} (${formatBookingPercent(rate).replace(" %", " %")})`;
 }

@@ -1,28 +1,45 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Audience } from "@/lib/admin/navigation";
+import type { Niche } from "@/lib/admin/navigation";
 
 import { BookingsTable } from "./bookings-table";
+import { BookingsDbTab } from "./bookings-db-tab";
 import { ConfirmSequenceTab } from "./confirm-sequence-tab";
+import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
+import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 
 type BookingsShellProps = {
-  audience: Audience;
+  niche: Niche;
 };
 
-export function BookingsShell({ audience }: BookingsShellProps) {
+export function BookingsShell({ niche }: BookingsShellProps) {
   return (
-    <Tabs defaultValue="bookings" className="space-y-4">
-      <TabsList>
-        <TabsTrigger value="bookings">Bookings</TabsTrigger>
-        <TabsTrigger value="confirm-sequence">Confirm sequence</TabsTrigger>
-      </TabsList>
-      <TabsContent value="bookings" className="mt-0">
-        <BookingsTable audience={audience} />
-      </TabsContent>
-      <TabsContent value="confirm-sequence" className="mt-0">
-        <ConfirmSequenceTab />
-      </TabsContent>
-    </Tabs>
+    <div className="flex flex-col gap-4">
+      <NicheSwitcher />
+      <Tabs defaultValue="pipeline" className="flex flex-col gap-4">
+        <TabsList>
+          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="sequences">Séquences</TabsTrigger>
+          <TabsTrigger value="db">DB</TabsTrigger>
+        </TabsList>
+        <TabsContent value="pipeline" className="mt-0">
+          <BookingsTable niche={niche} />
+        </TabsContent>
+        <TabsContent value="sequences" className="mt-0">
+          {niche === "agence" ? (
+            <ConfirmSequenceTab />
+          ) : (
+            <FunnelPlaceholder
+              title="Séquences"
+              detail="Éditeurs de séquences pour cette niche arrivent en Phase 4."
+            />
+          )}
+        </TabsContent>
+        <TabsContent value="db" className="mt-0">
+          <BookingsDbTab niche={niche} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

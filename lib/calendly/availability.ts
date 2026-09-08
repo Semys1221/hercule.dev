@@ -7,22 +7,25 @@ const WINDOW_DAYS = 7;
 const DEFAULT_HORIZON_DAYS = 42;
 const MIN_FUTURE_BUFFER_MS = 60_000;
 
-export type CalendlyBookingEvent = "agence" | "entreprise";
+export type CalendlyBookingEvent = "agence" | "comptable" | "entreprise";
 
 export const CALENDLY_BOOKING_EVENTS: CalendlyBookingEvent[] = [
   "agence",
+  "comptable",
   "entreprise",
 ];
 
-export const CALENDLY_SCHEDULING_URLS: Record<CalendlyBookingEvent, string> = {
+export const CALENDLY_SCHEDULING_URLS: Record<CalendlyBookingEvent, string | null> = {
   agence: "https://calendly.com/hercule-connect/30min",
   entreprise:
     "https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone",
+  comptable: null,
 };
 
 const EVENT_TYPE_URI_ENV: Record<CalendlyBookingEvent, string> = {
   agence: "CALENDLY_EVENT_TYPE_URI_AGENCE",
   entreprise: "CALENDLY_EVENT_TYPE_URI_ENTREPRISE",
+  comptable: "CALENDLY_EVENT_TYPE_URI_COMPTABLE",
 };
 
 const eventTypeUriCache: Partial<Record<CalendlyBookingEvent, string>> = {};
@@ -56,7 +59,11 @@ export function parseBookingEvent(
   value: string | null | undefined,
 ): CalendlyBookingEvent | null {
   const normalized = value?.trim().toLowerCase();
-  if (normalized === "agence" || normalized === "entreprise") {
+  if (
+    normalized === "agence" ||
+    normalized === "entreprise" ||
+    normalized === "comptable"
+  ) {
     return normalized;
   }
   return null;
@@ -201,9 +208,12 @@ export async function getEventTypeUri(
     return fromEnv;
   }
 
-  const resolved = await resolveEventTypeUriBySchedulingUrl(
-    CALENDLY_SCHEDULING_URLS[event],
-  );
+  const schedulingUrl = CALENDLY_SCHEDULING_URLS[event];
+  if (!schedulingUrl) {
+    throw new Error(`Calendly event type not configured for ${event}`);
+  }
+
+  const resolved = await resolveEventTypeUriBySchedulingUrl(schedulingUrl);
   eventTypeUriCache[event] = resolved;
   return resolved;
 }

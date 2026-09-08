@@ -14,7 +14,47 @@ const nextConfig = {
     ],
   },
   async redirects() {
+    const niches = ["agence", "entreprise", "comptable"];
+    const funnelRedirects = niches.flatMap((niche) => [
+      {
+        source: `/internal/funnels/${niche}`,
+        destination: `/internal/funnels/session/${niche}`,
+        permanent: true,
+      },
+      {
+        source: `/internal/funnels/${niche}/sales`,
+        destination: `/internal/funnels/session/${niche}`,
+        permanent: true,
+      },
+      {
+        source: `/internal/funnels/${niche}/bookings`,
+        destination: `/internal/funnels/bookings/${niche}`,
+        permanent: true,
+      },
+      {
+        source: `/internal/funnels/${niche}/clients`,
+        destination: `/internal/funnels/clients/${niche}`,
+        permanent: true,
+      },
+      {
+        source: `/internal/funnels/${niche}/emails`,
+        destination: `/internal/funnels/emails/${niche}`,
+        permanent: true,
+      },
+      {
+        source: `/internal/funnels/${niche}/emails/:slug*`,
+        destination: `/internal/funnels/emails/${niche}/:slug*`,
+        permanent: true,
+      },
+      {
+        source: `/internal/funnels/${niche}/legal/:path*`,
+        destination: `/internal/funnels/legal/${niche}/:path*`,
+        permanent: true,
+      },
+    ]);
+
     return [
+      ...funnelRedirects,
       {
         source: "/entreprise",
         destination: "/",

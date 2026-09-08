@@ -1,6 +1,6 @@
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { BOOKINGS_CACHE_REVALIDATE_SECONDS } from "@/lib/calendly/bookings-cache-constants";
-import type { Audience } from "@/lib/admin/navigation";
+import type { Niche } from "@/lib/admin/navigation";
 
 export type BookingsClientCacheEntry = {
   fetchedAt: number;
@@ -9,8 +9,8 @@ export type BookingsClientCacheEntry = {
 
 type CacheStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
-function cacheKey(audience: Audience, daysBehind = 0): string {
-  return `hercule:calendly-bookings:${audience}:${daysBehind}`;
+function cacheKey(niche: Niche, daysBehind = 0): string {
+  return `hercule:calendly-bookings:${niche}:${daysBehind}`;
 }
 
 function getSessionStorage(): CacheStorage | null {
@@ -32,7 +32,7 @@ export function isBookingsClientCacheEntryValid(
 }
 
 export function readBookingsClientCache(
-  audience: Audience,
+  niche: Niche,
   daysBehind = 0,
   now = Date.now(),
   storage: CacheStorage | null = getSessionStorage(),
@@ -41,7 +41,7 @@ export function readBookingsClientCache(
     return null;
   }
 
-  const raw = storage.getItem(cacheKey(audience, daysBehind));
+    const raw = storage.getItem(cacheKey(niche, daysBehind));
   if (!raw) {
     return null;
   }
@@ -58,19 +58,19 @@ export function readBookingsClientCache(
 
     const ageMs = now - parsed.fetchedAt;
     if (!isBookingsClientCacheEntryValid(parsed, now)) {
-      storage.removeItem(cacheKey(audience, daysBehind));
+      storage.removeItem(cacheKey(niche, daysBehind));
       return null;
     }
 
     return parsed;
   } catch {
-    storage.removeItem(cacheKey(audience, daysBehind));
+    storage.removeItem(cacheKey(niche, daysBehind));
     return null;
   }
 }
 
 export function writeBookingsClientCache(
-  audience: Audience,
+  niche: Niche,
   bookings: EnrichedCalendlyBooking[],
   daysBehind = 0,
   fetchedAt = Date.now(),
@@ -82,16 +82,16 @@ export function writeBookingsClientCache(
 
   const entry: BookingsClientCacheEntry = { fetchedAt, bookings };
   try {
-    storage.setItem(cacheKey(audience, daysBehind), JSON.stringify(entry));
+    storage.setItem(cacheKey(niche, daysBehind), JSON.stringify(entry));
   } catch {
     // sessionStorage full or unavailable — ignore
   }
 }
 
-export function clearBookingsClientCache(audience: Audience, daysBehind = 0): void {
+export function clearBookingsClientCache(niche: Niche, daysBehind = 0): void {
   const storage = getSessionStorage();
   if (!storage) {
     return;
   }
-  storage.removeItem(cacheKey(audience, daysBehind));
+  storage.removeItem(cacheKey(niche, daysBehind));
 }

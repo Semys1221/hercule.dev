@@ -56,7 +56,7 @@ import {
   SESSION_ONBOARDING_DEV_TITLE,
 } from "@/lib/admin/funnels/ui-copy";
 import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode";
-import { pathToHref, type Audience } from "@/lib/admin/navigation";
+import { sessionHubHref, pathToHref, type Audience } from "@/lib/admin/navigation";
 
 type SalesFunnelSettingsPageProps = {
   audience: Audience;

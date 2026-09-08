@@ -150,6 +150,7 @@ export function RendezVousPanel({
 
       try {
         const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
+          legacyCategory: true,
           fresh,
           daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
         });

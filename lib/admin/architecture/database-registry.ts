@@ -113,6 +113,18 @@ const RAW_DATABASE: DatabaseEntry[] = [
     status: "migrated",
   },
   {
+    id: "niche_outreach_config",
+    label: "Niche outreach config",
+    domain: "marketing",
+    purpose: "Campagne Instantly + event type Calendly par niche (Bookings CRM)",
+    keyColumns: "niche, instantly_campaign_id, calendly_event_type_uri, updated_at, updated_by",
+    writers: ["admin"],
+    readers: ["admin", "cron"],
+    profileKeys: "—",
+    relatedTables: [],
+    status: "migrated",
+  },
+  {
     id: "agence_demandes",
     label: "Agence demandes",
     domain: "marketing",
