@@ -8,7 +8,58 @@ import {
   markInstantlySynced,
   markLeadBooked,
 } from "./supabase";
-import { isMeetingBookedStatus, type LeadCategory, type LeadLookup } from "./types";
+import {
+  isMeetingBookedStatus,
+  type LeadCategory,
+  type LeadLookup,
+  type LinkTrackingLead,
+} from "./types";
+
+export function shouldPromoteLeadBeforeConfirm(
+  lead: Pick<LinkTrackingLead, "statut" | "scheduled_at">,
+): boolean {
+  if (
+    isMeetingBookedStatus(lead.statut) ||
+    lead.statut === "CONFIRMED" ||
+    lead.statut === "CANCELLED"
+  ) {
+    return false;
+  }
+  return Boolean(lead.scheduled_at?.trim());
+}
+
+export type EnsureLeadBookedBeforeConfirmResult =
+  | { ok: true; lookup: LeadLookup }
+  | { ok: false; reason: "not_booked_yet" };
+
+export async function ensureLeadBookedBeforeConfirm(
+  lookup: LeadLookup,
+): Promise<EnsureLeadBookedBeforeConfirmResult> {
+  if (isMeetingBookedStatus(lookup.lead.statut)) {
+    return { ok: true, lookup };
+  }
+
+  if (!shouldPromoteLeadBeforeConfirm(lookup.lead)) {
+    return { ok: false, reason: "not_booked_yet" };
+  }
+
+  const client = createLinkTrackingClient();
+  const result = await markLeadBooked(client, {
+    slug: lookup.lead.slug,
+    email: lookup.lead.email,
+    calendlyInviteeUri: lookup.lead.calendly_invitee_uri ?? "",
+    scheduledAt: lookup.lead.scheduled_at,
+    calendlyPayload: lookup.lead.calendly_payload,
+    firstName: lookup.lead.first_name,
+    company: lookup.lead.company,
+  });
+
+  if (!result.lookup || !isMeetingBookedStatus(result.lookup.lead.statut)) {
+    return { ok: false, reason: "not_booked_yet" };
+  }
+
+  return { ok: true, lookup: result.lookup };
+}
 
 export type BookLeadFromCalendlyParams = {
   email: string;

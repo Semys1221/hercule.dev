@@ -290,13 +290,26 @@
             renderFaq(context && context.faq ? context.faq : []);
         }
 
+        function formatConfirmError(reason) {
+            if (reason === 'not_booked_yet') {
+                return 'Votre rendez-vous n\'est pas encore enregistré. Réessayez dans quelques minutes ou contactez-nous.';
+            }
+            if (reason === 'lead_cancelled') {
+                return 'Ce rendez-vous a déjà été annulé.';
+            }
+            if (reason === 'lead_not_found') {
+                return 'Lien introuvable. Ouvrez ce lien depuis l\'email reçu.';
+            }
+            return reason || 'Impossible de confirmer.';
+        }
+
         function showError(message) {
             previewViewEl.classList.remove('is-hidden');
             successViewEl.classList.add('is-hidden');
             introEl.textContent = '';
             meetingEl.classList.add('is-hidden');
             formulasEl.classList.add('is-hidden');
-            statusEl.textContent = message;
+            statusEl.textContent = formatConfirmError(message);
             statusEl.className = 'status error';
         }
 

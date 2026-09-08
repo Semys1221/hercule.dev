@@ -15,7 +15,11 @@ import {
   isTooSoonForModalites,
   MIN_LEAD_MS,
   modalitesEnforceCancelAt,
+  modalitesEnforceCancelAtFromAskSent,
   modalitesWarningAt,
+  modalitesWarningAtFromAskSent,
+  MODALITES_ENFORCE_AFTER_MS,
+  MODALITES_WARNING_AFTER_MS,
 } from "@/lib/modalites-campaign/schedule";
 import { buildModalitesConfirmUrl } from "@/lib/modalites-campaign/urls";
 import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
@@ -51,6 +55,25 @@ function main() {
   const inTwoHoursTen = new Date(now.getTime() + (2 * 60 + 10) * 60 * 1000);
   const warningClamped = modalitesWarningAt(inTwoHoursTen, now);
   assert.equal(warningClamped.getTime(), now.getTime());
+
+  assert.equal(MODALITES_WARNING_AFTER_MS, 23 * 60 * 60 * 1000);
+  assert.equal(MODALITES_ENFORCE_AFTER_MS, 24 * 60 * 60 * 1000);
+
+  const warningFromAsk = modalitesWarningAtFromAskSent(now, now);
+  assert.equal(
+    warningFromAsk.getTime(),
+    now.getTime() + MODALITES_WARNING_AFTER_MS,
+  );
+
+  const enforceFromAsk = modalitesEnforceCancelAtFromAskSent(now, now);
+  assert.equal(
+    enforceFromAsk.getTime(),
+    now.getTime() + MODALITES_ENFORCE_AFTER_MS,
+  );
+
+  const askYesterday = new Date(now.getTime() - 25 * 60 * 60 * 1000);
+  const enforceOverdue = modalitesEnforceCancelAtFromAskSent(askYesterday, now);
+  assert.equal(enforceOverdue.getTime(), now.getTime());
 
   assert.equal(
     modalitesSkipReason({

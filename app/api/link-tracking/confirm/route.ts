@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { cancelFollowUpJobs } from "@/lib/booking-communication/jobs";
+import { ensureLeadBookedBeforeConfirm } from "@/lib/link-tracking/book-lead";
 import { syncLeadConfirmedToInstantly } from "@/lib/link-tracking/instantly";
 import {
   createLinkTrackingClient,
@@ -9,7 +10,6 @@ import {
   markInstantlyConfirmedSynced,
   markLeadConfirmed,
 } from "@/lib/link-tracking/supabase";
-import { isMeetingBookedStatus } from "@/lib/link-tracking/types";
 
 export async function POST(request: Request) {
   let body: { slug?: string; email?: string; code?: string };
@@ -51,12 +51,14 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!isMeetingBookedStatus(lookup.lead.statut)) {
+    const booked = await ensureLeadBookedBeforeConfirm(lookup);
+    if (!booked.ok) {
       return NextResponse.json(
-        { ok: false, reason: "not_booked_yet" },
+        { ok: false, reason: booked.reason },
         { status: 409 },
       );
     }
+    lookup = booked.lookup;
 
     const confirmed = await markLeadConfirmed(client, lookup);
     await cancelFollowUpJobs(confirmed.lead.id);

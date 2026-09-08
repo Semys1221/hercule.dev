@@ -307,8 +307,10 @@ export async function markLeadBooked(
     statut: "MEETING_BOOKED",
     booked_at: now,
     calendly_invitee_uri: params.calendlyInviteeUri || lookup.lead.calendly_invitee_uri,
-    dashboard_link: buildDashboardUrl(lookup.lead.slug),
   };
+  if (lookup.category === "agence" || lookup.category === "comptable") {
+    patch.dashboard_link = buildDashboardUrl(lookup.lead.slug);
+  }
   if (params.firstName) patch.first_name = params.firstName;
   if (params.company) patch.company = params.company;
   if (params.scheduledAt) patch.scheduled_at = params.scheduledAt;

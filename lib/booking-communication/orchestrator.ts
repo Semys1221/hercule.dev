@@ -30,6 +30,7 @@ import { buildTemporaryConfirmUrl, buildEntreprisePostBookingUrl } from "./templ
 import { defaultUseHtml } from "./signatures";
 import { confirmationAgenceLinkFor } from "@/lib/link-tracking/urls";
 import { modalitesConfirmUrlFor } from "@/lib/modalites-campaign/urls";
+import { enforceModalitesCancelForLead } from "@/lib/modalites-campaign/enforce-cancel";
 import { prepareThreadedSend } from "./threaded-send";
 import { bypassesSendWindow, isWithinSendWindow, nextSendSlot } from "./send-window";
 import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
@@ -363,16 +364,18 @@ async function processModalitesEnforceCancelJob(
   job: BookingEmailJob,
   lead: LinkTrackingLead,
 ): Promise<boolean> {
-  if (lead.statut === "CONFIRMED" || lead.statut === "CANCELLED") {
+  const result = await enforceModalitesCancelForLead({
+    category: job.lead_category,
+    lead,
+  });
+  if (
+    result === "skipped_confirmed" ||
+    result === "skipped_already_cancelled"
+  ) {
     await cancelJob(job.id);
     return true;
   }
 
-  await executeCalendlyAutoCancel(
-    job,
-    lead,
-    "Annulation automatique — absence de confirmation des modalités Hercule.",
-  );
   await markJobSent(job.id, `modalites-enforce/${job.id}`);
   return true;
 }

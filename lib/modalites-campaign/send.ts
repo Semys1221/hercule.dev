@@ -2,7 +2,12 @@ import { dispatchDueJobsForLead } from "@/lib/booking-communication/orchestrator
 import { insertJob } from "@/lib/booking-communication/jobs";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
 import { renderEmailFromStore } from "@/lib/booking-communication/template-store";
+import {
+  createLinkTrackingClient,
+  markLeadBooked,
+} from "@/lib/link-tracking/supabase";
 import type { LeadCategory, LeadLookup, LinkTrackingLead } from "@/lib/link-tracking/types";
+import { isMeetingBookedStatus } from "@/lib/link-tracking/types";
 
 import { SEND_ALL_CONFIRM_PHRASE } from "./copy";
 import { listModalitesCampaign } from "./list";
@@ -12,7 +17,7 @@ import {
   loadLeadLookup,
   persistLeadBookingContext,
 } from "./provision";
-import { modalitesEnforceCancelAt, modalitesWarningAt } from "./schedule";
+import { modalitesEnforceCancelAtFromAskSent, modalitesWarningAtFromAskSent } from "./schedule";
 import type { ModalitesCandidate, ModalitesPreview } from "./types";
 import { modalitesConfirmUrlFor } from "./urls";
 
@@ -80,6 +85,25 @@ async function prepareLeadForSend(params: {
     lookup = { category: params.category, lead };
   }
 
+  if (!isMeetingBookedStatus(lead.statut) && lead.scheduled_at?.trim()) {
+    const client = createLinkTrackingClient();
+    const booked = await markLeadBooked(client, {
+      slug: lead.slug,
+      email: lead.email,
+      calendlyInviteeUri: lead.calendly_invitee_uri ?? params.inviteeUri ?? "",
+      scheduledAt: lead.scheduled_at ?? params.scheduledAt,
+      calendlyPayload:
+        lead.calendly_payload ??
+        (params.eventUri ? calendlyPayloadFromEventUri(params.eventUri) : null),
+      firstName: lead.first_name,
+      company: lead.company,
+    });
+    if (booked.lookup) {
+      lookup = booked.lookup;
+      lead = booked.lookup.lead;
+    }
+  }
+
   return {
     lookup,
     lead,
@@ -89,9 +113,9 @@ async function prepareLeadForSend(params: {
 
 async function enqueueModalitesJobs(
   lookup: LeadLookup,
-  scheduledAt: Date,
   now: Date,
 ): Promise<void> {
+  const askSentAt = now;
   await insertJob({
     category: lookup.category,
     leadId: lookup.lead.id,
@@ -105,7 +129,7 @@ async function enqueueModalitesJobs(
     category: lookup.category,
     leadId: lookup.lead.id,
     emailType: "modalites_cancel",
-    scheduledFor: modalitesWarningAt(scheduledAt, now),
+    scheduledFor: modalitesWarningAtFromAskSent(askSentAt, now),
     triggeredBy: "admin_modalites",
     idempotencyKey: `modalites-warning/${lookup.lead.id}`,
     useHtml: true,
@@ -114,7 +138,7 @@ async function enqueueModalitesJobs(
     category: lookup.category,
     leadId: lookup.lead.id,
     emailType: "modalites_enforce_cancel",
-    scheduledFor: modalitesEnforceCancelAt(scheduledAt, now),
+    scheduledFor: modalitesEnforceCancelAtFromAskSent(askSentAt, now),
     triggeredBy: "admin_modalites",
     idempotencyKey: `modalites-enforce/${lookup.lead.id}`,
   });
@@ -253,10 +277,7 @@ export async function runModalitesCampaign(params: {
         eventUri: target.eventUri,
         scheduledAt: target.scheduledAt,
       });
-      const scheduled = prepared.lead.scheduled_at
-        ? new Date(prepared.lead.scheduled_at)
-        : new Date(target.scheduledAt);
-      await enqueueModalitesJobs(prepared.lookup, scheduled, now);
+      await enqueueModalitesJobs(prepared.lookup, now);
       lastPreview = await renderAskEmail(prepared.lookup, prepared.confirmUrl);
       sent += 1;
     } catch (err) {
