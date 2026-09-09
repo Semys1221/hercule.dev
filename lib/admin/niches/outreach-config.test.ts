@@ -1,10 +1,11 @@
-/** Unit tests for niche outreach config env fallbacks. */
+/** Unit tests for niche outreach config env fallbacks and view composition. */
 
 import assert from "node:assert/strict";
 
 import {
   calendlyUriFromEnv,
   campaignIdFromEnv,
+  composeOutreachConfigView,
 } from "@/lib/admin/niches/outreach-config";
 
 const previous = {
@@ -47,6 +48,50 @@ assert.equal(
   "https://api.calendly.com/event_types/COMPTABLE",
 );
 
+const dbRowView = composeOutreachConfigView({
+  niche: "agence",
+  row: {
+    niche: "agence",
+    instantly_campaign_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    calendly_event_type_uri: "https://api.calendly.com/event_types/DB",
+    updated_at: "2026-01-01T00:00:00.000Z",
+    updated_by: "ops",
+  },
+  envCampaignId: campaignIdFromEnv("agence"),
+  envCalendlyUri: null,
+  resolvedCalendlyFallback: null,
+});
+assert.equal(dbRowView.source, "database");
+assert.equal(dbRowView.instantly_campaign_id, "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
+assert.equal(dbRowView.calendly_configured, true);
+assert.equal(dbRowView.campaign_linked, true);
+
+const envOnlyView = composeOutreachConfigView({
+  niche: "comptable",
+  row: null,
+  envCampaignId: campaignIdFromEnv("comptable"),
+  envCalendlyUri: calendlyUriFromEnv("comptable"),
+  resolvedCalendlyFallback: null,
+});
+assert.equal(envOnlyView.source, "env");
+assert.equal(envOnlyView.calendly_configured, true);
+assert.equal(envOnlyView.campaign_linked, true);
+
+const fallbackCalendlyView = composeOutreachConfigView({
+  niche: "comptable",
+  row: null,
+  envCampaignId: null,
+  envCalendlyUri: null,
+  resolvedCalendlyFallback: "https://api.calendly.com/event_types/FALLBACK",
+});
+assert.equal(fallbackCalendlyView.source, "none");
+assert.equal(
+  fallbackCalendlyView.resolved_calendly_event_type_uri,
+  "https://api.calendly.com/event_types/FALLBACK",
+);
+assert.equal(fallbackCalendlyView.calendly_configured, true);
+assert.equal(fallbackCalendlyView.campaign_linked, false);
+
 if (previous.agence === undefined) {
   delete process.env.INSTANTLY_CAMPAIGN_ID_AGENCE;
 } else {
@@ -73,4 +118,4 @@ if (previous.calendlyComptable === undefined) {
   process.env.CALENDLY_EVENT_TYPE_URI_COMPTABLE = previous.calendlyComptable;
 }
 
-console.log("outreach-config env fallback tests passed");
+console.log("outreach-config tests passed");

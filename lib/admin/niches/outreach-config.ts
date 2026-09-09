@@ -77,37 +77,54 @@ export async function getOutreachConfigRow(
   return (data as NicheOutreachConfig | null) ?? null;
 }
 
+/** @internal Exported for unit tests. */
+export function composeOutreachConfigView(params: {
+  niche: Niche;
+  row: NicheOutreachConfig | null;
+  envCampaignId: string | null;
+  envCalendlyUri: string | null;
+  resolvedCalendlyFallback: string | null;
+}): OutreachConfigView {
+  const { niche, row, envCampaignId, envCalendlyUri, resolvedCalendlyFallback } = params;
+  const instantly_campaign_id = row?.instantly_campaign_id ?? envCampaignId;
+  const storedCalendlyUri = row?.calendly_event_type_uri ?? envCalendlyUri;
+  const resolved_calendly_event_type_uri =
+    storedCalendlyUri?.trim() || resolvedCalendlyFallback?.trim() || null;
+  const source = row ? "database" : envCampaignId || envCalendlyUri ? "env" : "none";
+
+  return {
+    niche,
+    instantly_campaign_id,
+    calendly_event_type_uri: storedCalendlyUri,
+    resolved_calendly_event_type_uri,
+    calendly_configured: Boolean(resolved_calendly_event_type_uri),
+    campaign_linked: Boolean(instantly_campaign_id),
+    source,
+  };
+}
+
 export async function getOutreachConfigView(niche: Niche): Promise<OutreachConfigView> {
   const client = createLinkTrackingClient();
   const row = await getOutreachConfigRow(client, niche);
   const envCampaignId = campaignIdFromEnv(niche);
   const envCalendlyUri = calendlyUriFromEnv(niche);
 
-  const instantly_campaign_id = row?.instantly_campaign_id ?? envCampaignId;
-  const calendly_event_type_uri = row?.calendly_event_type_uri ?? envCalendlyUri;
-
-  let resolved_calendly_event_type_uri: string | null =
-    calendly_event_type_uri?.trim() || null;
-
-  if (!resolved_calendly_event_type_uri) {
+  let resolvedCalendlyFallback: string | null = null;
+  if (!row?.calendly_event_type_uri?.trim() && !envCalendlyUri?.trim()) {
     try {
-      resolved_calendly_event_type_uri = await getEventTypeUri(niche as CalendlyBookingEvent);
+      resolvedCalendlyFallback = await getEventTypeUri(niche as CalendlyBookingEvent);
     } catch {
-      resolved_calendly_event_type_uri = null;
+      resolvedCalendlyFallback = null;
     }
   }
 
-  const source = row ? "database" : envCampaignId || envCalendlyUri ? "env" : "none";
-
-  return {
+  return composeOutreachConfigView({
     niche,
-    instantly_campaign_id,
-    calendly_event_type_uri: row?.calendly_event_type_uri ?? envCalendlyUri,
-    resolved_calendly_event_type_uri,
-    calendly_configured: Boolean(resolved_calendly_event_type_uri),
-    campaign_linked: Boolean(instantly_campaign_id),
-    source,
-  };
+    row,
+    envCampaignId,
+    envCalendlyUri,
+    resolvedCalendlyFallback,
+  });
 }
 
 export async function resolveCalendlyEventTypeUri(

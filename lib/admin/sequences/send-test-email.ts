@@ -4,15 +4,9 @@ import { defaultUseHtml } from "@/lib/booking-communication/signatures";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
 import { prepareThreadedSend } from "@/lib/booking-communication/threaded-send";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
-import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
-function testLeadIdForCategory(category: LeadCategory): string | null {
-  if (category === "agence") {
-    return process.env.SEQUENCE_TEST_LEAD_ID_AGENCE?.trim() || null;
-  }
-  return null;
-}
+import { resolveTestLeadForCategory } from "./resolve-test-lead";
 
 export async function sendSequenceTestEmail(params: {
   category: LeadCategory;
@@ -26,9 +20,7 @@ export async function sendSequenceTestEmail(params: {
     throw new Error("recipient_email_required");
   }
 
-  const leadId = testLeadIdForCategory(params.category);
-  const client = createLinkTrackingClient();
-  const lead = leadId ? await findLeadById(client, params.category, leadId) : null;
+  const lead = await resolveTestLeadForCategory(params.category);
 
   const rendered = await renderBookingEmailPreview({
     category: params.category,

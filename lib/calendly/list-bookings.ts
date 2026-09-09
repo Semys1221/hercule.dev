@@ -320,6 +320,14 @@ async function fetchEventInvitees(
   }));
 }
 
+/** @internal Exported for unit tests. */
+export function bookingsPipelineBlockedByMissingEventType(
+  niche: LeadCategory | undefined,
+  eventTypeUri: string | undefined,
+): boolean {
+  return Boolean(niche && !eventTypeUri);
+}
+
 export function buildScheduledEventsListParams(options: {
   userUri: string;
   minTime: string;
@@ -365,7 +373,7 @@ export async function listUpcomingBookings(options: {
       : undefined,
   });
 
-  if (options.niche && !listParams.event_type) {
+  if (bookingsPipelineBlockedByMissingEventType(options.niche, listParams.event_type)) {
     return [];
   }
 

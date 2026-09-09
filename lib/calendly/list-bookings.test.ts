@@ -2,7 +2,10 @@
 
 import assert from "node:assert/strict";
 
-import { buildScheduledEventsListParams } from "@/lib/calendly/list-bookings";
+import {
+  bookingsPipelineBlockedByMissingEventType,
+  buildScheduledEventsListParams,
+} from "@/lib/calendly/list-bookings";
 
 const base = {
   userUri: "https://api.calendly.com/users/ABC",
@@ -24,5 +27,15 @@ assert.equal(withoutEvent.event_type, undefined);
 
 const emptyUri = buildScheduledEventsListParams({ ...base, eventTypeUri: null });
 assert.equal(emptyUri.event_type, undefined);
+
+assert.equal(
+  bookingsPipelineBlockedByMissingEventType("comptable", undefined),
+  true,
+);
+assert.equal(
+  bookingsPipelineBlockedByMissingEventType("comptable", "https://api.calendly.com/event_types/X"),
+  false,
+);
+assert.equal(bookingsPipelineBlockedByMissingEventType(undefined, undefined), false);
 
 console.log("list-bookings event filter tests passed");

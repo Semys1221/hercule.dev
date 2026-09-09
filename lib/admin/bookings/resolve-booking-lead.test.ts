@@ -60,7 +60,18 @@ async function main() {
   assert.equal(byId?.lead.id, sample.id);
   assert.equal(byId?.category, "agence");
 
-  const comptableId = process.env.RESOLVE_LEAD_TEST_COMPTABLE_ID?.trim();
+  const client = createLinkTrackingClient();
+  const comptableId =
+    process.env.RESOLVE_LEAD_TEST_COMPTABLE_ID?.trim() ||
+    (
+      await client
+        .from("comptable")
+        .select("id")
+        .not("email", "is", null)
+        .limit(1)
+        .maybeSingle()
+    ).data?.id;
+
   if (comptableId) {
     const byComptableId = await resolveBookingLead({
       leadId: comptableId,
