@@ -15,6 +15,8 @@ import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
 import { ChronologieSection } from "./chronologie-section";
 import { ComptableOnboardingForm } from "./comptable-onboarding-form";
 import { OnboardingComptableWizard } from "./onboarding-comptable-wizard";
+import { comptableOfferLabel } from "@/lib/commercial/comptable-pricing";
+
 import { RetractionWaiverCard } from "./retraction-waiver-card";
 
 type DashboardComptableProps = {
@@ -22,12 +24,6 @@ type DashboardComptableProps = {
   onRefresh?: () => void;
   onOnboardingComplete?: () => void;
 };
-
-function offerLabel(offerType: string | null | undefined): string {
-  if (offerType === "starter_999_5") return "Hercule Starter — 999 € TTC";
-  if (offerType === "pack_3x1499") return "Pack 3 mois Croissance — 3 598 € TTC";
-  return "Formule Croissance — 1 499 €/mois";
-}
 
 export function DashboardComptable({
   data,
@@ -134,7 +130,7 @@ export function DashboardComptable({
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 Formule souscrite :{" "}
-                <span className="text-foreground font-medium">{offerLabel(offerType)}</span>
+                <span className="text-foreground font-medium">{comptableOfferLabel(offerType)}</span>
               </p>
             </CardContent>
           </Card>

@@ -73,6 +73,7 @@ export function ComptablePricingGrid({
           <PricingCard
             plan={{ ...pack3, featured: true }}
             {...sharedCardProps}
+            showRecommendedBadge={false}
             onCtaClick={
               isCheckout ? () => handleSelect(pack3.id) : undefined
             }

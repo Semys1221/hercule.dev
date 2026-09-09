@@ -166,6 +166,7 @@ export async function handleInstantlyReply(
       inboundText: truncateInboundText(inboundText || "(empty body)"),
       leadEmail,
       targetType: config.target_type,
+      nichePresetId: config.niche_preset_id,
       maxSentences,
       interestLabel: interestLabelFromStatus(interestStatus),
     });

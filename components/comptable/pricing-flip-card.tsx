@@ -44,7 +44,7 @@ export function PricingFlipCard({
         >
           <div
             className={cn(
-              "h-full [backface-visibility:hidden]",
+              "h-full pt-11 [backface-visibility:hidden]",
               flipped && "pointer-events-none absolute inset-0",
             )}
             aria-hidden={flipped}
@@ -53,7 +53,7 @@ export function PricingFlipCard({
           </div>
           <div
             className={cn(
-              "h-full [transform:rotateY(180deg)] [backface-visibility:hidden]",
+              "h-full pt-11 [transform:rotateY(180deg)] [backface-visibility:hidden]",
               !flipped && "pointer-events-none absolute inset-0",
             )}
             aria-hidden={!flipped}
@@ -66,7 +66,7 @@ export function PricingFlipCard({
         type="button"
         size="sm"
         variant="outline"
-        className="absolute top-3 right-3 z-20 gap-1.5 border-white/10 bg-[#0A0A0A]/90 text-neutral-300 hover:bg-white/[0.06] hover:text-white"
+        className="absolute top-3 left-3 z-20 gap-1.5 border-white/10 bg-[#0A0A0A]/90 text-neutral-300 hover:bg-white/[0.06] hover:text-white"
         onClick={toggleFlip}
         aria-expanded={flipped}
         aria-label={flipped ? flipBackLabel : flipFrontLabel}

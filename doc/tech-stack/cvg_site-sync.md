@@ -38,3 +38,26 @@ do_not:
 | Growth 2 500 € avec garanties contractuelles | **vitrine footnote only** |
 | No-show « sans délai » | 14 jours ouvrés |
 | 149 € / RDV honoré | Attribution au RDV **planifié** |
+
+---
+
+## Vertical comptable (2026-09-09)
+
+**CGV de référence :** [/cvg/comptable](/cvg/comptable) · **Knowledge reply agent :** [`ai-reply-knowledge-comptable.md`](./ai-reply-knowledge-comptable.md)
+
+1. `content/pricing/comptable.json` ↔ `cvg_comptable.md` ↔ `COMMERCIAL_COMPTABLE` dans `lib/commercial/constants.ts`.
+2. Nomenclature canonique : **Hercule Lite** (999 €) · **Hercule Starter** (1 499 €/mois) · **Pack 3 mois Starter** (3 598 €).
+3. FAQ : `content/faq/comptable.json` — mêmes montants et garanties MRR : **5 remplacements / 3 000 €** (Starter, après 10 missions) · **15 remplacements / 9 000 €** (Pack, après 30 missions, 5 par tranche de 10 missions).
+4. Site marketing : `components/comptable/comptable-pricing-grid.tsx` (flip Lite ↔ Pack + Starter).
+5. Sales live : `SalesComptablePricingPanel` → `ComptablePricingCheckout` (même grille).
+6. Dashboard onboarding : `StepPricingCardComptable` doit réutiliser `ComptablePricingGrid` — pas de plan ID `plan-comptable-croissance`.
+7. Reply agent : preset `cabinets_expertise_comptable` — prompts `prompts/cabinets_expertise_comptable_*.md`, knowledge pack comptable, CTA `{reservation_comptable_link}`, tarifs → `hercule.dev/cvg/comptable` sans chiffrer.
+
+### Interdits comptable (copy)
+
+| Ancien copy | Remplacement |
+|-------------|--------------|
+| « Formule Croissance » / « Croissance 1 499 € » | **Hercule Starter** |
+| « Hercule Starter 999 € » | **Hercule Lite 999 €** |
+| `plan-comptable-croissance` | `plan-comptable-lite` / `plan-comptable-starter` |
+| Tarifs agence (1 489 €, 5 attributions) dans reply agent comptable | Knowledge pack [`ai-reply-knowledge-comptable.md`](./ai-reply-knowledge-comptable.md) |

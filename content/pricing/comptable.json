@@ -37,7 +37,7 @@
       "priceSuffix": "/mois",
       "tagline": "10 contrats PME/TPE/indépendants par mois",
       "summary": "10 missions PME par mois. Premier RDV sous 15 jours.",
-      "footer": "Garantie MRR : 3 000 € cumulés après 10 missions, ou 10 missions de remplacement offertes.",
+      "footer": "Garantie MRR : 3 000 € cumulés après 10 missions, ou 5 missions de remplacement offertes.",
       "featured": true,
       "profileOnly": false,
       "highlight": null,
@@ -48,7 +48,7 @@
         "Attribution exclusive à votre cabinet.",
         "0 % de commission sur vos honoraires signés.",
         "Calendly Pro et Zoom Pro provisionnés par Hercule.",
-        "Garantie MRR : 3 000 € de revenus récurrents cumulés après vos 10 missions, ou 10 missions de remplacement offertes."
+        "Garantie MRR : 3 000 € de revenus récurrents cumulés après vos 10 missions, ou 5 missions de remplacement offertes."
       ]
     },
     {
@@ -59,7 +59,7 @@
       "priceSuffix": "TTC",
       "tagline": "1 499 € × 3 − 20 %",
       "summary": "10 missions PME par mois sur 3 mois de service actif. Même garantie MRR que Hercule Starter, étendue au pack.",
-      "footer": "Garantie MRR pack : 9 000 € cumulés à l'issue du pack, ou jusqu'à 30 missions de remplacement.",
+      "footer": "Garantie MRR pack : 9 000 € cumulés à l'issue du pack, ou jusqu'à 15 missions de remplacement (5 par tranche de 10 missions).",
       "featured": true,
       "profileOnly": false,
       "highlight": "− 20 %",
@@ -68,7 +68,7 @@
         "3 mois de service actif au rythme de Hercule Starter (10 missions / mois).",
         "30 missions PME qualifiées sur la durée du pack.",
         "0 % de commission sur vos honoraires.",
-        "Garantie MRR pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 30 missions de remplacement.",
+        "Garantie MRR pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 15 missions de remplacement (5 par tranche de 10 missions).",
         "Calendly Pro et Zoom Pro provisionnés par Hercule."
       ]
     }
@@ -88,7 +88,7 @@
     "items": [
       "1 499 €/mois — 10 missions qualifiées, 0 % de commission sur vos honoraires",
       "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
-      "Moins de 3 000 € de MRR cumulé après vos 10 missions ? 10 missions de remplacement offertes",
+      "Moins de 3 000 € de MRR cumulé après vos 10 missions ? 5 missions de remplacement offertes",
       "Hercule Lite (999 €) : aucune garantie MRR — uniquement la garantie no-show"
     ]
   }

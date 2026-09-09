@@ -102,7 +102,38 @@ export type PricingCardProps = {
   ctaLinkLabel?: string;
   /** Show checkout CTA even when the plan is not featured. */
   forceCta?: boolean;
+  /** Show the « Recommandé » badge when the plan is featured. Defaults to true. */
+  showRecommendedBadge?: boolean;
 };
+
+function PlanHeader({
+  label,
+  featured,
+  profileOnly,
+  showRecommendedBadge,
+}: {
+  label: string;
+  featured: boolean;
+  profileOnly: boolean;
+  showRecommendedBadge: boolean;
+}) {
+  return (
+    <div className="mb-2 flex items-start justify-between gap-3">
+      <p className="min-w-0 text-xs uppercase tracking-wider text-neutral-500">{label}</p>
+      {featured && showRecommendedBadge ? (
+        <span className="shrink-0 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-300 border border-white/20 bg-white/[0.04] rounded-md px-2 py-0.5">
+          Recommandé
+        </span>
+      ) : null}
+      {profileOnly ? (
+        <span className="shrink-0 flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-500 border border-white/10 bg-white/[0.02] rounded-md px-2 py-0.5">
+          <Lock className="w-3 h-3" />
+          Réservé aux membres
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
 export function PricingCard({
   plan,
@@ -116,6 +147,7 @@ export function PricingCard({
   ctaHref = CALENDLY_AGENCE_URL,
   ctaLinkLabel = "Soumettre ma candidature",
   forceCta = false,
+  showRecommendedBadge = true,
 }: PricingCardProps) {
   const showCheckoutCta = Boolean(onCtaClick && ctaLabel && (plan.featured || forceCta));
   const [open, setOpen] = useState(false);
@@ -154,22 +186,14 @@ export function PricingCard({
       )}
 
       <div className="relative z-10">
-        {plan.featured && (
-          <span className="absolute top-0 right-0 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-300 border border-white/20 bg-white/[0.04] rounded-md px-2 py-0.5">
-            Recommandé
-          </span>
-        )}
-
-        {plan.profileOnly && (
-          <span className="absolute top-0 right-0 z-20 flex items-center gap-1 text-[10px] uppercase tracking-[0.08em] font-medium text-neutral-500 border border-white/10 bg-white/[0.02] rounded-md px-2 py-0.5">
-            <Lock className="w-3 h-3" />
-            Réservé aux membres
-          </span>
-        )}
-
         {plan.profileOnly ? (
           <>
-            <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
+            <PlanHeader
+              label={plan.label}
+              featured={plan.featured}
+              profileOnly={plan.profileOnly}
+              showRecommendedBadge={showRecommendedBadge}
+            />
             <MetallicTitle name={plan.name} />
             <p className={cn("text-neutral-200 font-semibold tracking-[-0.04em] mb-2", compact ? "text-2xl" : "text-4xl")}>
               {plan.price}
@@ -186,7 +210,12 @@ export function PricingCard({
           </>
         ) : (
           <>
-            <p className="text-xs uppercase tracking-wider text-neutral-500 mb-2">{plan.label}</p>
+            <PlanHeader
+              label={plan.label}
+              featured={plan.featured}
+              profileOnly={plan.profileOnly}
+              showRecommendedBadge={showRecommendedBadge}
+            />
             <MetallicTitle name={plan.name} />
             <p className={cn("text-white font-semibold tracking-[-0.04em] mb-2", compact ? "text-2xl" : "text-4xl")}>
               {plan.price}

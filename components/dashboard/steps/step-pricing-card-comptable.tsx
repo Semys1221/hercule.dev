@@ -1,16 +1,9 @@
 "use client";
 
-import { PricingCard } from "@/components/funnels/widgets/pricing-card";
+import { ComptablePricingGrid } from "@/components/comptable/comptable-pricing-grid";
 import { Button } from "@/components/ui/button";
-import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
-import { getPricingDocument } from "@/lib/site/pricing-data";
-import { cn } from "@/lib/utils";
-
-const PLAN_TO_OFFER: Record<string, OfferTypeComptable> = {
-  "plan-comptable-starter": OFFER_TYPES_COMPTABLE.starter999_5,
-  "plan-comptable-croissance": OFFER_TYPES_COMPTABLE.monthly1499,
-  "plan-comptable-pack3": OFFER_TYPES_COMPTABLE.pack3x1499,
-};
+import type { OfferTypeComptable } from "@/lib/commercial/constants";
+import { comptableOfferLabel } from "@/lib/commercial/comptable-pricing";
 
 type StepPricingCardComptableProps = {
   selectedOffer: OfferTypeComptable;
@@ -23,18 +16,6 @@ export function StepPricingCardComptable({
   onSelectOffer,
   onProceed,
 }: StepPricingCardComptableProps) {
-  const document = getPricingDocument("comptable");
-  const purchasablePlans =
-    document?.plans.filter((plan) => !plan.profileOnly) ?? [];
-
-  if (!document || purchasablePlans.length === 0) {
-    return (
-      <p className="text-sm text-destructive">
-        Offre indisponible — configuration tarifaire manquante.
-      </p>
-    );
-  }
-
   return (
     <div className="space-y-5">
       <div>
@@ -44,36 +25,20 @@ export function StepPricingCardComptable({
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {purchasablePlans.map((plan) => {
-          const offerType = PLAN_TO_OFFER[plan.id];
-          if (!offerType) {
-            return null;
-          }
-          const isSelected = selectedOffer === offerType;
-
-          return (
-            <div
-              key={plan.id}
-              className={cn(
-                "cursor-pointer rounded-xl transition-colors",
-                isSelected ? "ring-2 ring-foreground" : "ring-1 ring-border",
-              )}
-              onClick={() => onSelectOffer(offerType)}
-            >
-              <PricingCard
-                plan={plan}
-                compact
-                animated={false}
-                gatedTeaserFeatures={document.gatedTeaserFeatures}
-                gatedGhostFeatures={document.gatedGhostFeatures}
-                ctaLabel={isSelected ? "Formule sélectionnée" : "Sélectionner"}
-                onCtaClick={() => onSelectOffer(offerType)}
-              />
-            </div>
-          );
-        })}
+      <div className="rounded-xl ring-1 ring-border p-4 md:p-6">
+        <ComptablePricingGrid
+          variant="checkout"
+          ctaLabel="Sélectionner"
+          onSelectOffer={onSelectOffer}
+        />
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        Formule sélectionnée :{" "}
+        <span className="font-medium text-foreground">
+          {comptableOfferLabel(selectedOffer)}
+        </span>
+      </p>
 
       <Button type="button" className="w-full" onClick={onProceed}>
         Activer Hercule Comptable

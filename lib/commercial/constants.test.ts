@@ -83,19 +83,18 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.growthMissionsPerMonth).toBe(10);
   });
 
-  it("growth MRR guarantee is 3 000 € after 10 missions", () => {
+  it("growth MRR guarantee is 3 000 € after 10 missions with 5 replacements", () => {
     expect(COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents).toBe(300_000);
-    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements).toBe(10);
-    expect(
-      COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents /
-        COMMERCIAL_COMPTABLE.mrrPerSignedMissionCents,
-    ).toBe(COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements);
+    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements).toBe(5);
   });
 
-  it("pack MRR guarantee is 9 000 € after 30 missions", () => {
+  it("pack MRR guarantee is 9 000 € after 30 missions with 15 replacements", () => {
     expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMrrCents).toBe(900_000);
-    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(30);
+    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(15);
     expect(COMMERCIAL_COMPTABLE.pack3MissionsTotal).toBe(30);
+    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(
+      3 * COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements,
+    );
   });
 });
 

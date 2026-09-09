@@ -3,13 +3,16 @@
 ```
 status: legacy-ops
 audience: coding-agent
+vertical: agence
 decisions: INT-02 EML-05
 do_not:
   - Contredire cvg_master.md / constants-commercial.md sur les prix
   - Mentionner 898 € ou offre 2 500 € souscriptible
+  - Utiliser ce fichier pour la niche comptable — voir ai-reply-knowledge-comptable.md
 ```
 
-> Source condensée pour les réponses email **ops**. Prix : [/cvg/constants-commercial](/cvg/constants-commercial).
+> Source condensée pour les réponses email **ops** (agence / entreprise). Prix : [/cvg/constants-commercial](/cvg/constants-commercial).  
+> **Comptable :** [`ai-reply-knowledge-comptable.md`](./ai-reply-knowledge-comptable.md) · CGV [/cvg/comptable](/cvg/comptable).
 
 ## Produit Hercule
 

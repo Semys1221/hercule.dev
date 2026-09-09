@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckout,
@@ -9,40 +9,21 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
+import {
+  OFFER_TYPES_COMPTABLE,
+  type OfferTypeComptable,
+} from "@/lib/commercial/constants";
+import { COMPTABLE_OFFER_LABELS } from "@/lib/commercial/comptable-pricing";
+import { getPricingDocument } from "@/lib/site/pricing-data";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
 );
 
-type OfferOption = {
-  offerType: OfferTypeComptable;
-  label: string;
-  price: string;
-  description: string;
-  featured?: boolean;
-};
-
-const OFFER_OPTIONS: OfferOption[] = [
-  {
-    offerType: OFFER_TYPES_COMPTABLE.starter999_5,
-    label: "Hercule Starter",
-    price: "999 € TTC",
-    description: "5 missions PME · 1er RDV sous 15 j · 0 % commission · pas de garantie MRR",
-  },
-  {
-    offerType: OFFER_TYPES_COMPTABLE.monthly1499,
-    label: "Formule Croissance",
-    price: "1 499 €/mois",
-    description: "10 missions PME/mois · garantie 3 000 € MRR · recommandé cabinets",
-    featured: true,
-  },
-  {
-    offerType: OFFER_TYPES_COMPTABLE.pack3x1499,
-    label: "Pack 3 mois Croissance",
-    price: "3 598 € TTC",
-    description: "10 missions/mois × 3 · −20 % · garantie 9 000 € MRR pack",
-  },
+const OFFER_ORDER: OfferTypeComptable[] = [
+  OFFER_TYPES_COMPTABLE.starter999_5,
+  OFFER_TYPES_COMPTABLE.monthly1499,
+  OFFER_TYPES_COMPTABLE.pack3x1499,
 ];
 
 type StepEmbeddedCheckoutComptableProps = {
@@ -59,10 +40,49 @@ export function StepEmbeddedCheckoutComptable({
   const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable | null>(
     selectedOfferProp,
   );
-  const [checkoutStarted, setCheckoutStarted] = useState(startImmediately && Boolean(selectedOfferProp));
+  const [checkoutStarted, setCheckoutStarted] = useState(
+    startImmediately && Boolean(selectedOfferProp),
+  );
   const [error, setError] = useState<string | null>(null);
 
   const activeOffer = selectedOfferProp ?? selectedOffer;
+
+  const offerOptions = useMemo(() => {
+    const document = getPricingDocument("comptable");
+    if (!document) {
+      return [];
+    }
+    const byOfferType = new Map<string, (typeof document.plans)[number]>();
+    for (const plan of document.plans) {
+      if (plan.offerType) {
+        byOfferType.set(plan.offerType, plan);
+      }
+    }
+
+    const options: Array<{
+      offerType: OfferTypeComptable;
+      label: string;
+      price: string;
+      description: string;
+      featured?: boolean;
+    }> = [];
+
+    for (const offerType of OFFER_ORDER) {
+      const plan = byOfferType.get(offerType);
+      if (!plan) {
+        continue;
+      }
+      options.push({
+        offerType,
+        label: COMPTABLE_OFFER_LABELS[offerType],
+        price: [plan.price, plan.priceSuffix].filter(Boolean).join(" "),
+        description: plan.summary,
+        featured: plan.featured,
+      });
+    }
+
+    return options;
+  }, []);
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     setError(null);
@@ -105,13 +125,21 @@ export function StepEmbeddedCheckoutComptable({
     );
   }
 
+  if (offerOptions.length === 0) {
+    return (
+      <p className="text-sm text-destructive">
+        Offre indisponible — configuration tarifaire manquante.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
         Sélectionnez votre formule pour finaliser votre accès Hercule Comptable.
       </p>
       <div className="grid gap-3 sm:grid-cols-3">
-        {OFFER_OPTIONS.map((offer) => (
+        {offerOptions.map((offer) => (
           <Card
             key={offer.offerType}
             className={`cursor-pointer transition-colors ${

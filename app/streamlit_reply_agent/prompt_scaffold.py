@@ -19,17 +19,35 @@ def _demande_phrase(niche: str) -> str:
     return f"demandes {niche}"
 
 
+def _is_comptable(preset_id: str, niche: str) -> bool:
+    return "comptable" in preset_id or "comptable" in niche
+
+
 def scaffold_ai_reply_prompts(preset_id: str, label: str) -> list[str]:
     """Create buyer + seller prompt files if missing. Returns paths written."""
     _PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
     niche = _niche_from_label(label)
     demande = _demande_phrase(niche)
+    comptable = _is_comptable(preset_id, niche)
     written: list[str] = []
 
     buyer_path = _PROMPTS_DIR / f"{preset_id}_buyer.md"
     if not buyer_path.is_file():
-        buyer_path.write_text(
-            f"""# {preset_id} — Buyer (agence)
+        if comptable:
+            buyer_body = f"""# {preset_id} — Buyer (cabinet EC)
+
+Tu écris à un **cabinet d'expertise comptable** ({niche}) qui candidate pour recevoir des demandes via Hercule.
+
+- Parle comme Béatrice Meyer.
+- **Contexte** : Hercule reçoit des demandes d'indépendants et de dirigeants de TPE en reprise comptable, fiscal et administratif.
+- **Éligibilité** : plus de **3 associés ou collaborateurs**.
+- **Valeur par défaut** : {demande} — **ne parle pas d'argent** sauf demande explicite.
+- **Si question sur les prix** : renvoie vers hercule.dev/cvg/comptable **sans chiffrer**.
+- CTA principal : {{reservation_comptable_link}} (« Proposer mon cabinet », avec urgence).
+- Si la réponse n'est pas dans le knowledge pack, **n'envoie pas** (should_reply=false).
+"""
+        else:
+            buyer_body = f"""# {preset_id} — Buyer (agence)
 
 Tu écris à une **agence** ({niche}) qui candidate pour recevoir des contrats via Hercule.
 
@@ -38,15 +56,25 @@ Tu écris à une **agence** ({niche}) qui candidate pour recevoir des contrats v
 - **Si question sur les prix** : valeur d'abord (fenêtre 8–27 sept., contrats), puis l'offre Starter **sans écrire le montant**, et renvoie vers hercule.dev/cvg pour le détail tarifaire.
 - CTA principal : {{reservation_agence_link}} (réserver un audit / appel cette semaine, avec urgence).
 - Si la réponse n'est pas dans le knowledge pack, **n'envoie pas** (should_reply=false).
-""",
-            encoding="utf-8",
-        )
+"""
+        buyer_path.write_text(buyer_body, encoding="utf-8")
         written.append(str(buyer_path))
 
     seller_path = _PROMPTS_DIR / f"{preset_id}_seller.md"
     if not seller_path.is_file():
-        seller_path.write_text(
-            f"""# {preset_id} — Seller (entreprise)
+        if comptable:
+            seller_body = f"""# {preset_id} — Seller (dirigeant TPE)
+
+Tu écris à un **dirigeant de TPE ou indépendant** ({niche}) qui cherche un accompagnement comptable via Hercule.
+
+- Parle comme Béatrice Meyer, accompagnement gratuit pour le dirigeant.
+- **Valeur par défaut** : mise en relation avec un cabinet adapté — service **gratuit** — **ne parle pas d'argent** sauf demande explicite.
+- **Si question sur les prix** : rappeler que le dirigeant ne paie rien ; tarifs cabinet → hercule.dev/cvg/comptable **sans chiffrer**.
+- CTA principal : {{reservation_comptable_link}} (créneau cette semaine, avec urgence).
+- Si la réponse n'est pas dans le knowledge pack, **n'envoie pas** (should_reply=false).
+"""
+        else:
+            seller_body = f"""# {preset_id} — Seller (entreprise)
 
 Tu écris à une **entreprise** ({niche}) qui cherche une agence web via Hercule.
 
@@ -55,9 +83,8 @@ Tu écris à une **entreprise** ({niche}) qui cherche une agence web via Hercule
 - **Si question sur les prix** : rappeler que l'entreprise ne paie rien ; si le prospect demande les tarifs côté agence, renvoyer vers hercule.dev/cvg **sans chiffrer**.
 - CTA principal : {{reservation_entreprise_link}} (créneau cette semaine, avec urgence).
 - Si la réponse n'est pas dans le knowledge pack, **n'envoie pas** (should_reply=false).
-""",
-            encoding="utf-8",
-        )
+"""
+        seller_path.write_text(seller_body, encoding="utf-8")
         written.append(str(seller_path))
 
     return written

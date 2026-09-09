@@ -1,8 +1,9 @@
 import {
   applyPromptLinkVariables,
-  resolveLeadCtaLink,
+  resolvePromptLinks,
 } from "./lead-links";
 import { truncateInboundText } from "./inbound";
+import { isComptableNichePreset } from "@/lib/site/legal-content";
 
 import type { AiReplyTargetType, GroqReplyDecision } from "./types";
 
@@ -11,9 +12,15 @@ const PRIMARY_MODEL = "grok-4-1-fast";
 const FALLBACK_MODEL = "grok-build-0.1";
 const MAX_OUTPUT_TOKENS = 200;
 
-export function buildGlobalRules(maxSentences = 3): string {
+export function buildGlobalRules(
+  maxSentences = 3,
+  nichePresetId?: string,
+): string {
   const n = Math.max(1, Math.min(10, maxSentences));
   const phraseLabel = n === 1 ? "phrase" : "phrases";
+  const pricingUrl = isComptableNichePreset(nichePresetId ?? "")
+    ? "https://hercule.dev/cvg/comptable"
+    : "https://hercule.dev/cvg";
   return `Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
 Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string).
@@ -24,7 +31,7 @@ Règles quand should_reply est true :
 - Rédige reply_text en français.
 - Structure : accuser réception → répondre à la question → CTA urgent pour réserver un appel.
 - Inclus le lien CTA de réservation en URL brute (sera affiché « Réserver » à l'envoi).
-- Termine toujours par « Béatrice Meyer », puis une ligne avec l'URL du site (https://hercule.dev ou https://hercule.dev/cvg si question tarifs).
+- Termine toujours par « Béatrice Meyer », puis une ligne avec l'URL du site (https://hercule.dev ou ${pricingUrl} si question tarifs).
 - Signe toujours « Béatrice Meyer ».
 - Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
 
@@ -49,9 +56,10 @@ function assembleSystemPrompt(params: {
   promptSnapshot: string;
   maxSentences?: number;
   customDirective?: string;
+  nichePresetId?: string;
 }): string {
   const parts = [
-    buildGlobalRules(params.maxSentences ?? 3),
+    buildGlobalRules(params.maxSentences ?? 3, params.nichePresetId),
     "",
     "## Pack de connaissances",
     params.knowledgePack,
@@ -165,6 +173,7 @@ export async function generateReplyDecision(params: {
   inboundText: string;
   leadEmail: string;
   targetType: AiReplyTargetType;
+  nichePresetId?: string;
   maxSentences?: number;
   customDirective?: string;
   interestLabel?: string | null;
@@ -190,11 +199,15 @@ export async function generateReplyDecision(params: {
   const primaryModel = resolveModel("GROK_PRIMARY_MODEL", PRIMARY_MODEL);
   const fallbackModel = resolveModel("GROK_FALLBACK_MODEL", FALLBACK_MODEL);
 
-  const ctaLink = await resolveLeadCtaLink(params.leadEmail, params.targetType);
+  const promptLinks = await resolvePromptLinks(
+    params.leadEmail,
+    params.targetType,
+  );
   const promptSnapshot = applyPromptLinkVariables(
     params.promptSnapshot,
-    ctaLink,
+    promptLinks.primary,
     params.targetType,
+    promptLinks,
   );
 
   const systemPrompt = assembleSystemPrompt({
@@ -202,13 +215,14 @@ export async function generateReplyDecision(params: {
     promptSnapshot,
     maxSentences: params.maxSentences,
     customDirective: params.customDirective,
+    nichePresetId: params.nichePresetId,
   });
 
   const userPrompt = [
     `Email du lead : ${params.leadEmail}`,
     `Tag Instantly du lead : ${interestLabel}`,
     "",
-    `Lien CTA (utilise exactement cette URL dans reply_text) : ${ctaLink}`,
+    `Lien CTA (utilise exactement cette URL dans reply_text) : ${promptLinks.primary}`,
     "",
     "Réponse entrante à traiter :",
     truncateInboundText(params.inboundText),

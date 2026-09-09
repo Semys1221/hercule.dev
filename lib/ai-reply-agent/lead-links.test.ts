@@ -36,6 +36,17 @@ function main() {
     `Book: ${sellerUrl}`,
   );
 
+  const comptablePrompt = "Postuler: {reservation_comptable_link}";
+  const comptableUrl = "https://www.hercule.dev/r/comptable/abc123";
+  assert.equal(
+    applyPromptLinkVariables(comptablePrompt, comptableUrl, "buyer", {
+      agenceLink: "https://www.hercule.dev/reservation.html",
+      entrepriseLink: "https://www.hercule.dev/reservation-entreprise.html",
+      comptableLink: comptableUrl,
+    }),
+    `Postuler: ${comptableUrl}`,
+  );
+
   console.log("lead-links.test.ts: OK");
 }
 

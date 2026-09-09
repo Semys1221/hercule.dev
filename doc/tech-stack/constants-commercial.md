@@ -64,3 +64,35 @@ export const FORBIDDEN_COPY = [
 `VITRINE_ONLY` : affichage marketing **uniquement**, jamais `payments.offer_type`.
 
 Rétractation **4 jours** : voir `retractationDays` et CGV §8.
+
+---
+
+## Comptable — `COMMERCIAL_COMPTABLE`
+
+Contrat lisible : [`cvg_comptable.md`](./cvg_comptable.md). Pricing UI : `content/pricing/comptable.json`.
+
+```ts
+export const OFFER_TYPES_COMPTABLE = {
+  starter999_5: "starter_999_5",   // Hercule Lite
+  monthly1499: "monthly_1499",     // Hercule Starter
+  pack3x1499: "pack_3x1499",       // Pack 3 mois Starter
+} as const;
+
+export const COMMERCIAL_COMPTABLE = {
+  starterPriceCents: 99_900,              // Lite — 999 € TTC, 5 missions
+  starterMissions: 5,
+  monthlyPriceCents: 149_900,             // Starter — 1 499 €/mois, 10 missions/mois
+  growthMissionsPerMonth: 10,
+  growthGuaranteeMrrCents: 300_000,       // 3 000 € MRR cumulé ou 5 remplacements
+  growthGuaranteeMaxReplacements: 5,
+  pack3TotalCents: 359_800,               // Pack 3 mois — 1 499 × 3 − 20 %
+  pack3MissionsTotal: 30,
+  pack3GuaranteeMrrCents: 900_000,
+  pack3GuaranteeMaxReplacements: 15,
+  firstRdvDays: 15,
+  noshowReplaceWorkingDays: 14,
+  minAssociatesOrCollaborators: 3,
+} as const;
+```
+
+Nomenclature UI (2026-09-09) : **Lite** (entrée 999 €) · **Starter** (mensuel 1 499 €) · **Pack 3 mois Starter** (3 598 €). Ne pas réintroduire « Croissance » ou « Starter 999 € ».

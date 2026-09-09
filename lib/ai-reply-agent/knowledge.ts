@@ -2,7 +2,10 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 import { getFaqEntries } from "@/lib/site/faq-data";
-import { getAiReplyKnowledgeMarkdown } from "@/lib/site/legal-content";
+import {
+  getAiReplyKnowledgeMarkdown,
+  isComptableNichePreset,
+} from "@/lib/site/legal-content";
 
 import type { AiReplyAgentConfig } from "./types";
 
@@ -14,10 +17,22 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(filePath, "utf-8");
 }
 
-function formatEntrepriseFaq(): string {
-  return getFaqEntries("entreprise")
+function formatFaq(audience: "entreprise" | "comptable"): string {
+  return getFaqEntries(audience)
     .map((entry) => `Q: ${entry.question}\nA: ${entry.answer}`)
     .join("\n\n");
+}
+
+function speakingToLabel(
+  targetType: AiReplyAgentConfig["target_type"],
+  comptable: boolean,
+): string {
+  if (comptable) {
+    return targetType === "buyer"
+      ? "cabinet EC (Buyer)"
+      : "dirigeant TPE (Seller)";
+  }
+  return targetType === "buyer" ? "agence (Buyer)" : "entreprise (Seller)";
 }
 
 type CacheEntry = { pack: string; expiresAt: number };
@@ -29,9 +44,17 @@ function knowledgeCacheKey(config: AiReplyAgentConfig): string {
 }
 
 function buildKnowledgePackUncached(config: AiReplyAgentConfig): string {
-  const aiReplyKnowledge = getAiReplyKnowledgeMarkdown();
+  const comptable = isComptableNichePreset(config.niche_preset_id);
+  const aiReplyKnowledge = getAiReplyKnowledgeMarkdown(
+    comptable ? "comptable" : "agence",
+  );
   const overview = readRepoFile("doc/tech-stack/00-overview.md");
-  const entrepriseFaq = formatEntrepriseFaq();
+  const faqSection = comptable
+    ? formatFaq("comptable")
+    : formatFaq("entreprise");
+  const faqHeading = comptable
+    ? "## FAQ comptable (Buyer/Seller)"
+    : "## Entreprise FAQ (Seller)";
   const niche = config.niche_metadata ?? {};
   const nicheAngle =
     typeof niche.angle === "string" ? niche.angle : config.niche_preset_id;
@@ -47,14 +70,17 @@ function buildKnowledgePackUncached(config: AiReplyAgentConfig): string {
     "## Reply-safe facts (condensed)",
     aiReplyKnowledge,
     "",
-    "## Entreprise FAQ (Seller)",
-    entrepriseFaq || "Entreprise service is free. No commission. Calendly via email.",
+    faqHeading,
+    faqSection ||
+      (comptable
+        ? "Cabinet > 3 associés. Dirigeant TPE : service gratuit."
+        : "Entreprise service is free. No commission. Calendly via email."),
     "",
     "## Niche context",
     `Preset: ${config.niche_preset_id}`,
     `Angle: ${nicheAngle}`,
     nicheEffectif ? `Target size: ${nicheEffectif}` : "",
-    `Speaking to: ${config.target_type === "buyer" ? "agence (Buyer)" : "entreprise (Seller)"}`,
+    `Speaking to: ${speakingToLabel(config.target_type, comptable)}`,
   ]
     .filter(Boolean)
     .join("\n");

@@ -210,13 +210,13 @@ export const COMMERCIAL_COMPTABLE = {
   monthlyPriceCents: 149_900,
   growthMissionsPerMonth: 10,
   growthGuaranteeMrrCents: 300_000,
-  growthGuaranteeMaxReplacements: 10,
+  growthGuaranteeMaxReplacements: 5,
 
   /** Pack 3 mois Starter — 1 499 € × 3 − 20 %, arrondi (offer type pack_3x1499) */
   pack3TotalCents: 359_800,
   pack3MissionsTotal: 30,
   pack3GuaranteeMrrCents: 900_000,
-  pack3GuaranteeMaxReplacements: 30,
+  pack3GuaranteeMaxReplacements: 15,
 
   billingCycleDays: 30,
 

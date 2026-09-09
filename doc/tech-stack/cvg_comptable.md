@@ -10,8 +10,8 @@ do_not:
   - Réintroduire 898 €, 4 jours de rétractation, 2 500 € vitrine
 ```
 
-> **Version :** 2026-09-08  
-> **Documents associés :** [cvg_master.md](./cvg_master.md) · [constants-commercial.md](./constants-commercial.md)  
+> **Version :** 2026-09-09  
+> **Documents associés :** [cvg_master.md](./cvg_master.md) · [constants-commercial.md](./constants-commercial.md) · [ai-reply-knowledge-comptable.md](./ai-reply-knowledge-comptable.md)  
 > Chiffres code : `lib/commercial/constants.ts` → `COMMERCIAL_COMPTABLE` (ENG-16).
 
 ---
@@ -113,7 +113,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Engagement** | Aucun. Résiliation : article 13 |
 
-**Garantie MRR :** si, à l'issue des **10 Attributions** consommées du cycle en cours, le **MRR cumulé** généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **10 Attributions de remplacement**, sous réserve des obligations du Client (article 11). Cette garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
+**Garantie MRR :** si, à l'issue des **10 Attributions** consommées du cycle en cours, le **MRR cumulé** généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **5 Attributions de remplacement**, sous réserve des obligations du Client (article 11). Cette garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
 
 ### 5.3 Pack 3 mois Starter
 
@@ -123,7 +123,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 | **Contenu** | **3 mois** de service actif au rythme de l'article 5.2 (**10 missions / mois**) |
 | **Commission Hercule** | **0 %** |
 
-**Garantie MRR pack :** si, à l'issue des **30 Attributions** du pack, le **MRR cumulé** est inférieur à **9 000 €**, Hercule attribue jusqu'à **30 Attributions de remplacement**, sous les mêmes exclusions que l'article 5.2.
+**Garantie MRR pack :** si, à l'issue des **30 Attributions** du pack, le **MRR cumulé** est inférieur à **9 000 €**, Hercule attribue jusqu'à **15 Attributions de remplacement** (5 par tranche de 10 missions), sous les mêmes exclusions que l'article 5.2.
 
 ### 5.4 Offres non commercialisées
 
@@ -167,8 +167,8 @@ Lors de l'onboarding, le Client peut **renoncer** à ce délai pour lancer la re
 | Premier RDV planifié | **≤ 15 jours** |
 | Rythme Lite | **5 missions** (paiement unique) |
 | Rythme Hercule Starter | **10 missions PME / mois** (cycle 30 jours) |
-| Garantie MRR Starter | **3 000 €** cumulés après 10 missions, ou remplacements |
-| Garantie MRR pack | **9 000 €** cumulés après 30 missions, ou remplacements |
+| Garantie MRR Starter | **3 000 €** cumulés après 10 missions, ou **5 remplacements** |
+| Garantie MRR pack | **9 000 €** cumulés après 30 missions, ou **15 remplacements** (5 par tranche de 10 missions) |
 
 ---
 
@@ -180,9 +180,9 @@ Prospect absent malgré relance H-24 : Attribution recréditée ; remplacement s
 
 ### 10.2 Garantie MRR (Hercule Starter et Pack)
 
-**Hercule Starter :** si, à l'issue des 10 Attributions consommées du cycle en cours, le MRR cumulé généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **10 Attributions de remplacement**.
+**Hercule Starter :** si, à l'issue des 10 Attributions consommées du cycle en cours, le MRR cumulé généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **5 Attributions de remplacement**.
 
-**Pack 3 mois Starter :** si, à l'issue des 30 Attributions du pack, le MRR cumulé est inférieur à **9 000 €**, Hercule attribue jusqu'à **30 Attributions de remplacement**.
+**Pack 3 mois Starter :** si, à l'issue des 30 Attributions du pack, le MRR cumulé est inférieur à **9 000 €**, Hercule attribue jusqu'à **15 Attributions de remplacement** (5 par tranche de 10 missions).
 
 Conditions communes :
 
@@ -247,6 +247,7 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-09b | 9 sept. 2026 | Garantie MRR — 5 remplacements (Starter, seuil 3 000 € / 10 missions) · 15 remplacements (Pack, seuil 9 000 € / 30 missions, 5 par tranche) |
 | 2026-09-09 | 9 sept. 2026 | Renommage offres — Lite 999 €, Hercule Starter 1 499 € (10 missions), Pack 3 mois 3 598 € |
 | 2026-09-08 | 8 sept. 2026 | Grille 3 offres — Starter 999 €, Croissance 1 499 € (10 missions), pack 3 598 €, garantie MRR |
 | 2026-09-08 | 8 sept. 2026 | Création CGV vertical comptable — provisionnement Calendly/Zoom |

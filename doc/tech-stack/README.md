@@ -43,7 +43,9 @@ do_not:
 
 Ces fichiers sont lus au runtime par le reply agent Grok (Streamlit + webhook Next.js). Ne pas archiver sans mettre à jour [`app/streamlit_reply_agent/legal_content.py`](../../app/streamlit_reply_agent/legal_content.py) et [`lib/ai-reply-agent/knowledge.ts`](../../lib/ai-reply-agent/knowledge.ts).
 
-- [ai-reply-knowledge.md](./ai-reply-knowledge.md)
+- [ai-reply-knowledge.md](./ai-reply-knowledge.md) — agence / entreprise (default)
+- [ai-reply-knowledge-comptable.md](./ai-reply-knowledge-comptable.md) — niche comptable (`niche_preset_id` contient `comptable`)
+- [cvg_comptable.md](./cvg_comptable.md) — contrat cabinets EC (référence légale, pas chargé tel quel au runtime)
 - [00-overview.md](./00-overview.md)
 - [deliverance/front-client.md](./deliverance/front-client.md)
 

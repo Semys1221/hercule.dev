@@ -13,7 +13,6 @@ const AGENCE_RESEND_ON = [
   "close-indecis",
   "sales-call-no-show",
   "payment-welcome",
-  "onboarding-sequence",
   "deliverance",
   "matching-booking",
   "post-rdv-survey",
@@ -53,6 +52,14 @@ function main() {
 
   const comptableSequences = getEmailSequences("comptable");
   const comptableBySlug = new Map(comptableSequences.map((entry) => [entry.slug, entry]));
+  const onboardingEntry = bySlug.get("onboarding-sequence");
+  assert.ok(onboardingEntry, "missing onboarding-sequence");
+  assert.equal(
+    evaluateSequenceSafety(onboardingEntry, "agence"),
+    "off",
+    "onboarding hold step is not a root/follow-up thread family",
+  );
+
   const comptableEntry = comptableBySlug.get("meeting-comptable");
   assert.ok(comptableEntry, "missing meeting-comptable in comptable catalogue");
   assert.equal(

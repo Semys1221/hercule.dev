@@ -66,7 +66,14 @@ export function getConfidentialiteMarkdown(): string {
   return readDocFile("confidentialite.md")
 }
 
-export function getAiReplyKnowledgeMarkdown(): string {
+export function isComptableNichePreset(presetId: string): boolean {
+  return presetId.includes("comptable")
+}
+
+export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "agence"): string {
+  if (audience === "comptable") {
+    return readDocFile("ai-reply-knowledge-comptable.md")
+  }
   return readDocFile("ai-reply-knowledge.md")
 }
 

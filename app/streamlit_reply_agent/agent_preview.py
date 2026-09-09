@@ -12,9 +12,9 @@ from typing import Any, Literal
 import requests
 
 from config import grok_api_key
-from lead_links import apply_prompt_link_variables, resolve_lead_cta_link
+from lead_links import apply_prompt_link_variables, resolve_prompt_links
 from lead_tags import TAG_LABELS, TAG_NOT_INTERESTED
-from legal_content import build_knowledge_pack_cached
+from legal_content import build_knowledge_pack_cached, is_comptable_niche_preset
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -34,9 +34,18 @@ def truncate_inbound_text(text: str, max_chars: int = INBOUND_TEXT_MAX_CHARS) ->
     return f"{trimmed[: max_chars - 1]}…"
 
 
-def build_global_rules(*, max_sentences: int = 3) -> str:
+def build_global_rules(
+    *,
+    max_sentences: int = 3,
+    niche_preset_id: str | None = None,
+) -> str:
     n = max(1, min(10, max_sentences))
     phrase_label = "phrase" if n == 1 else "phrases"
+    pricing_url = (
+        "https://hercule.dev/cvg/comptable"
+        if is_comptable_niche_preset(niche_preset_id or "")
+        else "https://hercule.dev/cvg"
+    )
     return f"""Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
 Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string).
@@ -47,7 +56,7 @@ Règles quand should_reply est true :
 - Rédige reply_text en français.
 - Structure : accuser réception → répondre à la question → CTA urgent pour réserver un appel.
 - Inclus le lien CTA de réservation en URL brute (sera affiché « Réserver » à l'envoi).
-- Termine toujours par « Béatrice Meyer », puis une ligne avec l'URL du site (https://hercule.dev ou https://hercule.dev/cvg si question tarifs).
+- Termine toujours par « Béatrice Meyer », puis une ligne avec l'URL du site (https://hercule.dev ou {pricing_url} si question tarifs).
 - Signe toujours « Béatrice Meyer ».
 - Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
 
@@ -58,9 +67,6 @@ Sécurité :
 - Utilise uniquement le lien CTA fourni — n'invente jamais d'URL."""
 
 
-GLOBAL_RULES = build_global_rules(max_sentences=3)
-
-
 def assemble_system_prompt(
     config: dict[str, Any],
     prompt_snapshot: str,
@@ -68,8 +74,9 @@ def assemble_system_prompt(
     max_sentences: int = 3,
     custom_directive: str | None = None,
 ) -> str:
+    niche_preset_id = str(config.get("niche_preset_id") or "")
     parts = [
-        build_global_rules(max_sentences=max_sentences),
+        build_global_rules(max_sentences=max_sentences, niche_preset_id=niche_preset_id),
         "",
         "## Pack de connaissances",
         build_knowledge_pack(config),
@@ -251,11 +258,12 @@ def generate_reply_preview(
         }
 
     target_type = _target_type_from_config(config)
-    cta_link = resolve_lead_cta_link(lead_email, target_type)
+    prompt_links = resolve_prompt_links(lead_email, target_type)
     prompt_snapshot = apply_prompt_link_variables(
         prompt_snapshot,
-        cta_link,
+        prompt_links["primary"],
         target_type,
+        prompt_links,
     )
     sentence_count = _max_sentences_from_config(config, max_sentences)
 
@@ -270,7 +278,7 @@ def generate_reply_preview(
             f"Email du lead : {lead_email}",
             f"Tag Instantly du lead : {tag_label}",
             "",
-            f"Lien CTA (utilise exactement cette URL dans reply_text) : {cta_link}",
+            f"Lien CTA (utilise exactement cette URL dans reply_text) : {prompt_links['primary']}",
             "",
             "Réponse entrante à traiter :",
             truncate_inbound_text(inbound_text),

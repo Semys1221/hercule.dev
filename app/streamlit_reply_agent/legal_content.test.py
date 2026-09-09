@@ -78,6 +78,20 @@ class LegalContentTests(unittest.TestCase):
         self.assertIn("biggy_agency", pack)
         self.assertIn("1 489 €", pack)
 
+    def test_build_knowledge_pack_comptable_preset(self) -> None:
+        pack = build_knowledge_pack_cached(
+            "cabinets_expertise_comptable",
+            "buyer",
+            "Cabinets expertise comptable",
+            ">3",
+        )
+        self.assertIn("cvg/comptable", pack)
+        self.assertIn("5 remplacements", pack)
+        self.assertIn("cabinet EC (Buyer)", pack)
+        reply_safe = pack.split("## Reply-safe facts (condensed)", 1)[1]
+        self.assertIn("Hercule Comptable", reply_safe)
+        self.assertNotIn("Starter 1 489", reply_safe)
+
 
 if __name__ == "__main__":
     unittest.main()

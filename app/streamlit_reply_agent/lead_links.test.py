@@ -14,7 +14,7 @@ from lead_links import (
 
 class LeadLinksTests(unittest.TestCase):
     def test_fallback_buyer(self) -> None:
-        with patch("lead_links._find_lead_by_email", return_value=None):
+        with patch("lead_links._find_lead_by_email", return_value=(None, None)):
             self.assertEqual(
                 resolve_lead_cta_link("x@y.com", "buyer"),
                 fallback_cta_link("buyer"),
@@ -24,9 +24,31 @@ class LeadLinksTests(unittest.TestCase):
         url = "https://www.hercule.dev/reservation.html/slug99"
         with patch(
             "lead_links._find_lead_by_email",
-            return_value={"reservation_agence_link": url},
+            return_value=("agence", {"reservation_agence_link": url}),
         ):
             self.assertEqual(resolve_lead_cta_link("x@y.com", "buyer"), url)
+
+    def test_resolve_comptable_buyer(self) -> None:
+        url = "https://www.hercule.dev/r/comptable/slug99"
+        with patch(
+            "lead_links._find_lead_by_email",
+            return_value=("comptable", {"reservation_comptable_link": url}),
+        ):
+            self.assertEqual(resolve_lead_cta_link("x@y.com", "buyer"), url)
+
+    def test_apply_comptable_link_variable(self) -> None:
+        url = "https://www.hercule.dev/r/comptable/slug99"
+        prompt = "CTA: {reservation_comptable_link}"
+        links = {
+            "primary": url,
+            "agence_link": "https://www.hercule.dev/reservation.html",
+            "entreprise_link": "https://www.hercule.dev/reservation-entreprise.html",
+            "comptable_link": url,
+        }
+        self.assertEqual(
+            apply_prompt_link_variables(prompt, url, "buyer", links),
+            f"CTA: {url}",
+        )
 
     def test_apply_prompt_link_variables_buyer(self) -> None:
         url = "https://www.hercule.dev/reservation.html/abc"
