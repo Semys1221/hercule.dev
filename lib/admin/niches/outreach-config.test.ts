@@ -1,12 +1,37 @@
 /** Unit tests for niche outreach config env fallbacks and view composition. */
 
 import assert from "node:assert/strict";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   calendlyUriFromEnv,
   campaignIdFromEnv,
   composeOutreachConfigView,
+  getOutreachConfigRow,
+  getOutreachConfigViewWithClient,
+  upsertOutreachConfigWithClient,
 } from "@/lib/admin/niches/outreach-config";
+
+function mockClient(handlers: {
+  select?: { data: unknown; error: { message: string } | null };
+  upsert?: { data: unknown; error: { message: string } | null };
+}): SupabaseClient {
+  return {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () =>
+            handlers.select ?? { data: null, error: null },
+        }),
+      }),
+      upsert: () => ({
+        select: () => ({
+          single: async () => handlers.upsert ?? { data: null, error: null },
+        }),
+      }),
+    }),
+  } as unknown as SupabaseClient;
+}
 
 const previous = {
   agence: process.env.INSTANTLY_CAMPAIGN_ID_AGENCE,
@@ -92,30 +117,102 @@ assert.equal(
 assert.equal(fallbackCalendlyView.calendly_configured, true);
 assert.equal(fallbackCalendlyView.campaign_linked, false);
 
-if (previous.agence === undefined) {
-  delete process.env.INSTANTLY_CAMPAIGN_ID_AGENCE;
-} else {
-  process.env.INSTANTLY_CAMPAIGN_ID_AGENCE = previous.agence;
-}
-if (previous.comptable === undefined) {
-  delete process.env.INSTANTLY_CAMPAIGN_ID_COMPTABLE;
-} else {
-  process.env.INSTANTLY_CAMPAIGN_ID_COMPTABLE = previous.comptable;
-}
-if (previous.comptableAlt === undefined) {
-  delete process.env.COMPTABLE_CAMPAIGN_ID;
-} else {
-  process.env.COMPTABLE_CAMPAIGN_ID = previous.comptableAlt;
-}
-if (previous.provisioning === undefined) {
-  delete process.env.LINK_PROVISIONING_CAMPAIGN_ID;
-} else {
-  process.env.LINK_PROVISIONING_CAMPAIGN_ID = previous.provisioning;
-}
-if (previous.calendlyComptable === undefined) {
-  delete process.env.CALENDLY_EVENT_TYPE_URI_COMPTABLE;
-} else {
-  process.env.CALENDLY_EVENT_TYPE_URI_COMPTABLE = previous.calendlyComptable;
+async function runAsyncTests(): Promise<void> {
+  const dbRow = {
+    niche: "agence" as const,
+    instantly_campaign_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    calendly_event_type_uri: "https://api.calendly.com/event_types/DB",
+    updated_at: "2026-01-01T00:00:00.000Z",
+    updated_by: "ops",
+  };
+
+  const readClient = mockClient({ select: { data: dbRow, error: null } });
+  const fetchedRow = await getOutreachConfigRow(readClient, "agence");
+  assert.deepEqual(fetchedRow, dbRow);
+
+  const missingTableClient = mockClient({
+    select: { data: null, error: { message: 'relation "niche_outreach_config" does not exist' } },
+  });
+  assert.equal(await getOutreachConfigRow(missingTableClient, "agence"), null);
+
+  const viewFromDb = await getOutreachConfigViewWithClient(readClient, "agence", null);
+  assert.equal(viewFromDb.source, "database");
+  assert.equal(viewFromDb.instantly_campaign_id, dbRow.instantly_campaign_id);
+
+  const emptyClient = mockClient({ select: { data: null, error: null } });
+  const viewWithFallback = await getOutreachConfigViewWithClient(
+    emptyClient,
+    "entreprise",
+    "https://api.calendly.com/event_types/MOCK",
+  );
+  assert.equal(viewWithFallback.source, "env");
+  assert.equal(
+    viewWithFallback.resolved_calendly_event_type_uri,
+    "https://api.calendly.com/event_types/MOCK",
+  );
+
+  const upsertPayload = {
+    niche: "agence" as const,
+    instantly_campaign_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+    calendly_event_type_uri: null,
+    updated_at: "2026-02-01T00:00:00.000Z",
+    updated_by: "test",
+  };
+  const upsertClient = mockClient({ upsert: { data: upsertPayload, error: null } });
+  const upserted = await upsertOutreachConfigWithClient(upsertClient, "agence", {
+    instantly_campaign_id: upsertPayload.instantly_campaign_id,
+    calendly_event_type_uri: null,
+    updated_by: "test",
+  });
+  assert.equal(upserted.instantly_campaign_id, upsertPayload.instantly_campaign_id);
+
+  const upsertErrorClient = mockClient({
+    upsert: { data: null, error: { message: "duplicate key" } },
+  });
+  await assert.rejects(
+    () =>
+      upsertOutreachConfigWithClient(upsertErrorClient, "agence", {
+        instantly_campaign_id: upsertPayload.instantly_campaign_id,
+      }),
+    /duplicate key/,
+  );
 }
 
-console.log("outreach-config tests passed");
+function restoreEnv(): void {
+  if (previous.agence === undefined) {
+    delete process.env.INSTANTLY_CAMPAIGN_ID_AGENCE;
+  } else {
+    process.env.INSTANTLY_CAMPAIGN_ID_AGENCE = previous.agence;
+  }
+  if (previous.comptable === undefined) {
+    delete process.env.INSTANTLY_CAMPAIGN_ID_COMPTABLE;
+  } else {
+    process.env.INSTANTLY_CAMPAIGN_ID_COMPTABLE = previous.comptable;
+  }
+  if (previous.comptableAlt === undefined) {
+    delete process.env.COMPTABLE_CAMPAIGN_ID;
+  } else {
+    process.env.COMPTABLE_CAMPAIGN_ID = previous.comptableAlt;
+  }
+  if (previous.provisioning === undefined) {
+    delete process.env.LINK_PROVISIONING_CAMPAIGN_ID;
+  } else {
+    process.env.LINK_PROVISIONING_CAMPAIGN_ID = previous.provisioning;
+  }
+  if (previous.calendlyComptable === undefined) {
+    delete process.env.CALENDLY_EVENT_TYPE_URI_COMPTABLE;
+  } else {
+    process.env.CALENDLY_EVENT_TYPE_URI_COMPTABLE = previous.calendlyComptable;
+  }
+}
+
+async function main(): Promise<void> {
+  await runAsyncTests();
+  restoreEnv();
+  console.log("outreach-config tests passed");
+}
+
+main().catch((err) => {
+  restoreEnv();
+  throw err;
+});

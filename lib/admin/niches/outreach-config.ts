@@ -103,18 +103,26 @@ export function composeOutreachConfigView(params: {
   };
 }
 
-export async function getOutreachConfigView(niche: Niche): Promise<OutreachConfigView> {
-  const client = createLinkTrackingClient();
+/** @internal Exported for unit tests. */
+export async function getOutreachConfigViewWithClient(
+  client: SupabaseClient,
+  niche: Niche,
+  calendlyFallback?: string | null,
+): Promise<OutreachConfigView> {
   const row = await getOutreachConfigRow(client, niche);
   const envCampaignId = campaignIdFromEnv(niche);
   const envCalendlyUri = calendlyUriFromEnv(niche);
 
   let resolvedCalendlyFallback: string | null = null;
   if (!row?.calendly_event_type_uri?.trim() && !envCalendlyUri?.trim()) {
-    try {
-      resolvedCalendlyFallback = await getEventTypeUri(niche as CalendlyBookingEvent);
-    } catch {
-      resolvedCalendlyFallback = null;
+    if (calendlyFallback !== undefined) {
+      resolvedCalendlyFallback = calendlyFallback;
+    } else {
+      try {
+        resolvedCalendlyFallback = await getEventTypeUri(niche as CalendlyBookingEvent);
+      } catch {
+        resolvedCalendlyFallback = null;
+      }
     }
   }
 
@@ -125,6 +133,11 @@ export async function getOutreachConfigView(niche: Niche): Promise<OutreachConfi
     envCalendlyUri,
     resolvedCalendlyFallback,
   });
+}
+
+export async function getOutreachConfigView(niche: Niche): Promise<OutreachConfigView> {
+  const client = createLinkTrackingClient();
+  return getOutreachConfigViewWithClient(client, niche);
 }
 
 export async function resolveCalendlyEventTypeUri(
@@ -139,7 +152,9 @@ export async function resolveInstantlyCampaignId(niche: Niche): Promise<string |
   return view.instantly_campaign_id;
 }
 
-export async function upsertOutreachConfig(
+/** @internal Exported for unit tests. */
+export async function upsertOutreachConfigWithClient(
+  client: SupabaseClient,
   niche: Niche,
   payload: {
     instantly_campaign_id: string;
@@ -147,7 +162,6 @@ export async function upsertOutreachConfig(
     updated_by?: string | null;
   },
 ): Promise<NicheOutreachConfig> {
-  const client = createLinkTrackingClient();
   const { data, error } = await client
     .from("niche_outreach_config")
     .upsert(
@@ -168,4 +182,16 @@ export async function upsertOutreachConfig(
   }
 
   return data as NicheOutreachConfig;
+}
+
+export async function upsertOutreachConfig(
+  niche: Niche,
+  payload: {
+    instantly_campaign_id: string;
+    calendly_event_type_uri?: string | null;
+    updated_by?: string | null;
+  },
+): Promise<NicheOutreachConfig> {
+  const client = createLinkTrackingClient();
+  return upsertOutreachConfigWithClient(client, niche, payload);
 }

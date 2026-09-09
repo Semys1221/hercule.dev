@@ -27,6 +27,19 @@ L'accès repose sur le **déploiement** (URL non publique, équipe restreinte), 
 
 Les routes `/api/admin/*` qui servent le funnel builder (funnels, FAQ, pricing, demandes, onboarding) sont appelées **sans auth** depuis l'UI internal. Ne pas réintroduire `verifyAdminRequest` ni `POST /api/admin/session` pour ce périmètre.
 
+## SequenceWorkspace (Phase 3)
+
+Variables d'environnement pour les envois test et l'historique :
+
+| Variable | Usage |
+|----------|--------|
+| `SEQUENCE_TEST_LEAD_ID_AGENCE` | FK fixture pour les lignes `booking_email_jobs` (Historique). Fallback : premier lead agence avec email. |
+| `SEQUENCE_TEST_LEAD_ID_COMPTABLE` | Idem niche comptable. |
+| `SEQUENCE_TEST_LEAD_ID_ENTREPRISE` | Idem niche entreprise. |
+| `NEXT_PUBLIC_OPS_TEST_EMAIL` | Destinataire par défaut du dialog Tester (ex. `ops@hercule.dev`). Redémarrer le dev server après modification. |
+
+Tests : `pnpm test-bookings-patch` (unit) ; `pnpm test-resolve-booking-lead` (intégration DB).
+
 ## Hors scope (inchangé)
 
 Ces mécanismes restent en place ailleurs dans le projet :
