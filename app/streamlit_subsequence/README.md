@@ -71,4 +71,6 @@ pnpm smoke-streamlit-subsequence
 
 `{{reservation_agence_link}}`, `{{reservation_entreprise_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`
 
+`{{slot_1}}`, `{{slot_2}}` — next two Calendly slots for the campaign niche (e.g. `mardi 10 septembre à 14h30`), resolved at send time via `GET /api/calendly/next-slots`.
+
 `{{reservation_agence_link}}` or `{{reservation_entreprise_link}}` is required on send **only if** the template HTML contains that placeholder.

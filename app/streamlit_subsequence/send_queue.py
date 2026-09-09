@@ -84,6 +84,11 @@ SENDABLE_FLOWS: list[Flow] = [
 EMAIL_SIGNATURE = "Béatrice Meyer"
 RESERVATION_AGENCE_PLACEHOLDER = "{{reservation_agence_link}}"
 RESERVATION_ENTREPRISE_PLACEHOLDER = "{{reservation_entreprise_link}}"
+SLOT_PLACEHOLDERS = ("{{slot_1}}", "{{slot_2}}")
+
+KNOWN_CAMPAIGN_CALENDLY_EVENT: dict[str, str] = {
+    "e4c58718-ca00-4e27-b714-68e522fe4db6": "comptable",
+}
 
 
 def template_requires_reservation_link(body_html: str) -> bool:
@@ -305,7 +310,148 @@ def _render_template(body_html: str, vars_map: dict[str, str]) -> str:
     return out_body.replace("{{accountSignature}}", EMAIL_SIGNATURE)
 
 
-def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
+def _template_requires_slots(body_html: str) -> bool:
+    text = body_html or ""
+    return any(placeholder in text for placeholder in SLOT_PLACEHOLDERS)
+
+
+def _campaign_calendly_event(campaign_id: str) -> str | None:
+    known = KNOWN_CAMPAIGN_CALENDLY_EVENT.get(campaign_id.strip())
+    if known:
+        return known
+
+    try:
+        from supabase_repo import get_client
+
+        resp = (
+            get_client()
+            .table("niche_outreach_config")
+            .select("niche")
+            .eq("instantly_campaign_id", campaign_id)
+            .maybe_single()
+            .execute()
+        )
+        niche = str((resp.data or {}).get("niche") or "").strip()
+        if niche in {"agence", "comptable", "entreprise"}:
+            return niche
+    except Exception:
+        return None
+    return None
+
+
+def _build_slot_vars_from_labels(labels: list[str]) -> dict[str, str]:
+    slot_1 = labels[0].strip() if labels else ""
+    slot_2 = labels[1].strip() if len(labels) > 1 else ""
+    if slot_1 and not slot_2:
+        slot_2 = "un autre créneau"
+    return {"slot_1": slot_1, "slot_2": slot_2}
+
+
+def _resolve_slot_vars(campaign_id: str, body_html: str) -> dict[str, str]:
+    empty = {"slot_1": "", "slot_2": ""}
+    if not _template_requires_slots(body_html):
+        return empty
+
+    event = _campaign_calendly_event(campaign_id)
+    if not event:
+        return empty
+
+    try:
+        import requests
+
+        from config import app_base_url
+
+        response = requests.get(
+            f"{app_base_url()}/api/calendly/next-slots",
+            params={"event": event, "count": 2},
+            timeout=30,
+        )
+        data = response.json()
+        if not response.ok or not data.get("ok"):
+            return empty
+        slots = data.get("slots") or []
+        labels = [
+            str(slot.get("label") or "").strip()
+            for slot in slots
+            if isinstance(slot, dict) and str(slot.get("label") or "").strip()
+        ]
+        result = _build_slot_vars_from_labels(labels)
+        # #region agent log
+        try:
+            import json
+            import time
+
+            with open(
+                "/Users/evqn/dev/hercule.dev/.cursor/debug-f685d6.log",
+                "a",
+                encoding="utf-8",
+            ) as log_file:
+                log_file.write(
+                    json.dumps(
+                        {
+                            "sessionId": "f685d6",
+                            "hypothesisId": "H2",
+                            "location": "send_queue.py:_resolve_slot_vars",
+                            "message": "calendly next-slots resolved",
+                            "data": {
+                                "campaign_id": campaign_id,
+                                "event": event,
+                                "http_ok": response.ok,
+                                "api_ok": bool(data.get("ok")),
+                                "slot_1": result.get("slot_1", ""),
+                                "slot_2": result.get("slot_2", ""),
+                            },
+                            "timestamp": int(time.time() * 1000),
+                            "runId": "pre-fix",
+                        }
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
+        return result
+    except Exception as exc:
+        # #region agent log
+        try:
+            import json
+            import time
+
+            with open(
+                "/Users/evqn/dev/hercule.dev/.cursor/debug-f685d6.log",
+                "a",
+                encoding="utf-8",
+            ) as log_file:
+                log_file.write(
+                    json.dumps(
+                        {
+                            "sessionId": "f685d6",
+                            "hypothesisId": "H2",
+                            "location": "send_queue.py:_resolve_slot_vars",
+                            "message": "calendly next-slots failed",
+                            "data": {
+                                "campaign_id": campaign_id,
+                                "event": event,
+                                "error": str(exc),
+                            },
+                            "timestamp": int(time.time() * 1000),
+                            "runId": "pre-fix",
+                        }
+                    )
+                    + "\n"
+                )
+        except Exception:
+            pass
+        # #endregion
+        return empty
+
+
+def _template_vars(
+    lead: dict[str, Any],
+    *,
+    body_html: str = "",
+    campaign_id: str = "",
+) -> dict[str, str]:
     payload = lead.get("payload") if isinstance(lead.get("payload"), dict) else {}
     reservation_agence_link = lead_custom_var(lead, "reservation_agence_link") or ""
     reservation_entreprise_link = lead_custom_var(lead, "reservation_entreprise_link") or ""
@@ -315,13 +461,16 @@ def _template_vars(lead: dict[str, Any]) -> dict[str, str]:
     company = str(
         lead.get("company_name") or payload.get("companyName") or payload.get("company_name") or ""
     )
-    return {
+    vars_map = {
         "first_name": first,
         "last_name": str(lead.get("last_name") or payload.get("lastName") or ""),
         "company_name": company,
         "reservation_agence_link": reservation_agence_link,
         "reservation_entreprise_link": reservation_entreprise_link,
     }
+    if body_html and campaign_id:
+        vars_map.update(_resolve_slot_vars(campaign_id, body_html))
+    return vars_map
 
 
 def _load_template(campaign_id: str, template_key: str) -> dict[str, str]:
@@ -471,8 +620,13 @@ def render_template_html(
     campaign_id: str = "",
 ) -> str:
     template = _load_template(campaign_id, template_key)
-    vars_map = _template_vars(lead or PREVIEW_LEAD)
-    return _render_template(template["body_html"], vars_map)
+    body_html = template["body_html"]
+    vars_map = _template_vars(
+        lead or PREVIEW_LEAD,
+        body_html=body_html,
+        campaign_id=campaign_id,
+    )
+    return _render_template(body_html, vars_map)
 
 
 def fetch_pipeline_leads(
@@ -616,9 +770,46 @@ def _execute_send(
         )
         return {"ok": False, "error": "thread_not_found", "lead_email": lead_email}
 
-    html = html_override if html_override is not None else _render_template(
-        template["body_html"], _template_vars(lead)
-    )
+    body_html = template["body_html"]
+    source_html = html_override if html_override is not None else body_html
+    vars_map = _template_vars(lead, body_html=source_html, campaign_id=campaign_id)
+    html = _render_template(source_html, vars_map)
+    # #region agent log
+    try:
+        import json
+        import time
+
+        with open(
+            "/Users/evqn/dev/hercule.dev/.cursor/debug-f685d6.log",
+            "a",
+            encoding="utf-8",
+        ) as log_file:
+            log_file.write(
+                json.dumps(
+                    {
+                        "sessionId": "f685d6",
+                        "hypothesisId": "H3",
+                        "location": "send_queue.py:_execute_send",
+                        "message": "rendered bypass email",
+                        "data": {
+                            "flow": flow,
+                            "campaign_id": campaign_id,
+                            "used_html_override": html_override is not None,
+                            "slot_1": vars_map.get("slot_1", ""),
+                            "slot_2": vars_map.get("slot_2", ""),
+                            "has_slot_placeholders": any(
+                                placeholder in html for placeholder in SLOT_PLACEHOLDERS
+                            ),
+                        },
+                        "timestamp": int(time.time() * 1000),
+                        "runId": "pre-fix",
+                    }
+                )
+                + "\n"
+            )
+    except Exception:
+        pass
+    # #endregion
     subject = thread["subject"] or template["subject"] or "your message"
 
     client.reply_to_email(

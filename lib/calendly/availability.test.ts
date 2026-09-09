@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import {
   buildAvailabilitySummary,
   formatFrenchDateLabel,
+  formatFrenchSlotLabel,
   getEarliestQueryableTime,
   parseBookingEvent,
 } from "@/lib/calendly/availability";
@@ -50,6 +51,16 @@ function main() {
   assert.equal(
     formatFrenchDateLabel(new Date("2026-09-18T22:00:00.000Z")),
     "19 septembre",
+  );
+
+  assert.equal(
+    formatFrenchSlotLabel(new Date("2026-09-10T12:30:00.000Z")),
+    "jeudi 10 septembre à 14h30",
+  );
+
+  assert.equal(
+    formatFrenchSlotLabel(new Date("2026-09-10T07:00:00.000Z")),
+    "jeudi 10 septembre à 9h",
   );
 
   console.log("OK lib/calendly/availability.test.ts");

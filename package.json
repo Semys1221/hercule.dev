@@ -22,6 +22,7 @@
     "apply-calendly-meeting-links-migration": "tsx --env-file=.env ./scripts/crm/applyCalendlyMeetingLinksMigration.ts",
     "seed-fake-clients": "tsx --env-file=.env ./scripts/crm/seedFakeClients.ts",
     "apply-h48-confirm-contiendront-migration": "tsx --env-file=.env ./scripts/crm/applyH48ConfirmContiendrontMigration.ts",
+    "apply-comptable-e1-e2-slots-migration": "tsx --env-file=.env ./scripts/crm/applyComptableE1E2SlotsMigration.ts",
     "configure-calendly-link-tracking-webhook": "tsx --env-file=.env ./scripts/crm/configureCalendlyLinkTrackingWebhook.ts",
     "repair-confirmed-without-booking-email": "tsx --env-file=.env ./scripts/crm/repairConfirmedWithoutBookingEmail.ts",
     "cancel-unconfirmed-agence-meetings": "tsx --env-file=.env ./scripts/crm/cancelUnconfirmedAgenceMeetings.ts",

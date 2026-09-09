@@ -25,7 +25,7 @@ const KNOWN_CAMPAIGN_CATEGORY: Record<string, LeadCategory> = {
   "e4c58718-ca00-4e27-b714-68e522fe4db6": "comptable",
 };
 
-async function resolveCategoryForCampaign(
+export async function resolveCategoryForCampaign(
   campaignId: string,
 ): Promise<LeadCategory | null> {
   const known = KNOWN_CAMPAIGN_CATEGORY[campaignId];

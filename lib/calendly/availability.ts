@@ -81,6 +81,32 @@ export function formatFrenchDateLabel(
   }).format(date);
 }
 
+/** e.g. mardi 10 septembre à 14h30 */
+export function formatFrenchSlotLabel(
+  date: Date,
+  timeZone = PARIS_TIMEZONE,
+): string {
+  const weekday = new Intl.DateTimeFormat("fr-FR", {
+    timeZone,
+    weekday: "long",
+  }).format(date);
+  const dayMonth = new Intl.DateTimeFormat("fr-FR", {
+    timeZone,
+    day: "numeric",
+    month: "long",
+  }).format(date);
+  const parts = new Intl.DateTimeFormat("fr-FR", {
+    timeZone,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const hour = parts.find((part) => part.type === "hour")?.value ?? "0";
+  const minute = parts.find((part) => part.type === "minute")?.value ?? "00";
+  const timeLabel = minute === "00" ? `${hour}h` : `${hour}h${minute}`;
+  return `${weekday} ${dayMonth} à ${timeLabel}`;
+}
+
 function getParisCalendarDate(date: Date, timeZone = PARIS_TIMEZONE): Date {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone,
@@ -236,17 +262,20 @@ export async function fetchAvailableTimesWindow(
   return payload.collection ?? [];
 }
 
-export async function findFirstAvailableSlot(
+export async function findNextAvailableSlotsForEventType(
   eventTypeUri: string,
+  count = 2,
   horizonDays = DEFAULT_HORIZON_DAYS,
-): Promise<Date | null> {
+): Promise<Date[]> {
+  const targetCount = Math.max(1, count);
   const now = new Date();
   const horizonEnd = new Date(
     now.getTime() + horizonDays * 24 * 60 * 60 * 1000,
   );
   let windowStart = getEarliestQueryableTime(now);
+  const collected: Date[] = [];
 
-  while (windowStart < horizonEnd) {
+  while (windowStart < horizonEnd && collected.length < targetCount) {
     const windowEnd = new Date(
       Math.min(
         windowStart.getTime() + WINDOW_DAYS * 24 * 60 * 60 * 1000,
@@ -267,14 +296,38 @@ export async function findFirstAvailableSlot(
           new Date(right.start_time ?? 0).getTime(),
       );
 
-    if (available.length > 0) {
-      return new Date(available[0].start_time as string);
+    for (const slot of available) {
+      if (collected.length >= targetCount) {
+        break;
+      }
+      collected.push(new Date(slot.start_time as string));
     }
 
     windowStart = windowEnd;
   }
 
-  return null;
+  return collected;
+}
+
+export async function findNextAvailableSlots(
+  event: CalendlyBookingEvent,
+  count = 2,
+  horizonDays = DEFAULT_HORIZON_DAYS,
+): Promise<Date[]> {
+  const eventTypeUri = await getEventTypeUri(event);
+  return findNextAvailableSlotsForEventType(eventTypeUri, count, horizonDays);
+}
+
+export async function findFirstAvailableSlot(
+  eventTypeUri: string,
+  horizonDays = DEFAULT_HORIZON_DAYS,
+): Promise<Date | null> {
+  const slots = await findNextAvailableSlotsForEventType(
+    eventTypeUri,
+    1,
+    horizonDays,
+  );
+  return slots[0] ?? null;
 }
 
 export function buildAvailabilitySummary(
