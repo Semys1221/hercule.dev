@@ -40,6 +40,16 @@ Variables d'environnement pour les envois test et l'historique :
 
 Tests : `pnpm test-bookings-patch` (unit) ; `pnpm test-resolve-booking-lead` (intégration DB).
 
+## Variables email — Bookings DB (Phase 7)
+
+Onglet **DB** sous `/internal/funnels/bookings/{niche}` :
+
+- **Vérifier** — `POST /api/admin/niches/{niche}/variables/verify` (scan leads campagne liée)
+- **Provisionner** — `POST /api/admin/niches/{niche}/variables/provision` (PATCH Instantly depuis Supabase)
+- CLI : `pnpm verify-email-variables -- --niche agence` (même lib que l'API ; exit 1 si mismatch)
+
+Prérequis : campagne Instantly liée via la section « Lier campagne » ; `INSTANTLY_API_KEY` + Supabase service role en local.
+
 ## Hors scope (inchangé)
 
 Ces mécanismes restent en place ailleurs dans le projet :

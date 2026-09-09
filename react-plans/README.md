@@ -31,6 +31,16 @@ Read-only audits from `improve-react` become executable plans here. Each plan is
 | 023 | [023-hercule-space-axis-in-internal-bookings-table-ts](./023-hercule-space-axis-in-internal-bookings-table-ts.md) | OPEN | frontend-audit (standard) |
 | 024 | [024-hercule-space-axis-in-internal-bookings-table-ts](./024-hercule-space-axis-in-internal-bookings-table-ts.md) | OPEN | frontend-audit (standard) |
 | 025 | [025-hercule-space-axis-in-internal-funnel-editor-tsx](./025-hercule-space-axis-in-internal-funnel-editor-tsx.md) | OPEN | frontend-audit (standard) |
+| 026 | [026-no-side-effect-in-state-updater-function-pricing](./026-no-side-effect-in-state-updater-function-pricing.md) | OPEN | frontend-audit (standard) |
+| 027 | [027-no-tiny-uppercase-tracked-label-apercu-crm-tsx](./027-no-tiny-uppercase-tracked-label-apercu-crm-tsx.md) | OPEN | frontend-audit (standard) |
+| 028 | [028-no-tiny-uppercase-tracked-label-carte-projet-tsx](./028-no-tiny-uppercase-tracked-label-carte-projet-tsx.md) | OPEN | frontend-audit (standard) |
+| 029 | [029-no-tiny-uppercase-tracked-label-apercu-crm-tsx](./029-no-tiny-uppercase-tracked-label-apercu-crm-tsx.md) | OPEN | frontend-audit (standard) |
+| 030 | [030-no-tiny-uppercase-tracked-label-carte-projet-tsx](./030-no-tiny-uppercase-tracked-label-carte-projet-tsx.md) | OPEN | frontend-audit (standard) |
+| 031 | [031-no-cramped-container-padding-apercu-crm-tsx](./031-no-cramped-container-padding-apercu-crm-tsx.md) | OPEN | frontend-audit (standard) |
+| 032 | [032-no-arbitrary-px-font-size-apercu-crm-tsx](./032-no-arbitrary-px-font-size-apercu-crm-tsx.md) | OPEN | frontend-audit (standard) |
+| 033 | [033-no-arbitrary-px-font-size-apercu-crm-tsx](./033-no-arbitrary-px-font-size-apercu-crm-tsx.md) | OPEN | frontend-audit (standard) |
+| 034 | [034-no-tiny-text-apercu-crm-tsx](./034-no-tiny-text-apercu-crm-tsx.md) | OPEN | frontend-audit (standard) |
+| 035 | [035-no-arbitrary-px-font-size-apercu-crm-tsx](./035-no-arbitrary-px-font-size-apercu-crm-tsx.md) | OPEN | frontend-audit (standard) |
 
 ## Execution order
 

@@ -24,9 +24,9 @@ export function GrilleOffres() {
           viewport={{ once: true }}
           className="flex items-center gap-2 mb-6"
         >
-          <div className="w-2 h-2 rounded-full bg-white/40" />
+          <div className="size-2 rounded-full bg-white/40" />
           <span className="text-neutral-500 text-sm">{hero.eyebrow}</span>
-          <ChevronRight className="w-4 h-4 text-neutral-600" />
+          <ChevronRight className="size-4 text-neutral-600" />
         </motion.div>
 
         <motion.h2
@@ -67,13 +67,13 @@ export function GrilleOffres() {
             className="border border-white/[0.08] rounded-xl p-8 bg-[#0A0A0A]"
           >
             <div className="flex items-center gap-3 mb-6">
-              <Shield className="w-5 h-5 text-neutral-400" />
+              <Shield className="size-5 text-neutral-400" />
               <h3 className="text-white text-xl font-medium tracking-[-0.02em]">{guaranteeSection.title}</h3>
             </div>
             <ul className="space-y-3">
               {guaranteeSection.items.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-neutral-400 text-sm">
-                  <Check className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
+                  <Check className="size-4 text-neutral-500 mt-0.5 shrink-0" />
                   {item}
                 </li>
               ))}

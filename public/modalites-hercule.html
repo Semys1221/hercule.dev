@@ -165,7 +165,7 @@
         </div>
 
         <div id="successView" class="is-hidden">
-            <h1>Votre rendez-vous a été confirmé</h1>
+            <h1>Validation enregistrée</h1>
             <p class="success-message" id="successMessage"></p>
             <p class="meeting-recap is-hidden" id="meetingRecap"></p>
             <div class="faq">
@@ -276,8 +276,8 @@
             successViewEl.classList.remove('is-hidden');
 
             successMessageEl.textContent = already
-                ? 'Votre rendez-vous était déjà confirmé. Merci.'
-                : 'Merci.';
+                ? 'Votre validation était déjà prise en compte.'
+                : 'Votre validation est prise en compte.';
 
             if (context && context.date && context.heure) {
                 meetingRecapEl.textContent =
@@ -359,28 +359,17 @@
             return data;
         }
 
-        async function confirmPresence() {
-            if (!slug && !email) {
-                showError('Lien invalide : identifiant manquant. Ouvrez ce lien depuis l\'email.');
-                return;
+        async function submitConfirmation() {
+            var res = await fetch('/api/link-tracking/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slug: slug, email: email })
+            });
+            var data = await res.json();
+            if (!res.ok || data.ok === false) {
+                throw new Error(data.error || data.reason || 'Échec');
             }
-            statusEl.textContent = 'Confirmation en cours…';
-            statusEl.className = 'status pending';
-            try {
-                var res = await fetch('/api/link-tracking/confirm', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ slug: slug, email: email })
-                });
-                var data = await res.json();
-                if (!res.ok || data.ok === false) {
-                    throw new Error(data.error || data.reason || 'Échec');
-                }
-                markConfirmedInUrl();
-                showConfirmedPage(lastContext, Boolean(data.alreadyConfirmed));
-            } catch (err) {
-                showError(err instanceof Error ? err.message : 'Impossible de confirmer.');
-            }
+            return data;
         }
 
         async function loadContext() {
@@ -388,21 +377,49 @@
                 showError('Lien invalide : identifiant manquant. Ouvrez ce lien depuis l\'email.');
                 return;
             }
+
+            if (autoConfirm || alreadyConfirmed) {
+                showConfirmedPage(null, alreadyConfirmed);
+
+                try {
+                    var contextPromise = fetchContext().catch(function () {
+                        return null;
+                    });
+                    var confirmPromise = alreadyConfirmed
+                        ? Promise.resolve({ alreadyConfirmed: true })
+                        : submitConfirmation();
+
+                    var results = await Promise.all([contextPromise, confirmPromise]);
+                    var data = results[0];
+                    var confirmData = results[1];
+
+                    if (data && data.cancelled) {
+                        showError('Ce rendez-vous a déjà été annulé.');
+                        return;
+                    }
+
+                    markConfirmedInUrl();
+                    showConfirmedPage(
+                        data,
+                        Boolean(confirmData.alreadyConfirmed || alreadyConfirmed || (data && data.alreadyConfirmed))
+                    );
+                } catch (err) {
+                    showError(err instanceof Error ? err.message : 'Impossible de confirmer.');
+                }
+                return;
+            }
+
             try {
-                var data = await fetchContext();
-                if (data.cancelled) {
+                var previewData = await fetchContext();
+                if (previewData.cancelled) {
                     showError('Ce rendez-vous a déjà été annulé.');
                     return;
                 }
-                if (data.alreadyConfirmed || alreadyConfirmed) {
-                    showConfirmedPage(data, true);
+                if (previewData.alreadyConfirmed) {
+                    showConfirmedPage(previewData, true);
                     return;
                 }
-                if (autoConfirm) {
-                    await confirmPresence();
-                    return;
-                }
-                renderContext(data);
+                renderContext(previewData);
                 statusEl.textContent = '';
                 statusEl.className = 'status';
             } catch (err) {

@@ -2,22 +2,23 @@ import Link from "next/link"
 
 import { FooterLegalBar } from "@/components/site/footer-legal-bar"
 
+const footerLinks: Record<string, { label: string; href: string }[]> = {
+  Offre: [
+    { label: "Méthode", href: "#methode" },
+    { label: "Tarification", href: "#pricing" },
+    { label: "Garanties", href: "#garanties" },
+    { label: "FAQ", href: "/faq" },
+    { label: "Contact", href: "#contact" },
+  ],
+  Hercule: [{ label: "Espace agences web", href: "/agence" }],
+  Légal: [
+    { label: "CGV", href: "/cvg/comptable" },
+    { label: "Mentions légales", href: "/mentions-legales" },
+    { label: "Confidentialité", href: "/confidentialite" },
+  ],
+}
+
 export function Footer() {
-  const footerLinks: Record<string, { label: string; href: string }[]> = {
-    Offre: [
-      { label: "Méthode", href: "#methode" },
-      { label: "Tarification", href: "#pricing" },
-      { label: "Garanties", href: "#garanties" },
-      { label: "FAQ", href: "/faq" },
-      { label: "Contact", href: "#contact" },
-    ],
-    Hercule: [{ label: "Espace agences web", href: "/agence" }],
-    Légal: [
-      { label: "CGV", href: "/cvg/comptable" },
-      { label: "Mentions légales", href: "/mentions-legales" },
-      { label: "Confidentialité", href: "/confidentialite" },
-    ],
-  }
 
   return (
     <footer className="border-t border-zinc-800 py-16 px-6" style={{ backgroundColor: "#09090B" }}>

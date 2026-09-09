@@ -28,11 +28,9 @@ export function PricingFlipCard({
   function toggleFlip(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
-    setFlipped((current) => {
-      const next = !current;
-      onFlipChange?.(next);
-      return next;
-    });
+    const next = !flipped;
+    setFlipped(next);
+    onFlipChange?.(next);
   }
 
   return (

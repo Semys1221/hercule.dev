@@ -33,9 +33,9 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             viewport={{ once: true }}
             className="flex items-center gap-2 mb-6"
           >
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <div className="size-2 rounded-full bg-emerald-500" />
             <span className="text-zinc-400 text-sm">Missions</span>
-            <ChevronRight className="w-4 h-4 text-zinc-500" />
+            <ChevronRight className="size-4 text-zinc-500" />
           </motion.div>
 
           <motion.h2
@@ -91,8 +91,8 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             </div>
           ) : null}
         </Marquee>
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-[#09090B] to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-1/6 bg-gradient-to-l from-[#09090B] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/6 bg-linear-to-r from-[#09090B] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-1/6 bg-linear-to-l from-[#09090B] to-transparent" />
       </motion.div>
 
       <div className="w-full flex justify-center px-6 mt-6">

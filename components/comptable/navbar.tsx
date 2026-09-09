@@ -10,7 +10,7 @@ export function Navbar() {
       <div className="w-full flex justify-center px-6 py-4">
         <div className="w-full max-w-4xl flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <HerculeMark variant="dual" className="w-5 h-5 text-white" />
+            <HerculeMark variant="dual" className="size-5 text-white" />
             <span className="text-white font-semibold">Hercule</span>
           </Link>
           <div className="hidden md:flex items-center gap-8">

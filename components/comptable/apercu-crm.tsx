@@ -86,23 +86,23 @@ const marieConversation = [
   },
 ]
 
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.2, delayChildren: 0.3 },
+  },
+}
+
+const panelVariants = {
+  hidden: { opacity: 0, x: 40 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const },
+  },
+}
+
 export function ApercuCrm() {
-  const containerVariants = {
-    hidden: {},
-    visible: {
-      transition: { staggerChildren: 0.2, delayChildren: 0.3 },
-    },
-  }
-
-  const panelVariants = {
-    hidden: { opacity: 0, x: 40 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const },
-    },
-  }
-
   const selected = prospects.find((p) => p.active) ?? prospects[0]
 
   return (
@@ -118,17 +118,17 @@ export function ApercuCrm() {
       >
         <div className="p-3 border-b border-zinc-800/50">
           <div className="flex items-center gap-2 px-2 py-1.5">
-            <div className="w-6 h-6 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-              <HerculeMark variant="dual" className="w-3.5 h-3.5 text-white" />
+            <div className="size-6 rounded-md bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+              <HerculeMark variant="dual" className="size-3.5 text-white" />
             </div>
             <span className="text-white font-semibold text-sm">Hercule</span>
-            <ChevronDown className="w-3.5 h-3.5 text-zinc-500 ml-auto" />
+            <ChevronDown className="size-3.5 text-zinc-500 ml-auto" />
           </div>
         </div>
         <div className="p-3">
           <div className="flex items-center gap-2 px-2.5 py-1.5 bg-zinc-800/50 rounded-md text-zinc-500 text-xs">
-            <Search className="w-3.5 h-3.5" />
-            <span>Rechercher une mission...</span>
+            <Search className="size-3.5" />
+            <span>Rechercher une mission…</span>
           </div>
         </div>
         <div className="px-3 space-y-0.5">

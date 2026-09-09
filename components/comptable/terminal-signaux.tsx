@@ -88,13 +88,13 @@ export function TerminalSignaux() {
       <div className="flex-1 rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden shadow-2xl shadow-black/40">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-800 bg-zinc-900/80">
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-            <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
+            <div className="size-2.5 rounded-full bg-zinc-700" />
+            <div className="size-2.5 rounded-full bg-zinc-700" />
+            <div className="size-2.5 rounded-full bg-zinc-700" />
           </div>
           <span className="text-zinc-500 text-xs font-mono ml-2">hercule-scanner — live</span>
           <span className="ml-auto flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-emerald-500/80 text-[10px] font-mono">running</span>
           </span>
         </div>

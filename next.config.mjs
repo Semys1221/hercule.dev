@@ -96,7 +96,7 @@ const nextConfig = {
         },
         {
           source: "/modalites-hercule.html/:slug",
-          destination: "/modalites-hercule.html?code=:slug",
+          destination: "/modalites-hercule.html",
         },
       ],
     };

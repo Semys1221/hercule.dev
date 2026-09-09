@@ -53,7 +53,7 @@ const MAIN_AGENCE_TYPES: BookingEmailType[] = [
   "h20_cancel",
 ];
 
-const ENTREPRISE_TYPES: BookingEmailType[] = [
+const CABINET_BOOKING_TYPES: BookingEmailType[] = [
   "immediate",
   "h48_confirm",
   "h24_relance",
@@ -62,7 +62,10 @@ const ENTREPRISE_TYPES: BookingEmailType[] = [
 const ROLE_RECOVERY_TYPES: BookingEmailType[] = ["role_seq_48", "role_seq_24"];
 
 function allowedMainTypes(category: StartSequenceParams["category"]): BookingEmailType[] {
-  return category === "entreprise" ? ENTREPRISE_TYPES : MAIN_AGENCE_TYPES;
+  if (category === "entreprise" || category === "comptable") {
+    return CABINET_BOOKING_TYPES;
+  }
+  return MAIN_AGENCE_TYPES;
 }
 
 function resolveMainEmailTypes(
@@ -448,10 +451,16 @@ function confirmUrlForJob(job: BookingEmailJob, lead: LinkTrackingLead): string 
   if (job.email_type === "role_seq_24") {
     return buildTemporaryConfirmUrl(lead.slug, lead.email);
   }
-  if (job.lead_category === "entreprise" && job.email_type === "h48_confirm") {
+  if (
+    (job.lead_category === "entreprise" || job.lead_category === "comptable") &&
+    job.email_type === "h48_confirm"
+  ) {
     return buildEntreprisePostBookingUrl(lead.slug, lead.email);
   }
-  if (job.lead_category === "entreprise" && job.email_type === "h24_relance") {
+  if (
+    (job.lead_category === "entreprise" || job.lead_category === "comptable") &&
+    job.email_type === "h24_relance"
+  ) {
     return "";
   }
   return confirmationAgenceLinkFor(lead);

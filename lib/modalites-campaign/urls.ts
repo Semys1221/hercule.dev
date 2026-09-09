@@ -13,7 +13,8 @@ export function buildModalitesConfirmUrl(
   options?: { autoConfirm?: boolean },
 ): string {
   const trimmedSlug = slug.trim();
-  const url = new URL(`${getModalitesConfirmBaseUrl()}/${trimmedSlug}`);
+  const url = new URL(getModalitesConfirmBaseUrl());
+  url.searchParams.set("code", trimmedSlug);
   if (email.trim()) {
     url.searchParams.set("email", email.trim().toLowerCase());
   }

@@ -37,7 +37,7 @@ function PostulerActionBar() {
       <span className="text-sm font-medium text-zinc-400 transition-colors duration-150 group-hover/card:text-white">
         Postuler
       </span>
-      <ArrowRight className="size-4 text-zinc-500 transition-all duration-150 group-hover/card:translate-x-0.5 group-hover/card:text-white" />
+      <ArrowRight className="size-4 text-zinc-500 transition-[transform,color] duration-150 group-hover/card:translate-x-0.5 group-hover/card:text-white" />
     </a>
   )
 }

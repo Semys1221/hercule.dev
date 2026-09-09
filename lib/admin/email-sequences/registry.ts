@@ -33,7 +33,7 @@ export type EmailSequenceEntry = {
   stepCount: number;
   status: EmailSequenceStatus;
   provider: EmailSequenceProvider;
-  audiences: Audience[] | "both";
+  audiences: Niche[];
   description: string;
   steps: EmailSequenceStep[];
   editorKind: EmailSequenceEditorKind;
@@ -55,7 +55,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 0,
     status: "spec",
     provider: "instantly",
-    audiences: "both",
+    audiences: ["agence", "comptable", "entreprise"],
     description:
       "Enregistrement et analyse des stats campagnes Instantly (pas d'édition copy outreach).",
     steps: [],
@@ -72,7 +72,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 3,
     status: "built",
     provider: "instantly",
-    audiences: "both",
+    audiences: ["agence", "comptable", "entreprise"],
     description: "Séquence interested post-webhook — E1 immédiat, E2 +24h, E3 +48h.",
     steps: [
       { id: "interested_email1", label: "Email 1", delay: "Immédiat", templateKey: "interested_email1" },
@@ -92,7 +92,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 1,
     status: "built",
     provider: "hybrid",
-    audiences: "both",
+    audiences: ["agence", "comptable", "entreprise"],
     description: "Prompt IA par campagne Instantly pour réponses automatiques.",
     steps: [{ id: "prompt", label: "Prompt", delay: "—" }],
     editorKind: "reply_agent",
@@ -188,7 +188,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 3,
     status: "built",
     provider: "instantly",
-    audiences: "both",
+    audiences: ["agence", "comptable", "entreprise"],
     description: "Séquence absence : immédiat, +24h, +48h (dernier sans lien reschedule).",
     steps: [
       { id: "no_show_email1", label: "Email 1", delay: "Immédiat", templateKey: "no_show_email1" },
@@ -352,7 +352,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 4,
     status: "built",
     provider: "resend",
-    audiences: "both",
+    audiences: ["agence", "entreprise"],
     description: "Recherche lancée, mise à jour J+7, milestones, waitlist.",
     steps: [
       { id: "deliverance_search_started", label: "Recherche lancée", delay: "startedAt + offset", emailType: "deliverance_search_started" },
@@ -411,7 +411,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 4,
     status: "built",
     provider: "resend",
-    audiences: "both",
+    audiences: ["agence", "entreprise"],
     description:
       "Survey fin de RDV avec token — entreprise et agence, chacun avec une relance +24h si pas de réponse.",
     steps: [
@@ -448,7 +448,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 1,
     status: "built",
     provider: "resend",
-    audiences: "both",
+    audiences: ["agence", "entreprise"],
     description: "Notification statut commercial paiement.",
     steps: [{ id: "payment_notification", label: "Paiement", delay: "Event", emailType: "payment_notification_client" }],
     editorKind: "booking",
@@ -457,9 +457,6 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
 ];
 
 function matchesAudience(entry: EmailSequenceEntry, audience: Audience): boolean {
-  if (entry.audiences === "both") {
-    return true;
-  }
   return entry.audiences.includes(audience);
 }
 
@@ -480,7 +477,7 @@ export function emailSequenceHref(audience: Audience, slug: string): string {
 }
 
 export function emailsHubHref(audience: Audience): string {
-  return `/internal/funnels/${audience}/emails`;
+  return `/internal/funnels/emails/${audience}`;
 }
 
 /** Legacy nav paths → new slugs (audience-specific overrides first) */

@@ -26,8 +26,12 @@ export async function resolveLeadCtaLink(
 ): Promise<string> {
   const client = createLinkTrackingClient();
   const lookup = await findLeadByEmail(client, leadEmail);
-  const column = ctaLinkColumn(targetType);
   if (lookup?.lead) {
+    if (targetType === "seller" && lookup.category === "comptable") {
+      const comptableLink = lookup.lead.reservation_comptable_link?.trim();
+      if (comptableLink) return comptableLink;
+    }
+    const column = ctaLinkColumn(targetType);
     const value = lookup.lead[column]?.trim();
     if (value) return value;
   }

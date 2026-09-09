@@ -122,7 +122,8 @@ function main() {
   );
 
   const url = buildModalitesConfirmUrl("AbC123", "Lead@Example.com");
-  assert.match(url, /modalites-hercule\.html\/AbC123/);
+  assert.match(url, /modalites-hercule\.html\?/);
+  assert.match(url, /code=AbC123/);
   assert.match(url, /email=lead%40example\.com/);
   assert.doesNotMatch(url, /confirm=1/);
 
@@ -130,6 +131,7 @@ function main() {
     autoConfirm: true,
   });
   assert.match(autoUrl, /confirm=1/);
+  assert.doesNotMatch(autoUrl, /modalites-hercule\.html\/AbC123/);
 
   assert.equal(modalitesFaqAudience("agence"), "agence");
   assert.equal(modalitesFaqAudience("entreprise"), "comptable");

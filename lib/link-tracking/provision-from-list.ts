@@ -24,7 +24,7 @@ import {
 
 const DEFAULT_LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c";
 const DEFAULT_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6";
-const DEFAULT_CATEGORY: LeadCategory = "entreprise";
+const DEFAULT_CATEGORY: LeadCategory = "comptable";
 const INSERT_BATCH_SIZE = 100;
 const PATCH_CONCURRENCY = Number.parseInt(
   process.env.INSTANTLY_PATCH_CONCURRENCY?.trim() ?? "8",

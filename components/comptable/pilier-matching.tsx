@@ -68,8 +68,8 @@ export function PilierMatching() {
                   transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
                   className="bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 transition-colors p-8 rounded-[30px] min-h-[280px] flex flex-col"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-6">
-                    <Icon className="w-5 h-5 text-zinc-300" />
+                  <div className="size-10 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center mb-6">
+                    <Icon className="size-5 text-zinc-300" />
                   </div>
                   <h3 className="text-white font-medium text-xl mb-3">{card.title}</h3>
                   <p className="text-zinc-400 text-sm leading-relaxed">{card.description}</p>

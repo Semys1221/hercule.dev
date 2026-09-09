@@ -20,6 +20,14 @@ interface AccueilSceneProps {
   teaser: DemandeTeaser | null
 }
 
+const baseTransform = {
+  translateX: 2,
+  scale: 1.2,
+  rotateX: 47,
+  rotateY: 31,
+  rotateZ: 324,
+}
+
 export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
   const [yOffset, setYOffset] = useState(0)
 
@@ -33,14 +41,6 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
-
-  const baseTransform = {
-    translateX: 2,
-    scale: 1.2,
-    rotateX: 47,
-    rotateY: 31,
-    rotateZ: 324,
-  }
 
   return (
     <>

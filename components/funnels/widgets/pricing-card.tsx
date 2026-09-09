@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, ChevronDown, Lock } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CALENDLY_AGENCE_URL } from "@/lib/constants";
 import type { PricingPlan } from "@/lib/site/pricing-types";
@@ -218,22 +219,24 @@ export function PricingCard({
             )}
 
             {showCheckoutCta ? (
-              <button
+              <Button
                 type="button"
                 onClick={onCtaClick}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
               >
                 {ctaLabel}
                 <ArrowRight className="size-4" />
-              </button>
+              </Button>
             ) : plan.featured && !compact ? (
-              <a
-                href={ctaHref}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+              <Button
+                asChild
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
               >
-                {ctaLinkLabel}
-                <ArrowRight className="size-4" />
-              </a>
+                <a href={ctaHref}>
+                  {ctaLinkLabel}
+                  <ArrowRight className="size-4" />
+                </a>
+              </Button>
             ) : null}
 
             <div
@@ -243,7 +246,7 @@ export function PricingCard({
             >
               <Collapsible open={open} onOpenChange={setOpen}>
                 <div className="border border-white/10 rounded-md overflow-hidden">
-                  <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/20">
+                  <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors focus-visible:ring-2 focus-visible:ring-white/20">
                     Ce qui est inclus
                     <ChevronDown
                       className={cn(

@@ -14,9 +14,9 @@ export function MethodeRadar() {
           viewport={{ once: true }}
           className="flex items-center gap-2 mb-6"
         >
-          <div className="w-2 h-2 rounded-full bg-emerald-500" />
+          <div className="size-2 rounded-full bg-emerald-500" />
           <span className="text-zinc-400 text-sm">Méthodologie</span>
-          <ChevronRight className="w-4 h-4 text-zinc-500" />
+          <ChevronRight className="size-4 text-zinc-500" />
         </motion.div>
 
         <motion.h2

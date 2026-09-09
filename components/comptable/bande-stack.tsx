@@ -32,7 +32,7 @@ export function BandeStack() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-zinc-500 mb-16"
           >
-            Tenue, fiscal, obligations administratives — honoraires annuels de 2 400 € à 6 000 €.
+            Tenue, fiscal, obligations administratives : honoraires annuels de 2 400 € à 6 000 €.
           </motion.p>
 
           <motion.div
@@ -46,7 +46,7 @@ export function BandeStack() {
               const Icon = item.icon
               return (
                 <div key={item.name} className="text-zinc-200 font-semibold text-lg flex items-center gap-3">
-                  <Icon className="w-5 h-5 text-zinc-400" strokeWidth={2} />
+                  <Icon className="size-5 text-zinc-400" strokeWidth={2} />
                   {item.name}
                 </div>
               )

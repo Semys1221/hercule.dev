@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
-import { SequenceDropdown } from "@/components/internal/funnels/sequence-editor/sequence-dropdown";
+import { SequenceWorkspace } from "@/components/internal/funnels/sequence-editor/sequence-workspace";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -235,7 +235,7 @@ export function EmailSequenceEditor({
       ) : null}
 
       {!needsCampaign && adapter ? (
-        <SequenceDropdown
+        <SequenceWorkspace
           title={sequence.name}
           description={sequence.description}
           adapter={adapter}
@@ -252,7 +252,7 @@ export function EmailSequenceEditor({
           </EmptyHeader>
           <EmptyContent>
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/internal/funnels/${audience}/emails`}>
+              <Link href={`/internal/funnels/emails/${audience}`}>
                 Retour au tableau
               </Link>
             </Button>
@@ -261,7 +261,7 @@ export function EmailSequenceEditor({
       ) : null}
 
       {needsCampaign && campaignId && adapter ? (
-        <SequenceDropdown
+        <SequenceWorkspace
           key={`${sequence.slug}-${campaignId}`}
           title={sequence.name}
           description={sequence.description}

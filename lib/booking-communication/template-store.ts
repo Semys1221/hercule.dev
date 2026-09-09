@@ -118,7 +118,7 @@ export function isStaleAgenceCopyOnEntreprise(
   subject: string,
   body: string,
 ): boolean {
-  if (category !== "entreprise") {
+  if (category !== "entreprise" && category !== "comptable") {
     return false;
   }
   if (emailType !== "h48_confirm" && emailType !== "h24_relance") {
@@ -237,7 +237,7 @@ const SAMPLE_CONFIRM_URL =
 const SAMPLE_TEMPORARY_URL =
   "https://www.hercule.dev/temporary-reservation.html/exemple-slug?email=jean@example.com";
 const SAMPLE_MODALITES_URL =
-  "https://www.hercule.dev/modalites-hercule.html/exemple-slug?email=jean@example.com";
+  "https://www.hercule.dev/modalites-hercule.html?code=exemple-slug&email=jean@example.com";
 
 export function buildBookingEmailVars(params: {
   firstName: string | null;
@@ -333,10 +333,16 @@ export function confirmUrlForLead(
   if (emailType === "role_seq_24") {
     return buildTemporaryConfirmUrl(lead.slug, lead.email);
   }
-  if (category === "entreprise" && emailType === "h48_confirm") {
+  if (
+    (category === "entreprise" || category === "comptable") &&
+    emailType === "h48_confirm"
+  ) {
     return buildEntreprisePostBookingUrl(lead.slug, lead.email);
   }
-  if (category === "entreprise" && emailType === "h24_relance") {
+  if (
+    (category === "entreprise" || category === "comptable") &&
+    emailType === "h24_relance"
+  ) {
     return "";
   }
   return confirmationAgenceLinkFor(lead);
