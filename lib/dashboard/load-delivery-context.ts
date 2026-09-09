@@ -144,7 +144,7 @@ export async function loadDeliveryContext(
     .select("offer_type")
     .eq("agence_id", agenceId)
     .eq("status", "succeeded")
-    .eq("payment_phase", "deposit")
+    .in("payment_phase", ["deposit", "full"])
     .order("succeeded_at", { ascending: false })
     .limit(1)
     .maybeSingle();

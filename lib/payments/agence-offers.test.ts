@@ -12,6 +12,8 @@ vi.mock("@/lib/payments/stripe", () => ({
 import {
   amountCentsForAgenceOffer,
   isAgenceCheckoutOfferType,
+  lineItemsForAgenceCheckout,
+  paymentPhaseForAgenceCheckout,
   priceIdForAgenceOffer,
 } from "./agence-offers";
 
@@ -48,6 +50,37 @@ describe("amountCentsForAgenceOffer", () => {
     expect(
       amountCentsForAgenceOffer(OFFER_TYPES.growth1498_10, PAYMENT_PHASES.balance),
     ).toBe(74_900);
+  });
+
+  it("returns full amounts for Fast checkout", () => {
+    expect(
+      amountCentsForAgenceOffer(OFFER_TYPES.starter998_5, PAYMENT_PHASES.full),
+    ).toBe(99_800);
+    expect(
+      amountCentsForAgenceOffer(OFFER_TYPES.growth1498_10, PAYMENT_PHASES.full),
+    ).toBe(149_800);
+  });
+});
+
+describe("lineItemsForAgenceCheckout", () => {
+  it("returns deposit only by default", () => {
+    expect(lineItemsForAgenceCheckout(OFFER_TYPES.starter998_5, false)).toEqual([
+      { price: "price_starter_deposit", quantity: 1 },
+    ]);
+  });
+
+  it("returns deposit and balance for Fast", () => {
+    expect(lineItemsForAgenceCheckout(OFFER_TYPES.starter998_5, true)).toEqual([
+      { price: "price_starter_deposit", quantity: 1 },
+      { price: "price_starter_balance", quantity: 1 },
+    ]);
+  });
+});
+
+describe("paymentPhaseForAgenceCheckout", () => {
+  it("maps Fast to full phase", () => {
+    expect(paymentPhaseForAgenceCheckout(true)).toBe(PAYMENT_PHASES.full);
+    expect(paymentPhaseForAgenceCheckout(false)).toBe(PAYMENT_PHASES.deposit);
   });
 });
 

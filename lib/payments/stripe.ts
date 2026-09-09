@@ -30,31 +30,43 @@ export function getStarterOfferType(): string {
   return STARTER_OFFER_TYPE;
 }
 
+/**
+ * Canonical Stripe price IDs for agence 50/50 checkout.
+ * Lookup keys: agence_starter_998_{deposit|balance}, agence_growth_1498_{deposit|balance}.
+ * Env vars override these defaults (see doc/tech-stack/modules/payments-stripe.md).
+ */
+const AGENCE_STRIPE_PRICE_IDS = {
+  starterDeposit: "price_1UDf2wBd01AMeiaQvafqpUoc",
+  starterBalance: "price_1UDf2wBd01AMeiaQXMsGzVQK",
+  growthDeposit: "price_1UDf2wBd01AMeiaQQP36mSak",
+  growthBalance: "price_1UDf2wBd01AMeiaQkdAlLNZd",
+} as const;
+
 export function getAgenceStarterDepositPriceId(): string {
-  return requireEnv(
-    process.env.STRIPE_PRICE_AGENCE_STARTER_DEPOSIT?.trim() ?? "",
-    "STRIPE_PRICE_AGENCE_STARTER_DEPOSIT",
+  return (
+    process.env.STRIPE_PRICE_AGENCE_STARTER_DEPOSIT?.trim() ||
+    AGENCE_STRIPE_PRICE_IDS.starterDeposit
   );
 }
 
 export function getAgenceStarterBalancePriceId(): string {
-  return requireEnv(
-    process.env.STRIPE_PRICE_AGENCE_STARTER_BALANCE?.trim() ?? "",
-    "STRIPE_PRICE_AGENCE_STARTER_BALANCE",
+  return (
+    process.env.STRIPE_PRICE_AGENCE_STARTER_BALANCE?.trim() ||
+    AGENCE_STRIPE_PRICE_IDS.starterBalance
   );
 }
 
 export function getAgenceGrowthDepositPriceId(): string {
-  return requireEnv(
-    process.env.STRIPE_PRICE_AGENCE_GROWTH_DEPOSIT?.trim() ?? "",
-    "STRIPE_PRICE_AGENCE_GROWTH_DEPOSIT",
+  return (
+    process.env.STRIPE_PRICE_AGENCE_GROWTH_DEPOSIT?.trim() ||
+    AGENCE_STRIPE_PRICE_IDS.growthDeposit
   );
 }
 
 export function getAgenceGrowthBalancePriceId(): string {
-  return requireEnv(
-    process.env.STRIPE_PRICE_AGENCE_GROWTH_BALANCE?.trim() ?? "",
-    "STRIPE_PRICE_AGENCE_GROWTH_BALANCE",
+  return (
+    process.env.STRIPE_PRICE_AGENCE_GROWTH_BALANCE?.trim() ||
+    AGENCE_STRIPE_PRICE_IDS.growthBalance
   );
 }
 

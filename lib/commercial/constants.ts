@@ -11,6 +11,8 @@
 export const PAYMENT_PHASES = {
   deposit: "deposit",
   balance: "balance",
+  /** Agence — paiement intégral (option Fast, livraison accélérée). */
+  full: "full",
 } as const;
 
 export type PaymentPhase = (typeof PAYMENT_PHASES)[keyof typeof PAYMENT_PHASES];
@@ -61,6 +63,11 @@ export const COMMERCIAL = {
   /** SLA livraison standard */
   firstHonoredDaysStandard: 21,
   firstHonoredDaysConstrained: 28,
+
+  /** Agence dashboard — délai affiché sur les pricing cards (paiement 50/50). */
+  agenceStandardDeliveryDaysLabel: "15-17 jours",
+  /** Agence dashboard — option Fast (paiement intégral). */
+  agenceFastDeliveryDays: 6,
 
   /** SLA volume honoré / mois @ allocation 30 inbox (mensuel) */
   volumeHonoredPerMonthStandard: { min: 3, max: 4 } as const,

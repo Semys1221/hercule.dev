@@ -2,26 +2,8 @@ import type { SalesQuestion } from "./sales-questions";
 
 export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
   {
-    id: "o1",
-    number: 1,
-    sectionId: "objectifs",
-    type: "multi",
-    maxSelections: 2,
-    prompt:
-      "Quelle est aujourd'hui votre principale difficulté pour développer votre activité ?",
-    description: "Sélectionnez jusqu'à 2 réponses.",
-    options: [
-      { id: "qualified_leads", label: "Manque de demandes entrantes qualifiées" },
-      { id: "irregular_pipeline", label: "Pipeline irrégulier / saisonnier" },
-      { id: "low_conversion", label: "Taux de conversion faible sur les leads existants" },
-      { id: "bench_time", label: "Équipe sous-utilisée (bench time)" },
-      { id: "hiring_skills", label: "Difficulté à recruter ou monter en compétences" },
-      { id: "key_clients", label: "Forte dépendance à 1–2 gros clients" },
-    ],
-  },
-  {
     id: "o2",
-    number: 2,
+    number: 1,
     sectionId: "objectifs",
     type: "single",
     prompt: "Avez-vous actuellement de la capacité pour prendre de nouveaux projets ?",
@@ -35,10 +17,10 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "o3",
-    number: 3,
+    number: 2,
     sectionId: "objectifs",
     type: "single",
-    prompt: "Quelle est la principale raison de cette situation ?",
+    prompt: "Pourquoi êtes-vous à cette capacité aujourd'hui ?",
     options: [
       { id: "insufficient_leads", label: "Flux de leads insuffisant" },
       { id: "unqualified_leads", label: "Leads non qualifiés / hors cible" },
@@ -51,11 +33,11 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "o4",
-    number: 4,
+    number: 3,
     sectionId: "objectifs",
     type: "multi",
     maxSelections: 3,
-    prompt: "Qu'est-ce qui fait que cette capacité n'est pas remplie aujourd'hui ?",
+    prompt: "Qu'est-ce qui vous freine pour remplir davantage cette capacité ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
       { id: "no_prospecting", label: "Pas assez de prospection active" },
@@ -69,7 +51,7 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "o5",
-    number: 5,
+    number: 4,
     sectionId: "objectifs",
     type: "multi",
     maxSelections: 3,
@@ -87,7 +69,7 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "o6",
-    number: 6,
+    number: 5,
     sectionId: "objectifs",
     type: "single",
     prompt:
@@ -99,6 +81,24 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
       { id: "near_target", label: "Proche de l'objectif (> 85 %)" },
       { id: "at_capacity", label: "Déjà à pleine capacité" },
       { id: "no_vision", label: "Pas de vision chiffrée / objectif flou" },
+    ],
+  },
+  {
+    id: "o1",
+    number: 6,
+    sectionId: "objectifs",
+    type: "multi",
+    maxSelections: 2,
+    prompt:
+      "En synthèse, quelles difficultés rencontrez-vous le plus dans le développement de votre activité ?",
+    description: "Sélectionnez jusqu'à 2 réponses.",
+    options: [
+      { id: "qualified_leads", label: "Manque de demandes entrantes qualifiées" },
+      { id: "irregular_pipeline", label: "Pipeline irrégulier / saisonnier" },
+      { id: "low_conversion", label: "Taux de conversion faible sur les leads existants" },
+      { id: "bench_time", label: "Équipe sous-utilisée (bench time)" },
+      { id: "hiring_skills", label: "Difficulté à recruter ou monter en compétences" },
+      { id: "key_clients", label: "Forte dépendance à 1–2 gros clients" },
     ],
   },
 ];

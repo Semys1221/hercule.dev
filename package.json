@@ -24,6 +24,7 @@
     "apply-h48-confirm-contiendront-migration": "tsx --env-file=.env ./scripts/crm/applyH48ConfirmContiendrontMigration.ts",
     "configure-calendly-link-tracking-webhook": "tsx --env-file=.env ./scripts/crm/configureCalendlyLinkTrackingWebhook.ts",
     "repair-confirmed-without-booking-email": "tsx --env-file=.env ./scripts/crm/repairConfirmedWithoutBookingEmail.ts",
+    "cancel-unconfirmed-agence-meetings": "tsx --env-file=.env ./scripts/crm/cancelUnconfirmedAgenceMeetings.ts",
     "repair-missing-booking-sequences": "tsx --env-file=.env ./scripts/crm/repairMissingBookingSequences.ts",
     "audit-modalites-not-booked": "tsx --env-file=.env ./scripts/crm/repairModalitesNotBookedLeads.ts -- --audit",
     "repair-modalites-not-booked": "tsx --env-file=.env ./scripts/crm/repairModalitesNotBookedLeads.ts",

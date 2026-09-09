@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
@@ -9,16 +8,14 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import {
   OFFER_TYPES_COMPTABLE,
   type OfferTypeComptable,
 } from "@/lib/commercial/constants";
 import { COMPTABLE_OFFER_LABELS } from "@/lib/commercial/comptable-pricing";
+import { useStripePromise } from "@/lib/payments/use-stripe-promise";
 import { getPricingDocument } from "@/lib/site/pricing-data";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
-);
 
 const OFFER_ORDER: OfferTypeComptable[] = [
   OFFER_TYPES_COMPTABLE.starter999_5,
@@ -37,6 +34,8 @@ export function StepEmbeddedCheckoutComptable({
   selectedOffer: selectedOfferProp = null,
   startImmediately = false,
 }: StepEmbeddedCheckoutComptableProps) {
+  const { stripePromise, error: stripeConfigError, loading: stripeLoading } =
+    useStripePromise();
   const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable | null>(
     selectedOfferProp,
   );
@@ -107,10 +106,15 @@ export function StepEmbeddedCheckoutComptable({
   if (checkoutStarted && activeOffer) {
     return (
       <div className="space-y-3">
-        {error ? (
-          <p className="text-sm text-destructive">{error}</p>
+        {error || stripeConfigError ? (
+          <p className="text-sm text-destructive">{error ?? stripeConfigError}</p>
         ) : null}
-        {!error ? (
+        {stripeLoading ? (
+          <div className="flex justify-center py-12">
+            <Spinner className="size-6" />
+          </div>
+        ) : null}
+        {!error && !stripeConfigError && stripePromise ? (
           <EmbeddedCheckoutProvider
             stripe={stripePromise}
             options={{ fetchClientSecret }}

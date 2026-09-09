@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
@@ -9,6 +8,7 @@ import {
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Card,
   CardContent,
@@ -17,10 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { DashboardData } from "@/lib/dashboard/types";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
-);
+import { useStripePromise } from "@/lib/payments/use-stripe-promise";
 
 function formatEuros(cents: number): string {
   return new Intl.NumberFormat("fr-FR", {
@@ -36,6 +33,8 @@ type BalancePaymentCardProps = {
 };
 
 export function BalancePaymentCard({ data, onRefresh }: BalancePaymentCardProps) {
+  const { stripePromise, error: stripeConfigError, loading: stripeLoading } =
+    useStripePromise();
   const schedule = data.paymentSchedule;
   const [checkoutStarted, setCheckoutStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,8 +73,15 @@ export function BalancePaymentCard({ data, onRefresh }: BalancePaymentCardProps)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          {!error ? (
+          {error || stripeConfigError ? (
+            <p className="text-sm text-destructive">{error ?? stripeConfigError}</p>
+          ) : null}
+          {stripeLoading ? (
+            <div className="flex justify-center py-12">
+              <Spinner className="size-6" />
+            </div>
+          ) : null}
+          {!error && !stripeConfigError && stripePromise ? (
             <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
               <EmbeddedCheckout />
             </EmbeddedCheckoutProvider>

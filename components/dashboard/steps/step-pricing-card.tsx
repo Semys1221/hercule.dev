@@ -2,7 +2,16 @@
 
 import { PricingCard } from "@/components/funnels/widgets/pricing-card";
 import { Button } from "@/components/ui/button";
-import { OFFER_TYPES, type AgenceCheckoutOfferType } from "@/lib/commercial/constants";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  COMMERCIAL,
+  OFFER_TYPES,
+  PAYMENT_PHASES,
+  totalPriceCentsForOffer,
+  type AgenceCheckoutOfferType,
+} from "@/lib/commercial/constants";
+import { amountCentsForAgenceOffer } from "@/lib/payments/agence-offers";
 import { getPricingDocument } from "@/lib/site/pricing-data";
 import { cn } from "@/lib/utils";
 
@@ -11,20 +20,35 @@ const PLAN_TO_OFFER: Record<string, AgenceCheckoutOfferType> = {
   "plan-growth": OFFER_TYPES.growth1498_10,
 };
 
+function formatEuros(cents: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
 type StepPricingCardProps = {
   selectedOffer: AgenceCheckoutOfferType;
   onSelectOffer: (offer: AgenceCheckoutOfferType) => void;
+  fastEnabled: boolean;
+  onFastChange: (enabled: boolean) => void;
   onProceed: () => void;
 };
 
 export function StepPricingCard({
   selectedOffer,
   onSelectOffer,
+  fastEnabled,
+  onFastChange,
   onProceed,
 }: StepPricingCardProps) {
   const document = getPricingDocument("agence");
   const purchasablePlans =
     document?.plans.filter((plan) => !plan.profileOnly) ?? [];
+
+  const depositCents = amountCentsForAgenceOffer(selectedOffer, PAYMENT_PHASES.deposit);
+  const fullCents = totalPriceCentsForOffer(selectedOffer);
 
   if (!document || purchasablePlans.length === 0) {
     return (
@@ -39,7 +63,9 @@ export function StepPricingCard({
       <div>
         <h2 className="text-lg font-medium">Choisissez votre formule</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          50 % à la commande · 50 % à la livraison de vos contrats PME sécurisés.
+          {fastEnabled
+            ? `Paiement intégral — livraison en ${COMMERCIAL.agenceFastDeliveryDays} jours.`
+            : `50 % à la commande · 50 % à la livraison · délai ${COMMERCIAL.agenceStandardDeliveryDaysLabel}.`}
         </p>
       </div>
 
@@ -50,6 +76,10 @@ export function StepPricingCard({
             return null;
           }
           const isSelected = selectedOffer === offerType;
+          const planFullCents = totalPriceCentsForOffer(offerType);
+          const deliveryLabel = fastEnabled
+            ? `Livraison en ${COMMERCIAL.agenceFastDeliveryDays} jours`
+            : `Livraison sous ${COMMERCIAL.agenceStandardDeliveryDaysLabel}`;
 
           return (
             <div
@@ -61,9 +91,16 @@ export function StepPricingCard({
               onClick={() => onSelectOffer(offerType)}
             >
               <PricingCard
-                plan={plan}
+                plan={{
+                  ...plan,
+                  featured: isSelected,
+                  footer: fastEnabled
+                    ? `${formatEuros(planFullCents)} à la commande · ${deliveryLabel}`
+                    : plan.footer,
+                }}
                 compact
                 animated={false}
+                forceCta
                 gatedTeaserFeatures={document.gatedTeaserFeatures}
                 gatedGhostFeatures={document.gatedGhostFeatures}
                 ctaLabel={isSelected ? "Formule sélectionnée" : "Sélectionner"}
@@ -74,8 +111,30 @@ export function StepPricingCard({
         })}
       </div>
 
+      <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="pricing-fast"
+            checked={fastEnabled}
+            onCheckedChange={(value) => onFastChange(value === true)}
+          />
+          <div className="space-y-1">
+            <Label htmlFor="pricing-fast" className="cursor-pointer text-sm font-medium">
+              Fast
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              Payer la totalité maintenant ({formatEuros(fullCents)}) et passer la livraison de{" "}
+              {COMMERCIAL.agenceStandardDeliveryDaysLabel} à {COMMERCIAL.agenceFastDeliveryDays}{" "}
+              jours.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <Button type="button" className="w-full" onClick={onProceed}>
-        Activer et sécuriser mes contrats
+        {fastEnabled
+          ? `Activer en Fast — ${formatEuros(fullCents)}`
+          : `Activer — ${formatEuros(depositCents)} maintenant`}
       </Button>
     </div>
   );

@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PAYMENT_PHASES, type AgenceCheckoutOfferType } from "@/lib/commercial/constants";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  COMMERCIAL,
+  PAYMENT_PHASES,
+  totalPriceCentsForOffer,
+  type AgenceCheckoutOfferType,
+} from "@/lib/commercial/constants";
 import { amountCentsForAgenceOffer } from "@/lib/payments/agence-offers";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
-);
+import { useStripePromise } from "@/lib/payments/use-stripe-promise";
 
 function formatEuros(cents: number): string {
   return new Intl.NumberFormat("fr-FR", {
@@ -26,6 +28,7 @@ function formatEuros(cents: number): string {
 type StepEmbeddedCheckoutProps = {
   slug: string;
   offerType: AgenceCheckoutOfferType;
+  fast?: boolean;
   clientSecret?: string | null;
   preloadError?: string | null;
 };
@@ -33,18 +36,22 @@ type StepEmbeddedCheckoutProps = {
 export function StepEmbeddedCheckout({
   slug,
   offerType,
+  fast = false,
   clientSecret: preloadedClientSecret,
   preloadError,
 }: StepEmbeddedCheckoutProps) {
+  const { stripePromise, error: stripeConfigError, loading: stripeLoading } =
+    useStripePromise();
   const [error, setError] = useState<string | null>(preloadError ?? null);
   const depositCents = amountCentsForAgenceOffer(offerType, PAYMENT_PHASES.deposit);
+  const fullCents = totalPriceCentsForOffer(offerType);
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     setError(null);
     const response = await fetch("/api/payments/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, offerType }),
+      body: JSON.stringify({ slug, offerType, fast }),
     });
     const data = (await response.json()) as { clientSecret?: string; error?: string };
     if (!response.ok || !data.clientSecret) {
@@ -53,11 +60,11 @@ export function StepEmbeddedCheckout({
       throw new Error(msg);
     }
     return data.clientSecret;
-  }, [slug, offerType]);
+  }, [slug, offerType, fast]);
 
   useEffect(() => {
     setError(preloadError ?? null);
-  }, [preloadError, slug, offerType]);
+  }, [preloadError, slug, offerType, fast]);
 
   const providerOptions = preloadedClientSecret
     ? { clientSecret: preloadedClientSecret }
@@ -67,14 +74,20 @@ export function StepEmbeddedCheckout({
     <div className="space-y-3">
       <Alert>
         <AlertDescription>
-          Acompte 50 % — {formatEuros(depositCents)} maintenant. Solde dû à la livraison
-          de vos contrats PME sécurisés.
+          {fast
+            ? `Fast — paiement intégral ${formatEuros(fullCents)} · livraison en ${COMMERCIAL.agenceFastDeliveryDays} jours.`
+            : `Acompte 50 % — ${formatEuros(depositCents)} maintenant. Solde dû à la livraison de vos contrats PME sécurisés (${COMMERCIAL.agenceStandardDeliveryDaysLabel}).`}
         </AlertDescription>
       </Alert>
-      {error ? (
-        <p className="text-sm text-destructive">{error}</p>
+      {error || stripeConfigError ? (
+        <p className="text-sm text-destructive">{error ?? stripeConfigError}</p>
       ) : null}
-      {!error && (preloadedClientSecret || slug) ? (
+      {stripeLoading ? (
+        <div className="flex justify-center py-12">
+          <Spinner className="size-6" />
+        </div>
+      ) : null}
+      {!error && !stripeConfigError && stripePromise && (preloadedClientSecret || slug) ? (
         <EmbeddedCheckoutProvider stripe={stripePromise} options={providerOptions}>
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>

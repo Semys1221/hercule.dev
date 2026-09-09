@@ -44,6 +44,7 @@ export function OnboardingPreviewWizard({
     OFFER_TYPES.starter998_5,
   );
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
+  const [fastCheckout, setFastCheckout] = useState(false);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
   const [skipLoading, setSkipLoading] = useState(false);
@@ -74,7 +75,11 @@ export function OnboardingPreviewWizard({
       const response = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: data.slug, offerType: selectedOfferType }),
+        body: JSON.stringify({
+          slug: data.slug,
+          offerType: selectedOfferType,
+          fast: fastCheckout,
+        }),
       });
       const body = (await response.json()) as { clientSecret?: string; error?: string };
 
@@ -92,13 +97,13 @@ export function OnboardingPreviewWizard({
       setCheckoutPreloadError("Paiement indisponible");
       setCheckoutClientSecret(null);
     }
-  }, [data.slug, selectedOfferType]);
+  }, [data.slug, selectedOfferType, fastCheckout]);
 
   useEffect(() => {
     checkoutPreloadStartedRef.current = false;
     setCheckoutClientSecret(null);
     setCheckoutPreloadError(null);
-  }, [data.slug, selectedOfferType]);
+  }, [data.slug, selectedOfferType, fastCheckout]);
 
   useEffect(() => {
     if (step < 4) {
@@ -192,6 +197,8 @@ export function OnboardingPreviewWizard({
                 <StepPricingCard
                   selectedOffer={selectedOfferType}
                   onSelectOffer={setSelectedOfferType}
+                  fastEnabled={fastCheckout}
+                  onFastChange={setFastCheckout}
                   onProceed={goNext}
                 />
               )}
@@ -199,6 +206,7 @@ export function OnboardingPreviewWizard({
                 <StepEmbeddedCheckout
                   slug={data.slug}
                   offerType={selectedOfferType}
+                  fast={fastCheckout}
                   clientSecret={checkoutClientSecret}
                   preloadError={checkoutPreloadError}
                 />

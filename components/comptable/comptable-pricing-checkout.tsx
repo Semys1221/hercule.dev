@@ -1,20 +1,17 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
 
 import { ComptablePricingGrid } from "@/components/comptable/comptable-pricing-grid";
+import { Spinner } from "@/components/ui/spinner";
 import type { OfferTypeComptable } from "@/lib/commercial/constants";
 import { COMPTABLE_PRICING_CTA } from "@/lib/commercial/comptable-pricing";
+import { useStripePromise } from "@/lib/payments/use-stripe-promise";
 import { cn } from "@/lib/utils";
-
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
-);
 
 export type ComptablePricingCheckoutProps = {
   slug: string;
@@ -31,6 +28,8 @@ export function ComptablePricingCheckout({
   className,
   disabled = false,
 }: ComptablePricingCheckoutProps) {
+  const { stripePromise, error: stripeConfigError, loading: stripeLoading } =
+    useStripePromise();
   const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable | null>(null);
   const [checkoutStarted, setCheckoutStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +53,15 @@ export function ComptablePricingCheckout({
   if (checkoutStarted && selectedOffer) {
     return (
       <div className={cn("space-y-3", className)}>
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        {!error ? (
+        {error || stripeConfigError ? (
+          <p className="text-sm text-destructive">{error ?? stripeConfigError}</p>
+        ) : null}
+        {stripeLoading ? (
+          <div className="flex justify-center py-12">
+            <Spinner className="size-6" />
+          </div>
+        ) : null}
+        {!error && !stripeConfigError && stripePromise ? (
           <EmbeddedCheckoutProvider
             stripe={stripePromise}
             options={{ fetchClientSecret }}

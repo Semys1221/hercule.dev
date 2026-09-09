@@ -17,7 +17,7 @@ export async function hasSucceededPayment(
     .select("id")
     .eq("agence_id", agenceId)
     .eq("status", "succeeded")
-    .eq("payment_phase", PAYMENT_PHASES.deposit)
+    .in("payment_phase", [PAYMENT_PHASES.deposit, PAYMENT_PHASES.full])
     .limit(1);
 
   if (error) {
@@ -49,9 +49,9 @@ export async function getAgencePaymentSchedule(
 ): Promise<DashboardPaymentSchedule | null> {
   const { data: depositRow, error: depositError } = await client
     .from("payments")
-    .select("offer_type, status, amount_cents")
+    .select("offer_type, status, amount_cents, payment_phase")
     .eq("agence_id", agenceId)
-    .eq("payment_phase", PAYMENT_PHASES.deposit)
+    .in("payment_phase", [PAYMENT_PHASES.deposit, PAYMENT_PHASES.full])
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -89,6 +89,19 @@ export async function getAgencePaymentSchedule(
 
   const offerType = depositRow.offer_type as string;
   const depositPaid = depositRow.status === "succeeded";
+  const isFullPayment = depositRow.payment_phase === PAYMENT_PHASES.full;
+
+  if (isFullPayment && depositPaid) {
+    return {
+      offerType,
+      depositPaid: true,
+      balanceDue: false,
+      balancePaid: true,
+      balanceAmountCents: 0,
+      deliveryComplete,
+    };
+  }
+
   const usesSplitPayment =
     depositPaid && !isLegacyAgenceOfferType(offerType);
   const balanceAmountCents = usesSplitPayment

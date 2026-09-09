@@ -42,7 +42,44 @@ export function amountCentsForAgenceOffer(
   phase: PaymentPhase,
 ): number {
   const total = totalPriceCentsForOffer(offerType);
+  if (phase === PAYMENT_PHASES.full) {
+    return total;
+  }
   return phase === PAYMENT_PHASES.balance ? balanceCents(total) : depositCents(total);
+}
+
+export type AgenceCheckoutLineItem = {
+  price: string;
+  quantity: number;
+};
+
+export function lineItemsForAgenceCheckout(
+  offerType: AgenceCheckoutOfferType,
+  fast: boolean,
+): AgenceCheckoutLineItem[] {
+  if (!fast) {
+    return [
+      {
+        price: priceIdForAgenceOffer(offerType, PAYMENT_PHASES.deposit),
+        quantity: 1,
+      },
+    ];
+  }
+
+  return [
+    {
+      price: priceIdForAgenceOffer(offerType, PAYMENT_PHASES.deposit),
+      quantity: 1,
+    },
+    {
+      price: priceIdForAgenceOffer(offerType, PAYMENT_PHASES.balance),
+      quantity: 1,
+    },
+  ];
+}
+
+export function paymentPhaseForAgenceCheckout(fast: boolean): PaymentPhase {
+  return fast ? PAYMENT_PHASES.full : PAYMENT_PHASES.deposit;
 }
 
 export function buildCheckoutIntegrationIdentifier(suffix: string): string {
