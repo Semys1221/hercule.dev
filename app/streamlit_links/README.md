@@ -58,4 +58,5 @@ Auto-provisions slug + Bookings-tab links (`reservation_entreprise_link`, `confi
 - Endpoint: `GET /api/cron/link-provisioning` (same auth as other crons)
 - Register: `pnpm configure-link-provisioning-cron` (requires `CRON_JOB_ORG_API_KEY` + `CRON_SECRET`)
 - Manual CLI: `pnpm provision-list-links` (Python, same pipeline as Streamlit Provisioning tab)
-- Env: `LINK_PROVISIONING_LIST_ID`, `LINK_PROVISIONING_CAMPAIGN_ID`, `LINK_PROVISIONING_CATEGORY` (defaults: comptable list, entreprise)
+- Env: `LINK_PROVISIONING_LIST_ID`, `LINK_PROVISIONING_CAMPAIGN_ID`, `LINK_PROVISIONING_CATEGORY` (defaults: comptable recovery list `bfb0fc90…`, campaign Comptable, category `comptable`)
+- Comptable manual run: `pnpm provision-comptable-links` (recovery + legacy lists + optional `--from-campaign`)
