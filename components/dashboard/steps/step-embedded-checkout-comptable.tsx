@@ -47,21 +47,33 @@ const OFFER_OPTIONS: OfferOption[] = [
 
 type StepEmbeddedCheckoutComptableProps = {
   slug: string;
+  selectedOffer?: OfferTypeComptable | null;
+  startImmediately?: boolean;
 };
 
 export function StepEmbeddedCheckoutComptable({
   slug,
+  selectedOffer: selectedOfferProp = null,
+  startImmediately = false,
 }: StepEmbeddedCheckoutComptableProps) {
-  const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable | null>(null);
-  const [checkoutStarted, setCheckoutStarted] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable | null>(
+    selectedOfferProp,
+  );
+  const [checkoutStarted, setCheckoutStarted] = useState(startImmediately && Boolean(selectedOfferProp));
   const [error, setError] = useState<string | null>(null);
+
+  const activeOffer = selectedOfferProp ?? selectedOffer;
 
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     setError(null);
+    if (!activeOffer) {
+      throw new Error("Formule non sélectionnée");
+    }
+
     const response = await fetch("/api/payments/checkout-comptable", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, offerType: selectedOffer }),
+      body: JSON.stringify({ slug, offerType: activeOffer }),
     });
     const data = (await response.json()) as { clientSecret?: string; error?: string };
     if (!response.ok || !data.clientSecret) {
@@ -70,9 +82,9 @@ export function StepEmbeddedCheckoutComptable({
       throw new Error(msg);
     }
     return data.clientSecret;
-  }, [slug, selectedOffer]);
+  }, [slug, activeOffer]);
 
-  if (checkoutStarted && selectedOffer) {
+  if (checkoutStarted && activeOffer) {
     return (
       <div className="space-y-3">
         {error ? (

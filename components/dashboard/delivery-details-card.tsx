@@ -9,7 +9,11 @@ import {
 } from "@/components/ui/card";
 import { DEMANDE_VERSO_CRITERIA } from "@/lib/commercial/qualification-criteria";
 import type { DemandeVersoFields } from "@/lib/commercial/qualification-criteria";
-import type { DashboardDeliveryPlan, DashboardEnterpriseBrief } from "@/lib/dashboard/types";
+import type {
+  DashboardDeliveryPlan,
+  DashboardEnterpriseBrief,
+  DashboardPaymentSchedule,
+} from "@/lib/dashboard/types";
 
 type DetailRow = {
   label: string;
@@ -45,14 +49,24 @@ function buildEnterpriseRows(brief: DashboardEnterpriseBrief): DetailRow[] {
   return rows;
 }
 
+function formatEuros(cents: number): string {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
 type DeliveryDetailsCardProps = {
   deliveryPlan: DashboardDeliveryPlan;
   enterpriseBrief?: DashboardEnterpriseBrief | null;
+  paymentSchedule?: DashboardPaymentSchedule | null;
 };
 
 export function DeliveryDetailsCard({
   deliveryPlan,
   enterpriseBrief,
+  paymentSchedule,
 }: DeliveryDetailsCardProps) {
   const enterpriseRows = enterpriseBrief ? buildEnterpriseRows(enterpriseBrief) : [];
 
@@ -70,6 +84,28 @@ export function DeliveryDetailsCard({
             <dt className="min-w-[9rem] text-sm text-muted-foreground">Formule</dt>
             <dd className="text-sm font-medium">{deliveryPlan.formulaLabel}</dd>
           </div>
+          {paymentSchedule ? (
+            <>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
+                <dt className="min-w-[9rem] text-sm text-muted-foreground">Acompte 50 %</dt>
+                <dd className="text-sm font-medium">
+                  {paymentSchedule.depositPaid ? "Réglé" : "En attente"}
+                </dd>
+              </div>
+              {paymentSchedule.balanceAmountCents > 0 ? (
+                <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
+                  <dt className="min-w-[9rem] text-sm text-muted-foreground">Solde 50 %</dt>
+                  <dd className="text-sm font-medium">
+                    {paymentSchedule.balancePaid
+                      ? "Réglé"
+                      : paymentSchedule.balanceDue
+                        ? `Dû — ${formatEuros(paymentSchedule.balanceAmountCents)}`
+                        : `À la livraison — ${formatEuros(paymentSchedule.balanceAmountCents)}`}
+                  </dd>
+                </div>
+              ) : null}
+            </>
+          ) : null}
         </dl>
 
         {enterpriseRows.length > 0 ? (

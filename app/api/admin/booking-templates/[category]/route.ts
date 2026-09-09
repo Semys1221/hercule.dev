@@ -16,7 +16,7 @@ import { BOOKING_EMAIL_TYPE_VALUES } from "@/lib/booking-communication/types";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
-const categorySchema = z.enum(["agence", "entreprise"]);
+const categorySchema = z.enum(["agence", "comptable", "entreprise"]);
 
 const emailTypeSchema = z.enum(BOOKING_EMAIL_TYPE_VALUES);
 

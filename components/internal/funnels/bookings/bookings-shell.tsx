@@ -5,9 +5,8 @@ import type { Niche } from "@/lib/admin/navigation";
 
 import { BookingsTable } from "./bookings-table";
 import { BookingsDbTab } from "./bookings-db-tab";
-import { ConfirmSequenceTab } from "./confirm-sequence-tab";
+import { BookingsSequencesTab } from "./bookings-sequences-tab";
 import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
-import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
 
 type BookingsShellProps = {
   niche: Niche;
@@ -27,14 +26,7 @@ export function BookingsShell({ niche }: BookingsShellProps) {
           <BookingsTable niche={niche} />
         </TabsContent>
         <TabsContent value="sequences" className="mt-0">
-          {niche === "agence" ? (
-            <ConfirmSequenceTab />
-          ) : (
-            <FunnelPlaceholder
-              title="Séquences"
-              detail="Éditeurs de séquences pour cette niche arrivent en Phase 4."
-            />
-          )}
+          <BookingsSequencesTab niche={niche} />
         </TabsContent>
         <TabsContent value="db" className="mt-0">
           <BookingsDbTab niche={niche} />

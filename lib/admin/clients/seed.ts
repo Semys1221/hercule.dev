@@ -88,7 +88,7 @@ export const SEED_SLUGS = [
 
 async function upsertLead(
   client: SupabaseClient,
-  table: "agence" | "entreprise",
+  table: LeadCategory,
   row: Record<string, unknown>,
 ): Promise<string> {
   const { data, error } = await client
@@ -223,32 +223,34 @@ export async function deleteSeedClient(
 
   const leadId = lead.id as string;
 
-  const idColumn = category === "agence" ? "agence_id" : "entreprise_id";
+  if (category === "agence" || category === "entreprise") {
+    const idColumn = category === "agence" ? "agence_id" : "entreprise_id";
 
-  const { error: appointmentsError } = await client
-    .from("appointments")
-    .delete()
-    .eq(idColumn, leadId);
-  if (appointmentsError) {
-    throw new Error(`appointments delete failed: ${appointmentsError.message}`);
-  }
-
-  if (category === "agence") {
-    const { error: clearActiveError } = await client
-      .from("agence")
-      .update({ active_match_id: null })
-      .eq("id", leadId);
-    if (clearActiveError) {
-      throw new Error(`active_match clear failed: ${clearActiveError.message}`);
+    const { error: appointmentsError } = await client
+      .from("appointments")
+      .delete()
+      .eq(idColumn, leadId);
+    if (appointmentsError) {
+      throw new Error(`appointments delete failed: ${appointmentsError.message}`);
     }
-  }
 
-  const { error: matchesError } = await client
-    .from("matches")
-    .delete()
-    .eq(idColumn, leadId);
-  if (matchesError) {
-    throw new Error(`matches delete failed: ${matchesError.message}`);
+    if (category === "agence") {
+      const { error: clearActiveError } = await client
+        .from("agence")
+        .update({ active_match_id: null })
+        .eq("id", leadId);
+      if (clearActiveError) {
+        throw new Error(`active_match clear failed: ${clearActiveError.message}`);
+      }
+    }
+
+    const { error: matchesError } = await client
+      .from("matches")
+      .delete()
+      .eq(idColumn, leadId);
+    if (matchesError) {
+      throw new Error(`matches delete failed: ${matchesError.message}`);
+    }
   }
 
   if (category === "agence") {
@@ -256,6 +258,16 @@ export async function deleteSeedClient(
       .from("payments")
       .delete()
       .eq("agence_id", leadId);
+    if (paymentsError) {
+      throw new Error(`payments delete failed: ${paymentsError.message}`);
+    }
+  }
+
+  if (category === "comptable") {
+    const { error: paymentsError } = await client
+      .from("payments")
+      .delete()
+      .eq("comptable_id", leadId);
     if (paymentsError) {
       throw new Error(`payments delete failed: ${paymentsError.message}`);
     }

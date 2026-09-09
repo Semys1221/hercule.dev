@@ -10,6 +10,7 @@ import {
   DASHBOARD_DEV_SKIP_PAYMENT_ERROR,
   DASHBOARD_DEV_SKIP_PAYMENT_LOADING,
 } from "@/lib/admin/funnels/ui-copy";
+import { OFFER_TYPES, type AgenceCheckoutOfferType } from "@/lib/commercial/constants";
 import { DASHBOARD_EYEBROW, dashboardPageTitle } from "@/lib/dashboard/copy";
 import {
   getDashboardDeveloperModeEnabledServerSnapshot,
@@ -39,6 +40,9 @@ export function OnboardingPreviewWizard({
   onRefresh,
 }: OnboardingPreviewWizardProps) {
   const [step, setStep] = useState(0);
+  const [selectedOfferType, setSelectedOfferType] = useState<AgenceCheckoutOfferType>(
+    OFFER_TYPES.starter998_5,
+  );
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
@@ -70,7 +74,7 @@ export function OnboardingPreviewWizard({
       const response = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: data.slug }),
+        body: JSON.stringify({ slug: data.slug, offerType: selectedOfferType }),
       });
       const body = (await response.json()) as { clientSecret?: string; error?: string };
 
@@ -88,13 +92,13 @@ export function OnboardingPreviewWizard({
       setCheckoutPreloadError("Paiement indisponible");
       setCheckoutClientSecret(null);
     }
-  }, [data.slug]);
+  }, [data.slug, selectedOfferType]);
 
   useEffect(() => {
     checkoutPreloadStartedRef.current = false;
     setCheckoutClientSecret(null);
     setCheckoutPreloadError(null);
-  }, [data.slug]);
+  }, [data.slug, selectedOfferType]);
 
   useEffect(() => {
     if (step < 4) {
@@ -179,14 +183,22 @@ export function OnboardingPreviewWizard({
               )}
               {step === 3 && (
                 <StepFaqTieDown
+                  audience="agence"
                   tieDownAccepted={tieDownAccepted}
                   onTieDownChange={setTieDownAccepted}
                 />
               )}
-              {step === 4 && <StepPricingCard onProceed={goNext} />}
+              {step === 4 && (
+                <StepPricingCard
+                  selectedOffer={selectedOfferType}
+                  onSelectOffer={setSelectedOfferType}
+                  onProceed={goNext}
+                />
+              )}
               {step === 5 && (
                 <StepEmbeddedCheckout
                   slug={data.slug}
+                  offerType={selectedOfferType}
                   clientSecret={checkoutClientSecret}
                   preloadError={checkoutPreloadError}
                 />

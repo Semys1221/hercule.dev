@@ -145,8 +145,10 @@ function main() {
   assert.match(agenceBody, /\{\{confirmation_agence_link\}\}/);
 
   const cabinetFormulas = modalitesFormulas("comptable");
+  assert.equal(cabinetFormulas[0]?.name, "Hercule Starter");
   assert.equal(cabinetFormulas[0]?.recommended, true);
   assert.match(cabinetFormulas[0]?.detail ?? "", /1\s*499/);
+  assert.equal(cabinetFormulas[1]?.name, "Hercule Lite");
   assert.equal(
     COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents,
     COMMERCIAL_COMPTABLE.growthMissionsPerMonth *

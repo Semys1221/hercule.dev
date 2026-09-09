@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { RotateCcw } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ import { setDeveloperModeEnabled } from "@/lib/admin/funnels/sales-funnel-settin
 import {
   SESSION_TEST_MEETING_ACTIVE,
   SESSION_TEST_MEETING_CTA,
+  SESSION_RESET_ARIA,
+  SESSION_RESET_CTA,
   SESSION_TEST_MEETING_ERROR,
   SESSION_TEST_MEETING_LOADING,
   WELCOME_SCRIPT_TITLE,
@@ -54,9 +57,13 @@ type TestMeetingPreset = {
 type RendezVousPanelProps = {
   audience: Audience;
   selectedLead: LinkTrackingLead | null;
+  selectedBooking: EnrichedCalendlyBooking | null;
+  hasSelectedBooking: boolean;
+  sessionResetKey: number;
   onMeetingNameChange: (name: string) => void;
   onBookingSelect: (booking: EnrichedCalendlyBooking | null) => Promise<void>;
   onApplyTestPreset: (preset: TestMeetingPreset) => void;
+  onResetSession: () => void;
 };
 
 function formatParisDateTime(iso: string): string {
@@ -102,9 +109,13 @@ function LinkRow({ label, href }: { label: string; href: string | null | undefin
 export function RendezVousPanel({
   audience,
   selectedLead,
+  selectedBooking,
+  hasSelectedBooking,
+  sessionResetKey,
   onMeetingNameChange,
   onBookingSelect,
   onApplyTestPreset,
+  onResetSession,
 }: RendezVousPanelProps) {
   const [bookings, setBookings] = useState<EnrichedCalendlyBooking[]>([]);
   const [selectedUri, setSelectedUri] = useState<string>("");
@@ -113,11 +124,6 @@ export function RendezVousPanel({
   const [testLoading, setTestLoading] = useState(false);
   const [testActive, setTestActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const selectedBooking = useMemo(
-    () => bookings.find((booking) => booking.invitee_uri === selectedUri) ?? null,
-    [bookings, selectedUri],
-  );
 
   const introChecklist = useMemo(
     () =>
@@ -139,6 +145,10 @@ export function RendezVousPanel({
       setBookings(cached.bookings);
     }
   }, [audience]);
+
+  useEffect(() => {
+    setScriptTab("intro");
+  }, [sessionResetKey]);
 
   const fetchBookings = useCallback(
     async (fresh = false) => {
@@ -278,6 +288,16 @@ export function RendezVousPanel({
         </Button>
         <Button
           type="button"
+          variant="outline"
+          onClick={onResetSession}
+          disabled={!hasSelectedBooking || loading || testLoading}
+          aria-label={SESSION_RESET_ARIA}
+        >
+          <RotateCcw className="size-4" />
+          {SESSION_RESET_CTA}
+        </Button>
+        <Button
+          type="button"
           variant="secondary"
           onClick={() => void startTestMeeting()}
           disabled={loading || testLoading}
@@ -409,7 +429,7 @@ export function RendezVousPanel({
               {scriptTab === "intro" && introChecklist ? (
                 <SalesIntroChecklist
                   items={introChecklist}
-                  resetKey={selectedBooking.invitee_uri}
+                  resetKey={`${selectedBooking.invitee_uri}-${sessionResetKey}`}
                 />
               ) : null}
               {scriptTab === "declarative" ? (

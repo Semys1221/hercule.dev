@@ -107,9 +107,21 @@ describe("VITRINE_ONLY", () => {
 
 describe("OFFER_TYPES", () => {
   it("matches Supabase CHECK constraint values", () => {
+    expect(OFFER_TYPES.starter998_5).toBe("starter_998_5");
+    expect(OFFER_TYPES.growth1498_10).toBe("growth_1498_10");
     expect(OFFER_TYPES.starter1489_5).toBe("starter_1489_5");
     expect(OFFER_TYPES.monthly1489).toBe("monthly_1489");
     expect(OFFER_TYPES.pack989x3).toBe("pack_989x3");
+  });
+});
+
+describe("Agence 998/1498 deposit math", () => {
+  it("splits 50/50 for starter and growth", async () => {
+    const { depositCents, balanceCents, COMMERCIAL } = await import("./constants");
+    expect(depositCents(COMMERCIAL.starter998PriceCents)).toBe(49_900);
+    expect(balanceCents(COMMERCIAL.starter998PriceCents)).toBe(49_900);
+    expect(depositCents(COMMERCIAL.growth1498PriceCents)).toBe(74_900);
+    expect(balanceCents(COMMERCIAL.growth1498PriceCents)).toBe(74_900);
   });
 });
 

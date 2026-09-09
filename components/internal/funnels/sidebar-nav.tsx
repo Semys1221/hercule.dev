@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   ChevronDown,
   ClipboardCheck,
+  Flame,
   Globe,
   Home,
   Mail,
@@ -56,6 +57,7 @@ import { useEffect, useState } from "react";
 
 const GLOBAL_NAV = [
   { href: "/internal/funnels", label: "Accueil", icon: Home, exact: false },
+  { href: "/internal/deliverability", label: "Deliverability", icon: Flame, exact: false },
   { href: "/internal/modalites", label: "Modalités", icon: ClipboardCheck, exact: false },
   { href: "/", label: "Site public", icon: Globe, exact: true },
 ] as const;
@@ -147,7 +149,7 @@ export function InternalAppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Documentation</SidebarGroupLabel>
+          <SidebarGroupLabel>Ops</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {GLOBAL_NAV.map((item) => (

@@ -51,6 +51,16 @@ function main() {
     );
   }
 
+  const comptableSequences = getEmailSequences("comptable");
+  const comptableBySlug = new Map(comptableSequences.map((entry) => [entry.slug, entry]));
+  const comptableEntry = comptableBySlug.get("meeting-comptable");
+  assert.ok(comptableEntry, "missing meeting-comptable in comptable catalogue");
+  assert.equal(
+    evaluateSequenceSafety(comptableEntry, "comptable"),
+    "off",
+    "comptable meeting defaults pending dedicated copy in DB",
+  );
+
   console.log("safety.test.ts: ok");
 }
 

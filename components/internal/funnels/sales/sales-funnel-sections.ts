@@ -3,6 +3,7 @@ import type { Audience } from "@/lib/admin/navigation";
 export type SalesFunnelSectionId =
   | "rendez-vous"
   | "introduction"
+  | "objectifs"
   | "presentation-societe"
   | "capacite"
   | "historique"
@@ -32,6 +33,13 @@ const AGENCE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     subtitle:
       "Avant de commencer, quelques informations nous permettront d'évaluer votre profil et de vous orienter vers les opportunités les plus adaptées.",
     hasIntroCheckbox: true,
+  },
+  {
+    id: "objectifs",
+    label: "Objectifs",
+    title: "Objectifs & douleur",
+    subtitle:
+      "Comprendre la situation actuelle, la capacité disponible et l'écart avec l'objectif avant de présenter Hercule.",
   },
   {
     id: "presentation-societe",
@@ -86,6 +94,13 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     hasIntroCheckbox: true,
   },
   {
+    id: "objectifs",
+    label: "Objectifs",
+    title: "Objectifs & douleur",
+    subtitle:
+      "Comprendre la situation actuelle, la capacité disponible pour de nouveaux dossiers TPE et l'écart avec l'objectif avant de présenter Hercule Comptable.",
+  },
+  {
     id: "presentation-societe",
     label: "Présentation de la société",
     title: "Présentation de la société",
@@ -118,7 +133,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Starter 999 €, Formule Croissance 1 499 €/mois, pack 3 598 € — garantie MRR Croissance — et les missions que vous souhaitez prioriser.",
+      "Lite 999 €, Hercule Starter 1 499 €/mois, pack 3 598 € — garantie MRR Starter — et les missions que vous souhaitez prioriser.",
   },
 ];
 

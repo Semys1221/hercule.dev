@@ -9,7 +9,7 @@ do_not:
   - Réintroduire 898 €, 149 €/RDV, offre 2 500 € souscriptible
 ```
 
-> **Version :** 2026-09-08  
+> **Version :** 2026-09-09  
 > **Documents associés :** [CGV onboarding](/cvg/onboarding) · [Audit site ↔ CGV](/cvg/site-sync) · [SLA client](/cvg/sla-client) · [Constantes commerciales](/cvg/constants-commercial)  
 > Chiffres code : `lib/commercial/constants.ts` (ENG-16) — ne pas parser ce fichier au runtime.
 
@@ -107,54 +107,45 @@ Les prix sont indiqués en **euros, montant net**. Hercule bénéficie de la fra
 
 Le Client ne consomme une Attribution que lorsqu'un RDV de mise en relation est **planifié**. Un no-show entreprise recrédite l'Attribution conformément à l'article 10.1. Une vente signée par le Client **n'éteint pas** les Attributions ou la période mensuelle restantes.
 
-### 5.1 Offre Starter (entrée)
+### 5.1 Hercule Starter
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **1 489 €** (payable en une fois) |
-| **Contenu** | **5 Attributions** qualifiées |
+| **Prix** | **998 € TTC** |
+| **Contenu** | **5 contrats PME sécurisés** sur **30 jours** |
 | **Commission Hercule** | **0 %** |
-| **Durée** | Jusqu'à consommation des 5 Attributions ou résiliation |
+| **Paiement** | **50 %** à la commande (**499 €**) · **50 %** à la livraison du compte de contrats (**499 €**) |
 
-**Garantie Starter :** si, à l'issue des 5 Attributions consommées, le MRR cumulé généré par le Client auprès des entreprises rencontrées via Hercule est inférieur à **1 500 €**, Hercule attribue jusqu'à **5 Attributions de remplacement**, dans la limite des règles de qualification et de no-show des présentes.
+Aucune garantie de signature n'est incluse. Hercule s'engage sur une obligation de moyens dans la qualification et l'attribution des contrats.
 
-Conditions de cette garantie :
-- onboarding complété dans les **48 heures** suivant le paiement ;
-- retours post-RDV transmis dans les **7 jours** suivant chaque RDV ;
-- RDV honorés ou no-shows traités conformément à l'article 10 ;
-- la garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
-
-### 5.2 Offre mensuelle sans engagement
+### 5.2 Hercule Growth
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **1 489 € / mois** |
-| **Contenu** | Service actif de mise en relation ; rythme opérationnel **3 à 4 RDV honorés / mois** en allocation inbox standard (article 9) |
+| **Prix** | **1 498 € TTC** |
+| **Contenu** | **10 contrats PME sécurisés** sur **60 jours** |
 | **Commission Hercule** | **0 %** |
-| **Engagement** | Aucun. Résiliation : article 13 |
+| **Paiement** | **50 %** à la commande (**749 €**) · **50 %** à la livraison du compte de contrats (**749 €**) |
 
-Proposée en **renouvellement** après l'offre Starter ou à tout moment pendant le service (article 5.4).
+Aucune garantie de signature n'est incluse.
 
-### 5.3 Pack 3 mois
+### 5.3 Paiement échelonné (formules 5.1 et 5.2)
 
-| Élément | Détail |
-|---------|--------|
-| **Prix** | **989 € × 3 = 2 967 €** (payable en une fois) |
-| **Contenu** | **15 Attributions** |
-| **Commission Hercule** | **0 %** |
-| **Durée** | Jusqu'à consommation des 15 Attributions, expiration de 3 mois calendaires de service actif, ou résiliation |
+- **Acompte (50 %)** : payable à la souscription via Stripe embedded checkout ; déclenche l'accès onboarding et l'Activation.
+- **Solde (50 %)** : payable automatiquement via le dashboard client lorsque l'ensemble des contrats de la formule a été livré (compte de contrats complet).
+- Le solde est exigible à la livraison ; Hercule peut suspendre toute nouvelle attribution tant que le solde n'est pas réglé.
 
-**Garantie pack 3 mois :** si, à l'issue des 3 mois de service actif, le chiffre d'affaires (CA) généré par le Client auprès des entreprises rencontrées via Hercule est inférieur à **4 500 €**, Hercule attribue jusqu'à **15 Attributions de remplacement**, dans la limite des règles de qualification et de no-show des présentes.
+### 5.4 Formules legacy (clients antérieurs)
 
-Conditions de cette garantie :
-- onboarding complété dans les **48 heures** suivant le paiement ;
-- retours post-RDV transmis dans les **7 jours** suivant chaque RDV ;
-- RDV honorés ou no-shows traités conformément à l'article 10 ;
-- la garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
+Les clients sous contrat antérieur au 9 septembre 2026 restent régis par les tarifs et garanties de leur contrat d'origine :
 
-### 5.4 Renouvellement
+| Formule legacy | Prix | Contenu |
+|----------------|------|---------|
+| Starter 1 489 € | 1 489 € (une fois) | 5 Attributions |
+| Mensuel | 1 489 € / mois | 3–4 RDV honorés / mois |
+| Pack 3 mois | 989 € × 3 = 2 967 € | 15 Attributions |
 
-À l'issue d'un match, à la consommation de l'offre Starter, ou à tout moment pendant le service, Hercule peut proposer au Client, **sur la page de questionnaire ou par échange ops**, de souscrire à l'offre 5.2 (mensuelle) ou 5.3 (pack 3 mois). Cette proposition est **optionnelle**. Elle n'est pas envoyée automatiquement par email du seul fait d'une vente.
+Ces formules peuvent inclure des garanties MRR ou de remplacement non applicables aux formules 5.1 et 5.2.
 
 ### 5.5 Offres non commercialisées
 
@@ -179,10 +170,9 @@ La commande est ferme lorsque :
 
 ### 6.2 Paiement
 
-- Paiement par **lien Stripe** (carte) envoyé par Hercule, ou virement sur facture.
-- Pour l'offre Starter : paiement **unique** à la souscription.
-- Pour l'offre mensuelle : facturation **mensuelle à date anniversaire**, sauf accord contraire.
-- Pour le pack 3 mois : paiement **unique** à la souscription.
+- Paiement par **Stripe embedded checkout** (carte) ou virement sur facture.
+- Pour Hercule Starter et Hercule Growth : **50 %** à la commande, **50 %** à la livraison du compte de contrats (article 5.3).
+- Pour les formules legacy (article 5.4) : selon les modalités du contrat d'origine.
 - **Retard de paiement :** pénalités au taux légal + indemnité forfaitaire de recouvrement (40 €). Suspension du service après **7 jours** de retard sans régularisation.
 - Le service de recherche active ne démarre qu'après **paiement reçu** (Activation).
 

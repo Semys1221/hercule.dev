@@ -93,29 +93,29 @@ Les prix sont indiqués en **euros TTC**. Franchise en base de TVA (article 293 
 
 Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no-show recrédite l'Attribution conformément à l'article 10.1.
 
-### 5.1 Hercule Starter (offre d'entrée)
+### 5.1 Hercule Lite (offre d'entrée)
 
 | Élément | Détail |
 |---------|--------|
 | **Prix** | **999 € TTC** (paiement unique) |
-| **Contenu** | **5 missions PME** qualifiées |
+| **Contenu** | **5 missions PME/TPE/indépendants** qualifiées |
 | **Premier RDV** | Sous **15 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Garantie MRR** | **Aucune** — uniquement garantie no-show (article 10.1) |
 
-### 5.2 Formule Croissance (mensuelle sans engagement)
+### 5.2 Hercule Starter (mensuelle sans engagement)
 
 | Élément | Détail |
 |---------|--------|
 | **Prix** | **1 499 € / mois** |
-| **Contenu** | Service actif de mise en relation ; **10 missions PME / mois** ; cycle **30 jours** |
+| **Contenu** | Service actif de mise en relation ; **10 missions PME/TPE/indépendants / mois** ; cycle **30 jours** |
 | **Premier RDV** | Sous **15 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Engagement** | Aucun. Résiliation : article 13 |
 
 **Garantie MRR :** si, à l'issue des **10 Attributions** consommées du cycle en cours, le **MRR cumulé** généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **10 Attributions de remplacement**, sous réserve des obligations du Client (article 11). Cette garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
 
-### 5.3 Pack 3 mois Croissance
+### 5.3 Pack 3 mois Starter
 
 | Élément | Détail |
 |---------|--------|
@@ -149,7 +149,11 @@ Cocher « J'accepte les Conditions Générales de Vente de Hercule » lors de l'
 
 ## 8. Droit de rétractation
 
-Le Client est un **professionnel**. Aucun délai de rétractation de 4 jours n'est offert. La commande est ferme dès acceptation des CGV et réception du paiement.
+Le Client est un **professionnel** agissant dans le cadre de son activité. Les dispositions du Code de la consommation relatives au droit de rétractation des consommateurs **ne s'appliquent pas**.
+
+**Politique commerciale :** après souscription, le Client dispose d'un délai de **4 jours calendaires** pour se rétracter par email à contact@hercule.dev, sous réserve que le service n'ait pas encore démarré (Activation non effectuée). Passé ce délai ou après Activation, la commande est ferme.
+
+Lors de l'onboarding, le Client peut **renoncer** à ce délai pour lancer la recherche immédiatement. Il peut également le faire à tout moment depuis son dashboard client tant que l'Activation n'a pas démarré.
 
 ---
 
@@ -161,9 +165,9 @@ Le Client est un **professionnel**. Aucun délai de rétractation de 4 jours n'e
 |-------|-------|
 | Accès onboarding après paiement | **48 heures** |
 | Premier RDV planifié | **≤ 15 jours** |
-| Rythme Starter | **5 missions** (paiement unique) |
-| Rythme Formule Croissance | **10 missions PME / mois** (cycle 30 jours) |
-| Garantie MRR Croissance | **3 000 €** cumulés après 10 missions, ou remplacements |
+| Rythme Lite | **5 missions** (paiement unique) |
+| Rythme Hercule Starter | **10 missions PME / mois** (cycle 30 jours) |
+| Garantie MRR Starter | **3 000 €** cumulés après 10 missions, ou remplacements |
 | Garantie MRR pack | **9 000 €** cumulés après 30 missions, ou remplacements |
 
 ---
@@ -174,11 +178,11 @@ Le Client est un **professionnel**. Aucun délai de rétractation de 4 jours n'e
 
 Prospect absent malgré relance H-24 : Attribution recréditée ; remplacement sous **14 jours ouvrés**. Signalement no-show sous **48 h**.
 
-### 10.2 Garantie MRR (Formule Croissance et Pack)
+### 10.2 Garantie MRR (Hercule Starter et Pack)
 
-**Formule Croissance :** si, à l'issue des 10 Attributions consommées du cycle en cours, le MRR cumulé généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **10 Attributions de remplacement**.
+**Hercule Starter :** si, à l'issue des 10 Attributions consommées du cycle en cours, le MRR cumulé généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **10 Attributions de remplacement**.
 
-**Pack 3 mois Croissance :** si, à l'issue des 30 Attributions du pack, le MRR cumulé est inférieur à **9 000 €**, Hercule attribue jusqu'à **30 Attributions de remplacement**.
+**Pack 3 mois Starter :** si, à l'issue des 30 Attributions du pack, le MRR cumulé est inférieur à **9 000 €**, Hercule attribue jusqu'à **30 Attributions de remplacement**.
 
 Conditions communes :
 
@@ -186,7 +190,7 @@ Conditions communes :
 - les lettres de mission signées sont déclarées à Hercule sur demande ;
 - la garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
 
-**Hercule Starter :** aucune garantie MRR.
+**Hercule Lite :** aucune garantie MRR.
 
 ### 10.3 Absence de garantie de signature
 
@@ -243,5 +247,6 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-09 | 9 sept. 2026 | Renommage offres — Lite 999 €, Hercule Starter 1 499 € (10 missions), Pack 3 mois 3 598 € |
 | 2026-09-08 | 8 sept. 2026 | Grille 3 offres — Starter 999 €, Croissance 1 499 € (10 missions), pack 3 598 €, garantie MRR |
 | 2026-09-08 | 8 sept. 2026 | Création CGV vertical comptable — provisionnement Calendly/Zoom |

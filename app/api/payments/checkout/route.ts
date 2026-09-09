@@ -1,21 +1,26 @@
+import { randomBytes } from "node:crypto";
+
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { z } from "zod";
 
-import {
-  createLinkTrackingClient,
-} from "@/lib/link-tracking/supabase";
 import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
-import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
 import {
-  getAppBaseUrl,
-  getStarterOfferType,
-  getStarterPriceId,
-  getStripeClient,
-} from "@/lib/payments/stripe";
+  AGENCE_CHECKOUT_OFFER_TYPES,
+  PAYMENT_PHASES,
+} from "@/lib/commercial/constants";
+import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
+import {
+  amountCentsForAgenceOffer,
+  buildCheckoutIntegrationIdentifier,
+  priceIdForAgenceOffer,
+} from "@/lib/payments/agence-offers";
+import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
+import { getAppBaseUrl, getStripeClient } from "@/lib/payments/stripe";
 
 const bodySchema = z.object({
   slug: z.string().min(1),
+  offerType: z.enum(AGENCE_CHECKOUT_OFFER_TYPES),
 });
 
 export async function POST(request: Request) {
@@ -34,29 +39,27 @@ export async function POST(request: Request) {
   try {
     const client = createLinkTrackingClient();
     const slug = parsed.data.slug.trim();
+    const offerType = parsed.data.offerType;
     const lookup = await ensureSalesTestSessionLead(client, slug);
     if (!lookup || lookup.category !== "agence") {
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
     const stripe = getStripeClient();
-    const priceId = getStarterPriceId();
-    const offerType = getStarterOfferType();
+    const priceId = priceIdForAgenceOffer(offerType, PAYMENT_PHASES.deposit);
+    const amountCents = amountCentsForAgenceOffer(offerType, PAYMENT_PHASES.deposit);
     const baseUrl = getAppBaseUrl();
     const leadSlug = lookup.lead.slug;
 
     const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
-    const amountCents = price.unit_amount ?? 148900;
-    const product = price.product as Stripe.Product;
-    const productName = typeof product === "string" ? product : product.name;
+    const stripeAmountCents = price.unit_amount ?? amountCents;
 
-    if (
-      (typeof product !== "string" && !product.name.includes("Starter")) ||
-      amountCents !== 148900
-    ) {
+    if (stripeAmountCents !== amountCents) {
       console.error(
-        "[payments/checkout] Unexpected Stripe product:",
-        productName,
+        "[payments/checkout] Unexpected Stripe price amount:",
+        priceId,
+        stripeAmountCents,
+        "expected",
         amountCents,
       );
       if (process.env.NODE_ENV === "production") {
@@ -73,6 +76,7 @@ export async function POST(request: Request) {
         agence_id: lookup.lead.id,
         offer_type: offerType,
         amount_cents: amountCents,
+        payment_phase: PAYMENT_PHASES.deposit,
         status: "pending",
       })
       .select("id")
@@ -82,6 +86,7 @@ export async function POST(request: Request) {
       throw new Error(paymentError?.message ?? "Failed to create payment row");
     }
 
+    const integrationSuffix = randomBytes(4).toString("hex");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       ui_mode: "embedded_page",
@@ -99,8 +104,10 @@ export async function POST(request: Request) {
         payment_id: paymentRow.id,
         slug: leadSlug,
         offer_type: offerType,
+        payment_phase: PAYMENT_PHASES.deposit,
       },
-    });
+      integration_identifier: buildCheckoutIntegrationIdentifier(integrationSuffix),
+    } as Stripe.Checkout.SessionCreateParams);
 
     await client
       .from("payments")
@@ -112,7 +119,7 @@ export async function POST(request: Request) {
       sessionId: session.id,
     });
   } catch (error) {
-    const { body, status } = checkoutErrorResponse(error, "payments/checkout");
-    return NextResponse.json(body, { status });
+    const { body: errorBody, status } = checkoutErrorResponse(error, "payments/checkout");
+    return NextResponse.json(errorBody, { status });
   }
 }

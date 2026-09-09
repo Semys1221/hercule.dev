@@ -39,6 +39,10 @@ export type LinkTrackingLead = {
   confirmed_at: string | null;
   instantly_confirmed_synced_at: string | null;
   onboarding_completed_at: string | null;
+  retraction_status?: string | null;
+  retraction_ends_at?: string | null;
+  retraction_waived_at?: string | null;
+  product_statut?: string | null;
   profile: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;

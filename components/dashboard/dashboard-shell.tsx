@@ -9,6 +9,7 @@ import type { DashboardData } from "@/lib/dashboard/types";
 import { DashboardActive } from "./dashboard-active";
 import { DashboardComptable } from "./dashboard-comptable";
 import { DashboardState } from "./dashboard-state";
+import { OnboardingEntrepriseWizard } from "./onboarding-entreprise-wizard";
 import { OnboardingPreviewWizard } from "./onboarding-preview-wizard";
 import {
   OnboardingTransition,
@@ -90,24 +91,24 @@ export function DashboardShell({ slug, paidQuery }: DashboardShellProps) {
 
   if (
     data.dashboardMode === "comptable_active" ||
-    data.dashboardMode === "comptable_pending"
+    data.dashboardMode === "comptable_pending" ||
+    data.dashboardMode === "comptable_onboarding"
   ) {
-    const comptableData = data as typeof data & {
-      comptable?: { offerType: string | null; succeededAt: string | null };
-    };
     return (
       <DashboardComptable
-        slug={data.slug}
-        isPaid={data.isPaid}
-        firstName={data.firstName}
-        company={data.company}
-        offerType={comptableData.comptable?.offerType ?? null}
+        data={data}
+        onRefresh={loadDashboard}
+        onOnboardingComplete={handleOnboardingComplete}
       />
     );
   }
 
+  if (data.dashboardMode === "entreprise_preview") {
+    return <OnboardingEntrepriseWizard data={data} onRefresh={loadDashboard} />;
+  }
+
   if (data.dashboardMode === "dashboard_active") {
-    return <DashboardActive data={data} />;
+    return <DashboardActive data={data} onRefresh={loadDashboard} />;
   }
 
   if (data.dashboardMode === "dashboard_state") {

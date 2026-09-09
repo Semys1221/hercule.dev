@@ -8,8 +8,27 @@
  * VITRINE_ONLY entries must never appear in payments.offer_type.
  */
 
+export const PAYMENT_PHASES = {
+  deposit: "deposit",
+  balance: "balance",
+} as const;
+
+export type PaymentPhase = (typeof PAYMENT_PHASES)[keyof typeof PAYMENT_PHASES];
+
 export const COMMERCIAL = {
-  /** Hercule Starter — 1 489 € one-shot, 5 attributions */
+  /** Hercule Starter — 998 € TTC, 5 contrats PME / 30 j */
+  starter998PriceCents: 99_800,
+  starter998Attributions: 5,
+  starter998DeliveryDays: 30,
+  starter998FormulaLabel: "5 contrats PME sécurisés",
+
+  /** Hercule Growth — 1 498 € TTC, 10 contrats PME / 60 j */
+  growth1498PriceCents: 149_800,
+  growth1498Attributions: 10,
+  growth1498DeliveryDays: 60,
+  growth1498FormulaLabel: "10 contrats PME sécurisés",
+
+  /** Legacy Hercule Starter — 1 489 € one-shot, 5 attributions */
   starterPriceCents: 148_900,
   starterAttributions: 5,
   starterFormulaLabel: "5 rendez-vous qualifiés",
@@ -61,6 +80,8 @@ export const COMMERCIAL = {
  * Must match CHECK constraint in Supabase migrations.
  */
 export const OFFER_TYPES = {
+  starter998_5: "starter_998_5",
+  growth1498_10: "growth_1498_10",
   starter1489_5: "starter_1489_5",
   monthly1489: "monthly_1489",
   pack989x3: "pack_989x3",
@@ -68,11 +89,78 @@ export const OFFER_TYPES = {
 
 export type OfferType = (typeof OFFER_TYPES)[keyof typeof OFFER_TYPES];
 
+export const AGENCE_CHECKOUT_OFFER_TYPES = [
+  OFFER_TYPES.starter998_5,
+  OFFER_TYPES.growth1498_10,
+] as const;
+
+export type AgenceCheckoutOfferType = (typeof AGENCE_CHECKOUT_OFFER_TYPES)[number];
+
+export function depositCents(totalCents: number): number {
+  return Math.floor(totalCents / 2);
+}
+
+export function balanceCents(totalCents: number): number {
+  return totalCents - depositCents(totalCents);
+}
+
+export function totalPriceCentsForOffer(offerType: string): number {
+  if (offerType === OFFER_TYPES.growth1498_10) {
+    return COMMERCIAL.growth1498PriceCents;
+  }
+  if (offerType === OFFER_TYPES.starter998_5) {
+    return COMMERCIAL.starter998PriceCents;
+  }
+  if (offerType === OFFER_TYPES.pack989x3) {
+    return COMMERCIAL.pack989x3TotalCents;
+  }
+  return COMMERCIAL.starterPriceCents;
+}
+
+export function attributionsForOfferType(offerType: string | null | undefined): number {
+  if (offerType === OFFER_TYPES.growth1498_10) {
+    return COMMERCIAL.growth1498Attributions;
+  }
+  if (offerType === OFFER_TYPES.pack989x3) {
+    return COMMERCIAL.pack989x3Attributions;
+  }
+  if (offerType === OFFER_TYPES.starter998_5) {
+    return COMMERCIAL.starter998Attributions;
+  }
+  return COMMERCIAL.starterAttributions;
+}
+
+export function formulaLabelForOfferType(offerType: string | null | undefined): string {
+  if (offerType === OFFER_TYPES.growth1498_10) {
+    return COMMERCIAL.growth1498FormulaLabel;
+  }
+  if (offerType === OFFER_TYPES.starter998_5) {
+    return COMMERCIAL.starter998FormulaLabel;
+  }
+  if (offerType === OFFER_TYPES.pack989x3) {
+    return `${COMMERCIAL.pack989x3Attributions} rendez-vous qualifiés`;
+  }
+  return COMMERCIAL.starterFormulaLabel;
+}
+
 /** Legacy `monthly_1489` rows were one-shot Starter checkouts before starter_1489_5 existed. */
 export function isStarterLikeOfferType(offerType: string | null | undefined): boolean {
   return (
+    offerType === OFFER_TYPES.starter998_5 ||
     offerType === OFFER_TYPES.starter1489_5 ||
     offerType === OFFER_TYPES.monthly1489
+  );
+}
+
+export function isGrowthOfferType(offerType: string | null | undefined): boolean {
+  return offerType === OFFER_TYPES.growth1498_10;
+}
+
+export function isLegacyAgenceOfferType(offerType: string | null | undefined): boolean {
+  return (
+    offerType === OFFER_TYPES.starter1489_5 ||
+    offerType === OFFER_TYPES.monthly1489 ||
+    offerType === OFFER_TYPES.pack989x3
   );
 }
 
@@ -112,19 +200,19 @@ export const FORBIDDEN_COPY = [
  * Stripe offer types: OFFER_TYPES_COMPTABLE (starter_999_5 / monthly_1499 / pack_3x1499).
  */
 export const COMMERCIAL_COMPTABLE = {
-  /** Hercule Starter — 999 € one-shot, 5 missions, aucune garantie MRR */
+  /** Hercule Lite — 999 € one-shot, 5 missions, aucune garantie MRR (offer type starter_999_5) */
   starterPriceCents: 99_900,
   starterMissions: 5,
 
-  /** Formule Croissance — mensuel sans engagement — 1 499 €/mois, 10 missions */
+  /** Hercule Starter — mensuel sans engagement — 1 499 €/mois, 10 missions (offer type monthly_1499) */
   growthMonthlyPriceCents: 149_900,
-  /** Alias — même offre que growthMonthlyPriceCents (offer type monthly_1499) */
+  /** Alias — même offre que growthMonthlyPriceCents */
   monthlyPriceCents: 149_900,
   growthMissionsPerMonth: 10,
   growthGuaranteeMrrCents: 300_000,
   growthGuaranteeMaxReplacements: 10,
 
-  /** Pack 3 mois Croissance — 1 499 € × 3 − 20 %, arrondi */
+  /** Pack 3 mois Starter — 1 499 € × 3 − 20 %, arrondi (offer type pack_3x1499) */
   pack3TotalCents: 359_800,
   pack3MissionsTotal: 30,
   pack3GuaranteeMrrCents: 900_000,

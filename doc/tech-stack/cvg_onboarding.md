@@ -9,46 +9,21 @@ do_not:
   - Mentionner 898 €, 149 €/RDV, offre 2 500 € souscriptible
 ```
 
-> **Version CGV :** 2026-09-08  
+> **Version CGV :** 2026-09-09  
 > **Document complet :** [/cvg](/cvg)
 
 ---
 
 ## Résumé (11 points)
 
-1. **Objet** — Hercule met en relation votre agence avec des **contrats**, après validation téléphonique. Obligation de **moyens**, pas de garantie de vente.
-2. **Formule d'entrée** — **Starter : 1 489 €** (montant net, TVA non applicable) pour **5 Attributions**. **0 % de commission**. Renouvellement optionnel : **1 489 € / mois** ou **989 € × 3 = 2 967 €** (15 Attributions). L'offre **2 500 €/mois** est une vitrine, non souscriptible.
-3. **Attribution** — Contrat + mise en relation exclusive + RDV **planifié**. Un RDV honoré = présence décideur visio ≥ 15 min. Une vente **ne clôt pas** le pack / le mois.
-4. **Démarrage** — Onboarding sous **48 h** · Activation dès **paiement + onboarding** · Premier RDV honoré sous **21 j** @ 30 inbox (28 j si contraint), file d'attente +15 j max · ~**6 j ouvrés** pour le 1er RDV en audit pré-paiement (CGV §4.2).
-5. **Volume** — Starter : **5 Attributions** · Mensuel : **3–4 RDV honorés / mois** · Pack : **15 Attributions** / 3 mois.
-6. **No-show** — Prospect absent malgré relance H-24 : **attribution recréditée**, remplacement sous **14 jours ouvrés**. Signalement sous 48 h.
-7. **Garantie Starter** — Si MRR &lt; **1 500 €** après 5 Attributions : jusqu'à **5 remplacements** (conditions CGV § 5.1).
-8. **Garantie pack** — Si CA &lt; **4 500 €** sur 3 mois : jusqu'à **15 remplacements** (conditions CGV § 5.3).
+1. **Objet** — Hercule met en relation votre agence avec des **contrats PME sécurisés**, après validation téléphonique. Obligation de **moyens**, pas de garantie de signature.
+2. **Formules** — **Hercule Starter : 998 € TTC** (5 contrats / 30 j) · **Hercule Growth : 1 498 € TTC** (10 contrats / 60 j). **0 % de commission**. Paiement **50 %** à la commande, **50 %** à la livraison du compte de contrats. L'offre **2 500 €/mois** est une vitrine, non souscriptible.
+3. **Contrat** — Mise en relation exclusive + planification. Un contrat consommé = mise en relation planifiée. Une vente **ne clôt pas** les contrats restants.
+4. **Démarrage** — Onboarding sous **48 h** · Activation dès **acompte + onboarding** · Livraison selon formule (30 ou 60 jours).
+5. **Volume** — Starter : **5 contrats** · Growth : **10 contrats**.
+6. **No-show** — Prospect absent malgré relance H-24 : **contrat recrédité**, remplacement sous **14 jours ouvrés**. Signalement sous 48 h.
+7. **Garantie** — Aucune garantie de signature incluse sur les formules Starter et Growth.
+8. **Paiement échelonné** — Solde exigible à la livraison complète du compte de contrats via le dashboard client.
 9. **Rétractation** — **4 jours calendaires** après souscription, tant que l'Activation n'a pas démarré.
-10. **Résiliation** — Mensuel : **préavis 30 jours**. Crédits non utilisés forclos sauf RDV déjà planifiés.
+10. **Legacy** — Clients antérieurs au 9 sept. 2026 : formules 1 489 € / pack 989×3 selon contrat d'origine.
 11. **Données** — RGPD · Politique de confidentialité : `/confidentialite`.
-
----
-
-## Texte checkbox (UI)
-
-```
-☐ J'accepte les Conditions Générales de Vente de Hercule
-  (version du 8 septembre 2026) et je confirme être un professionnel
-  agissant dans le cadre de mon activité.
-```
-
-**Libellé lien :** « Lire les CGV complètes » → `/cvg`
-
----
-
-## Champs techniques
-
-| Champ | Type |
-|-------|------|
-| `cvg_version` | `text` ex. `2026-09-08` |
-| `cvg_accepted_at` | `timestamptz` |
-| `cvg_accepted_ip` | `text` optionnel |
-| `cvg_accepted_by` | `text` |
-
-Refuser `POST /api/onboarding` si `cvg_accepted !== true` ou version ≠ courante.

@@ -465,7 +465,7 @@ Exemplars à composer :
 
 - Shell : `sales-funnel-module.tsx` (session live seulement)
 - Liste : `clients-table.tsx`
-- Séquence : `sequence-dropdown.tsx` + `confirm-sequence-tab.tsx`
+- Séquence : `sequence-dropdown.tsx` + `bookings-sequences-tab.tsx` / `clients-sequences-tab.tsx`
 - Stats : `bookings-stats-bar.tsx` étendu, `Card` shadcn
 
 Qualité : `pnpm doctor` sur les fichiers touchés. Après UI visible : browser MCP sur `/internal/funnels/session/agence`, `/bookings/agence`, `/bookings/comptable` (empty states), `/clients/agence`.

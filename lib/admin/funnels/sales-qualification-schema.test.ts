@@ -46,6 +46,23 @@ function main() {
     false,
   );
 
+  assert.equal(
+    isSalesSectionComplete("objectifs", SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, "comptable"),
+    true,
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        o6: "",
+      },
+      "comptable",
+    ),
+    false,
+  );
+
   console.log("OK lib/admin/funnels/sales-qualification-schema.test.ts");
 }
 

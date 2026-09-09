@@ -14,6 +14,7 @@ import {
   History,
   LogOut,
   Settings,
+  Target,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -54,6 +55,7 @@ import type { Audience } from "@/lib/admin/navigation";
 const SECTION_ICONS: Record<SalesFunnelSectionId, LucideIcon> = {
   "rendez-vous": Calendar,
   introduction: ClipboardCheck,
+  objectifs: Target,
   "presentation-societe": Building2,
   capacite: Briefcase,
   historique: History,

@@ -169,7 +169,7 @@ const MODEL_HIGHLIGHTS = [
 const COMPTABLE_MODEL_HIGHLIGHTS = [
   {
     title: "3 000 €",
-    description: "de MRR garanti en Formule Croissance après 10 missions — lettres de mission signées, pas une promesse de volume seul.",
+    description: "de MRR garanti en Hercule Starter après 10 missions — lettres de mission signées, pas une promesse de volume seul.",
   },
   {
     title: "Audit partenaire",

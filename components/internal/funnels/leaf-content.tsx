@@ -1,4 +1,4 @@
-import { ClientsTable } from "@/components/internal/clients/clients-table";
+import { ClientsShell } from "@/components/internal/clients/clients-shell";
 import { BookingsShell } from "@/components/internal/funnels/bookings/bookings-shell";
 import { FaqManagementShell } from "@/components/internal/funnels/faq-management-shell";
 import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
@@ -21,15 +21,7 @@ export function FunnelLeafContent({
   }
 
   if (leafKey === "clients_hub") {
-    if (audience !== "agence") {
-      return (
-        <FunnelPlaceholder
-          title="Clients"
-          detail="Disponible pour l'audience agence uniquement."
-        />
-      );
-    }
-    return <ClientsTable />;
+    return <ClientsShell niche={audience} />;
   }
 
   if (leafKey === "legal_faq") {

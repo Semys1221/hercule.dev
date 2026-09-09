@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { Check, ChevronRight, Shield } from "lucide-react"
 
-import { PricingCard } from "@/components/funnels/widgets/pricing-card"
+import { ComptablePricingGrid } from "@/components/comptable/comptable-pricing-grid"
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
 import { getPricingDocument } from "@/lib/site/pricing-data"
 
@@ -13,7 +13,7 @@ export function GrilleOffres() {
     return null
   }
 
-  const { hero, plans, guaranteeSection, gatedTeaserFeatures, gatedGhostFeatures } = document
+  const { hero, guaranteeSection } = document
 
   return (
     <section id="pricing" className="relative py-40 px-6 bg-black">
@@ -50,41 +50,36 @@ export function GrilleOffres() {
           {hero.intro}
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-start">
-          {plans.map((plan, index) => (
-            <PricingCard
-              key={plan.id}
-              plan={plan}
-              index={index}
-              gatedTeaserFeatures={gatedTeaserFeatures}
-              gatedGhostFeatures={gatedGhostFeatures}
-              ctaHref={CALENDLY_ENTREPRISE_URL}
-              ctaLinkLabel="Proposer mon cabinet"
-            />
-          ))}
-        </div>
+        <ComptablePricingGrid
+          variant="marketing"
+          ctaHref={CALENDLY_ENTREPRISE_URL}
+          ctaLinkLabel="Proposer mon cabinet"
+          className="mb-16"
+        />
 
-        <motion.div
-          id="garanties"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.35 }}
-          className="border border-white/[0.08] rounded-xl p-8 bg-[#0A0A0A]"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-5 h-5 text-neutral-400" />
-            <h3 className="text-white text-xl font-medium tracking-[-0.02em]">{guaranteeSection.title}</h3>
-          </div>
-          <ul className="space-y-3">
-            {guaranteeSection.items.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-neutral-400 text-sm">
-                <Check className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
+        {guaranteeSection ? (
+          <motion.div
+            id="garanties"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.35 }}
+            className="border border-white/[0.08] rounded-xl p-8 bg-[#0A0A0A]"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <Shield className="w-5 h-5 text-neutral-400" />
+              <h3 className="text-white text-xl font-medium tracking-[-0.02em]">{guaranteeSection.title}</h3>
+            </div>
+            <ul className="space-y-3">
+              {guaranteeSection.items.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-neutral-400 text-sm">
+                  <Check className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        ) : null}
       </div>
     </section>
   )

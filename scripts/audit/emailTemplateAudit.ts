@@ -40,7 +40,6 @@ const DEPRECATED_PATTERNS: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /\{\{firstName\}\}/, label: "camelCase {{firstName}} (use {{first_name}} in bypass)" },
   { pattern: /\b898\b/, label: "forbidden 898 pricing" },
   { pattern: /1500\s*€|1\s*500\s*€/, label: "deprecated 1500 € entry price" },
-  { pattern: /4\s+jours?\s+de\s+rétractation/i, label: "forbidden 4-day retraction" },
 ];
 
 const UNREPLACED_PLACEHOLDER = /\{\{(\w+)\}\}/g;

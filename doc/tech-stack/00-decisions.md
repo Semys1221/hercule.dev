@@ -33,7 +33,6 @@ Une ligne = une vérité. Si deux docs se disputent, **celle-ci gagne**.
 - Machine `NOT_PAID → PAID → MEETING_1…10 → COMPLETED` comme `lead_statut`
 - Offre **898 €** (3 RDV / 3 cycles)
 - Two-price **~1 500 € entrée vs 1 489 € renouvellement**
-- Rétractation commerciale **4 jours**
 - Streamlit = **seul** cockpit d’écriture produit
 - Table `communications`
 - Facturation **149 € / RDV honoré** (ancien modèle)
@@ -189,4 +188,4 @@ Une ligne = une vérité. Si deux docs se disputent, **celle-ci gagne**.
 | Pack 3 mois | CONFIRMED / NEW | **989 € × 3 = 2 967 €** · **15 attributions** · jusqu’à **15 remplacements** si CA &lt; **4 500 €** / 3 mois |
 | 2 500 € / mois | DEPRECATED commercial / vitrine copy | Pas de webhook abo, pas de vente réelle |
 | 898 € | REJECTED | — |
-| Rétractation 4 j | DEPRECATED | Retirée ; Activation = paiement + onboarding |
+| Rétractation 4 j | CONFIRMED | 4 j calendaires par défaut (agence + comptable) ; waiver opt-in dashboard |

@@ -8,6 +8,7 @@ import {
 import {
   assertActiveDashboardUi,
   runDryPaymentAndOnboarding,
+  runDryPaymentRetractionHold,
   runLivePaymentAndOnboarding,
   runPreviewWizardToCheckout,
 } from "./helpers/client-dashboard-workflow";
@@ -37,6 +38,20 @@ test.describe("@dashboard-dry Client dashboard E2E", () => {
     expect(refreshRes.ok()).toBeTruthy();
     const payload = (await refreshRes.json()) as { productStatut?: string };
     expect(payload.productStatut).toBe("IN_DELIVERANCE");
+  });
+
+  test("retraction hold then waive from dashboard", async ({ page }) => {
+    await runPreviewWizardToCheckout(page);
+    await runDryPaymentRetractionHold(page);
+    await assertActiveDashboardUi(page);
+
+    const refreshRes = await page.request.get(`/api/dashboard/${TEST_AGENCE_SLUG}`);
+    const payload = (await refreshRes.json()) as {
+      productStatut?: string;
+      retraction?: { status?: string };
+    };
+    expect(payload.productStatut).toBe("IN_DELIVERANCE");
+    expect(payload.retraction?.status).toBe("waived");
   });
 });
 

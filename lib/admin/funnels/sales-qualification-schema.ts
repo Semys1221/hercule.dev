@@ -34,6 +34,12 @@ function buildSalesQualificationSchema(monthlyMin: number) {
     presentationConfirmed: z.boolean().refine((value) => value, {
       message: "Veuillez confirmer avoir pris connaissance de la présentation.",
     }),
+    o1: multiChoiceSchema,
+    o2: z.string().min(1),
+    o3: z.string().min(1),
+    o4: multiChoiceSchema,
+    o5: multiChoiceSchema,
+    o6: z.string().min(1),
     q1: multiChoiceSchema,
     q2: multiChoiceSchema,
     q2Other: z.string().optional(),
@@ -75,6 +81,12 @@ export function getSalesQualificationDefaultValues(
   return {
     introConfirmed: false,
     presentationConfirmed: false,
+    o1: [],
+    o2: "",
+    o3: "",
+    o4: [],
+    o5: [],
+    o6: "",
     q1: [],
     q2: [],
     q2Other: "",
@@ -111,6 +123,7 @@ const SECTION_QUESTION_KEYS: Record<
   Array<keyof SalesQualificationValues>
 > = {
   introduction: ["introConfirmed"],
+  objectifs: ["o1", "o2", "o3", "o4", "o5", "o6"],
   "presentation-societe": ["presentationConfirmed"],
   capacite: ["q1", "q2", "q3", "q4", "q5"],
   historique: ["q6", "q7", "q8", "q9", "q10"],
@@ -197,6 +210,7 @@ const QUALIFICATION_SECTION_IDS: Array<
   Exclude<SalesFunnelSectionId, "rendez-vous">
 > = [
   "introduction",
+  "objectifs",
   "presentation-societe",
   "capacite",
   "historique",

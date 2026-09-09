@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
+  getAgencePaymentSchedule,
   hasSucceededPayment,
   hasSucceededPaymentComptable,
   getComptablePaymentDetails,
@@ -8,13 +9,17 @@ import {
 import { loadDeliveryContext } from "@/lib/dashboard/load-delivery-context";
 import { isFormSparse, resolvePreviewForm } from "@/lib/dashboard/resolve-preview-form";
 import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
-import { isSeedSlug } from "@/lib/admin/clients/seed";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import {
   createOnboardingClient,
   prefillAgenceFormFromQualification,
 } from "@/lib/admin/onboarding/supabase";
-import { transitionToInDeliverance } from "@/lib/product/transitions";
+import { isLegacyComptableEntrepriseLead } from "@/lib/dashboard/legacy-comptable-entreprise";
+import {
+  completeBuyerOnboarding,
+  waiveRetractionNow,
+} from "@/lib/dashboard/onboarding-complete";
+import { buildDashboardRetractionFields } from "@/lib/dashboard/retraction-fields";
 import type { DashboardFaqItem, DashboardFormData } from "@/lib/dashboard/types";
 import {
   createLinkTrackingClient,
@@ -29,6 +34,11 @@ import {
 type RouteParams = {
   params: Promise<{ slug: string }>;
 };
+
+function tieDownAcceptedFromProfile(profile: Record<string, unknown> | null): boolean {
+  const closing = (profile?.dashboard ?? {}) as Record<string, unknown>;
+  return Boolean(closing.tie_down_accepted);
+}
 
 function timelineFromProfile(profile: Record<string, unknown> | null) {
   const display = profile?.display as Record<string, unknown> | undefined;
@@ -64,10 +74,24 @@ export async function GET(_request: Request, { params }: RouteParams) {
     // ── Comptable dashboard (comptable table) ───────────────────────────────
     if (lookup.category === "comptable") {
       const lead = lookup.lead;
+      const profile = (lead.profile ?? {}) as Record<string, unknown>;
+      const profileForm = (profile.form ?? {}) as DashboardFormData;
       const isPaid = await hasSucceededPaymentComptable(client, lead.id, "comptable");
       const paymentDetails = isPaid
         ? await getComptablePaymentDetails(client, lead.id, "comptable")
         : null;
+      const isOnboarded = Boolean(lead.onboarding_completed_at);
+      const productStatut = lead.product_statut ?? "NONE";
+      const { retraction, milestones } = buildDashboardRetractionFields({
+        category: "comptable",
+        lead,
+      });
+
+      const dashboardMode = !isPaid
+        ? "comptable_pending"
+        : !isOnboarded
+          ? "comptable_onboarding"
+          : "comptable_active";
 
       return NextResponse.json({
         slug: lead.slug,
@@ -75,18 +99,21 @@ export async function GET(_request: Request, { params }: RouteParams) {
         firstName: lead.first_name,
         company: lead.company,
         statut: lead.statut,
-        productStatut: "NONE",
+        productStatut,
         scheduledAt: lead.scheduled_at,
         dashboardLink: dashboardLinkFor(lead),
-        timeline: [],
-        onboardingCompleted: false,
-        tieDownAccepted: false,
-        form: {},
+        timeline: milestones,
+        milestones,
+        onboardingCompleted: isOnboarded,
+        tieDownAccepted: tieDownAcceptedFromProfile(profile),
+        form: profileForm,
         faq: [],
         isPaid,
-        dashboardMode: isPaid ? "comptable_active" : "comptable_pending",
+        audience: "comptable",
+        dashboardMode,
         deliveryPlan: null,
         enterpriseBrief: null,
+        retraction,
         comptable: {
           offerType: paymentDetails?.offerType ?? null,
           succeededAt: paymentDetails?.succeededAt ?? null,
@@ -94,13 +121,56 @@ export async function GET(_request: Request, { params }: RouteParams) {
       });
     }
 
-    // ── Legacy comptable dashboard (entreprise table, pre-migration rows) ───
+    // ── Entreprise dashboard (free buyers) or legacy comptable on entreprise table ───
     if (lookup.category === "entreprise") {
       const lead = lookup.lead;
-      const isPaid = await hasSucceededPaymentComptable(client, lead.id, "entreprise");
-      const paymentDetails = isPaid
-        ? await getComptablePaymentDetails(client, lead.id, "entreprise")
-        : null;
+      const profile = (lead.profile ?? {}) as Record<string, unknown>;
+
+      if (isLegacyComptableEntrepriseLead(lead)) {
+        const isPaid = await hasSucceededPaymentComptable(client, lead.id, "entreprise");
+        const paymentDetails = isPaid
+          ? await getComptablePaymentDetails(client, lead.id, "entreprise")
+          : null;
+        const isOnboarded = Boolean(lead.onboarding_completed_at);
+        const productStatut = lead.product_statut ?? "NONE";
+        const { retraction, milestones } = buildDashboardRetractionFields({
+          category: "comptable",
+          lead,
+        });
+
+        const dashboardMode = !isPaid
+          ? "comptable_pending"
+          : !isOnboarded
+            ? "comptable_onboarding"
+            : "comptable_active";
+
+        return NextResponse.json({
+          slug: lead.slug,
+          email: lead.email,
+          firstName: lead.first_name,
+          company: lead.company,
+          statut: lead.statut,
+          productStatut,
+          scheduledAt: lead.scheduled_at,
+          dashboardLink: dashboardLinkFor(lead),
+          timeline: milestones,
+          milestones,
+          onboardingCompleted: isOnboarded,
+          tieDownAccepted: tieDownAcceptedFromProfile(profile),
+          form: (profile.form ?? {}) as DashboardFormData,
+          faq: [],
+          isPaid,
+          audience: "comptable",
+          dashboardMode,
+          deliveryPlan: null,
+          enterpriseBrief: null,
+          retraction,
+          comptable: {
+            offerType: paymentDetails?.offerType ?? null,
+            succeededAt: paymentDetails?.succeededAt ?? null,
+          },
+        });
+      }
 
       return NextResponse.json({
         slug: lead.slug,
@@ -111,19 +181,16 @@ export async function GET(_request: Request, { params }: RouteParams) {
         productStatut: "NONE",
         scheduledAt: lead.scheduled_at,
         dashboardLink: dashboardLinkFor(lead),
-        timeline: [],
+        timeline: timelineFromProfile(profile),
         onboardingCompleted: false,
-        tieDownAccepted: false,
+        tieDownAccepted: tieDownAcceptedFromProfile(profile),
         form: {},
         faq: [],
-        isPaid,
-        dashboardMode: isPaid ? "comptable_active" : "comptable_pending",
+        isPaid: false,
+        audience: "entreprise",
+        dashboardMode: "entreprise_preview",
         deliveryPlan: null,
         enterpriseBrief: null,
-        comptable: {
-          offerType: paymentDetails?.offerType ?? null,
-          succeededAt: paymentDetails?.succeededAt ?? null,
-        },
       });
     }
 
@@ -188,24 +255,46 @@ export async function GET(_request: Request, { params }: RouteParams) {
       isPaid,
     );
 
+    const deliveryComplete = Boolean(
+      deliveryPlan &&
+        deliveryPlan.attributionsTotal > 0 &&
+        deliveryPlan.attributionsUsed >= deliveryPlan.attributionsTotal,
+    );
+    const paymentSchedule = isPaid
+      ? await getAgencePaymentSchedule(client, lead.id, deliveryComplete)
+      : null;
+
+    const productStatut = lead.product_statut ?? "NONE";
+    const { retraction, milestones } = isOnboarded
+      ? buildDashboardRetractionFields({ category: "agence", lead })
+      : { retraction: null, milestones: [] as ReturnType<typeof buildDashboardRetractionFields>["milestones"] };
+
+    const timeline =
+      milestones.length > 0 ? milestones : timelineFromProfile(profile);
+
     return NextResponse.json({
       slug: lead.slug,
       email: lead.email,
       firstName: lead.first_name,
       company: lead.company,
       statut: lead.statut,
-      productStatut: (lead as { product_statut?: string }).product_statut ?? "NONE",
+      productStatut,
       scheduledAt: lead.scheduled_at,
       dashboardLink: dashboardLinkFor(lead),
-      timeline: timelineFromProfile(profile),
+      timeline,
+      milestones,
       onboardingCompleted: isOnboarded,
       tieDownAccepted: Boolean(closing.tie_down_accepted),
       form: resolvedForm,
       faq,
       isPaid,
+      audience: "agence",
       dashboardMode,
       deliveryPlan,
       enterpriseBrief,
+      offerType: paymentSchedule?.offerType ?? null,
+      paymentSchedule,
+      retraction,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Dashboard fetch failed";
@@ -231,22 +320,124 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const client = createLinkTrackingClient();
     const lookup = await findLeadByLink(client, normalizedSlug);
-    // PATCH is agence-only; comptable leads have no onboarding form
-    if (!lookup || lookup.category !== "agence") {
+    if (!lookup) {
       return NextResponse.json({ error: "Dashboard not found" }, { status: 404 });
     }
 
     const lead = lookup.lead;
+    const category = lookup.category;
 
-    // Guard: onboarding completion requires payment
-    if (body.completeOnboarding === true) {
-      const isPaid = await hasSucceededPayment(client, lead.id);
-      if (!isPaid) {
-        return NextResponse.json(
-          { error: "Payment required to complete onboarding" },
-          { status: 403 },
-        );
+    const isComptableBuyer =
+      category === "comptable" ||
+      (category === "entreprise" && isLegacyComptableEntrepriseLead(lead));
+
+    if (isComptableBuyer) {
+      const table = category === "comptable" ? "comptable" : "entreprise";
+      const paymentCategory = category === "comptable" ? "comptable" : "entreprise";
+
+      if (body.waiveRetraction === true && !body.completeOnboarding) {
+        const waiver = await waiveRetractionNow({
+          client,
+          category: "comptable",
+          leadId: lead.id,
+          slug: normalizedSlug,
+          currentStatus: lead.retraction_status,
+          onboardingCompletedAt: lead.onboarding_completed_at,
+        });
+        if (!waiver.ok) {
+          return NextResponse.json(
+            { error: waiver.error },
+            { status: waiver.status ?? 400 },
+          );
+        }
+        return NextResponse.json({ ok: true });
       }
+
+      if (body.completeOnboarding === true) {
+        const isPaid = await hasSucceededPaymentComptable(client, lead.id, paymentCategory);
+        if (!isPaid) {
+          return NextResponse.json(
+            { error: "Payment required to complete onboarding" },
+            { status: 403 },
+          );
+        }
+
+        const profile = { ...(lead.profile ?? {}) } as Record<string, unknown>;
+        const dashboardMeta = { ...((profile.dashboard ?? {}) as Record<string, unknown>) };
+
+        if (body.cgvVersion && typeof body.cgvVersion === "string") {
+          dashboardMeta.cvg_version = body.cgvVersion;
+          dashboardMeta.cvg_accepted_at = new Date().toISOString();
+        }
+
+        profile.dashboard = dashboardMeta;
+
+        await completeBuyerOnboarding({
+          client,
+          category: "comptable",
+          leadId: lead.id,
+          slug: normalizedSlug,
+          profile,
+          waiveRetraction: body.waiveRetraction === true,
+        });
+
+        return NextResponse.json({ ok: true });
+      }
+
+      if (body.tieDownAccepted === true) {
+        const profile = { ...(lead.profile ?? {}) } as Record<string, unknown>;
+        const dashboardMeta = { ...((profile.dashboard ?? {}) as Record<string, unknown>) };
+        dashboardMeta.tie_down_accepted = true;
+        dashboardMeta.tie_down_accepted_at = new Date().toISOString();
+        profile.dashboard = dashboardMeta;
+
+        const { error } = await client.from(table).update({ profile }).eq("id", lead.id);
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        return NextResponse.json({ ok: true });
+      }
+
+      return NextResponse.json({ error: "Unsupported update" }, { status: 400 });
+    }
+
+    if (category === "entreprise") {
+      if (body.tieDownAccepted !== true) {
+        return NextResponse.json({ error: "Unsupported update" }, { status: 400 });
+      }
+
+      const profile = { ...(lead.profile ?? {}) } as Record<string, unknown>;
+      const dashboardMeta = { ...((profile.dashboard ?? {}) as Record<string, unknown>) };
+      dashboardMeta.tie_down_accepted = true;
+      dashboardMeta.tie_down_accepted_at = new Date().toISOString();
+      profile.dashboard = dashboardMeta;
+
+      const { error } = await client.from("entreprise").update({ profile }).eq("id", lead.id);
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+
+    if (category !== "agence") {
+      return NextResponse.json({ error: "Dashboard not found" }, { status: 404 });
+    }
+
+    if (body.waiveRetraction === true && !body.completeOnboarding) {
+      const waiver = await waiveRetractionNow({
+        client,
+        category: "agence",
+        leadId: lead.id,
+        slug: normalizedSlug,
+        currentStatus: lead.retraction_status,
+        onboardingCompletedAt: lead.onboarding_completed_at,
+      });
+      if (!waiver.ok) {
+        return NextResponse.json({ error: waiver.error }, { status: waiver.status ?? 400 });
+      }
+      return NextResponse.json({ ok: true });
     }
 
     const profile = { ...(lead.profile ?? {}) } as Record<string, unknown>;
@@ -264,7 +455,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       dashboardMeta.tie_down_accepted_at = new Date().toISOString();
     }
 
-    // CGV acceptance fields
     if (body.cgvVersion && typeof body.cgvVersion === "string") {
       dashboardMeta.cvg_version = body.cgvVersion;
       dashboardMeta.cvg_accepted_at = new Date().toISOString();
@@ -272,61 +462,30 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     profile.dashboard = dashboardMeta;
 
-    const patch: Record<string, unknown> = { profile };
     if (body.completeOnboarding === true) {
-      patch.onboarding_completed_at = new Date().toISOString();
+      const isPaid = await hasSucceededPayment(client, lead.id);
+      if (!isPaid) {
+        return NextResponse.json(
+          { error: "Payment required to complete onboarding" },
+          { status: 403 },
+        );
+      }
+
+      await completeBuyerOnboarding({
+        client,
+        category: "agence",
+        leadId: lead.id,
+        slug: normalizedSlug,
+        profile,
+        waiveRetraction: body.waiveRetraction === true,
+      });
+
+      return NextResponse.json({ ok: true });
     }
 
-    const { data, error } = await client
-      .from("agence")
-      .update(patch)
-      .eq("id", lead.id)
-      .select("*")
-      .single();
-
-    if (error || !data) {
-      throw new Error(error?.message ?? "Update failed");
-    }
-
-    // After successful onboarding completion: transition to IN_DELIVERANCE + start workflows
-    if (body.completeOnboarding === true) {
-      const isTestLead = isSeedSlug(normalizedSlug);
-
-      try {
-        await transitionToInDeliverance(client, lead.id, "agence");
-      } catch (transitionError) {
-        // Log but don't fail — onboarding data already saved
-        console.error(
-          "[dashboard/slug] transitionToInDeliverance failed:",
-          transitionError instanceof Error ? transitionError.message : transitionError,
-        );
-      }
-
-      try {
-        const { startCalendlySeatWorkflow } = await import(
-          "@/lib/calendly-seat-onboarding/orchestrator"
-        );
-        await startCalendlySeatWorkflow(lead.id, { dryRun: isTestLead });
-      } catch (workflowError) {
-        console.error(
-          "[dashboard/slug] calendly seat workflow failed:",
-          workflowError instanceof Error ? workflowError.message : workflowError,
-        );
-      }
-
-      if (!isTestLead) {
-        try {
-          const { startOnboardingSequence } = await import(
-            "@/lib/onboarding-sequence/orchestrator"
-          );
-          await startOnboardingSequence(lead.id);
-        } catch (sequenceError) {
-          console.error(
-            "[dashboard/slug] onboarding sequence failed:",
-            sequenceError instanceof Error ? sequenceError.message : sequenceError,
-          );
-        }
-      }
+    const { error } = await client.from("agence").update({ profile }).eq("id", lead.id);
+    if (error) {
+      throw new Error(error.message);
     }
 
     return NextResponse.json({ ok: true });

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { ArrowLeft } from "lucide-react";
 
@@ -44,6 +45,8 @@ import {
   SESSION_SETTINGS_BACK_ARIA,
   SESSION_SETTINGS_DESCRIPTION,
   SESSION_SETTINGS_LABEL,
+  SESSION_DATA_DESCRIPTION,
+  SESSION_SETTINGS_TAB_DATA,
   SESSION_SETTINGS_TAB_GENERAL,
   SESSION_SETTINGS_TAB_PREPARATION,
   SESSION_WAITING_QUEUE_DESCRIPTION,
@@ -57,6 +60,8 @@ import {
 } from "@/lib/admin/funnels/ui-copy";
 import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode";
 import { sessionHubHref, pathToHref, type Audience } from "@/lib/admin/navigation";
+
+import { SalesSessionDataPanel } from "./sales-session-data-panel";
 
 type SalesFunnelSettingsPageProps = {
   audience: Audience;
@@ -73,6 +78,10 @@ function SettingsSkeleton() {
 }
 
 export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPageProps) {
+  const searchParams = useSearchParams();
+  const initialInviteeUri = searchParams.get("inviteeUri");
+  const defaultTab = initialInviteeUri ? "donnees" : "general";
+
   const funnelHref = pathToHref([audience, "sales", "funnel"]);
   const pitchSidebarEnabled = useSyncExternalStore(
     subscribePitchSidebarEnabled,
@@ -211,10 +220,11 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
       {loading ? (
         <SettingsSkeleton />
       ) : (
-        <Tabs defaultValue="general" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList>
             <TabsTrigger value="general">{SESSION_SETTINGS_TAB_GENERAL}</TabsTrigger>
             <TabsTrigger value="preparation">{SESSION_SETTINGS_TAB_PREPARATION}</TabsTrigger>
+            <TabsTrigger value="donnees">{SESSION_SETTINGS_TAB_DATA}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="general" className="mt-6 space-y-4">
@@ -326,6 +336,14 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="donnees" className="mt-6 space-y-4">
+            <p className="text-sm text-muted-foreground">{SESSION_DATA_DESCRIPTION}</p>
+            <SalesSessionDataPanel
+              audience={audience}
+              initialInviteeUri={initialInviteeUri}
+            />
           </TabsContent>
         </Tabs>
       )}

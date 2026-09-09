@@ -287,6 +287,11 @@ export async function POST(request: Request) {
     }
 
     // ── Agence path (agenceId) ──────────────────────────────────────────────
+    const paymentPhase = session.metadata?.payment_phase ?? "deposit";
+    if (paymentPhase === "balance") {
+      return NextResponse.json({ ok: true, balance: true });
+    }
+
     // Set intermediate statut: paid but onboarding not yet complete
     await client
       .from("agence")

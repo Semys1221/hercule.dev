@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Calendar,
   ClipboardCheck,
+  CreditCard,
   FileText,
   Link2,
   ShieldCheck,
@@ -16,6 +17,7 @@ export type SalesClosingSectionId =
   | "regles-traitement"
   | "demandes-eligibles"
   | "calendrier"
+  | "activation"
   | "envoi-dashboard";
 
 export type SalesClosingSection = {
@@ -84,6 +86,13 @@ const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
     subtitle: "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants TPE.",
   },
   {
+    id: "activation",
+    label: "Activation & paiement",
+    title: "Activation & paiement",
+    subtitle:
+      "Hercule Lite, Hercule Starter 1 499 €/mois ou Pack 3 mois — checkout Stripe embarqué.",
+  },
+  {
     id: "envoi-dashboard",
     label: "Lien dashboard",
     title: "Accès dashboard",
@@ -102,6 +111,7 @@ export const SALES_CLOSING_SECTION_ICONS: Record<SalesClosingSectionId, LucideIc
   "regles-traitement": ShieldCheck,
   "demandes-eligibles": ClipboardCheck,
   calendrier: Calendar,
+  activation: CreditCard,
   "envoi-dashboard": Link2,
 };
 
@@ -122,9 +132,10 @@ export function getSalesClosingSection(
   return getSalesClosingSections(audience).find((section) => section.id === id);
 }
 
-const CLOSING_SECTION_IDS = new Set<SalesClosingSectionId>(
-  SALES_CLOSING_SECTIONS.map((section) => section.id),
-);
+const CLOSING_SECTION_IDS = new Set<SalesClosingSectionId>([
+  ...SALES_CLOSING_SECTIONS.map((section) => section.id),
+  "activation",
+]);
 
 export function isSalesClosingSectionId(
   id: SalesFunnelSectionId | SalesClosingSectionId,
@@ -156,23 +167,28 @@ export function isSalesClosingSectionValidated(
   if (sectionId === "calendrier") {
     return values.calendrierAccepted;
   }
+  if (sectionId === "activation") {
+    return visitedIds.has("activation");
+  }
   return false;
 }
 
 export function isSalesClosingSectionComplete(
   sectionId: SalesClosingSectionId,
   context: SalesClosingCompletionContext,
+  audience: Audience = "agence",
 ): boolean {
   if (sectionId === "envoi-dashboard") {
     return false;
   }
 
-  const sectionIndex = SALES_CLOSING_SECTIONS.findIndex((section) => section.id === sectionId);
+  const sections = getSalesClosingSections(audience);
+  const sectionIndex = sections.findIndex((section) => section.id === sectionId);
   if (sectionIndex === -1) {
     return false;
   }
 
-  const priorSections = SALES_CLOSING_SECTIONS.slice(0, sectionIndex);
+  const priorSections = sections.slice(0, sectionIndex);
   const allPriorValidated = priorSections.every((section) =>
     isSalesClosingSectionValidated(section.id, context),
   );

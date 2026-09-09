@@ -37,6 +37,7 @@ export const MOCK_DASHBOARD_DATA: DashboardData = {
   },
   faq: [],
   isPaid: true,
+  audience: "agence",
   dashboardMode: "dashboard_state",
   deliveryPlan: {
     formulaLabel: COMMERCIAL.starterFormulaLabel,

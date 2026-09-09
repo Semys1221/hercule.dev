@@ -445,6 +445,9 @@ import {
   COMPTABLE_SALES_QUESTIONS,
   COMPTABLE_SLIDER_CONFIGS,
 } from "./sales-questions-comptable";
+import { AGENCE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-agence";
+import { COMPTABLE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-comptable";
+import { ENTREPRISE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-entreprise";
 
 export function getHerculeMonthlyMin(audience: Audience = "agence"): number {
   return isComptableSalesAudience(audience) ? COMPTABLE_MONTHLY_MIN : HERCULE_MONTHLY_MIN;
@@ -454,8 +457,21 @@ export function getSliderConfigs(audience: Audience = "agence") {
   return isComptableSalesAudience(audience) ? COMPTABLE_SLIDER_CONFIGS : SLIDER_CONFIGS;
 }
 
+function getObjectifsQuestions(audience: Audience): SalesQuestion[] {
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_OBJECTIFS_QUESTIONS;
+  }
+  if (audience === "entreprise") {
+    return ENTREPRISE_OBJECTIFS_QUESTIONS;
+  }
+  return AGENCE_OBJECTIFS_QUESTIONS;
+}
+
 export function getSalesQuestions(audience: Audience = "agence"): SalesQuestion[] {
-  return isComptableSalesAudience(audience) ? COMPTABLE_SALES_QUESTIONS : SALES_QUESTIONS;
+  const baseQuestions = isComptableSalesAudience(audience)
+    ? COMPTABLE_SALES_QUESTIONS
+    : SALES_QUESTIONS;
+  return [...getObjectifsQuestions(audience), ...baseQuestions];
 }
 
 export function getSalesQuestionsForSection(

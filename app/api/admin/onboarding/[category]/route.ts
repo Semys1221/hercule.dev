@@ -16,7 +16,7 @@ const agenceSchema = z.object({
   specialites: z.array(z.string()).optional().default([]),
   taille_equipe: z.string().optional().default(""),
   budget: z.string().optional().default(""),
-  droit_retractation: z.boolean().optional().default(false),
+  droit_retractation: z.boolean().optional().default(true),
 });
 
 const entrepriseSchema = z.object({

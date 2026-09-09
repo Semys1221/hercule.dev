@@ -33,6 +33,7 @@ export const REMINDER_EMAIL_LABELS: Record<BookingEmailType, string> = {
   no_show_indecis_1: "no_show_indecis_1",
   no_show_indecis_2: "no_show_indecis_2",
   no_show_indecis_3: "no_show_indecis_3",
+  onboarding_retraction_hold: "Hold rétractation onboarding",
   onboarding_j0: "onboarding_j0",
   onboarding_j0_bis: "onboarding_j0_bis",
   onboarding_j1: "onboarding_j1",

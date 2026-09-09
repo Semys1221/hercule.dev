@@ -76,4 +76,7 @@ export type ClientCockpitData = {
   timeline: TimelineStep[];
   matches: MatchRow[];
   appointments: AppointmentRow[];
+  retractionStatus: string;
+  retractionEndsAt: string | null;
+  retractionWaivedAt: string | null;
 };

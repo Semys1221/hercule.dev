@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DashboardData, DashboardFormData } from "@/lib/dashboard/types";
 
-export const CGV_VERSION = "2026-09-06";
+import { RetractionWaiverFields } from "./retraction-waiver-fields";
+
+export const CGV_VERSION = "2026-09-09";
 
 export type OnboardingFormFieldsProps = {
   mode: "live" | "preview";
@@ -39,6 +41,7 @@ export function OnboardingFormFields({
     String(data.form.budgetMinMensuel ?? ""),
   );
   const [cgvAccepted, setCgvAccepted] = useState(false);
+  const [waiveRetraction, setWaiveRetraction] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,6 +91,7 @@ export function OnboardingFormFields({
           tieDownAccepted: true,
           completeOnboarding: true,
           cgvVersion: CGV_VERSION,
+          waiveRetraction,
         }),
       });
       const body = await response.json();
@@ -229,6 +233,12 @@ export function OnboardingFormFields({
               </Label>
             </div>
           </div>
+
+          <RetractionWaiverFields
+            idPrefix={idPrefix}
+            checked={waiveRetraction}
+            onCheckedChange={setWaiveRetraction}
+          />
 
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
 

@@ -99,6 +99,8 @@ export type PricingCardProps = {
   onCtaClick?: () => void;
   ctaHref?: string;
   ctaLinkLabel?: string;
+  /** Show checkout CTA even when the plan is not featured. */
+  forceCta?: boolean;
 };
 
 export function PricingCard({
@@ -112,7 +114,9 @@ export function PricingCard({
   onCtaClick,
   ctaHref = CALENDLY_AGENCE_URL,
   ctaLinkLabel = "Soumettre ma candidature",
+  forceCta = false,
 }: PricingCardProps) {
+  const showCheckoutCta = Boolean(onCtaClick && ctaLabel && (plan.featured || forceCta));
   const [open, setOpen] = useState(false);
 
   const card = (
@@ -213,7 +217,7 @@ export function PricingCard({
               </p>
             )}
 
-            {plan.featured && onCtaClick && ctaLabel ? (
+            {showCheckoutCta ? (
               <button
                 type="button"
                 onClick={onCtaClick}
@@ -234,9 +238,7 @@ export function PricingCard({
 
             <div
               className={cn(
-                (plan.featured && !compact) || (plan.featured && onCtaClick && ctaLabel)
-                  ? "mt-6"
-                  : "",
+                (plan.featured && !compact) || showCheckoutCta ? "mt-6" : "",
               )}
             >
               <Collapsible open={open} onOpenChange={setOpen}>

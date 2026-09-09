@@ -1,4 +1,4 @@
-import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
+import { COMMERCIAL, COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import type { FaqAudience } from "@/lib/site/faq-types";
 
@@ -10,9 +10,10 @@ export function modalitesFaqAudience(category: LeadCategory): FaqAudience {
   return category === "agence" ? "agence" : "comptable";
 }
 
-/** Campaign-only agence prices — do not write to payments.offer_type. */
-export const MODALITES_AGENCE_GROWTH_TTC_CENTS = 149_800;
-export const MODALITES_AGENCE_LAUNCH_TTC_CENTS = 99_800;
+/** @deprecated Use COMMERCIAL.growth1498PriceCents / starter998PriceCents */
+export const MODALITES_AGENCE_GROWTH_TTC_CENTS = COMMERCIAL.growth1498PriceCents;
+/** @deprecated Use COMMERCIAL.starter998PriceCents */
+export const MODALITES_AGENCE_LAUNCH_TTC_CENTS = COMMERCIAL.starter998PriceCents;
 
 export const MODALITES_SUBJECT = "Modalités d'Hercule";
 export const MODALITES_CONFIRM_BUTTON_LABEL = "Confirmer le rendez-vous";
@@ -49,25 +50,26 @@ export function modalitesFormulas(audience: LeadCategory): ModalitesFormula[] {
     const missions = COMMERCIAL_COMPTABLE.growthMissionsPerMonth;
     return [
       {
-        name: "Formule Croissance",
+        name: "Hercule Starter",
         recommended: true,
-        detail: `Hercule — ${missions} missions PME / mois (${growthPrice} TTC) — recommandé pour les cabinets. Garantie ${guaranteeMrr} de MRR à la signature (${missions} lettres de mission × ${mrrPerMission} de MRR par mission, soit ${COMMERCIAL_COMPTABLE.valueShowcaseAnnualHonorairesLabel} d'honoraires annuels / 12).`,
+        detail: `Hercule — ${missions} missions PME/TPE/indépendants / mois (${growthPrice}/mois) — recommandé pour les cabinets. Garantie ${guaranteeMrr} de MRR à la signature (${missions} lettres de mission × ${mrrPerMission} de MRR par mission, soit ${COMMERCIAL_COMPTABLE.valueShowcaseAnnualHonorairesLabel} d'honoraires annuels / 12).`,
       },
       {
-        name: "Hercule Starter",
-        detail: `${COMMERCIAL_COMPTABLE.starterMissions} missions PME / mois (${starterPrice} TTC)`,
+        name: "Hercule Lite",
+        detail: `${COMMERCIAL_COMPTABLE.starterMissions} missions PME (${starterPrice} TTC)`,
       },
     ];
   }
 
   return [
     {
-      name: "Formule Croissance",
-      detail: `10 contrats PME sécurisés / 60 jours (${formatEurosFromCents(MODALITES_AGENCE_GROWTH_TTC_CENTS)} TTC)`,
+      name: "Hercule Growth",
+      recommended: true,
+      detail: `10 contrats PME sécurisés / 60 jours (${formatEurosFromCents(COMMERCIAL.growth1498PriceCents)} TTC) — 50 % à la commande, 50 % à la livraison.`,
     },
     {
-      name: "Formule Lancement",
-      detail: `5 contrats PME sécurisés / 30 jours (${formatEurosFromCents(MODALITES_AGENCE_LAUNCH_TTC_CENTS)} TTC)`,
+      name: "Hercule Starter",
+      detail: `5 contrats PME sécurisés / 30 jours (${formatEurosFromCents(COMMERCIAL.starter998PriceCents)} TTC) — 50 % à la commande, 50 % à la livraison.`,
     },
   ];
 }

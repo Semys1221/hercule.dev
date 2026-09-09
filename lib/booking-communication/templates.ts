@@ -241,6 +241,18 @@ Dernier rappel : vous pouvez toujours reprendre rendez-vous via ce lien :
 
 L'équipe Hercule`,
   },
+  onboarding_retraction_hold: {
+    subject: "Votre délai de rétractation est en cours",
+    body: `{{firstNameLine}}
+
+Votre onboarding est bien enregistré. Conformément à nos CGV, vous disposez de 4 jours calendaires pour vous rétracter tant que l'activation n'a pas démarré.
+
+Votre activation est prévue le {{activationDate}}. Pour lancer la recherche immédiatement, rendez-vous sur votre dashboard :
+
+{{dashboardLink}}
+
+L'équipe Hercule`,
+  },
   onboarding_j0: {
     subject: "Bienvenue — votre onboarding Hercule est activé",
     body: `{{firstNameLine}}

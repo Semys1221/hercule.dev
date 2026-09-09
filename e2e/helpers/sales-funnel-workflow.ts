@@ -29,11 +29,13 @@ export async function provisionTestMeetingInSession(page: Page): Promise<void> {
   await expect(page.getByText(TEST_AGENCE_EMAIL).first()).toBeVisible({
     timeout: 30_000,
   });
+  await expect(page.getByRole("button", { name: "Réinitialiser la session" })).toBeEnabled();
 }
 
 export async function navigateQualificationSections(page: Page): Promise<void> {
   for (const label of [
     "Audit de compatibilité",
+    "Objectifs",
     "Présentation de la société",
     "Conditions commerciales",
   ]) {
@@ -121,6 +123,9 @@ export async function runSalesSettingsWorkflow(page: Page): Promise<void> {
   ]);
   expect(saveRes.ok()).toBeTruthy();
   await expect(page.getByText(SESSION_PREPARATION_SAVE_SUCCESS)).toBeVisible();
+
+  await page.getByRole("tab", { name: "Données" }).click();
+  await expect(page.getByText(/Supabase › public\.sales_calls › notes/)).toBeVisible();
 }
 
 export async function fetchCalendlyBookingsInSession(page: Page): Promise<boolean> {

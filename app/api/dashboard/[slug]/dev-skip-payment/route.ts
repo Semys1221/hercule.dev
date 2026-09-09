@@ -7,7 +7,7 @@ type RouteParams = {
   params: Promise<{ slug: string }>;
 };
 
-export async function POST(_request: Request, { params }: RouteParams) {
+export async function POST(request: Request, { params }: RouteParams) {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json({ error: "Not available in production" }, { status: 403 });
   }
@@ -30,11 +30,24 @@ export async function POST(_request: Request, { params }: RouteParams) {
     const succeededAt = new Date().toISOString();
     const stripeCheckoutSessionId = `dev_skip_session_${normalizedSlug}`;
 
+    let offerType = "starter_998_5";
+    let amountCents = 49_900;
+    try {
+      const body = (await request.json()) as { offerType?: string };
+      if (body.offerType === "growth_1498_10") {
+        offerType = "growth_1498_10";
+        amountCents = 74_900;
+      }
+    } catch {
+      // default starter deposit
+    }
+
     const { error: paymentError } = await client.from("payments").upsert(
       {
         agence_id: agenceId,
-        offer_type: "starter_1489_5",
-        amount_cents: 148900,
+        offer_type: offerType,
+        amount_cents: amountCents,
+        payment_phase: "deposit",
         status: "succeeded",
         stripe_checkout_session_id: stripeCheckoutSessionId,
         succeeded_at: succeededAt,

@@ -107,7 +107,8 @@ export async function completeOnboardingApi(request: APIRequestContext, slug: st
       form: data.form ?? {},
       tieDownAccepted: true,
       completeOnboarding: true,
-      cgvVersion: "2026-09-06",
+      cgvVersion: "2026-09-09",
+      waiveRetraction: true,
     },
   });
   if (!response.ok()) {

@@ -46,17 +46,31 @@ export async function runDryPaymentAndOnboarding(page: Page): Promise<void> {
     (response) =>
       response.url().includes("/dev-skip-payment") && response.request().method() === "POST",
   );
+  const dashboardRefresh = page.waitForResponse(
+    (response) =>
+      response.url().includes(`/api/dashboard/${TEST_AGENCE_SLUG}`) &&
+      response.request().method() === "GET",
+  );
   await page.getByRole("button", { name: "Simuler le paiement" }).click();
   expect((await skipResponse).ok()).toBeTruthy();
   await pollAgenceProductStatut(TEST_AGENCE_SLUG, "PAID_PENDING_ONBOARDING");
+  await dashboardRefresh;
+
+  const onboardingButton = page.getByRole("button", {
+    name: "Compléter l'onboarding (test)",
+  });
+  await expect(onboardingButton).toBeVisible({ timeout: 30_000 });
 
   const onboardingResponse = page.waitForResponse(
     (response) =>
       response.url().includes(`/api/dashboard/${TEST_AGENCE_SLUG}`) &&
       response.request().method() === "PATCH",
   );
-  await page.getByRole("button", { name: "Compléter l'onboarding (test)" }).click();
-  expect((await onboardingResponse).ok()).toBeTruthy();
+  await onboardingButton.click();
+  const patchRes = await onboardingResponse;
+  if (!patchRes.ok()) {
+    throw new Error(`onboarding PATCH failed: ${patchRes.status()} ${await patchRes.text()}`);
+  }
   await pollAgenceProductStatut(TEST_AGENCE_SLUG, "IN_DELIVERANCE");
 }
 
@@ -81,6 +95,45 @@ export async function runLivePaymentAndOnboarding(
   );
   await page.getByRole("button", { name: "Compléter l'onboarding (test)" }).click();
   expect((await onboardingResponse).ok()).toBeTruthy();
+  await pollAgenceProductStatut(TEST_AGENCE_SLUG, "IN_DELIVERANCE");
+}
+
+export async function runDryPaymentRetractionHold(page: Page): Promise<void> {
+  await enableDashboardDeveloperMode(page);
+  await page.goto(DASHBOARD_PATH, { waitUntil: "domcontentloaded" });
+  await navigateToStripeCheckout(page);
+
+  const skipResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("/dev-skip-payment") && response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Simuler le paiement" }).click();
+  expect((await skipResponse).ok()).toBeTruthy();
+  await pollAgenceProductStatut(TEST_AGENCE_SLUG, "PAID_PENDING_ONBOARDING");
+
+  const holdOnboarding = await page.request.patch(`/api/dashboard/${TEST_AGENCE_SLUG}`, {
+    data: {
+      form: { specialites: ["SEO"], zone: "Paris", capacite: 2 },
+      completeOnboarding: true,
+      cgvVersion: "2026-09-09",
+      waiveRetraction: false,
+    },
+  });
+  expect(holdOnboarding.ok()).toBeTruthy();
+  await pollAgenceProductStatut(TEST_AGENCE_SLUG, "PAID_PENDING_ONBOARDING");
+
+  await page.goto(DASHBOARD_PATH, { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("button", { name: "Démarrer maintenant" })).toBeVisible({
+    timeout: 30_000,
+  });
+
+  const waiveResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes(`/api/dashboard/${TEST_AGENCE_SLUG}`) &&
+      response.request().method() === "PATCH",
+  );
+  await page.getByRole("button", { name: "Démarrer maintenant" }).click();
+  expect((await waiveResponse).ok()).toBeTruthy();
   await pollAgenceProductStatut(TEST_AGENCE_SLUG, "IN_DELIVERANCE");
 }
 

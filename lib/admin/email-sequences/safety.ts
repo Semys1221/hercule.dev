@@ -1,4 +1,5 @@
 import type { Audience } from "@/lib/admin/navigation";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 import {
   bookingSequenceTypesFor,
   type EmailSequenceEntry,
@@ -71,7 +72,7 @@ function sequenceTypesFormValidFamilies(
 
 function typeCompliesWithPattern(
   emailType: BookingEmailType,
-  category: "agence" | "entreprise",
+  category: LeadCategory,
 ): boolean {
   const family = threadFamilyFor(emailType);
   if (!family) {
@@ -110,9 +111,13 @@ export function evaluateSequenceSafety(
     return "off";
   }
 
-  const category =
+  const category: LeadCategory =
     entry.bookingCategory ??
-    (audience === "entreprise" ? "entreprise" : "agence");
+    (audience === "entreprise"
+      ? "entreprise"
+      : audience === "comptable"
+        ? "comptable"
+        : "agence");
 
   const allTypesCompliant = sequenceTypes.every((type) =>
     typeCompliesWithPattern(type, category),

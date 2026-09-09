@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DashboardData, DashboardFormData } from "@/lib/dashboard/types";
 
+import { RetractionWaiverFields } from "../retraction-waiver-fields";
+
 type StepOnboardingFormProps = {
   slug: string;
   data: DashboardData;
@@ -21,6 +23,7 @@ export function StepOnboardingForm({ slug, data, onSaved }: StepOnboardingFormPr
   const [zone, setZone] = useState(data.form.zone ?? "");
   const [capacite, setCapacite] = useState(String(data.form.capacite ?? 2));
   const [tieDown, setTieDown] = useState(data.tieDownAccepted);
+  const [waiveRetraction, setWaiveRetraction] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,6 +53,7 @@ export function StepOnboardingForm({ slug, data, onSaved }: StepOnboardingFormPr
           form,
           tieDownAccepted: true,
           completeOnboarding: true,
+          waiveRetraction,
         }),
       });
       const body = await response.json();
@@ -115,6 +119,12 @@ export function StepOnboardingForm({ slug, data, onSaved }: StepOnboardingFormPr
           J&apos;accepte les règles de traitement Hercule
         </Label>
       </div>
+
+      <RetractionWaiverFields
+        idPrefix="step-onboarding"
+        checked={waiveRetraction}
+        onCheckedChange={setWaiveRetraction}
+      />
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 

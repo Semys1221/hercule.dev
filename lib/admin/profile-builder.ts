@@ -16,15 +16,35 @@ const ENTREPRISE_TIMELINE = [
 
 export type ProfileFormFields = Record<string, unknown>;
 
+const COMPTABLE_TIMELINE = [
+  "Activation de votre espace",
+  "Qualification des missions",
+  "Première proposition PME",
+  "Rendez-vous planifié",
+];
+
 export function buildDefaultProfile(
   form: ProfileFormFields,
   category: Audience,
 ): Record<string, unknown> {
-  const retraction = form.droit_retractation ? 4 : 0;
-  const timeline = category === "agence" ? AGENCE_TIMELINE : ENTREPRISE_TIMELINE;
+  const appliesRetraction = category === "agence" || category === "comptable";
+  const keepRetraction =
+    appliesRetraction &&
+    (form.droit_retractation === undefined || form.droit_retractation === true);
+  const retraction = keepRetraction ? 4 : appliesRetraction ? 0 : 0;
+  const timeline =
+    category === "agence"
+      ? AGENCE_TIMELINE
+      : category === "comptable"
+        ? COMPTABLE_TIMELINE
+        : ENTREPRISE_TIMELINE;
+
+  const profileForm = appliesRetraction
+    ? { ...form, droit_retractation: keepRetraction }
+    : form;
 
   return {
-    form,
+    form: profileForm,
     communication: {
       delays: {
         base_match_days: 14,

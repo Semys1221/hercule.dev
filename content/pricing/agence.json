@@ -1,31 +1,51 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "audience": "agence",
-  "updatedAt": "2026-09-08T12:00:00.000Z",
+  "updatedAt": "2026-09-09T12:00:00.000Z",
   "hero": {
     "eyebrow": "Tarification",
-    "title": "Accès aux apports d'affaires. Starter en entrée. Renouvellement mensuel ou pack.",
-    "intro": "Chaque formule ouvre l'accès à des contrats, attribués après audit de compatibilité. Un contrat signé à 4 000 € pour 1 489 € d'investissement : retour positif dès la première attribution."
+    "title": "Deux formules pour sécuriser vos contrats PME.",
+    "intro": "Chaque formule ouvre l'accès à des contrats PME sécurisés, attribués après audit de compatibilité. Paiement en deux fois : 50 % à la commande, 50 % à la livraison du compte de contrats."
   },
   "plans": [
     {
       "id": "plan-starter",
       "name": "Hercule Starter",
-      "label": "Offre d'entrée",
-      "price": "1 489 €",
-      "priceSuffix": null,
-      "tagline": "5 contrats à votre portée",
-      "summary": "Cinq contrats sélectionnés selon votre activité et votre capacité. En l'absence de signature, l'attribution est renouvelée (sous conditions CGV).",
-      "footer": "Paiement unique. Renouvellement optionnel : 1 489 €/mois ou pack 989×3 = 2 967 € (15 attributions).",
+      "label": "Entrée",
+      "price": "998 €",
+      "priceSuffix": " TTC",
+      "tagline": "5 contrats PME sécurisés sur 30 jours",
+      "summary": "Cinq contrats PME sécurisés selon votre activité et votre capacité, livrés sur 30 jours.",
+      "footer": "499 € à la commande · 499 € à la livraison du compte de contrats",
       "featured": true,
       "profileOnly": false,
       "highlight": null,
       "features": [
-        "5 contrats dans votre champ d'éligibilité, validés par appel téléphonique selon 5 critères : taille de l'entreprise, durée souhaitée, horizon de résultat, budget mensuel et historique avec les agences.",
+        "5 contrats PME sécurisés sur 30 jours, validés par appel téléphonique selon 5 critères : taille de l'entreprise, durée souhaitée, horizon de résultat, budget mensuel et historique avec les agences.",
         "Attribution exclusive des demandes à votre agence.",
-        "Remplacement de toute demande lorsque le prospect est absent au rendez-vous, avec remplacement sous 14 jours ouvrés.",
+        "Remplacement de tout contrat lorsque le prospect est absent, avec remplacement sous 14 jours ouvrés.",
         "0 % de commission sur les ventes réalisées par votre agence.",
-        "Garantie : 1 500 € de MRR minimum, ou 5 rendez-vous supplémentaires offerts (onboarding 48 h, retours post-RDV, présence aux RDV)."
+        "Paiement 50 % maintenant, 50 % à la livraison du compte de contrats."
+      ]
+    },
+    {
+      "id": "plan-growth",
+      "name": "Hercule Growth",
+      "label": "Croissance",
+      "price": "1 498 €",
+      "priceSuffix": " TTC",
+      "tagline": "10 contrats PME sécurisés sur 60 jours",
+      "summary": "Dix contrats PME sécurisés selon votre activité et votre capacité, livrés sur 60 jours.",
+      "footer": "749 € à la commande · 749 € à la livraison du compte de contrats",
+      "featured": false,
+      "profileOnly": false,
+      "highlight": "Recommandé",
+      "features": [
+        "10 contrats PME sécurisés sur 60 jours, validés par appel téléphonique selon 5 critères.",
+        "Attribution exclusive des demandes à votre agence.",
+        "Remplacement de tout contrat lorsque le prospect est absent, avec remplacement sous 14 jours ouvrés.",
+        "0 % de commission sur les ventes réalisées par votre agence.",
+        "Paiement 50 % maintenant, 50 % à la livraison du compte de contrats."
       ]
     },
     {
@@ -35,35 +55,27 @@
       "price": "2 500 €",
       "priceSuffix": "/mois",
       "tagline": "Référence marketing — offre non souscriptible.",
-      "summary": "Offre vitrine — non souscriptible. Contact commercial pour les formules Starter, Mensuel (1 489 €/mois) ou Pack 3 mois (989×3).",
-      "footer": "Cette formule n'est pas disponible à la souscription. Elle illustre notre positionnement premium sur le site.",
+      "summary": "Offre vitrine — non souscriptible. Contact commercial pour les formules Starter ou Growth.",
+      "footer": "Cette formule n'est pas disponible à la souscription.",
       "featured": false,
       "profileOnly": true,
       "highlight": "Non souscriptible",
       "features": [
         "Affichée à titre de vitrine marketing uniquement.",
-        "Les formules contractuelles sont le Starter (1 489 €, 5 attributions), le Mensuel (1 489 €/mois) et le Pack 3 mois (989×3 = 2 967 €).",
-        "0 % de commission sur vos ventes — identique aux formules souscriptibles.",
-        "Pour souscrire ou renouveler, contactez l'équipe Hercule ou finalisez depuis votre tableau de bord après audit."
+        "Les formules contractuelles sont Hercule Starter (998 € TTC) et Hercule Growth (1 498 € TTC).",
+        "0 % de commission sur vos ventes — identique aux formules souscriptibles."
       ]
     }
   ],
   "gatedTeaserFeatures": [
     "Contrats déjà disponibles dans notre pipeline, pas un démarrage à froid.",
     "Vos tarifs, 0 % commission — chaque contrat signé à vos prix, sans commission.",
-    "Renouvellement : jusqu'à 4 RDV honorés par mois en formule mensuelle."
+    "Paiement échelonné : 50 % à la commande, 50 % à la livraison."
   ],
   "gatedGhostFeatures": [
     "Positionnement premium",
     "Vitrine marketing",
     "Avantages Starter"
   ],
-  "guaranteeSection": {
-    "title": "Garantie Hercule Starter",
-    "items": [
-      "1 489 € net (TVA non applicable) — 5 rendez-vous qualifiés, 0 % de commission sur vos ventes",
-      "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
-      "Moins de 1 500 € de MRR après vos 5 rendez-vous ? 5 rendez-vous supplémentaires offerts"
-    ]
-  }
+  "guaranteeSection": null
 }

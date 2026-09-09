@@ -45,6 +45,7 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "no_show_indecis_1",
   "no_show_indecis_2",
   "no_show_indecis_3",
+  "onboarding_retraction_hold",
   "onboarding_j0",
   "onboarding_j0_bis",
   "onboarding_j1",

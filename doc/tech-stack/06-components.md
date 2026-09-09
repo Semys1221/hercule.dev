@@ -28,6 +28,7 @@ Référence archivée : `archive/2026-09-pre-architecture/documentations_2/` (da
 | ID | Surface | Domaine | Rôle |
 |----|---------|---------|------|
 | mkt-home | `/` | marketing | recipient |
+| mkt-agence | `/agence` | marketing | recipient |
 | mkt-entreprise | `/entreprise` | marketing | recipient |
 | mkt-faq | `/faq` | marketing | recipient |
 | mkt-cvg | `/cvg` | marketing | recipient |
@@ -83,6 +84,9 @@ Référence archivée : `archive/2026-09-pre-architecture/documentations_2/` (da
 | streamlit-stats | component | sales_funnel | `app/streamlit_stats/app.py` |
 | dashboard-onboarding-form | component | dashboard_client | `onboarding-form-modal.tsx` |
 | dashboard-kpis | component | dashboard_internal | `components/internal/funnels/dashboard/dashboard-state-table.tsx` (archived) |
+| modalites-campaign-page | component | dashboard_internal | `/internal/modalites` |
+| deliverability-panel | component | dashboard_internal | `/internal/deliverability` |
+| deliverability-api | api_route | dashboard_internal | `/api/admin/deliverability` |
 
 ---
 

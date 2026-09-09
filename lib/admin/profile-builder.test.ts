@@ -21,6 +21,24 @@ assert.equal(
   4,
 );
 
+const agenceDefaultProfile = buildDefaultProfile({ besoin: "Site web" }, "agence");
+assert.equal(
+  (agenceDefaultProfile.form as { droit_retractation: boolean }).droit_retractation,
+  true,
+);
+assert.equal(
+  (agenceDefaultProfile.communication as { delays: { retraction_days: number } }).delays
+    .retraction_days,
+  4,
+);
+
+const comptableProfile = buildDefaultProfile({ besoin: "Compta" }, "comptable");
+assert.equal(
+  (comptableProfile.communication as { delays: { retraction_days: number } }).delays
+    .retraction_days,
+  4,
+);
+
 const entrepriseProfile = buildDefaultProfile({ besoin: "Refonte" }, "entreprise");
 assert.equal(
   (entrepriseProfile.communication as { delays: { retraction_days: number } }).delays

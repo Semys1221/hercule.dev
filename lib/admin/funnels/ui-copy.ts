@@ -84,6 +84,25 @@ export const SESSION_ONBOARDING_DEV_CTA = "Ouvrir le parcours onboarding";
 
 export const SESSION_SETTINGS_TAB_GENERAL = "Général";
 export const SESSION_SETTINGS_TAB_PREPARATION = "Préparation";
+export const SESSION_SETTINGS_TAB_DATA = "Données";
+
+export const SESSION_RESET_CTA = "Réinitialiser la session";
+export const SESSION_RESET_ARIA = "Remettre toutes les questions à zéro pour le prospect sélectionné";
+
+export const SESSION_DATA_DESCRIPTION =
+  "Consultez les réponses enregistrées et l'emplacement de persistance pour chaque prospect.";
+export const SESSION_DATA_PROSPECT_LABEL = "Prospect";
+export const SESSION_DATA_PROSPECT_PLACEHOLDER = "Sélectionner un rendez-vous";
+export const SESSION_DATA_STORAGE_TITLE = "Emplacement";
+export const SESSION_DATA_STORAGE_DESCRIPTION =
+  "Chemins où les réponses de session sont persistées pour ce prospect.";
+export const SESSION_DATA_ANSWERS_TITLE = "Réponses enregistrées";
+export const SESSION_DATA_ANSWERS_DESCRIPTION =
+  "Données lues depuis Supabase après sauvegarde (passage en audit institutionnel).";
+export const SESSION_DATA_EMPTY =
+  "Aucune réponse sauvegardée — les données apparaissent après le passage en audit institutionnel.";
+export const SESSION_DATA_LOAD_ERROR = "Impossible de charger les données du prospect.";
+export const SESSION_DATA_BOOKINGS_LOAD_ERROR = "Impossible de charger la liste des rendez-vous.";
 
 export const SESSION_WAITING_QUEUE_TITLE = "File d'attente 15 jours";
 export const SESSION_WAITING_QUEUE_DESCRIPTION =

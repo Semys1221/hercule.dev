@@ -1,27 +1,49 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-08T12:00:00.000Z",
+  "updatedAt": "2026-09-09T06:00:00.000Z",
   "hero": {
     "eyebrow": "Tarification",
-    "title": "Accès aux missions PME. Starter en entrée. Formule Croissance recommandée.",
-    "intro": "Chaque formule ouvre l'accès à des missions de tenue qualifiées, attribuées après audit de compatibilité. Une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement mensuel en Formule Croissance."
+    "title": "Accès aux missions PME. Lite en entrée. Hercule Starter recommandé.",
+    "intro": "Chaque formule ouvre l'accès à des missions de tenue qualifiées, attribuées après audit de compatibilité. Une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement mensuel en Hercule Starter."
   },
   "plans": [
     {
-      "id": "plan-comptable-croissance",
-      "name": "Formule Croissance",
+      "id": "plan-comptable-lite",
+      "name": "Hercule Lite",
+      "label": "Offre d'entrée",
+      "price": "999 €",
+      "priceSuffix": "TTC",
+      "tagline": "5 missions PME à votre portée",
+      "summary": "Cinq missions PME/TPE/indépendants sélectionnées selon votre activité et votre capacité. Paiement unique. Aucune garantie MRR.",
+      "footer": "Renouvellement optionnel : Hercule Starter 1 499 €/mois ou Pack 3 mois 3 598 €.",
+      "featured": false,
+      "profileOnly": false,
+      "highlight": null,
+      "offerType": "starter_999_5",
+      "features": [
+        "5 missions PME qualifiées (tenue, fiscal, obligations administratives).",
+        "Attribution exclusive à votre cabinet.",
+        "Remplacement de toute mission lorsque le dirigeant est absent au rendez-vous, sous 14 jours ouvrés.",
+        "0 % de commission sur vos honoraires signés.",
+        "Pas de garantie MRR — uniquement la garantie no-show."
+      ]
+    },
+    {
+      "id": "plan-comptable-starter",
+      "name": "Hercule Starter",
       "label": "Recommandé pour les cabinets",
       "price": "1 499 €",
       "priceSuffix": "/mois",
-      "tagline": "1 mission annuelle de tenue à 3 600 € d'honoraires",
+      "tagline": "10 contrats PME/TPE/indépendants par mois",
       "summary": "10 missions PME par mois. Premier RDV sous 15 jours. 0 % de commission. Garantie MRR sur lettres de mission signées.",
       "footer": "Garantie MRR : 3 000 € cumulés après 10 missions, ou 10 missions de remplacement offertes.",
       "featured": true,
       "profileOnly": false,
       "highlight": null,
+      "offerType": "monthly_1499",
       "features": [
-        "10 missions PME qualifiées par mois (tenue, fiscal, obligations administratives).",
+        "10 missions PME/TPE/indépendants qualifiées par mois (tenue, fiscal, obligations administratives).",
         "Premier rendez-vous planifié sous 15 jours après activation.",
         "Attribution exclusive à votre cabinet.",
         "0 % de commission sur vos honoraires signés.",
@@ -31,47 +53,28 @@
     },
     {
       "id": "plan-comptable-pack3",
-      "name": "Pack 3 mois Croissance",
+      "name": "Pack 3 mois Starter",
       "label": "Engagement 3 mois",
       "price": "3 598 €",
       "priceSuffix": "TTC",
       "tagline": "1 499 € × 3 − 20 %",
-      "summary": "10 missions PME par mois sur 3 mois de service actif. Même garantie MRR que la Formule Croissance, étendue au pack.",
+      "summary": "10 missions PME par mois sur 3 mois de service actif. Même garantie MRR que Hercule Starter, étendue au pack.",
       "footer": "Garantie MRR pack : 9 000 € cumulés à l'issue du pack, ou jusqu'à 30 missions de remplacement.",
-      "featured": false,
+      "featured": true,
       "profileOnly": false,
       "highlight": "− 20 %",
+      "offerType": "pack_3x1499",
       "features": [
-        "3 mois de service actif au rythme de la Formule Croissance (10 missions / mois).",
+        "3 mois de service actif au rythme de Hercule Starter (10 missions / mois).",
         "30 missions PME qualifiées sur la durée du pack.",
         "0 % de commission sur vos honoraires.",
         "Garantie MRR pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 30 missions de remplacement.",
         "Calendly Pro et Zoom Pro provisionnés par Hercule."
       ]
-    },
-    {
-      "id": "plan-comptable-starter",
-      "name": "Hercule Starter",
-      "label": "Offre d'entrée",
-      "price": "999 €",
-      "priceSuffix": "TTC",
-      "tagline": "5 missions PME à votre portée",
-      "summary": "Cinq missions PME sélectionnées selon votre activité et votre capacité. Paiement unique. Aucune garantie MRR.",
-      "footer": "Renouvellement optionnel : Formule Croissance 1 499 €/mois ou Pack 3 mois 3 598 €.",
-      "featured": false,
-      "profileOnly": false,
-      "highlight": null,
-      "features": [
-        "5 missions PME qualifiées (tenue, fiscal, obligations administratives).",
-        "Attribution exclusive à votre cabinet.",
-        "Remplacement de toute mission lorsque le dirigeant est absent au rendez-vous, sous 14 jours ouvrés.",
-        "0 % de commission sur vos honoraires signés.",
-        "Pas de garantie MRR — uniquement la garantie no-show."
-      ]
     }
   ],
   "gatedTeaserFeatures": [
-    "10 missions PME qualifiées par mois en Formule Croissance.",
+    "10 missions PME qualifiées par mois en Hercule Starter.",
     "0 % de commission — honoraires conservés.",
     "Premier RDV sous 15 jours."
   ],
@@ -81,12 +84,12 @@
     "Pack 3 mois −20 %"
   ],
   "guaranteeSection": {
-    "title": "Garantie Formule Croissance",
+    "title": "Garantie Hercule Starter",
     "items": [
       "1 499 €/mois — 10 missions qualifiées, 0 % de commission sur vos honoraires",
       "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
       "Moins de 3 000 € de MRR cumulé après vos 10 missions ? 10 missions de remplacement offertes",
-      "Hercule Starter (999 €) : aucune garantie MRR — uniquement la garantie no-show"
+      "Hercule Lite (999 €) : aucune garantie MRR — uniquement la garantie no-show"
     ]
   }
 }

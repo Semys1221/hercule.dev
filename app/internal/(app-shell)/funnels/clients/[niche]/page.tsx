@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { ClientsTable } from "@/components/internal/clients/clients-table";
-import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
+import { ClientsShell } from "@/components/internal/clients/clients-shell";
 import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
 import { segmentsFromModulePath } from "@/components/internal/funnels/ui/breadcrumb-segments";
 import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
@@ -29,14 +28,7 @@ export default async function ClientsNichePage({
       <div className="mb-6">
         <NicheSwitcher />
       </div>
-      {niche === "agence" ? (
-        <ClientsTable />
-      ) : (
-        <FunnelPlaceholder
-          title="Clients"
-          detail="Disponible pour l'audience agence uniquement (Phase 5)."
-        />
-      )}
+      <ClientsShell niche={niche} />
     </main>
   );
 }

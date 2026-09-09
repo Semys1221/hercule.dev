@@ -1,13 +1,13 @@
 import { expect, type Page } from "@playwright/test";
 
-const PRICING_CTA = "Activer et sécuriser mon calendrier";
+const PRICING_CTA = "Activer et sécuriser mes contrats";
 
 export async function advancePreviewWizardToCheckout(page: Page): Promise<void> {
   for (let step = 0; step < 3; step += 1) {
     await page.getByRole("button", { name: "Suivant" }).click();
   }
 
-  await page.getByRole("checkbox", { name: /Le fonctionnement d'Hercule/i }).check();
+  await page.getByRole("checkbox", { name: /Le fonctionnement d.?Hercule/i }).check();
   await page.getByRole("button", { name: "Suivant" }).click();
   await page.getByRole("button", { name: PRICING_CTA }).click();
   await page.waitForTimeout(500);

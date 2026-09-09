@@ -43,6 +43,7 @@ import {
   type SalesClosingValues,
 } from "./sales-closing-sections";
 import { SalesCalendrierPanel } from "./sales-calendrier-panel";
+import { SalesComptablePricingPanel } from "./sales-comptable-pricing-panel";
 import { SalesEligiblePanel, SalesPresetSummary } from "./sales-eligible-panel";
 
 type SalesClosingPanelProps = {
@@ -187,8 +188,8 @@ const COMPTABLE_DASHBOARD_FEATURES = [
 const AGENCE_DASHBOARD_NEXT_STEPS = [
   "Accès onboarding — sous 48h après réception du lien",
   "Activation — premier matching lancé dès l'onboarding complété",
-  "Proposition de match — RDV livraison planifié sous 5–10 jours ouvrés",
-  "Premier RDV honoré — ≤ 21 jours après activation",
+  "Proposition de contrat — mise en relation planifiée sous 5–10 jours ouvrés",
+  "Premier contrat livré — ≤ 21 jours après activation",
 ] as const;
 
 const COMPTABLE_DASHBOARD_NEXT_STEPS = [
@@ -379,6 +380,14 @@ export function SalesClosingPanel({
           closingValues={closingValues}
           saving={saving}
           persistTieDown={persistTieDown}
+        />
+      ) : null}
+
+      {sectionId === "activation" && audience === "comptable" ? (
+        <SalesComptablePricingPanel
+          slug={selectedLead?.slug ?? null}
+          developerMode={developerMode}
+          closingValues={closingValues}
         />
       ) : null}
 

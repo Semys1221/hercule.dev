@@ -79,6 +79,7 @@ export function DashboardState({ data, onOnboardingComplete }: DashboardStatePro
           tieDownAccepted: true,
           completeOnboarding: true,
           cgvVersion: CGV_VERSION,
+          waiveRetraction: true,
         }),
       });
       const body = (await response.json()) as { error?: string };

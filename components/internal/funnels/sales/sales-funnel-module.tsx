@@ -73,6 +73,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const [visitedClosingSectionIds, setVisitedClosingSectionIds] = useState<
     Set<SalesClosingSectionId>
   >(() => new Set());
+  const [sessionResetKey, setSessionResetKey] = useState(0);
 
   const hasAutoTransitionedRef = useRef(false);
   const transitionTimeoutRef = useRef<number | null>(null);
@@ -104,7 +105,13 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   );
 
   const exitHref = sessionHubHref(audience);
-  const settingsHref = pathToHref([audience, "sales", "funnel", "settings"]);
+  const settingsHref = useMemo(() => {
+    const base = pathToHref([audience, "sales", "funnel", "settings"]);
+    if (!selectedBooking) {
+      return base;
+    }
+    return `${base}?inviteeUri=${encodeURIComponent(selectedBooking.invitee_uri)}`;
+  }, [audience, selectedBooking]);
   const activeSectionId = phase === "closing" ? activeClosingId : activeQualificationId;
 
   const closingCompletionContext = useMemo(
@@ -129,7 +136,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     ).map((section) => section.id);
 
     const closingCompleted = closingSections.filter((section) =>
-      isSalesClosingSectionComplete(section.id, closingCompletionContext),
+      isSalesClosingSectionComplete(section.id, closingCompletionContext, audience),
     ).map((section) => section.id);
 
     return [...qualificationCompleted, ...closingCompleted];
@@ -138,7 +145,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const { progress, progressLabel } = useMemo(() => {
     if (phase === "closing") {
       const completed = closingSections.filter((section) =>
-        isSalesClosingSectionComplete(section.id, closingCompletionContext),
+        isSalesClosingSectionComplete(section.id, closingCompletionContext, audience),
       ).length;
       const total = closingSections.length;
       return {
@@ -214,6 +221,19 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     setContentAnimation("idle");
   }, [clearTransitionTimeout]);
 
+  const resetSessionUiState = useCallback(() => {
+    clearTransitionTimeout();
+    form.reset(getSalesQualificationDefaultValues(audience));
+    setClosingValues(salesClosingDefaultValues);
+    setVisitedClosingSectionIds(new Set());
+    setPhase("qualification");
+    setContentPhase("qualification");
+    setContentAnimation("idle");
+    setActiveQualificationId("rendez-vous");
+    hasAutoTransitionedRef.current = false;
+    setSessionResetKey((current) => current + 1);
+  }, [audience, clearTransitionTimeout, form]);
+
   const persistQualificationNotes = useCallback(async () => {
     if (!salesCallId) return;
     await fetch(`/api/admin/sales-calls/${salesCallId}`, {
@@ -237,9 +257,8 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
 
   const loadLeadForBooking = useCallback(
     async (booking: EnrichedCalendlyBooking | null) => {
+      resetSessionUiState();
       setSelectedBooking(booking);
-      setVisitedClosingSectionIds(new Set());
-      setClosingValues(salesClosingDefaultValues);
       if (!booking?.lead_id || !booking.lead_category) {
         setSelectedLead(null);
         setSalesCallId(null);
@@ -283,7 +302,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         }
       }
     },
-    [],
+    [resetSessionUiState],
   );
 
   const refreshLead = useCallback(async () => {
@@ -419,9 +438,13 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
               <RendezVousPanel
                 audience={audience}
                 selectedLead={selectedLead}
+                selectedBooking={selectedBooking}
+                hasSelectedBooking={selectedBooking !== null}
+                sessionResetKey={sessionResetKey}
                 onMeetingNameChange={setMeetingName}
                 onBookingSelect={loadLeadForBooking}
                 onApplyTestPreset={applyTestPreset}
+                onResetSession={resetSessionUiState}
               />
             ) : activeQualificationId === "presentation-societe" ? (
               <SalesCompanyPresentationPanel audience={audience} form={form} />

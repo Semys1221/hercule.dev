@@ -1,4 +1,15 @@
-export type DashboardMode = "onboarding_preview" | "dashboard_state" | "dashboard_active" | "comptable_active" | "comptable_pending";
+import type { DashboardRetraction } from "@/lib/retraction";
+
+export type DashboardMode =
+  | "onboarding_preview"
+  | "dashboard_state"
+  | "dashboard_active"
+  | "comptable_active"
+  | "comptable_pending"
+  | "comptable_onboarding"
+  | "entreprise_preview";
+
+export type DashboardFaqAudience = "agence" | "comptable" | "entreprise";
 
 export type TimelineStep = {
   id: string;
@@ -40,6 +51,15 @@ export type DashboardDeliveryPlan = {
   attributionsUsed: number;
 };
 
+export type DashboardPaymentSchedule = {
+  offerType: string;
+  depositPaid: boolean;
+  balanceDue: boolean;
+  balancePaid: boolean;
+  balanceAmountCents: number;
+  deliveryComplete: boolean;
+};
+
 export type DashboardData = {
   slug: string;
   email: string;
@@ -56,10 +76,15 @@ export type DashboardData = {
   faq: DashboardFaqItem[];
   isPaid: boolean;
   dashboardMode: DashboardMode;
+  audience: DashboardFaqAudience;
   deliveryPlan: DashboardDeliveryPlan | null;
   enterpriseBrief: DashboardEnterpriseBrief | null;
   comptable?: {
     offerType: string;
     succeededAt: string;
   } | null;
+  offerType?: string | null;
+  paymentSchedule?: DashboardPaymentSchedule | null;
+  retraction?: DashboardRetraction | null;
+  milestones?: TimelineStep[];
 };

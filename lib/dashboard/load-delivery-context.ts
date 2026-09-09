@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { COMMERCIAL, OFFER_TYPES } from "@/lib/commercial/constants";
+import {
+  attributionsForOfferType,
+  formulaLabelForOfferType,
+  OFFER_TYPES,
+} from "@/lib/commercial/constants";
 import type { DemandeVersoFields } from "@/lib/commercial/qualification-criteria";
 import type {
   DashboardDeliveryPlan,
@@ -39,14 +43,8 @@ function buildDeliveryPlan(
   offerType: string | null,
   matches: MatchRow[],
 ): DashboardDeliveryPlan {
-  const isPack = offerType === OFFER_TYPES.pack989x3;
-  // starter_1489_5 and legacy monthly_1489 (pre-migration Starter checkouts) → 5 attributions
-  const attributionsTotal = isPack
-    ? COMMERCIAL.pack989x3Attributions
-    : COMMERCIAL.starterAttributions;
-  const formulaLabel = isPack
-    ? `${COMMERCIAL.pack989x3Attributions} rendez-vous qualifiés`
-    : COMMERCIAL.starterFormulaLabel;
+  const attributionsTotal = attributionsForOfferType(offerType);
+  const formulaLabel = formulaLabelForOfferType(offerType);
   const attributionsUsed = matches.filter((match) =>
     ATTRIBUTION_COUNT_STATUSES.has(match.status),
   ).length;
@@ -141,14 +139,30 @@ export async function loadDeliveryContext(
     return { deliveryPlan: null, enterpriseBrief: null };
   }
 
-  const { data: payment, error: paymentError } = await client
+  const { data: depositPayment, error: depositPaymentError } = await client
     .from("payments")
     .select("offer_type")
     .eq("agence_id", agenceId)
     .eq("status", "succeeded")
+    .eq("payment_phase", "deposit")
     .order("succeeded_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (depositPaymentError) {
+    throw new Error(`payments lookup failed: ${depositPaymentError.message}`);
+  }
+
+  const { data: payment, error: paymentError } = depositPayment
+    ? { data: depositPayment, error: null }
+    : await client
+        .from("payments")
+        .select("offer_type")
+        .eq("agence_id", agenceId)
+        .eq("status", "succeeded")
+        .order("succeeded_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
   if (paymentError) {
     throw new Error(`payments lookup failed: ${paymentError.message}`);
@@ -168,7 +182,7 @@ export async function loadDeliveryContext(
     mapMatchRow(row as Record<string, unknown>),
   );
   const deliveryPlan = buildDeliveryPlan(
-    (payment?.offer_type as string | null) ?? OFFER_TYPES.starter1489_5,
+    (payment?.offer_type as string | null) ?? OFFER_TYPES.starter998_5,
     matches,
   );
 

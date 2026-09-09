@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, Database, TrendingUp } from "lucide-react";
+import { Boxes, Database, Flame, TrendingUp } from "lucide-react";
 
 import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,14 @@ const SECTIONS = [
     description: LANDING_DESCRIPTION,
     icon: TrendingUp,
     cta: `Ouvrir ${PRODUCT_ROOT_LABEL}`,
+  },
+  {
+    href: "/internal/deliverability",
+    title: "Deliverability",
+    description:
+      "Santé des inboxes Instantly — placement warmup, DNS et panneau de contrôle.",
+    icon: Flame,
+    cta: "Ouvrir Deliverability",
   },
   {
     href: "/internal/components",
@@ -51,7 +59,7 @@ export default function InternalHubPage() {
         description="Documentation vivante de l'architecture Hercule — composants, base de données et outils ops."
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {SECTIONS.map((section) => (
           <Card key={section.href}>
             <CardHeader>

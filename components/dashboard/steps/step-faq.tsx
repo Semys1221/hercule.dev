@@ -6,29 +6,25 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import type { DashboardFaqItem } from "@/lib/dashboard/types";
+import { FaqRichText } from "@/components/dashboard/faq-rich-text";
+import { getOnboardingFaq, onboardingFaqToDashboardItems } from "@/lib/dashboard/onboarding-faq";
+import type { DashboardFaqAudience, DashboardFaqItem } from "@/lib/dashboard/types";
 
-const DEFAULT_FAQ: DashboardFaqItem[] = [
-  {
-    q: "Comment fonctionne la mise en relation ?",
-    a: "Hercule vous attribue 5 contrats selon vos critères d'éligibilité. 0 % de commission sur vos ventes. Si aucune signature n'est conclue, la garantie Starter prévoit 5 rendez-vous supplémentaires.",
-  },
-  {
-    q: "Puis-je modifier mes critères ?",
-    a: "Oui, contactez votre interlocuteur Hercule pour ajuster votre profil.",
-  },
-  {
-    q: "Quand recevrai-je ma première demande ?",
-    a: "Dès qu'une opportunité correspond à votre capacité et à vos spécialités.",
-  },
-];
+const DEFAULT_FAQ: DashboardFaqItem[] = onboardingFaqToDashboardItems(
+  getOnboardingFaq("agence"),
+);
 
 type StepFaqProps = {
+  audience?: DashboardFaqAudience;
   items?: DashboardFaqItem[];
 };
 
-export function StepFaq({ items }: StepFaqProps) {
-  const faqItems = items?.length ? items : DEFAULT_FAQ;
+export function StepFaq({ audience = "agence", items }: StepFaqProps) {
+  const fallback =
+    audience === "agence"
+      ? DEFAULT_FAQ
+      : onboardingFaqToDashboardItems(getOnboardingFaq(audience));
+  const faqItems = items?.length ? items : fallback;
 
   return (
     <div className="space-y-4">
@@ -44,7 +40,7 @@ export function StepFaq({ items }: StepFaqProps) {
           <AccordionItem key={`${item.q}-${index}`} value={`faq-${index}`}>
             <AccordionTrigger>{item.q}</AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
-              {item.a}
+              <FaqRichText text={item.a} />
             </AccordionContent>
           </AccordionItem>
         ))}

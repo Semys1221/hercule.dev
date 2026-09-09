@@ -2,7 +2,12 @@
 
 import { Badge } from "@/components/ui/badge";
 import type { DashboardData, TimelineStep } from "@/lib/dashboard/types";
-import { DASHBOARD_EYEBROW, dashboardPageTitle } from "@/lib/dashboard/copy";
+import {
+  DASHBOARD_EYEBROW,
+  DASHBOARD_RETRACTION_BADGE_ACTIVE,
+  DASHBOARD_RETRACTION_BADGE_PENDING,
+  dashboardPageTitle,
+} from "@/lib/dashboard/copy";
 
 import { ChronologieSection } from "./chronologie-section";
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
@@ -10,7 +15,9 @@ import { DeliveryDetailsCard } from "./delivery-details-card";
 import { NextStepBlock } from "./next-step-block";
 import { NoShowDialog } from "./noshow-dialog";
 import { PostPaymentFaqLink } from "./post-payment-faq-link";
+import { BalancePaymentCard } from "./balance-payment-card";
 import { RdvStatusCard } from "./rdv-status-card";
+import { RetractionWaiverCard } from "./retraction-waiver-card";
 
 /** Working-day offset helper — skips Sat/Sun from a reference date. */
 function addWorkingDays(from: Date, days: number): Date {
@@ -56,20 +63,20 @@ function buildDefaultMilestones(activatedAt: Date): MilestoneItem[] {
       status: "done",
     },
     {
-      id: "first_rdv",
-      label: "1er RDV attribué",
+      id: "first_contrat",
+      label: "1er contrat attribué",
       estimatedAt: `~${formatDate(firstBooking)}`,
       status: isPast(firstBooking) ? "done" : "active",
     },
     {
-      id: "second_rdv",
-      label: "2ème RDV attribué",
+      id: "second_contrat",
+      label: "2ème contrat attribué",
       estimatedAt: `~${formatDate(secondBooking)}`,
       status: isPast(secondBooking) ? "done" : "pending",
     },
     {
-      id: "third_rdv",
-      label: "3ème RDV attribué",
+      id: "third_contrat",
+      label: "3ème contrat attribué",
       estimatedAt: `~${formatDate(thirdBooking)}`,
       status: isPast(thirdBooking) ? "done" : "pending",
     },
@@ -78,9 +85,10 @@ function buildDefaultMilestones(activatedAt: Date): MilestoneItem[] {
 
 type DashboardActiveProps = {
   data: DashboardData;
+  onRefresh?: () => void;
 };
 
-export function DashboardActive({ data }: DashboardActiveProps) {
+export function DashboardActive({ data, onRefresh }: DashboardActiveProps) {
   const greeting = data.firstName || "Bonjour";
   const prospectLine = data.company ? `${greeting} · ${data.company}` : greeting;
 
@@ -106,6 +114,12 @@ export function DashboardActive({ data }: DashboardActiveProps) {
     status: milestone.status,
   }));
 
+  const retractionPending = data.retraction?.status === "pending";
+  const isDeliverance =
+    data.productStatut === "IN_DELIVERANCE" ||
+    data.productStatut === "MATCH_PROPOSED" ||
+    data.productStatut === "MEETING_BOOKED";
+
   return (
     <div className="mx-auto max-w-3xl px-6 pb-20">
       <DashboardBrandHeader />
@@ -120,27 +134,45 @@ export function DashboardActive({ data }: DashboardActiveProps) {
 
       <ChronologieSection
         steps={chronologieSteps}
-        description="Estimations basées sur votre configuration d'activation standard."
+        description={
+          retractionPending
+            ? "Estimations incluant votre délai de rétractation de 4 jours."
+            : "Estimations basées sur votre configuration d'activation standard."
+        }
       />
 
-      {/* Status badges */}
       <div className="mt-6 flex flex-wrap gap-2">
-        <Badge variant="outline" className="border-emerald-500/35 text-emerald-400">
-          Service actif
+        <Badge
+          variant="outline"
+          className={
+            retractionPending
+              ? "border-amber-500/35 text-amber-400"
+              : "border-emerald-500/35 text-emerald-400"
+          }
+        >
+          {retractionPending
+            ? DASHBOARD_RETRACTION_BADGE_PENDING
+            : DASHBOARD_RETRACTION_BADGE_ACTIVE}
         </Badge>
-        <Badge variant="outline" className="border-primary text-foreground">
-          Recherche en cours
-        </Badge>
+        {isDeliverance && !retractionPending ? (
+          <Badge variant="outline" className="border-primary text-foreground">
+            Recherche en cours
+          </Badge>
+        ) : null}
       </div>
+
+      <RetractionWaiverCard data={data} onSuccess={onRefresh} />
 
       <NextStepBlock data={data} />
       <RdvStatusCard data={data} />
+      <BalancePaymentCard data={data} onRefresh={onRefresh ?? (() => {})} />
 
       {data.deliveryPlan ? (
         <>
           <DeliveryDetailsCard
             deliveryPlan={data.deliveryPlan}
             enterpriseBrief={data.enterpriseBrief}
+            paymentSchedule={data.paymentSchedule}
           />
           <PostPaymentFaqLink />
         </>

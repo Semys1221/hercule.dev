@@ -31,7 +31,7 @@ export function FicheForm({ audience }: FicheFormProps) {
   const [budget, setBudget] = useState("");
   const [zone, setZone] = useState("");
   const [taille, setTaille] = useState("");
-  const [droitRetractation, setDroitRetractation] = useState(false);
+  const [droitRetractation, setDroitRetractation] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdRow, setCreatedRow] = useState<LinkTrackingLead | null>(null);

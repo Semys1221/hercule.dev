@@ -96,5 +96,8 @@ export async function loadClientCockpit(
     timeline: timelineFromProfile(profile),
     matches,
     appointments,
+    retractionStatus: lead.retraction_status ?? "n_a",
+    retractionEndsAt: lead.retraction_ends_at ?? null,
+    retractionWaivedAt: lead.retraction_waived_at ?? null,
   };
 }

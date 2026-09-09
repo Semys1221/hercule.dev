@@ -5,9 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
-import { createBookingAdapter } from "@/components/internal/funnels/sequence-editor/adapters/booking-adapter";
-import { createBypassAdapter } from "@/components/internal/funnels/sequence-editor/adapters/bypass-adapter";
-import { createReplyAgentAdapter } from "@/components/internal/funnels/sequence-editor/adapters/reply-agent-adapter";
 import { SequenceDropdown } from "@/components/internal/funnels/sequence-editor/sequence-dropdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,16 +31,12 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  BOOKING_SEQUENCE_SLUGS,
-  bookingSequenceTypesFor,
   getEmailSequence,
   PHASE_LABELS,
   type EmailSequenceEntry,
 } from "@/lib/admin/email-sequences/registry";
+import { buildSequenceAdapter } from "@/lib/admin/sequences/build-sequence-adapter";
 import type { Audience } from "@/lib/admin/navigation";
-import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
-
-import type { SequenceEditorAdapter } from "./sequence-editor/types";
 
 type EmailSequenceEditorProps = {
   audience: Audience;
@@ -205,66 +198,6 @@ function CampaignSelector({
   );
 }
 
-function buildAdapter(
-  sequence: EmailSequenceEntry,
-  audience: Audience,
-  campaignId: string | null,
-): SequenceEditorAdapter | null {
-  if (sequence.editorKind === "booking") {
-    const emailTypes = bookingSequenceTypesFor(sequence.slug, audience);
-    const rawCategory = sequence.bookingCategory ?? audience;
-    if (rawCategory !== "agence" && rawCategory !== "entreprise") {
-      return null;
-    }
-    const category = rawCategory;
-    const typedSteps = sequence.steps.filter(
-      (step) => step.emailType && emailTypes.includes(step.emailType),
-    );
-    const stepMeta = (typedSteps.length > 0 ? typedSteps : sequence.steps).map(
-      (step) => ({
-        id: step.id,
-        label: step.label,
-        delay: step.delay,
-      }),
-    );
-    return createBookingAdapter({
-      slug: sequence.slug,
-      niche: audience,
-      category,
-      emailTypes: emailTypes.length > 0 ? emailTypes : (BOOKING_SEQUENCE_SLUGS[sequence.slug] ?? []),
-      stepMeta,
-    });
-  }
-
-  if (sequence.editorKind === "bypass" && campaignId && sequence.bypassTemplateKeys) {
-    const stepMeta = sequence.steps
-      .filter((step) => step.templateKey)
-      .map((step) => ({
-        id: step.id,
-        label: step.label,
-        delay: step.delay,
-        templateKey: step.templateKey as BypassTemplateKey,
-      }));
-    return createBypassAdapter({
-      slug: sequence.slug,
-      niche: audience,
-      campaignId,
-      templateKeys: sequence.bypassTemplateKeys,
-      stepMeta,
-    });
-  }
-
-  if (sequence.editorKind === "reply_agent" && campaignId) {
-    return createReplyAgentAdapter({
-      slug: sequence.slug,
-      niche: audience,
-      campaignId,
-    });
-  }
-
-  return null;
-}
-
 export function EmailSequenceEditor({
   audience,
   sequenceSlug,
@@ -289,10 +222,11 @@ export function EmailSequenceEditor({
     return <SpecSequencePlaceholder sequence={sequence} />;
   }
 
-  const needsCampaign =
-    sequence.editorKind === "bypass" || sequence.editorKind === "reply_agent";
-
-  const adapter = buildAdapter(sequence, audience, campaignId);
+  const { adapter, needsCampaign } = buildSequenceAdapter(
+    sequence,
+    audience,
+    campaignId,
+  );
 
   return (
     <div className="space-y-6">

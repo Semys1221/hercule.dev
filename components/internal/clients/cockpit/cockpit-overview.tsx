@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PRODUCT_STATUT_LABELS, type ClientCockpitData } from "@/lib/admin/clients/types";
+import { retractionStatusLabel } from "@/lib/retraction";
 
 type CockpitOverviewProps = {
   data: ClientCockpitData;
@@ -52,6 +53,26 @@ export function CockpitOverview({ data }: CockpitOverviewProps) {
               ? new Date(data.onboardingCompletedAt).toLocaleDateString("fr-FR")
               : "—"}
           </p>
+          {data.category === "agence" || data.category === "comptable" ? (
+            <>
+              <p>
+                <span className="text-muted-foreground">Rétractation : </span>
+                {retractionStatusLabel(data.retractionStatus)}
+              </p>
+              {data.retractionEndsAt ? (
+                <p>
+                  <span className="text-muted-foreground">Fin délai : </span>
+                  {new Date(data.retractionEndsAt).toLocaleDateString("fr-FR")}
+                </p>
+              ) : null}
+              {data.retractionWaivedAt ? (
+                <p>
+                  <span className="text-muted-foreground">Renonciation : </span>
+                  {new Date(data.retractionWaivedAt).toLocaleDateString("fr-FR")}
+                </p>
+              ) : null}
+            </>
+          ) : null}
           {data.dashboardLink ? (
             <p className="break-all font-mono text-xs text-muted-foreground">
               {data.dashboardLink}

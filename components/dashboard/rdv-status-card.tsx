@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DASHBOARD_STARTER_SUBTITLE, formatStarterProgress } from "@/lib/dashboard/copy";
+import { DASHBOARD_STARTER_SUBTITLE, formatContratProgress } from "@/lib/dashboard/copy";
 import type { DashboardData } from "@/lib/dashboard/types";
 
 function formatScheduledAt(value: string): string {
@@ -33,7 +33,7 @@ export function RdvStatusCard({ data }: RdvStatusCardProps) {
     return null;
   }
 
-  const progressLabel = formatStarterProgress(
+  const progressLabel = formatContratProgress(
     deliveryPlan.attributionsUsed,
     deliveryPlan.attributionsTotal,
   );
@@ -41,7 +41,7 @@ export function RdvStatusCard({ data }: RdvStatusCardProps) {
   return (
     <Card className="mt-6">
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Vos rendez-vous</CardTitle>
+        <CardTitle className="text-lg font-medium">Vos contrats</CardTitle>
         <CardDescription>{DASHBOARD_STARTER_SUBTITLE}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -55,10 +55,10 @@ export function RdvStatusCard({ data }: RdvStatusCardProps) {
         </div>
 
         <div>
-          <p className="text-sm font-medium">Prochain RDV</p>
+          <p className="text-sm font-medium">Prochain contrat</p>
           {hasScheduledRdv ? (
             <p className="mt-1 text-sm text-muted-foreground">
-              {formatScheduledAt(data.scheduledAt!)}
+              Mise en relation planifiée — {formatScheduledAt(data.scheduledAt!)}
             </p>
           ) : (
             <p className="mt-1 text-sm text-muted-foreground">En recherche active</p>

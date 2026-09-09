@@ -20,6 +20,7 @@ export function getStripeClient(): Stripe {
   return new Stripe(secretKey);
 }
 
+/** @deprecated Legacy 1 489 € Starter — use agence deposit price getters for new checkouts. */
 export function getStarterPriceId(): string {
   const priceId = getStripeStarterPriceId();
   return requireEnv(priceId, "STRIPE_PRICE_STARTER");
@@ -27,6 +28,34 @@ export function getStarterPriceId(): string {
 
 export function getStarterOfferType(): string {
   return STARTER_OFFER_TYPE;
+}
+
+export function getAgenceStarterDepositPriceId(): string {
+  return requireEnv(
+    process.env.STRIPE_PRICE_AGENCE_STARTER_DEPOSIT?.trim() ?? "",
+    "STRIPE_PRICE_AGENCE_STARTER_DEPOSIT",
+  );
+}
+
+export function getAgenceStarterBalancePriceId(): string {
+  return requireEnv(
+    process.env.STRIPE_PRICE_AGENCE_STARTER_BALANCE?.trim() ?? "",
+    "STRIPE_PRICE_AGENCE_STARTER_BALANCE",
+  );
+}
+
+export function getAgenceGrowthDepositPriceId(): string {
+  return requireEnv(
+    process.env.STRIPE_PRICE_AGENCE_GROWTH_DEPOSIT?.trim() ?? "",
+    "STRIPE_PRICE_AGENCE_GROWTH_DEPOSIT",
+  );
+}
+
+export function getAgenceGrowthBalancePriceId(): string {
+  return requireEnv(
+    process.env.STRIPE_PRICE_AGENCE_GROWTH_BALANCE?.trim() ?? "",
+    "STRIPE_PRICE_AGENCE_GROWTH_BALANCE",
+  );
 }
 
 export function getComptableMonthlyPriceId(): string {

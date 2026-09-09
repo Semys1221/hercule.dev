@@ -1,4 +1,5 @@
-import type { Audience } from "@/lib/admin/navigation";
+import type { Audience, Niche } from "@/lib/admin/navigation";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
 
@@ -37,7 +38,7 @@ export type EmailSequenceEntry = {
   steps: EmailSequenceStep[];
   editorKind: EmailSequenceEditorKind;
   /** Booking category when editorKind is booking */
-  bookingCategory?: "agence" | "entreprise";
+  bookingCategory?: LeadCategory;
   /** Template keys filter for bypass editor */
   bypassTemplateKeys?: BypassTemplateKey[];
   legacyDoc?: string;
@@ -136,6 +137,27 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     ],
     editorKind: "booking",
     bookingCategory: "entreprise",
+    streamlitHint: "pnpm streamlit-booking-resend",
+  },
+  {
+    id: "meeting-comptable",
+    slug: "meeting-comptable",
+    name: "Meeting sequence — Comptable",
+    phase: "pre_close",
+    category: "Meeting",
+    stepCount: 4,
+    status: "built",
+    provider: "resend",
+    audiences: ["comptable"],
+    description: "Séquence booking Calendly comptable : immediate, h48, h24, h20.",
+    steps: [
+      { id: "immediate", label: "Confirmation", delay: "Immédiat", emailType: "immediate" },
+      { id: "h48_confirm", label: "Confirmation requise", delay: "H-48", emailType: "h48_confirm" },
+      { id: "h24_relance", label: "Relance", delay: "H-24", emailType: "h24_relance" },
+      { id: "h20_cancel", label: "Annulation", delay: "H-20", emailType: "h20_cancel" },
+    ],
+    editorKind: "booking",
+    bookingCategory: "comptable",
     streamlitHint: "pnpm streamlit-booking-resend",
   },
   {
@@ -297,14 +319,20 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     name: "Séquence onboarding post-formulaire",
     phase: "close",
     category: "Onboarding",
-    stepCount: 6,
+    stepCount: 7,
     status: "built",
     provider: "resend",
-    audiences: ["agence"],
+    audiences: ["agence", "comptable"],
     description:
-      "Déclenché après complétion du formulaire onboarding (completeOnboarding=true). J0 ×2, J+1, rappels J-10 → J+5 relatifs à estimated_first_booking_at. Les emails J0/J+1 seront envoyés automatiquement ; J-10/J-5/J+5 attendent un cron avec la date de référence.",
+      "Déclenché après complétion du formulaire onboarding (completeOnboarding=true). Si rétractation conservée : hold immédiat. Sinon (waiver) : J0 ×2, J+1, rappels J-10 → J+5 relatifs à estimated_first_booking_at.",
     steps: [
-      { id: "email1", label: "Bienvenue activation", delay: "Immédiat", emailType: "onboarding_j0" },
+      {
+        id: "email0",
+        label: "Hold rétractation",
+        delay: "Immédiat si rétractation conservée",
+        emailType: "onboarding_retraction_hold",
+      },
+      { id: "email1", label: "Bienvenue activation", delay: "Immédiat (post-waiver)", emailType: "onboarding_j0" },
       { id: "email2", label: "Email J0 bis", delay: "17:00 même jour", emailType: "onboarding_j0_bis" },
       { id: "email3", label: "Suivi J+1", delay: "08:00 jour suivant", emailType: "onboarding_j1" },
       { id: "email4", label: "Rappel J-10", delay: "estimated_first_booking_at − 10j", emailType: "onboarding_reminder_m10" },
@@ -475,7 +503,9 @@ const LEGACY_EMAIL_PATH_REDIRECTS_BY_AUDIENCE: Record<
   entreprise: {
     "emails/pre_close/booking": "meeting-entreprise",
   },
-  comptable: {},
+  comptable: {
+    "emails/pre_close/booking": "meeting-comptable",
+  },
 };
 
 export function resolveLegacyEmailSlugForAudience(
@@ -498,8 +528,13 @@ export const PHASE_LABELS: Record<EmailSequencePhase, string> = {
   close: "CLOSE",
 };
 
+export function meetingSequenceSlugForNiche(niche: Niche): string {
+  return `meeting-${niche}`;
+}
+
 export const BOOKING_SEQUENCE_SLUGS: Record<string, BookingEmailType[]> = {
   "meeting-agence": ["immediate", "h48_confirm", "h24_relance", "h20_cancel"],
+  "meeting-comptable": ["immediate", "h48_confirm", "h24_relance", "h20_cancel"],
   "meeting-entreprise": ["immediate", "h48_confirm", "h24_relance"],
   "role-recovery": ["role_seq_48", "role_seq_24"],
   "calendly-seat-onboarding": [
@@ -515,6 +550,7 @@ export const BOOKING_SEQUENCE_SLUGS: Record<string, BookingEmailType[]> = {
     "no_show_indecis_3",
   ],
   "onboarding-sequence": [
+    "onboarding_retraction_hold",
     "onboarding_j0",
     "onboarding_j0_bis",
     "onboarding_j1",

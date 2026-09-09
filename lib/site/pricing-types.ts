@@ -15,6 +15,8 @@ export const pricingPlanSchema = z.object({
   featured: z.boolean(),
   profileOnly: z.boolean(),
   highlight: z.string().nullable(),
+  /** Maps to payments.offer_type for comptable checkout (optional on agence plans). */
+  offerType: z.string().min(1).optional(),
   features: z.array(z.string().min(1)),
 });
 
@@ -32,14 +34,14 @@ export const pricingHeroSchema = z.object({
 });
 
 export const pricingDocumentSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.union([z.literal(1), z.literal(2)]),
   audience: pricingAudienceSchema,
   updatedAt: z.string().datetime(),
   hero: pricingHeroSchema,
   plans: z.array(pricingPlanSchema).min(1),
   gatedTeaserFeatures: z.array(z.string().min(1)),
   gatedGhostFeatures: z.array(z.string().min(1)),
-  guaranteeSection: pricingGuaranteeSectionSchema,
+  guaranteeSection: pricingGuaranteeSectionSchema.nullable(),
 });
 
 export type PricingDocument = z.infer<typeof pricingDocumentSchema>;

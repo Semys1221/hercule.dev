@@ -1,3 +1,4 @@
+import { formatFrenchDate } from "@/lib/retraction/dates";
 import { dashboardLinkFor, reservationAgenceLinkFor } from "@/lib/link-tracking/urls";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
@@ -50,16 +51,27 @@ export async function extraVarsForJob(
   entrepriseInfo?: string;
   calendlyLink?: string;
   estimatedFirstBookingDate?: string;
+  activationDate?: string;
+  retractionEndsAt?: string;
   scheduledAt?: string | null;
 }> {
   const dashboardLink = dashboardLinkFor(lead) ?? "";
   const reservationAgenceLink = reservationAgenceLinkFor(lead);
+  const retractionEndsRaw = lead.retraction_ends_at;
+  const retractionEndsAt =
+    retractionEndsRaw && !Number.isNaN(new Date(retractionEndsRaw).getTime())
+      ? formatFrenchDate(new Date(retractionEndsRaw))
+      : "";
+  const activationDate = retractionEndsAt || estimatedFirstBookingDateFromLead(lead);
+
   const base = {
     dashboardLink,
     reservationAgenceLink,
     company: lead.company,
     email: lead.email,
     estimatedFirstBookingDate: estimatedFirstBookingDateFromLead(lead),
+    activationDate,
+    retractionEndsAt,
   };
 
   const emailType = job.email_type as BookingEmailType;

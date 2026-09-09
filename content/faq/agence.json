@@ -38,7 +38,7 @@
     {
       "id": "faq-ag-006",
       "question": "Ai-je un délai de rétractation ?",
-      "answer": "Oui. Après souscription, vous disposez d'un délai de 4 jours calendaires pour vous rétracter.",
+      "answer": "Oui. Par défaut, vous disposez de 4 jours calendaires après souscription pour vous rétracter, tant que l'activation n'a pas démarré. Vous pouvez renoncer à ce délai lors de l'onboarding ou à tout moment depuis votre dashboard pour lancer la recherche immédiatement.",
       "cvgLink": true
     },
     {

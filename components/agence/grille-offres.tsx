@@ -61,27 +61,42 @@ export function GrilleOffres() {
           ))}
         </div>
 
-        <motion.div
-          id="garanties"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.35 }}
-          className="border border-white/[0.08] rounded-xl p-8 bg-[#0A0A0A]"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <Shield className="w-5 h-5 text-neutral-400" />
-            <h3 className="text-white text-xl font-medium tracking-[-0.02em]">{guaranteeSection.title}</h3>
-          </div>
-          <ul className="space-y-3">
-            {guaranteeSection.items.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-neutral-400 text-sm">
-                <Check className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
+        {guaranteeSection ? (
+          <motion.div
+            id="garanties"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.35 }}
+            className="border border-white/[0.08] rounded-xl p-8 bg-[#0A0A0A]"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <Shield className="w-5 h-5 text-neutral-400" />
+              <h3 className="text-white text-xl font-medium tracking-[-0.02em]">
+                {guaranteeSection.title}
+              </h3>
+            </div>
+            <ul className="space-y-3">
+              {guaranteeSection.items.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-neutral-400 text-sm">
+                  <Check className="w-4 h-4 text-neutral-500 mt-0.5 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        ) : (
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.35 }}
+            className="text-neutral-400 text-sm border border-white/[0.08] rounded-xl p-8 bg-[#0A0A0A]"
+          >
+            Paiement en deux fois : 50 % à la commande, 50 % à la livraison du compte de contrats
+            PME sécurisés. Pas de garantie de signature incluse.
+          </motion.p>
+        )}
       </div>
     </section>
   )
