@@ -26,7 +26,7 @@ export function Footer() {
           <div>
             <p className="text-white font-semibold text-lg mb-2">Hercule</p>
             <p className="text-zinc-500 text-sm max-w-xs">
-              Mise en relation B2B entre TPE et cabinets d&apos;expertise comptable.
+              Mise en relation B2B entre PME et cabinets d&apos;expertise comptable.
             </p>
           </div>
 

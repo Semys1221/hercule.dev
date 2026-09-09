@@ -92,17 +92,48 @@ export const PRESET_TAILLE_FALLBACKS: Record<AgencyPresetId, TailleClass[]> = {
 };
 
 export const TAILLE_SAMPLES: Record<TailleClass, string[]> = {
-  freelancers: ["Indépendant", "Profession libérale"],
-  tpe: ["TPE — 4 salariés", "TPE — 7 salariés", "TPE — 9 salariés"],
+  freelancers: [
+    "Indépendant",
+    "Profession libérale",
+    "Libéral — cabinet solo",
+    "Indépendant — activité artisanale",
+    "Profession libérale — conseil",
+  ],
+  tpe: [
+    "TPE — 4 salariés",
+    "TPE — 7 salariés",
+    "TPE — 9 salariés",
+    "TPE — 3 salariés",
+    "TPE — 10 salariés",
+  ],
   pme_small: [
     "PME — 12 salariés",
     "PME — 22 salariés",
     "PME — 38 salariés",
     "PME — 45 salariés",
+    "PME — 18 salariés",
   ],
-  pme_medium: ["PME — 60 salariés", "PME — 110 salariés", "PME — 200 salariés"],
-  eti: ["ETI — 280 salariés", "ETI — 380 salariés", "Cabinet — 45 associés"],
-  enterprise: ["Grand groupe — 800 salariés", "Réseau — 12 établissements"],
+  pme_medium: [
+    "PME — 60 salariés",
+    "PME — 110 salariés",
+    "PME — 200 salariés",
+    "PME — 85 salariés",
+    "PME — 150 salariés",
+  ],
+  eti: [
+    "ETI — 280 salariés",
+    "ETI — 380 salariés",
+    "Cabinet — 45 associés",
+    "ETI — 320 salariés",
+    "ETI — 420 salariés",
+  ],
+  enterprise: [
+    "Grand groupe — 800 salariés",
+    "Réseau — 12 établissements",
+    "Groupe — 1 200 salariés",
+    "Réseau — 8 filiales",
+    "Grand compte — 650 salariés",
+  ],
 };
 
 const MONTHLY_PRESTATION_TYPES = new Set<PrestationType>([
@@ -419,15 +450,49 @@ function asTailleClass(value: string): TailleClass | null {
   return TAILLE_CLASS_IDS.has(value) ? (value as TailleClass) : null;
 }
 
+export function resolveTailleClassForSlot(
+  q11: string[],
+  tailleClass: TailleClass,
+  slotIndex: number,
+  presetId: AgencyPresetId,
+  audience: Audience = "agence",
+): TailleClass {
+  const declared = q11.map(asTailleClass).filter((value): value is TailleClass => value !== null);
+  const classes = declared.length > 0 ? declared : PRESET_TAILLE_FALLBACKS[presetId];
+
+  if (isComptableSalesAudience(audience) && declared.length > 0) {
+    return classes[slotIndex % classes.length];
+  }
+
+  return classes.includes(tailleClass) ? tailleClass : classes[slotIndex % classes.length];
+}
+
 export function computeTaille(
   q11: string[],
   tailleClass: TailleClass,
   slotIndex: number,
   presetId: AgencyPresetId,
+  audience: Audience = "agence",
 ): string {
-  const declared = q11.map(asTailleClass).filter((value): value is TailleClass => value !== null);
-  const classes = declared.length > 0 ? declared : PRESET_TAILLE_FALLBACKS[presetId];
-  const preferred = classes.includes(tailleClass) ? tailleClass : classes[slotIndex % classes.length];
+  const preferred = resolveTailleClassForSlot(
+    q11,
+    tailleClass,
+    slotIndex,
+    presetId,
+    audience,
+  );
   const samples = TAILLE_SAMPLES[preferred];
   return samples[slotIndex % samples.length];
+}
+
+export function classifyTailleSample(taille: string): TailleClass | null {
+  for (const [tailleClass, samples] of Object.entries(TAILLE_SAMPLES) as Array<
+    [TailleClass, string[]]
+  >) {
+    if (samples.includes(taille)) {
+      return tailleClass;
+    }
+  }
+
+  return null;
 }

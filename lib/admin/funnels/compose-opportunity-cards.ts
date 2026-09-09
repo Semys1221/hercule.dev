@@ -187,6 +187,7 @@ function blueprintToCard(
   values: SalesQualificationValues,
   presetId: AgencyPresetId,
   floorCents: number,
+  audience: Audience = "agence",
 ): PresetOpportunityCard {
   const budgetKind = budgetKindFromPrestationType(blueprint.prestationType);
   const timing = computeTimingOffsets(blueprint.timingClass, delayed);
@@ -199,7 +200,13 @@ function blueprintToCard(
     budget: formatOpportunityBudget(budgetCents, budgetKind),
     budgetCents,
     budgetKind,
-    taille: computeTaille(values.q11, blueprint.tailleClass, index, presetId),
+    taille: computeTaille(
+      values.q11,
+      blueprint.tailleClass,
+      index,
+      presetId,
+      audience,
+    ),
     dureeSouhaitee: computeDuration(
       blueprint.prestationType,
       budgetCents,
@@ -253,6 +260,7 @@ export function composeOpportunityCards(
       values,
       presetId,
       floorCents,
+      audience,
     );
   });
 

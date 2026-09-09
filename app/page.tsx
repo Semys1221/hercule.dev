@@ -9,7 +9,7 @@ import {
 export const metadata: Metadata = {
   title: "Proposer votre cabinet — Hercule",
   description:
-    "Hercule reçoit des demandes d'indépendants et de dirigeants de TPE. Les cabinets partenaires éligibles reçoivent ces missions de tenue, fiscales et administratives.",
+    "Hercule reçoit des demandes de dirigeants PME. Les cabinets partenaires éligibles reçoivent ces missions de tenue, fiscales et administratives.",
 }
 
 export const revalidate = 60

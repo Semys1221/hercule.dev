@@ -1,24 +1,34 @@
 import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
+import type { Niche } from "@/lib/admin/navigation";
 
 import type { SequenceEditorAdapter, SequenceStep } from "../types";
 
 type BypassAdapterOptions = {
+  slug: string;
+  niche: Niche;
   campaignId: string;
   templateKeys: BypassTemplateKey[];
   stepMeta: Array<{ id: string; label: string; delay: string; templateKey: BypassTemplateKey }>;
 };
 
 export function createBypassAdapter(options: BypassAdapterOptions): SequenceEditorAdapter {
-  const { campaignId, stepMeta } = options;
+  const { slug, niche, campaignId, stepMeta } = options;
 
   return {
-    variables: [
-      "{{first_name}}",
-      "{{last_name}}",
-      "{{company_name}}",
-      "{{reservation_agence_link}}",
-      "{{accountSignature}}",
-    ],
+    slug,
+    niche,
+    provider: "instantly",
+    historyFilter: () => ({
+      templateKeys: stepMeta.map((meta) => meta.templateKey),
+    }),
+    async loadVariables() {
+      const response = await fetch(`/api/admin/niches/${niche}/variables`);
+      const body = (await response.json()) as { variables?: string[]; error?: string };
+      if (!response.ok) {
+        throw new Error(body.error ?? "Variables indisponibles");
+      }
+      return body.variables ?? [];
+    },
     async load() {
       const response = await fetch(
         `/api/admin/instantly-bypass/${campaignId}/templates`,

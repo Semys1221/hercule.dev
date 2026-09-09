@@ -472,7 +472,7 @@ export const ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES: Partial<
 
 Votre rendez-vous d'audit de compatibilité avec Hercule est bien confirmé le {{date}} à {{heure}}.
 
-Nous reviendrons ensemble sur votre cabinet, votre zone d'intervention et vos disponibilités pour recevoir de nouvelles missions de tenue TPE.
+Nous reviendrons ensemble sur votre cabinet, votre zone d'intervention et vos disponibilités pour recevoir de nouvelles missions de tenue PME.
 
 Les informations de connexion vous seront transmises directement par Calendly.`,
   },
@@ -493,7 +493,7 @@ Votre paiement a bien été reçu. Votre accès Hercule Comptable est maintenant
 L'équipe Hercule configure votre espace dans les prochaines 48 heures :
 - Provisionnement de votre compte Calendly Pro
 - Provisionnement de votre compte Zoom Pro
-- Premier rendez-vous TPE planifié sous 15 jours
+- Premier rendez-vous PME planifié sous 15 jours
 
 Retrouvez votre espace cabinet :
 {{dashboardLink}}

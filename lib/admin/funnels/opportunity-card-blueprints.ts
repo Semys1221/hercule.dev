@@ -891,7 +891,7 @@ const COMPTABLE_RAW_BLUEPRINTS: Omit<
     prestationType: "social_paie",
     timingClass: "normal",
     tailleClass: "pme_small",
-    prestation: "Mission social / paie récurrente — TPE 8 salariés",
+    prestation: "Mission social / paie récurrente — structure en croissance",
     historiqueAgences: "Gestion interne — charge sociale croissante",
     zone: "Bordeaux",
     companyNameBlurred: "**** BTP",

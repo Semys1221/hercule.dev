@@ -8,7 +8,7 @@ const cabinetStack = [
   { name: "Attribution exclusive", icon: Shield },
   { name: "Calendly Pro", icon: Calendar },
   { name: "Zoom Pro", icon: Video },
-  { name: "Missions TPE", icon: Users },
+  { name: "Missions PME", icon: Users },
 ]
 
 export function BandeStack() {
@@ -23,7 +23,7 @@ export function BandeStack() {
             transition={{ duration: 0.6 }}
             className="text-lg text-zinc-300 mb-2"
           >
-            Des cabinets partenaires reçoivent des missions TPE qualifiées.
+            Des cabinets partenaires reçoivent des missions PME qualifiées.
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}

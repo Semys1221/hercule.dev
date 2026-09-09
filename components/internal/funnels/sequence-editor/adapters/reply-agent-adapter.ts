@@ -1,16 +1,34 @@
+import type { Niche } from "@/lib/admin/navigation";
+
 import type { SequenceEditorAdapter, SequenceStep } from "../types";
 
 type ReplyAgentAdapterOptions = {
+  slug: string;
+  niche: Niche;
   campaignId: string;
 };
+
+const REPLY_AGENT_VARIABLES = [
+  "@PRENOM",
+  "@TYPE_DEMANDE",
+  "@ZONE",
+  "@CALENDRIER",
+  "@SIGNATURE",
+];
 
 export function createReplyAgentAdapter(
   options: ReplyAgentAdapterOptions,
 ): SequenceEditorAdapter {
-  const { campaignId } = options;
+  const { slug, niche, campaignId } = options;
 
   return {
-    variables: ["@PRENOM", "@TYPE_DEMANDE", "@ZONE", "@CALENDRIER", "@SIGNATURE"],
+    slug,
+    niche,
+    provider: "instantly",
+    historyFilter: () => ({}),
+    async loadVariables() {
+      return REPLY_AGENT_VARIABLES;
+    },
     async load() {
       const response = await fetch(`/api/admin/ai-reply-agent/${campaignId}`);
       const body = (await response.json()) as {

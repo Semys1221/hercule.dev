@@ -125,6 +125,18 @@ const RAW_DATABASE: DatabaseEntry[] = [
     status: "migrated",
   },
   {
+    id: "email_variable_bindings",
+    label: "Email variable bindings",
+    domain: "marketing",
+    purpose: "Variables template activées par niche pour éditeurs de séquences",
+    keyColumns: "niche, variable_key, enabled, base_url_preview",
+    writers: ["admin"],
+    readers: ["admin"],
+    profileKeys: "—",
+    relatedTables: [],
+    status: "migrated",
+  },
+  {
     id: "agence_demandes",
     label: "Agence demandes",
     domain: "marketing",

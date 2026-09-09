@@ -9,8 +9,10 @@ import {
   validateOpportunityCardSet,
 } from "@/lib/admin/funnels/compose-opportunity-cards";
 import {
+  classifyTailleSample,
   computeBudgetTiers,
   roundToBand,
+  type TailleClass,
 } from "@/lib/admin/funnels/opportunity-card-formulas";
 import { salesQualificationDefaultValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { SALES_TEST_SESSION_QUALIFICATION } from "@/lib/admin/funnels/sales-test-session-preset";
@@ -214,6 +216,59 @@ function main() {
   const comptableCards = composeOpportunityCards(comptableValues, "serial", "comptable");
   assertCardSetConstraints(comptableCards, comptableFloor);
   assert.equal(new Set(comptableCards.map((card) => card.secteur)).size, 5);
+
+  function countTailleClasses(
+    cards: ReturnType<typeof composeOpportunityCards>,
+  ): Record<TailleClass, number> {
+    const counts: Partial<Record<TailleClass, number>> = {};
+    for (const card of cards) {
+      const tailleClass = classifyTailleSample(card.taille);
+      assert.ok(tailleClass, `Unknown taille sample: ${card.taille}`);
+      counts[tailleClass] = (counts[tailleClass] ?? 0) + 1;
+    }
+    return counts as Record<TailleClass, number>;
+  }
+
+  const comptableBaseValues = {
+    ...salesQualificationDefaultValues,
+    q1: ["web_creation", "google_ads", "seo"],
+    q19: ["one_off", "recurring", "acquisition"],
+    q13: 1499,
+    q14: { months3: 1499, months6: 1499, months12: 1499 },
+  };
+
+  const singleTargetCards = composeOpportunityCards(
+    { ...comptableBaseValues, q11: ["tpe"] },
+    "serial",
+    "comptable",
+  );
+  assertCardSetConstraints(singleTargetCards, comptableFloor);
+  assert.equal(
+    singleTargetCards.filter((card) => card.taille.startsWith("TPE —")).length,
+    5,
+  );
+
+  const dualTargetCards = composeOpportunityCards(
+    { ...comptableBaseValues, q11: ["tpe", "pme_small"] },
+    "serial",
+    "comptable",
+  );
+  assertCardSetConstraints(dualTargetCards, comptableFloor);
+  const dualCounts = countTailleClasses(dualTargetCards);
+  assert.deepEqual(dualCounts, { tpe: 3, pme_small: 2 });
+
+  const tripleTargetCards = composeOpportunityCards(
+    { ...comptableBaseValues, q11: ["freelancers", "tpe", "pme_small"] },
+    "serial",
+    "comptable",
+  );
+  assertCardSetConstraints(tripleTargetCards, comptableFloor);
+  const tripleCounts = countTailleClasses(tripleTargetCards);
+  assert.deepEqual(tripleCounts, {
+    freelancers: 2,
+    tpe: 2,
+    pme_small: 1,
+  });
 
   console.log("OK lib/admin/funnels/compose-opportunity-cards.test.ts");
 }

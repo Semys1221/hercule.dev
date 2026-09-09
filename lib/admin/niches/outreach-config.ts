@@ -37,7 +37,8 @@ const CALENDLY_ENV: Record<Niche, string> = {
   comptable: "CALENDLY_EVENT_TYPE_URI_COMPTABLE",
 };
 
-function campaignIdFromEnv(niche: Niche): string | null {
+/** @internal Exported for unit tests. */
+export function campaignIdFromEnv(niche: Niche): string | null {
   const primary = process.env[CAMPAIGN_ENV[niche]]?.trim();
   if (primary) {
     return primary;
@@ -51,7 +52,8 @@ function campaignIdFromEnv(niche: Niche): string | null {
   return null;
 }
 
-function calendlyUriFromEnv(niche: Niche): string | null {
+/** @internal Exported for unit tests. */
+export function calendlyUriFromEnv(niche: Niche): string | null {
   return process.env[CALENDLY_ENV[niche]]?.trim() || null;
 }
 

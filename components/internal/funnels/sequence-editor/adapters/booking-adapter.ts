@@ -1,77 +1,35 @@
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 import { followUpRequiresEmptySubject } from "@/lib/booking-communication/sequence-pattern";
+import { validateSequenceCopy } from "@/lib/admin/niches/sequence-variables";
+import type { Niche } from "@/lib/admin/navigation";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 import type { SequenceEditorAdapter, SequenceStep } from "../types";
 
-const PRODUCT_EMAIL_TYPES = new Set([
-  "product_calendly_welcome",
-  "product_calendly_reminder",
-  "product_payment_welcome",
-  "upsell_email_1",
-  "upsell_email_2",
-  "upsell_email_3",
-  "close_indecis_1",
-  "close_indecis_2",
-  "close_indecis_3",
-  "no_show_indecis_1",
-  "no_show_indecis_2",
-  "no_show_indecis_3",
-  "onboarding_j0",
-  "onboarding_j0_bis",
-  "onboarding_j1",
-  "onboarding_reminder_m10",
-  "onboarding_reminder_m5",
-  "onboarding_reminder_p5",
-  "deliverance_search_started",
-  "deliverance_d7_update",
-  "deliverance_milestone",
-  "deliverance_waitlist",
-  "match_proposal",
-  "match_proposal_followup",
-  "match_booking_agence",
-  "survey_rdv_entreprise",
-  "survey_rdv_entreprise_followup",
-  "survey_rdv_agence",
-  "survey_rdv_agence_followup",
-  "sold_check_j7",
-  "payment_notification_client",
-]);
-
 type BookingAdapterOptions = {
+  slug: string;
+  niche: Niche;
   category: LeadCategory;
   emailTypes: BookingEmailType[];
   stepMeta: Array<{ id: string; label: string; delay: string }>;
 };
 
 export function createBookingAdapter(options: BookingAdapterOptions): SequenceEditorAdapter {
-  const { category, emailTypes, stepMeta } = options;
-  const isProductSequence = emailTypes.some((type) => PRODUCT_EMAIL_TYPES.has(type));
-
-  const variables = isProductSequence
-    ? [
-        "{{firstNameLine}}",
-        "{{email}}",
-        "{{dashboardLink}}",
-        "{{reservation_agence_link}}",
-        "{{company}}",
-        "{{surveyLink}}",
-        "{{agenceInfo}}",
-        "{{entrepriseInfo}}",
-        "{{calendlyLink}}",
-        "{{estimatedFirstBookingDate}}",
-      ]
-    : [
-        "{{firstNameLine}}",
-        "{{date}}",
-        "{{heure}}",
-        "{{confirmation_agence_link}}",
-        "{{confirmLink}}",
-        "{{post_booking_link}}",
-      ];
+  const { slug, niche, category, emailTypes, stepMeta } = options;
 
   return {
-    variables,
+    slug,
+    niche,
+    provider: "resend",
+    historyFilter: () => ({ emailTypes }),
+    async loadVariables() {
+      const response = await fetch(`/api/admin/niches/${niche}/variables`);
+      const body = (await response.json()) as { variables?: string[]; error?: string };
+      if (!response.ok) {
+        throw new Error(body.error ?? "Variables indisponibles");
+      }
+      return body.variables ?? [];
+    },
     async load() {
       const response = await fetch(`/api/admin/booking-templates/${category}`);
       const body = (await response.json()) as {
@@ -99,6 +57,14 @@ export function createBookingAdapter(options: BookingAdapterOptions): SequenceEd
       });
     },
     async save(steps: SequenceStep[]) {
+      const variables = await this.loadVariables();
+      const validation = validateSequenceCopy(variables, steps);
+      if (!validation.ok) {
+        throw new Error(
+          `Variables inconnues : ${validation.unknown.map((key) => `{{${key}}}`).join(", ")}`,
+        );
+      }
+
       const templates = steps.map((step, index) => ({
         email_type: emailTypes[index],
         subject: followUpRequiresEmptySubject(emailTypes[index])

@@ -1,82 +1,28 @@
-/** Unit tests for batch lead lookup priority in Calendly list bookings. */
+/** Unit tests for list bookings helpers. */
 
 import assert from "node:assert/strict";
 
-import { resolveLeadFromBatchMaps, isUpcomingBooking } from "@/lib/calendly/list-bookings";
-import type { LeadLookup, LinkTrackingLead } from "@/lib/link-tracking/types";
+import { buildScheduledEventsListParams } from "@/lib/calendly/list-bookings";
 
-function lead(id: string, email: string): LinkTrackingLead {
-  return {
-    id,
-    email,
-    statut: "MEETING_BOOKED",
-    slug: `slug-${id}`,
-    reservation_agence_link: null,
-    reservation_entreprise_link: null,
-    confirmation_agence_link: null,
-    dashboard_link: null,
-    instantly_lead_id: null,
-    instantly_campaign_id: null,
-    first_name: "Marie",
-    company: "Acme",
-    scheduled_at: null,
-    calendly_invitee_uri: `https://api.calendly.com/scheduled_events/EVT/invitees/${id}`,
-    calendly_join_url: null,
-    calendly_reschedule_url: null,
-    calendly_cancel_url: null,
-  };
-}
-
-function lookup(category: "agence" | "entreprise", id: string, email: string): LeadLookup {
-  return { category, lead: lead(id, email) };
-}
-
-const candidate = {
-  email: "prospect@example.com",
-  utmContent: "slug-slug",
-  inviteeUri: "https://api.calendly.com/scheduled_events/EVT/invitees/INV",
+const base = {
+  userUri: "https://api.calendly.com/users/ABC",
+  minTime: "2026-01-01T00:00:00.000Z",
+  maxTime: "2026-02-01T00:00:00.000Z",
 };
 
-const emailLookup = lookup("agence", "email-lead", candidate.email);
-const slugLookup = lookup("agence", "slug-lead", "other@example.com");
-const inviteeLookup = lookup("agence", "invitee-lead", "another@example.com");
+const withEvent = buildScheduledEventsListParams({
+  ...base,
+  eventTypeUri: "https://api.calendly.com/event_types/XYZ",
+});
 
-const byEmail = new Map([[candidate.email, emailLookup]]);
-const bySlug = new Map([[candidate.utmContent, slugLookup]]);
-const byInviteeUri = new Map([[candidate.inviteeUri, inviteeLookup]]);
+assert.equal(withEvent.event_type, "https://api.calendly.com/event_types/XYZ");
+assert.equal(withEvent.user, base.userUri);
+assert.equal(withEvent.status, "active");
 
-assert.equal(
-  resolveLeadFromBatchMaps(candidate, byEmail, bySlug, byInviteeUri)?.lead.id,
-  "email-lead",
-);
+const withoutEvent = buildScheduledEventsListParams(base);
+assert.equal(withoutEvent.event_type, undefined);
 
-assert.equal(
-  resolveLeadFromBatchMaps(
-    candidate,
-    new Map(),
-    bySlug,
-    byInviteeUri,
-  )?.lead.id,
-  "slug-lead",
-);
+const emptyUri = buildScheduledEventsListParams({ ...base, eventTypeUri: null });
+assert.equal(emptyUri.event_type, undefined);
 
-assert.equal(
-  resolveLeadFromBatchMaps(
-    candidate,
-    new Map(),
-    new Map(),
-    byInviteeUri,
-  )?.lead.id,
-  "invitee-lead",
-);
-
-assert.equal(
-  resolveLeadFromBatchMaps(candidate, new Map(), new Map(), new Map()),
-  null,
-);
-
-const now = new Date("2026-09-07T12:00:00.000Z");
-assert.equal(isUpcomingBooking("2026-09-07T13:00:00.000Z", now), true);
-assert.equal(isUpcomingBooking("2026-09-07T11:00:00.000Z", now), false);
-
-console.log("list-bookings.test.ts: ok");
+console.log("list-bookings event filter tests passed");

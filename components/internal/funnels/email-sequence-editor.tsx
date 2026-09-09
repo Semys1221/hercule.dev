@@ -228,6 +228,8 @@ function buildAdapter(
       }),
     );
     return createBookingAdapter({
+      slug: sequence.slug,
+      niche: audience,
       category,
       emailTypes: emailTypes.length > 0 ? emailTypes : (BOOKING_SEQUENCE_SLUGS[sequence.slug] ?? []),
       stepMeta,
@@ -244,6 +246,8 @@ function buildAdapter(
         templateKey: step.templateKey as BypassTemplateKey,
       }));
     return createBypassAdapter({
+      slug: sequence.slug,
+      niche: audience,
       campaignId,
       templateKeys: sequence.bypassTemplateKeys,
       stepMeta,
@@ -251,7 +255,11 @@ function buildAdapter(
   }
 
   if (sequence.editorKind === "reply_agent" && campaignId) {
-    return createReplyAgentAdapter({ campaignId });
+    return createReplyAgentAdapter({
+      slug: sequence.slug,
+      niche: audience,
+      campaignId,
+    });
   }
 
   return null;

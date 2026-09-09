@@ -34,7 +34,7 @@ export function AuditLive() {
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-8"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            Les missions TPE sont visibles lors de l&apos;audit de compatibilité.
+            Les missions PME sont visibles lors de l&apos;audit de compatibilité.
           </motion.h2>
 
           <motion.p

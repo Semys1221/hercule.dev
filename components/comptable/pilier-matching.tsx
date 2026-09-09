@@ -5,9 +5,9 @@ import { Inbox, Shield, ClipboardCheck } from "lucide-react"
 
 const matchingCards = [
   {
-    title: "Missions TPE qualifiées",
+    title: "Missions PME qualifiées",
     description:
-      "Des dirigeants indépendants et TPE attendent un cabinet compatible. Les missions sont disponibles dès activation.",
+      "Des dirigeants PME attendent un cabinet compatible. Les missions sont disponibles dès activation.",
     icon: Inbox,
   },
   {
@@ -42,7 +42,7 @@ export function PilierMatching() {
                 lineHeight: 1.1,
               }}
             >
-              Nous recevons des demandes TPE. Notre rôle : identifier le cabinet le plus adapté.
+              Nous recevons des demandes PME. Notre rôle : identifier le cabinet le plus adapté.
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}

@@ -25,14 +25,33 @@ import { Textarea } from "@/components/ui/textarea";
 
 import type { SequenceEditorAdapter, SequenceStep } from "./types";
 
+export type SequenceEditorActions = {
+  save: () => Promise<void>;
+  steps: SequenceStep[];
+  saving: boolean;
+};
+
 type SequenceDropdownProps = {
   title: string;
   description?: string;
   adapter: SequenceEditorAdapter;
+  embedded?: boolean;
+  hideSaveButton?: boolean;
+  onRegisterActions?: (actions: SequenceEditorActions) => void;
+  onStepsChange?: (steps: SequenceStep[]) => void;
 };
 
-export function SequenceDropdown({ title, description, adapter }: SequenceDropdownProps) {
+export function SequenceDropdown({
+  title,
+  description,
+  adapter,
+  embedded = false,
+  hideSaveButton = false,
+  onRegisterActions,
+  onStepsChange,
+}: SequenceDropdownProps) {
   const [steps, setSteps] = useState<SequenceStep[]>([]);
+  const [variables, setVariables] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,34 +69,43 @@ export function SequenceDropdown({ title, description, adapter }: SequenceDropdo
     setLoading(true);
     setError(null);
     try {
-      const loaded = await adapter.load();
+      const [loaded, loadedVariables] = await Promise.all([
+        adapter.load(),
+        adapter.loadVariables(),
+      ]);
       setSteps(loaded);
+      setVariables(loadedVariables);
+      onStepsChange?.(loaded);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Chargement impossible");
     } finally {
       setLoading(false);
     }
-  }, [adapter]);
+  }, [adapter, onStepsChange]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   const updateStep = (index: number, patch: Partial<SequenceStep>) => {
-    setSteps((prev) =>
-      prev.map((step, i) => (i === index ? { ...step, ...patch } : step)),
-    );
+    setSteps((prev) => {
+      const next = prev.map((step, i) => (i === index ? { ...step, ...patch } : step));
+      onStepsChange?.(next);
+      return next;
+    });
   };
 
   const insertVariable = (index: number, variable: string) => {
-    setSteps((prev) =>
-      prev.map((step, i) =>
+    setSteps((prev) => {
+      const next = prev.map((step, i) =>
         i === index ? { ...step, body: `${step.body}${variable}` } : step,
-      ),
-    );
+      );
+      onStepsChange?.(next);
+      return next;
+    });
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -89,7 +117,11 @@ export function SequenceDropdown({ title, description, adapter }: SequenceDropdo
     } finally {
       setSaving(false);
     }
-  };
+  }, [adapter, steps]);
+
+  useEffect(() => {
+    onRegisterActions?.({ save: handleSave, steps, saving });
+  }, [handleSave, onRegisterActions, saving, steps]);
 
   const handlePreview = async (stepId: string) => {
     if (!adapter.preview) {
@@ -129,32 +161,36 @@ export function SequenceDropdown({ title, description, adapter }: SequenceDropdo
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">{title}</h2>
-        {description ? (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        ) : null}
-      </div>
+      {!embedded ? (
+        <div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          {description ? (
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          ) : null}
+        </div>
+      ) : null}
 
-      <InternalResourceToolbar
-        edit={{ enabled: false, reason: "Édition inline ci-dessous" }}
-        preview={{ enabled: false, reason: "Prévisualiser par step" }}
-        promote={{ enabled: false, reason: "Non applicable" }}
-        delete={{
-          enabled: false,
-          reason: "Non applicable",
-          confirmTitle: "Supprimer la séquence ?",
-          confirmDescription: "Non applicable",
-        }}
-        busy={saving}
-      />
+      {!embedded ? (
+        <InternalResourceToolbar
+          edit={{ enabled: false, reason: "Édition inline ci-dessous" }}
+          preview={{ enabled: false, reason: "Prévisualiser par step" }}
+          promote={{ enabled: false, reason: "Non applicable" }}
+          delete={{
+            enabled: false,
+            reason: "Non applicable",
+            confirmTitle: "Supprimer la séquence ?",
+            confirmDescription: "Non applicable",
+          }}
+          busy={saving}
+        />
+      ) : null}
 
       {error ? <InternalStatusAlert variant="error" message={error} /> : null}
       {success ? <InternalStatusAlert variant="success" message={success} /> : null}
 
       <div className="flex flex-wrap gap-2">
         <span className="text-xs text-muted-foreground">Variables :</span>
-        {adapter.variables.map((variable) => (
+        {variables.map((variable) => (
           <Badge key={variable} variant="outline" className="font-mono text-xs">
             {variable}
           </Badge>
@@ -204,7 +240,7 @@ export function SequenceDropdown({ title, description, adapter }: SequenceDropdo
                 />
               </div>
               <div className="flex flex-wrap gap-2">
-                {adapter.variables.map((variable) => (
+                {variables.map((variable) => (
                   <Button
                     key={`${step.id}-${variable}`}
                     type="button"
@@ -229,9 +265,11 @@ export function SequenceDropdown({ title, description, adapter }: SequenceDropdo
         ))}
       </Accordion>
 
-      <Button type="button" onClick={() => void handleSave()} disabled={saving}>
-        {saving ? "Enregistrement…" : "Enregistrer la séquence"}
-      </Button>
+      {!hideSaveButton ? (
+        <Button type="button" onClick={() => void handleSave()} disabled={saving}>
+          {saving ? "Enregistrement…" : "Enregistrer la séquence"}
+        </Button>
+      ) : null}
 
       <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-xl">

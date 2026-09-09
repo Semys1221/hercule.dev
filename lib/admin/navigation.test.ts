@@ -5,8 +5,12 @@ import assert from "node:assert/strict";
 import {
   bookingsHref,
   breadcrumb,
+  clientsHubHref,
+  emailsHref,
   isHub,
   leafKey,
+  legalHref,
+  moduleFromPathname,
   nicheFromPathname,
   normalizePath,
   salesFunnelHref,
@@ -59,5 +63,26 @@ assert.equal(
   salesFunnelHref("comptable"),
   "/internal/funnels/comptable/sales/funnel",
 );
+
+assert.equal(clientsHubHref("comptable"), "/internal/funnels/clients/comptable");
+assert.equal(legalHref("agence", "cgv"), "/internal/funnels/legal/agence/cgv");
+assert.equal(
+  emailsHref("entreprise", "meeting-agence"),
+  "/internal/funnels/emails/entreprise/meeting-agence",
+);
+
+assert.equal(moduleFromPathname("/internal/funnels/bookings/agence"), "bookings");
+assert.equal(moduleFromPathname("/internal/funnels/legal/comptable/cgv"), "legal");
+assert.equal(moduleFromPathname("/internal/funnels/agence/bookings"), "bookings");
+
+const redirectSources = [
+  "/internal/funnels/agence",
+  "/internal/funnels/agence/bookings",
+  "/internal/funnels/comptable/clients",
+  "/internal/funnels/entreprise/emails",
+];
+for (const source of redirectSources) {
+  assert.ok(nicheFromPathname(source), `nicheFromPathname(${source})`);
+}
 
 console.log("navigation.test.ts: ok");

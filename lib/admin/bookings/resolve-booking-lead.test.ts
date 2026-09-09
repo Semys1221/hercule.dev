@@ -60,6 +60,17 @@ async function main() {
   assert.equal(byId?.lead.id, sample.id);
   assert.equal(byId?.category, "agence");
 
+  const comptableId = process.env.RESOLVE_LEAD_TEST_COMPTABLE_ID?.trim();
+  if (comptableId) {
+    const byComptableId = await resolveBookingLead({
+      leadId: comptableId,
+      email: "unknown@example.com",
+      inviteeUri,
+    });
+    assert.equal(byComptableId?.category, "comptable");
+    assert.equal(byComptableId?.lead.id, comptableId);
+  }
+
   const byEmail = await resolveBookingLead({
     leadId: null,
     email: sample.email,

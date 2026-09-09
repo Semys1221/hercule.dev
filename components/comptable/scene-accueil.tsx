@@ -68,7 +68,7 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 transition={{ duration: 0.6 }}
                 className="text-4xl md:text-5xl lg:text-[56px] font-medium text-white leading-[1.1] text-balance"
               >
-                Nous trouvons le bon cabinet pour chaque mission TPE.
+                Nous trouvons le bon cabinet pour chaque mission PME.
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -76,7 +76,7 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="mt-6 text-lg text-zinc-400"
               >
-                Hercule reçoit et qualifie des demandes de dirigeants TPE, puis sélectionne les cabinets adaptés pour leur attribuer des missions de tenue en exclusivité.
+                Hercule reçoit et qualifie des demandes de dirigeants PME, puis sélectionne les cabinets adaptés pour leur attribuer des missions de tenue en exclusivité.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

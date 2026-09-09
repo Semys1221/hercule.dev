@@ -320,6 +320,25 @@ async function fetchEventInvitees(
   }));
 }
 
+export function buildScheduledEventsListParams(options: {
+  userUri: string;
+  minTime: string;
+  maxTime: string;
+  eventTypeUri?: string | null;
+}): Record<string, string> {
+  const params: Record<string, string> = {
+    user: options.userUri,
+    status: "active",
+    min_start_time: options.minTime,
+    max_start_time: options.maxTime,
+    count: "100",
+  };
+  if (options.eventTypeUri) {
+    params.event_type = options.eventTypeUri;
+  }
+  return params;
+}
+
 export async function listUpcomingBookings(options: {
   daysAhead?: number;
   daysBehind?: number;
@@ -337,20 +356,17 @@ export async function listUpcomingBookings(options: {
   const minTime = new Date(now.getTime() - daysBehind * 24 * 60 * 60 * 1000);
   const maxTime = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
 
-  const listParams: Record<string, string> = {
-    user: userUri,
-    status: "active",
-    min_start_time: minTime.toISOString(),
-    max_start_time: maxTime.toISOString(),
-    count: "100",
-  };
+  const listParams = buildScheduledEventsListParams({
+    userUri,
+    minTime: minTime.toISOString(),
+    maxTime: maxTime.toISOString(),
+    eventTypeUri: options.niche
+      ? await resolveCalendlyEventTypeUri(options.niche)
+      : undefined,
+  });
 
-  if (options.niche) {
-    const eventTypeUri = await resolveCalendlyEventTypeUri(options.niche);
-    if (!eventTypeUri) {
-      return [];
-    }
-    listParams.event_type = eventTypeUri;
+  if (options.niche && !listParams.event_type) {
+    return [];
   }
 
   const events = await paginate("/scheduled_events", listParams);

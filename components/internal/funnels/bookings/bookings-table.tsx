@@ -42,6 +42,10 @@ import {
   primaryConfirmationLink,
   primaryReservationLink,
 } from "@/lib/calendly/enrich-bookings";
+import {
+  WORKFLOW_SEQUENCES_DISABLED_TOOLTIP,
+  workflowSequencesEnabled,
+} from "@/lib/admin/bookings/workflow-sequences-enabled";
 import type { Niche } from "@/lib/admin/navigation";
 import type { SalesCallStatus } from "@/lib/sales-calls/types";
 
@@ -191,6 +195,7 @@ function formatNotPresentFeedback(
 }
 
 export function BookingsTable({ niche }: BookingsTableProps) {
+  const sequencesEnabled = workflowSequencesEnabled(niche);
   const [rows, setRows] = useState<EnrichedCalendlyBooking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -635,6 +640,7 @@ export function BookingsTable({ niche }: BookingsTableProps) {
                     </TableCell>
                     <TableCell className="min-w-[6rem]">
                       <BookingRowToggles
+                        niche={niche}
                         inviteeUri={row.invitee_uri}
                         salesCallStatus={row.sales_call_status}
                         pendingNoShow={pending}
@@ -643,7 +649,7 @@ export function BookingsTable({ niche }: BookingsTableProps) {
                     </TableCell>
                     <TableCell className="min-w-[10rem]">
                       <div className="flex flex-wrap items-center gap-2">
-                        {canConfirm ? (
+                        {canConfirm && sequencesEnabled ? (
                           <Button
                             type="button"
                             variant="outline"
@@ -654,12 +660,21 @@ export function BookingsTable({ niche }: BookingsTableProps) {
                             {pendingConfirm ? "…" : "Confirmer"}
                           </Button>
                         ) : null}
-                        <BookingRowActionsMenu
-                          actions={actions}
-                          pending={pending}
-                          pendingNotPresent={pendingNotPresent}
-                          onNotPresent={() => void sendNotPresentEmail(row)}
-                        />
+                        {sequencesEnabled ? (
+                          <BookingRowActionsMenu
+                            actions={actions}
+                            pending={pending}
+                            pendingNotPresent={pendingNotPresent}
+                            onNotPresent={() => void sendNotPresentEmail(row)}
+                          />
+                        ) : (
+                          <span
+                            className="text-xs text-muted-foreground"
+                            title={WORKFLOW_SEQUENCES_DISABLED_TOOLTIP}
+                          >
+                            —
+                          </span>
+                        )}
                       </div>
                       <SalesCallStatusHint
                         salesCallStatus={row.sales_call_status}

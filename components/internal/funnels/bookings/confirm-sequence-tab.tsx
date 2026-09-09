@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import { createBookingAdapter } from "@/components/internal/funnels/sequence-editor/adapters/booking-adapter";
-import { SequenceDropdown } from "@/components/internal/funnels/sequence-editor/sequence-dropdown";
+import { SequenceWorkspace } from "@/components/internal/funnels/sequence-editor/sequence-workspace";
 import {
   bookingSequenceTypesFor,
   getEmailSequence,
@@ -19,6 +19,8 @@ export function ConfirmSequenceTab() {
     }
     const emailTypes = bookingSequenceTypesFor(sequence.slug, "agence");
     return createBookingAdapter({
+      slug: sequence.slug,
+      niche: "agence",
       category: "agence",
       emailTypes,
       stepMeta: sequence.steps.map((step) => ({
@@ -34,7 +36,7 @@ export function ConfirmSequenceTab() {
   }
 
   return (
-    <SequenceDropdown
+    <SequenceWorkspace
       title="Séquence de confirmation — Agence"
       description="Éditez les emails de confirmation (immediate, H-48, H-24, H-20). L'envoi se déclenche manuellement depuis l'onglet Bookings via le bouton « Confirmer »."
       adapter={adapter}

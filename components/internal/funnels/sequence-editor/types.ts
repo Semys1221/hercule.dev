@@ -1,3 +1,7 @@
+import type { BookingEmailType } from "@/lib/booking-communication/types";
+import type { Niche } from "@/lib/admin/navigation";
+import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
+
 export type SequenceStep = {
   id: string;
   label: string;
@@ -9,9 +13,18 @@ export type SequenceStep = {
   subjectManaged?: boolean;
 };
 
+export type SequenceHistoryFilter = {
+  emailTypes?: BookingEmailType[];
+  templateKeys?: BypassTemplateKey[];
+};
+
 export type SequenceEditorAdapter = {
+  slug: string;
+  niche: Niche;
+  provider: "resend" | "instantly";
   load(): Promise<SequenceStep[]>;
   save(steps: SequenceStep[]): Promise<void>;
   preview?(stepId: string, steps: SequenceStep[]): Promise<{ subject: string; body: string; html?: string }>;
-  variables: string[];
+  loadVariables(): Promise<string[]>;
+  historyFilter(): SequenceHistoryFilter;
 };

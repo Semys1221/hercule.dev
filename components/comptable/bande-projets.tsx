@@ -46,7 +46,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-6"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            +25 missions TPE actuellement disponibles
+            +25 missions PME actuellement disponibles
           </motion.h2>
 
           <motion.p
@@ -66,7 +66,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             transition={{ delay: 0.15 }}
             className="text-zinc-400 max-w-2xl leading-relaxed"
           >
-            Hercule qualifie les besoins des dirigeants TPE et identifie les cabinets présentant la meilleure
+            Hercule qualifie les besoins des dirigeants PME et identifie les cabinets présentant la meilleure
             compatibilité avec chaque mission de tenue.
           </motion.p>
         </div>

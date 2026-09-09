@@ -6,7 +6,7 @@ export function BandeAudit() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           <div>
-            <p className="text-sm text-emerald-400 mb-3 font-medium">Des missions TPE en attente d&apos;attribution</p>
+            <p className="text-sm text-emerald-400 mb-3 font-medium">Des missions PME en attente d&apos;attribution</p>
             <h2 className="text-3xl md:text-4xl lg:text-[42px] font-medium text-white tracking-tight">
               Demandez votre audit de compatibilité
             </h2>

@@ -5,6 +5,10 @@ import {
   followUpRequiresEmptySubject,
 } from "@/lib/booking-communication/sequence-pattern";
 import {
+  listEnabledVariableTokens,
+  validateSequenceCopy,
+} from "@/lib/admin/niches/sequence-variables";
+import {
   getBookingEmailTemplates,
   upsertBookingEmailTemplates,
 } from "@/lib/booking-communication/template-store";
@@ -87,6 +91,23 @@ export async function PUT(
   }
 
   try {
+    const enabledTokens = await listEnabledVariableTokens(category);
+    const validation = validateSequenceCopy(
+      enabledTokens,
+      parsed.data.templates.map((template) => ({
+        subject: template.subject,
+        body: template.body,
+      })),
+    );
+    if (!validation.ok) {
+      return NextResponse.json(
+        {
+          error: `Variables inconnues : ${validation.unknown.map((key) => `{{${key}}}`).join(", ")}`,
+        },
+        { status: 400 },
+      );
+    }
+
     await upsertBookingEmailTemplates(
       category,
       parsed.data.templates as Array<{

@@ -102,7 +102,7 @@ export function CarteProjet({ demande }: { demande: DemandeContrat }) {
               <p className="text-white text-sm font-medium leading-snug">{demande.prestation}</p>
               <div className="mt-auto space-y-2 border-t border-zinc-800/80 pt-3">
                 <DemandeMetaRow label="Honoraires" value={demande.budget} variant="marketing" />
-                <DemandeMetaRow label="Profil TPE" value={demande.taille} variant="marketing" />
+                <DemandeMetaRow label="Profil PME" value={demande.taille} variant="marketing" />
               </div>
               {!isAssigned && <PostulerActionBar />}
             </CardContent>
