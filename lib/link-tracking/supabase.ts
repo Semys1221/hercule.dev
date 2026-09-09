@@ -149,6 +149,8 @@ async function findLeadsInTableByColumn(
   return (data ?? []) as LinkTrackingLead[];
 }
 
+const BULK_EMAIL_LOOKUP_BATCH = 100;
+
 export async function findLeadsByEmails(
   client: SupabaseClient,
   emails: string[],
@@ -159,12 +161,15 @@ export async function findLeadsByEmails(
     return map;
   }
 
-  for (const category of TABLES) {
-    const rows = await findLeadsInTableByColumn(client, category, "email", normalized);
-    for (const lead of rows) {
-      const key = normalizeEmail(lead.email);
-      if (!map.has(key)) {
-        map.set(key, { category, lead });
+  for (let offset = 0; offset < normalized.length; offset += BULK_EMAIL_LOOKUP_BATCH) {
+    const batch = normalized.slice(offset, offset + BULK_EMAIL_LOOKUP_BATCH);
+    for (const category of TABLES) {
+      const rows = await findLeadsInTableByColumn(client, category, "email", batch);
+      for (const lead of rows) {
+        const key = normalizeEmail(lead.email);
+        if (!map.has(key)) {
+          map.set(key, { category, lead });
+        }
       }
     }
   }

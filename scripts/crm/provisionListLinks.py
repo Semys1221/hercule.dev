@@ -21,7 +21,7 @@ for path in (str(_REPO_ROOT), str(_CRM_DIR)):
 
 load_dotenv(_REPO_ROOT / ".env")
 
-DEFAULT_LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c"
+DEFAULT_LIST_ID = "bfb0fc90-ec59-4d49-b266-3891f59d3ea8"
 DEFAULT_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6"
 DEFAULT_CATEGORY = "entreprise"
 
@@ -103,7 +103,9 @@ def provision_list_links(
     from supabase_repo import LeadCategory, get_client, load_email_index
 
     if category not in ("agence", "entreprise"):
-        raise ValueError(f"Invalid category: {category}")
+        raise ValueError(
+            f"Invalid category: {category} (comptable: use pnpm provision-comptable-links)"
+        )
 
     lead_category: LeadCategory = category  # type: ignore[assignment]
 

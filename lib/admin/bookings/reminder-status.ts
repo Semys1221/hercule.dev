@@ -9,7 +9,6 @@ const MAIN_SEQUENCE: BookingEmailType[] = [
   "immediate",
   "h48_confirm",
   "h24_relance",
-  "h20_cancel",
 ];
 
 const RECOVERY_SEQUENCE: BookingEmailType[] = ["role_seq_48", "role_seq_24"];
@@ -84,9 +83,7 @@ export function expectedReminderTypes(
     return RECOVERY_SEQUENCE;
   }
   if (kind === "main") {
-    return category === "entreprise"
-      ? MAIN_SEQUENCE.filter((type) => type !== "h20_cancel")
-      : MAIN_SEQUENCE;
+    return MAIN_SEQUENCE;
   }
   return [];
 }

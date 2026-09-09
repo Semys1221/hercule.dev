@@ -155,10 +155,8 @@ def _status_side_effects(old_statut: str, new_statut: str) -> list[str]:
     if old_statut == new_statut:
         return []
     messages: list[str] = []
-    if new_statut == "MEETING_BOOKED" and not _is_meeting_booked(old_statut):
-        messages.append("Déclencher la séquence d'emails Resend (immediate + relances) ?")
     if old_statut == "MEETING_BOOKED" and new_statut == "CONFIRMED":
-        messages.append("Les relances en attente (h48, h24, h20) seront annulées.")
+        messages.append("Les relances en attente seront annulées si présentes.")
     return messages
 
 
@@ -224,12 +222,7 @@ def _detect_statut_changes(edited: pd.DataFrame) -> list[dict]:
     return changes
 
 
-def _apply_statut_change(
-    change: dict,
-    *,
-    resend_mode: str | None = None,
-    scheduled_at: str | None = None,
-) -> None:
+def _apply_statut_change(change: dict) -> None:
     post_json(
         "/api/link-tracking/sync-status",
         {
@@ -238,19 +231,6 @@ def _apply_statut_change(
             "statut": change["new_statut"],
         },
     )
-    if (
-        change["new_statut"] == "MEETING_BOOKED"
-        and resend_mode
-        and resend_mode != "Do not trigger"
-    ):
-        payload: dict = {
-            "lead_id": change["id"],
-            "category": change["category"],
-            "mode": "scheduled" if resend_mode == "Schedule" else "now",
-        }
-        if resend_mode == "Schedule" and scheduled_at:
-            payload["scheduled_at"] = scheduled_at
-        post_json("/api/booking-communication/trigger", payload)
 
 
 @st.dialog("Confirmer les modifications de statut")
@@ -263,38 +243,12 @@ def _confirm_statut_changes_dialog(changes: list[dict]) -> None:
         for msg in change.get("side_effects") or []:
             st.caption(msg)
 
-    needs_resend = any(
-        c["new_statut"] == "MEETING_BOOKED" and not _is_meeting_booked(c["old_statut"])
-        for c in changes
-    )
-    resend_mode = "Do not trigger"
-    scheduled_at = ""
-    if needs_resend:
-        resend_mode = st.radio(
-            "Séquence Resend (leads passant en MEETING_BOOKED)",
-            ["Trigger now", "Schedule", "Do not trigger"],
-            key="dialog_resend_mode",
-        )
-        if resend_mode == "Schedule":
-            scheduled_at = st.text_input(
-                "Démarrage séquence (ISO, ex. 2026-09-10T09:00:00+02:00)",
-                key="dialog_resend_schedule",
-            )
-
     col_confirm, col_cancel = st.columns(2)
     with col_confirm:
         if st.button("Confirmer", type="primary", key="dialog_confirm_statut"):
             try:
                 for change in changes:
-                    mode = resend_mode if (
-                        change["new_statut"] == "MEETING_BOOKED"
-                        and not _is_meeting_booked(change["old_statut"])
-                    ) else None
-                    _apply_statut_change(
-                        change,
-                        resend_mode=mode,
-                        scheduled_at=scheduled_at or None,
-                    )
+                    _apply_statut_change(change)
                 st.session_state.pending_statut_changes = None
                 st.session_state.leads_editor_version = None
                 _reload_leads()
@@ -550,15 +504,6 @@ with tab_add:
     slug = st.text_input("Slug (laisser vide pour génération auto)")
     statut = st.selectbox("Statut initial", LEAD_STATUTS)
     calendly_json = st.text_area("Réponses Calendly (JSON optionnel)", value="{}")
-    send_resend = st.radio(
-        "Séquence Resend (si MEETING_BOOKED)",
-        ["Do not trigger", "Trigger now", "Schedule"],
-        horizontal=True,
-    )
-    scheduled_at = ""
-    if send_resend == "Schedule":
-        scheduled_at = st.text_input("Démarrage séquence (ISO)")
-
     if st.button("Créer le lead", type="primary"):
         if not email or "@" not in email:
             st.error("Email requis.")
@@ -594,16 +539,6 @@ with tab_add:
                         f"Entreprise: {urls['reservation_entreprise_link']}\n\n"
                         f"Confirmation: {urls['confirmation_agence_link']}"
                     )
-                    if statut == "MEETING_BOOKED" and send_resend != "Do not trigger":
-                        payload = {
-                            "lead_id": created["id"],
-                            "category": category,
-                            "mode": "scheduled" if send_resend == "Schedule" else "now",
-                        }
-                        if send_resend == "Schedule":
-                            payload["scheduled_at"] = scheduled_at
-                        post_json("/api/booking-communication/trigger", payload)
-                        st.info("Séquence Resend déclenchée.")
                     _reload_leads()
             except json.JSONDecodeError:
                 st.error("JSON Calendly invalide.")

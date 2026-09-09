@@ -1,3 +1,4 @@
+import { BOOKING_CONFIRMATION_DISABLED } from "@/lib/booking-communication/confirmation-disabled";
 import { dispatchDueJobsForLead } from "@/lib/booking-communication/orchestrator";
 import { insertJob } from "@/lib/booking-communication/jobs";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
@@ -115,6 +116,10 @@ async function enqueueModalitesJobs(
   lookup: LeadLookup,
   now: Date,
 ): Promise<void> {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return;
+  }
+
   const askSentAt = now;
   await insertJob({
     category: lookup.category,

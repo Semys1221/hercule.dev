@@ -22,7 +22,10 @@ import {
   leadSlug,
 } from "@/lib/link-tracking/urls";
 
-const DEFAULT_LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c";
+/** Active comptable intake list (Cabinets EC vol throughput recovery). */
+const DEFAULT_LIST_ID = "bfb0fc90-ec59-4d49-b266-3891f59d3ea8";
+/** Legacy list kept for dedup / historical rows. */
+export const LEGACY_COMPTABLE_LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c";
 const DEFAULT_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6";
 const DEFAULT_CATEGORY: LeadCategory = "comptable";
 const INSERT_BATCH_SIZE = 100;
@@ -89,20 +92,32 @@ async function attachCampaignLeadIds(
   campaignId: string,
   leads: ParsedLead[],
 ): Promise<ParsedLead[]> {
-  const enriched: ParsedLead[] = [];
-  for (const lead of leads) {
-    const campaignLead = await findLeadByEmailInCampaign(
-      apiKey,
-      campaignId,
-      lead.email,
+  const concurrency = Number.isFinite(PATCH_CONCURRENCY) ? PATCH_CONCURRENCY : 8;
+  const enriched = new Array<ParsedLead>(leads.length);
+
+  for (let start = 0; start < leads.length; start += concurrency) {
+    const chunk = leads.slice(start, start + concurrency);
+    const resolved = await Promise.all(
+      chunk.map(async (lead, index) => {
+        const campaignLead = await findLeadByEmailInCampaign(
+          apiKey,
+          campaignId,
+          lead.email,
+        );
+        const campaignLeadId = campaignLead?.id?.trim();
+        return {
+          index: start + index,
+          lead: campaignLeadId
+            ? { ...lead, instantlyLeadId: campaignLeadId }
+            : lead,
+        };
+      }),
     );
-    const campaignLeadId = campaignLead?.id?.trim();
-    enriched.push(
-      campaignLeadId
-        ? { ...lead, instantlyLeadId: campaignLeadId }
-        : lead,
-    );
+    for (const item of resolved) {
+      enriched[item.index] = item.lead;
+    }
   }
+
   return enriched;
 }
 

@@ -2,7 +2,7 @@ import type { BookingEmailType } from "./types";
 
 /** Ordered thread families — first type is plain-text root; rest are HTML follow-ups. */
 export const SEQUENCE_THREAD_FAMILIES: readonly BookingEmailType[][] = [
-  ["immediate", "h48_confirm", "h24_relance", "h20_cancel"],
+  ["immediate", "h48_confirm", "h24_relance"],
   ["role_seq_48", "role_seq_24"],
   ["product_calendly_welcome", "product_calendly_reminder"],
   ["product_payment_welcome"],

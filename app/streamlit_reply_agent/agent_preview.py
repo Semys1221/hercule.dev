@@ -285,6 +285,43 @@ def generate_reply_preview(
         ]
     )
 
+    knowledge_pack = build_knowledge_pack(config)
+    legal_anchors = (
+        "Nanguy Evan Gbeho",
+        "entrepreneur individuel",
+        "885 248 039",
+    )
+    pack_lower = knowledge_pack.lower()
+    # #region agent log
+    try:
+        requests.post(
+            "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
+            headers={
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "4c294f",
+            },
+            json={
+                "sessionId": "4c294f",
+                "runId": "pre-grok",
+                "hypothesisId": "A",
+                "location": "agent_preview.py:generate_reply_preview",
+                "message": "knowledge pack legal anchor coverage",
+                "data": {
+                    "niche_preset_id": config.get("niche_preset_id"),
+                    "target_type": config.get("target_type"),
+                    "anchors_present": {
+                        anchor: anchor.lower() in pack_lower for anchor in legal_anchors
+                    },
+                    "inbound_preview": truncate_inbound_text(inbound_text)[:120],
+                },
+                "timestamp": int(time.time() * 1000),
+            },
+            timeout=2,
+        )
+    except Exception:
+        pass
+    # #endregion
+
     try:
         decision, model, cost_ticks = _generate_with_models(system_prompt, user_prompt)
     except Exception as exc:
@@ -295,5 +332,38 @@ def generate_reply_preview(
             raise
         time.sleep(min(wait_s + 1.0, 90.0))
         decision, model, cost_ticks = _generate_with_models(system_prompt, user_prompt)
+
+    reply_text = decision.get("reply_text") or ""
+    reply_lower = reply_text.lower()
+    # #region agent log
+    try:
+        requests.post(
+            "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
+            headers={
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "4c294f",
+            },
+            json={
+                "sessionId": "4c294f",
+                "runId": "post-grok",
+                "hypothesisId": "C",
+                "location": "agent_preview.py:generate_reply_preview",
+                "message": "grok decision for inbound reply",
+                "data": {
+                    "should_reply": decision.get("should_reply"),
+                    "reason": decision.get("reason"),
+                    "reply_has_legal_name": "nanguy" in reply_lower,
+                    "reply_has_ei": "entrepreneur individuel" in reply_lower
+                    or " ei" in reply_lower,
+                    "reply_has_rcs": "885" in reply_lower or "rcs" in reply_lower,
+                    "reply_preview": reply_text[:180],
+                },
+                "timestamp": int(time.time() * 1000),
+            },
+            timeout=2,
+        )
+    except Exception:
+        pass
+    # #endregion
 
     return {**decision, "model": model, "cost_usd_ticks": cost_ticks}

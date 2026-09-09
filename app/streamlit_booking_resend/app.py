@@ -24,10 +24,12 @@ from templates_ui import render_templates_tab  # noqa: E402
 
 st.set_page_config(page_title="Booking Resend", layout="wide")
 st.title("Booking Resend")
-st.caption(
-    "Séquence auto pour les nouvelles réservations. "
-    "Les bookings agence antérieurs au go-live sont dans Agence Legacy."
+st.error(
+    "Module désactivé — les séquences de confirmation Resend et les annulations "
+    "automatiques (H-20, modalités T+24h) ne sont plus actives. "
+    "Les RDV Calendly en cours ne seront pas annulés pour absence de confirmation."
 )
+st.stop()
 
 tab_seq, tab_agence, tab_legacy, tab_entreprise, tab_historique = st.tabs(
     [

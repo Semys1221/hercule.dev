@@ -6,6 +6,7 @@ import {
 import { flowIdempotencyKey, hasBypassEvent, recordBypassEvent } from "./jobs";
 import { upsertPipelineStep, type PipelineStep } from "./pipeline";
 import { resolveThreadForReply } from "./thread-resolver";
+import { ensureCampaignLeadLinks } from "@/lib/link-tracking/provision-campaign-lead";
 import { readReservationLink, templateRequiresReservationLink } from "./reservation-links";
 import {
   buildTemplateVariables,
@@ -86,7 +87,7 @@ export async function executeBypassFlow(
   }
 
   const apiKey = getInstantlyApiKey();
-  const lead =
+  let lead =
     params.lead ??
     (await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail));
 
@@ -110,10 +111,28 @@ export async function executeBypassFlow(
     return { ok: false, error: "template_empty" };
   }
 
-  if (
-    templateRequiresReservationLink(customBodyHtml ?? template.body_html) &&
-    !readReservationLink(lead ?? undefined, params.webhookPayload ?? undefined)
-  ) {
+  const bodyHtml = customBodyHtml ?? template.body_html;
+  const needsReservationLink = templateRequiresReservationLink(bodyHtml);
+  let reservationLink = readReservationLink(
+    lead ?? undefined,
+    params.webhookPayload ?? undefined,
+  );
+
+  if (needsReservationLink && !reservationLink) {
+    const provisioned = await ensureCampaignLeadLinks({
+      campaignId,
+      leadEmail,
+    });
+    if (provisioned.ok) {
+      lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
+      reservationLink = readReservationLink(
+        lead ?? undefined,
+        params.webhookPayload ?? undefined,
+      );
+    }
+  }
+
+  if (needsReservationLink && !reservationLink) {
     await recordBypassEvent({
       idempotencyKey,
       flow,

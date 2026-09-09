@@ -215,9 +215,64 @@
             line-height: 1.6;
         }
 
+        .booking-intro.is-hidden,
+        .calendly-wrapper.is-hidden {
+            display: none;
+        }
+
         .booking-intro-date {
             color: var(--foreground);
             font-weight: 500;
+        }
+
+        .booking-closed {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px 32px;
+            background-color: rgba(24, 24, 27, 0.3);
+            text-align: center;
+        }
+
+        .booking-closed.is-hidden {
+            display: none;
+        }
+
+        .booking-closed-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted-foreground);
+        }
+
+        .booking-closed h3 {
+            font-size: 22px;
+            font-weight: 500;
+            margin: 0 0 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .booking-closed p {
+            font-size: 15px;
+            color: var(--muted-foreground);
+            margin: 0 0 12px;
+            line-height: 1.6;
+        }
+
+        .booking-closed a {
+            color: var(--foreground);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: opacity 0.15s ease;
+        }
+
+        .booking-closed a:hover {
+            opacity: 0.8;
         }
 
         .calendly-wrapper {
@@ -617,9 +672,17 @@
             </div>
 
             <div id="view-booking" class="view">
-                <h2>Planifier votre échange</h2>
+                <h2 id="booking-title">Planifier votre échange</h2>
                 <p class="booking-intro" id="booking-intro" aria-live="polite">Choisissez un créneau pour votre audit de compatibilité avec nos demandes.</p>
-                <div class="calendly-wrapper">
+                <div class="booking-closed is-hidden" id="booking-closed" aria-live="polite">
+                    <div class="booking-closed-icon" aria-hidden="true">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                    </div>
+                    <h3 id="booking-closed-title">Nous sommes complets</h3>
+                    <p id="booking-closed-pricing">Les tarifs démarrent à 998 €/mois.</p>
+                    <p id="booking-closed-cta">Pour réserver, envoyez un email au support : <a id="booking-closed-email" href="mailto:contact@hercule.dev">contact@hercule.dev</a></p>
+                </div>
+                <div class="calendly-wrapper" id="calendly-wrapper">
                     <div class="calendly-loader" id="calendly-loader" aria-live="polite">
                         <div class="loader-spinner" aria-hidden="true"></div>
                         <p class="loader-text">Chargement du calendrier…</p>
@@ -1027,6 +1090,44 @@
             void fetchCalendlyLinks();
         }
 
+        function showBookingClosed(message) {
+            var title = document.getElementById('booking-title');
+            var intro = document.getElementById('booking-intro');
+            var closed = document.getElementById('booking-closed');
+            var calendlyWrapper = document.getElementById('calendly-wrapper');
+            var closedTitle = document.getElementById('booking-closed-title');
+            var closedPricing = document.getElementById('booking-closed-pricing');
+            var closedCta = document.getElementById('booking-closed-cta');
+            var closedEmail = document.getElementById('booking-closed-email');
+
+            if (title) title.textContent = message && message.title ? message.title : 'Nous sommes complets';
+            if (intro) intro.classList.add('is-hidden');
+            if (closedTitle && message && message.title) closedTitle.textContent = message.title;
+            if (closedPricing && message && message.pricing) closedPricing.textContent = message.pricing;
+            if (closedEmail && message && message.contactEmail) {
+                closedEmail.textContent = message.contactEmail;
+                closedEmail.href = 'mailto:' + message.contactEmail;
+            }
+            if (closedCta && message && message.contactEmail) {
+                closedCta.innerHTML = 'Pour réserver, envoyez un email au support : <a id="booking-closed-email" href="mailto:' + message.contactEmail + '">' + message.contactEmail + '</a>';
+            }
+            if (closed) closed.classList.remove('is-hidden');
+            if (calendlyWrapper) calendlyWrapper.classList.add('is-hidden');
+            hideLoader();
+        }
+
+        async function fetchBookingConfig() {
+            try {
+                var response = await fetch('/api/booking/config');
+                var data = await response.json();
+                if (!response.ok) return null;
+                return data;
+            } catch (err) {
+                console.warn('[booking-config]', err);
+                return null;
+            }
+        }
+
         function initCalendlyWidget() {
             Calendly.initInlineWidget({
                 url: buildCalendlyUrl(CALENDLY_EVENT_URL),
@@ -1055,18 +1156,27 @@
             showConfirmation();
         } else {
             void trackClick();
-            void fetchAvailabilityMessage('agence');
 
-            function bootCalendly() {
-                if (window.Calendly) {
-                    initCalendlyWidget();
-                } else {
-                    window.setTimeout(bootCalendly, 50);
+            void fetchBookingConfig().then(function(config) {
+                var isClosed = !config || config.agenceBookingClosed;
+                if (isClosed) {
+                    showBookingClosed(config && config.agenceBookingClosedMessage ? config.agenceBookingClosedMessage : null);
+                    return;
                 }
-            }
 
-            bootCalendly();
-            window.setTimeout(hideLoader, 8000);
+                void fetchAvailabilityMessage('agence');
+
+                function bootCalendly() {
+                    if (window.Calendly) {
+                        initCalendlyWidget();
+                    } else {
+                        window.setTimeout(bootCalendly, 50);
+                    }
+                }
+
+                bootCalendly();
+                window.setTimeout(hideLoader, 8000);
+            });
         }
     </script>
 </body>

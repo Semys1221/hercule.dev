@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 import {
+  BOOKING_CONFIRMATION_DISABLED,
+  bookingConfirmationDisabledResponse,
+  isDisabledMeetingConfirmationType,
+} from "@/lib/booking-communication/confirmation-disabled";
+import {
   isBookingEmailType,
   verifyBookingCommunicationSecret,
 } from "@/lib/booking-communication/route-utils";
@@ -35,6 +40,13 @@ export async function POST(request: Request) {
       { error: "lead_id, category, email_type required" },
       { status: 400 },
     );
+  }
+
+  if (
+    BOOKING_CONFIRMATION_DISABLED &&
+    isDisabledMeetingConfirmationType(body.email_type)
+  ) {
+    return NextResponse.json(bookingConfirmationDisabledResponse(), { status: 409 });
   }
 
   try {

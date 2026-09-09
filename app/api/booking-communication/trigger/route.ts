@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import {
+  BOOKING_CONFIRMATION_DISABLED,
+  bookingConfirmationDisabledResponse,
+} from "@/lib/booking-communication/confirmation-disabled";
 import { startBookingSequence } from "@/lib/booking-communication/orchestrator";
 import { parseEmailTypes, parseHtmlByType, verifyBookingCommunicationSecret } from "@/lib/booking-communication/route-utils";
 import { syncLeadStatutToInstantly } from "@/lib/link-tracking/instantly";
@@ -16,6 +20,10 @@ function isCategory(value: unknown): value is LeadCategory {
 }
 
 export async function POST(request: Request) {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return NextResponse.json(bookingConfirmationDisabledResponse(), { status: 409 });
+  }
+
   if (!verifyBookingCommunicationSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

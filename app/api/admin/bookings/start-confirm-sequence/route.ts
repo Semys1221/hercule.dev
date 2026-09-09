@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import {
+  BOOKING_CONFIRMATION_DISABLED,
+  bookingConfirmationDisabledResponse,
+} from "@/lib/booking-communication/confirmation-disabled";
 import { resolveBookingLead } from "@/lib/admin/bookings/resolve-booking-lead";
 import { startSequenceForBookedLead } from "@/lib/booking-communication/route-sequence";
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
@@ -13,6 +17,10 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return NextResponse.json(bookingConfirmationDisabledResponse(), { status: 409 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();

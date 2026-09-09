@@ -91,6 +91,14 @@ class LegalContentTests(unittest.TestCase):
         reply_safe = pack.split("## Reply-safe facts (condensed)", 1)[1]
         self.assertIn("Hercule Comptable", reply_safe)
         self.assertNotIn("Starter 1 489", reply_safe)
+        for anchor in (
+            "Nanguy Evan Gbeho",
+            "entrepreneur individuel",
+            "885 248 039",
+            "Qui êtes-vous ? De quelle structure dépendez-vous ?",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, pack)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import {
+  BOOKING_CONFIRMATION_DISABLED,
+  bookingConfirmationDisabledResponse,
+} from "@/lib/booking-communication/confirmation-disabled";
 import { startRoleRecoverySequence } from "@/lib/booking-communication/orchestrator";
 import {
   parseHtmlByType,
@@ -37,6 +41,10 @@ function parseRoleRecoveryEmailTypes(value: unknown): BookingEmailType[] | null 
 }
 
 export async function POST(request: Request) {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return NextResponse.json(bookingConfirmationDisabledResponse(), { status: 409 });
+  }
+
   if (!verifyBookingCommunicationSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

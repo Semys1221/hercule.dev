@@ -1,6 +1,9 @@
 export const CALENDLY_AGENCE_URL = "/reservation.html"
 export const CALENDLY_ENTREPRISE_URL = "/reservation-entreprise.html"
 
+/** When true, agence Calendly booking is disabled — reservation.html shows a waitlist message. */
+export const AGENCE_BOOKING_CLOSED = true
+
 export const TEAM_IMAGE_URL =
   "https://grzs6rqzvzupoxv9.public.blob.vercel-storage.com/team%20images/Generated%20Image%20August%2028%2C%202026%20-%206_32PM-optimized.webp"
 

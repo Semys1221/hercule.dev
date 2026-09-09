@@ -59,6 +59,18 @@ Renoyer vers **hercule.dev/cvg/comptable** pour le détail. En résumé interne 
 - **Commission Hercule ?** Non. Jamais de facturation dirigeant.
 - **Réserver RDV ?** Via le lien Calendly dans l'email de proposition.
 
+## Identité légale Hercule (questions « qui êtes-vous / quelle structure »)
+
+- **Raison sociale** : **Nanguy Evan Gbeho** — **entrepreneur individuel (EI)**.
+- **Dénomination commerciale** : **Hercule** (nom commercial alternatif : Goscale France).
+- **Siège / établissement** : 4 rue Claude Bonnier, 33000 Bordeaux.
+- **RCS** : 885 248 039 R.C.S. Bordeaux (immatriculation : 22/04/2025).
+- **Greffe** : Tribunal de Commerce de Bordeaux — n° de gestion 2025A02250.
+- **TVA** : non applicable — art. 293 B du CGI (franchise en base).
+- **Directeur de publication** : Evan Nanguy.
+- Hercule **n'est pas** une société (SARL, SAS, etc.) ni une filiale d'un groupe : c'est l'activité B2B exploitée par l'EI ci-dessus.
+- Détail : **hercule.dev/mentions-legales**.
+
 ## Contact & légal
 
 - Contact : **contact@hercule.dev**

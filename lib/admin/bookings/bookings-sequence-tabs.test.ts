@@ -23,7 +23,7 @@ assert.ok(comptableMeeting);
 assert.equal(comptableMeeting?.bookingCategory, "comptable");
 assert.deepEqual(
   bookingSequenceTypesFor("meeting-comptable", "comptable"),
-  ["immediate", "h48_confirm", "h24_relance", "h20_cancel"],
+  ["immediate", "h48_confirm", "h24_relance"],
 );
 
 const agenceLive = bookingsSequenceTabsForNiche("agence");

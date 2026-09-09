@@ -34,6 +34,10 @@ import { modalitesConfirmUrlFor } from "@/lib/modalites-campaign/urls";
 import { enforceModalitesCancelForLead } from "@/lib/modalites-campaign/enforce-cancel";
 import { prepareThreadedSend } from "./threaded-send";
 import { bypassesSendWindow, isWithinSendWindow, nextSendSlot } from "./send-window";
+import {
+  BOOKING_CONFIRMATION_DISABLED,
+  isDisabledMeetingConfirmationType,
+} from "./confirmation-disabled";
 import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
 import type { RenderedBookingEmail } from "./types";
 
@@ -50,7 +54,6 @@ const MAIN_AGENCE_TYPES: BookingEmailType[] = [
   "immediate",
   "h48_confirm",
   "h24_relance",
-  "h20_cancel",
 ];
 
 const CABINET_BOOKING_TYPES: BookingEmailType[] = [
@@ -131,6 +134,10 @@ function jobKey(
 export async function startBookingSequence(
   params: StartSequenceParams,
 ): Promise<{ started: boolean; reason?: string }> {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return { started: false, reason: "confirmation_disabled" };
+  }
+
   const { lead, category, triggeredBy } = params;
 
   if (!params.partial && (await hasSequenceStarted(lead.id))) {
@@ -176,6 +183,10 @@ export async function startBookingSequence(
 export async function startRoleRecoverySequence(
   params: StartSequenceParams,
 ): Promise<{ started: boolean; reason?: string }> {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return { started: false, reason: "confirmation_disabled" };
+  }
+
   const { lead, category, triggeredBy } = params;
 
   if (category !== "agence") {
@@ -297,6 +308,11 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
   }
 
   if (lead.statut === "CANCELLED") {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  if (isDisabledMeetingConfirmationType(job.email_type)) {
     await cancelJob(job.id);
     return true;
   }
