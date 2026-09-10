@@ -58,6 +58,7 @@ function assembleSystemPrompt(params: {
   maxSentences?: number;
   customDirective?: string;
   nichePresetId?: string;
+  bookingContext?: string | null;
 }): string {
   const parts = [
     buildGlobalRules(params.maxSentences ?? 3, params.nichePresetId),
@@ -68,6 +69,14 @@ function assembleSystemPrompt(params: {
     "## Prompt campagne",
     params.promptSnapshot,
   ];
+  const bookingContext = params.bookingContext?.trim();
+  if (bookingContext) {
+    parts.push(
+      "",
+      "## Contexte Calendly (ne pas inventer)",
+      bookingContext,
+    );
+  }
   const directive = params.customDirective?.trim();
   if (directive) {
     parts.push("", "## Directive custom (opérateur)", directive);
@@ -178,6 +187,7 @@ export async function generateReplyDecision(params: {
   maxSentences?: number;
   customDirective?: string;
   interestLabel?: string | null;
+  bookingContext?: string | null;
 }): Promise<{
   decision: GroqReplyDecision;
   model: string;
@@ -217,6 +227,7 @@ export async function generateReplyDecision(params: {
     maxSentences: params.maxSentences,
     customDirective: params.customDirective,
     nichePresetId: params.nichePresetId,
+    bookingContext: params.bookingContext,
   });
 
   const userPrompt = [

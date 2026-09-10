@@ -5,12 +5,17 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
+from pathlib import Path
+
 from agent_preview import (
     assemble_system_prompt,
     build_global_rules,
+    build_knowledge_pack,
     generate_reply_preview,
     truncate_inbound_text,
 )
+
+_PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 
 class BuildGlobalRulesTests(unittest.TestCase):
@@ -80,6 +85,24 @@ class AssembleSystemPromptTests(unittest.TestCase):
         )
         self.assertNotIn("## Directive custom (opérateur)", prompt)
 
+    def test_comptable_system_prompt_includes_bandwidth_guidance(self) -> None:
+        config = {
+            "niche_preset_id": "cabinets_expertise_comptable",
+            "target_type": "buyer",
+            "niche_metadata": {
+                "angle": "Cabinets expertise comptable",
+                "effectif_cible": ">3",
+            },
+        }
+        buyer_prompt = (
+            _PROMPTS_DIR / "cabinets_expertise_comptable_buyer.md"
+        ).read_text(encoding="utf-8")
+        prompt = assemble_system_prompt(config, buyer_prompt, max_sentences=3)
+        lower = prompt.lower()
+        self.assertIn("bande passante", lower)
+        self.assertIn("visioconférence", lower)
+        self.assertIn("je n'ai pas 3 collaborateurs", lower)
+
 
 class TruncateInboundTests(unittest.TestCase):
     def test_short_text_unchanged(self) -> None:
@@ -109,6 +132,57 @@ class GenerateReplyPreviewTests(unittest.TestCase):
         mock_grok.assert_not_called()
         self.assertFalse(preview["should_reply"])
         self.assertIn("Not interested", preview["reason"])
+
+    def test_jomega_collaborator_objection_reply_preview(self) -> None:
+        config = {
+            "prompt_snapshot": (
+                _PROMPTS_DIR / "cabinets_expertise_comptable_buyer.md"
+            ).read_text(encoding="utf-8"),
+            "target_type": "buyer",
+            "niche_preset_id": "cabinets_expertise_comptable",
+            "niche_metadata": {},
+            "max_sentences": 3,
+        }
+        inbound = (
+            "Je n'ai pas 3 collaborateurs. Nous sommes 2 associés avec une partie "
+            "sous-traités à un ami qui a aussi son cabinet. "
+            "C'est donc problématique d'après ce que vous me dites.."
+        )
+        decision = {
+            "should_reply": True,
+            "reply_text": (
+                "Merci pour votre message. L'enjeu est la bande passante pour "
+                "intégrer des visioconférences qualifiantes, pas des appels de "
+                "10 minutes, tout en assurant la production comptable.\n\n"
+                "https://www.hercule.dev/reservation-entreprise.html/test\n\n"
+                "Béatrice Meyer\nhercule.dev"
+            ),
+            "reason": "Objection éligibilité couverte par le pack connaissances.",
+        }
+        reserve = "https://www.hercule.dev/reservation-entreprise.html/test"
+        links = {
+            "primary": reserve,
+            "agence_link": reserve,
+            "entreprise_link": reserve,
+            "comptable_link": reserve,
+        }
+        with (
+            patch(
+                "agent_preview._generate_with_models",
+                return_value=(decision, "grok-test", None),
+            ),
+            patch("agent_preview.resolve_prompt_links", return_value=links),
+        ):
+            preview = generate_reply_preview(
+                config,
+                inbound,
+                "jomega.expertise@gmail.com",
+                interest_label="Interested",
+            )
+        self.assertTrue(preview["should_reply"])
+        self.assertIn("bande passante", (preview.get("reply_text") or "").lower())
+        pack = build_knowledge_pack(config)
+        self.assertIn("bande passante", pack.lower())
 
 
 if __name__ == "__main__":

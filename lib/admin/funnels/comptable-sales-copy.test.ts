@@ -7,6 +7,9 @@ import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import {
   COMPTABLE_DIFFERENTIATOR_OPTIONS,
   COMPTABLE_ENTERPRISES_MONITORED_LABEL,
+  COMPTABLE_MODEL_HIGHLIGHTS,
+  COMPTABLE_NICHE_BENCHMARK,
+  COMPTABLE_PERFORMANCE_REPORTING_RULE,
   COMPTABLE_PRESENTATION_PARAGRAPHS,
   COMPTABLE_SIGNALS,
   COMPTABLE_TYPICAL_MONTHLY_HONORAIRES_CENTS,
@@ -32,6 +35,15 @@ function main() {
   assert.equal(COMPTABLE_DIFFERENTIATOR_OPTIONS.length, 7);
   const labels = COMPTABLE_DIFFERENTIATOR_OPTIONS.map((option) => option.label).join(" ");
   assert.doesNotMatch(labels, /moins cher/i);
+
+  const userFacingCopy = [
+    ...COMPTABLE_PRESENTATION_PARAGRAPHS,
+    ...COMPTABLE_MODEL_HIGHLIGHTS.map((item) => item.description),
+    ...COMPTABLE_NICHE_BENCHMARK.advantages.items,
+    ...COMPTABLE_NICHE_BENCHMARK.disadvantages.items,
+    COMPTABLE_PERFORMANCE_REPORTING_RULE.description,
+  ].join(" ");
+  assert.doesNotMatch(userFacingCopy, /\bMRR\b/i);
 
   console.log("OK lib/admin/funnels/comptable-sales-copy.test.ts");
 }

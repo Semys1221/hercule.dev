@@ -66,7 +66,7 @@ export const COMPTABLE_MODEL_HIGHLIGHTS = [
   {
     title: "3 000 €",
     description:
-      "de MRR garanti en Hercule Starter après 10 missions — lettres de mission signées, pas une promesse de volume seul.",
+      "de revenus récurrents garantis en Hercule Starter après 10 missions — lettres de mission signées, pas une promesse de volume seul.",
   },
   {
     title: COMPTABLE_ENTERPRISES_MONITORED_LABEL,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
 from legal_content import (
     build_knowledge_pack_cached,
@@ -96,9 +97,35 @@ class LegalContentTests(unittest.TestCase):
             "entrepreneur individuel",
             "885 248 039",
             "Qui êtes-vous ? De quelle structure dépendez-vous ?",
+            "bande passante",
+            "visioconférences",
+            "Je n'ai pas 3 collaborateurs",
+            "Rémunérez-vous les apporteurs",
         ):
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, pack)
+
+    def test_comptable_ai_reply_knowledge_includes_bandwidth(self) -> None:
+        bundle = get_ai_reply_knowledge_markdown(comptable=True)
+        self.assertIn("bande passante", bundle.lower())
+        self.assertIn("visio", bundle.lower())
+
+    def test_comptable_buyer_prompt_covers_objections(self) -> None:
+        prompt_path = (
+            Path(__file__).resolve().parent
+            / "prompts"
+            / "cabinets_expertise_comptable_buyer.md"
+        )
+        body = prompt_path.read_text(encoding="utf-8").lower()
+        for anchor in (
+            "bande passante",
+            "visioconférence",
+            "sous-traitance",
+            "apporteur",
+            "à quelles heures",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, body)
 
 
 if __name__ == "__main__":

@@ -74,6 +74,7 @@ def assemble_system_prompt(
     *,
     max_sentences: int = 3,
     custom_directive: str | None = None,
+    booking_context: str | None = None,
 ) -> str:
     niche_preset_id = str(config.get("niche_preset_id") or "")
     parts = [
@@ -88,6 +89,9 @@ def assemble_system_prompt(
     directive = (custom_directive or "").strip()
     if directive:
         parts.extend(["", "## Directive custom (opérateur)", directive])
+    calendly_context = (booking_context or "").strip()
+    if calendly_context:
+        parts.extend(["", "## Contexte Calendly (ne pas inventer)", calendly_context])
     return "\n".join(parts)
 
 
@@ -239,6 +243,7 @@ def generate_reply_preview(
     max_sentences: int | None = None,
     custom_directive: str | None = None,
     interest_label: str | None = None,
+    lead_name: str | None = None,
 ) -> dict[str, Any]:
     prompt_snapshot = (
         prompt_override
@@ -268,11 +273,22 @@ def generate_reply_preview(
     )
     sentence_count = _max_sentences_from_config(config, max_sentences)
 
+    from calendly_booking import resolve_booking_context
+
+    booking_context = resolve_booking_context(
+        campaign_id=str(config.get("campaign_id") or ""),
+        niche_preset_id=str(config.get("niche_preset_id") or ""),
+        inbound_text=inbound_text,
+        lead_email=lead_email,
+        lead_name=(lead_name or lead_email).strip(),
+    )
+
     system_prompt = assemble_system_prompt(
         config,
         prompt_snapshot,
         max_sentences=sentence_count,
         custom_directive=custom_directive,
+        booking_context=booking_context,
     )
     user_prompt = "\n".join(
         [

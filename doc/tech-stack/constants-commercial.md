@@ -79,8 +79,9 @@ export const OFFER_TYPES_COMPTABLE = {
 } as const;
 
 export const COMMERCIAL_COMPTABLE = {
-  starterPriceCents: 99_800,              // Lite — 998 €, 5 missions
-  starterMissions: 5,
+  starterPriceCents: 99_800,              // Lite — 998 €/mois, 5 missions/mois
+  liteMissionsPerMonth: 5,
+  starterMissions: 5,                   // alias liteMissionsPerMonth
   monthlyPriceCents: 149_900,             // Starter — 1 499 €/mois, 10 missions/mois
   growthMissionsPerMonth: 10,
   growthGuaranteeMrrCents: 300_000,       // 3 000 € MRR cumulé ou 5 remplacements
@@ -96,4 +97,4 @@ export const COMMERCIAL_COMPTABLE = {
 } as const;
 ```
 
-Nomenclature UI (2026-09-10) : **Lite** (entrée 998 €) · **Starter** (mensuel 1 499 €) · **Pack 3 mois Starter** (3 598 €). Ne pas réintroduire « Croissance », « Starter 999 € » ni le libellé « TTC ».
+Nomenclature UI (2026-09-10) : **Lite** (entrée 998 €/mois, 5 missions/mois) · **Starter** (mensuel 1 499 €, 10 missions/mois) · **Pack 3 mois Starter** (3 598 €, paiement unique). Ne pas réintroduire « Croissance », « Starter 999 € » ni le libellé « TTC ».

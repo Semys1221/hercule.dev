@@ -97,10 +97,11 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **998 €** (paiement unique) |
-| **Contenu** | **5 missions PME/TPE/indépendants** qualifiées |
+| **Prix** | **998 € / mois** |
+| **Contenu** | Service actif de mise en relation ; **5 missions PME/TPE/indépendants / mois** ; cycle **30 jours** |
 | **Premier RDV** | Sous **20 à 25 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
+| **Engagement** | Aucun. Résiliation : article 13 |
 | **Garantie MRR** | **Aucune** — uniquement garantie no-show (article 10.1) |
 | **Garantie signature** | **Aucune** (article 10.3) |
 
@@ -134,10 +135,11 @@ Ne font pas l'objet des présentes : offres agence web (1 489 €, 2 500 € vit
 
 ## 6. Commande, paiement et facturation
 
-La commande est ferme lorsque le Client accepte les présentes CGV et que le paiement intégral est reçu par Hercule.
+La commande est ferme lorsque le Client accepte les présentes CGV et que le paiement est reçu par Hercule.
 
 - Paiement par lien Stripe ou virement sur facture.
-- Offre mensuelle : facturation mensuelle à date anniversaire.
+- **Hercule Lite et Hercule Starter** : abonnement mensuel Stripe ; facturation à date anniversaire ; renouvellement automatique jusqu'à résiliation (article 13).
+- **Pack 3 mois Starter** : paiement intégral unique à la souscription.
 - Retard de paiement : pénalités au taux légal ; suspension après **7 jours** sans régularisation.
 
 ---
@@ -166,7 +168,7 @@ Lors de l'onboarding, le Client peut **renoncer** à ce délai pour lancer la re
 |-------|-------|
 | Accès onboarding après paiement | **48 heures** |
 | Premier RDV planifié | **20 à 25 jours** |
-| Rythme Lite | **5 missions** (paiement unique) |
+| Rythme Hercule Lite | **5 missions PME / mois** (cycle 30 jours) |
 | Rythme Hercule Starter | **10 missions PME / mois** (cycle 30 jours) |
 | Garantie MRR Starter | **3 000 €** cumulés après 10 missions, ou **5 remplacements** |
 | Garantie MRR pack | **9 000 €** cumulés après 30 missions, ou **15 remplacements** (5 par tranche de 10 missions) |
@@ -222,7 +224,7 @@ Hercule s'engage à mettre en œuvre les moyens raisonnables pour qualifier et a
 
 ## 13. Durée, résiliation et suspension
 
-**Offre mensuelle :** durée indéterminée ; résiliation Client avec **30 jours** de préavis par email à contact@hercule.dev.
+**Hercule Lite et Hercule Starter (offres mensuelles) :** durée indéterminée ; résiliation Client avec **30 jours** de préavis par email à contact@hercule.dev. L'abonnement Stripe est résilié à l'échéance du préavis.
 
 **Pack 3 mois :** jusqu'à expiration des 3 mois ou résiliation.
 
@@ -248,6 +250,7 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-10b | 10 sept. 2026 | Hercule Lite **998 €/mois** (5 missions/mois, abonnement) · Hercule Starter **1 499 €/mois** (abonnement Stripe) |
 | 2026-09-10 | 10 sept. 2026 | Hercule Lite **998 €** · premier RDV **20 à 25 jours** · retrait mentions TTC |
 | 2026-09-09b | 9 sept. 2026 | Garantie MRR — 5 remplacements (Starter, seuil 3 000 € / 10 missions) · 15 remplacements (Pack, seuil 9 000 € / 30 missions, 5 par tranche) |
 | 2026-09-09 | 9 sept. 2026 | Renommage offres — Lite 999 €, Hercule Starter 1 499 € (10 missions), Pack 3 mois 3 598 € |

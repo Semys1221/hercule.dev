@@ -44,7 +44,7 @@ export function modalitesFormulas(audience: LeadCategory): ModalitesFormula[] {
     const guaranteeMrr = formatEurosFromCents(
       COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents,
     );
-    const mrrPerMission = formatEurosFromCents(
+    const monthlyHonorairesPerMission = formatEurosFromCents(
       COMMERCIAL_COMPTABLE.mrrPerSignedMissionCents,
     );
     const missions = COMMERCIAL_COMPTABLE.growthMissionsPerMonth;
@@ -52,7 +52,7 @@ export function modalitesFormulas(audience: LeadCategory): ModalitesFormula[] {
       {
         name: "Hercule Starter",
         recommended: true,
-        detail: `Hercule — ${missions} missions PME/TPE/indépendants / mois (${growthPrice}/mois) — recommandé pour les cabinets. Garantie ${guaranteeMrr} de MRR à la signature (${missions} lettres de mission × ${mrrPerMission} de MRR par mission, soit ${COMMERCIAL_COMPTABLE.valueShowcaseAnnualHonorairesLabel} d'honoraires annuels / 12).`,
+        detail: `Hercule — ${missions} missions PME/TPE/indépendants / mois (${growthPrice}/mois) — recommandé pour les cabinets. Garantie ${guaranteeMrr} de revenus récurrents à la signature (${missions} lettres de mission × ${monthlyHonorairesPerMission} d'honoraires mensualisés par mission, soit ${COMMERCIAL_COMPTABLE.valueShowcaseAnnualHonorairesLabel} d'honoraires annuels / 12).`,
       },
       {
         name: "Hercule Lite",

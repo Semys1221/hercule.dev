@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-10T12:00:00.000Z",
+  "updatedAt": "2026-09-10T18:30:00.000Z",
   "entries": [
     {
       "id": "faq-cp-001",
@@ -12,13 +12,13 @@
     {
       "id": "faq-cp-002",
       "question": "Qui peut postuler ?",
-      "answer": "Pour recevoir ce type de contrat, votre cabinet doit compter plus de 3 associés ou collaborateurs. L'éligibilité est confirmée lors de l'audit de compatibilité.",
+      "answer": "Les cabinets avec une bande passante suffisante pour absorber de nouveaux dossiers. Le seuil de plus de 3 associés ou collaborateurs est un indicateur de capacité, pas un refus automatique. L'éligibilité est confirmée lors de l'audit de compatibilité.",
       "cvgLink": true
     },
     {
       "id": "faq-cp-003",
       "question": "Combien coûte Hercule ?",
-      "answer": "Hercule Lite : 998 € one-shot — 5 missions PME, aucune garantie MRR. Hercule Starter : 1 499 €/mois — 10 missions PME/TPE/indépendants par mois, garantie 3 000 € de MRR cumulé ou 5 missions de remplacement. Pack 3 mois Starter : 3 598 € (−20 %) — 10 missions/mois sur 3 mois, garantie 9 000 € de MRR cumulé ou jusqu'à 15 remplacements (5 par tranche de 10 missions). 0 % de commission sur vos honoraires.",
+      "answer": "Hercule Lite : 998 €/mois — 5 missions PME par mois, aucune garantie MRR. Hercule Starter : 1 499 €/mois — 10 missions PME/TPE/indépendants par mois, garantie 3 000 € de MRR cumulé ou 5 missions de remplacement. Pack 3 mois Starter : 3 598 € (−20 %, paiement unique) — 10 missions/mois sur 3 mois, garantie 9 000 € de MRR cumulé ou jusqu'à 15 remplacements (5 par tranche de 10 missions). 0 % de commission sur vos honoraires.",
       "cvgLink": true
     },
     {
@@ -59,6 +59,30 @@
       "id": "faq-cp-010",
       "question": "Ai-je un délai de rétractation ?",
       "answer": "Oui. Par défaut, vous disposez de 4 jours calendaires après souscription pour vous rétracter, tant que l'activation n'a pas démarré. Vous pouvez renoncer à ce délai lors de l'onboarding ou à tout moment depuis votre dashboard pour lancer la recherche immédiatement.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-011",
+      "question": "Je n'ai pas 3 collaborateurs — suis-je éligible ?",
+      "answer": "L'enjeu n'est pas le décompte strict : c'est la bande passante pour intégrer des visioconférences qualifiantes (Zoom provisionné), pas des appels téléphoniques de 10 minutes, tout en assurant la production comptable. Si votre cabinet a la capacité — y compris via une sous-traitance stable à un partenaire de confiance — vous pouvez candidater via l'audit de compatibilité Calendly.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-012",
+      "question": "Les mensualités sont trop élevées — pouvez-vous expliquer ?",
+      "answer": "Hercule Starter inclut 10 missions qualifiées par mois, une garantie MRR et 0 % de commission sur vos honoraires signés. Tant que vous avez la capacité d'absorber de nouveaux dossiers, Hercule Lite (998 €/mois, 5 missions/mois) peut servir d'offre d'entrée. Détail des formules : hercule.dev/cvg/comptable.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-013",
+      "question": "Puis-je vous joindre par téléphone plutôt que via le formulaire ?",
+      "answer": "Les échanges se font en visioconférence planifiée (Calendly + Zoom provisionnés par Hercule), pas en appel téléphonique ad hoc. Indiquez vos disponibilités (« à quelle heure cette semaine ? ») et réservez un créneau via le lien Calendly.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-014",
+      "question": "Rémunérez-vous les apporteurs d'affaires ?",
+      "answer": "Hercule ne rémunère pas les apporteurs. Le cabinet souscrit à Hercule pour recevoir des missions qualifiées et exclusives. Hercule ne prélève aucune commission sur les honoraires que vous signez avec le dirigeant, et le dirigeant ne paie rien à Hercule.",
       "cvgLink": true
     }
   ]

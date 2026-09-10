@@ -217,8 +217,10 @@ export const FORBIDDEN_COPY = [
  * Stripe offer types: OFFER_TYPES_COMPTABLE (starter_999_5 / monthly_1499 / pack_3x1499).
  */
 export const COMMERCIAL_COMPTABLE = {
-  /** Hercule Lite — 998 € one-shot, 5 missions, aucune garantie MRR (offer type starter_999_5) */
+  /** Hercule Lite — 998 €/mois, 5 missions/mois, aucune garantie MRR (offer type starter_999_5) */
   starterPriceCents: 99_800,
+  liteMissionsPerMonth: 5,
+  /** @deprecated Use liteMissionsPerMonth */
   starterMissions: 5,
 
   /** Hercule Starter — mensuel sans engagement — 1 499 €/mois, 10 missions (offer type monthly_1499) */

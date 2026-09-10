@@ -122,7 +122,7 @@ export function buildSalesIntroScript(
 
   if (isComptableSalesAudience(audience)) {
     const eligibilityLine = fields.budgetConfirmed
-      ? "Tu as confirmé les informations de ton formulaire Calendly — cabinet éligible (> 3 associés ou collaborateurs) et positionnement compatible avec nos missions TPE."
+      ? "Tu as confirmé les informations de ton formulaire Calendly — bande passante compatible avec nos missions TPE et positionnement aligné."
       : "Nous avons noté les informations de votre formulaire Calendly concernant votre cabinet et votre zone d'intervention.";
 
     return `${fields.firstName}, ravi de t'avoir en ligne — Evan d'Hercule Comptable.

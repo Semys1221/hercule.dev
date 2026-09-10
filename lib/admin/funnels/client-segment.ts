@@ -61,12 +61,7 @@ export function interpolateQuestionCopy<T extends InterpolatableQuestion>(
   };
 }
 
-export const COMPTABLE_Q11_DISABLED_OPTION_IDS = new Set([
-  "pme_small",
-  "pme_medium",
-  "eti",
-  "enterprise",
-]);
+export const COMPTABLE_Q11_DISABLED_OPTION_IDS = new Set(["eti", "enterprise"]);
 
 export function sanitizeComptableQ11Selection(q11: string[]): string[] {
   return q11.filter((id) => !COMPTABLE_Q11_DISABLED_OPTION_IDS.has(id));

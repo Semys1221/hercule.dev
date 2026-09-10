@@ -2,8 +2,19 @@ import { upsertLeadReply } from "./lead-replies";
 import { isAutoSendEnabled, isCampaignConfigReady, loadAiReplyConfig } from "./config";
 import { isHandledReplyAgentEvent, isOooReplyEvent } from "./events";
 import { generateReplyDecision, interestLabelFromStatus } from "./grok";
+import {
+  inboundLooksLikePhoneRequest,
+  inboundLooksLikeQuestion,
+  inboundLooksLikeSchedulingAnswer,
+} from "./inbound-question";
 import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack } from "./knowledge";
+import {
+  bookFromInbound,
+  formatBookingContextForGrok,
+  type BookFromInboundMode,
+} from "@/lib/calendly/book-from-inbound";
+import { resolveCategoryForCampaign } from "@/lib/link-tracking/provision-campaign-lead";
 import {
   insertInboundMessage,
   insertOutboundMessage,
@@ -37,6 +48,54 @@ function readInboundText(payload: InstantlyReplyWebhookPayload): string {
   const html = payload.reply_html?.trim();
   if (html) return stripHtml(html);
   return payload.reply_text_snippet?.trim() ?? "";
+}
+
+function resolveLeadDisplayName(
+  lead: { first_name?: string | null; last_name?: string | null } | null,
+  leadEmail: string,
+): string {
+  const parts = [lead?.first_name, lead?.last_name]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean);
+  if (parts.length > 0) {
+    return parts.join(" ");
+  }
+  return leadEmail;
+}
+
+async function resolveBookingContext(params: {
+  campaignId: string;
+  inboundText: string;
+  leadEmail: string;
+  leadName: string;
+}): Promise<string | null> {
+  try {
+    const category = await resolveCategoryForCampaign(params.campaignId);
+    if (category !== "comptable") {
+      return null;
+    }
+
+    const mode: BookFromInboundMode = inboundLooksLikeSchedulingAnswer(
+      params.inboundText,
+    )
+      ? "try_book"
+      : inboundLooksLikePhoneRequest(params.inboundText)
+        ? "suggest_slots"
+        : "none";
+
+    const result = await bookFromInbound({
+      event: "comptable",
+      leadEmail: params.leadEmail,
+      leadName: params.leadName,
+      inboundText: params.inboundText,
+      mode,
+    });
+    return formatBookingContextForGrok(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn("[ai-reply-agent] calendly booking failed:", message);
+    return null;
+  }
 }
 
 export async function handleInstantlyReply(
@@ -97,7 +156,8 @@ export async function handleInstantlyReply(
     };
   }
 
-  if (await hasRecentHerculeCollision({ campaignId, leadEmail })) {
+  const recentCollision = await hasRecentHerculeCollision({ campaignId, leadEmail });
+  if (recentCollision && !inboundLooksLikeQuestion(inboundText)) {
     await updateInboundStatus(
       inbound.id,
       "skipped_collision",
@@ -159,6 +219,12 @@ export async function handleInstantlyReply(
   let model: string;
   let costUsdTicks: number | null = null;
   const maxSentences = Math.max(1, Math.min(10, config.max_sentences ?? 2));
+  const bookingContext = await resolveBookingContext({
+    campaignId,
+    inboundText,
+    leadEmail,
+    leadName: resolveLeadDisplayName(lead, leadEmail),
+  });
   try {
     const groq = await generateReplyDecision({
       knowledgePack: buildKnowledgePack(config),
@@ -169,6 +235,7 @@ export async function handleInstantlyReply(
       nichePresetId: config.niche_preset_id,
       maxSentences,
       interestLabel: interestLabelFromStatus(interestStatus),
+      bookingContext,
     });
     decision = groq.decision;
     model = groq.model;

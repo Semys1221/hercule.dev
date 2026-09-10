@@ -299,18 +299,16 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
       {
         id: "pme_small",
         label: "PME — 11 à 50 salariés",
-        disabled: true,
         helpTitle: "PME — 11 à 50 salariés",
         helpText:
-          "Dossiers plus structurés (paie, multi-établissements). Hors sourcing actuel Hercule Comptable.",
+          "Dossiers plus structurés (paie, multi-établissements). Tenue, fiscal et obligations administratives.",
       },
       {
         id: "pme_medium",
         label: "PME — 51 à 250 salariés",
-        disabled: true,
         helpTitle: "PME — 51 à 250 salariés",
         helpText:
-          "Dossiers plus structurés (paie, multi-établissements). Hors sourcing actuel Hercule Comptable.",
+          "Dossiers plus structurés (paie, multi-établissements). Tenue, fiscal et obligations administratives.",
       },
       {
         id: "eti",

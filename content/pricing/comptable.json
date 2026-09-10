@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-10T06:00:00.000Z",
+  "updatedAt": "2026-09-10T18:45:00.000Z",
   "hero": {
     "eyebrow": "Tarification",
     "title": "Accès aux missions PME. Lite en entrée. Hercule Starter recommandé.",
@@ -13,16 +13,16 @@
       "name": "Hercule Lite",
       "label": "Offre d'entrée",
       "price": "998 €",
-      "priceSuffix": null,
-      "tagline": "5 missions PME à votre portée",
+      "priceSuffix": "/mois",
+      "tagline": "5 missions PME par mois",
       "summary": null,
-      "footer": "Premier rendez-vous sous 15 jours.",
+      "footer": "Premier rendez-vous sous 20 à 25 jours.",
       "featured": false,
       "profileOnly": false,
       "highlight": null,
       "offerType": "starter_999_5",
       "features": [
-        "5 missions PME qualifiées (tenue, fiscal, obligations administratives).",
+        "5 missions PME qualifiées par mois (tenue, fiscal, obligations administratives).",
         "Premier rendez-vous planifié sous 20 à 25 jours après activation.",
         "Attribution exclusive à votre cabinet.",
         "Remplacement de toute mission lorsque le dirigeant est absent au rendez-vous, sous 14 jours ouvrés.",
@@ -38,7 +38,7 @@
       "priceSuffix": "/mois",
       "tagline": "10 contrats PME/TPE/indépendants par mois",
       "summary": null,
-      "footer": "Premier rendez-vous sous 15 jours. 1 contrat garantie par mois.",
+      "footer": "Premier rendez-vous sous 20 à 25 jours.",
       "featured": true,
       "profileOnly": false,
       "highlight": null,
@@ -49,7 +49,7 @@
         "Attribution exclusive à votre cabinet.",
         "0 % de commission sur vos honoraires signés.",
         "Calendly Pro et Zoom Pro provisionnés par Hercule.",
-        "Garantie MRR : 3 000 € de revenus récurrents cumulés après vos 10 missions, ou 5 missions de remplacement offertes."
+        "Garantie de revenus récurrents : 3 000 € cumulés après vos 10 missions, ou 5 missions de remplacement offertes."
       ]
     },
     {
@@ -60,7 +60,7 @@
       "priceSuffix": null,
       "tagline": "1 499 € × 3 − 20 %",
       "summary": null,
-      "footer": "Premier rendez-vous sous 15 jours. 1 contrat garantie par mois.",
+      "footer": "Premier rendez-vous sous 20 à 25 jours.",
       "featured": true,
       "profileOnly": false,
       "highlight": "− 20 %",
@@ -69,7 +69,7 @@
         "3 mois de service actif au rythme de Hercule Starter (10 missions / mois).",
         "30 missions PME qualifiées sur la durée du pack.",
         "0 % de commission sur vos honoraires.",
-        "Garantie MRR pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 15 missions de remplacement (5 par tranche de 10 missions).",
+        "Garantie pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 15 missions de remplacement (5 par tranche de 10 missions).",
         "Calendly Pro et Zoom Pro provisionnés par Hercule."
       ]
     }
@@ -80,7 +80,7 @@
     "Premier RDV sous 20 à 25 jours."
   ],
   "gatedGhostFeatures": [
-    "Garantie MRR 3 000 €",
+    "Garantie revenus récurrents 3 000 €",
     "Provisionnement Calendly / Zoom",
     "Pack 3 mois −20 %"
   ],
@@ -89,8 +89,8 @@
     "items": [
       "1 499 €/mois — 10 missions qualifiées, 0 % de commission sur vos honoraires",
       "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
-      "Moins de 3 000 € de MRR cumulé après vos 10 missions ? 5 missions de remplacement offertes",
-      "Hercule Lite (998 €) : aucune garantie MRR — uniquement la garantie no-show"
+      "Moins de 3 000 € de revenus récurrents cumulés après vos 10 missions ? 5 missions de remplacement offertes",
+      "Hercule Lite (998 €/mois) : aucune garantie de revenus récurrents — uniquement la garantie no-show"
     ]
   }
 }
