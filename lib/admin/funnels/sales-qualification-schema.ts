@@ -63,6 +63,7 @@ const sharedQualificationFields = {
   q12: z.string().min(1),
   q19: multiChoiceSchema,
   q20: z.number().min(SLIDER_CONFIGS.herculeCapacity.min),
+  q21: z.array(z.string()).default([]),
 };
 
 function buildAgenceQualificationSchema(monthlyMin: number) {
@@ -86,6 +87,7 @@ function buildComptableQualificationSchema() {
     q16: z.number().min(COMPTABLE_PONCTUEL_MIN).nullable(),
     q17: z.literal(SALES_SKIP_VALUE),
     q18: z.literal(SALES_SKIP_VALUE),
+    q21: multiChoiceSchema,
   });
 }
 
@@ -134,6 +136,7 @@ export type SalesQualificationValues = {
   q18: ConditionalSliderValue;
   q19: string[];
   q20: number;
+  q21: string[];
 };
 
 export type ConditionalSliderValue = number | typeof SALES_SKIP_VALUE;
@@ -174,6 +177,7 @@ export function getSalesQualificationDefaultValues(
       q18: SALES_SKIP_VALUE,
       q19: [],
       q20: sliders.herculeCapacity.defaultValue,
+      q21: [],
     };
   }
 
@@ -211,6 +215,7 @@ export function getSalesQualificationDefaultValues(
     q18: sliders.seoDuration.defaultValue,
     q19: [],
     q20: sliders.herculeCapacity.defaultValue,
+    q21: [],
   };
 }
 
@@ -338,6 +343,10 @@ export function isSalesSectionComplete(
 
   if (sectionId === "capacite" && values.q2.includes("other")) {
     return Boolean(values.q2Other?.trim());
+  }
+
+  if (sectionId === "standards" && isComptableSalesAudience(audience)) {
+    return values.q21.length > 0 && values.q21.length <= 3;
   }
 
   return true;

@@ -1,3 +1,8 @@
+import {
+  COMPTABLE_DIFFERENTIATOR_OPTIONS,
+  COMPTABLE_Q21_DESCRIPTION,
+  COMPTABLE_Q21_PROMPT,
+} from "@/lib/admin/funnels/comptable-sales-copy";
 import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 
 import type { SalesQuestion, SalesSliderConfig, SalesSliderUnit } from "./sales-questions";
@@ -259,8 +264,18 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     ],
   },
   {
-    id: "q11",
+    id: "q21",
     number: 11,
+    sectionId: "standards",
+    type: "multi",
+    maxSelections: 3,
+    prompt: COMPTABLE_Q21_PROMPT,
+    description: COMPTABLE_Q21_DESCRIPTION,
+    options: COMPTABLE_DIFFERENTIATOR_OPTIONS.map((option) => ({ ...option })),
+  },
+  {
+    id: "q11",
+    number: 12,
     sectionId: "standards",
     type: "multi",
     maxSelections: 2,
@@ -317,7 +332,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "q12",
-    number: 12,
+    number: 13,
     sectionId: "standards",
     type: "single",
     prompt: "Quel niveau de complexité de dossier souhaitez-vous principalement traiter ?",
@@ -360,7 +375,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "q13",
-    number: 13,
+    number: 14,
     sectionId: "standards",
     type: "slider",
     prompt:
@@ -370,7 +385,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "q14",
-    number: 14,
+    number: 15,
     sectionId: "standards",
     type: "single",
     prompt: "Comment facturez-vous habituellement vos lettres de mission de tenue ?",
@@ -384,7 +399,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "q15",
-    number: 15,
+    number: 16,
     sectionId: "conditions",
     type: "single",
     prompt: "Comment traitez-vous le social / paie pour vos dossiers {clientSegment} ?",
@@ -396,7 +411,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "q16",
-    number: 16,
+    number: 17,
     sectionId: "conditions",
     type: "slider",
     prompt:
@@ -407,7 +422,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "q19",
-    number: 19,
+    number: 18,
     sectionId: "conditions",
     type: "multi",
     maxSelections: 3,
@@ -427,7 +442,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   },
   {
     id: "q20",
-    number: 20,
+    number: 19,
     sectionId: "conditions",
     type: "slider",
     prompt: "Quelle capacité souhaitez-vous réserver aux missions {clientSegment} provenant d'Hercule ?",

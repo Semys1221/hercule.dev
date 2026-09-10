@@ -38,7 +38,12 @@ Montants = `COMMERCIAL.*` uniquement. Idempotence `stripe_event_id`.
 | `STRIPE_PRICE_AGENCE_GROWTH_DEPOSIT` | 749 € | deposit |
 | `STRIPE_PRICE_AGENCE_GROWTH_BALANCE` | 749 € | balance |
 
-Lookup keys Stripe (prod, créés via MCP) :
+Lookup keys Stripe comptable (prod) :
+- `comptable_starter_998` → `price_1UE5gUBd01AMeiaQqyit0dNU`
+- `comptable_monthly_1499` → `price_1UE5gVBd01AMeiaQOrZNfbRk`
+- `comptable_pack3_3598` → `price_1UE5gWBd01AMeiaQp4gkn1sq`
+
+Lookup keys Stripe agence (prod, créés via MCP) :
 - `agence_starter_998_deposit` → `price_1UDf2wBd01AMeiaQvafqpUoc`
 - `agence_starter_998_balance` → `price_1UDf2wBd01AMeiaQXMsGzVQK`
 - `agence_growth_1498_deposit` → `price_1UDf2wBd01AMeiaQQP36mSak`
@@ -67,7 +72,8 @@ Configurer sur **Vercel** (Production + Preview) et redéployer après ajout.
 
 | Symptôme | Cause probable |
 |----------|----------------|
-| Embed affiche `Paiement indisponible` | Env vars agence deposit manquantes ou migration `payment_phase` non appliquée |
+| Embed affiche `Paiement indisponible` (agence) | Env vars agence deposit manquantes ou migration `payment_phase` non appliquée |
+| Embed affiche `Paiement indisponible` (comptable) | Price IDs comptable absents dans Stripe ou lead `comptable` introuvable pour le slug |
 | `Invalid Stripe product configuration` en prod | Price ID ≠ montant attendu (49 900 / 74 900 centimes) |
 | Solde non proposé | Livraison incomplète (`attributionsUsed < attributionsTotal`) |
 | Legacy clients | `starter_1489_5` / `pack_989x3` — pas de solde 50/50 |

@@ -19,6 +19,8 @@ function main() {
   assert.equal(comptableDefaults.q15, "included");
   assert.equal(comptableDefaults.q16, null);
 
+  assert.deepEqual(comptableDefaults.q21, []);
+
   assert.equal(
     isSalesSectionComplete(
       "standards",
@@ -28,6 +30,40 @@ function main() {
         q14: "annual",
       },
       "comptable",
+    ),
+    true,
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "standards",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        q21: [],
+      },
+      "comptable",
+    ),
+    false,
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "standards",
+      {
+        ...getSalesQualificationDefaultValues("agence"),
+        introConfirmed: true,
+        presentationConfirmed: true,
+        q11: ["tpe"],
+        q12: "simple",
+        q13: 2000,
+        q14: {
+          months3: 2000,
+          months6: 2000,
+          months12: 2000,
+        },
+        q21: [],
+      },
+      "agence",
     ),
     true,
   );

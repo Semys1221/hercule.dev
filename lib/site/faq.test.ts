@@ -12,6 +12,12 @@ const entrepriseEntries = getFaqEntries("entreprise");
 assert.equal(entrepriseEntries.length, 7);
 assert.match(entrepriseEntries[0].question, /gratuit/i);
 
+const comptableEntries = getFaqEntries("comptable");
+assert.ok(comptableEntries.length >= 8);
+assert.equal(comptableEntries[0].id, "faq-cp-001");
+assert.match(comptableEntries[0].answer, /Pappers/);
+assert.match(comptableEntries[0].answer, /4 M/);
+
 const resolved = resolveFaqForComponent("agence", {
   id: "faq_inst_test",
   hiddenIds: ["faq-ag-001"],

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/collapsible";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { RESERVATION_BODY_TEXT, RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
+import { COMPTABLE_MODEL_HIGHLIGHTS, COMPTABLE_PRESENTATION_PARAGRAPHS } from "@/lib/admin/funnels/comptable-sales-copy";
 import { getEnterpriseQualificationCriteria } from "@/lib/commercial/qualification-criteria";
 import type { Audience } from "@/lib/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
@@ -166,21 +167,6 @@ const MODEL_HIGHLIGHTS = [
   },
 ] as const;
 
-const COMPTABLE_MODEL_HIGHLIGHTS = [
-  {
-    title: "3 000 €",
-    description: "de MRR garanti en Hercule Starter après 10 missions — lettres de mission signées, pas une promesse de volume seul.",
-  },
-  {
-    title: "Audit partenaire",
-    description: "avant toute attribution pour garantir la compatibilité cabinet-dirigeant TPE.",
-  },
-  {
-    title: "0 %",
-    description: "de commission sur vos honoraires — vous facturez à vos tarifs.",
-  },
-] as const;
-
 type SalesCompanyPresentationPanelProps = {
   audience?: Audience;
   form: UseFormReturn<SalesQualificationValues>;
@@ -218,16 +204,24 @@ export function SalesCompanyPresentationPanel({
           </p>
         ) : (
           <>
-            <p>
-              {isComptable
-                ? "Hercule Comptable met en relation des dirigeants TPE en reprise comptable, fiscale et administrative avec des cabinets d'expertise comptable partenaires éligibles."
-                : "Hercule est l'évolution d'un outil interne que nous utilisons depuis 2018 pour notre propre activité de développement backend. Renommé Hercule en 2025, ce socle est devenu la plateforme que nous présentons aujourd'hui."}
-            </p>
-            <p>
-              {isComptable
-                ? "Nous qualifions chaque demande par Live Qualification, provisionnons Calendly Pro et Zoom Pro pour vos RDV, et attribuons jusqu'à 10 missions PME qualifiées par mois en Hercule Starter — sans commission sur vos honoraires."
-                : "Aujourd'hui, nous générons plus de 20 contrats par mois dans différents secteurs. Nous auditons et qualifions les agences partenaires pour mettre en relation ces demandes avec les profils les plus compatibles."}
-            </p>
+            {isComptable ? (
+              COMPTABLE_PRESENTATION_PARAGRAPHS.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))
+            ) : (
+              <>
+                <p>
+                  Hercule est l&apos;évolution d&apos;un outil interne que nous utilisons depuis 2018
+                  pour notre propre activité de développement backend. Renommé Hercule en 2025, ce
+                  socle est devenu la plateforme que nous présentons aujourd&apos;hui.
+                </p>
+                <p>
+                  Aujourd&apos;hui, nous générons plus de 20 contrats par mois dans différents
+                  secteurs. Nous auditons et qualifions les agences partenaires pour mettre en relation
+                  ces demandes avec les profils les plus compatibles.
+                </p>
+              </>
+            )}
           </>
         )}
       </div>

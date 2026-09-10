@@ -71,19 +71,34 @@ export function getAgenceGrowthBalancePriceId(): string {
   );
 }
 
+/**
+ * Canonical Stripe price IDs for comptable checkout.
+ * Lookup keys: comptable_starter_998, comptable_monthly_1499, comptable_pack3_3598.
+ * Env vars override these defaults (see doc/tech-stack/modules/payments-stripe.md).
+ */
+const COMPTABLE_STRIPE_PRICE_IDS = {
+  starter: "price_1UE5gUBd01AMeiaQqyit0dNU",
+  monthly: "price_1UE5gVBd01AMeiaQOrZNfbRk",
+  pack3: "price_1UE5gWBd01AMeiaQp4gkn1sq",
+} as const;
+
 export function getComptableMonthlyPriceId(): string {
-  const priceId = process.env.STRIPE_PRICE_COMPTABLE_MONTHLY?.trim();
-  return requireEnv(priceId ?? "", "STRIPE_PRICE_COMPTABLE_MONTHLY");
+  return (
+    process.env.STRIPE_PRICE_COMPTABLE_MONTHLY?.trim() ||
+    COMPTABLE_STRIPE_PRICE_IDS.monthly
+  );
 }
 
 export function getComptablePack3PriceId(): string {
-  const priceId = process.env.STRIPE_PRICE_COMPTABLE_PACK3?.trim();
-  return requireEnv(priceId ?? "", "STRIPE_PRICE_COMPTABLE_PACK3");
+  return (
+    process.env.STRIPE_PRICE_COMPTABLE_PACK3?.trim() || COMPTABLE_STRIPE_PRICE_IDS.pack3
+  );
 }
 
 export function getComptableStarterPriceId(): string {
-  const priceId = process.env.STRIPE_PRICE_COMPTABLE_STARTER?.trim();
-  return requireEnv(priceId ?? "", "STRIPE_PRICE_COMPTABLE_STARTER");
+  return (
+    process.env.STRIPE_PRICE_COMPTABLE_STARTER?.trim() || COMPTABLE_STRIPE_PRICE_IDS.starter
+  );
 }
 
 export function getStripeWebhookSecret(): string {

@@ -127,10 +127,10 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   },
   {
     id: "standards",
-    label: "Expertise & honoraires",
-    title: "Expertise & honoraires",
+    label: "Modèle différenciant",
+    title: "Modèle différenciant",
     subtitle:
-      "Précisez vos honoraires annuels typiques, votre modalité de facturation et votre ticket dossier minimum.",
+      "Ce qui distingue votre cabinet d'un expert-comptable déjà en place, puis vos honoraires.",
   },
   {
     id: "conditions",

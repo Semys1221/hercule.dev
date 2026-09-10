@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
@@ -27,12 +27,16 @@ type StepEmbeddedCheckoutComptableProps = {
   slug: string;
   selectedOffer?: OfferTypeComptable | null;
   startImmediately?: boolean;
+  clientSecret?: string | null;
+  preloadError?: string | null;
 };
 
 export function StepEmbeddedCheckoutComptable({
   slug,
   selectedOffer: selectedOfferProp = null,
   startImmediately = false,
+  clientSecret: preloadedClientSecret,
+  preloadError,
 }: StepEmbeddedCheckoutComptableProps) {
   const { stripePromise, error: stripeConfigError, loading: stripeLoading } =
     useStripePromise();
@@ -42,7 +46,7 @@ export function StepEmbeddedCheckoutComptable({
   const [checkoutStarted, setCheckoutStarted] = useState(
     startImmediately && Boolean(selectedOfferProp),
   );
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(preloadError ?? null);
 
   const activeOffer = selectedOfferProp ?? selectedOffer;
 
@@ -83,6 +87,10 @@ export function StepEmbeddedCheckoutComptable({
     return options;
   }, []);
 
+  useEffect(() => {
+    setError(preloadError ?? null);
+  }, [preloadError, slug, activeOffer]);
+
   const fetchClientSecret = useCallback(async (): Promise<string> => {
     setError(null);
     if (!activeOffer) {
@@ -103,6 +111,10 @@ export function StepEmbeddedCheckoutComptable({
     return data.clientSecret;
   }, [slug, activeOffer]);
 
+  const providerOptions = preloadedClientSecret
+    ? { clientSecret: preloadedClientSecret }
+    : { fetchClientSecret };
+
   if (checkoutStarted && activeOffer) {
     return (
       <div className="space-y-3">
@@ -114,11 +126,8 @@ export function StepEmbeddedCheckoutComptable({
             <Spinner className="size-6" />
           </div>
         ) : null}
-        {!error && !stripeConfigError && stripePromise ? (
-          <EmbeddedCheckoutProvider
-            stripe={stripePromise}
-            options={{ fetchClientSecret }}
-          >
+        {!error && !stripeConfigError && stripePromise && (preloadedClientSecret || slug) ? (
+          <EmbeddedCheckoutProvider stripe={stripePromise} options={providerOptions}>
             <EmbeddedCheckout />
           </EmbeddedCheckoutProvider>
         ) : null}

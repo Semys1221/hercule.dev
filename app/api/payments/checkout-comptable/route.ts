@@ -61,6 +61,25 @@ export async function POST(request: Request) {
 
   const { slug, offerType } = parsed.data;
 
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "569fa6",
+    },
+    body: JSON.stringify({
+      sessionId: "569fa6",
+      runId: "pre-fix",
+      hypothesisId: "B",
+      location: "checkout-comptable/route.ts:POST",
+      message: "checkout-comptable request received",
+      data: { slug, offerType },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   try {
     const client = createLinkTrackingClient();
 
@@ -123,11 +142,58 @@ export async function POST(request: Request) {
       .update({ stripe_checkout_session_id: session.id })
       .eq("id", paymentRow.id);
 
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "569fa6",
+      },
+      body: JSON.stringify({
+        sessionId: "569fa6",
+        runId: "pre-fix",
+        hypothesisId: "C",
+        location: "checkout-comptable/route.ts:success",
+        message: "checkout session created",
+        data: {
+          slug,
+          offerType,
+          hasClientSecret: Boolean(session.client_secret),
+          sessionId: session.id,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     return NextResponse.json({
       clientSecret: session.client_secret,
       sessionId: session.id,
     });
   } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "569fa6",
+      },
+      body: JSON.stringify({
+        sessionId: "569fa6",
+        runId: "pre-fix",
+        hypothesisId: "D",
+        location: "checkout-comptable/route.ts:error",
+        message: "checkout-comptable failed",
+        data: {
+          slug,
+          offerType,
+          error: error instanceof Error ? error.message : "unknown",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     const { body, status } = checkoutErrorResponse(error, "payments/checkout-comptable");
     return NextResponse.json(body, { status });
   }

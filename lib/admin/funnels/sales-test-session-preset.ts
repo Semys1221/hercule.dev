@@ -76,6 +76,7 @@ export const SALES_TEST_SESSION_QUALIFICATION: SalesQualificationValues = {
   q18: SLIDER_CONFIGS.seoDuration.defaultValue,
   q19: ["acquisition", "seo", "recurring"],
   q20: 5,
+  q21: [],
 };
 
 export const SALES_TEST_SESSION_COMPTABLE_QUALIFICATION: SalesQualificationValues = {
@@ -90,6 +91,7 @@ export const SALES_TEST_SESSION_COMPTABLE_QUALIFICATION: SalesQualificationValue
   q17: SALES_SKIP_VALUE,
   q18: SALES_SKIP_VALUE,
   q19: ["recurring", "acquisition", "seo"],
+  q21: ["reactivite", "pilotage", "honoraires_lisibles"],
 };
 
 export const SALES_TEST_SESSION_CLOSING: SalesClosingValues = {

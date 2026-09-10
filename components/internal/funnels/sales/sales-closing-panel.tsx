@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  BarChart3,
   CalendarOff,
   ClipboardCheck,
   Clock,
@@ -38,6 +39,9 @@ import {
   type SalesQuestion,
 } from "@/components/internal/funnels/sales/sales-questions";
 import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
+import {
+  COMPTABLE_PERFORMANCE_REPORTING_RULE,
+} from "@/lib/admin/funnels/comptable-sales-copy";
 import { SESSION_DEVELOPER_MODE_FAKE_LINK } from "@/lib/admin/funnels/ui-copy";
 import { SALES_SKIP_VALUE, type Q14Matrix, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
@@ -50,6 +54,7 @@ import {
   type SalesClosingValues,
 } from "./sales-closing-sections";
 import { SalesCalendrierPanel } from "./sales-calendrier-panel";
+import { SalesComptableNicheBenchmark } from "./sales-comptable-niche-benchmark";
 import { SalesEligiblePanel, SalesPresetSummary } from "./sales-eligible-panel";
 
 type SalesClosingPanelProps = {
@@ -174,6 +179,12 @@ const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
     title: "Disponibilité",
     description: "Informer Hercule en cas d'indisponibilité avant la date prévue.",
     icon: CalendarOff,
+  },
+  {
+    id: "reporting",
+    title: COMPTABLE_PERFORMANCE_REPORTING_RULE.title,
+    description: COMPTABLE_PERFORMANCE_REPORTING_RULE.description,
+    icon: BarChart3,
   },
 ];
 
@@ -404,6 +415,7 @@ export function SalesClosingPanel({
                 );
               })}
             </ItemGroup>
+            {audience === "comptable" ? <SalesComptableNicheBenchmark /> : null}
             <Separator />
             <div className="flex items-start gap-3">
               <Checkbox

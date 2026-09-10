@@ -35,11 +35,7 @@ export function DashboardComptable({
 
   if (data.dashboardMode === "comptable_pending") {
     return (
-      <OnboardingComptableWizard
-        slug={data.slug}
-        firstName={data.firstName}
-        company={data.company}
-      />
+      <OnboardingComptableWizard data={data} />
     );
   }
 
