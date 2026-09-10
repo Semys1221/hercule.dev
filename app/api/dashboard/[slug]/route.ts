@@ -127,6 +127,33 @@ export async function GET(_request: Request, { params }: RouteParams) {
           ? "comptable_onboarding"
           : "comptable_active";
 
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "c71c85",
+        },
+        body: JSON.stringify({
+          sessionId: "c71c85",
+          runId: "pre-fix",
+          hypothesisId: "B,C",
+          location: "app/api/dashboard/[slug]/route.ts:comptable",
+          message: "comptable dashboard GET form state",
+          data: {
+            slug: lead.slug,
+            dashboardMode,
+            isPaid,
+            isOnboarded,
+            profileForm,
+            isFormSparse: isFormSparse(profileForm),
+            resolvesQualification: false,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
       return NextResponse.json({
         slug: lead.slug,
         email: lead.email,

@@ -120,6 +120,37 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
     void preloadCheckout();
   }, [step, preloadCheckout]);
 
+  useEffect(() => {
+    if (step !== 2) {
+      return;
+    }
+
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "c71c85",
+      },
+      body: JSON.stringify({
+        sessionId: "c71c85",
+        runId: "pre-fix",
+        hypothesisId: "A,C,D",
+        location: "onboarding-comptable-wizard.tsx:step2",
+        message: "comptable wizard step 2 render context",
+        data: {
+          step,
+          dashboardMode: data.dashboardMode,
+          component: "StepComptableOnboardingFormPreview",
+          form: data.form,
+          formKeys: Object.keys(data.form ?? {}),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [step, data.dashboardMode, data.form]);
+
   function goNext() {
     if (isFaqStep && tieDownAccepted) {
       void persistTieDown();
