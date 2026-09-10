@@ -4,6 +4,7 @@ import {
   amountCentsForComptableOffer,
   comptableCheckoutMode,
   isComptableSubscriptionOffer,
+  stripeCheckoutModeForComptablePrice,
 } from "@/lib/payments/comptable-offers";
 import { COMMERCIAL_COMPTABLE, OFFER_TYPES_COMPTABLE } from "@/lib/commercial/constants";
 
@@ -16,6 +17,9 @@ assert.equal(
   "subscription",
 );
 assert.equal(comptableCheckoutMode(OFFER_TYPES_COMPTABLE.pack3x1499), "payment");
+
+assert.equal(stripeCheckoutModeForComptablePrice({ type: "recurring" }), "subscription");
+assert.equal(stripeCheckoutModeForComptablePrice({ type: "one_time" }), "payment");
 
 assert.equal(isComptableSubscriptionOffer(OFFER_TYPES_COMPTABLE.starter999_5), true);
 assert.equal(isComptableSubscriptionOffer(OFFER_TYPES_COMPTABLE.pack3x1499), false);

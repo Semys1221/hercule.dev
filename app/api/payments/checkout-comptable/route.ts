@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { z } from "zod";
 
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import { OFFER_TYPES_COMPTABLE } from "@/lib/commercial/constants";
 import {
   amountCentsForComptableOffer,
-  comptableCheckoutMode,
   priceIdForComptableOffer,
+  stripeCheckoutModeForComptablePrice,
 } from "@/lib/payments/comptable-offers";
 import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
 import {
@@ -57,9 +58,32 @@ export async function POST(request: Request) {
 
     const stripe = getStripeClient();
     const priceId = priceIdForComptableOffer(offerType);
+    const price = await stripe.prices.retrieve(priceId);
+    const checkoutMode = stripeCheckoutModeForComptablePrice(price);
     const amountCents = amountCentsForComptableOffer(offerType);
-    const checkoutMode = comptableCheckoutMode(offerType);
     const baseUrl = getAppBaseUrl();
+
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "6a28c9" },
+      body: JSON.stringify({
+        sessionId: "6a28c9",
+        runId: "post-fix",
+        hypothesisId: "A-B",
+        location: "checkout-comptable/route.ts:priceResolved",
+        message: "Stripe price resolved for comptable checkout",
+        data: {
+          slug,
+          offerType,
+          priceId,
+          priceType: price.type,
+          checkoutMode,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
 
     const { data: paymentRow, error: paymentError } = await client
       .from("payments")
@@ -83,49 +107,80 @@ export async function POST(request: Request) {
       offer_type: offerType,
     };
 
+    const sharedSessionParams = {
+      ui_mode: "embedded_page" as const,
+      line_items: [{ price: priceId, quantity: 1 }],
+      return_url: `${baseUrl}/dashboard/${lead.slug}?paid=1`,
+      customer_email: lead.email,
+      branding_settings: getCheckoutBrandingSettings(),
+      wallet_options: {
+        link: {
+          display: "never",
+        },
+      },
+      metadata,
+    };
+
     const session =
       checkoutMode === "subscription"
         ? await stripe.checkout.sessions.create({
             mode: "subscription",
-            ui_mode: "embedded",
-            line_items: [{ price: priceId, quantity: 1 }],
-            return_url: `${baseUrl}/dashboard/${lead.slug}?paid=1`,
-            customer_email: lead.email,
-            branding_settings: getCheckoutBrandingSettings(),
+            ...sharedSessionParams,
             subscription_data: { metadata },
-            wallet_options: {
-              link: {
-                display: "never",
-              },
-            },
-            metadata,
-          })
+          } as Stripe.Checkout.SessionCreateParams)
         : await stripe.checkout.sessions.create({
             mode: "payment",
-            ui_mode: "embedded",
-            line_items: [{ price: priceId, quantity: 1 }],
-            return_url: `${baseUrl}/dashboard/${lead.slug}?paid=1`,
-            customer_email: lead.email,
-            branding_settings: getCheckoutBrandingSettings(),
+            ...sharedSessionParams,
             invoice_creation: { enabled: true },
-            wallet_options: {
-              link: {
-                display: "never",
-              },
-            },
-            metadata,
-          });
+          } as Stripe.Checkout.SessionCreateParams);
 
     await client
       .from("payments")
       .update({ stripe_checkout_session_id: session.id })
       .eq("id", paymentRow.id);
 
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "6a28c9" },
+      body: JSON.stringify({
+        sessionId: "6a28c9",
+        runId: "post-fix",
+        hypothesisId: "A-B",
+        location: "checkout-comptable/route.ts:success",
+        message: "Comptable checkout session created",
+        data: {
+          slug,
+          offerType,
+          checkoutMode,
+          sessionId: session.id,
+          hasClientSecret: Boolean(session.client_secret),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     return NextResponse.json({
       clientSecret: session.client_secret,
       sessionId: session.id,
     });
   } catch (error) {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "6a28c9" },
+      body: JSON.stringify({
+        sessionId: "6a28c9",
+        runId: "post-fix",
+        hypothesisId: "A-E",
+        location: "checkout-comptable/route.ts:catch",
+        message: "Comptable checkout failed",
+        data: { error: error instanceof Error ? error.message : String(error) },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     const { body: errorBody, status } = checkoutErrorResponse(
       error,
       "payments/checkout-comptable",

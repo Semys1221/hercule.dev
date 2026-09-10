@@ -3,6 +3,8 @@ import {
   OFFER_TYPES_COMPTABLE,
   type OfferTypeComptable,
 } from "@/lib/commercial/constants";
+import type Stripe from "stripe";
+
 import {
   getComptableMonthlyPriceId,
   getComptablePack3PriceId,
@@ -22,6 +24,13 @@ export function comptableCheckoutMode(
   offerType: OfferTypeComptable,
 ): "subscription" | "payment" {
   return isComptableSubscriptionOffer(offerType) ? "subscription" : "payment";
+}
+
+/** Uses the live Stripe price type so one-time prices still checkout before recurring prices ship. */
+export function stripeCheckoutModeForComptablePrice(
+  price: Pick<Stripe.Price, "type">,
+): "subscription" | "payment" {
+  return price.type === "recurring" ? "subscription" : "payment";
 }
 
 export function priceIdForComptableOffer(offerType: OfferTypeComptable): string {
