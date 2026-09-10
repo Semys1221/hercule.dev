@@ -2,10 +2,15 @@
 
 import { Check, Clock } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  interpolateClientSegment,
+  resolveClientSegment,
+} from "@/lib/admin/funnels/client-segment";
 import type { Audience } from "@/lib/admin/navigation";
 import { RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
@@ -22,7 +27,7 @@ const INTRO_BENEFITS = [
 ] as const;
 
 const COMPTABLE_INTRO_BENEFITS = [
-  "Des missions TPE compatibles avec vos expertises et vos honoraires",
+  "Des missions {clientSegment} compatibles avec vos expertises et vos honoraires",
   "Moins de temps perdu sur des dossiers hors-profil",
   "Un scoring de compatibilité ajusté à votre capacité réelle",
   "Une relation durable fondée sur la transparence mutuelle",
@@ -35,8 +40,12 @@ type SalesIntroSectionProps = {
 };
 
 export function SalesIntroSection({ audience, section, form }: SalesIntroSectionProps) {
+  const watchedQ11 = useWatch({ control: form.control, name: "q11" }) as string[] | undefined;
+  const clientSegment = resolveClientSegment(watchedQ11 ?? []);
   const benefits =
-    audience === "comptable" ? COMPTABLE_INTRO_BENEFITS : INTRO_BENEFITS;
+    audience === "comptable"
+      ? COMPTABLE_INTRO_BENEFITS.map((item) => interpolateClientSegment(item, clientSegment))
+      : INTRO_BENEFITS;
   return (
     <div className="mx-auto w-full max-w-3xl space-y-8 text-left">
       <div className="space-y-3">
@@ -83,7 +92,7 @@ export function SalesIntroSection({ audience, section, form }: SalesIntroSection
           <FormItem>
             <SalesConfirmationCard
               id="sales-intro-confirmed"
-              label={getIntroConfirmationText(audience)}
+              label={getIntroConfirmationText(audience, clientSegment)}
               description="Cette étape est requise avant de commencer la qualification."
               checked={field.value}
               onCheckedChange={field.onChange}

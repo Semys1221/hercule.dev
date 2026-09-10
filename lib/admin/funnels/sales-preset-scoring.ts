@@ -140,9 +140,17 @@ function scorePremium(values: SalesQualificationValues): { score: number; reason
     score += 30;
     reasons.push("ticket ponctuel ≥ 5 000 €");
   }
-  if (values.q14.months12 >= 5000) {
+  if (
+    typeof values.q14 === "object" &&
+    values.q14 !== null &&
+    "months12" in values.q14 &&
+    values.q14.months12 >= 5000
+  ) {
     score += 25;
     reasons.push("récurrent 12 mois ≥ 5 000 € / mois");
+  } else if (typeof values.q14 === "string" && typeof values.q13 === "number" && values.q13 >= 7200) {
+    score += 25;
+    reasons.push("honoraires annuels ≥ 7 200 €");
   }
   if (includesAny(values.q11, ["eti", "enterprise"])) {
     score += 15;
@@ -193,7 +201,7 @@ export function scoreAgencyPresets(
 
 export const COMPTABLE_PRESET_REASONS: Record<string, string> = {
   "capacité ≥ 5 projets / mois": "capacité ≥ 5 dossiers TPE / mois",
-  "ticket ponctuel ≤ 3 000 €": "honoraires ponctuels ≤ 3 000 €",
+  "ticket ponctuel ≤ 3 000 €": "honoraires annuels ≤ 3 000 €",
   "capacité Hercule ≥ 3 projets / mois": "capacité Hercule ≥ 3 dossiers / mois",
   "offre acquisition / SEO": "offre fiscal / social / tenue",
   "expertise paid ou organique": "expertise fiscal ou social",
@@ -207,7 +215,7 @@ export const COMPTABLE_PRESET_REASONS: Record<string, string> = {
   "ticket ponctuel ≥ 3 500 €": "honoraires ponctuels ≥ 3 500 €",
   "priorité aux projets à forte valeur": "priorité aux dossiers à honoraires élevés",
   "ticket ponctuel ≥ 5 000 €": "honoraires ponctuels ≥ 5 000 €",
-  "récurrent 12 mois ≥ 5 000 € / mois": "tenue récurrente 12 mois ≥ 5 000 € / mois",
+  "récurrent 12 mois ≥ 5 000 € / mois": "honoraires annuels ≥ 7 200 €",
   "appétit pour les projets complexes": "appétit pour les dossiers complexes",
   "disponibilité élevée ou modérée": "capacité disponible élevée ou modérée",
   "processus standardisés": "processus cabinet standardisés",

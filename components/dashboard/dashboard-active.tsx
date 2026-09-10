@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import type { DashboardData, TimelineStep } from "@/lib/dashboard/types";
+import { agenceFirstContratAt } from "@/lib/retraction/dates";
 import {
   DASHBOARD_EYEBROW,
   DASHBOARD_RETRACTION_BADGE_ACTIVE,
@@ -47,8 +48,11 @@ type MilestoneItem = {
   status: TimelineStep["status"];
 };
 
-function buildDefaultMilestones(activatedAt: Date): MilestoneItem[] {
-  const firstBooking = addWorkingDays(activatedAt, 7); // mid-range 6–8j
+function buildDefaultMilestones(
+  activatedAt: Date,
+  isFastCheckout = false,
+): MilestoneItem[] {
+  const firstBooking = agenceFirstContratAt(activatedAt, "waived", isFastCheckout);
   const secondBooking = addWorkingDays(firstBooking, 4);
   const thirdBooking = addWorkingDays(secondBooking, 4);
 
@@ -105,7 +109,7 @@ export function DashboardActive({ data, onRefresh }: DashboardActiveProps) {
         estimatedAt: s.meta ?? "",
         status: s.status,
       }))
-    : buildDefaultMilestones(activatedAt);
+    : buildDefaultMilestones(activatedAt, data.paymentSchedule?.isFastCheckout ?? false);
 
   const chronologieSteps = milestones.map((milestone) => ({
     id: milestone.id,

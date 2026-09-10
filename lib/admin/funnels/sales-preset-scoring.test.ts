@@ -3,7 +3,10 @@
 import assert from "node:assert/strict";
 
 import { composeOpportunityCards } from "@/lib/admin/funnels/compose-opportunity-cards";
-import { salesQualificationDefaultValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import {
+  getSalesQualificationDefaultValues,
+  salesQualificationDefaultValues,
+} from "@/lib/admin/funnels/sales-qualification-schema";
 import { formatContractWindow } from "@/lib/admin/funnels/sales-preset-registry";
 import {
   AGENCY_PRESET_IDS,
@@ -67,11 +70,13 @@ function main() {
   }
 
   const comptableComposeValues = {
-    ...salesQualificationDefaultValues,
+    ...getSalesQualificationDefaultValues("comptable"),
     q1: ["web_creation", "google_ads", "seo"],
     q19: ["one_off", "recurring", "acquisition"],
-    q13: 1499,
-    q14: { months3: 1499, months6: 1499, months12: 1499 },
+    q13: 3600,
+    q14: "monthly_12",
+    q15: "included",
+    q16: null,
   };
   const comptableCards = composeOpportunityCards(
     comptableComposeValues,

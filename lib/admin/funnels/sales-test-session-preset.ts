@@ -2,7 +2,10 @@ import { SLIDER_CONFIGS } from "@/components/internal/funnels/sales/sales-questi
 import { COMPTABLE_SLIDER_CONFIGS } from "@/components/internal/funnels/sales/sales-questions-comptable";
 import type { SalesClosingValues } from "@/components/internal/funnels/sales/sales-closing-sections";
 import { SEED_PREFIX } from "@/lib/admin/clients/seed";
-import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import {
+  SALES_SKIP_VALUE,
+  type SalesQualificationValues,
+} from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
 import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { LeadCategory } from "@/lib/link-tracking/types";
@@ -59,7 +62,7 @@ export const SALES_TEST_SESSION_QUALIFICATION: SalesQualificationValues = {
   q8: ["none"],
   q9: "freelance",
   q10: "all",
-  q11: ["pme_small", "pme_medium"],
+  q11: ["freelancers", "tpe"],
   q12: "intermediate",
   q13: 2000,
   q14: {
@@ -77,16 +80,15 @@ export const SALES_TEST_SESSION_QUALIFICATION: SalesQualificationValues = {
 
 export const SALES_TEST_SESSION_COMPTABLE_QUALIFICATION: SalesQualificationValues = {
   ...SALES_TEST_SESSION_QUALIFICATION,
+  q11: ["freelancers", "tpe"],
   q1: ["google_ads", "seo", "web_creation"],
   q2: ["paid_acquisition", "organic_seo"],
-  q13: 2000,
-  q14: {
-    months3: COMPTABLE_SLIDER_CONFIGS.monthlyMin.defaultValue,
-    months6: COMPTABLE_SLIDER_CONFIGS.monthlyMin.defaultValue,
-    months12: COMPTABLE_SLIDER_CONFIGS.monthlyMin.defaultValue,
-  },
-  q15: 1800,
-  q17: COMPTABLE_SLIDER_CONFIGS.monthlyMin.defaultValue,
+  q13: COMPTABLE_SLIDER_CONFIGS.annualMin.defaultValue,
+  q14: "monthly_12",
+  q15: "included",
+  q16: null,
+  q17: SALES_SKIP_VALUE,
+  q18: SALES_SKIP_VALUE,
   q19: ["recurring", "acquisition", "seo"],
 };
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-08T12:00:00.000Z",
+  "updatedAt": "2026-09-10T12:00:00.000Z",
   "entries": [
     {
       "id": "faq-cp-001",
@@ -48,6 +48,18 @@
       "id": "faq-cp-008",
       "question": "Qui êtes-vous ? De quelle structure dépendez-vous ?",
       "answer": "Hercule est la dénomination commerciale de Nanguy Evan Gbeho, entrepreneur individuel immatriculé au RCS de Bordeaux (885 248 039). Siège : 4 rue Claude Bonnier, 33000 Bordeaux. Ce n'est pas une société (SARL/SAS) ni une filiale de groupe. Mentions légales : hercule.dev/mentions-legales."
+    },
+    {
+      "id": "faq-cp-009",
+      "question": "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
+      "answer": "Selon nos [Conditions générales de vente Hercule Comptable](/cvg/comptable) (article 9), vous nous accordez un délai supplémentaire de **7 jours** en cas de retard de livraison. Au-delà, nous vous invitons à nous écrire à contact@hercule.dev et à ne pas initier de dispute sur Stripe sans nous avoir contactés au préalable. Un règlement à l'amiable pourra être envisagé au cas par cas.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-010",
+      "question": "Ai-je un délai de rétractation ?",
+      "answer": "Oui. Par défaut, vous disposez de 4 jours calendaires après souscription pour vous rétracter, tant que l'activation n'a pas démarré. Vous pouvez renoncer à ce délai lors de l'onboarding ou à tout moment depuis votre dashboard pour lancer la recherche immédiatement.",
+      "cvgLink": true
     }
   ]
 }

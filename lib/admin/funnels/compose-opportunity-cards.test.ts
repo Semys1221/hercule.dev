@@ -14,7 +14,11 @@ import {
   roundToBand,
   type TailleClass,
 } from "@/lib/admin/funnels/opportunity-card-formulas";
-import { salesQualificationDefaultValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import {
+  getSalesQualificationDefaultValues,
+  salesQualificationDefaultValues,
+  SALES_SKIP_VALUE,
+} from "@/lib/admin/funnels/sales-qualification-schema";
 import { SALES_TEST_SESSION_QUALIFICATION } from "@/lib/admin/funnels/sales-test-session-preset";
 import {
   AGENCY_PRESET_IDS,
@@ -208,14 +212,22 @@ function main() {
     ...salesQualificationDefaultValues,
     q1: ["web_creation", "google_ads", "seo"],
     q19: ["one_off", "recurring", "acquisition"],
-    q13: 1499,
-    q14: { months3: 1499, months6: 1499, months12: 1499 },
+    q13: 3600,
+    q14: "monthly_12",
+    q15: "included",
+    q16: null,
+    q17: SALES_SKIP_VALUE,
+    q18: SALES_SKIP_VALUE,
   };
   const comptableFloor = resolveBudgetFloorCents(comptableValues, "serial", "comptable");
-  assert.equal(comptableFloor, 149_900);
+  assert.equal(comptableFloor, 360_000);
   const comptableCards = composeOpportunityCards(comptableValues, "serial", "comptable");
   assertCardSetConstraints(comptableCards, comptableFloor);
   assert.equal(new Set(comptableCards.map((card) => card.secteur)).size, 5);
+  assert.ok(
+    comptableCards.every((card) => card.budget.includes("/ an") || !card.budget.includes("/ mois")),
+    "comptable cards should use annual honoraires, not monthly retainers",
+  );
 
   function countTailleClasses(
     cards: ReturnType<typeof composeOpportunityCards>,
@@ -230,11 +242,15 @@ function main() {
   }
 
   const comptableBaseValues = {
-    ...salesQualificationDefaultValues,
+    ...getSalesQualificationDefaultValues("comptable"),
     q1: ["web_creation", "google_ads", "seo"],
     q19: ["one_off", "recurring", "acquisition"],
-    q13: 1499,
-    q14: { months3: 1499, months6: 1499, months12: 1499 },
+    q13: 3600,
+    q14: "monthly_12",
+    q15: "included",
+    q16: null,
+    q17: SALES_SKIP_VALUE,
+    q18: SALES_SKIP_VALUE,
   };
 
   const singleTargetCards = composeOpportunityCards(

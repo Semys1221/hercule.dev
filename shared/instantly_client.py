@@ -275,10 +275,29 @@ class InstantlyClient:
         data = self._fetch(f"/leads/{lead_id.strip()}")
         return data if isinstance(data, dict) else {}
 
+    def find_lead_by_email(self, lead_email: str) -> dict[str, Any] | None:
+        normalized = lead_email.strip().lower()
+        if not normalized or "@" not in normalized:
+            return None
+
+        searched = self._fetch(
+            "/leads/list",
+            method="POST",
+            body={"contacts": [normalized], "limit": 20},
+        )
+        items = searched.get("items") or [] if isinstance(searched, dict) else []
+        for item in items:
+            email = str(item.get("email") or "").strip().lower()
+            if email == normalized:
+                return item
+        return None
+
     def find_lead_by_email_in_campaign(
         self,
         campaign_id: str,
         lead_email: str,
+        *,
+        search_only: bool = False,
     ) -> dict[str, Any] | None:
         normalized = lead_email.strip().lower()
         campaign = campaign_id.strip()
@@ -293,6 +312,9 @@ class InstantlyClient:
             email = str(item.get("email") or "").strip().lower()
             if email == normalized:
                 return item
+
+        if search_only:
+            return None
 
         starting_after: str | None = None
         while True:

@@ -2,6 +2,8 @@
 
 import type { PresetOpportunityCard } from "@/lib/admin/funnels/sales-preset-registry";
 import { formatContractWindow } from "@/lib/admin/funnels/sales-preset-registry";
+import type { ClientSegment } from "@/lib/admin/funnels/client-segment";
+import { interpolateClientSegment } from "@/lib/admin/funnels/client-segment";
 import type { Audience } from "@/lib/admin/navigation";
 import { getSecteurConfig } from "@/lib/agence/secteur-config";
 import {
@@ -22,6 +24,7 @@ type SalesCalendrierBookingLegendProps = {
   meetings: CalendarMeeting[];
   today: Date;
   phase: RevealPhase;
+  clientSegment?: ClientSegment;
 };
 
 export function SalesCalendrierBookingLegend({
@@ -30,6 +33,7 @@ export function SalesCalendrierBookingLegend({
   meetings,
   today,
   phase,
+  clientSegment,
 }: SalesCalendrierBookingLegendProps) {
   const cardById = new Map(cards.map((card) => [card.id, card]));
   const showBookingLive = phaseAtLeast(phase, "booking");
@@ -44,7 +48,12 @@ export function SalesCalendrierBookingLegend({
         aria-live={showBookingLive ? "polite" : undefined}
         aria-label={
           audience === "comptable"
-            ? "Rendez-vous planifiés par mission TPE"
+            ? clientSegment
+              ? interpolateClientSegment(
+                  "Rendez-vous planifiés par mission {clientSegment}",
+                  clientSegment,
+                )
+              : "Rendez-vous planifiés par mission TPE"
             : "Rendez-vous planifiés par opportunité"
         }
       >

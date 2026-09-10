@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useWatch, type UseFormReturn } from "react-hook-form";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
+import {
+  interpolateQuestionCopy,
+  resolveClientSegment,
+  sanitizeComptableQ11Selection,
+} from "@/lib/admin/funnels/client-segment";
 import { RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
 import {
   SALES_SKIP_VALUE,
@@ -23,7 +28,7 @@ import {
   SalesSliderMatrixField,
 } from "./sales-question-fields";
 import { getSalesQuestionsForSection } from "./sales-questions";
-import type { SalesConditionalSliderQuestion } from "./sales-questions";
+import type { SalesConditionalSliderQuestion, SalesQuestion } from "./sales-questions";
 import type { SalesFunnelSection } from "./sales-funnel-sections";
 
 const COMPACT_CARD_CLASS = `${RESERVATION_SURFACE} gap-0 py-0 shadow-none`;
@@ -44,12 +49,34 @@ export function SalesQualificationForm({
     useWatch({ control: form.control }) as Partial<SalesQualificationValues>,
     audience,
   );
+  const watchedQ11 = useWatch({ control: form.control, name: "q11" }) as string[] | undefined;
+  const clientSegment = useMemo(
+    () => resolveClientSegment(watchedQ11 ?? watchedValues.q11),
+    [watchedQ11, watchedValues.q11],
+  );
+
+  useEffect(() => {
+    if (audience !== "comptable") {
+      return;
+    }
+
+    const current = form.getValues("q11") ?? [];
+    const sanitized = sanitizeComptableQ11Selection(current);
+    if (sanitized.length !== current.length) {
+      form.setValue("q11", sanitized, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [audience, form, watchedQ11]);
 
   if (section.id === "rendez-vous" || section.id === "introduction") {
     return null;
   }
 
-  const questions = getSalesQuestionsForSection(section.id, audience);
+  const questions = getSalesQuestionsForSection(section.id, audience).map((question) =>
+    applyQuestionSegmentCopy(question, clientSegment),
+  );
 
   return (
     <Card className={COMPACT_CARD_CLASS}>
@@ -59,7 +86,19 @@ export function SalesQualificationForm({
             {question.type === "single" ? (
               <FormField
                 control={form.control}
-                name={question.id as "q4"}
+                name={
+                  question.id as
+                    | "o2"
+                    | "o3"
+                    | "o6"
+                    | "q4"
+                    | "q5"
+                    | "q9"
+                    | "q10"
+                    | "q12"
+                    | "q14"
+                    | "q15"
+                }
                 render={({ field }) => (
                   <FormItem>
                     <SalesSingleChoiceField
@@ -105,7 +144,7 @@ export function SalesQualificationForm({
             {question.type === "slider" ? (
               <FormField
                 control={form.control}
-                name={question.id as "q3" | "q6" | "q7" | "q13" | "q20"}
+                name={question.id as "q3" | "q6" | "q7" | "q13" | "q16" | "q20"}
                 render={({ field }) => (
                   <FormItem>
                     <SalesSliderField
@@ -148,6 +187,14 @@ export function SalesQualificationForm({
       </CardContent>
     </Card>
   );
+}
+
+function applyQuestionSegmentCopy(question: SalesQuestion, clientSegment: ReturnType<typeof resolveClientSegment>) {
+  if (question.id === "q11") {
+    return question;
+  }
+
+  return interpolateQuestionCopy(question, clientSegment);
 }
 
 function ConditionalSliderQuestionField({

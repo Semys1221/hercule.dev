@@ -154,6 +154,58 @@ export function dashboardLinkFor(
   return buildDashboardUrl(slug);
 }
 
+export function extractDashboardSlug(dashboardLink: string | null | undefined): string | null {
+  const trimmed = dashboardLink?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const url = new URL(trimmed, "https://example.com");
+    const parts = url.pathname.split("/").filter(Boolean);
+    const dashboardIndex = parts.indexOf("dashboard");
+    if (dashboardIndex === -1 || dashboardIndex >= parts.length - 1) {
+      return null;
+    }
+    return decodeURIComponent(parts[dashboardIndex + 1] ?? "");
+  } catch {
+    return null;
+  }
+}
+
+export function resolveSalesSessionDashboardLink(params: {
+  lead: Pick<LinkTrackingLead, "slug" | "dashboard_link"> | null;
+  bookingDashboardLink?: string | null;
+  developerMode?: boolean;
+  origin?: string;
+}): { link: string | null; isFake: boolean } {
+  const leadLink = params.lead ? dashboardLinkFor(params.lead) : null;
+  const slug =
+    params.lead?.slug?.trim() ||
+    extractDashboardSlug(params.bookingDashboardLink) ||
+    extractDashboardSlug(leadLink);
+
+  if (slug) {
+    if (params.developerMode && params.origin) {
+      return {
+        link: `${params.origin.replace(/\/$/, "")}/dashboard/${encodeURIComponent(slug)}`,
+        isFake: false,
+      };
+    }
+
+    return {
+      link: leadLink ?? params.bookingDashboardLink ?? buildDashboardUrl(slug),
+      isFake: false,
+    };
+  }
+
+  if (params.developerMode) {
+    return { link: buildDashboardUrl("dev-preview"), isFake: true };
+  }
+
+  return { link: null, isFake: false };
+}
+
 export function leadSlug(lead: Pick<LinkTrackingLead, "slug">): string {
   return lead.slug?.trim() ?? "";
 }

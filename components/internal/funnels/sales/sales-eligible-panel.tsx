@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { composeOpportunityCards } from "@/lib/admin/funnels/compose-opportunity-cards";
+import type { ClientSegment } from "@/lib/admin/funnels/client-segment";
+import { interpolateClientSegment } from "@/lib/admin/funnels/client-segment";
 import {
   formatContractWindow,
   getAgencyPreset,
@@ -42,6 +44,7 @@ type SalesEligiblePanelProps = {
   qualificationValues: SalesQualificationValues;
   reglesAccepted: boolean;
   developerMode?: boolean;
+  clientSegment?: ClientSegment;
 };
 
 export function SalesPresetSummary({
@@ -189,6 +192,7 @@ export function SalesEligiblePanel({
   qualificationValues,
   reglesAccepted,
   developerMode = false,
+  clientSegment,
 }: SalesEligiblePanelProps) {
   const reducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<RevealPhase>("loading");
@@ -240,6 +244,15 @@ export function SalesEligiblePanel({
   const showCopy = phase === "copy" || phase === "cards";
   const showCards = phase === "cards";
   const showRulesAlert = showCards && !developerMode && !reglesAccepted;
+  const rulesAlertMessage =
+    isComptable && clientSegment
+      ? interpolateClientSegment(
+          "Avant d'accéder à vos missions {clientSegment}, confirmez vos règles de traitement.",
+          clientSegment,
+        )
+      : isComptable
+        ? "Avant d'accéder à vos missions TPE, confirmez vos règles de traitement."
+        : "Avant d'accéder à vos opportunités, confirmez vos règles de traitement.";
 
   if (phase === "loading") {
     return (
@@ -308,11 +321,7 @@ export function SalesEligiblePanel({
         <InternalStatusAlert
           variant="info"
           title="Règles de traitement"
-          message={
-            isComptable
-              ? "Avant d'accéder à vos missions TPE, confirmez vos règles de traitement."
-              : "Avant d'accéder à vos opportunités, confirmez vos règles de traitement."
-          }
+          message={rulesAlertMessage}
           className="max-w-xl text-left"
         />
       ) : null}

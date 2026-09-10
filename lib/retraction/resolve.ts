@@ -20,6 +20,7 @@ export function resolveDashboardRetraction(params: {
   category: LeadCategory;
   row: RetractionRow;
   productStatut?: string | null;
+  isFastCheckout?: boolean;
 }): DashboardRetraction | null {
   if (!retractionAppliesTo(params.category)) {
     return null;
@@ -50,6 +51,9 @@ export function resolveDashboardRetraction(params: {
     waivedAt,
     canWaive,
     activationAt: activation?.toISOString() ?? null,
-    firstContratWorkingDays: firstContratWorkingDays(status),
+    firstContratWorkingDays: firstContratWorkingDays(
+      status,
+      params.isFastCheckout ?? false,
+    ),
   };
 }

@@ -3,6 +3,8 @@ export {
   activationAt,
   addCalendarDays,
   addWorkingDays,
+  agenceFirstContratAt,
+  agenceFirstContratCalendarDays,
   computeRetractionEndsAt,
   estimatedFirstBookingAt,
   firstContratWorkingDays,

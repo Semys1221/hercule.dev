@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
-  COMMERCIAL,
+  formatAgenceFastFirstRdvLabel,
+  formatAgenceStandardFirstRdvLabel,
   OFFER_TYPES,
   PAYMENT_PHASES,
   totalPriceCentsForOffer,
@@ -64,8 +65,8 @@ export function StepPricingCard({
         <h2 className="text-lg font-medium">Choisissez votre formule</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {fastEnabled
-            ? `Paiement intégral — livraison en ${COMMERCIAL.agenceFastDeliveryDays} jours.`
-            : `50 % à la commande · 50 % à la livraison · délai ${COMMERCIAL.agenceStandardDeliveryDaysLabel}.`}
+            ? `Paiement intégral — premier RDV sous ${formatAgenceFastFirstRdvLabel()}.`
+            : `50 % à la commande · 50 % à la livraison · premier RDV sous ${formatAgenceStandardFirstRdvLabel()}.`}
         </p>
       </div>
 
@@ -78,8 +79,8 @@ export function StepPricingCard({
           const isSelected = selectedOffer === offerType;
           const planFullCents = totalPriceCentsForOffer(offerType);
           const deliveryLabel = fastEnabled
-            ? `Livraison en ${COMMERCIAL.agenceFastDeliveryDays} jours`
-            : `Livraison sous ${COMMERCIAL.agenceStandardDeliveryDaysLabel}`;
+            ? `Premier RDV sous ${formatAgenceFastFirstRdvLabel()}`
+            : `Premier RDV sous ${formatAgenceStandardFirstRdvLabel()}`;
 
           return (
             <div
@@ -123,9 +124,8 @@ export function StepPricingCard({
               Fast
             </Label>
             <p className="text-sm text-muted-foreground">
-              Payer la totalité maintenant ({formatEuros(fullCents)}) et passer la livraison de{" "}
-              {COMMERCIAL.agenceStandardDeliveryDaysLabel} à {COMMERCIAL.agenceFastDeliveryDays}{" "}
-              jours.
+              Payer la totalité maintenant ({formatEuros(fullCents)}) et passer le premier RDV de{" "}
+              {formatAgenceStandardFirstRdvLabel()} à {formatAgenceFastFirstRdvLabel()}.
             </p>
           </div>
         </div>

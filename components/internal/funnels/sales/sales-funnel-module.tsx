@@ -13,6 +13,7 @@ import {
   subscribeDeveloperModeEnabled,
   subscribePitchSidebarEnabled,
 } from "@/lib/admin/funnels/sales-funnel-settings";
+import { resolveClientSegment } from "@/lib/admin/funnels/client-segment";
 import {
   getSalesQualificationDefaultValues,
   getSalesQualificationProgress,
@@ -103,6 +104,10 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     useWatch({ control: form.control }) as Partial<SalesQualificationValues>,
     audience,
   );
+  const clientSegment = useMemo(
+    () => resolveClientSegment(watchedValues.q11),
+    [watchedValues.q11],
+  );
 
   const exitHref = sessionHubHref(audience);
   const settingsHref = useMemo(() => {
@@ -124,11 +129,14 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   );
 
   const closingSections = useMemo(
-    () => getSalesClosingSections(audience),
-    [audience],
+    () => getSalesClosingSections(audience, clientSegment),
+    [audience, clientSegment],
   );
 
-  const funnelSections = useMemo(() => getSalesFunnelSections(audience), [audience]);
+  const funnelSections = useMemo(
+    () => getSalesFunnelSections(audience, clientSegment),
+    [audience, clientSegment],
+  );
 
   const completedSectionIds = useMemo(() => {
     const qualificationCompleted = funnelSections.filter((section) =>
@@ -164,7 +172,11 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   }, [audience, closingCompletionContext, phase, watchedValues]);
 
   const canEnterClosing = isSalesQualificationComplete(watchedValues, audience);
-  const activeQualificationSection = getSalesFunnelSection(activeQualificationId, audience);
+  const activeQualificationSection = getSalesFunnelSection(
+    activeQualificationId,
+    audience,
+    clientSegment,
+  );
 
   const meetingInfo: MeetingInfo | null = selectedBooking
     ? {
@@ -373,6 +385,12 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   }, [canEnterClosing, developerModeEnabled, enterClosingPhase, phase, pitchSidebarEnabled]);
 
   useEffect(() => {
+    if (audience === "comptable" && activeClosingId === "activation") {
+      setActiveClosingId("envoi-dashboard");
+    }
+  }, [activeClosingId, audience]);
+
+  useEffect(() => {
     return () => {
       clearTransitionTimeout();
     };
@@ -396,6 +414,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           canEnterClosing={canEnterClosing}
           pitchSidebarEnabled={pitchSidebarEnabled}
           developerModeEnabled={developerModeEnabled}
+          clientSegment={clientSegment}
           meetingInfo={meetingInfo}
           onEnterClosing={() => enterClosingPhase({ animated: true })}
           onBackToQualification={backToQualification}
@@ -429,6 +448,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
                   setClosingValues((current) => ({ ...current, ...patch }))
                 }
                 selectedLead={selectedLead}
+                selectedBooking={selectedBooking}
                 salesCallId={salesCallId}
                 developerMode={developerModeEnabled}
                 onRefreshLead={refreshLead}

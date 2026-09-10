@@ -84,6 +84,7 @@ export async function getAgencePaymentSchedule(
       balancePaid: true,
       balanceAmountCents: 0,
       deliveryComplete,
+      isFastCheckout: false,
     };
   }
 
@@ -99,6 +100,7 @@ export async function getAgencePaymentSchedule(
       balancePaid: true,
       balanceAmountCents: 0,
       deliveryComplete,
+      isFastCheckout: true,
     };
   }
 
@@ -132,6 +134,7 @@ export async function getAgencePaymentSchedule(
     balancePaid: usesSplitPayment ? balancePaid : true,
     balanceAmountCents,
     deliveryComplete,
+    isFastCheckout: false,
   };
 }
 

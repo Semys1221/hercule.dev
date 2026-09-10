@@ -7,6 +7,7 @@ import type { SalesClosingValues } from "@/components/internal/funnels/sales/sal
 import {
   mergeSalesQualificationValues,
   SALES_SKIP_VALUE,
+  type Q14Matrix,
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
@@ -59,9 +60,10 @@ export function formatQuestionAnswerValue(
     question.type === "slider_matrix" &&
     typeof raw === "object" &&
     raw !== null &&
-    !Array.isArray(raw)
+    !Array.isArray(raw) &&
+    "months3" in raw
   ) {
-    const matrix = raw as SalesQualificationValues["q14"];
+    const matrix = raw as Q14Matrix;
     return question.subQuestions
       .map((sub) => `${sub.label} : ${formatSliderLabel(matrix[sub.id], question.slider.unit)}`)
       .join(" · ");

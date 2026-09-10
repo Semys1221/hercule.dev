@@ -1,7 +1,13 @@
 import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import type { TimelineStep } from "@/lib/dashboard/types";
 
-import { addCalendarDays, addWorkingDays, formatFrenchDate, formatFrenchDateRange } from "./dates";
+import {
+  addCalendarDays,
+  addWorkingDays,
+  agenceFirstContratAt,
+  formatFrenchDate,
+  formatFrenchDateRange,
+} from "./dates";
 import type { RetractionStatus } from "./types";
 
 export type MilestoneItem = {
@@ -14,12 +20,13 @@ export type MilestoneItem = {
 export function buildActivationMilestones(params: {
   activationAt: Date;
   status: RetractionStatus;
+  isFastCheckout?: boolean;
   now?: Date;
 }): MilestoneItem[] {
   const now = params.now ?? new Date();
   const { status } = params;
-  const firstDays = status === "pending" ? 11 : 7;
-  const firstBooking = addWorkingDays(params.activationAt, firstDays);
+  const isFastCheckout = params.isFastCheckout ?? false;
+  const firstBooking = agenceFirstContratAt(params.activationAt, status, isFastCheckout);
   const secondBooking = addWorkingDays(firstBooking, 4);
   const thirdBooking = addWorkingDays(secondBooking, 4);
 
@@ -35,7 +42,7 @@ export function buildActivationMilestones(params: {
     {
       id: "first_contrat",
       label: "1er contrat attribué",
-      estimatedAt: `~${formatFrenchDate(addWorkingDays(params.activationAt, firstDays))}`,
+      estimatedAt: `~${formatFrenchDate(firstBooking)}`,
       status: status === "pending" ? "pending" : isPast(firstBooking) ? "done" : "active",
     },
     {

@@ -29,11 +29,33 @@ export function computeRetractionEndsAt(from: Date): Date {
   return ends;
 }
 
-export function firstContratWorkingDays(status: RetractionStatus): number {
-  if (status === "pending") {
-    return 11;
+export function agenceFirstContratCalendarDays(
+  status: RetractionStatus,
+  isFastCheckout: boolean,
+): number {
+  if (isFastCheckout) {
+    const base = COMMERCIAL.agenceFastFirstRdvWorkingDays;
+    return status === "pending" ? base + COMMERCIAL.retractationDays : base;
   }
-  return 7;
+  const base = COMMERCIAL.agenceStandardFirstRdvCalendarDays;
+  return status === "pending" ? base + COMMERCIAL.retractationDays : base;
+}
+
+export function agenceFirstContratAt(
+  activation: Date,
+  status: RetractionStatus,
+  isFastCheckout: boolean,
+): Date {
+  const days = agenceFirstContratCalendarDays(status, isFastCheckout);
+  return isFastCheckout ? addWorkingDays(activation, days) : addCalendarDays(activation, days);
+}
+
+/** @deprecated Prefer agenceFirstContratCalendarDays — kept for DashboardRetraction field. */
+export function firstContratWorkingDays(
+  status: RetractionStatus,
+  isFastCheckout = false,
+): number {
+  return agenceFirstContratCalendarDays(status, isFastCheckout);
 }
 
 export function activationAt(params: {
@@ -86,6 +108,10 @@ export function formatFrenchDateRange(min: Date, max: Date): string {
   return `${formatFrenchDate(min)} à ${formatFrenchDate(max)}`;
 }
 
-export function estimatedFirstBookingAt(activation: Date, status: RetractionStatus): Date {
-  return addWorkingDays(activation, firstContratWorkingDays(status));
+export function estimatedFirstBookingAt(
+  activation: Date,
+  status: RetractionStatus,
+  isFastCheckout = false,
+): Date {
+  return agenceFirstContratAt(activation, status, isFastCheckout);
 }

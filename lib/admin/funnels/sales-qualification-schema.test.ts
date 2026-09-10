@@ -2,7 +2,10 @@
 
 import assert from "node:assert/strict";
 
-import { COMPTABLE_MONTHLY_MIN } from "@/components/internal/funnels/sales/sales-questions-comptable";
+import {
+  COMPTABLE_ANNUAL_MIN,
+  COMPTABLE_ANNUAL_TYPICAL,
+} from "@/components/internal/funnels/sales/sales-questions-comptable";
 import {
   getSalesQualificationDefaultValues,
   isSalesSectionComplete,
@@ -11,19 +14,18 @@ import { SALES_TEST_SESSION_COMPTABLE_QUALIFICATION } from "@/lib/admin/funnels/
 
 function main() {
   const comptableDefaults = getSalesQualificationDefaultValues("comptable");
-  assert.equal(comptableDefaults.q14.months3, COMPTABLE_MONTHLY_MIN);
-  assert.equal(comptableDefaults.q13, COMPTABLE_MONTHLY_MIN);
+  assert.equal(comptableDefaults.q14, "monthly_12");
+  assert.equal(comptableDefaults.q13, COMPTABLE_ANNUAL_TYPICAL);
+  assert.equal(comptableDefaults.q15, "included");
+  assert.equal(comptableDefaults.q16, null);
 
   assert.equal(
     isSalesSectionComplete(
       "standards",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        q14: {
-          months3: COMPTABLE_MONTHLY_MIN,
-          months6: COMPTABLE_MONTHLY_MIN,
-          months12: COMPTABLE_MONTHLY_MIN,
-        },
+        q13: COMPTABLE_ANNUAL_MIN,
+        q14: "annual",
       },
       "comptable",
     ),
@@ -35,11 +37,7 @@ function main() {
       "standards",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        q14: {
-          months3: COMPTABLE_MONTHLY_MIN - 1,
-          months6: COMPTABLE_MONTHLY_MIN,
-          months12: COMPTABLE_MONTHLY_MIN,
-        },
+        q13: COMPTABLE_ANNUAL_MIN - 1,
       },
       "comptable",
     ),

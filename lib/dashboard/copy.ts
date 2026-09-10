@@ -6,6 +6,8 @@ export const DASHBOARD_STARTER_SUBTITLE = "Suivi de vos contrats PME sécurisés
 export const DASHBOARD_POST_PAYMENT_FAQ_LABEL = "Questions fréquentes — service actif";
 export const DASHBOARD_RETRACTION_BADGE_PENDING = "Rétractation en cours";
 export const DASHBOARD_RETRACTION_BADGE_ACTIVE = "Service actif";
+export const DASHBOARD_UNAVAILABLE_MESSAGE =
+  "Navré, cette prestation n'est plus disponible.";
 
 export function dashboardPageTitle(slug: string): string {
   return `Suivi ${slug}`;

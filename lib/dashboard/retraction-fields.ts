@@ -18,6 +18,7 @@ export function buildDashboardRetractionFields(params: {
     onboarding_completed_at?: string | null;
     product_statut?: string | null;
   };
+  isFastCheckout?: boolean;
 }): {
   retraction: DashboardRetraction | null;
   milestones: TimelineStep[];
@@ -26,6 +27,7 @@ export function buildDashboardRetractionFields(params: {
     category: params.category,
     row: params.lead,
     productStatut: params.lead.product_statut,
+    isFastCheckout: params.isFastCheckout,
   });
 
   if (!retraction?.activationAt) {
@@ -51,6 +53,9 @@ export function buildDashboardRetractionFields(params: {
   const milestones = buildMilestones({
     activationAt: activation,
     status: retraction.status,
+    ...(params.category === "agence"
+      ? { isFastCheckout: params.isFastCheckout ?? false }
+      : {}),
   }).map((m) => ({
     id: m.id,
     label: m.label,

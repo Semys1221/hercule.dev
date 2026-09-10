@@ -5,9 +5,12 @@ export const HERCULE_MONTHLY_MIN = 1500;
 export type SalesQuestionOption = {
   id: string;
   label: string;
+  disabled?: boolean;
+  helpTitle?: string;
+  helpText?: string;
 };
 
-export type SalesSliderUnit = "count" | "eur" | "eur_month" | "months";
+export type SalesSliderUnit = "count" | "eur" | "eur_month" | "eur_year" | "months";
 
 export type SalesSliderConfig = {
   min: number;
@@ -139,6 +142,8 @@ export function formatSliderLabel(value: number, unit: SalesSliderUnit): string 
       return `${formatted} €`;
     case "eur_month":
       return `${formatted} € / mois`;
+    case "eur_year":
+      return `${formatted} € / an`;
     case "months":
       return value === 1 ? "1 mois" : `${formatted} mois`;
     case "count":

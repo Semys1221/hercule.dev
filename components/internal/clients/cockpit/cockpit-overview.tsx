@@ -98,14 +98,41 @@ export function CockpitOverview({ data }: CockpitOverviewProps) {
             <span className="text-muted-foreground">Capacité : </span>
             {data.form.capacite ?? "—"}
           </p>
-          <p>
-            <span className="text-muted-foreground">Budget ponctuel : </span>
-            {data.form.budgetMinPonctuel ?? "—"}
-          </p>
-          <p>
-            <span className="text-muted-foreground">Budget mensuel : </span>
-            {data.form.budgetMinMensuel ?? "—"}
-          </p>
+          {data.category === "comptable" ? (
+            <>
+              <p>
+                <span className="text-muted-foreground">Honoraires annuels min. : </span>
+                {data.form.honorairesAnnuelsMin != null
+                  ? `${data.form.honorairesAnnuelsMin.toLocaleString("fr-FR")} € / an`
+                  : "—"}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Facturation : </span>
+                {data.form.facturationMode ?? "—"}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Social / paie : </span>
+                {data.form.socialPaieMode ?? "—"}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Honoraires ponctuels min. : </span>
+                {data.form.honorairesPonctuelMin != null
+                  ? `${data.form.honorairesPonctuelMin.toLocaleString("fr-FR")} €`
+                  : "—"}
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                <span className="text-muted-foreground">Budget ponctuel : </span>
+                {data.form.budgetMinPonctuel ?? "—"}
+              </p>
+              <p>
+                <span className="text-muted-foreground">Budget mensuel : </span>
+                {data.form.budgetMinMensuel ?? "—"}
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
 

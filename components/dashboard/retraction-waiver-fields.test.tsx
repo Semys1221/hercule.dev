@@ -19,4 +19,19 @@ describe("RetractionWaiverFields", () => {
     await user.click(checkbox);
     expect(onCheckedChange).toHaveBeenCalledWith(true);
   });
+
+  it("uses custom cvgHref when provided", () => {
+    render(
+      <RetractionWaiverFields
+        checked={false}
+        onCheckedChange={() => {}}
+        cvgHref="/cvg/comptable"
+      />,
+    );
+
+    expect(screen.getByRole("link", { name: "Voir les CGV §8" })).toHaveAttribute(
+      "href",
+      "/cvg/comptable",
+    );
+  });
 });

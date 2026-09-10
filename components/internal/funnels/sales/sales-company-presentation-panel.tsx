@@ -225,7 +225,7 @@ export function SalesCompanyPresentationPanel({
             </p>
             <p>
               {isComptable
-                ? "Nous qualifions chaque demande par Live Qualification, provisionnons Calendly Pro et Zoom Pro pour vos RDV, et garantissons 15 rendez-vous planifiés en 90 jours — sans commission sur vos honoraires."
+                ? "Nous qualifions chaque demande par Live Qualification, provisionnons Calendly Pro et Zoom Pro pour vos RDV, et attribuons jusqu'à 10 missions PME qualifiées par mois en Hercule Starter — sans commission sur vos honoraires."
                 : "Aujourd'hui, nous générons plus de 20 contrats par mois dans différents secteurs. Nous auditons et qualifions les agences partenaires pour mettre en relation ces demandes avec les profils les plus compatibles."}
             </p>
           </>

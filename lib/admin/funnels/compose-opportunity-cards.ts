@@ -46,10 +46,16 @@ const budgetFormatter = new Intl.NumberFormat("fr-FR");
 
 export function formatOpportunityBudget(
   cents: number,
-  kind: "one_off" | "monthly",
+  kind: BudgetKind,
 ): string {
   const formatted = `${budgetFormatter.format(cents / 100)} €`;
-  return kind === "monthly" ? `${formatted} / mois` : formatted;
+  if (kind === "monthly") {
+    return `${formatted} / mois`;
+  }
+  if (kind === "annual") {
+    return `${formatted} / an`;
+  }
+  return formatted;
 }
 
 function classifyBlueprint(
@@ -189,7 +195,7 @@ function blueprintToCard(
   floorCents: number,
   audience: Audience = "agence",
 ): PresetOpportunityCard {
-  const budgetKind = budgetKindFromPrestationType(blueprint.prestationType);
+  const budgetKind = budgetKindFromPrestationType(blueprint.prestationType, audience);
   const timing = computeTimingOffsets(blueprint.timingClass, delayed);
 
   return {

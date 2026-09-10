@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { retractionAppliesTo } from "./applies";
 import {
+  addCalendarDays,
   addWorkingDays,
   computeRetractionEndsAt,
   firstContratWorkingDays,
@@ -27,10 +28,11 @@ describe("computeRetractionEndsAt", () => {
 });
 
 describe("firstContratWorkingDays", () => {
-  it("returns 11 for pending and 7 otherwise", () => {
-    expect(firstContratWorkingDays("pending")).toBe(11);
-    expect(firstContratWorkingDays("waived")).toBe(7);
-    expect(firstContratWorkingDays("expired")).toBe(7);
+  it("returns 34/30 calendar days for 2x and 12/8 working days for Fast", () => {
+    expect(firstContratWorkingDays("pending", false)).toBe(34);
+    expect(firstContratWorkingDays("waived", false)).toBe(30);
+    expect(firstContratWorkingDays("pending", true)).toBe(12);
+    expect(firstContratWorkingDays("waived", true)).toBe(8);
   });
 });
 
@@ -107,12 +109,25 @@ describe("buildActivationMilestones", () => {
     expect(milestones[1]?.status).toBe("pending");
   });
 
-  it("shifts first contrat by 11 working days when pending", () => {
+  it("shifts first contrat by 34 calendar days when pending (paiement 2x)", () => {
     const activation = new Date("2026-09-13T00:00:00.000Z");
-    const first = addWorkingDays(activation, 11);
+    const first = addCalendarDays(activation, 34);
     const milestones = buildActivationMilestones({
       activationAt: activation,
       status: "pending",
+      isFastCheckout: false,
+    });
+
+    expect(milestones[1]?.estimatedAt).toContain(String(first.getDate()));
+  });
+
+  it("shifts first contrat by 8 working days when Fast checkout", () => {
+    const activation = new Date("2026-09-10T12:00:00.000Z");
+    const first = addWorkingDays(activation, 8);
+    const milestones = buildActivationMilestones({
+      activationAt: activation,
+      status: "waived",
+      isFastCheckout: true,
     });
 
     expect(milestones[1]?.estimatedAt).toContain(String(first.getDate()));

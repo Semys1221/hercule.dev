@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { fr } from "date-fns/locale";
 
 import { composeOpportunityCards } from "@/lib/admin/funnels/compose-opportunity-cards";
+import type { ClientSegment } from "@/lib/admin/funnels/client-segment";
 import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
 import type { Audience } from "@/lib/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
@@ -62,6 +63,7 @@ type SalesCalendrierPanelProps = {
   closingValues: SalesClosingValues;
   saving: boolean;
   persistTieDown: (patch: Partial<SalesClosingValues>) => Promise<void>;
+  clientSegment?: ClientSegment;
 };
 
 export function SalesCalendrierPanel({
@@ -70,6 +72,7 @@ export function SalesCalendrierPanel({
   closingValues,
   saving,
   persistTieDown,
+  clientSegment,
 }: SalesCalendrierPanelProps) {
   const reducedMotion = useReducedMotion() ?? false;
   const [phase, setPhase] = useState<RevealPhase>(reducedMotion ? "complete" : "idle");
@@ -216,6 +219,7 @@ export function SalesCalendrierPanel({
             meetings={meetings}
             today={today}
             phase={phase}
+            clientSegment={clientSegment}
           />
 
           <div

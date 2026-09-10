@@ -211,6 +211,26 @@ export async function cancelFollowUpJobs(leadId: string): Promise<number> {
   return cancelPendingJobsForLead(leadId, FOLLOW_UP_EMAIL_TYPES);
 }
 
+export async function cancelAllPendingJobsForLead(leadId: string): Promise<number> {
+  const client = createLinkTrackingClient();
+  const now = new Date().toISOString();
+  const { data, error } = await client
+    .from("booking_email_jobs")
+    .update({
+      status: "cancelled",
+      cancelled_at: now,
+    })
+    .eq("lead_id", leadId)
+    .eq("status", "pending")
+    .select("id");
+
+  if (error) {
+    throw new Error(`Failed to cancel all pending jobs: ${error.message}`);
+  }
+
+  return data?.length ?? 0;
+}
+
 export async function cancelJob(jobId: string): Promise<void> {
   const client = createLinkTrackingClient();
   const now = new Date().toISOString();

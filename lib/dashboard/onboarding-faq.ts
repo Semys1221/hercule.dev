@@ -38,7 +38,12 @@ const AGENCE_FAQ: OnboardingFaqConfig = {
     {
       id: "ag-delai-rdv",
       q: "Combien de temps avant mon premier RDV ?",
-      a: "Premier RDV honoré planifié sous 6 jours ouvrés dès validation de votre profil (sous 15 jours en file d'attente).",
+      a: "Premier RDV planifié sous 30 jours (paiement en 2 fois) ou sous 8 jours ouvrés (paiement intégral), dès validation de votre profil.",
+    },
+    {
+      id: "ag-retard-livraison",
+      q: "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
+      a: "Selon nos [Conditions générales de vente](/cvg) (article 9), vous nous accordez un délai supplémentaire de **7 jours** en cas de retard de livraison (notamment en phase de montée en charge). Au-delà, nous vous invitons à nous écrire à contact@hercule.dev et à ne pas initier de dispute sur Stripe sans nous avoir contactés au préalable. Un règlement à l'amiable pourra être envisagé au cas par cas.",
     },
     {
       id: "ag-retractation",
@@ -89,9 +94,14 @@ const COMPTABLE_FAQ: OnboardingFaqConfig = {
       a: "Premier rendez-vous planifié sous 20 à 25 jours après activation, avec Calendly Pro et Zoom Pro provisionnés par Hercule.",
     },
     {
+      id: "cp-retard-livraison",
+      q: "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
+      a: "Selon nos [Conditions générales de vente Hercule Comptable](/cvg/comptable) (article 9), vous nous accordez un délai supplémentaire de **7 jours** en cas de retard de livraison. Au-delà, nous vous invitons à nous écrire à contact@hercule.dev et à ne pas initier de dispute sur Stripe sans nous avoir contactés au préalable. Un règlement à l'amiable pourra être envisagé au cas par cas.",
+    },
+    {
       id: "cp-retractation",
       q: "Ai-je un délai de rétractation ?",
-      a: "En tant que professionnel, aucun délai de rétractation de 4 jours n'est applicable. La commande est ferme dès acceptation des CGV et réception du paiement. Détail : [CGV Comptable §8](/cvg/comptable).",
+      a: "Oui. Après souscription, vous disposez de 4 jours calendaires pour vous rétracter par email à contact@hercule.dev, tant que votre service n'a pas encore démarré (Activation non effectuée). Vous pouvez renoncer à ce délai lors de l'onboarding ou à tout moment depuis votre dashboard pour lancer la recherche immédiatement. Passé ce délai ou après Activation, la commande est ferme. Détail : [CGV Comptable §8](/cvg/comptable).",
     },
     {
       id: "cp-garantie-mrr",

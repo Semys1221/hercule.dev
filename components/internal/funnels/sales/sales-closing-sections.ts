@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 
 import type { Audience } from "@/lib/admin/navigation";
+import {
+  interpolateClientSegment,
+  type ClientSegment,
+} from "@/lib/admin/funnels/client-segment";
 
 import type { SalesFunnelSectionId } from "./sales-funnel-sections";
 
@@ -71,26 +75,21 @@ const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
     id: "regles-traitement",
     label: "Règles de traitement",
     title: "Vos règles de traitement",
-    subtitle: "Confirmez que vous acceptez nos règles de traitement des missions TPE.",
+    subtitle:
+      "Confirmez que vous acceptez nos règles de traitement des missions {clientSegment}.",
   },
   {
     id: "demandes-eligibles",
     label: "Missions éligibles",
-    title: "Vos missions TPE éligibles",
+    title: "Vos missions {clientSegment} éligibles",
     subtitle: "Profils sélectionnés selon votre questionnaire de qualification cabinet.",
   },
   {
     id: "calendrier",
     label: "Calendrier de collaboration",
     title: "Votre calendrier",
-    subtitle: "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants TPE.",
-  },
-  {
-    id: "activation",
-    label: "Activation & paiement",
-    title: "Activation & paiement",
     subtitle:
-      "Hercule Lite, Hercule Starter 1 499 €/mois ou Pack 3 mois — checkout Stripe embarqué.",
+      "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants {clientSegment}.",
   },
   {
     id: "envoi-dashboard",
@@ -100,10 +99,25 @@ const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
   },
 ];
 
-export function getSalesClosingSections(audience: Audience = "agence"): SalesClosingSection[] {
-  return audience === "comptable"
-    ? COMPTABLE_SALES_CLOSING_SECTIONS
-    : SALES_CLOSING_SECTIONS;
+export function getSalesClosingSections(
+  audience: Audience = "agence",
+  clientSegment?: ClientSegment,
+): SalesClosingSection[] {
+  const sections =
+    audience === "comptable" ? COMPTABLE_SALES_CLOSING_SECTIONS : SALES_CLOSING_SECTIONS;
+
+  if (audience !== "comptable" || !clientSegment) {
+    return sections;
+  }
+
+  return sections.map((section) => ({
+    ...section,
+    label: interpolateClientSegment(section.label, clientSegment),
+    title: interpolateClientSegment(section.title, clientSegment),
+    subtitle: section.subtitle
+      ? interpolateClientSegment(section.subtitle, clientSegment)
+      : undefined,
+  }));
 }
 
 export const SALES_CLOSING_SECTION_ICONS: Record<SalesClosingSectionId, LucideIcon> = {
@@ -128,8 +142,9 @@ export const salesClosingDefaultValues: SalesClosingValues = {
 export function getSalesClosingSection(
   id: SalesClosingSectionId,
   audience: Audience = "agence",
+  clientSegment?: ClientSegment,
 ): SalesClosingSection | undefined {
-  return getSalesClosingSections(audience).find((section) => section.id === id);
+  return getSalesClosingSections(audience, clientSegment).find((section) => section.id === id);
 }
 
 const CLOSING_SECTION_IDS = new Set<SalesClosingSectionId>([

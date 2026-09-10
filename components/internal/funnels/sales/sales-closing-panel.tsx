@@ -9,6 +9,7 @@ import {
   UserX,
 } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,12 @@ import {
 } from "@/components/ui/item";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
+import {
+  interpolateClientSegment,
+  interpolateQuestionCopy,
+  resolveClientSegment,
+} from "@/lib/admin/funnels/client-segment";
 import type { Audience } from "@/lib/admin/navigation";
 import {
   getSalesQuestions,
@@ -32,9 +39,9 @@ import {
 } from "@/components/internal/funnels/sales/sales-questions";
 import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
 import { SESSION_DEVELOPER_MODE_FAKE_LINK } from "@/lib/admin/funnels/ui-copy";
-import { SALES_SKIP_VALUE, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { SALES_SKIP_VALUE, type Q14Matrix, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
-import { buildDashboardUrl, dashboardLinkFor } from "@/lib/link-tracking/urls";
+import { resolveSalesSessionDashboardLink } from "@/lib/link-tracking/urls";
 
 import {
   getSalesClosingSection,
@@ -43,7 +50,6 @@ import {
   type SalesClosingValues,
 } from "./sales-closing-sections";
 import { SalesCalendrierPanel } from "./sales-calendrier-panel";
-import { SalesComptablePricingPanel } from "./sales-comptable-pricing-panel";
 import { SalesEligiblePanel, SalesPresetSummary } from "./sales-eligible-panel";
 
 type SalesClosingPanelProps = {
@@ -53,6 +59,7 @@ type SalesClosingPanelProps = {
   closingValues: SalesClosingValues;
   onClosingChange: (values: Partial<SalesClosingValues>) => void;
   selectedLead: LinkTrackingLead | null;
+  selectedBooking: EnrichedCalendlyBooking | null;
   salesCallId: string | null;
   developerMode?: boolean;
   onRefreshLead: () => Promise<void>;
@@ -83,8 +90,8 @@ function formatQuestionAnswer(question: SalesQuestion, values: SalesQualificatio
     }
   }
 
-  if (question.type === "slider_matrix" && typeof raw === "object" && raw !== null && !Array.isArray(raw)) {
-    const matrix = raw as SalesQualificationValues["q14"];
+  if (question.type === "slider_matrix" && typeof raw === "object" && raw !== null && !Array.isArray(raw) && "months3" in raw) {
+    const matrix = raw as Q14Matrix;
     return question.subQuestions
       .map((sub) => `${sub.label} : ${formatSliderLabel(matrix[sub.id], question.slider.unit)}`)
       .join(" · ");
@@ -145,20 +152,21 @@ const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
   {
     id: "reactivite",
     title: "Réactivité",
-    description: "Répondre à toute mission TPE proposée sous 24h ouvrées.",
+    description: "Répondre à toute mission {clientSegment} proposée sous 24h ouvrées.",
     icon: Clock,
   },
   {
     id: "traitement",
     title: "Traitement",
-    description: "Chaque mission TPE est traitée avec sérieux dans un délai raisonnable.",
+    description:
+      "Chaque mission {clientSegment} est traitée avec sérieux dans un délai raisonnable.",
     icon: ClipboardCheck,
   },
   {
     id: "no-show",
     title: "No-show",
     description:
-      "Signaler tout no-show dirigeant TPE sous 48h → remplacement ≤ 14 jours.",
+      "Signaler tout no-show dirigeant {clientSegment} sous 48h → remplacement ≤ 14 jours.",
     icon: UserX,
   },
   {
@@ -169,8 +177,18 @@ const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
   },
 ];
 
-function getTreatmentRules(audience: Audience): TreatmentRule[] {
-  return audience === "comptable" ? COMPTABLE_TREATMENT_RULES : AGENCE_TREATMENT_RULES;
+function getTreatmentRules(
+  audience: Audience,
+  clientSegment = resolveClientSegment([]),
+): TreatmentRule[] {
+  if (audience !== "comptable") {
+    return AGENCE_TREATMENT_RULES;
+  }
+
+  return COMPTABLE_TREATMENT_RULES.map((rule) => ({
+    ...rule,
+    description: interpolateClientSegment(rule.description, clientSegment),
+  }));
 }
 
 const AGENCE_DASHBOARD_FEATURES = [
@@ -180,7 +198,7 @@ const AGENCE_DASHBOARD_FEATURES = [
 ] as const;
 
 const COMPTABLE_DASHBOARD_FEATURES = [
-  "Le suivi de vos missions TPE en cours et leur statut",
+  "Le suivi de vos missions {clientSegment} en cours et leur statut",
   "L'historique de vos mises en relation et résultats",
   "Les informations liées à votre offre et votre facturation",
 ] as const;
@@ -194,20 +212,36 @@ const AGENCE_DASHBOARD_NEXT_STEPS = [
 
 const COMPTABLE_DASHBOARD_NEXT_STEPS = [
   "Accès onboarding — sous 48h après réception du lien",
-  "Activation — première mission TPE lancée dès l'onboarding complété",
+  "Activation — première mission {clientSegment} lancée dès l'onboarding complété",
   "Proposition de mission — RDV dirigeant planifié sous 5–10 jours ouvrés",
   "Premier RDV honoré — ≤ 25 jours après activation",
 ] as const;
 
-function getDashboardFeatures(audience: Audience): readonly string[] {
-  return audience === "comptable" ? COMPTABLE_DASHBOARD_FEATURES : AGENCE_DASHBOARD_FEATURES;
+function getDashboardFeatures(
+  audience: Audience,
+  clientSegment = resolveClientSegment([]),
+): readonly string[] {
+  if (audience !== "comptable") {
+    return AGENCE_DASHBOARD_FEATURES;
+  }
+
+  return COMPTABLE_DASHBOARD_FEATURES.map((item) =>
+    interpolateClientSegment(item, clientSegment),
+  );
 }
 
-function getDashboardNextSteps(audience: Audience): readonly string[] {
-  return audience === "comptable" ? COMPTABLE_DASHBOARD_NEXT_STEPS : AGENCE_DASHBOARD_NEXT_STEPS;
-}
+function getDashboardNextSteps(
+  audience: Audience,
+  clientSegment = resolveClientSegment([]),
+): readonly string[] {
+  if (audience !== "comptable") {
+    return AGENCE_DASHBOARD_NEXT_STEPS;
+  }
 
-const DEV_PREVIEW_DASHBOARD_LINK = buildDashboardUrl("dev-preview");
+  return COMPTABLE_DASHBOARD_NEXT_STEPS.map((item) =>
+    interpolateClientSegment(item, clientSegment),
+  );
+}
 
 export function SalesClosingPanel({
   audience,
@@ -216,40 +250,58 @@ export function SalesClosingPanel({
   closingValues,
   onClosingChange,
   selectedLead,
+  selectedBooking,
   salesCallId,
   developerMode = false,
   onRefreshLead,
   onPersistClosing,
 }: SalesClosingPanelProps) {
-  const section = getSalesClosingSection(sectionId, audience);
   const qualificationValues = qualificationForm.getValues();
+  const watchedQ11 = useWatch({ control: qualificationForm.control, name: "q11" }) as
+    | string[]
+    | undefined;
+  const clientSegment = useMemo(
+    () => resolveClientSegment(watchedQ11 ?? qualificationValues.q11),
+    [qualificationValues.q11, watchedQ11],
+  );
+  const section = getSalesClosingSection(sectionId, audience, clientSegment);
   const salesQuestions = useMemo(() => getSalesQuestions(audience), [audience]);
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const leadDashboardLink = useMemo(
-    () => (selectedLead ? dashboardLinkFor(selectedLead) : null),
-    [selectedLead],
+  const dashboardResolution = useMemo(
+    () =>
+      resolveSalesSessionDashboardLink({
+        lead: selectedLead,
+        bookingDashboardLink: selectedBooking?.links?.dashboard_link,
+        developerMode,
+        origin: typeof window !== "undefined" ? window.location.origin : undefined,
+      }),
+    [developerMode, selectedBooking?.links?.dashboard_link, selectedLead],
   );
-  const dashboardLink = useMemo(() => {
-    if (leadDashboardLink) return leadDashboardLink;
-    if (developerMode) return DEV_PREVIEW_DASHBOARD_LINK;
-    return null;
-  }, [developerMode, leadDashboardLink]);
-
+  const dashboardLink = dashboardResolution.link;
+  const usingFakeDashboardLink = dashboardResolution.isFake;
   const showDashboardLinkBlock =
     Boolean(dashboardLink) &&
     (developerMode || isSalesClosingReadyForDashboardLink(closingValues));
-  const usingFakeDashboardLink = developerMode && !leadDashboardLink;
 
   const presetResult = useMemo(
     () => scoreAgencyPresets(qualificationValues, audience),
     [audience, qualificationValues],
   );
-  const treatmentRules = useMemo(() => getTreatmentRules(audience), [audience]);
-  const dashboardFeatures = useMemo(() => getDashboardFeatures(audience), [audience]);
-  const dashboardNextSteps = useMemo(() => getDashboardNextSteps(audience), [audience]);
+  const treatmentRules = useMemo(
+    () => getTreatmentRules(audience, clientSegment),
+    [audience, clientSegment],
+  );
+  const dashboardFeatures = useMemo(
+    () => getDashboardFeatures(audience, clientSegment),
+    [audience, clientSegment],
+  );
+  const dashboardNextSteps = useMemo(
+    () => getDashboardNextSteps(audience, clientSegment),
+    [audience, clientSegment],
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -313,14 +365,21 @@ export function SalesClosingPanel({
               <CardTitle className="text-base">Réponses qualification</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              {salesQuestions.map((question) => (
-                <div key={question.id} className="grid gap-1 border-b border-border pb-3 last:border-0">
-                  <p className="font-medium">{question.prompt}</p>
-                  <p className="text-muted-foreground">
-                    {formatQuestionAnswer(question, qualificationValues)}
-                  </p>
-                </div>
-              ))}
+              {salesQuestions.map((question) => {
+                const displayQuestion =
+                  question.id === "q11"
+                    ? question
+                    : interpolateQuestionCopy(question, clientSegment);
+
+                return (
+                  <div key={question.id} className="grid gap-1 border-b border-border pb-3 last:border-0">
+                    <p className="font-medium">{displayQuestion.prompt}</p>
+                    <p className="text-muted-foreground">
+                      {formatQuestionAnswer(displayQuestion, qualificationValues)}
+                    </p>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </div>
@@ -370,6 +429,7 @@ export function SalesClosingPanel({
           qualificationValues={qualificationValues}
           reglesAccepted={closingValues.reglesAccepted}
           developerMode={developerMode}
+          clientSegment={clientSegment}
         />
       ) : null}
 
@@ -380,14 +440,7 @@ export function SalesClosingPanel({
           closingValues={closingValues}
           saving={saving}
           persistTieDown={persistTieDown}
-        />
-      ) : null}
-
-      {sectionId === "activation" && audience === "comptable" ? (
-        <SalesComptablePricingPanel
-          slug={selectedLead?.slug ?? null}
-          developerMode={developerMode}
-          closingValues={closingValues}
+          clientSegment={clientSegment}
         />
       ) : null}
 

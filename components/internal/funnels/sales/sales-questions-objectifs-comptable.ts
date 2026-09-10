@@ -8,7 +8,7 @@ export const COMPTABLE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     type: "multi",
     maxSelections: 2,
     prompt:
-      "Quelle est aujourd'hui votre principale difficulté pour développer votre portefeuille de dossiers TPE ?",
+      "Quelle est aujourd'hui votre principale difficulté pour développer votre portefeuille de dossiers {clientSegment} ?",
     description: "Sélectionnez jusqu'à 2 réponses.",
     options: [
       { id: "qualified_dossiers", label: "Manque de nouveaux dossiers qualifiés" },
@@ -24,7 +24,7 @@ export const COMPTABLE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     number: 2,
     sectionId: "objectifs",
     type: "single",
-    prompt: "Avez-vous actuellement de la capacité pour prendre de nouveaux dossiers TPE ?",
+    prompt: "Avez-vous actuellement de la capacité pour prendre de nouveaux dossiers {clientSegment} ?",
     options: [
       { id: "high", label: "Oui, capacité significative (≥ 5 dossiers/mois)" },
       { id: "moderate", label: "Oui, capacité modérée (2–4 dossiers/mois)" },
@@ -41,7 +41,7 @@ export const COMPTABLE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     prompt: "Quelle est la principale raison de cette situation ?",
     options: [
       { id: "insufficient_prospects", label: "Flux de prospects insuffisant" },
-      { id: "unqualified_prospects", label: "Prospects non qualifiés (hors zone, budget, typologie)" },
+      { id: "unqualified_prospects", label: "Prospects non qualifiés (hors zone, honoraires, typologie)" },
       { id: "slow_onboarding", label: "Processus de prise en charge trop long" },
       { id: "hard_to_sell", label: "Offre / honoraires difficiles à vendre" },
       { id: "missing_skills", label: "Manque de compétences sur certaines missions" },
@@ -60,7 +60,7 @@ export const COMPTABLE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
       { id: "no_local_prospecting", label: "Pas assez de prospection locale" },
       { id: "weak_channels", label: "Canaux d'acquisition peu performants" },
       { id: "weak_network", label: "Bouche-à-oreille / réseau insuffisant" },
-      { id: "offer_mismatch", label: "Offre pas adaptée aux TPE de votre zone" },
+      { id: "offer_mismatch", label: "Offre pas adaptée aux {clientSegment} de votre zone" },
       { id: "low_visibility", label: "Manque de visibilité (site, avis, réseaux)" },
       { id: "fee_competition", label: "Concurrence agressive sur les honoraires" },
       { id: "no_acquisition_resource", label: "Pas de ressource dédiée à l'acquisition" },

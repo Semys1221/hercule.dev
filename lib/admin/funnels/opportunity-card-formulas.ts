@@ -1,16 +1,24 @@
 import { HERCULE_MONTHLY_MIN } from "@/components/internal/funnels/sales/sales-questions";
-import { COMPTABLE_MONTHLY_MIN } from "@/components/internal/funnels/sales/sales-questions-comptable";
+import { COMPTABLE_ANNUAL_MIN } from "@/components/internal/funnels/sales/sales-questions-comptable";
 import type { Audience } from "@/lib/admin/navigation";
 import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 
-export type BudgetKind = "one_off" | "monthly";
+function isQ14Matrix(
+  value: SalesQualificationValues["q14"],
+): value is { months3: number; months6: number; months12: number } {
+  return typeof value === "object" && value !== null && "months3" in value;
+}
+
+export type BudgetKind = "one_off" | "monthly" | "annual";
 
 export function getHerculeFloorCents(audience: Audience = "agence"): number {
-  const min = isComptableSalesAudience(audience)
-    ? COMPTABLE_MONTHLY_MIN
-    : HERCULE_MONTHLY_MIN;
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_ANNUAL_MIN * 100;
+  }
+  const min = HERCULE_MONTHLY_MIN;
   return min * 100;
 }
 
@@ -66,11 +74,11 @@ export const PRESET_FLOOR_OVERRIDE_CENTS: Record<AgencyPresetId, number> = {
 };
 
 const COMPTABLE_PRESET_FLOOR_OVERRIDE_CENTS: Record<AgencyPresetId, number> = {
-  serial: 149_900,
-  growth: 149_900,
-  architect: 200_000,
-  specialist: 350_000,
-  premium: 500_000,
+  serial: COMMERCIAL_COMPTABLE.honorairesAnnuelsMinCents,
+  growth: COMMERCIAL_COMPTABLE.honorairesAnnuelsMinCents,
+  architect: COMMERCIAL_COMPTABLE.valueShowcaseAnnualHonorairesCents,
+  specialist: 480_000,
+  premium: 720_000,
 };
 
 export function getPresetFloorOverrideCents(
@@ -140,8 +148,12 @@ const MONTHLY_PRESTATION_TYPES = new Set<PrestationType>([
   "acquisition_paid",
   "seo_organique",
   "maintenance",
+]);
+
+const ANNUAL_PRESTATION_TYPES = new Set<PrestationType>([
   "tenue_comptable",
   "social_paie",
+  "reprise_dossier",
 ]);
 
 const HORIZON_COPY: Record<PrestationType, readonly [string, string, string, string, string]> = {
@@ -240,7 +252,16 @@ const TAILLE_CLASS_IDS = new Set<string>([
   "enterprise",
 ]);
 
-export function budgetKindFromPrestationType(type: PrestationType): BudgetKind {
+export function budgetKindFromPrestationType(
+  type: PrestationType,
+  audience: Audience = "agence",
+): BudgetKind {
+  if (isComptableSalesAudience(audience)) {
+    if (ANNUAL_PRESTATION_TYPES.has(type)) {
+      return "annual";
+    }
+    return "one_off";
+  }
   return MONTHLY_PRESTATION_TYPES.has(type) ? "monthly" : "one_off";
 }
 
@@ -268,14 +289,23 @@ export function resolveBudgetFloorCents(
   presetId: AgencyPresetId,
   audience: Audience = "agence",
 ): number {
-  const floorMin = isComptableSalesAudience(audience)
-    ? COMPTABLE_MONTHLY_MIN
-    : HERCULE_MONTHLY_MIN;
+  if (isComptableSalesAudience(audience)) {
+    const declaredAnnualEur =
+      typeof values.q13 === "number" && values.q13 > 0 ? values.q13 : COMPTABLE_ANNUAL_MIN;
+
+    return Math.max(
+      getHerculeFloorCents(audience),
+      declaredAnnualEur * 100,
+      getPresetFloorOverrideCents(presetId, audience),
+    );
+  }
+
+  const floorMin = HERCULE_MONTHLY_MIN;
   const candidates = [
     values.q13,
-    values.q14?.months3,
-    values.q14?.months6,
-    values.q14?.months12,
+    isQ14Matrix(values.q14) ? values.q14.months3 : undefined,
+    isQ14Matrix(values.q14) ? values.q14.months6 : undefined,
+    isQ14Matrix(values.q14) ? values.q14.months12 : undefined,
   ].filter((value): value is number => typeof value === "number" && value > 0);
 
   const declaredMinEur =
@@ -333,47 +363,45 @@ export function computeDuration(
   }
 
   if (type === "tenue_comptable") {
-    const months = typeof values.q15 === "number" && values.q15 > 0 ? values.q15 : 12;
     const labels = [
-      `${Math.min(12, Math.max(6, months))} mois minimum — tenue`,
-      "12 mois renouvelable — tenue comptable",
-      "12 mois récurrent — déclarations périodiques",
-      "12 mois minimum — tenue + clôtures",
-      "12 mois avec suivi trimestriel — tenue",
+      "Lettre de mission annuelle — tenue",
+      "Lettre de mission annuelle — tenue + déclarations",
+      "Lettre de mission annuelle — tenue + clôtures périodiques",
+      "Lettre de mission annuelle — tenue + fiscal",
+      "Lettre de mission annuelle — tenue complète",
     ];
     return labels[slot];
   }
 
   if (type === "social_paie") {
-    const months = typeof values.q17 === "number" && values.q17 > 0 ? values.q17 : 12;
     const labels = [
-      `${Math.min(12, Math.max(6, months))} mois minimum — social / paie`,
-      "12 mois renouvelable — bulletins et DSN",
-      "12 mois récurrent — paie",
-      "12 mois minimum — social",
-      "12 mois avec suivi trimestriel — paie",
+      "Lettre de mission annuelle — social / paie",
+      "Lettre de mission annuelle — bulletins et DSN",
+      "Lettre de mission annuelle — paie récurrente",
+      "Lettre de mission annuelle — social",
+      "Lettre de mission annuelle — paie + DSN",
     ];
     return labels[slot];
   }
 
   if (type === "fiscal_liasse") {
     const labels = [
-      "Mission fiscale (4–6 semaines)",
-      "Liasse et TVA (6–8 semaines)",
-      "Obligations fiscales (8–10 semaines)",
-      "Mission fiscale (10–12 semaines)",
-      "Reprise fiscale (12–14 semaines)",
+      "Mission fiscale — liasse et TVA (exercice en cours)",
+      "Mission fiscale — obligations fiscales annuelles",
+      "Mission fiscale — liasse + déclarations",
+      "Mission fiscale — clôture annuelle",
+      "Mission fiscale — reprise fiscale structurée",
     ];
     return labels[slot];
   }
 
   if (type === "reprise_dossier") {
     const labels = [
-      "Reprise dossier (3–5 semaines)",
-      "Reprise tenue (4–6 semaines)",
-      "Mission de reprise (5–7 semaines)",
-      "Reprise structurée (6–8 semaines)",
-      "Reprise complexe (8–10 semaines)",
+      "Reprise dossier puis lettre annuelle de tenue",
+      "Reprise tenue — lettre de mission annuelle",
+      "Reprise structurée — lettre annuelle",
+      "Reprise avant clôture — lettre annuelle",
+      "Reprise complexe — lettre annuelle",
     ];
     return labels[slot];
   }

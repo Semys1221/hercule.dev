@@ -6,7 +6,16 @@ import {
   HERCULE_MONTHLY_MIN,
   SLIDER_CONFIGS,
 } from "@/components/internal/funnels/sales/sales-questions";
+import {
+  COMPTABLE_ANNUAL_MIN,
+  COMPTABLE_FACTURATION_MODES,
+  COMPTABLE_PONCTUEL_MIN,
+  COMPTABLE_SOCIAL_PAIE_MODES,
+  type ComptableFacturationMode,
+  type ComptableSocialPaieMode,
+} from "@/components/internal/funnels/sales/sales-questions-comptable";
 import type { SalesFunnelSectionId } from "@/components/internal/funnels/sales/sales-funnel-sections";
+import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 
 export const SALES_SKIP_VALUE = "__skip__";
@@ -26,51 +35,106 @@ function buildMatrixSliderSchema(monthlyMin: number) {
   });
 }
 
-function buildSalesQualificationSchema(monthlyMin: number) {
+const sharedQualificationFields = {
+  introConfirmed: z.boolean().refine((value) => value, {
+    message: "Veuillez confirmer avant de continuer.",
+  }),
+  presentationConfirmed: z.boolean().refine((value) => value, {
+    message: "Veuillez confirmer avoir pris connaissance de la présentation.",
+  }),
+  o1: multiChoiceSchema,
+  o2: z.string().min(1),
+  o3: z.string().min(1),
+  o4: multiChoiceSchema,
+  o5: multiChoiceSchema,
+  o6: z.string().min(1),
+  q1: multiChoiceSchema,
+  q2: multiChoiceSchema,
+  q2Other: z.string().optional(),
+  q3: z.number().min(SLIDER_CONFIGS.projectCapacity.min),
+  q4: z.string().min(1),
+  q5: z.string().min(1),
+  q6: z.number().min(SLIDER_CONFIGS.delayCount.min),
+  q7: z.number().min(SLIDER_CONFIGS.lostClients.min).nullable(),
+  q8: multiChoiceSchema,
+  q9: z.string().min(1),
+  q10: z.string().min(1),
+  q11: multiChoiceSchema,
+  q12: z.string().min(1),
+  q19: multiChoiceSchema,
+  q20: z.number().min(SLIDER_CONFIGS.herculeCapacity.min),
+};
+
+function buildAgenceQualificationSchema(monthlyMin: number) {
   return z.object({
-    introConfirmed: z.boolean().refine((value) => value, {
-      message: "Veuillez confirmer avant de continuer.",
-    }),
-    presentationConfirmed: z.boolean().refine((value) => value, {
-      message: "Veuillez confirmer avoir pris connaissance de la présentation.",
-    }),
-    o1: multiChoiceSchema,
-    o2: z.string().min(1),
-    o3: z.string().min(1),
-    o4: multiChoiceSchema,
-    o5: multiChoiceSchema,
-    o6: z.string().min(1),
-    q1: multiChoiceSchema,
-    q2: multiChoiceSchema,
-    q2Other: z.string().optional(),
-    q3: z.number().min(SLIDER_CONFIGS.projectCapacity.min),
-    q4: z.string().min(1),
-    q5: z.string().min(1),
-    q6: z.number().min(SLIDER_CONFIGS.delayCount.min),
-    q7: z.number().min(SLIDER_CONFIGS.lostClients.min).nullable(),
-    q8: multiChoiceSchema,
-    q9: z.string().min(1),
-    q10: z.string().min(1),
-    q11: multiChoiceSchema,
-    q12: z.string().min(1),
+    ...sharedQualificationFields,
     q13: z.number().min(monthlyMin).nullable(),
     q14: buildMatrixSliderSchema(monthlyMin),
     q15: conditionalSliderSchema,
     q16: conditionalSliderSchema,
     q17: conditionalSliderSchema,
     q18: conditionalSliderSchema,
-    q19: multiChoiceSchema,
-    q20: z.number().min(SLIDER_CONFIGS.herculeCapacity.min),
+  });
+}
+
+function buildComptableQualificationSchema() {
+  return z.object({
+    ...sharedQualificationFields,
+    q13: z.number().min(COMPTABLE_ANNUAL_MIN),
+    q14: z.enum(COMPTABLE_FACTURATION_MODES),
+    q15: z.enum(COMPTABLE_SOCIAL_PAIE_MODES),
+    q16: z.number().min(COMPTABLE_PONCTUEL_MIN).nullable(),
+    q17: z.literal(SALES_SKIP_VALUE),
+    q18: z.literal(SALES_SKIP_VALUE),
   });
 }
 
 export function getSalesQualificationSchema(audience: Audience = "agence") {
-  return buildSalesQualificationSchema(getHerculeMonthlyMin(audience));
+  if (isComptableSalesAudience(audience)) {
+    return buildComptableQualificationSchema();
+  }
+  return buildAgenceQualificationSchema(getHerculeMonthlyMin(audience));
 }
 
 export const salesQualificationSchema = getSalesQualificationSchema("agence");
 
-export type SalesQualificationValues = z.infer<typeof salesQualificationSchema>;
+export type Q14Matrix = {
+  months3: number;
+  months6: number;
+  months12: number;
+};
+
+export type SalesQualificationValues = {
+  introConfirmed: boolean;
+  presentationConfirmed: boolean;
+  o1: string[];
+  o2: string;
+  o3: string;
+  o4: string[];
+  o5: string[];
+  o6: string;
+  q1: string[];
+  q2: string[];
+  q2Other?: string;
+  q3: number;
+  q4: string;
+  q5: string;
+  q6: number;
+  q7: number | null;
+  q8: string[];
+  q9: string;
+  q10: string;
+  q11: string[];
+  q12: string;
+  q13: number | null;
+  q14: Q14Matrix | ComptableFacturationMode;
+  q15: ConditionalSliderValue | ComptableSocialPaieMode;
+  q16: ConditionalSliderValue | number | null;
+  q17: ConditionalSliderValue;
+  q18: ConditionalSliderValue;
+  q19: string[];
+  q20: number;
+};
 
 export type ConditionalSliderValue = number | typeof SALES_SKIP_VALUE;
 
@@ -78,6 +142,41 @@ export function getSalesQualificationDefaultValues(
   audience: Audience = "agence",
 ): SalesQualificationValues {
   const sliders = getSliderConfigs(audience);
+
+  if (isComptableSalesAudience(audience)) {
+    return {
+      introConfirmed: false,
+      presentationConfirmed: false,
+      o1: [],
+      o2: "",
+      o3: "",
+      o4: [],
+      o5: [],
+      o6: "",
+      q1: [],
+      q2: [],
+      q2Other: "",
+      q3: sliders.projectCapacity.defaultValue,
+      q4: "",
+      q5: "",
+      q6: sliders.delayCount.defaultValue,
+      q7: sliders.lostClients.defaultValue,
+      q8: [],
+      q9: "",
+      q10: "",
+      q11: [],
+      q12: "",
+      q13: sliders.annualMin.defaultValue,
+      q14: "monthly_12",
+      q15: "included",
+      q16: null,
+      q17: SALES_SKIP_VALUE,
+      q18: SALES_SKIP_VALUE,
+      q19: [],
+      q20: sliders.herculeCapacity.defaultValue,
+    };
+  }
+
   return {
     introConfirmed: false,
     presentationConfirmed: false,
@@ -131,6 +230,14 @@ const SECTION_QUESTION_KEYS: Record<
   conditions: ["q15", "q16", "q17", "q18", "q19", "q20"],
 };
 
+function isComptableQ14(value: SalesQualificationValues["q14"]): value is ComptableFacturationMode {
+  return typeof value === "string";
+}
+
+function isQ14Matrix(value: SalesQualificationValues["q14"]): value is Q14Matrix {
+  return typeof value === "object" && value !== null && "months3" in value;
+}
+
 function isConditionalSliderComplete(value: ConditionalSliderValue): boolean {
   return value === SALES_SKIP_VALUE || typeof value === "number";
 }
@@ -138,9 +245,10 @@ function isConditionalSliderComplete(value: ConditionalSliderValue): boolean {
 function isFieldComplete(
   key: keyof SalesQualificationValues,
   values: SalesQualificationValues,
-  monthlyMin: number,
+  audience: Audience,
 ): boolean {
   const value = values[key];
+  const monthlyMin = getHerculeMonthlyMin(audience);
 
   if (key === "introConfirmed" || key === "presentationConfirmed") {
     return value === true;
@@ -150,12 +258,25 @@ function isFieldComplete(
     return true;
   }
 
-  if (key === "q7" || key === "q13") {
+  if (key === "q7") {
+    return value === null || typeof value === "number";
+  }
+
+  if (key === "q13") {
+    if (isComptableSalesAudience(audience)) {
+      return typeof value === "number" && value >= COMPTABLE_ANNUAL_MIN;
+    }
     return value === null || typeof value === "number";
   }
 
   if (key === "q14") {
+    if (isComptableSalesAudience(audience)) {
+      return isComptableQ14(values.q14);
+    }
     const matrix = values.q14;
+    if (!isQ14Matrix(matrix)) {
+      return false;
+    }
     return (
       matrix.months3 >= monthlyMin &&
       matrix.months6 >= monthlyMin &&
@@ -163,7 +284,24 @@ function isFieldComplete(
     );
   }
 
-  if (key === "q15" || key === "q16" || key === "q17" || key === "q18") {
+  if (key === "q15") {
+    if (isComptableSalesAudience(audience)) {
+      return typeof value === "string" && value.length > 0;
+    }
+    return isConditionalSliderComplete(value as ConditionalSliderValue);
+  }
+
+  if (key === "q16") {
+    if (isComptableSalesAudience(audience)) {
+      return value === null || typeof value === "number";
+    }
+    return isConditionalSliderComplete(value as ConditionalSliderValue);
+  }
+
+  if (key === "q17" || key === "q18") {
+    if (isComptableSalesAudience(audience)) {
+      return value === SALES_SKIP_VALUE;
+    }
     return isConditionalSliderComplete(value as ConditionalSliderValue);
   }
 
@@ -191,9 +329,8 @@ export function isSalesSectionComplete(
     return false;
   }
 
-  const monthlyMin = getHerculeMonthlyMin(audience);
   const keys = SECTION_QUESTION_KEYS[sectionId];
-  const baseComplete = keys.every((key) => isFieldComplete(key, values, monthlyMin));
+  const baseComplete = keys.every((key) => isFieldComplete(key, values, audience));
 
   if (!baseComplete) {
     return false;
@@ -252,14 +389,28 @@ export function mergeSalesQualificationValues(
   audience: Audience = "agence",
 ): SalesQualificationValues {
   const defaults = getSalesQualificationDefaultValues(audience);
-  return {
+  const merged = {
     ...defaults,
     ...partial,
-    q14: {
-      ...defaults.q14,
-      ...partial?.q14,
-    },
   };
+
+  if (isComptableSalesAudience(audience)) {
+    return merged;
+  }
+
+  const matrixDefault = defaults.q14;
+  const matrixPartial = partial?.q14;
+  if (isQ14Matrix(matrixDefault) && isQ14Matrix(matrixPartial)) {
+    return {
+      ...merged,
+      q14: {
+        ...matrixDefault,
+        ...matrixPartial,
+      },
+    };
+  }
+
+  return merged;
 }
 
 /** @deprecated Use getHerculeMonthlyMin(audience) instead. */

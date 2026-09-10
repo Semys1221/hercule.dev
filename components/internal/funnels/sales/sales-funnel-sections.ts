@@ -1,4 +1,8 @@
 import type { Audience } from "@/lib/admin/navigation";
+import {
+  interpolateClientSegment,
+  type ClientSegment,
+} from "@/lib/admin/funnels/client-segment";
 
 export type SalesFunnelSectionId =
   | "rendez-vous"
@@ -90,7 +94,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     title: "Avant-propos",
     duration: "Durée : 20min",
     subtitle:
-      "Avant de commencer, quelques informations nous permettront d'évaluer votre cabinet et de vous orienter vers les missions TPE les plus adaptées.",
+      "Avant de commencer, quelques informations nous permettront d'évaluer votre cabinet et de vous orienter vers les missions {clientSegment} les plus adaptées.",
     hasIntroCheckbox: true,
   },
   {
@@ -98,7 +102,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Objectifs",
     title: "Objectifs & douleur",
     subtitle:
-      "Comprendre la situation actuelle, la capacité disponible pour de nouveaux dossiers TPE et l'écart avec l'objectif avant de présenter Hercule Comptable.",
+      "Comprendre la situation actuelle, la capacité disponible pour de nouveaux dossiers {clientSegment} et l'écart avec l'objectif avant de présenter Hercule Comptable.",
   },
   {
     id: "presentation-societe",
@@ -112,7 +116,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Capacité opérationnelle",
     title: "Capacité opérationnelle",
     subtitle:
-      "Évaluez votre capacité actuelle à prendre en charge de nouveaux dossiers TPE — tenue, fiscal et obligations administratives.",
+      "Évaluez votre capacité actuelle à prendre en charge de nouveaux dossiers {clientSegment} — tenue, fiscal et obligations administratives.",
   },
   {
     id: "historique",
@@ -126,14 +130,14 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Expertise & honoraires",
     title: "Expertise & honoraires",
     subtitle:
-      "Précisez votre zone, vos honoraires typiques, votre typologie de missions et votre ticket dossier minimum.",
+      "Précisez vos honoraires annuels typiques, votre modalité de facturation et votre ticket dossier minimum.",
   },
   {
     id: "conditions",
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Lite 998 €, Hercule Starter 1 499 €/mois, pack 3 598 € — garantie MRR Starter — et les missions que vous souhaitez prioriser.",
+      "Social / paie, missions ponctuelles, formules Hercule (Lite 998 €, Starter 1 499 €/mois, pack 3 598 €) et priorités de dossiers.",
   },
 ];
 
@@ -147,15 +151,21 @@ export const PRESENTATION_CONFIRMATION_TEXT =
   "J'ai pris connaissance de la présentation de la société Hercule et des conditions générales de vente.";
 
 const COMPTABLE_INTRO_CONFIRMATION_TEXT =
-  "Je confirme fournir des réponses honnêtes et précises afin que les missions TPE qui me sont proposées correspondent au mieux à mon expertise, ma capacité et mes conditions de collaboration.";
+  "Je confirme fournir des réponses honnêtes et précises afin que les missions {clientSegment} qui me sont proposées correspondent au mieux à mon expertise, ma capacité et mes conditions de collaboration.";
 
 const COMPTABLE_PRESENTATION_CONFIRMATION_TEXT =
   "J'ai pris connaissance de la présentation de Hercule Comptable et des conditions générales de vente.";
 
-export function getIntroConfirmationText(audience: Audience = "agence"): string {
-  return audience === "comptable"
-    ? COMPTABLE_INTRO_CONFIRMATION_TEXT
-    : INTRO_CONFIRMATION_TEXT;
+export function getIntroConfirmationText(
+  audience: Audience = "agence",
+  clientSegment?: ClientSegment,
+): string {
+  if (audience === "comptable") {
+    return clientSegment
+      ? interpolateClientSegment(COMPTABLE_INTRO_CONFIRMATION_TEXT, clientSegment)
+      : COMPTABLE_INTRO_CONFIRMATION_TEXT.replace("{clientSegment}", "TPE");
+  }
+  return INTRO_CONFIRMATION_TEXT;
 }
 
 export function getPresentationConfirmationText(audience: Audience = "agence"): string {
@@ -164,16 +174,29 @@ export function getPresentationConfirmationText(audience: Audience = "agence"): 
     : PRESENTATION_CONFIRMATION_TEXT;
 }
 
-export function getSalesFunnelSections(audience: Audience): SalesFunnelSection[] {
-  if (audience === "comptable") {
-    return COMPTABLE_SALES_FUNNEL_SECTIONS;
+export function getSalesFunnelSections(
+  audience: Audience,
+  clientSegment?: ClientSegment,
+): SalesFunnelSection[] {
+  const sections =
+    audience === "comptable" ? COMPTABLE_SALES_FUNNEL_SECTIONS : AGENCE_SALES_FUNNEL_SECTIONS;
+
+  if (audience !== "comptable" || !clientSegment) {
+    return sections;
   }
-  return AGENCE_SALES_FUNNEL_SECTIONS;
+
+  return sections.map((section) => ({
+    ...section,
+    subtitle: section.subtitle
+      ? interpolateClientSegment(section.subtitle, clientSegment)
+      : undefined,
+  }));
 }
 
 export function getSalesFunnelSection(
   id: SalesFunnelSectionId,
   audience: Audience = "agence",
+  clientSegment?: ClientSegment,
 ): SalesFunnelSection | undefined {
-  return getSalesFunnelSections(audience).find((section) => section.id === id);
+  return getSalesFunnelSections(audience, clientSegment).find((section) => section.id === id);
 }

@@ -7,7 +7,8 @@ export type DashboardMode =
   | "comptable_active"
   | "comptable_pending"
   | "comptable_onboarding"
-  | "entreprise_preview";
+  | "entreprise_preview"
+  | "unavailable";
 
 export type DashboardFaqAudience = "agence" | "comptable" | "entreprise";
 
@@ -27,8 +28,18 @@ export type DashboardFormData = {
   specialites?: string[];
   zone?: string;
   capacite?: number;
+  /** @deprecated Agence — use honorairesAnnuelsMin for comptable */
   budgetMinPonctuel?: number;
+  /** @deprecated Agence — use honorairesAnnuelsMin for comptable */
   budgetMinMensuel?: number;
+  /** Comptable — honoraires annuels minimum lettre de mission */
+  honorairesAnnuelsMin?: number;
+  /** Comptable — modalité de facturation (monthly_12 | quarterly | annual | variable) */
+  facturationMode?: string;
+  /** Comptable — social / paie (included | separate | not_offered) */
+  socialPaieMode?: string;
+  /** Comptable — honoraires minimum mission ponctuelle */
+  honorairesPonctuelMin?: number;
 };
 
 export type DashboardEnterpriseBrief = {
@@ -58,6 +69,7 @@ export type DashboardPaymentSchedule = {
   balancePaid: boolean;
   balanceAmountCents: number;
   deliveryComplete: boolean;
+  isFastCheckout: boolean;
 };
 
 export type DashboardData = {

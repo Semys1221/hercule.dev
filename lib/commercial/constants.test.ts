@@ -53,6 +53,12 @@ describe("COMMERCIAL constants", () => {
   it("noshowReplaceWorkingDays is 14", () => {
     expect(COMMERCIAL.noshowReplaceWorkingDays).toBe(14);
   });
+
+  it("agence first RDV delays are 30 calendar days (2x) and 8 working days (Fast)", () => {
+    expect(COMMERCIAL.agenceStandardFirstRdvCalendarDays).toBe(30);
+    expect(COMMERCIAL.agenceStandardDeliveryDaysLabel).toBe("30 jours");
+    expect(COMMERCIAL.agenceFastFirstRdvWorkingDays).toBe(8);
+  });
 });
 
 describe("COMMERCIAL_COMPTABLE constants", () => {
@@ -96,6 +102,14 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(
       3 * COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements,
     );
+  });
+
+  it("honorairesAnnuelsMinCents is 240 000", () => {
+    expect(COMMERCIAL_COMPTABLE.honorairesAnnuelsMinCents).toBe(240_000);
+  });
+
+  it("honorairesPonctuelMinCents is 80 000", () => {
+    expect(COMMERCIAL_COMPTABLE.honorairesPonctuelMinCents).toBe(80_000);
   });
 });
 

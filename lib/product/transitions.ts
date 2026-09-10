@@ -12,6 +12,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { cancelAllPendingJobsForLead } from "@/lib/booking-communication/jobs";
 import { COMMERCIAL } from "@/lib/commercial/constants";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import type { ProductStatut } from "@/lib/admin/clients/types";
@@ -306,6 +307,8 @@ export async function transitionToCancelled(
   client: SupabaseClient,
   agenceId: string,
 ): Promise<void> {
+  await cancelAllPendingJobsForLead(agenceId);
+
   const { error } = await client
     .from("agence")
     .update({ product_statut: "CANCELLED" satisfies ProductStatut })

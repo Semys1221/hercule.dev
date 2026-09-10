@@ -79,6 +79,7 @@ export function ComptableOnboardingForm({ data, onSuccess }: ComptableOnboarding
 
       <RetractionWaiverFields
         idPrefix="comptable"
+        cvgHref="/cvg/comptable"
         checked={waiveRetraction}
         onCheckedChange={setWaiveRetraction}
       />

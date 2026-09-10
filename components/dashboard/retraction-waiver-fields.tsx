@@ -9,6 +9,7 @@ type RetractionWaiverFieldsProps = {
   onCheckedChange: (checked: boolean) => void;
   idPrefix?: string;
   disabled?: boolean;
+  cvgHref?: string;
 };
 
 export function RetractionWaiverFields({
@@ -16,6 +17,7 @@ export function RetractionWaiverFields({
   onCheckedChange,
   idPrefix = "rw",
   disabled = false,
+  cvgHref = "/cvg",
 }: RetractionWaiverFieldsProps) {
   const fieldId = `${idPrefix}-waive-retraction`;
 
@@ -32,7 +34,7 @@ export function RetractionWaiverFields({
           Je renonce à mon délai de rétractation de {COMMERCIAL.retractationDays} jours pour
           lancer la recherche maintenant.{" "}
           <a
-            href="/cvg"
+            href={cvgHref}
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2 hover:text-foreground"

@@ -2,9 +2,40 @@ import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 
 import type { SalesQuestion, SalesSliderConfig, SalesSliderUnit } from "./sales-questions";
 
+/** Prix Hercule Starter — utilisé pour l'éligibilité Calendly, pas pour les honoraires TPE. */
 export const COMPTABLE_MONTHLY_MIN = Math.round(
   COMMERCIAL_COMPTABLE.monthlyPriceCents / 100,
 );
+
+/** Plancher honoraires annuels lettre de mission TPE. */
+export const COMPTABLE_ANNUAL_MIN = Math.round(
+  COMMERCIAL_COMPTABLE.honorairesAnnuelsMinCents / 100,
+);
+
+export const COMPTABLE_PONCTUEL_MIN = Math.round(
+  COMMERCIAL_COMPTABLE.honorairesPonctuelMinCents / 100,
+);
+
+export const COMPTABLE_ANNUAL_TYPICAL = Math.round(
+  COMMERCIAL_COMPTABLE.valueShowcaseAnnualHonorairesCents / 100,
+);
+
+export const COMPTABLE_FACTURATION_MODES = [
+  "monthly_12",
+  "quarterly",
+  "annual",
+  "variable",
+] as const;
+
+export type ComptableFacturationMode = (typeof COMPTABLE_FACTURATION_MODES)[number];
+
+export const COMPTABLE_SOCIAL_PAIE_MODES = [
+  "included",
+  "separate",
+  "not_offered",
+] as const;
+
+export type ComptableSocialPaieMode = (typeof COMPTABLE_SOCIAL_PAIE_MODES)[number];
 
 const countFormatter = new Intl.NumberFormat("fr-FR");
 
@@ -15,25 +46,13 @@ function formatSliderLabel(value: number, unit: SalesSliderUnit): string {
       return `${formatted} €`;
     case "eur_month":
       return `${formatted} € / mois`;
+    case "eur_year":
+      return `${formatted} € / an`;
     case "months":
       return value === 1 ? "1 mois" : `${formatted} mois`;
     case "count":
       return formatted;
   }
-}
-
-function comptableSlider(
-  base: SalesSliderConfig,
-  min = COMPTABLE_MONTHLY_MIN,
-): SalesSliderConfig {
-  if (base.unit === "eur" || base.unit === "eur_month") {
-    return {
-      ...base,
-      min,
-      defaultValue: Math.max(base.defaultValue, min),
-    };
-  }
-  return base;
 }
 
 const BASE_SLIDER_CONFIGS = {
@@ -58,33 +77,19 @@ const BASE_SLIDER_CONFIGS = {
     unit: "count" as const,
     defaultValue: 0,
   },
-  oneTimeMin: {
-    min: COMPTABLE_MONTHLY_MIN,
-    max: 20_000,
-    step: 250,
+  annualMin: {
+    min: COMPTABLE_ANNUAL_MIN,
+    max: 12_000,
+    step: 100,
+    unit: "eur_year" as const,
+    defaultValue: COMPTABLE_ANNUAL_TYPICAL,
+  },
+  ponctuelMin: {
+    min: COMPTABLE_PONCTUEL_MIN,
+    max: 5_000,
+    step: 100,
     unit: "eur" as const,
-    defaultValue: COMPTABLE_MONTHLY_MIN,
-  },
-  monthlyMin: {
-    min: COMPTABLE_MONTHLY_MIN,
-    max: 15_000,
-    step: 250,
-    unit: "eur_month" as const,
-    defaultValue: COMPTABLE_MONTHLY_MIN,
-  },
-  paidAdsDuration: {
-    min: 1,
-    max: 24,
-    step: 1,
-    unit: "months" as const,
-    defaultValue: 3,
-  },
-  seoDuration: {
-    min: 3,
-    max: 24,
-    step: 1,
-    unit: "months" as const,
-    defaultValue: 6,
+    defaultValue: COMPTABLE_PONCTUEL_MIN,
   },
   herculeCapacity: {
     min: 1,
@@ -95,19 +100,9 @@ const BASE_SLIDER_CONFIGS = {
   },
 } satisfies Record<string, SalesSliderConfig>;
 
-export const COMPTABLE_SLIDER_CONFIGS = {
-  projectCapacity: BASE_SLIDER_CONFIGS.projectCapacity,
-  delayCount: BASE_SLIDER_CONFIGS.delayCount,
-  lostClients: BASE_SLIDER_CONFIGS.lostClients,
-  oneTimeMin: comptableSlider(BASE_SLIDER_CONFIGS.oneTimeMin),
-  monthlyMin: comptableSlider(BASE_SLIDER_CONFIGS.monthlyMin),
-  paidAdsDuration: BASE_SLIDER_CONFIGS.paidAdsDuration,
-  seoDuration: BASE_SLIDER_CONFIGS.seoDuration,
-  herculeCapacity: BASE_SLIDER_CONFIGS.herculeCapacity,
-} satisfies Record<string, SalesSliderConfig>;
+export const COMPTABLE_SLIDER_CONFIGS = BASE_SLIDER_CONFIGS;
 
-const floorLabel = formatSliderLabel(COMPTABLE_MONTHLY_MIN, "eur");
-const floorMonthlyLabel = formatSliderLabel(COMPTABLE_MONTHLY_MIN, "eur_month");
+const annualFloorLabel = formatSliderLabel(COMPTABLE_ANNUAL_MIN, "eur_year");
 
 export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
   {
@@ -159,7 +154,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 3,
     sectionId: "capacite",
     type: "slider",
-    prompt: "Combien de nouveaux dossiers TPE pouvez-vous actuellement accepter par mois ?",
+    prompt: "Combien de nouveaux dossiers {clientSegment} pouvez-vous actuellement accepter par mois ?",
     description: "Dossiers par mois.",
     slider: COMPTABLE_SLIDER_CONFIGS.projectCapacity,
   },
@@ -229,7 +224,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
       { id: "scope", label: "Périmètre du dossier mal défini" },
       { id: "availability", label: "Manque de disponibilité de l'équipe" },
       { id: "external", label: "Dépendance à des prestataires externes" },
-      { id: "client", label: "Difficultés liées au dirigeant TPE" },
+      { id: "client", label: "Difficultés liées au dirigeant {clientSegment}" },
       { id: "none", label: "Aucune difficulté significative" },
     ],
   },
@@ -268,16 +263,56 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 11,
     sectionId: "standards",
     type: "multi",
-    maxSelections: 3,
-    prompt: "Quels types de dirigeants TPE souhaitez-vous principalement accompagner ?",
-    description: "Sélectionnez jusqu'à 3 réponses.",
+    maxSelections: 2,
+    prompt: "Quels types de dirigeants souhaitez-vous principalement accompagner ?",
+    description: "Sélectionnez jusqu'à 2 réponses.",
     options: [
-      { id: "freelancers", label: "Indépendants / professions libérales" },
-      { id: "tpe", label: "TPE — 1 à 10 salariés" },
-      { id: "pme_small", label: "PME — 11 à 50 salariés" },
-      { id: "pme_medium", label: "PME — 51 à 250 salariés" },
-      { id: "eti", label: "ETI — 251 à 500 salariés" },
-      { id: "enterprise", label: "Grandes structures — 500+ salariés" },
+      {
+        id: "freelancers",
+        label: "Indépendants / professions libérales",
+        helpTitle: "Indépendants / professions libérales",
+        helpText:
+          "Reprise de tenue et obligations d'un indépendant ou libéral (BNC/BIC), volume limité, relation directe avec le dirigeant.",
+      },
+      {
+        id: "tpe",
+        label: "TPE — 1 à 10 salariés",
+        helpTitle: "TPE — 1 à 10 salariés",
+        helpText:
+          "Tenue comptable, TVA et social léger. Dirigeant souvent saturé, honoraires au plancher cabinet.",
+      },
+      {
+        id: "pme_small",
+        label: "PME — 11 à 50 salariés",
+        disabled: true,
+        helpTitle: "PME — 11 à 50 salariés",
+        helpText:
+          "Dossiers plus structurés (paie, multi-établissements). Hors sourcing actuel Hercule Comptable.",
+      },
+      {
+        id: "pme_medium",
+        label: "PME — 51 à 250 salariés",
+        disabled: true,
+        helpTitle: "PME — 51 à 250 salariés",
+        helpText:
+          "Dossiers plus structurés (paie, multi-établissements). Hors sourcing actuel Hercule Comptable.",
+      },
+      {
+        id: "eti",
+        label: "ETI — 251 à 500 salariés",
+        disabled: true,
+        helpTitle: "ETI — 251 à 500 salariés",
+        helpText:
+          "Hors périmètre : process groupe, appels d'offres, volumes incompatibles avec le matching actuel.",
+      },
+      {
+        id: "enterprise",
+        label: "Grandes structures — 500+ salariés",
+        disabled: true,
+        helpTitle: "Grandes structures — 500+ salariés",
+        helpText:
+          "Hors périmètre : process groupe, appels d'offres, volumes incompatibles avec le matching actuel.",
+      },
     ],
   },
   {
@@ -287,11 +322,40 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     type: "single",
     prompt: "Quel niveau de complexité de dossier souhaitez-vous principalement traiter ?",
     options: [
-      { id: "simple", label: "Dossiers simples / standardisés" },
-      { id: "intermediate", label: "Dossiers intermédiaires" },
-      { id: "complex", label: "Dossiers complexes" },
-      { id: "technical", label: "Dossiers à forte composante réglementaire" },
-      { id: "all", label: "Tous niveaux" },
+      {
+        id: "simple",
+        label: "Dossiers simples / standardisés",
+        helpTitle: "Dossiers simples / standardisés",
+        helpText:
+          "Régime simplifié, peu d'écritures, process répétitif (TVA standard, liasse peu spécifique).",
+      },
+      {
+        id: "intermediate",
+        label: "Dossiers intermédiaires",
+        helpTitle: "Dossiers intermédiaires",
+        helpText:
+          "Volume moyen, quelques spécificités (TVA, social de base, reprise simple).",
+      },
+      {
+        id: "complex",
+        label: "Dossiers complexes",
+        helpTitle: "Dossiers complexes",
+        helpText:
+          "Multi-activités, reprise de dossier, restructurations légères, plusieurs établissements.",
+      },
+      {
+        id: "technical",
+        label: "Dossiers à forte composante réglementaire",
+        helpTitle: "Dossiers à forte composante réglementaire",
+        helpText:
+          "Fiscal avancé, social/paie structuré, liasse et obligations lourdes.",
+      },
+      {
+        id: "all",
+        label: "Tous niveaux",
+        helpTitle: "Tous niveaux",
+        helpText: "Le cabinet accepte le mix de complexités ci-dessus.",
+      },
     ],
   },
   {
@@ -300,70 +364,46 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "standards",
     type: "slider",
     prompt:
-      "Quel montant minimum d'honoraires souhaitez-vous généralement facturer pour une mission ponctuelle ?",
-    description: `Minimum Hercule : ${floorLabel}.`,
-    slider: COMPTABLE_SLIDER_CONFIGS.oneTimeMin,
-    optOutLabel: "Je ne propose pas de mission ponctuelle",
+      "Quel montant minimum d'honoraires annuels acceptez-vous pour une lettre de mission de tenue ({clientSegment}) ?",
+    description: `Plancher marché : ${annualFloorLabel} / an.`,
+    slider: COMPTABLE_SLIDER_CONFIGS.annualMin,
   },
   {
     id: "q14",
     number: 14,
     sectionId: "standards",
-    type: "slider_matrix",
-    prompt: "Quel niveau d'honoraires recherchez-vous pour une mission récurrente de tenue ?",
-    description: `Indiquez le montant mensuel minimum pour chaque durée (plancher ${floorMonthlyLabel}).`,
-    subQuestions: [
-      { id: "months3", label: "3 mois" },
-      { id: "months6", label: "6 mois" },
-      { id: "months12", label: "12 mois" },
+    type: "single",
+    prompt: "Comment facturez-vous habituellement vos lettres de mission de tenue ?",
+    description: "Modalité de facturation — pas la durée du contrat.",
+    options: [
+      { id: "monthly_12", label: "Mensualisé (12 acomptes)" },
+      { id: "quarterly", label: "Trimestriel" },
+      { id: "annual", label: "Annuel" },
+      { id: "variable", label: "Selon le dossier" },
     ],
-    slider: COMPTABLE_SLIDER_CONFIGS.monthlyMin,
   },
   {
     id: "q15",
     number: 15,
     sectionId: "conditions",
-    type: "conditional_slider",
-    skipLabel: "Cela ne me concerne pas",
-    prompt:
-      "Pour une mission fiscale récurrente, quel budget mensuel minimum considérez-vous comme pertinent ?",
-    description: "Fiscal — ignorez si votre cabinet ne propose pas cette mission.",
-    slider: COMPTABLE_SLIDER_CONFIGS.monthlyMin,
+    type: "single",
+    prompt: "Comment traitez-vous le social / paie pour vos dossiers {clientSegment} ?",
+    options: [
+      { id: "included", label: "Inclus dans la lettre de mission de tenue" },
+      { id: "separate", label: "Facturé à part (forfait annuel social / paie)" },
+      { id: "not_offered", label: "Non proposé" },
+    ],
   },
   {
     id: "q16",
     number: 16,
     sectionId: "conditions",
-    type: "conditional_slider",
-    skipLabel: "Cela ne me concerne pas",
-    dependsOn: "q15",
+    type: "slider",
     prompt:
-      "Pour une mission fiscale, quelle durée d'engagement vous semble généralement nécessaire ?",
-    description: "Fiscal — ignorez si votre cabinet ne propose pas cette mission.",
-    slider: COMPTABLE_SLIDER_CONFIGS.paidAdsDuration,
-  },
-  {
-    id: "q17",
-    number: 17,
-    sectionId: "conditions",
-    type: "conditional_slider",
-    skipLabel: "Cela ne me concerne pas",
-    prompt:
-      "Pour une mission social / paie, quel budget mensuel minimum considérez-vous comme pertinent ?",
-    description: "Social / paie — ignorez si votre cabinet ne propose pas cette mission.",
-    slider: COMPTABLE_SLIDER_CONFIGS.monthlyMin,
-  },
-  {
-    id: "q18",
-    number: 18,
-    sectionId: "conditions",
-    type: "conditional_slider",
-    skipLabel: "Cela ne me concerne pas",
-    dependsOn: "q17",
-    prompt:
-      "Pour une mission social / paie, quelle durée d'engagement vous semble généralement nécessaire ?",
-    description: "Social / paie — ignorez si votre cabinet ne propose pas cette mission.",
-    slider: COMPTABLE_SLIDER_CONFIGS.seoDuration,
+      "Quel montant minimum d'honoraires facturez-vous pour une mission ponctuelle (création, reprise hors tenue, conseil) ?",
+    description: "Création, reprise, conseil — hors lettre de mission annuelle.",
+    slider: COMPTABLE_SLIDER_CONFIGS.ponctuelMin,
+    optOutLabel: "Toujours packagée dans la lettre annuelle",
   },
   {
     id: "q19",
@@ -371,11 +411,11 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "conditions",
     type: "multi",
     maxSelections: 3,
-    prompt: "Quels types de missions TPE souhaitez-vous recevoir en priorité ?",
+    prompt: "Quels types de missions {clientSegment} souhaitez-vous recevoir en priorité ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
-      { id: "one_off", label: "Missions ponctuelles" },
-      { id: "recurring", label: "Missions récurrentes de tenue" },
+      { id: "one_off", label: "Missions ponctuelles (création, conseil)" },
+      { id: "recurring", label: "Lettres de mission annuelles de tenue" },
       { id: "redesign", label: "Reprises de dossier" },
       { id: "ecommerce", label: "Dossiers e-commerce / digital" },
       { id: "acquisition", label: "Missions fiscales" },
@@ -390,7 +430,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 20,
     sectionId: "conditions",
     type: "slider",
-    prompt: "Quelle capacité souhaitez-vous réserver aux missions TPE provenant d'Hercule ?",
+    prompt: "Quelle capacité souhaitez-vous réserver aux missions {clientSegment} provenant d'Hercule ?",
     description: "Dossiers par mois réservés à Hercule.",
     slider: COMPTABLE_SLIDER_CONFIGS.herculeCapacity,
   },

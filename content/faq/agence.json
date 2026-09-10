@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "agence",
-  "updatedAt": "2026-09-08T12:00:00.000Z",
+  "updatedAt": "2026-09-10T12:00:00.000Z",
   "entries": [
     {
       "id": "faq-ag-001",
@@ -68,6 +68,12 @@
       "id": "faq-ag-011",
       "question": "Comment se passe ma mise en relation ?",
       "answer": "Une fois votre fiche agence complétée, les dirigeants éligibles dont la demande entre dans la fenêtre calendaire du mois reçoivent un email de proposition. Comptez environ 6 jours ouvrés pour voir le premier RDV dans votre agenda.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-ag-013",
+      "question": "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
+      "answer": "Selon nos [Conditions générales de vente](/cvg) (article 9), vous nous accordez un délai supplémentaire de **7 jours** en cas de retard de livraison (notamment en phase de montée en charge). Au-delà, nous vous invitons à nous écrire à contact@hercule.dev et à ne pas initier de dispute sur Stripe sans nous avoir contactés au préalable. Un règlement à l'amiable pourra être envisagé au cas par cas.",
       "cvgLink": true
     }
   ]

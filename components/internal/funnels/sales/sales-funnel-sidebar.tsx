@@ -35,6 +35,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import type { ClientSegment } from "@/lib/admin/funnels/client-segment";
 import { cn } from "@/lib/utils";
 import { SESSION_DEVELOPER_MODE_BADGE, SESSION_ENTER_INSTITUTIONAL_CTA, SESSION_PHASE_INSTITUTIONAL, SESSION_SETTINGS_LABEL, SESSION_SIDEBAR_QUALIFICATION, SESSION_SIDEBAR_STEPS } from "@/lib/admin/funnels/ui-copy";
 
@@ -89,6 +90,7 @@ type SalesFunnelSidebarProps = {
   canEnterClosing: boolean;
   pitchSidebarEnabled: boolean;
   developerModeEnabled: boolean;
+  clientSegment?: ClientSegment;
   meetingInfo?: MeetingInfo | null;
   onEnterClosing: () => void;
   onBackToQualification: () => void;
@@ -110,13 +112,14 @@ export function SalesFunnelSidebar({
   canEnterClosing,
   pitchSidebarEnabled,
   developerModeEnabled,
+  clientSegment,
   meetingInfo,
   onEnterClosing,
   onBackToQualification,
   onSectionChange,
 }: SalesFunnelSidebarProps) {
-  const qualificationSections = getSalesFunnelSections(audience);
-  const closingSections = getSalesClosingSections(audience);
+  const qualificationSections = getSalesFunnelSections(audience, clientSegment);
+  const closingSections = getSalesClosingSections(audience, clientSegment);
   const sections =
     contentPhase === "pitch" ? closingSections : qualificationSections;
   const sidebarGroupLabel =

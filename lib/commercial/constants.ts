@@ -64,10 +64,12 @@ export const COMMERCIAL = {
   firstHonoredDaysStandard: 21,
   firstHonoredDaysConstrained: 28,
 
-  /** Agence dashboard — délai affiché sur les pricing cards (paiement 50/50). */
-  agenceStandardDeliveryDaysLabel: "15-17 jours",
-  /** Agence dashboard — option Fast (paiement intégral). */
-  agenceFastDeliveryDays: 6,
+  /** Agence dashboard — premier RDV après activation (paiement 50/50, jours calendaires). */
+  agenceStandardFirstRdvCalendarDays: 30,
+  /** Label affiché — paiement 50/50. */
+  agenceStandardDeliveryDaysLabel: "30 jours",
+  /** Agence dashboard — premier RDV après activation (paiement intégral Fast, jours ouvrés). */
+  agenceFastFirstRdvWorkingDays: 8,
 
   /** SLA volume honoré / mois @ allocation 30 inbox (mensuel) */
   volumeHonoredPerMonthStandard: { min: 3, max: 4 } as const,
@@ -102,6 +104,14 @@ export const AGENCE_CHECKOUT_OFFER_TYPES = [
 ] as const;
 
 export type AgenceCheckoutOfferType = (typeof AGENCE_CHECKOUT_OFFER_TYPES)[number];
+
+export function formatAgenceStandardFirstRdvLabel(): string {
+  return `${COMMERCIAL.agenceStandardFirstRdvCalendarDays} jours`;
+}
+
+export function formatAgenceFastFirstRdvLabel(): string {
+  return `${COMMERCIAL.agenceFastFirstRdvWorkingDays} jours ouvrés`;
+}
 
 export function depositCents(totalCents: number): number {
   return Math.floor(totalCents / 2);
@@ -237,6 +247,18 @@ export const COMMERCIAL_COMPTABLE = {
   /** Vitrine marketing — honoraires annuels typiques d'une mission de tenue */
   valueShowcaseAnnualHonorairesCents: 360_000,
   valueShowcaseAnnualHonorairesLabel: "3 600 €",
+
+  /** Plancher honoraires annuels lettre de mission (session + cards) */
+  honorairesAnnuelsMinCents: 240_000,
+  honorairesAnnuelsMinLabel: "2 400 €",
+
+  /** Plafond vitrine honoraires annuels (fourchette marketing) */
+  honorairesAnnuelsMaxVitrineCents: 600_000,
+  honorairesAnnuelsMaxVitrineLabel: "6 000 €",
+
+  /** Plancher honoraires mission ponctuelle (création, reprise, conseil) */
+  honorairesPonctuelMinCents: 80_000,
+  honorairesPonctuelMinLabel: "800 €",
 
   /** Seuil d'éligibilité cabinet */
   minAssociatesOrCollaborators: 3,

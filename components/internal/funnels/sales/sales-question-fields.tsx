@@ -1,6 +1,9 @@
 "use client";
 
+import { CircleHelp } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,6 +14,7 @@ import {
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { SALES_SKIP_VALUE } from "@/lib/admin/funnels/sales-qualification-schema";
@@ -44,7 +48,43 @@ const CHOICE_GROUP_CLASS =
 /** FieldLabel adds border/background when wrapping a Field — layout only on the inner Field. */
 const CHOICE_LABEL_CLASS =
   "w-full font-normal transition-colors hover:border-primary/50 hover:bg-primary/5";
+const CHOICE_LABEL_DISABLED_CLASS =
+  "cursor-not-allowed opacity-50 hover:border-border hover:bg-transparent";
 const CHOICE_FIELD_CLASS = "min-h-10 flex-1 items-center gap-2 !p-3";
+const CHOICE_CHIP_WRAPPER_CLASS = "relative flex w-full items-stretch";
+
+function OptionHelpPopover({ option }: { option: SalesQuestionOption }) {
+  if (!option.helpText) {
+    return null;
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="absolute right-1 top-1 z-10 size-6 shrink-0 text-muted-foreground hover:text-foreground"
+          aria-label={`Aide : ${option.helpTitle ?? option.label}`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <CircleHelp className="size-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        className="w-72 text-sm"
+        onClick={(event) => event.stopPropagation()}
+      >
+        {option.helpTitle ? (
+          <p className="mb-1 font-medium leading-snug">{option.helpTitle}</p>
+        ) : null}
+        <p className="text-muted-foreground">{option.helpText}</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function QuestionNumber({ number }: { number: number }) {
   return (
@@ -151,34 +191,42 @@ export function SalesMultiChoiceField({
 }: SalesMultiChoiceFieldProps) {
   const maxSelections = question.maxSelections;
   const exclusiveId = question.exclusiveOptionId;
-  const atLimit = value.length >= maxSelections;
+  const disabledOptionIds = new Set(
+    question.options.filter((option) => option.disabled).map((option) => option.id),
+  );
+  const selectableValue = value.filter((id) => !disabledOptionIds.has(id));
+  const atLimit = selectableValue.length >= maxSelections;
 
-  function toggleOption(optionId: string, checked: boolean) {
+  function toggleOption(optionId: string, checked: boolean, optionDisabled: boolean) {
+    if (optionDisabled) {
+      return;
+    }
+
     if (checked) {
       if (exclusiveId && optionId === exclusiveId) {
         onChange([optionId]);
         return;
       }
 
-      if (exclusiveId && value.includes(exclusiveId)) {
+      if (exclusiveId && selectableValue.includes(exclusiveId)) {
         onChange([optionId]);
         return;
       }
 
-      if (value.length >= maxSelections) {
+      if (selectableValue.length >= maxSelections) {
         return;
       }
 
-      onChange([...value, optionId]);
+      onChange([...selectableValue, optionId]);
       return;
     }
 
-    onChange(value.filter((id) => id !== optionId));
+    onChange(selectableValue.filter((id) => id !== optionId));
   }
 
   const counterBadge = question.description ? (
     <Badge variant="outline" className="h-5 px-1.5 text-xs font-normal">
-      {value.length}/{maxSelections}
+      {selectableValue.length}/{maxSelections}
     </Badge>
   ) : null;
 
@@ -195,26 +243,34 @@ export function SalesMultiChoiceField({
         className={CHOICE_GROUP_CLASS}
       >
         {question.options.map((option) => {
-          const isChecked = value.includes(option.id);
-          const isDisabled = !isChecked && atLimit;
+          const isChecked = selectableValue.includes(option.id);
+          const optionDisabled = Boolean(option.disabled);
+          const isDisabled = optionDisabled || (!isChecked && atLimit);
           const inputId = `${question.id}-${option.id}`;
 
           return (
-            <FieldLabel
-              key={option.id}
-              htmlFor={inputId}
-              className={cn(CHOICE_LABEL_CLASS, isDisabled && "opacity-50")}
-            >
-              <Field orientation="horizontal" className={CHOICE_FIELD_CLASS}>
-                <Checkbox
-                  id={inputId}
-                  checked={isChecked}
-                  disabled={isDisabled}
-                  onCheckedChange={(checked) => toggleOption(option.id, checked === true)}
-                />
-                <span className="text-sm">{option.label}</span>
-              </Field>
-            </FieldLabel>
+            <div key={option.id} className={CHOICE_CHIP_WRAPPER_CLASS}>
+              <FieldLabel
+                htmlFor={inputId}
+                className={cn(
+                  CHOICE_LABEL_CLASS,
+                  isDisabled && CHOICE_LABEL_DISABLED_CLASS,
+                )}
+              >
+                <Field orientation="horizontal" className={CHOICE_FIELD_CLASS}>
+                  <Checkbox
+                    id={inputId}
+                    checked={isChecked}
+                    disabled={isDisabled}
+                    onCheckedChange={(checked) =>
+                      toggleOption(option.id, checked === true, optionDisabled)
+                    }
+                  />
+                  <span className="pr-6 text-sm">{option.label}</span>
+                </Field>
+              </FieldLabel>
+              <OptionHelpPopover option={option} />
+            </div>
           );
         })}
       </FieldGroup>
@@ -430,13 +486,23 @@ type ChoiceChipProps = {
 
 function ChoiceChip({ option, groupId }: ChoiceChipProps) {
   const inputId = `${groupId}-${option.id}`;
+  const optionDisabled = Boolean(option.disabled);
 
   return (
-    <FieldLabel htmlFor={inputId} className={CHOICE_LABEL_CLASS}>
-      <Field orientation="horizontal" className={CHOICE_FIELD_CLASS}>
-        <RadioGroupItem value={option.id} id={inputId} />
-        <FieldTitle className="text-sm font-normal">{option.label}</FieldTitle>
-      </Field>
-    </FieldLabel>
+    <div className={CHOICE_CHIP_WRAPPER_CLASS}>
+      <FieldLabel
+        htmlFor={inputId}
+        className={cn(
+          CHOICE_LABEL_CLASS,
+          optionDisabled && CHOICE_LABEL_DISABLED_CLASS,
+        )}
+      >
+        <Field orientation="horizontal" className={CHOICE_FIELD_CLASS}>
+          <RadioGroupItem value={option.id} id={inputId} disabled={optionDisabled} />
+          <FieldTitle className="pr-6 text-sm font-normal">{option.label}</FieldTitle>
+        </Field>
+      </FieldLabel>
+      <OptionHelpPopover option={option} />
+    </div>
   );
 }

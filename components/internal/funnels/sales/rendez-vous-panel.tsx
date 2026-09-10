@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { RotateCcw } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
@@ -21,7 +21,7 @@ import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import { salesAudienceToLeadCategory } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
-import { setDeveloperModeEnabled } from "@/lib/admin/funnels/sales-funnel-settings";
+import { setDeveloperModeEnabled, getDeveloperModeEnabledServerSnapshot, getDeveloperModeEnabledSnapshot, subscribeDeveloperModeEnabled } from "@/lib/admin/funnels/sales-funnel-settings";
 import {
   SESSION_TEST_MEETING_ACTIVE,
   SESSION_TEST_MEETING_CTA,
@@ -35,7 +35,7 @@ import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualifi
 import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode";
 import type { SalesClosingValues } from "@/components/internal/funnels/sales/sales-closing-sections";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
-import { dashboardLinkFor, postBookingLinkFor, reservationEntrepriseLinkFor } from "@/lib/link-tracking/urls";
+import { postBookingLinkFor, reservationEntrepriseLinkFor, resolveSalesSessionDashboardLink } from "@/lib/link-tracking/urls";
 import { cn } from "@/lib/utils";
 
 import { SalesIntroChecklist } from "./sales-intro-checklist";
@@ -124,6 +124,11 @@ export function RendezVousPanel({
   const [testLoading, setTestLoading] = useState(false);
   const [testActive, setTestActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const developerModeEnabled = useSyncExternalStore(
+    subscribeDeveloperModeEnabled,
+    () => getDeveloperModeEnabledSnapshot(audience),
+    getDeveloperModeEnabledServerSnapshot,
+  );
 
   const introChecklist = useMemo(
     () =>
@@ -238,7 +243,16 @@ export function RendezVousPanel({
     }
   }, [audience, onApplyTestPreset, onBookingSelect]);
 
-  const dashboardLink = selectedLead ? dashboardLinkFor(selectedLead) : null;
+  const dashboardLink = useMemo(
+    () =>
+      resolveSalesSessionDashboardLink({
+        lead: selectedLead,
+        bookingDashboardLink: selectedBooking?.links?.dashboard_link,
+        developerMode: developerModeEnabled,
+        origin: typeof window !== "undefined" ? window.location.origin : undefined,
+      }).link,
+    [developerModeEnabled, selectedBooking?.links?.dashboard_link, selectedLead],
+  );
   const leadCategory =
     selectedBooking?.lead_category ??
     selectedBooking?.booking_category ??

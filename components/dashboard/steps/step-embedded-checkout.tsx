@@ -9,7 +9,8 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  COMMERCIAL,
+  formatAgenceFastFirstRdvLabel,
+  formatAgenceStandardFirstRdvLabel,
   PAYMENT_PHASES,
   totalPriceCentsForOffer,
   type AgenceCheckoutOfferType,
@@ -75,8 +76,8 @@ export function StepEmbeddedCheckout({
       <Alert>
         <AlertDescription>
           {fast
-            ? `Fast — paiement intégral ${formatEuros(fullCents)} · livraison en ${COMMERCIAL.agenceFastDeliveryDays} jours.`
-            : `Acompte 50 % — ${formatEuros(depositCents)} maintenant. Solde dû à la livraison de vos contrats PME sécurisés (${COMMERCIAL.agenceStandardDeliveryDaysLabel}).`}
+            ? `Fast — paiement intégral ${formatEuros(fullCents)} · premier RDV sous ${formatAgenceFastFirstRdvLabel()}.`
+            : `Acompte 50 % — ${formatEuros(depositCents)} maintenant. Solde dû à la livraison de vos contrats PME sécurisés · premier RDV sous ${formatAgenceStandardFirstRdvLabel()}.`}
         </AlertDescription>
       </Alert>
       {error || stripeConfigError ? (

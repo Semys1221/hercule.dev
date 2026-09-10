@@ -20,11 +20,16 @@ import {
   waiveRetractionNow,
 } from "@/lib/dashboard/onboarding-complete";
 import { buildDashboardRetractionFields } from "@/lib/dashboard/retraction-fields";
-import type { DashboardFaqItem, DashboardFormData } from "@/lib/dashboard/types";
+import type {
+  DashboardFaqAudience,
+  DashboardFaqItem,
+  DashboardFormData,
+} from "@/lib/dashboard/types";
 import {
   createLinkTrackingClient,
   findLeadByLink,
 } from "@/lib/link-tracking/supabase";
+import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { dashboardLinkFor } from "@/lib/link-tracking/urls";
 import {
   createSalesCallsClient,
@@ -54,6 +59,32 @@ function timelineFromProfile(profile: Record<string, unknown> | null) {
   ];
 }
 
+function unavailableDashboardResponse(
+  lead: LinkTrackingLead,
+  audience: DashboardFaqAudience,
+) {
+  return {
+    slug: lead.slug,
+    email: lead.email,
+    firstName: lead.first_name,
+    company: lead.company,
+    statut: lead.statut,
+    productStatut: "CANCELLED",
+    scheduledAt: lead.scheduled_at,
+    dashboardLink: dashboardLinkFor(lead),
+    timeline: [],
+    onboardingCompleted: Boolean(lead.onboarding_completed_at),
+    tieDownAccepted: false,
+    form: {},
+    faq: [],
+    isPaid: false,
+    audience,
+    dashboardMode: "unavailable" as const,
+    deliveryPlan: null,
+    enterpriseBrief: null,
+  };
+}
+
 export async function GET(_request: Request, { params }: RouteParams) {
   const { slug } = await params;
   const normalizedSlug = slug.trim();
@@ -74,6 +105,9 @@ export async function GET(_request: Request, { params }: RouteParams) {
     // ── Comptable dashboard (comptable table) ───────────────────────────────
     if (lookup.category === "comptable") {
       const lead = lookup.lead;
+      if (lead.product_statut === "CANCELLED") {
+        return NextResponse.json(unavailableDashboardResponse(lead, "comptable"));
+      }
       const profile = (lead.profile ?? {}) as Record<string, unknown>;
       const profileForm = (profile.form ?? {}) as DashboardFormData;
       const isPaid = await hasSucceededPaymentComptable(client, lead.id, "comptable");
@@ -127,6 +161,9 @@ export async function GET(_request: Request, { params }: RouteParams) {
       const profile = (lead.profile ?? {}) as Record<string, unknown>;
 
       if (isLegacyComptableEntrepriseLead(lead)) {
+        if (lead.product_statut === "CANCELLED") {
+          return NextResponse.json(unavailableDashboardResponse(lead, "comptable"));
+        }
         const isPaid = await hasSucceededPaymentComptable(client, lead.id, "entreprise");
         const paymentDetails = isPaid
           ? await getComptablePaymentDetails(client, lead.id, "entreprise")
@@ -200,6 +237,10 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     const lead = lookup.lead;
+    if (lead.product_statut === "CANCELLED") {
+      return NextResponse.json(unavailableDashboardResponse(lead, "agence"));
+    }
+
     const profile = (lead.profile ?? {}) as Record<string, unknown>;
     const profileForm = (profile.form ?? {}) as DashboardFormData;
     const closing = (profile.dashboard ?? {}) as Record<string, unknown>;
@@ -266,7 +307,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     const productStatut = lead.product_statut ?? "NONE";
     const { retraction, milestones } = isOnboarded
-      ? buildDashboardRetractionFields({ category: "agence", lead })
+      ? buildDashboardRetractionFields({
+          category: "agence",
+          lead,
+          isFastCheckout: paymentSchedule?.isFastCheckout ?? false,
+        })
       : { retraction: null, milestones: [] as ReturnType<typeof buildDashboardRetractionFields>["milestones"] };
 
     const timeline =
