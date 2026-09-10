@@ -104,6 +104,7 @@ export type PricingCardProps = {
   forceCta?: boolean;
   /** Show the « Recommandé » badge when the plan is featured. Defaults to true. */
   showRecommendedBadge?: boolean;
+  className?: string;
 };
 
 function PlanHeader({
@@ -148,14 +149,18 @@ export function PricingCard({
   ctaLinkLabel = "Soumettre ma candidature",
   forceCta = false,
   showRecommendedBadge = true,
+  className,
 }: PricingCardProps) {
   const showCheckoutCta = Boolean(onCtaClick && ctaLabel && (plan.featured || forceCta));
   const [open, setOpen] = useState(false);
+  const showCollapsible = !plan.profileOnly && plan.features.length > 0;
+  const showActionBlock = showCheckoutCta || showCollapsible;
 
   const card = (
     <div
       className={cn(
         "rounded-xl relative overflow-hidden bg-[#0A0A0A]",
+        compact && "flex h-full flex-col",
         plan.featured
           ? cn(
               "border border-white/[0.22] ring-1 ring-white/[0.06] shadow-[0_0_48px_rgba(255,255,255,0.04)]",
@@ -164,6 +169,7 @@ export function PricingCard({
           : plan.profileOnly
             ? cn("border border-dashed border-white/[0.08]", compact ? "p-5" : "p-8")
             : cn("border border-white/[0.08]", compact ? "p-5" : "p-8"),
+        className,
       )}
     >
       {plan.featured && (
@@ -185,7 +191,7 @@ export function PricingCard({
         </>
       )}
 
-      <div className="relative z-10">
+      <div className={cn("relative z-10", compact && "flex flex-1 flex-col")}>
         {plan.profileOnly ? (
           <>
             <PlanHeader
@@ -242,68 +248,79 @@ export function PricingCard({
             )}
 
             {plan.footer && (
-              <p className={cn("text-sm mb-6", plan.featured ? "text-white font-medium" : "text-neutral-500")}>
+              <p
+                className={cn(
+                  "text-sm",
+                  compact ? "mb-0" : "mb-6",
+                  plan.featured ? "text-white font-medium" : "text-neutral-500",
+                )}
+              >
                 {plan.footer}
               </p>
             )}
 
-            {showCheckoutCta ? (
-              <Button
-                type="button"
-                onClick={onCtaClick}
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
+            {showActionBlock ? (
+              <div
+                className={cn(
+                  "flex flex-col",
+                  compact ? "mt-auto gap-6 pt-6" : showCheckoutCta || (plan.featured && !compact) ? "mt-6 gap-6" : "",
+                )}
               >
-                {ctaLabel}
-                <ArrowRight className="size-4" />
-              </Button>
-            ) : plan.featured && !compact ? (
-              <Button
-                asChild
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
-              >
-                <a href={ctaHref}>
-                  {ctaLinkLabel}
-                  <ArrowRight className="size-4" />
-                </a>
-              </Button>
-            ) : null}
+                {showCheckoutCta ? (
+                  <Button
+                    type="button"
+                    onClick={onCtaClick}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
+                  >
+                    {ctaLabel}
+                    <ArrowRight className="size-4" />
+                  </Button>
+                ) : plan.featured && !compact ? (
+                  <Button
+                    asChild
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
+                  >
+                    <a href={ctaHref}>
+                      {ctaLinkLabel}
+                      <ArrowRight className="size-4" />
+                    </a>
+                  </Button>
+                ) : null}
 
-            <div
-              className={cn(
-                (plan.featured && !compact) || showCheckoutCta ? "mt-6" : "",
-              )}
-            >
-              <Collapsible open={open} onOpenChange={setOpen}>
-                <div className="border border-white/10 rounded-md overflow-hidden">
-                  <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors focus-visible:ring-2 focus-visible:ring-white/20">
-                    Ce qui est inclus
-                    <ChevronDown
-                      className={cn(
-                        "w-4 h-4 text-neutral-500 shrink-0 transition-transform duration-200",
-                        open && "rotate-180",
-                      )}
-                    />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr]">
-                    <div className="min-h-0 overflow-hidden">
-                      <ul className="space-y-3 px-4 pb-4 pt-3 border-t border-white/[0.06]">
-                        {plan.features.map((feature) => (
-                          <li key={feature} className="flex items-start gap-3 text-neutral-400 text-sm">
-                            <Check
-                              className={cn(
-                                "w-4 h-4 mt-0.5 shrink-0",
-                                plan.featured ? "text-[#0070F3]" : "text-neutral-400",
-                              )}
-                            />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
+                {showCollapsible ? (
+                  <Collapsible open={open} onOpenChange={setOpen}>
+                    <div className="border border-white/10 rounded-md overflow-hidden">
+                      <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors focus-visible:ring-2 focus-visible:ring-white/20">
+                        Ce qui est inclus
+                        <ChevronDown
+                          className={cn(
+                            "w-4 h-4 text-neutral-500 shrink-0 transition-transform duration-200",
+                            open && "rotate-180",
+                          )}
+                        />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr]">
+                        <div className="min-h-0 overflow-hidden">
+                          <ul className="space-y-3 px-4 pb-4 pt-3 border-t border-white/[0.06]">
+                            {plan.features.map((feature) => (
+                              <li key={feature} className="flex items-start gap-3 text-neutral-400 text-sm">
+                                <Check
+                                  className={cn(
+                                    "w-4 h-4 mt-0.5 shrink-0",
+                                    plan.featured ? "text-[#0070F3]" : "text-neutral-400",
+                                  )}
+                                />
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </CollapsibleContent>
                     </div>
-                  </CollapsibleContent>
-                </div>
-              </Collapsible>
-            </div>
+                  </Collapsible>
+                ) : null}
+              </div>
+            ) : null}
           </>
         )}
       </div>
@@ -316,6 +333,7 @@ export function PricingCard({
 
   return (
     <motion.div
+      className={cn(compact && "h-full")}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}

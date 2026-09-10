@@ -34,8 +34,8 @@ export function PricingFlipCard({
   }
 
   return (
-    <div className={cn("group/pricing-flip relative h-full", className)}>
-      <div className="relative h-full min-h-[420px] [perspective:1200px]">
+    <div className={cn("group/pricing-flip relative flex h-full flex-col", className)}>
+      <div className="relative min-h-[420px] flex-1 [perspective:1200px]">
         <div
           className={cn(
             "relative h-full w-full transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none [transform-style:preserve-3d]",
@@ -43,6 +43,7 @@ export function PricingFlipCard({
           )}
         >
           <div
+            data-pricing-card
             className={cn(
               "h-full pt-11 [backface-visibility:hidden]",
               flipped && "pointer-events-none absolute inset-0",
@@ -52,6 +53,7 @@ export function PricingFlipCard({
             {front}
           </div>
           <div
+            data-pricing-card
             className={cn(
               "h-full pt-11 [transform:rotateY(180deg)] [backface-visibility:hidden]",
               !flipped && "pointer-events-none absolute inset-0",

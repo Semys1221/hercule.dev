@@ -17,8 +17,8 @@ export function Navbar() {
             <a href="#methode" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Méthode
             </a>
-            <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors">
-              Tarification
+            <a href="#missions" className="text-sm text-zinc-400 hover:text-white transition-colors">
+              Missions
             </a>
             <a href="#garanties" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Garanties

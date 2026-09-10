@@ -9,8 +9,9 @@ import { BandeStack } from "./bande-stack"
 import { PilierMatching } from "./pilier-matching"
 import { BandeProjets } from "./bande-projets"
 import { AuditLive } from "./audit-live"
-import { GrilleOffres } from "./grille-offres"
+import { GrillePipeline } from "./grille-pipeline"
 import { MethodeRadar } from "./methode-radar"
+import { BlocGaranties } from "./bloc-garanties"
 import { BandeAudit } from "./bande-audit"
 import { Footer } from "./footer"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
@@ -171,8 +172,9 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
           <BandeProjets demandes={demandes} teaser={teaser} />
           <PilierMatching />
           <AuditLive />
-          <GrilleOffres />
+          <GrillePipeline demandes={demandes} />
           <MethodeRadar />
+          <BlocGaranties />
           <BandeAudit />
           <Footer />
         </div>

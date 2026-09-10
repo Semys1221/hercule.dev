@@ -55,15 +55,17 @@ export function ComptablePricingGrid({
   return (
     <div
       className={cn(
-        "grid grid-cols-1 gap-6 md:grid-cols-2 md:items-start",
+        "grid grid-cols-1 gap-6 md:grid-cols-2 md:items-stretch",
         className,
       )}
     >
       <PricingFlipCard
+        className="h-full"
         front={
           <PricingCard
             plan={lite}
             {...sharedCardProps}
+            className="h-full"
             onCtaClick={
               isCheckout ? () => handleSelect(lite.id) : undefined
             }
@@ -73,6 +75,7 @@ export function ComptablePricingGrid({
           <PricingCard
             plan={{ ...pack3, featured: true }}
             {...sharedCardProps}
+            className="h-full"
             showRecommendedBadge={false}
             onCtaClick={
               isCheckout ? () => handleSelect(pack3.id) : undefined
@@ -84,6 +87,7 @@ export function ComptablePricingGrid({
         plan={starter}
         index={1}
         {...sharedCardProps}
+        className="h-full"
         onCtaClick={isCheckout ? () => handleSelect(starter.id) : undefined}
       />
     </div>

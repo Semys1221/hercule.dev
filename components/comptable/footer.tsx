@@ -5,7 +5,7 @@ import { FooterLegalBar } from "@/components/site/footer-legal-bar"
 const footerLinks: Record<string, { label: string; href: string }[]> = {
   Offre: [
     { label: "Méthode", href: "#methode" },
-    { label: "Tarification", href: "#pricing" },
+    { label: "Missions", href: "#missions" },
     { label: "Garanties", href: "#garanties" },
     { label: "FAQ", href: "/faq" },
     { label: "Contact", href: "#contact" },

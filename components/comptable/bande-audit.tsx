@@ -17,10 +17,10 @@ export function BandeAudit() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <a
-              href="#pricing"
+              href="#missions"
               className="px-5 py-2.5 border border-zinc-700 text-white font-medium rounded-lg hover:bg-zinc-800 transition-colors text-sm"
             >
-              Consulter la tarification
+              Voir le pipeline
             </a>
             <a
               href={CALENDLY_ENTREPRISE_URL}
