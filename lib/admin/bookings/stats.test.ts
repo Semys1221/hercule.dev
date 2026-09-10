@@ -25,9 +25,9 @@ function main() {
   assert.equal(stats.totalBooked, 4);
   assert.equal(stats.pastBooked, 3);
   assert.equal(stats.noShowCount, 1);
-  assert.equal(stats.noShowPercent, 33);
+  assert.equal(stats.noShowPercent, 33.3);
   assert.equal(stats.soldCount, 1);
-  assert.equal(stats.soldPercent, 33);
+  assert.equal(stats.soldPercent, 33.3);
   assert.equal(formatBookingPercent(null), "—");
   assert.equal(formatBookingPercent(42), "42 %");
 
@@ -39,7 +39,7 @@ function main() {
   assert.equal(emptyPast.noShowPercent, null);
   assert.equal(emptyPast.soldPercent, null);
 
-  assert.equal(computeBookingRate(29, 3600), 1);
+  assert.equal(computeBookingRate(29, 3600), 0.8);
   assert.equal(computeBookingRate(29, 0), null);
 
   const extended = computeExtendedBookingStats(

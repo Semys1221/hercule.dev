@@ -2,9 +2,15 @@ import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { BOOKINGS_CACHE_REVALIDATE_SECONDS } from "@/lib/calendly/bookings-cache-constants";
 import type { Niche } from "@/lib/admin/navigation";
 
+export type BookingsClientCacheOutreach = {
+  calendly_configured?: boolean;
+  campaign_linked?: boolean;
+};
+
 export type BookingsClientCacheEntry = {
   fetchedAt: number;
   bookings: EnrichedCalendlyBooking[];
+  outreach?: BookingsClientCacheOutreach;
 };
 
 type CacheStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
@@ -75,12 +81,13 @@ export function writeBookingsClientCache(
   daysBehind = 0,
   fetchedAt = Date.now(),
   storage: CacheStorage | null = getSessionStorage(),
+  outreach?: BookingsClientCacheOutreach,
 ): void {
   if (!storage) {
     return;
   }
 
-  const entry: BookingsClientCacheEntry = { fetchedAt, bookings };
+  const entry: BookingsClientCacheEntry = { fetchedAt, bookings, outreach };
   try {
     storage.setItem(cacheKey(niche, daysBehind), JSON.stringify(entry));
   } catch {

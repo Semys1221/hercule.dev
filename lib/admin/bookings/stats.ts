@@ -39,7 +39,7 @@ export function percent(count: number, total: number): number | null {
   if (total <= 0) {
     return null;
   }
-  return Math.round((count / total) * 100);
+  return Math.round((count / total) * 1000) / 10;
 }
 
 export function computeBookingRate(booked: number, sent: number): number | null {
@@ -95,7 +95,8 @@ export function formatBookingPercent(value: number | null): string {
   if (value === null) {
     return "—";
   }
-  return `${value} %`;
+  const label = Number.isInteger(value) ? String(value) : value.toFixed(1);
+  return `${label} %`;
 }
 
 export function formatBookingRateLabel(

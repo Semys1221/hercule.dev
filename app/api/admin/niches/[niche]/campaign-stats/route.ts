@@ -20,6 +20,24 @@ export async function GET(
   const refresh = searchParams.get("refresh") === "1";
 
   const campaignId = await resolveInstantlyCampaignId(rawNiche);
+  // #region agent log
+  await fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "9da3c4",
+    },
+    body: JSON.stringify({
+      sessionId: "9da3c4",
+      runId: "pre-fix",
+      hypothesisId: "C",
+      location: "campaign-stats/route.ts:resolve",
+      message: "resolved campaign for stats",
+      data: { niche: rawNiche, campaignId, refresh },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (!campaignId) {
     return NextResponse.json({ linked: false });
   }

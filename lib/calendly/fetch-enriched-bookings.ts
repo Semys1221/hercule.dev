@@ -22,7 +22,59 @@ export async function fetchEnrichedBookings(
   if (!options?.fresh) {
     const cached = readBookingsClientCache(niche, daysBehind);
     if (cached) {
-      return { bookings: cached.bookings, error: null, fromCache: true };
+      let outreach = cached.outreach;
+      if (!outreach) {
+        const outreachResponse = await fetch(`/api/admin/niches/${niche}/outreach-config`);
+        const outreachBody = (await outreachResponse.json()) as {
+          config?: {
+            calendly_configured?: boolean;
+            campaign_linked?: boolean;
+          };
+        };
+        if (outreachResponse.ok && outreachBody.config) {
+          outreach = {
+            calendly_configured: outreachBody.config.calendly_configured,
+            campaign_linked: outreachBody.config.campaign_linked,
+          };
+          writeBookingsClientCache(
+            niche,
+            cached.bookings,
+            daysBehind,
+            cached.fetchedAt,
+            undefined,
+            outreach,
+          );
+        }
+      }
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "9da3c4",
+        },
+        body: JSON.stringify({
+          sessionId: "9da3c4",
+          runId: "post-fix",
+          hypothesisId: "B",
+          location: "fetch-enriched-bookings.ts:client-cache-hit",
+          message: "bookings client cache hit",
+          data: {
+            niche,
+            bookingsCount: cached.bookings.length,
+            hasOutreachInCache: Boolean(outreach),
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+      return {
+        bookings: cached.bookings,
+        error: null,
+        fromCache: true,
+        calendlyConfigured: outreach?.calendly_configured,
+        campaignLinked: outreach?.campaign_linked,
+      };
     }
   }
 
@@ -55,7 +107,7 @@ export async function fetchEnrichedBookings(
   }
 
   const bookings = body.bookings ?? [];
-  writeBookingsClientCache(niche, bookings, daysBehind);
+  writeBookingsClientCache(niche, bookings, daysBehind, Date.now(), undefined, body.outreach);
 
   return {
     bookings,

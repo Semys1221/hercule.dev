@@ -33,15 +33,60 @@ export function BookingsStatsBar({
   campaignLinked = false,
 }: BookingsStatsBarProps) {
   const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      setStatsLoading(true);
       setStatsError(null);
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "9da3c4",
+        },
+        body: JSON.stringify({
+          sessionId: "9da3c4",
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "bookings-stats-bar.tsx:load:start",
+          message: "campaign-stats fetch started",
+          data: { niche, rowsLength: rows.length, campaignLinked },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       try {
         const response = await fetch(`/api/admin/niches/${niche}/campaign-stats`);
         const body = (await response.json()) as CampaignStats;
+        // #region agent log
+        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "9da3c4",
+          },
+          body: JSON.stringify({
+            sessionId: "9da3c4",
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "bookings-stats-bar.tsx:load:response",
+            message: "campaign-stats fetch completed",
+            data: {
+              niche,
+              ok: response.ok,
+              cancelled,
+              linked: body.linked,
+              sent: body.sent,
+              error: body.error ?? null,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         if (!response.ok) {
           throw new Error(body.error ?? "Stats Instantly indisponibles");
         }
@@ -49,19 +94,63 @@ export function BookingsStatsBar({
           setCampaignStats(body);
         }
       } catch (error) {
+        // #region agent log
+        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "9da3c4",
+          },
+          body: JSON.stringify({
+            sessionId: "9da3c4",
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "bookings-stats-bar.tsx:load:error",
+            message: "campaign-stats fetch failed or cancelled",
+            data: {
+              niche,
+              cancelled,
+              error: error instanceof Error ? error.message : String(error),
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         if (!cancelled) {
           setCampaignStats(null);
           setStatsError(
             error instanceof Error ? error.message : "Stats Instantly indisponibles",
           );
         }
+      } finally {
+        if (!cancelled) {
+          setStatsLoading(false);
+        }
       }
     }
     void load();
     return () => {
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "9da3c4",
+        },
+        body: JSON.stringify({
+          sessionId: "9da3c4",
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "bookings-stats-bar.tsx:effect:cleanup",
+          message: "campaign-stats effect cancelled",
+          data: { niche, rowsLength: rows.length },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       cancelled = true;
     };
-  }, [niche, rows.length]);
+  }, [niche]);
 
   const outreach =
     campaignStats?.linked && typeof campaignStats.sent === "number"
@@ -80,10 +169,28 @@ export function BookingsStatsBar({
     outreach,
   );
 
-  const bookingRateLabel =
-    stats.bookingRate === null
+  const bookingRateLabel = statsLoading && outreach === null
+    ? "…"
+    : stats.bookingRate === null
       ? String(stats.totalBooked)
       : `${stats.totalBooked} (${formatBookingPercent(stats.bookingRate)})`;
+
+  function formatOutreachMetric(value: number | null): string {
+    if (statsLoading && outreach === null) {
+      return "…";
+    }
+    if (value === null) {
+      return "—";
+    }
+    return String(value);
+  }
+
+  function formatOutreachPercent(value: number | null): string {
+    if (statsLoading && outreach === null) {
+      return "…";
+    }
+    return formatBookingPercent(value);
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -108,7 +215,7 @@ export function BookingsStatsBar({
           <CardContent className="px-4 py-3">
             <p className="text-xs text-muted-foreground">Sent</p>
             <p className="text-2xl font-semibold tabular-nums">
-              {stats.sent ?? "—"}
+              {formatOutreachMetric(stats.sent)}
             </p>
           </CardContent>
         </Card>
@@ -117,7 +224,7 @@ export function BookingsStatsBar({
           <CardContent className="px-4 py-3">
             <p className="text-xs text-muted-foreground">Reply %</p>
             <p className="text-2xl font-semibold tabular-nums">
-              {formatBookingPercent(stats.replyPercent)}
+              {formatOutreachPercent(stats.replyPercent)}
             </p>
           </CardContent>
         </Card>
@@ -126,7 +233,7 @@ export function BookingsStatsBar({
           <CardContent className="px-4 py-3">
             <p className="text-xs text-muted-foreground">Positive %</p>
             <p className="text-2xl font-semibold tabular-nums">
-              {formatBookingPercent(stats.positivePercent)}
+              {formatOutreachPercent(stats.positivePercent)}
             </p>
           </CardContent>
         </Card>

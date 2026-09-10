@@ -6,6 +6,7 @@ import {
   upsertOutreachConfig,
 } from "@/lib/admin/niches/outreach-config";
 import { isNiche } from "@/lib/admin/navigation";
+import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 
 const patchSchema = z.object({
   instantly_campaign_id: z.string().uuid(),
@@ -48,6 +49,7 @@ export async function PATCH(
 
   try {
     const row = await upsertOutreachConfig(rawNiche, parsed.data);
+    revalidateBookingsCache(rawNiche);
     const config = await getOutreachConfigView(rawNiche);
     return NextResponse.json({ row, config });
   } catch (error) {
