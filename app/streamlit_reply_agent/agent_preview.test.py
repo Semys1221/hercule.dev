@@ -8,10 +8,12 @@ from unittest.mock import patch
 from pathlib import Path
 
 from agent_preview import (
+    DEFAULT_GROK_TEMPERATURE,
     assemble_system_prompt,
     build_global_rules,
     build_knowledge_pack,
     generate_reply_preview,
+    grok_temperature,
     truncate_inbound_text,
 )
 
@@ -21,28 +23,57 @@ _PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 class BuildGlobalRulesTests(unittest.TestCase):
     def test_single_sentence(self) -> None:
         rules = build_global_rules(max_sentences=1)
-        self.assertIn("Écris exactement 1 phrase dans reply_text.", rules)
+        self.assertIn(
+            "Maximum 1 phrase courte dans reply_text (hors signature et lien CTA).",
+            rules,
+        )
 
     def test_multiple_sentences(self) -> None:
         rules = build_global_rules(max_sentences=5)
-        self.assertIn("Écris exactement 5 phrases dans reply_text.", rules)
+        self.assertIn(
+            "Maximum 5 phrases courtes dans reply_text (hors signature et lien CTA).",
+            rules,
+        )
 
     def test_clamps_above_ten(self) -> None:
         rules = build_global_rules(max_sentences=99)
-        self.assertIn("Écris exactement 10 phrases dans reply_text.", rules)
+        self.assertIn(
+            "Maximum 10 phrases courtes dans reply_text (hors signature et lien CTA).",
+            rules,
+        )
 
     def test_clamps_below_one(self) -> None:
         rules = build_global_rules(max_sentences=0)
-        self.assertIn("Écris exactement 1 phrase dans reply_text.", rules)
+        self.assertIn(
+            "Maximum 1 phrase courte dans reply_text (hors signature et lien CTA).",
+            rules,
+        )
 
     def test_requires_french_reply_text(self) -> None:
         rules = build_global_rules(max_sentences=2)
-        self.assertIn("Rédige reply_text en français.", rules)
+        self.assertIn("Rédige reply_text en français", rules)
+
+    def test_includes_tone_anti_patterns(self) -> None:
+        rules = build_global_rules(max_sentences=2)
+        self.assertIn("pas d'urgence artificielle", rules)
+        self.assertIn("Merci pour votre message", rules)
+        self.assertNotIn("CTA urgent", rules)
+        self.assertNotIn("accuser réception →", rules)
 
     def test_skips_not_interested_tag(self) -> None:
         rules = build_global_rules(max_sentences=2)
         self.assertIn("Not interested", rules)
         self.assertIn("should_reply à false", rules)
+
+
+class GrokTemperatureTests(unittest.TestCase):
+    def test_defaults_to_half(self) -> None:
+        with patch.dict("os.environ", {"GROK_TEMPERATURE": ""}):
+            self.assertEqual(grok_temperature(), DEFAULT_GROK_TEMPERATURE)
+
+    def test_clamps_invalid_values(self) -> None:
+        with patch.dict("os.environ", {"GROK_TEMPERATURE": "bad"}):
+            self.assertEqual(grok_temperature(), DEFAULT_GROK_TEMPERATURE)
 
 
 class AssembleSystemPromptTests(unittest.TestCase):
@@ -64,7 +95,10 @@ class AssembleSystemPromptTests(unittest.TestCase):
         self.assertIn("KNOWLEDGE", prompt)
         self.assertIn("## Prompt campagne", prompt)
         self.assertIn("Campaign body", prompt)
-        self.assertIn("Écris exactement 3 phrases dans reply_text.", prompt)
+        self.assertIn(
+            "Maximum 3 phrases courtes dans reply_text (hors signature et lien CTA).",
+            prompt,
+        )
 
     @patch("agent_preview.build_knowledge_pack", return_value="KNOWLEDGE")
     def test_includes_custom_directive_when_provided(self, _mock_knowledge: object) -> None:
@@ -84,6 +118,16 @@ class AssembleSystemPromptTests(unittest.TestCase):
             custom_directive="   ",
         )
         self.assertNotIn("## Directive custom (opérateur)", prompt)
+
+    @patch("agent_preview.build_knowledge_pack", return_value="KNOWLEDGE")
+    def test_includes_booking_context_when_provided(self, _mock_knowledge: object) -> None:
+        prompt = assemble_system_prompt(
+            self.config,
+            "Campaign body",
+            booking_context="Un rendez-vous Calendly a été créé automatiquement.",
+        )
+        self.assertIn("## Contexte Calendly (ne pas inventer)", prompt)
+        self.assertIn("créé automatiquement", prompt)
 
     def test_comptable_system_prompt_includes_bandwidth_guidance(self) -> None:
         config = {

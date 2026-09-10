@@ -159,7 +159,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 3,
     sectionId: "capacite",
     type: "slider",
-    prompt: "Combien de nouveaux dossiers {clientSegment} pouvez-vous actuellement accepter par mois ?",
+    prompt: "Combien de nouveaux dossiers pouvez-vous actuellement accepter par mois ?",
     description: "Dossiers par mois.",
     slider: COMPTABLE_SLIDER_CONFIGS.projectCapacity,
   },

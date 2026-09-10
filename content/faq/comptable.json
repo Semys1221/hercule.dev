@@ -76,7 +76,7 @@
     {
       "id": "faq-cp-013",
       "question": "Puis-je vous joindre par téléphone plutôt que via le formulaire ?",
-      "answer": "Les échanges se font en visioconférence planifiée (Calendly + Zoom provisionnés par Hercule), pas en appel téléphonique ad hoc. Indiquez vos disponibilités (« à quelle heure cette semaine ? ») et réservez un créneau via le lien Calendly.",
+      "answer": "Les échanges se font en visioconférence planifiée (Calendly + Zoom provisionnés par Hercule), pas en appel téléphonique ad hoc. Indiquez vos disponibilités (« à quelle heure cette semaine ? ») : si le cabinet propose un créneau précis (ex. « mardi 14h »), Hercule peut confirmer automatiquement la visio ; sinon proposez deux créneaux Calendly via le lien de réservation.",
       "cvgLink": true
     },
     {

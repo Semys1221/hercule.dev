@@ -200,7 +200,7 @@ export function scoreAgencyPresets(
 }
 
 export const COMPTABLE_PRESET_REASONS: Record<string, string> = {
-  "capacité ≥ 5 projets / mois": "capacité ≥ 5 dossiers TPE / mois",
+  "capacité ≥ 5 projets / mois": "capacité ≥ 5 dossiers / mois",
   "ticket ponctuel ≤ 3 000 €": "honoraires annuels ≤ 3 000 €",
   "capacité Hercule ≥ 3 projets / mois": "capacité Hercule ≥ 3 dossiers / mois",
   "offre acquisition / SEO": "offre fiscal / social / tenue",

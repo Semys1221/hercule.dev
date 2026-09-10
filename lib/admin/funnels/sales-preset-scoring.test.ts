@@ -58,7 +58,7 @@ function main() {
   );
   assert.equal(comptableSerial.id, "serial");
   assert.ok(
-    comptableSerial.reasons.some((reason) => reason.includes("dossiers TPE")),
+    comptableSerial.reasons.some((reason) => reason.includes("dossiers / mois")),
     `expected comptable reasons, got ${comptableSerial.reasons.join(", ")}`,
   );
 

@@ -31,6 +31,7 @@ FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
     "interested_email1": [
         "voici plus de precisions",
         "cabinets partenaires",
+        "au minimum 2 associes",
         "plus de 3 associes",
         "proposer mon cabinet",
         "reprendre ces sujets en main",

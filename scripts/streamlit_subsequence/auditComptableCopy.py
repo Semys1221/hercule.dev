@@ -27,7 +27,7 @@ COMPTABLE_POSITIVE_MARKERS = (
     "cabinets partenaires",
     "proposer mon cabinet",
     "reprendre ces sujets en main",
-    "plus de 3 associes",
+    "au minimum 2 associes",
 )
 
 COMPTABLE_E1_MARKERS = COMPTABLE_POSITIVE_MARKERS + (

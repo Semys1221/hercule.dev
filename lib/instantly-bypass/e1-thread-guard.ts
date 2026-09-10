@@ -7,6 +7,7 @@ const PARTNER_CABINETS_MARKER = "cabinets partenaires";
 const E1_FINGERPRINTS = [
   "voici plus de precisions",
   "cabinets partenaires",
+  "au minimum 2 associes",
   "plus de 3 associes",
   "proposer mon cabinet",
   "reprendre ces sujets en main",

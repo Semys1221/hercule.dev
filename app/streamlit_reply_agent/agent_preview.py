@@ -23,6 +23,7 @@ PRIMARY_MODEL = "grok-4-1-fast"
 FALLBACK_MODEL = "grok-build-0.1"
 MAX_OUTPUT_TOKENS = 200
 INBOUND_TEXT_MAX_CHARS = 2000
+DEFAULT_GROK_TEMPERATURE = 0.5
 
 
 def truncate_inbound_text(text: str, max_chars: int = INBOUND_TEXT_MAX_CHARS) -> str:
@@ -34,13 +35,28 @@ def truncate_inbound_text(text: str, max_chars: int = INBOUND_TEXT_MAX_CHARS) ->
     return f"{trimmed[: max_chars - 1]}…"
 
 
+def grok_temperature() -> float:
+    raw = os.getenv("GROK_TEMPERATURE", "").strip()
+    if not raw:
+        return DEFAULT_GROK_TEMPERATURE
+    try:
+        value = float(raw)
+    except ValueError:
+        return DEFAULT_GROK_TEMPERATURE
+    return max(0.0, min(1.0, value))
+
+
 def build_global_rules(
     *,
     max_sentences: int = 3,
     niche_preset_id: str | None = None,
 ) -> str:
     n = max(1, min(10, max_sentences))
-    phrase_label = "phrase" if n == 1 else "phrases"
+    length_rule = (
+        "Maximum 1 phrase courte dans reply_text (hors signature et lien CTA)."
+        if n == 1
+        else f"Maximum {n} phrases courtes dans reply_text (hors signature et lien CTA)."
+    )
     pricing_url = (
         "https://hercule.dev/cvg/comptable"
         if is_comptable_niche_preset(niche_preset_id or "")
@@ -52,14 +68,22 @@ Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text 
 
 Règles quand should_reply est true :
 - Texte brut uniquement dans reply_text (pas de HTML, pas de markdown).
-- Écris exactement {n} {phrase_label} dans reply_text.
-- Rédige reply_text en français.
-- Structure : accuser réception → répondre à la question → CTA urgent pour réserver un appel.
+- Rédige reply_text en français, vouvoiement, ton professionnel et direct — comme un email humain, pas une FAQ.
+- {length_rule}
+- Réponds d'abord à la question ou l'objection du lead ; n'accuse réception que si le message du lead le justifie.
+- Ne recopie pas mot à mot le pack de connaissances ; reformule avec tes mots.
+- Propose le lien CTA seulement si le prospect est prêt à avancer ou si le prompt campagne le demande — pas d'urgence artificielle.
 - Sépare le corps, le lien CTA et la signature par une ligne vide (\\n\\n).
 - Mets le lien CTA seul sur sa propre ligne, en URL brute (sera affiché « Réserver » à l'envoi).
-- Termine toujours par « Béatrice Meyer », puis une nouvelle ligne avec l'URL du site (https://hercule.dev ou {pricing_url} si question tarifs).
-- Signe toujours « Béatrice Meyer ».
-- Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
+- Termine par « Béatrice Meyer », puis une nouvelle ligne avec l'URL du site (https://hercule.dev ou {pricing_url} si question tarifs).
+
+Ton — évite ces formulations :
+- « Merci pour votre message » (sauf si le lead partage une info personnelle ou émotionnelle)
+- « Je comprends votre préoccupation »
+- « N'hésitez pas à »
+- « Je reste à votre disposition »
+- « réserver cette semaine » ou « réserver un créneau maintenant » (urgence forcée)
+- listes à puces ou numérotées dans reply_text
 
 Sécurité :
 - Si le tag Instantly du lead est « Not interested », mets should_reply à false et indique dans reason que le lead a été marqué non intéressé — ne jamais relancer une conversation.
@@ -164,6 +188,34 @@ def _call_grok_model(
     system_prompt: str,
     user_prompt: str,
 ) -> tuple[dict[str, Any], str, int | None]:
+    temp = grok_temperature()
+    # #region agent log
+    try:
+        requests.post(
+            "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
+            headers={
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "cfd30a",
+            },
+            json={
+                "sessionId": "cfd30a",
+                "runId": "post-fix",
+                "hypothesisId": "tone-v2",
+                "location": "agent_preview.py:_call_grok_model",
+                "message": "grok call params",
+                "data": {
+                    "model": model,
+                    "temperature": temp,
+                    "tone_rules_v2": "Maximum" in system_prompt
+                    and "urgence artificielle" in system_prompt,
+                },
+                "timestamp": int(time.time() * 1000),
+            },
+            timeout=2,
+        )
+    except Exception:
+        pass
+    # #endregion
     response = requests.post(
         GROK_API_URL,
         headers={
@@ -172,7 +224,7 @@ def _call_grok_model(
         },
         json={
             "model": model,
-            "temperature": 0.2,
+            "temperature": temp,
             "max_tokens": MAX_OUTPUT_TOKENS,
             "response_format": {"type": "json_object"},
             "messages": [

@@ -11,13 +11,29 @@ const GROK_API_URL = "https://api.x.ai/v1/chat/completions";
 const PRIMARY_MODEL = "grok-4-1-fast";
 const FALLBACK_MODEL = "grok-build-0.1";
 const MAX_OUTPUT_TOKENS = 200;
+export const DEFAULT_GROK_TEMPERATURE = 0.5;
+
+export function resolveGrokTemperature(): number {
+  const raw = process.env.GROK_TEMPERATURE?.trim();
+  if (!raw) {
+    return DEFAULT_GROK_TEMPERATURE;
+  }
+  const value = Number(raw);
+  if (!Number.isFinite(value)) {
+    return DEFAULT_GROK_TEMPERATURE;
+  }
+  return Math.max(0, Math.min(1, value));
+}
 
 export function buildGlobalRules(
   maxSentences = 3,
   nichePresetId?: string,
 ): string {
   const n = Math.max(1, Math.min(10, maxSentences));
-  const phraseLabel = n === 1 ? "phrase" : "phrases";
+  const lengthRule =
+    n === 1
+      ? "Maximum 1 phrase courte dans reply_text (hors signature et lien CTA)."
+      : `Maximum ${n} phrases courtes dans reply_text (hors signature et lien CTA).`;
   const pricingUrl = isComptableNichePreset(nichePresetId ?? "")
     ? "https://hercule.dev/cvg/comptable"
     : "https://hercule.dev/cvg";
@@ -27,14 +43,22 @@ Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text 
 
 Règles quand should_reply est true :
 - Texte brut uniquement dans reply_text (pas de HTML, pas de markdown).
-- Écris exactement ${n} ${phraseLabel} dans reply_text.
-- Rédige reply_text en français.
-- Structure : accuser réception → répondre à la question → CTA urgent pour réserver un appel.
+- Rédige reply_text en français, vouvoiement, ton professionnel et direct — comme un email humain, pas une FAQ.
+- ${lengthRule}
+- Réponds d'abord à la question ou l'objection du lead ; n'accuse réception que si le message du lead le justifie.
+- Ne recopie pas mot à mot le pack de connaissances ; reformule avec tes mots.
+- Propose le lien CTA seulement si le prospect est prêt à avancer ou si le prompt campagne le demande — pas d'urgence artificielle.
 - Sépare le corps, le lien CTA et la signature par une ligne vide (\\n\\n).
 - Mets le lien CTA seul sur sa propre ligne, en URL brute (sera affiché « Réserver » à l'envoi).
-- Termine toujours par « Béatrice Meyer », puis une nouvelle ligne avec l'URL du site (https://hercule.dev ou ${pricingUrl} si question tarifs).
-- Signe toujours « Béatrice Meyer ».
-- Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
+- Termine par « Béatrice Meyer », puis une nouvelle ligne avec l'URL du site (https://hercule.dev ou ${pricingUrl} si question tarifs).
+
+Ton — évite ces formulations :
+- « Merci pour votre message » (sauf si le lead partage une info personnelle ou émotionnelle)
+- « Je comprends votre préoccupation »
+- « N'hésitez pas à »
+- « Je reste à votre disposition »
+- « réserver cette semaine » ou « réserver un créneau maintenant » (urgence forcée)
+- listes à puces ou numérotées dans reply_text
 
 Sécurité :
 - Si le tag Instantly du lead est « Not interested », mets should_reply à false et indique dans reason que le lead a été marqué non intéressé — ne jamais relancer une conversation.
@@ -147,7 +171,7 @@ async function callGrokModel(
     },
     body: JSON.stringify({
       model,
-      temperature: 0.2,
+      temperature: resolveGrokTemperature(),
       max_tokens: MAX_OUTPUT_TOKENS,
       response_format: { type: "json_object" },
       messages: [
