@@ -169,39 +169,12 @@ export async function executeBypassFlow(
     return { ok: false, error: "thread_not_found" };
   }
 
-  const slotVars = await resolveSlotVariables(campaignId, bodyHtml);
   const vars = {
     ...buildTemplateVariables(params.webhookPayload ?? {}, lead ?? undefined),
-    ...slotVars,
+    ...(await resolveSlotVariables(campaignId, bodyHtml)),
   };
   const rendered = renderTemplate({ ...template, body_html: bodyHtml }, vars);
   const html = rendered.html;
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "f685d6",
-    },
-    body: JSON.stringify({
-      sessionId: "f685d6",
-      hypothesisId: "H3",
-      location: "send-flow.ts:executeBypassFlow",
-      message: "rendered bypass email",
-      data: {
-        flow,
-        campaignId,
-        slot_1: slotVars.slot_1,
-        slot_2: slotVars.slot_2,
-        hasSlotPlaceholders:
-          html.includes("{{slot_1}}") || html.includes("{{slot_2}}"),
-        hasWrongBillingLink: html.includes("hercule.dev/cvg/comptable"),
-      },
-      timestamp: Date.now(),
-      runId: "pre-fix",
-    }),
-  }).catch(() => {});
-  // #endregion
   const subject = thread.subject?.trim() || rendered.subject || "your message";
   const started = params.webhookReceivedAt ?? new Date();
 

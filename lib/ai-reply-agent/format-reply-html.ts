@@ -1,7 +1,7 @@
 const HERCULE_WEBSITE_URL = "https://hercule.dev";
 export const BEATRICE_SIGNATURE = "Béatrice Meyer";
 
-const RESERVATION_PATH_RE = /reservation(?:-entreprise)?\.html/i;
+const RESERVATION_PATH_RE = /reservation(?:-entreprise)?\.html|\/r\/comptable\//i;
 const URL_RE =
   /https?:\/\/[^\s<>]+|(?:www\.)?hercule\.dev[/\w\-.?=&%]*/gi;
 
@@ -51,6 +51,47 @@ function signatureIndex(text: string): number {
     }
   }
   return -1;
+}
+
+function structureReplyPlaintext(text: string): string {
+  let body = normalizePlainText(text);
+  if (!body) {
+    return body;
+  }
+
+  for (const marker of [BEATRICE_SIGNATURE, "Beatrice Meyer"]) {
+    body = body.replace(
+      new RegExp(`([^\\n])\\s+(${marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`),
+      "$1\n\n$2",
+    );
+  }
+
+  const urlPattern = URL_RE.source;
+  body = body.replace(
+    new RegExp(`([.!?:])\\s+(${urlPattern})`, "gi"),
+    "$1\n\n$2",
+  );
+  body = body.replace(
+    new RegExp(`(ici\\s*:\\s*)(${urlPattern})`, "gi"),
+    "$1\n$2",
+  );
+
+  const idx = signatureIndex(body);
+  if (idx >= 0) {
+    for (const marker of [BEATRICE_SIGNATURE, "Beatrice Meyer"]) {
+      if (body.slice(idx).startsWith(marker)) {
+        const sigEnd = idx + marker.length;
+        const rest = body.slice(sigEnd);
+        const stripped = rest.trimStart();
+        if (stripped && !rest.startsWith("\n")) {
+          body = `${body.slice(0, sigEnd)}\n${stripped}`;
+        }
+        break;
+      }
+    }
+  }
+
+  return body.trim();
 }
 
 export function ensureBeatriceSignature(text: string): string {
@@ -134,6 +175,32 @@ export function formatReplyHtml(
   }
 
   body = ensureBeatriceSignature(body);
+  body = structureReplyPlaintext(body);
   const linked = plainToLinkedHtml(body);
-  return paragraphsFromLinkedText(linked);
+  const htmlOut = paragraphsFromLinkedText(linked);
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "000421",
+    },
+    body: JSON.stringify({
+      sessionId: "000421",
+      runId: "format",
+      hypothesisId: "A",
+      location: "format-reply-html.ts:formatReplyHtml",
+      message: "reply html formatted",
+      data: {
+        inputNewlines: body.split("\n").length - 1,
+        paragraphCount: (htmlOut.match(/<p>/g) ?? []).length,
+        hasReserverLink: htmlOut.includes("Réserver</a>"),
+        hasRawHttps: htmlOut.includes("https://") && !htmlOut.includes("<a href="),
+        htmlPreview: htmlOut.slice(0, 240),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  return htmlOut;
 }

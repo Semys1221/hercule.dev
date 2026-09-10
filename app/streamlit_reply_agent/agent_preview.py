@@ -55,8 +55,9 @@ Règles quand should_reply est true :
 - Écris exactement {n} {phrase_label} dans reply_text.
 - Rédige reply_text en français.
 - Structure : accuser réception → répondre à la question → CTA urgent pour réserver un appel.
-- Inclus le lien CTA de réservation en URL brute (sera affiché « Réserver » à l'envoi).
-- Termine toujours par « Béatrice Meyer », puis une ligne avec l'URL du site (https://hercule.dev ou {pricing_url} si question tarifs).
+- Sépare le corps, le lien CTA et la signature par une ligne vide (\\n\\n).
+- Mets le lien CTA seul sur sa propre ligne, en URL brute (sera affiché « Réserver » à l'envoi).
+- Termine toujours par « Béatrice Meyer », puis une nouvelle ligne avec l'URL du site (https://hercule.dev ou {pricing_url} si question tarifs).
 - Signe toujours « Béatrice Meyer ».
 - Ajoute de l'urgence au CTA (réserver cette semaine / réserver un créneau maintenant).
 

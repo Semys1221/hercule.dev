@@ -17,32 +17,6 @@ import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate } from "./templates
 
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
 
-function debugLog(
-  location: string,
-  message: string,
-  data: Record<string, unknown>,
-  hypothesisId: string,
-): void {
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "ce280c",
-    },
-    body: JSON.stringify({
-      sessionId: "ce280c",
-      location,
-      message,
-      data,
-      hypothesisId,
-      timestamp: Date.now(),
-      runId: "e1-missing-link",
-    }),
-  }).catch(() => {});
-  // #endregion
-}
-
 export async function handleLeadInterested(
   payload: InstantlyWebhookPayload,
 ): Promise<HandleInterestedResult> {
@@ -96,32 +70,11 @@ export async function handleLeadInterested(
     const needsReservationLink = templateRequiresReservationLink(template.body_html);
     let reservationLink = readReservationLink(lead ?? undefined, payload);
 
-    debugLog("handler.ts:reservation-check", "E1 reservation link pre-check", {
-      campaignId,
-      leadEmail,
-      needsReservationLink,
-      hasReservationLink: Boolean(reservationLink),
-      leadId: lead?.id ?? null,
-    }, "H1");
-
     if (needsReservationLink && !reservationLink) {
       const provisioned = await ensureCampaignLeadLinks({
         campaignId,
         leadEmail,
       });
-
-      debugLog(
-        "handler.ts:auto-provision",
-        "Attempted auto-provision for missing reservation link",
-        {
-          campaignId,
-          leadEmail,
-          provisionOk: provisioned.ok,
-          provisionReason: provisioned.ok ? null : provisioned.reason,
-          created: provisioned.ok ? provisioned.created : null,
-        },
-        "H2",
-      );
 
       if (provisioned.ok) {
         lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
@@ -140,12 +93,6 @@ export async function handleLeadInterested(
         status: "failed",
         errorMessage: "Missing reservation link on lead",
       });
-      debugLog(
-        "handler.ts:missing-link-fail",
-        "E1 blocked after provision attempt",
-        { campaignId, leadEmail, leadId: lead?.id ?? null },
-        "H1",
-      );
       return { ok: false, error: "missing_reservation_link" };
     }
 

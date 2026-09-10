@@ -14,7 +14,11 @@ import {
   paymentPhaseForAgenceCheckout,
 } from "@/lib/payments/agence-offers";
 import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
-import { getAppBaseUrl, getStripeClient } from "@/lib/payments/stripe";
+import {
+  getAppBaseUrl,
+  getCheckoutBrandingSettings,
+  getStripeClient,
+} from "@/lib/payments/stripe";
 
 const bodySchema = z.object({
   slug: z.string().min(1),
@@ -132,6 +136,7 @@ export async function POST(request: Request) {
       line_items: lineItems,
       return_url: `${baseUrl}/dashboard/${leadSlug}?paid=1`,
       customer_email: lookup.lead.email,
+      branding_settings: getCheckoutBrandingSettings(),
       invoice_creation: { enabled: true },
       wallet_options: {
         link: {
@@ -157,14 +162,17 @@ export async function POST(request: Request) {
     // #region agent log
     fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "3adecb" },
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "c1b414" },
       body: JSON.stringify({
-        sessionId: "3adecb",
-        runId: "pre-fix",
-        hypothesisId: "C-E",
+        sessionId: "c1b414",
+        runId: "post-fix",
+        hypothesisId: "A",
         location: "checkout/route.ts:success",
-        message: "Checkout session created",
-        data: { sessionId: session.id, hasClientSecret: Boolean(session.client_secret) },
+        message: "Checkout session branding",
+        data: {
+          sessionId: session.id,
+          brandingDisplayName: session.branding_settings?.display_name ?? null,
+        },
         timestamp: Date.now(),
       }),
     }).catch(() => {});

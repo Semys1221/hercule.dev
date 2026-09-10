@@ -11,7 +11,10 @@ from lead_links import TargetType, resolve_lead_cta_link
 HERCULE_WEBSITE_URL = "https://hercule.dev"
 BEATRICE_SIGNATURE = "Béatrice Meyer"
 
-_RESERVATION_PATH_RE = re.compile(r"reservation(?:-entreprise)?\.html", re.I)
+_RESERVATION_PATH_RE = re.compile(
+    r"reservation(?:-entreprise)?\.html|/r/comptable/",
+    re.I,
+)
 _URL_RE = re.compile(
     r"https?://[^\s<>]+|(?:www\.)?hercule\.dev[/\w\-.?=&%]*",
     re.I,
@@ -49,6 +52,48 @@ def _signature_index(text: str) -> int:
         if idx >= 0:
             return idx
     return -1
+
+
+def _structure_reply_plaintext(text: str) -> str:
+    """Insert paragraph breaks before signature, CTA URLs, and site link."""
+    body = _normalize_plain_text(text)
+    if not body:
+        return body
+
+    for marker in (BEATRICE_SIGNATURE, "Beatrice Meyer"):
+        body = re.sub(
+            rf"([^\n])\s+({re.escape(marker)})",
+            rf"\1\n\n\2",
+            body,
+            count=1,
+        )
+
+    url_pattern = _URL_RE.pattern
+    body = re.sub(
+        rf"([.!?:])\s+({url_pattern})",
+        r"\1\n\n\2",
+        body,
+        flags=re.I,
+    )
+    body = re.sub(
+        rf"(ici\s*:\s*)({url_pattern})",
+        r"\1\n\2",
+        body,
+        flags=re.I,
+    )
+
+    idx = _signature_index(body)
+    if idx >= 0:
+        for marker in (BEATRICE_SIGNATURE, "Beatrice Meyer"):
+            if body[idx:].startswith(marker):
+                sig_end = idx + len(marker)
+                rest = body[sig_end:]
+                stripped = rest.lstrip()
+                if stripped and not rest.startswith("\n"):
+                    body = f"{body[:sig_end]}\n{stripped}"
+                break
+
+    return body.strip()
 
 
 def ensure_beatrice_signature(text: str) -> str:
@@ -131,5 +176,46 @@ def format_reply_html(
         body = ensure_cta_present(body, resolved_cta)
 
     body = ensure_beatrice_signature(body)
+    body = _structure_reply_plaintext(body)
     linked = _plain_to_linked_html(body)
-    return _paragraphs_from_linked_text(linked)
+    html_out = _paragraphs_from_linked_text(linked)
+    # #region agent log
+    try:
+        import json
+        import time
+        import urllib.request
+
+        payload = json.dumps(
+            {
+                "sessionId": "000421",
+                "runId": "format",
+                "hypothesisId": "A",
+                "location": "email_format.py:format_reply_html",
+                "message": "reply html formatted",
+                "data": {
+                    "input_newlines": body.count("\n"),
+                    "paragraph_count": html_out.count("<p>"),
+                    "has_reserver_link": "Réserver</a>" in html_out,
+                    "has_raw_https": "https://" in html_out
+                    and "<a href=" not in html_out,
+                    "html_preview": html_out[:240],
+                },
+                "timestamp": int(time.time() * 1000),
+            }
+        ).encode()
+        urllib.request.urlopen(
+            urllib.request.Request(
+                "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
+                data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Debug-Session-Id": "000421",
+                },
+                method="POST",
+            ),
+            timeout=2,
+        )
+    except Exception:
+        pass
+    # #endregion
+    return html_out

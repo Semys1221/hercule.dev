@@ -50,24 +50,6 @@ export async function resolveSlotVariables(
       console.warn(
         `[slot-variables] Unknown campaign category for ${campaignId}`,
       );
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "f685d6",
-        },
-        body: JSON.stringify({
-          sessionId: "f685d6",
-          hypothesisId: "H1",
-          location: "slot-variables.ts:resolveSlotVariables",
-          message: "unknown campaign category",
-          data: { campaignId },
-          timestamp: Date.now(),
-          runId: "pre-fix",
-        }),
-      }).catch(() => {});
-      // #endregion
       return empty;
     }
 
@@ -76,47 +58,10 @@ export async function resolveSlotVariables(
       2,
     );
     const labels = slots.map((slot) => formatFrenchSlotLabel(slot));
-    const result = buildSlotVariablesFromLabels(labels);
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "f685d6",
-      },
-      body: JSON.stringify({
-        sessionId: "f685d6",
-        hypothesisId: "H2",
-        location: "slot-variables.ts:resolveSlotVariables",
-        message: "resolved calendly slots",
-        data: { campaignId, category, slot_1: result.slot_1, slot_2: result.slot_2 },
-        timestamp: Date.now(),
-        runId: "pre-fix",
-      }),
-    }).catch(() => {});
-    // #endregion
-    return result;
+    return buildSlotVariablesFromLabels(labels);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.warn(`[slot-variables] Failed to resolve slots: ${message}`);
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "f685d6",
-      },
-      body: JSON.stringify({
-        sessionId: "f685d6",
-        hypothesisId: "H2",
-        location: "slot-variables.ts:resolveSlotVariables",
-        message: "calendly slot resolution failed",
-        data: { campaignId, error: message },
-        timestamp: Date.now(),
-        runId: "pre-fix",
-      }),
-    }).catch(() => {});
-    // #endregion
     return empty;
   }
 }

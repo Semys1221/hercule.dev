@@ -375,74 +375,8 @@ def _resolve_slot_vars(campaign_id: str, body_html: str) -> dict[str, str]:
             for slot in slots
             if isinstance(slot, dict) and str(slot.get("label") or "").strip()
         ]
-        result = _build_slot_vars_from_labels(labels)
-        # #region agent log
-        try:
-            import json
-            import time
-
-            with open(
-                "/Users/evqn/dev/hercule.dev/.cursor/debug-f685d6.log",
-                "a",
-                encoding="utf-8",
-            ) as log_file:
-                log_file.write(
-                    json.dumps(
-                        {
-                            "sessionId": "f685d6",
-                            "hypothesisId": "H2",
-                            "location": "send_queue.py:_resolve_slot_vars",
-                            "message": "calendly next-slots resolved",
-                            "data": {
-                                "campaign_id": campaign_id,
-                                "event": event,
-                                "http_ok": response.ok,
-                                "api_ok": bool(data.get("ok")),
-                                "slot_1": result.get("slot_1", ""),
-                                "slot_2": result.get("slot_2", ""),
-                            },
-                            "timestamp": int(time.time() * 1000),
-                            "runId": "pre-fix",
-                        }
-                    )
-                    + "\n"
-                )
-        except Exception:
-            pass
-        # #endregion
-        return result
-    except Exception as exc:
-        # #region agent log
-        try:
-            import json
-            import time
-
-            with open(
-                "/Users/evqn/dev/hercule.dev/.cursor/debug-f685d6.log",
-                "a",
-                encoding="utf-8",
-            ) as log_file:
-                log_file.write(
-                    json.dumps(
-                        {
-                            "sessionId": "f685d6",
-                            "hypothesisId": "H2",
-                            "location": "send_queue.py:_resolve_slot_vars",
-                            "message": "calendly next-slots failed",
-                            "data": {
-                                "campaign_id": campaign_id,
-                                "event": event,
-                                "error": str(exc),
-                            },
-                            "timestamp": int(time.time() * 1000),
-                            "runId": "pre-fix",
-                        }
-                    )
-                    + "\n"
-                )
-        except Exception:
-            pass
-        # #endregion
+        return _build_slot_vars_from_labels(labels)
+    except Exception:
         return empty
 
 
@@ -774,42 +708,6 @@ def _execute_send(
     source_html = html_override if html_override is not None else body_html
     vars_map = _template_vars(lead, body_html=source_html, campaign_id=campaign_id)
     html = _render_template(source_html, vars_map)
-    # #region agent log
-    try:
-        import json
-        import time
-
-        with open(
-            "/Users/evqn/dev/hercule.dev/.cursor/debug-f685d6.log",
-            "a",
-            encoding="utf-8",
-        ) as log_file:
-            log_file.write(
-                json.dumps(
-                    {
-                        "sessionId": "f685d6",
-                        "hypothesisId": "H3",
-                        "location": "send_queue.py:_execute_send",
-                        "message": "rendered bypass email",
-                        "data": {
-                            "flow": flow,
-                            "campaign_id": campaign_id,
-                            "used_html_override": html_override is not None,
-                            "slot_1": vars_map.get("slot_1", ""),
-                            "slot_2": vars_map.get("slot_2", ""),
-                            "has_slot_placeholders": any(
-                                placeholder in html for placeholder in SLOT_PLACEHOLDERS
-                            ),
-                        },
-                        "timestamp": int(time.time() * 1000),
-                        "runId": "pre-fix",
-                    }
-                )
-                + "\n"
-            )
-    except Exception:
-        pass
-    # #endregion
     subject = thread["subject"] or template["subject"] or "your message"
 
     client.reply_to_email(

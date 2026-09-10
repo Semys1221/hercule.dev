@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 
+import { LEGAL_ENTITY } from "@/lib/constants";
 import {
   getStripeSecretKey,
   getStripeStarterPriceId,
@@ -94,4 +95,9 @@ export function getAppBaseUrl(): string {
     process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "") ||
     "https://www.hercule.dev"
   );
+}
+
+/** Overrides legacy account business_profile.name (e.g. Montis Media) on embedded Checkout. */
+export function getCheckoutBrandingSettings(): Stripe.Checkout.SessionCreateParams.BrandingSettings {
+  return { display_name: LEGAL_ENTITY.commercialName };
 }

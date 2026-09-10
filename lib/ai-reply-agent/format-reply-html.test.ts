@@ -63,6 +63,16 @@ function main() {
     assert.match(html, /<p>Line two<\/p>/);
   }
 
+  {
+    const url = "https://www.hercule.dev/r/comptable/slug99";
+    const html = formatReplyHtml(
+      `Merci pour votre retour. Réservez ici : ${url} ${BEATRICE_SIGNATURE} https://hercule.dev`,
+      { ctaLink: url },
+    );
+    assert.match(html, new RegExp(`<a href="${url}">Réserver</a>`));
+    assert.ok((html.match(/<p>/g) ?? []).length > 1);
+  }
+
   console.log("format-reply-html.test.ts: OK");
 }
 

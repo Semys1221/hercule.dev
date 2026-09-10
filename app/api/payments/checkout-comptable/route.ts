@@ -10,6 +10,7 @@ import {
 import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
 import {
   getAppBaseUrl,
+  getCheckoutBrandingSettings,
   getComptableMonthlyPriceId,
   getComptablePack3PriceId,
   getComptableStarterPriceId,
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       return_url: `${baseUrl}/dashboard/${lead.slug}?paid=1`,
       customer_email: lead.email,
+      branding_settings: getCheckoutBrandingSettings(),
       invoice_creation: { enabled: true },
       wallet_options: {
         link: {

@@ -17,7 +17,11 @@ import {
   priceIdForAgenceOffer,
 } from "@/lib/payments/agence-offers";
 import { checkoutErrorResponse } from "@/lib/payments/checkout-errors";
-import { getAppBaseUrl, getStripeClient } from "@/lib/payments/stripe";
+import {
+  getAppBaseUrl,
+  getCheckoutBrandingSettings,
+  getStripeClient,
+} from "@/lib/payments/stripe";
 import { loadDeliveryContext } from "@/lib/dashboard/load-delivery-context";
 
 const bodySchema = z.object({
@@ -129,6 +133,7 @@ export async function POST(request: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       return_url: `${baseUrl}/dashboard/${lead.slug}?balance_paid=1`,
       customer_email: lead.email,
+      branding_settings: getCheckoutBrandingSettings(),
       invoice_creation: { enabled: true },
       wallet_options: {
         link: {

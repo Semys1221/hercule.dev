@@ -71,6 +71,25 @@ class FormatReplyHtmlTests(unittest.TestCase):
         )
         self.assertIn(f'<a href="{url}">Réserver</a>', html_out)
 
+    def test_comptable_tracking_url_becomes_reserver_link(self) -> None:
+        url = "https://www.hercule.dev/r/comptable/slug99"
+        html_out = format_reply_html(
+            f"Merci. Réservez ici : {url} {BEATRICE_SIGNATURE} https://hercule.dev",
+            cta_link=url,
+        )
+        self.assertIn(f'<a href="{url}">Réserver</a>', html_out)
+        self.assertGreater(html_out.count("<p>"), 1)
+
+    def test_one_liner_gets_paragraph_breaks(self) -> None:
+        url = "https://www.hercule.dev/r/comptable/slug99"
+        html_out = format_reply_html(
+            f"Merci pour votre retour. Réservez ici : {url} {BEATRICE_SIGNATURE} https://hercule.dev",
+            cta_link=url,
+        )
+        self.assertIn("<p>Merci pour votre retour.", html_out)
+        self.assertIn(f'<a href="{url}">Réserver</a>', html_out)
+        self.assertIn(f"<p>{BEATRICE_SIGNATURE}", html_out)
+
 
 class PlainTextToHtmlTests(unittest.TestCase):
     def test_wraps_paragraphs(self) -> None:

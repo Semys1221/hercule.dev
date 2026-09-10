@@ -1,5 +1,4 @@
 import {
-  findLeadByEmailInCampaign,
   getInstantlyApiKey,
   listEmails,
   replyToEmail,
@@ -9,28 +8,20 @@ import { resolveThreadForReply } from "@/lib/instantly-bypass/thread-resolver";
 import type { InstantlyEmailRecord } from "@/lib/instantly-bypass/types";
 
 import { formatReplyHtml, plainTextToHtml } from "./format-reply-html";
+import { resolvePromptLinks } from "./lead-links";
 import { createAiReplyAgentClient } from "./supabase";
 
-import type { AiReplyAgentConfig, AiReplyTargetType } from "./types";
+import type { AiReplyAgentConfig } from "./types";
 
 const COLLISION_MINUTES = 15;
 const HERCULE_FINGERPRINTS = ["beatrice meyer", "hercule.dev", "béatrice meyer"];
 
-function readCtaFromLead(
-  lead: { payload?: Record<string, unknown> | null } | null | undefined,
-  targetType: AiReplyTargetType,
-): string {
-  const key =
-    targetType === "buyer"
-      ? "reservation_agence_link"
-      : "reservation_entreprise_link";
-  const fromLead = lead?.payload?.[key];
-  if (typeof fromLead === "string" && fromLead.trim()) {
-    return fromLead.trim();
-  }
-  return targetType === "buyer"
-    ? "https://www.hercule.dev/reservation.html"
-    : "https://www.hercule.dev/reservation-entreprise.html";
+async function readCtaForLead(
+  leadEmail: string,
+  config: AiReplyAgentConfig,
+): Promise<string> {
+  const links = await resolvePromptLinks(leadEmail, config.target_type);
+  return links.primary;
 }
 
 function isHerculeSentBody(text: string): boolean {
@@ -89,13 +80,7 @@ export async function sendAiReply(params: {
   preferredEmailId?: string;
 }): Promise<{ replyToUuid: string }> {
   const apiKey = getInstantlyApiKey();
-  const lead = await findLeadByEmailInCampaign(
-    apiKey,
-    params.campaignId,
-    params.leadEmail,
-  );
-
-  const ctaLink = readCtaFromLead(lead, params.config.target_type);
+  const ctaLink = await readCtaForLead(params.leadEmail, params.config);
 
   const thread = await resolveThreadForReply(apiKey, {
     leadEmail: params.leadEmail,
