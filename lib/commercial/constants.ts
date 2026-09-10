@@ -18,13 +18,13 @@ export const PAYMENT_PHASES = {
 export type PaymentPhase = (typeof PAYMENT_PHASES)[keyof typeof PAYMENT_PHASES];
 
 export const COMMERCIAL = {
-  /** Hercule Starter — 998 € TTC, 5 contrats PME / 30 j */
+  /** Hercule Starter — 998 €, 5 contrats PME / 30 j */
   starter998PriceCents: 99_800,
   starter998Attributions: 5,
   starter998DeliveryDays: 30,
   starter998FormulaLabel: "5 contrats PME sécurisés",
 
-  /** Hercule Growth — 1 498 € TTC, 10 contrats PME / 60 j */
+  /** Hercule Growth — 1 498 €, 10 contrats PME / 60 j */
   growth1498PriceCents: 149_800,
   growth1498Attributions: 10,
   growth1498DeliveryDays: 60,
@@ -207,8 +207,8 @@ export const FORBIDDEN_COPY = [
  * Stripe offer types: OFFER_TYPES_COMPTABLE (starter_999_5 / monthly_1499 / pack_3x1499).
  */
 export const COMMERCIAL_COMPTABLE = {
-  /** Hercule Lite — 999 € one-shot, 5 missions, aucune garantie MRR (offer type starter_999_5) */
-  starterPriceCents: 99_900,
+  /** Hercule Lite — 998 € one-shot, 5 missions, aucune garantie MRR (offer type starter_999_5) */
+  starterPriceCents: 99_800,
   starterMissions: 5,
 
   /** Hercule Starter — mensuel sans engagement — 1 499 €/mois, 10 missions (offer type monthly_1499) */
@@ -227,8 +227,9 @@ export const COMMERCIAL_COMPTABLE = {
 
   billingCycleDays: 30,
 
-  /** SLA livraison */
-  firstRdvDays: 15,
+  /** SLA premier RDV planifié (jours calendaires après activation) */
+  firstRdvDaysMin: 20,
+  firstRdvDaysMax: 25,
 
   /** MRR par lettre de mission signée (3 600 € honoraires annuels / 12) */
   mrrPerSignedMissionCents: 30_000,

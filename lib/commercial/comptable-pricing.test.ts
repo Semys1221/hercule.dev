@@ -27,7 +27,7 @@ assert.equal(pack3.name, "Pack 3 mois Starter");
 assert.equal(offerTypeForPlan(pack3), OFFER_TYPES_COMPTABLE.pack3x1499);
 
 assert.match(COMPTABLE_PRICING_CTA, /Activer & Sécuriser mon calendrier/i);
-assert.match(comptableOfferLabel(OFFER_TYPES_COMPTABLE.starter999_5), /Lite/);
+assert.match(comptableOfferLabel(OFFER_TYPES_COMPTABLE.starter999_5), /998/);
 assert.match(comptableOfferLabel(OFFER_TYPES_COMPTABLE.monthly1499), /Starter/);
 assert.match(comptableOfferLabel(OFFER_TYPES_COMPTABLE.pack3x1499), /Pack 3 mois/i);
 

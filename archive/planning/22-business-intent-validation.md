@@ -87,7 +87,7 @@ Capture → **Live Qualification** humaine → **Attribution exclusive** → RDV
 
 Sauf contradiction explicite de votre part dans les notes :
 
-- Marché **France**, B2B, droit français, EUR TTC (franchise en base).  
+- Marché **France**, B2B, droit français, EUR (franchise en base).  
 - ICP agence : web / digital.  
 - Sourcing entreprises : PME + verticales déjà présentes dans `doc/email_outreach_copy/` (formation, comptable, conseil financier, nettoyage, rénovation, transport) et besoins digitaux (site, refonte, SEO).  
 - Preuve d’une garantie MRR : email + **jugement admin** (voir BIZ-09), pas un portail de pièces justificatives.

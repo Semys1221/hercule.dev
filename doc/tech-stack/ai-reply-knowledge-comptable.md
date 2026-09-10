@@ -30,7 +30,7 @@ do_not:
 1. Qualification du besoin dirigeant (Live Qualification).
 2. Attribution exclusive d'une demande compatible.
 3. RDV planifié dans l'agenda du cabinet (Calendly provisionné).
-4. **Premier RDV** : sous **15 jours** après Activation.
+4. **Premier RDV** : sous **20 à 25 jours** après Activation.
 5. Le cabinet négocie et signe seul avec le dirigeant — Hercule n'intervient pas dans la négociation.
 
 ## Formules (référence — ne pas chiffrer dans l'email)
@@ -39,7 +39,7 @@ Renoyer vers **hercule.dev/cvg/comptable** pour le détail. En résumé interne 
 
 | Formule | Missions | Garantie MRR |
 |---------|----------|--------------|
-| Hercule Lite | 5 missions (one-shot) | Aucune — no-show only |
+| Hercule Lite | 5 missions (one-shot) — **998 €** | Aucune — no-show only |
 | Hercule Starter | 10 missions / mois | 3 000 € cumulés après 10 missions, ou **5 remplacements** |
 | Pack 3 mois Starter | 30 missions sur 3 mois | 9 000 € cumulés après 30 missions, ou **15 remplacements** (5 par tranche de 10 missions) |
 

@@ -13,7 +13,7 @@
       "name": "Hercule Starter",
       "label": "Entrée",
       "price": "998 €",
-      "priceSuffix": " TTC",
+      "priceSuffix": null,
       "tagline": "5 contrats PME sécurisés sur 30 jours",
       "summary": "Cinq contrats PME sécurisés selon votre activité et votre capacité, livrés sur 30 jours.",
       "footer": "499 € à la commande · 499 € à la livraison du compte de contrats",
@@ -33,7 +33,7 @@
       "name": "Hercule Growth",
       "label": "Croissance",
       "price": "1 498 €",
-      "priceSuffix": " TTC",
+      "priceSuffix": null,
       "tagline": "10 contrats PME sécurisés sur 60 jours",
       "summary": "Dix contrats PME sécurisés selon votre activité et votre capacité, livrés sur 60 jours.",
       "footer": "749 € à la commande · 749 € à la livraison du compte de contrats",
@@ -62,7 +62,7 @@
       "highlight": "Non souscriptible",
       "features": [
         "Affichée à titre de vitrine marketing uniquement.",
-        "Les formules contractuelles sont Hercule Starter (998 € TTC) et Hercule Growth (1 498 € TTC).",
+        "Les formules contractuelles sont Hercule Starter (998 €) et Hercule Growth (1 498 €).",
         "0 % de commission sur vos ventes — identique aux formules souscriptibles."
       ]
     }

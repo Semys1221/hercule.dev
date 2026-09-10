@@ -191,6 +191,7 @@ export function SalesCompanyPresentationPanel({
   form,
 }: SalesCompanyPresentationPanelProps) {
   const isComptable = audience === "comptable";
+  const isEntreprise = audience === "entreprise";
   const teamMembers = isComptable ? COMPTABLE_TEAM : TEAM;
   const modelHighlights = isComptable ? COMPTABLE_MODEL_HIGHLIGHTS : MODEL_HIGHLIGHTS;
   const qualificationCriteria = getEnterpriseQualificationCriteria(audience);
@@ -209,16 +210,26 @@ export function SalesCompanyPresentationPanel({
       <TeamImageFrame />
 
       <div className={cn("space-y-5 text-[15px] leading-[1.65]", RESERVATION_BODY_TEXT)}>
-        <p>
-          {isComptable
-            ? "Hercule Comptable met en relation des dirigeants TPE en reprise comptable, fiscale et administrative avec des cabinets d'expertise comptable partenaires éligibles."
-            : "Hercule est l'évolution d'un outil interne que nous utilisons depuis 2018 pour notre propre activité de développement backend. Renommé Hercule en 2025, ce socle est devenu la plateforme que nous présentons aujourd'hui."}
-        </p>
-        <p>
-          {isComptable
-            ? "Nous qualifions chaque demande par Live Qualification, provisionnons Calendly Pro et Zoom Pro pour vos RDV, et garantissons 15 rendez-vous planifiés en 90 jours — sans commission sur vos honoraires."
-            : "Aujourd'hui, nous générons plus de 20 contrats par mois dans différents secteurs. Nous auditons et qualifions les agences partenaires pour mettre en relation ces demandes avec les profils les plus compatibles."}
-        </p>
+        {isEntreprise ? (
+          <p>
+            Actuellement, nous opérons sous le statut de micro-entreprise collaborative avec une
+            équipe de 3 experts dédiés, ce qui nous permet de vous offrir une flexibilité totale et
+            zéro frais de structure cachés. Nos prix sont nets.
+          </p>
+        ) : (
+          <>
+            <p>
+              {isComptable
+                ? "Hercule Comptable met en relation des dirigeants TPE en reprise comptable, fiscale et administrative avec des cabinets d'expertise comptable partenaires éligibles."
+                : "Hercule est l'évolution d'un outil interne que nous utilisons depuis 2018 pour notre propre activité de développement backend. Renommé Hercule en 2025, ce socle est devenu la plateforme que nous présentons aujourd'hui."}
+            </p>
+            <p>
+              {isComptable
+                ? "Nous qualifions chaque demande par Live Qualification, provisionnons Calendly Pro et Zoom Pro pour vos RDV, et garantissons 15 rendez-vous planifiés en 90 jours — sans commission sur vos honoraires."
+                : "Aujourd'hui, nous générons plus de 20 contrats par mois dans différents secteurs. Nous auditons et qualifions les agences partenaires pour mettre en relation ces demandes avec les profils les plus compatibles."}
+            </p>
+          </>
+        )}
       </div>
 
       <CompanyOriginTimeline audience={audience} />

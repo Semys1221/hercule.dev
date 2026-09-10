@@ -505,7 +505,7 @@ Votre paiement a bien été reçu. Votre accès Hercule Comptable est maintenant
 L'équipe Hercule configure votre espace dans les prochaines 48 heures :
 - Provisionnement de votre compte Calendly Pro
 - Provisionnement de votre compte Zoom Pro
-- Premier rendez-vous PME planifié sous 15 jours
+- Premier rendez-vous PME planifié sous 20 à 25 jours
 
 Retrouvez votre espace cabinet :
 {{dashboardLink}}

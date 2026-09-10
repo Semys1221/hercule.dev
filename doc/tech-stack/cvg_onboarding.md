@@ -17,7 +17,7 @@ do_not:
 ## Résumé (11 points)
 
 1. **Objet** — Hercule met en relation votre agence avec des **contrats PME sécurisés**, après validation téléphonique. Obligation de **moyens**, pas de garantie de signature.
-2. **Formules** — **Hercule Starter : 998 € TTC** (5 contrats / 30 j) · **Hercule Growth : 1 498 € TTC** (10 contrats / 60 j). **0 % de commission**. Paiement **50 %** à la commande, **50 %** à la livraison du compte de contrats. L'offre **2 500 €/mois** est une vitrine, non souscriptible.
+2. **Formules** — **Hercule Starter : 998 €** (5 contrats / 30 j) · **Hercule Growth : 1 498 €** (10 contrats / 60 j). **0 % de commission**. Paiement **50 %** à la commande, **50 %** à la livraison du compte de contrats. L'offre **2 500 €/mois** est une vitrine, non souscriptible.
 3. **Contrat** — Mise en relation exclusive + planification. Un contrat consommé = mise en relation planifiée. Une vente **ne clôt pas** les contrats restants.
 4. **Démarrage** — Onboarding sous **48 h** · Activation dès **acompte + onboarding** · Livraison selon formule (30 ou 60 jours).
 5. **Volume** — Starter : **5 contrats** · Growth : **10 contrats**.

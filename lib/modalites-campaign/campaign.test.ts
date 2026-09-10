@@ -6,8 +6,8 @@ import {
   modalitesAskBody,
   modalitesFaqAudience,
   modalitesFormulas,
-  MODALITES_AGENCE_GROWTH_TTC_CENTS,
-  MODALITES_AGENCE_LAUNCH_TTC_CENTS,
+  MODALITES_AGENCE_GROWTH_PRICE_CENTS,
+  MODALITES_AGENCE_LAUNCH_PRICE_CENTS,
   MODALITES_SUBJECT,
 } from "@/lib/modalites-campaign/copy";
 import { modalitesSkipReason } from "@/lib/modalites-campaign/eligibility";
@@ -138,8 +138,8 @@ function main() {
   assert.equal(modalitesFaqAudience("comptable"), "comptable");
 
   assert.equal(MODALITES_SUBJECT, "Modalités d'Hercule");
-  assert.equal(MODALITES_AGENCE_GROWTH_TTC_CENTS, 149_800);
-  assert.equal(MODALITES_AGENCE_LAUNCH_TTC_CENTS, 99_800);
+  assert.equal(MODALITES_AGENCE_GROWTH_PRICE_CENTS, 149_800);
+  assert.equal(MODALITES_AGENCE_LAUNCH_PRICE_CENTS, 99_800);
 
   const agenceBody = modalitesAskBody("agence");
   assert.match(agenceBody, /1\s*498/);
@@ -159,7 +159,7 @@ function main() {
   assert.match(cabinetFormulas[0]?.detail ?? "", /3\s*000/);
 
   const cabinetBody = modalitesAskBody("entreprise");
-  assert.match(cabinetBody, /999/);
+  assert.match(cabinetBody, /998/);
   assert.doesNotMatch(cabinetBody, /1 498/);
 
   console.log("modalites-campaign.test.ts: ok");

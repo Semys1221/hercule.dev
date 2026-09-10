@@ -56,8 +56,8 @@ describe("COMMERCIAL constants", () => {
 });
 
 describe("COMMERCIAL_COMPTABLE constants", () => {
-  it("starterPriceCents is 99 900", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_900);
+  it("starterPriceCents is 99 800", () => {
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_800);
   });
 
   it("starterMissions is 5", () => {
@@ -75,8 +75,9 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
   });
 
-  it("firstRdvDays is 15", () => {
-    expect(COMMERCIAL_COMPTABLE.firstRdvDays).toBe(15);
+  it("firstRdvDaysMin/Max is 20–25", () => {
+    expect(COMMERCIAL_COMPTABLE.firstRdvDaysMin).toBe(20);
+    expect(COMMERCIAL_COMPTABLE.firstRdvDaysMax).toBe(25);
   });
 
   it("growthMissionsPerMonth is 10", () => {
@@ -142,7 +143,7 @@ describe("OFFER_TYPES_COMPTABLE", () => {
   });
 
   it("starter999_5 amount matches COMMERCIAL_COMPTABLE.starterPriceCents", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_900);
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_800);
   });
 });
 

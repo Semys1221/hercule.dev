@@ -1,11 +1,13 @@
 export { retractionAppliesTo } from "./applies";
 export {
   activationAt,
+  addCalendarDays,
   addWorkingDays,
   computeRetractionEndsAt,
   estimatedFirstBookingAt,
   firstContratWorkingDays,
   formatFrenchDate,
+  formatFrenchDateRange,
 } from "./dates";
 export {
   defaultRetractionProfilePatch,
@@ -14,7 +16,7 @@ export {
   syncProfileRetraction,
 } from "./profile-sync";
 export { resolveDashboardRetraction } from "./resolve";
-export { buildActivationMilestones } from "./timeline";
+export { buildActivationMilestones, buildComptableActivationMilestones } from "./timeline";
 export { RETRACTION_STATUS_LABELS, retractionStatusLabel } from "./labels";
 export type {
   DashboardRetraction,

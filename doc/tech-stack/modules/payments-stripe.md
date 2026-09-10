@@ -51,13 +51,15 @@ Legacy (clients antérieurs) :
 
 | Variable | Offre (nom affiché) | Montant | `offer_type` |
 |----------|---------------------|---------|--------------|
-| `STRIPE_PRICE_COMPTABLE_STARTER` | **Hercule Lite** | 999 € TTC | `starter_999_5` |
+| `STRIPE_PRICE_COMPTABLE_STARTER` | **Hercule Lite** | 998 € | `starter_999_5` |
 | `STRIPE_PRICE_COMPTABLE_MONTHLY` | **Hercule Starter** | 1 499 €/mois | `monthly_1499` |
-| `STRIPE_PRICE_COMPTABLE_PACK3` | **Pack 3 mois Starter** | 3 598 € TTC | `pack_3x1499` |
+| `STRIPE_PRICE_COMPTABLE_PACK3` | **Pack 3 mois Starter** | 3 598 € | `pack_3x1499` |
 
-Montants attendus = `COMMERCIAL_COMPTABLE` (`99_900` / `149_900` / `359_800` centimes). Les noms de variables env sont conservés pour compatibilité ; seuls les libellés UI/CVG ont été renommés (Lite / Starter / Pack).
+Montants attendus = `COMMERCIAL_COMPTABLE` (`99_800` / `149_900` / `359_800` centimes). Les noms de variables env sont conservés pour compatibilité ; seuls les libellés UI/CVG ont été renommés (Lite / Starter / Pack).
 
 Checkout embarqué : session de vente live (`/internal/funnels/comptable/sales/funnel` → closing **Activation & paiement**) et dashboard client (`/dashboard/{slug}`).
+
+**Ops :** mettre à jour le Price Stripe `STRIPE_PRICE_COMPTABLE_STARTER` à **998 €** après déploiement code.
 
 Configurer sur **Vercel** (Production + Preview) et redéployer après ajout.
 

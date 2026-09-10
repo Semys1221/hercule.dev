@@ -133,7 +133,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Lite 999 €, Hercule Starter 1 499 €/mois, pack 3 598 € — garantie MRR Starter — et les missions que vous souhaitez prioriser.",
+      "Lite 998 €, Hercule Starter 1 499 €/mois, pack 3 598 € — garantie MRR Starter — et les missions que vous souhaitez prioriser.",
   },
 ];
 

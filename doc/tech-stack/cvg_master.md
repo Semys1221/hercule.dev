@@ -111,7 +111,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV de mise en relation est 
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **998 € TTC** |
+| **Prix** | **998 €** |
 | **Contenu** | **5 contrats PME sécurisés** sur **30 jours** |
 | **Commission Hercule** | **0 %** |
 | **Paiement** | **50 %** à la commande (**499 €**) · **50 %** à la livraison du compte de contrats (**499 €**) |
@@ -122,7 +122,7 @@ Aucune garantie de signature n'est incluse. Hercule s'engage sur une obligation 
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **1 498 € TTC** |
+| **Prix** | **1 498 €** |
 | **Contenu** | **10 contrats PME sécurisés** sur **60 jours** |
 | **Commission Hercule** | **0 %** |
 | **Paiement** | **50 %** à la commande (**749 €**) · **50 %** à la livraison du compte de contrats (**749 €**) |
@@ -412,7 +412,7 @@ Pour les contrats récurrents, Hercule informe le Client **30 jours** avant l'en
 |---------|------|-------------|
 | 2026-09-08 | 8 sept. 2026 | Modèle hybride : Starter 5 attr + garantie MRR 1 500 € ; mensuel et pack en renouvellement ; rétractation 4 j ; TVA net ; liens /cvg/* ; 2 500 € vitrine |
 | 2026-09-06 | 6 sept. 2026 | Offres 1 489 €/mois et 989×3 / 15 Attributions ; suppression 898 €, pack 5×1489 ; 2 500 € vitrine |
-| 2026-09-05 | 5 sept. 2026 | Prix TTC · Attribution consommée · forfait Starter (version archivée) |
+| 2026-09-05 | 5 sept. 2026 | Prix nets · Attribution consommée · forfait Starter (version archivée) |
 | 2026-09-18 | 18 sept. 2026 | §4.1–4.2 planification anticipée |
 | 2026-09-04 | 4 sept. 2026 | Création CGV |
 

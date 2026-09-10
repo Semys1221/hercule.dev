@@ -36,7 +36,6 @@ Terminologie **alignée CGV** à préserver : Attribution (pas « signature gara
 | Onboarding J+7 | mot « onboarding » après match | confusion D-04 |
 | Statuts UI | NOTBOOKED vs « recherche lancée » vs MEETING_n | dashboards |
 | Pack 5 attributions vs 3–4 honorés/mois | cvg_site-sync dit harmonisé | à ne pas recasser |
-| HT vs TTC | sop-validation « conflit connu » | légal |
 | Placeholders SOP | `doc/sop/contrat.md` stub | obsolète |
 | « Livraison DHL » timeline | spec deliverance | pas d’UI |
 | Mockup demandes | `agence_demandes` titres | marketing vs réel matching |

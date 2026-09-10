@@ -8,7 +8,7 @@ import {
 } from "./dates";
 import { droitRetractationFromStatus, retractionDaysForStatus } from "./profile-sync";
 import { resolveDashboardRetraction } from "./resolve";
-import { buildActivationMilestones } from "./timeline";
+import { buildActivationMilestones, buildComptableActivationMilestones } from "./timeline";
 
 describe("retractionAppliesTo", () => {
   it("applies to agence and comptable only", () => {
@@ -74,6 +74,22 @@ describe("resolveDashboardRetraction", () => {
     });
 
     expect(result?.canWaive).toBe(false);
+  });
+});
+
+describe("buildComptableActivationMilestones", () => {
+  it("labels first RDV with 20–25 day range after activation", () => {
+    const activation = new Date("2026-09-10T12:00:00.000Z");
+    const milestones = buildComptableActivationMilestones({
+      activationAt: activation,
+      status: "waived",
+      now: new Date("2026-09-09T00:00:00.000Z"),
+    });
+
+    expect(milestones[1]?.label).toBe("Premier RDV planifié");
+    expect(milestones[1]?.estimatedAt).toMatch(/à/);
+    expect(milestones[2]?.label).toBe("2ème mission attribuée");
+    expect(milestones[3]?.label).toBe("3ème mission attribuée");
   });
 });
 

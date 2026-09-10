@@ -196,7 +196,7 @@ const COMPTABLE_DASHBOARD_NEXT_STEPS = [
   "Accès onboarding — sous 48h après réception du lien",
   "Activation — première mission TPE lancée dès l'onboarding complété",
   "Proposition de mission — RDV dirigeant planifié sous 5–10 jours ouvrés",
-  "Premier RDV honoré — ≤ 21 jours après activation",
+  "Premier RDV honoré — ≤ 25 jours après activation",
 ] as const;
 
 function getDashboardFeatures(audience: Audience): readonly string[] {

@@ -16,7 +16,7 @@ test("mapComptableDemandeRow maps verso qualification fields from snake_case", (
     disponibilite: "Septembre",
     origine: "Changement expert-comptable",
     duree_souhaitee: "Mission annuelle",
-    horizon_resultat: "Premier RDV sous 15 jours",
+    horizon_resultat: "Premier RDV sous 20 à 25 jours",
     historique_agences: "Cabinet précédent — délais de clôture",
     status: "available",
     available_from: "2026-09-08",
@@ -28,7 +28,7 @@ test("mapComptableDemandeRow maps verso qualification fields from snake_case", (
   });
 
   assert.equal(mapped.dureeSouhaitee, "Mission annuelle");
-  assert.equal(mapped.horizonResultat, "Premier RDV sous 15 jours");
+  assert.equal(mapped.horizonResultat, "Premier RDV sous 20 à 25 jours");
   assert.equal(mapped.historiqueAgences, "Cabinet précédent — délais de clôture");
   assert.equal(mapped.origine, "Changement expert-comptable");
 });

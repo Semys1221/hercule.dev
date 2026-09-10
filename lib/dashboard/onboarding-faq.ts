@@ -66,7 +66,7 @@ const COMPTABLE_FAQ: OnboardingFaqConfig = {
     {
       id: "cp-contrat-facture",
       q: "Quel contrat signé-je et comment suis-je facturé ?",
-      a: "Votre souscription est régie par les [Conditions générales de vente Hercule Comptable](/cvg/comptable). Vous recevrez une facture au nom de votre cabinet (raison sociale, SIRET et adresse indiqués lors de l'onboarding). Montant TTC selon la formule choisie.",
+      a: "Votre souscription est régie par les [Conditions générales de vente Hercule Comptable](/cvg/comptable). Vous recevrez une facture au nom de votre cabinet (raison sociale, SIRET et adresse indiqués lors de l'onboarding). Montant selon la formule choisie.",
     },
     {
       id: "cp-accompagnement",
@@ -81,12 +81,12 @@ const COMPTABLE_FAQ: OnboardingFaqConfig = {
     {
       id: "cp-paiement",
       q: "Comment se passe le paiement ?",
-      a: "Paiement intégral à la souscription via Stripe (Hercule Lite 999 € TTC, Hercule Starter 1 499 €/mois, ou Pack 3 mois Starter 3 598 € TTC). La commande est ferme dès acceptation des CGV et réception du paiement.",
+      a: "Paiement intégral à la souscription via Stripe (Hercule Lite 998 €, Hercule Starter 1 499 €/mois, ou Pack 3 mois Starter 3 598 €). La commande est ferme dès acceptation des CGV et réception du paiement.",
     },
     {
       id: "cp-delai-rdv",
       q: "Combien de temps avant mon premier RDV dirigeant TPE ?",
-      a: "Premier rendez-vous planifié sous 15 jours après activation, avec Calendly Pro et Zoom Pro provisionnés par Hercule.",
+      a: "Premier rendez-vous planifié sous 20 à 25 jours après activation, avec Calendly Pro et Zoom Pro provisionnés par Hercule.",
     },
     {
       id: "cp-retractation",

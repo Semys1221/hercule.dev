@@ -16,7 +16,7 @@ assert.match(plans[2].footer ?? "", /souscription/i);
 const comptablePlans = getPricingPlans("comptable");
 assert.equal(comptablePlans.length, 3);
 assert.equal(comptablePlans[0].id, "plan-comptable-lite");
-assert.match(comptablePlans[0].price, /999/);
+assert.match(comptablePlans[0].price, /998/);
 assert.equal(comptablePlans[1].id, "plan-comptable-starter");
 assert.match(comptablePlans[1].price, /1 499/);
 assert.equal(comptablePlans[2].id, "plan-comptable-pack3");

@@ -156,7 +156,7 @@ export function ApercuCrm() {
             <p className="text-zinc-500 text-[10px] mt-1">Fourchette 2 400 € – 6 000 €/an</p>
           </div>
           <DetailRow label="Besoin validé" value={selected.need} />
-          <DetailRow label="Délai" value="< 15 jours" />
+          <DetailRow label="Délai" value="20–25 jours" />
           <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
             <div className="flex items-center gap-2 text-emerald-400 text-xs">
               <CheckCircle2 className="w-3.5 h-3.5" />

@@ -147,7 +147,7 @@ export function DashboardComptable({
               <ul className="ml-4 list-disc space-y-1">
                 <li>Provisionnement de votre compte Calendly Pro</li>
                 <li>Provisionnement de votre compte Zoom Pro</li>
-                <li>Premier rendez-vous PME planifié sous 15 jours</li>
+                <li>Premier rendez-vous PME planifié sous 20 à 25 jours</li>
               </ul>
               <Separator className="my-2" />
               <p>

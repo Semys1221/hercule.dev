@@ -17,7 +17,7 @@
 | **Landing** | Rebrand **Hercule** ; pricing **1 489 € Starter / 2 500 €/mois** ; garanties MRR + no-show (audit : [cvg_site-sync.md](../tech-stack/cvg_site-sync.md)) |
 | **Opérationnel interne** | CGV : [cvg_master.md](../tech-stack/cvg_master.md) · Capacity SLA · onboarding checkbox à implémenter |
 
-**Conflits connus à trancher :** voir [cvg_site-sync.md](../tech-stack/cvg_site-sync.md) (no-show 14j, garanties MRR, pack 5 vs 3–4/mois) · HT vs TTC · placeholders légaux.
+**Conflits connus à trancher :** voir [cvg_site-sync.md](../tech-stack/cvg_site-sync.md) (no-show 14j, garanties MRR, pack 5 vs 3–4/mois) · placeholders légaux.
 
 ---
 

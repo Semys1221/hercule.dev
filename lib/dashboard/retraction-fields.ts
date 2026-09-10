@@ -1,6 +1,7 @@
 import {
   activationAt,
   buildActivationMilestones,
+  buildComptableActivationMilestones,
   resolveDashboardRetraction,
 } from "@/lib/retraction";
 import type { DashboardRetraction } from "@/lib/retraction";
@@ -42,7 +43,12 @@ export function buildDashboardRetractionFields(params: {
     return { retraction, milestones: [] };
   }
 
-  const milestones = buildActivationMilestones({
+  const buildMilestones =
+    params.category === "comptable"
+      ? buildComptableActivationMilestones
+      : buildActivationMilestones;
+
+  const milestones = buildMilestones({
     activationAt: activation,
     status: retraction.status,
   }).map((m) => ({

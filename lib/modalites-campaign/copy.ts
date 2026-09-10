@@ -11,9 +11,9 @@ export function modalitesFaqAudience(category: LeadCategory): FaqAudience {
 }
 
 /** @deprecated Use COMMERCIAL.growth1498PriceCents / starter998PriceCents */
-export const MODALITES_AGENCE_GROWTH_TTC_CENTS = COMMERCIAL.growth1498PriceCents;
+export const MODALITES_AGENCE_GROWTH_PRICE_CENTS = COMMERCIAL.growth1498PriceCents;
 /** @deprecated Use COMMERCIAL.starter998PriceCents */
-export const MODALITES_AGENCE_LAUNCH_TTC_CENTS = COMMERCIAL.starter998PriceCents;
+export const MODALITES_AGENCE_LAUNCH_PRICE_CENTS = COMMERCIAL.starter998PriceCents;
 
 export const MODALITES_SUBJECT = "Modalités d'Hercule";
 export const MODALITES_CONFIRM_BUTTON_LABEL = "Confirmer le rendez-vous";
@@ -56,7 +56,7 @@ export function modalitesFormulas(audience: LeadCategory): ModalitesFormula[] {
       },
       {
         name: "Hercule Lite",
-        detail: `${COMMERCIAL_COMPTABLE.starterMissions} missions PME (${starterPrice} TTC)`,
+        detail: `${COMMERCIAL_COMPTABLE.starterMissions} missions PME (${starterPrice})`,
       },
     ];
   }
@@ -65,11 +65,11 @@ export function modalitesFormulas(audience: LeadCategory): ModalitesFormula[] {
     {
       name: "Hercule Growth",
       recommended: true,
-      detail: `10 contrats PME sécurisés / 60 jours (${formatEurosFromCents(COMMERCIAL.growth1498PriceCents)} TTC) — 50 % à la commande, 50 % à la livraison.`,
+      detail: `10 contrats PME sécurisés / 60 jours (${formatEurosFromCents(COMMERCIAL.growth1498PriceCents)}) — 50 % à la commande, 50 % à la livraison.`,
     },
     {
       name: "Hercule Starter",
-      detail: `5 contrats PME sécurisés / 30 jours (${formatEurosFromCents(COMMERCIAL.starter998PriceCents)} TTC) — 50 % à la commande, 50 % à la livraison.`,
+      detail: `5 contrats PME sécurisés / 30 jours (${formatEurosFromCents(COMMERCIAL.starter998PriceCents)}) — 50 % à la commande, 50 % à la livraison.`,
     },
   ];
 }

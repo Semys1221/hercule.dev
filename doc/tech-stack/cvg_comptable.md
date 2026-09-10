@@ -10,7 +10,7 @@ do_not:
   - Réintroduire 898 €, 4 jours de rétractation, 2 500 € vitrine
 ```
 
-> **Version :** 2026-09-09  
+> **Version :** 2026-09-10  
 > **Documents associés :** [cvg_master.md](./cvg_master.md) · [constants-commercial.md](./constants-commercial.md) · [ai-reply-knowledge-comptable.md](./ai-reply-knowledge-comptable.md)  
 > Chiffres code : `lib/commercial/constants.ts` → `COMMERCIAL_COMPTABLE` (ENG-16).
 
@@ -89,7 +89,7 @@ Avant souscription, le cabinet peut être invité à un **audit de compatibilit�
 
 ## 5. Formules et tarifs
 
-Les prix sont indiqués en **euros TTC**. Franchise en base de TVA (article 293 B du CGI).
+Les prix sont indiqués en **euros**. Franchise en base de TVA (article 293 B du CGI).
 
 Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no-show recrédite l'Attribution conformément à l'article 10.1.
 
@@ -97,11 +97,12 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **999 € TTC** (paiement unique) |
+| **Prix** | **998 €** (paiement unique) |
 | **Contenu** | **5 missions PME/TPE/indépendants** qualifiées |
-| **Premier RDV** | Sous **15 jours** après Activation |
+| **Premier RDV** | Sous **20 à 25 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Garantie MRR** | **Aucune** — uniquement garantie no-show (article 10.1) |
+| **Garantie signature** | **Aucune** (article 10.3) |
 
 ### 5.2 Hercule Starter (mensuelle sans engagement)
 
@@ -109,7 +110,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 |---------|--------|
 | **Prix** | **1 499 € / mois** |
 | **Contenu** | Service actif de mise en relation ; **10 missions PME/TPE/indépendants / mois** ; cycle **30 jours** |
-| **Premier RDV** | Sous **15 jours** après Activation |
+| **Premier RDV** | Sous **20 à 25 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Engagement** | Aucun. Résiliation : article 13 |
 
@@ -119,7 +120,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **3 598 € TTC** (payable en une fois) |
+| **Prix** | **3 598 €** (payable en une fois) |
 | **Contenu** | **3 mois** de service actif au rythme de l'article 5.2 (**10 missions / mois**) |
 | **Commission Hercule** | **0 %** |
 
@@ -164,7 +165,7 @@ Lors de l'onboarding, le Client peut **renoncer** à ce délai pour lancer la re
 | Jalon | Délai |
 |-------|-------|
 | Accès onboarding après paiement | **48 heures** |
-| Premier RDV planifié | **≤ 15 jours** |
+| Premier RDV planifié | **20 à 25 jours** |
 | Rythme Lite | **5 missions** (paiement unique) |
 | Rythme Hercule Starter | **10 missions PME / mois** (cycle 30 jours) |
 | Garantie MRR Starter | **3 000 €** cumulés après 10 missions, ou **5 remplacements** |
@@ -247,6 +248,7 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-10 | 10 sept. 2026 | Hercule Lite **998 €** · premier RDV **20 à 25 jours** · retrait mentions TTC |
 | 2026-09-09b | 9 sept. 2026 | Garantie MRR — 5 remplacements (Starter, seuil 3 000 € / 10 missions) · 15 remplacements (Pack, seuil 9 000 € / 30 missions, 5 par tranche) |
 | 2026-09-09 | 9 sept. 2026 | Renommage offres — Lite 999 €, Hercule Starter 1 499 € (10 missions), Pack 3 mois 3 598 € |
 | 2026-09-08 | 8 sept. 2026 | Grille 3 offres — Starter 999 €, Croissance 1 499 € (10 missions), pack 3 598 €, garantie MRR |
