@@ -7,10 +7,10 @@ depends_on: constants-commercial.md
 decisions: CVG-01 CPY-01 CPY-04 BIZ-10 CAP-01
 vertical: comptable
 do_not:
-  - Réintroduire 898 €, 4 jours de rétractation, 2 500 € vitrine
+  - Réintroduire 898 €, « Croissance », « Starter 999 € » one-shot, 2 500 € vitrine
 ```
 
-> **Version :** 2026-09-10  
+> **Version :** 2026-09-11  
 > **Documents associés :** [cvg_master.md](./cvg_master.md) · [constants-commercial.md](./constants-commercial.md) · [ai-reply-knowledge-comptable.md](./ai-reply-knowledge-comptable.md)  
 > Chiffres code : `lib/commercial/constants.ts` → `COMMERCIAL_COMPTABLE` (ENG-16).
 
@@ -25,11 +25,12 @@ do_not:
 | Dénomination commerciale | **Hercule** |
 | Raison sociale | **Nanguy Evan Gbeho** (entrepreneur individuel) |
 | Siège social | 4 Rue Claude Bonnier, 33000 Bordeaux |
+| RCS | 885 248 039 R.C.S. Bordeaux (immatriculé le 22/04/2025) |
 | Email contact | contact@hercule.dev |
 
 **Client**
 
-Cabinet d'expertise comptable professionnel (B2B) souscrivant aux formules Hercule Comptable, comptant **plus de 3 associés ou collaborateurs**, agissant dans le cadre de son activité et disposant de la capacité juridique pour contracter.
+Cabinet d'expertise comptable professionnel (B2B) souscrivant aux formules Hercule Comptable, disposant de la **bande passante** pour absorber de nouveaux dossiers (le seuil de plus de 3 associés ou collaborateurs est un **indicateur de capacité**, pas un critère d'exclusion automatique), agissant dans le cadre de son activité et disposant de la capacité juridique pour contracter.
 
 ---
 
@@ -54,6 +55,7 @@ Elles prévalent sur tout document contradictoire du Client, sauf dérogation ex
 | **RDV honoré** | RDV planifié au cours duquel le dirigeant est **effectivement présent** en visioconférence pendant au moins **15 minutes**. |
 | **No-show** | Absence du prospect qualifié au RDV planifié, malgré relance H-24. |
 | **Activation** | Date à laquelle Hercule démarre l'attribution de demandes TPE au Client, après paiement reçu et onboarding complet. |
+| **Période de service** | Intervalle entre l'Activation et la fin ou la résiliation du contrat. |
 | **Live Qualification** | Échange mené par Hercule pour valider le besoin, la compatibilité cabinet-TPE et la pertinence du match avant attribution. |
 
 ---
@@ -98,7 +100,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 | Élément | Détail |
 |---------|--------|
 | **Prix** | **998 € / mois** |
-| **Contenu** | Service actif de mise en relation ; **5 missions PME/TPE/indépendants / mois** ; cycle **30 jours** |
+| **Contenu** | Service actif de mise en relation ; **5 Attributions / mois** (PME/TPE/indépendants qualifiés) ; cycle **30 jours** |
 | **Premier RDV** | Sous **20 à 25 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Engagement** | Aucun. Résiliation : article 13 |
@@ -110,7 +112,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 | Élément | Détail |
 |---------|--------|
 | **Prix** | **1 499 € / mois** |
-| **Contenu** | Service actif de mise en relation ; **10 missions PME/TPE/indépendants / mois** ; cycle **30 jours** |
+| **Contenu** | Service actif de mise en relation ; **10 Attributions / mois** (PME/TPE/indépendants qualifiés) ; cycle **30 jours** |
 | **Premier RDV** | Sous **20 à 25 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
 | **Engagement** | Aucun. Résiliation : article 13 |
@@ -122,10 +124,10 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 | Élément | Détail |
 |---------|--------|
 | **Prix** | **3 598 €** (payable en une fois) |
-| **Contenu** | **3 mois** de service actif au rythme de l'article 5.2 (**10 missions / mois**) |
+| **Contenu** | **3 mois** de service actif au rythme de l'article 5.2 (**10 Attributions / mois**) |
 | **Commission Hercule** | **0 %** |
 
-**Garantie MRR pack :** si, à l'issue des **30 Attributions** du pack, le **MRR cumulé** est inférieur à **9 000 €**, Hercule attribue jusqu'à **15 Attributions de remplacement** (5 par tranche de 10 missions), sous les mêmes exclusions que l'article 5.2.
+**Garantie MRR pack :** si, à l'issue des **30 Attributions** du pack, le **MRR cumulé** est inférieur à **9 000 €**, Hercule attribue jusqu'à **15 Attributions de remplacement** (5 par tranche de 10 Attributions), sous les mêmes exclusions que l'article 5.2.
 
 ### 5.4 Offres non commercialisées
 
@@ -146,7 +148,7 @@ La commande est ferme lorsque le Client accepte les présentes CGV et que le pai
 
 ## 7. Acceptation des CGV
 
-Cocher « J'accepte les Conditions Générales de Vente de Hercule » lors de l'onboarding ou du paiement. Version applicable : celle **en vigueur à la date de commande**.
+Cocher « J'accepte les Conditions Générales de Vente Hercule Comptable » lors de l'onboarding ou du paiement. Version applicable : celle **en vigueur à la date de commande**.
 
 ---
 
@@ -168,10 +170,12 @@ Lors de l'onboarding, le Client peut **renoncer** à ce délai pour lancer la re
 |-------|-------|
 | Accès onboarding après paiement | **48 heures** |
 | Premier RDV planifié | **20 à 25 jours** |
-| Rythme Hercule Lite | **5 missions PME / mois** (cycle 30 jours) |
-| Rythme Hercule Starter | **10 missions PME / mois** (cycle 30 jours) |
-| Garantie MRR Starter | **3 000 €** cumulés après 10 missions, ou **5 remplacements** |
-| Garantie MRR pack | **9 000 €** cumulés après 30 missions, ou **15 remplacements** (5 par tranche de 10 missions) |
+| Rythme Hercule Lite | **5 Attributions / mois** (cycle 30 jours) |
+| Rythme Hercule Starter | **10 Attributions / mois** (cycle 30 jours) |
+| Garantie MRR Starter | **3 000 €** cumulés après 10 Attributions, ou **5 remplacements** |
+| Garantie MRR pack | **9 000 €** cumulés après 30 Attributions, ou **15 remplacements** (5 par tranche de 10 Attributions) |
+
+En **phase de montée en charge**, les délais ci-dessus peuvent être allongés de **7 jours** ; le Client en est informé.
 
 ---
 
@@ -185,7 +189,7 @@ Prospect absent malgré relance H-24 : Attribution recréditée ; remplacement s
 
 **Hercule Starter :** si, à l'issue des 10 Attributions consommées du cycle en cours, le MRR cumulé généré par le Client auprès des dirigeants rencontrés via Hercule est inférieur à **3 000 €**, Hercule attribue jusqu'à **5 Attributions de remplacement**.
 
-**Pack 3 mois Starter :** si, à l'issue des 30 Attributions du pack, le MRR cumulé est inférieur à **9 000 €**, Hercule attribue jusqu'à **15 Attributions de remplacement** (5 par tranche de 10 missions).
+**Pack 3 mois Starter :** si, à l'issue des 30 Attributions du pack, le MRR cumulé est inférieur à **9 000 €**, Hercule attribue jusqu'à **15 Attributions de remplacement** (5 par tranche de 10 Attributions).
 
 Conditions communes :
 
@@ -250,6 +254,7 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-11 | 11 sept. 2026 | Harmonisation Attributions · éligibilité bande passante (> 3 = indicateur) · clause montée en charge +7 j · RCS · checkbox CGV Comptable |
 | 2026-09-10b | 10 sept. 2026 | Hercule Lite **998 €/mois** (5 missions/mois, abonnement) · Hercule Starter **1 499 €/mois** (abonnement Stripe) |
 | 2026-09-10 | 10 sept. 2026 | Hercule Lite **998 €** · premier RDV **20 à 25 jours** · retrait mentions TTC |
 | 2026-09-09b | 9 sept. 2026 | Garantie MRR — 5 remplacements (Starter, seuil 3 000 € / 10 missions) · 15 remplacements (Pack, seuil 9 000 € / 30 missions, 5 par tranche) |
