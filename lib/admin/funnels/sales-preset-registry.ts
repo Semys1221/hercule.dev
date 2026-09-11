@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import type { Audience } from "@/lib/admin/navigation";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 import type { BudgetKind } from "@/lib/admin/funnels/opportunity-card-formulas";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
@@ -119,7 +119,7 @@ const COMPTABLE_AGENCY_PRESETS: Record<AgencyPresetId, AgencyPreset> = {
 };
 
 export function getAgencyPreset(id: AgencyPresetId, audience: Audience = "agence"): AgencyPreset {
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return COMPTABLE_AGENCY_PRESETS[id];
   }
   return AGENCY_PRESETS[id];

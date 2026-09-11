@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const pricingAudienceSchema = z.enum(["agence", "comptable"]);
+export const pricingAudienceSchema = z.enum(["agence", "comptable", "cif"]);
 export type PricingAudience = z.infer<typeof pricingAudienceSchema>;
 
 export const pricingPlanSchema = z.object({

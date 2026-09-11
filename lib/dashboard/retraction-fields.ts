@@ -46,7 +46,7 @@ export function buildDashboardRetractionFields(params: {
   }
 
   const buildMilestones =
-    params.category === "comptable"
+    params.category === "comptable" || params.category === "cif"
       ? buildComptableActivationMilestones
       : buildActivationMilestones;
 

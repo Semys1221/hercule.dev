@@ -7,7 +7,7 @@ import { isNiche } from "@/lib/admin/navigation";
 import { isBookingEmailType } from "@/lib/booking-communication/route-utils";
 
 const bodySchema = z.object({
-  niche: z.enum(["agence", "comptable", "entreprise"]),
+  niche: z.enum(["agence", "comptable", "entreprise", "cif"]),
   stepId: z.string().min(1),
   recipientEmail: z.string().email(),
   subject: z.string().optional(),

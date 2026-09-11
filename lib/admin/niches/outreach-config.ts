@@ -29,12 +29,14 @@ const CAMPAIGN_ENV: Record<Niche, string> = {
   agence: "INSTANTLY_CAMPAIGN_ID_AGENCE",
   entreprise: "INSTANTLY_CAMPAIGN_ID_ENTREPRISE",
   comptable: "INSTANTLY_CAMPAIGN_ID_COMPTABLE",
+  cif: "INSTANTLY_CAMPAIGN_ID_CIF",
 };
 
 const CALENDLY_ENV: Record<Niche, string> = {
   agence: "CALENDLY_EVENT_TYPE_URI_AGENCE",
   entreprise: "CALENDLY_EVENT_TYPE_URI_ENTREPRISE",
   comptable: "CALENDLY_EVENT_TYPE_URI_COMPTABLE",
+  cif: "CALENDLY_EVENT_TYPE_URI_CIF",
 };
 
 /** @internal Exported for unit tests. */

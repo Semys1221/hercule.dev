@@ -334,13 +334,13 @@ export function confirmUrlForLead(
     return buildTemporaryConfirmUrl(lead.slug, lead.email);
   }
   if (
-    (category === "entreprise" || category === "comptable") &&
+    (category === "entreprise" || category === "comptable" || category === "cif") &&
     emailType === "h48_confirm"
   ) {
     return buildEntreprisePostBookingUrl(lead.slug, lead.email);
   }
   if (
-    (category === "entreprise" || category === "comptable") &&
+    (category === "entreprise" || category === "comptable" || category === "cif") &&
     emailType === "h24_relance"
   ) {
     return "";

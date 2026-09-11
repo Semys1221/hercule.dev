@@ -15,6 +15,7 @@ import {
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { RESERVATION_BODY_TEXT, RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
 import { COMPTABLE_MODEL_HIGHLIGHTS, COMPTABLE_PRESENTATION_PARAGRAPHS } from "@/lib/admin/funnels/comptable-sales-copy";
+import { CIF_MODEL_HIGHLIGHTS, CIF_PRESENTATION_PARAGRAPHS } from "@/lib/admin/funnels/cif-sales-copy";
 import { getEnterpriseQualificationCriteria } from "@/lib/commercial/qualification-criteria";
 import type { Audience } from "@/lib/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
@@ -177,9 +178,15 @@ export function SalesCompanyPresentationPanel({
   form,
 }: SalesCompanyPresentationPanelProps) {
   const isComptable = audience === "comptable";
+  const isCif = audience === "cif";
+  const isCabinetBuyer = isComptable || isCif;
   const isEntreprise = audience === "entreprise";
-  const teamMembers = isComptable ? COMPTABLE_TEAM : TEAM;
-  const modelHighlights = isComptable ? COMPTABLE_MODEL_HIGHLIGHTS : MODEL_HIGHLIGHTS;
+  const teamMembers = isCabinetBuyer ? COMPTABLE_TEAM : TEAM;
+  const modelHighlights = isCif
+    ? CIF_MODEL_HIGHLIGHTS
+    : isComptable
+      ? COMPTABLE_MODEL_HIGHLIGHTS
+      : MODEL_HIGHLIGHTS;
   const qualificationCriteria = getEnterpriseQualificationCriteria(audience);
   const cvgHref = "/cvg"
   return (
@@ -188,7 +195,7 @@ export function SalesCompanyPresentationPanel({
         <div className="flex items-center gap-3">
           <HerculeMark variant="dual" className="size-10 text-foreground" />
           <span className="text-2xl font-semibold text-foreground">
-            {isComptable ? "Hercule Comptable" : "Hercule"}
+            {isCif ? "Hercule CIF" : isComptable ? "Hercule Comptable" : "Hercule"}
           </span>
         </div>
       </div>
@@ -204,7 +211,11 @@ export function SalesCompanyPresentationPanel({
           </p>
         ) : (
           <>
-            {isComptable ? (
+            {isCif ? (
+              CIF_PRESENTATION_PARAGRAPHS.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))
+            ) : isComptable ? (
               COMPTABLE_PRESENTATION_PARAGRAPHS.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))

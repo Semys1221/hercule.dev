@@ -11,7 +11,7 @@ TargetType = Literal["buyer", "seller"]
 FALLBACK_BUYER = "https://www.hercule.dev/reservation.html"
 FALLBACK_SELLER = "https://www.hercule.dev/reservation-entreprise.html"
 
-_LEAD_TABLES = ("agence", "comptable", "entreprise")
+_LEAD_TABLES = ("agence", "comptable", "entreprise", "cif")
 
 
 class PromptLinks(TypedDict):
@@ -19,6 +19,7 @@ class PromptLinks(TypedDict):
     agence_link: str
     entreprise_link: str
     comptable_link: str
+    cif_link: str
 
 
 def cta_link_column(target_type: TargetType) -> str:
@@ -54,6 +55,7 @@ def resolve_prompt_links(lead_email: str, target_type: TargetType) -> PromptLink
     agence_link = fallback_cta_link("buyer")
     entreprise_link = fallback_cta_link("seller")
     comptable_link = entreprise_link
+    cif_link = entreprise_link
 
     if row:
         agence = str(row.get("reservation_agence_link") or "").strip()
@@ -65,9 +67,14 @@ def resolve_prompt_links(lead_email: str, target_type: TargetType) -> PromptLink
         comptable = str(row.get("reservation_comptable_link") or "").strip()
         if comptable:
             comptable_link = comptable
+        cif = str(row.get("reservation_cif_link") or "").strip()
+        if cif:
+            cif_link = cif
 
     if category == "comptable":
         primary = comptable_link
+    elif category == "cif":
+        primary = cif_link
     elif target_type == "buyer":
         primary = agence_link
     else:
@@ -78,6 +85,7 @@ def resolve_prompt_links(lead_email: str, target_type: TargetType) -> PromptLink
         "agence_link": agence_link,
         "entreprise_link": entreprise_link,
         "comptable_link": comptable_link,
+        "cif_link": cif_link,
     }
 
 
@@ -95,6 +103,7 @@ def apply_prompt_link_variables(
         agence_link = links["agence_link"]
         entreprise_link = links["entreprise_link"]
         comptable_link = links["comptable_link"]
+        cif_link = links["cif_link"]
     else:
         agence_link = cta_link if target_type == "buyer" else fallback_cta_link("buyer")
         entreprise_link = (
@@ -105,12 +114,16 @@ def apply_prompt_link_variables(
             if "reservation_comptable_link" in prompt
             else entreprise_link
         )
+        cif_link = (
+            cta_link if "reservation_cif_link" in prompt else entreprise_link
+        )
 
     result = prompt
     for key, value in (
         ("reservation_agence_link", agence_link),
         ("reservation_entreprise_link", entreprise_link),
         ("reservation_comptable_link", comptable_link),
+        ("reservation_cif_link", cif_link),
     ):
         result = result.replace(f"{{{{{key}}}}}", value)
         result = result.replace(f"{{{key}}}", value)

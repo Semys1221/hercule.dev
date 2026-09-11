@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "audience": "cif",
+  "updatedAt": "2026-09-10T18:45:00.000Z",
+  "hero": {
+    "eyebrow": "Tarification",
+    "title": "Accès aux missions PME. Lite en entrée. Hercule Starter recommandé.",
+    "intro": "Chaque formule ouvre l'accès à des missions de conseil qualifiées, attribuées après audit de compatibilité. Une mission annuelle d'accompagnement fiscal et trésorerie à 3 600 € d'honoraires, pour 1 499 € d'investissement mensuel en Hercule Starter."
+  },
+  "plans": [
+    {
+      "id": "plan-cif-lite",
+      "name": "Hercule Lite",
+      "label": "Offre d'entrée",
+      "price": "998 €",
+      "priceSuffix": "/mois",
+      "tagline": "5 missions PME par mois",
+      "summary": null,
+      "footer": "Premier rendez-vous sous 20 à 25 jours.",
+      "featured": false,
+      "profileOnly": false,
+      "highlight": null,
+      "offerType": "starter_999_5",
+      "features": [
+        "5 missions PME qualifiées par mois (fiscal, trésorerie, obligations administratives).",
+        "Premier rendez-vous planifié sous 20 à 25 jours après activation.",
+        "Attribution exclusive à votre cabinet.",
+        "Remplacement de toute mission lorsque le dirigeant est absent au rendez-vous, sous 14 jours ouvrés.",
+        "0 % de commission sur vos honoraires signés.",
+        "Aucune garantie de signature — uniquement garantie no-show."
+      ]
+    },
+    {
+      "id": "plan-cif-starter",
+      "name": "Hercule Starter",
+      "label": "Recommandé pour les cabinets CIF",
+      "price": "1 499 €",
+      "priceSuffix": "/mois",
+      "tagline": "10 contrats PME/TPE/indépendants par mois",
+      "summary": null,
+      "footer": "Premier rendez-vous sous 20 à 25 jours.",
+      "featured": true,
+      "profileOnly": false,
+      "highlight": null,
+      "offerType": "monthly_1499",
+      "features": [
+        "10 missions PME/TPE/indépendants qualifiées par mois (fiscal, trésorerie, obligations administratives).",
+        "Premier rendez-vous planifié sous 20 à 25 jours après activation.",
+        "Attribution exclusive à votre cabinet.",
+        "0 % de commission sur vos honoraires signés.",
+        "Calendly Pro et Zoom Pro provisionnés par Hercule.",
+        "Garantie de revenus récurrents : 3 000 € cumulés après vos 10 missions, ou 5 missions de remplacement offertes."
+      ]
+    },
+    {
+      "id": "plan-cif-pack3",
+      "name": "Pack 3 mois Starter",
+      "label": "Engagement 3 mois",
+      "price": "3 598 €",
+      "priceSuffix": null,
+      "tagline": "1 499 € × 3 − 20 %",
+      "summary": null,
+      "footer": "Premier rendez-vous sous 20 à 25 jours.",
+      "featured": true,
+      "profileOnly": false,
+      "highlight": "− 20 %",
+      "offerType": "pack_3x1499",
+      "features": [
+        "3 mois de service actif au rythme de Hercule Starter (10 missions / mois).",
+        "30 missions PME qualifiées sur la durée du pack.",
+        "0 % de commission sur vos honoraires.",
+        "Garantie pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 15 missions de remplacement (5 par tranche de 10 missions).",
+        "Calendly Pro et Zoom Pro provisionnés par Hercule."
+      ]
+    }
+  ],
+  "gatedTeaserFeatures": [
+    "10 missions PME qualifiées par mois en Hercule Starter.",
+    "0 % de commission — honoraires conservés.",
+    "Premier RDV sous 20 à 25 jours."
+  ],
+  "gatedGhostFeatures": [
+    "Garantie revenus récurrents 3 000 €",
+    "Provisionnement Calendly / Zoom",
+    "Pack 3 mois −20 %"
+  ],
+  "guaranteeSection": {
+    "title": "Garantie Hercule Starter",
+    "items": [
+      "1 499 €/mois — 10 missions qualifiées, 0 % de commission sur vos honoraires",
+      "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
+      "Moins de 3 000 € de revenus récurrents cumulés après vos 10 missions ? 5 missions de remplacement offertes",
+      "Hercule Lite (998 €/mois) : aucune garantie de revenus récurrents — uniquement la garantie no-show"
+    ]
+  }
+}

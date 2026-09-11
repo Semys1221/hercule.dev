@@ -12,8 +12,9 @@ import {
   normalizeEmail,
 } from "@/lib/link-tracking/supabase";
 import { allocateSlugs, loadSlugSet } from "@/lib/link-tracking/slug";
-import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
+import { ALL_LEAD_CATEGORIES, isLeadCategory, type LeadCategory, type LinkTrackingLead } from "@/lib/link-tracking/types";
 import {
+  buildCifLeadUrls,
   buildComptableLeadUrls,
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
@@ -68,7 +69,7 @@ function readConfig(): {
     process.env.LINK_PROVISIONING_CAMPAIGN_ID?.trim() || DEFAULT_CAMPAIGN_ID;
   const categoryRaw =
     process.env.LINK_PROVISIONING_CATEGORY?.trim() || DEFAULT_CATEGORY;
-  if (categoryRaw !== "agence" && categoryRaw !== "comptable" && categoryRaw !== "entreprise") {
+  if (categoryRaw !== "agence" && categoryRaw !== "comptable" && categoryRaw !== "entreprise" && categoryRaw !== "cif") {
     throw new Error(`Invalid LINK_PROVISIONING_CATEGORY: ${categoryRaw}`);
   }
   return { listId, campaignId, category: categoryRaw };
@@ -129,6 +130,9 @@ function urlFieldsForCategory(
   if (category === "comptable") {
     return buildComptableLeadUrls(slug, email);
   }
+  if (category === "cif") {
+    return buildCifLeadUrls(slug, email);
+  }
   return category === "entreprise"
     ? buildEntrepriseLeadUrls(slug, email)
     : buildLeadUrls(slug, email);
@@ -147,6 +151,11 @@ function needsProvision(
   if (category === "comptable") {
     const reservationLink = row.reservation_comptable_link?.trim();
     const confirmLink = row.confirmation_comptable_link?.trim();
+    return !slug || !reservationLink || !confirmLink;
+  }
+  if (category === "cif") {
+    const reservationLink = row.reservation_cif_link?.trim();
+    const confirmLink = row.confirmation_cif_link?.trim();
     return !slug || !reservationLink || !confirmLink;
   }
   const entrepriseLink = row.reservation_entreprise_link?.trim();

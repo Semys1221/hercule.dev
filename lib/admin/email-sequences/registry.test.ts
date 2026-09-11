@@ -33,6 +33,13 @@ function main() {
     "comptable includes meeting-comptable",
   );
 
+  const cifSlugs = getEmailSequences("cif").map((entry) => entry.slug);
+  assert.ok(cifSlugs.includes("meeting-cif"), "cif includes meeting-cif");
+  assert.ok(
+    cifSlugs.includes("subsequence-interested"),
+    "cif includes subsequence-interested",
+  );
+
   console.log("registry.test.ts: OK");
 }
 

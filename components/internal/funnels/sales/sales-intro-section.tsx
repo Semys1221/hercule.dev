@@ -7,10 +7,8 @@ import { useWatch } from "react-hook-form";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
-import {
-  interpolateClientSegment,
-  resolveClientSegment,
-} from "@/lib/admin/funnels/client-segment";
+import { interpolateClientSegment, resolveClientSegment } from "@/lib/admin/funnels/client-segment";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 import { RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
@@ -43,7 +41,7 @@ export function SalesIntroSection({ audience, section, form }: SalesIntroSection
   const watchedQ11 = useWatch({ control: form.control, name: "q11" }) as string[] | undefined;
   const clientSegment = resolveClientSegment(watchedQ11 ?? []);
   const benefits =
-    audience === "comptable"
+    isCabinetBuyerSalesAudience(audience)
       ? COMPTABLE_INTRO_BENEFITS.map((item) => interpolateClientSegment(item, clientSegment))
       : INTRO_BENEFITS;
   return (

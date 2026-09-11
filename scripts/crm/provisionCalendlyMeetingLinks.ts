@@ -25,7 +25,7 @@ async function listTargets(all: boolean, limit: number): Promise<LeadLookup[]> {
   }
 
   const results: LeadLookup[] = [];
-  for (const category of ["agence", "comptable", "entreprise"] as const) {
+  for (const category of ["agence", "comptable", "entreprise", "cif"] as const) {
     const { data, error } = await client
       .from(category)
       .select("*")

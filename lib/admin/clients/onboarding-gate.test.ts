@@ -7,7 +7,7 @@ import {
   filterOnboardedRows,
 } from "@/lib/admin/clients/onboarding-gate";
 
-assert.deepEqual(CLIENTS_ONBOARDING_GATE_TABLES, ["agence", "comptable", "entreprise"]);
+assert.deepEqual(CLIENTS_ONBOARDING_GATE_TABLES, ["agence", "comptable", "entreprise", "cif"]);
 
 const rows = [
   { id: "1", onboarding_completed_at: "2026-01-01T00:00:00.000Z" },

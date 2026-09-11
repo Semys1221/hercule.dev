@@ -115,6 +115,8 @@ export function evaluateSequenceSafety(
     entry.bookingCategory ??
     (audience === "entreprise"
       ? "entreprise"
+      : audience === "cif"
+        ? "cif"
       : audience === "comptable"
         ? "comptable"
         : "agence");

@@ -241,9 +241,10 @@ export async function POST(request: Request) {
       const session = event.data.object as Stripe.Checkout.Session;
       const comptableId = session.metadata?.comptable_id;
       const entrepriseId = session.metadata?.entreprise_id;
+      const cifId = session.metadata?.cif_id;
       const agenceId = session.metadata?.agence_id;
 
-      if (comptableId || entrepriseId) {
+      if (comptableId || entrepriseId || cifId) {
         const handled = await handleComptableCheckoutCompleted(
           client,
           session,

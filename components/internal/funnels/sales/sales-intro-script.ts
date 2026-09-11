@@ -1,6 +1,6 @@
 import type { CalendlyBookingRow } from "@/lib/calendly/list-bookings";
 import type { Audience } from "@/lib/admin/navigation";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export const SALES_DECLARATIVE_SCRIPT = `Toutes les questions restent du déclaratif : aujourd'hui je vais vous poser des questions, ce n'est pas une compétition, ni le but est de s'inventer des services. C'est du déclaratif certes, mais aujourd'hui si je vous attribue une agence en recherche d'un service de création web et que vous lui faites des réseaux sociaux c'est vous qui allez avoir un chargeback et un très mauvais retour client.
 
@@ -12,8 +12,15 @@ export const COMPTABLE_DECLARATIVE_SCRIPT = `Toutes les questions restent du dé
 
 Chez Hercule Comptable, on protège les dirigeants TPE et on protège nos cabinets partenaires. On valide la compatibilité à 100 % pour que vous honoriez vos missions sereinement — tenue, fiscal, obligations administratives. On joue cartes sur table. Ça vous va ?`;
 
+export const CIF_DECLARATIVE_SCRIPT = `Toutes les questions restent du déclaratif : aujourd'hui je vais vous poser des questions, ce n'est pas une compétition, ni le but est de s'inventer des missions. C'est du déclaratif certes, mais si je vous attribue un dirigeant PME en optimisation fiscale et trésorerie et que vous lui proposez un périmètre hors de vos agréments CIF, c'est vous qui allez avoir un très mauvais retour client et une relation difficile à tenir.
+
+Chez Hercule CIF, on protège les dirigeants PME et on protège nos cabinets partenaires. On valide la compatibilité à 100 % pour que vous honoriez vos missions sereinement — fiscal, trésorerie, patrimoine. On joue cartes sur table. Ça vous va ?`;
+
 export function getSalesDeclarativeScript(audience: Audience = "agence"): string {
-  return isComptableSalesAudience(audience)
+  if (audience === "cif") {
+    return CIF_DECLARATIVE_SCRIPT;
+  }
+  return isCabinetBuyerSalesAudience(audience)
     ? COMPTABLE_DECLARATIVE_SCRIPT
     : SALES_DECLARATIVE_SCRIPT;
 }
@@ -79,7 +86,7 @@ function budgetConfirmedFromAnswer(answer: string | null, audience: Audience): b
   if (!answer) {
     return false;
   }
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return /9[\s.]?98|998|1[\s.]?499|1499|plus de|compatible/i.test(answer);
   }
   return /1[\s.]?500|1500|plus de/i.test(answer);
@@ -97,7 +104,7 @@ export function extractSalesIntroFields(
   const teamSize = matchQuestionAnswer(booking.questions, TEAM_SIZE_KEYS);
   const activities = matchQuestionAnswer(booking.questions, ACTIVITY_KEYS);
 
-  const budgetKeys = isComptableSalesAudience(audience)
+  const budgetKeys = isCabinetBuyerSalesAudience(audience)
     ? BUDGET_KEYS_COMPTABLE
     : BUDGET_KEYS_AGENCE;
   const budgetAnswer = matchQuestionAnswer(booking.questions, budgetKeys);
@@ -118,9 +125,41 @@ export function buildSalesIntroScript(
   const fields = extractSalesIntroFields(booking, audience);
   const teamSize = fields.teamSize ?? "[Nombre de collaborateurs, ex: 4 à 8]";
   const activities =
-    fields.activities ?? "[Missions principales, ex: tenue comptable TPE et fiscal]";
+    fields.activities ??
+    (audience === "cif"
+      ? "[Missions principales, ex: optimisation fiscale et trésorerie]"
+      : "[Missions principales, ex: tenue comptable TPE et fiscal]");
 
-  if (isComptableSalesAudience(audience)) {
+  if (audience === "cif") {
+    const eligibilityLine = fields.budgetConfirmed
+      ? "Tu as confirmé les informations de ton formulaire Calendly — bande passante compatible avec nos missions PME et positionnement aligné."
+      : "Nous avons noté les informations de votre formulaire Calendly concernant votre cabinet et votre zone d'intervention.";
+
+    return `${fields.firstName}, ravi de t'avoir en ligne — Evan d'Hercule CIF.
+
+Écoute, j'ai ton dossier d'audit de compatibilité sous les yeux. J'ai bien noté que vous étiez actuellement ${teamSize} et que vous vous positionnez principalement sur ${activities}.
+
+Le fonctionnement : Hercule reçoit et qualifie des demandes d'indépendants et de dirigeants PME/TPE en recherche d'accompagnement fiscal et de trésorerie.
+
+Notre rôle,
+
+- c'est de sélectionner le bon cabinet partenaire
+- qualifier le besoin et la compatibilité cabinet-dirigeant
+- établir la relation
+
+Je fais en sorte que vous ne perdiez pas votre temps : tout ce que nous pourrons vous proposer restera dans la limite de vos expertises déclarées.
+
+Le but : maintenir ce niveau de qualité sur les cabinets que nous recommandons et sur les missions fiscales / trésorerie qui vous sont proposées.
+
+La première étape formulaire Calendly : ${eligibilityLine}
+
+L'objectif c'est de continuer :
+
+- profil cabinet : vos honoraires, votre capacité, vos attentes
+- les missions PME qui vous sont éligibles`;
+  }
+
+  if (isCabinetBuyerSalesAudience(audience)) {
     const eligibilityLine = fields.budgetConfirmed
       ? "Tu as confirmé les informations de ton formulaire Calendly — bande passante compatible avec nos missions TPE et positionnement aligné."
       : "Nous avons noté les informations de votre formulaire Calendly concernant votre cabinet et votre zone d'intervention.";
@@ -185,7 +224,7 @@ export function buildSalesIntroChecklist(
   const teamSize = fields.teamSize ?? "[ex. 4 à 8 collaborateurs]";
   const activities = fields.activities ?? "[ex. tenue TPE, fiscal]";
 
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return [
       `${fields.firstName} — en ligne — Evan / Hercule Comptable`,
       `Dossier Calendly — ${teamSize} — ${activities}`,

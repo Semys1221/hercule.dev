@@ -1,4 +1,21 @@
-export type LeadCategory = "agence" | "comptable" | "entreprise";
+export const ALL_LEAD_CATEGORIES = [
+  "agence",
+  "comptable",
+  "entreprise",
+  "cif",
+] as const;
+
+export type LeadCategory = (typeof ALL_LEAD_CATEGORIES)[number];
+
+export function isLeadCategory(value: string): value is LeadCategory {
+  return (ALL_LEAD_CATEGORIES as readonly string[]).includes(value);
+}
+
+export function isCabinetBuyerCategory(
+  value: LeadCategory | string,
+): value is "comptable" | "cif" {
+  return value === "comptable" || value === "cif";
+}
 
 export type LeadStatut =
   | "NOTBOOKED"
@@ -19,6 +36,8 @@ export type LinkTrackingLead = {
   confirmation_agence_link?: string | null;
   reservation_comptable_link?: string | null;
   confirmation_comptable_link?: string | null;
+  reservation_cif_link?: string | null;
+  confirmation_cif_link?: string | null;
   post_booking_link?: string | null;
   dashboard_link: string | null;
   instantly_lead_id: string | null;

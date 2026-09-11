@@ -14,7 +14,7 @@ const nextConfig = {
     ],
   },
   async redirects() {
-    const niches = ["agence", "entreprise", "comptable"];
+    const niches = ["agence", "entreprise", "comptable", "cif"];
     const funnelRedirects = niches.flatMap((niche) => [
       {
         source: `/internal/funnels/${niche}`,

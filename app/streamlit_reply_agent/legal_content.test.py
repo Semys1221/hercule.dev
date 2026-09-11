@@ -106,9 +106,47 @@ class LegalContentTests(unittest.TestCase):
                 self.assertIn(anchor, pack)
 
     def test_comptable_ai_reply_knowledge_includes_bandwidth(self) -> None:
-        bundle = get_ai_reply_knowledge_markdown(comptable=True)
+        bundle = get_ai_reply_knowledge_markdown(audience="comptable")
         self.assertIn("bande passante", bundle.lower())
         self.assertIn("visio", bundle.lower())
+
+    def test_build_knowledge_pack_cif_preset(self) -> None:
+        pack = build_knowledge_pack_cached(
+            "conseillers_gestion_patrimoine",
+            "buyer",
+            "CGP France",
+            "2+",
+        )
+        self.assertIn("cvg/conseil-financier", pack)
+        self.assertIn("cabinet CIF (Buyer)", pack)
+        self.assertIn("minimum 2", pack)
+        self.assertNotIn("plus de 3", pack)
+        reply_safe = pack.split("## Reply-safe facts (condensed)", 1)[1]
+        self.assertIn("Hercule CIF", reply_safe)
+        for anchor in (
+            "bande passante",
+            "visioconférence",
+            "Je n'ai pas 2 collaborateurs",
+            "Rémunérez-vous les apporteurs",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, pack)
+
+    def test_cif_buyer_prompt_covers_objections(self) -> None:
+        prompt_path = (
+            Path(__file__).resolve().parent
+            / "prompts"
+            / "conseillers_gestion_patrimoine_buyer.md"
+        )
+        body = prompt_path.read_text(encoding="utf-8").lower()
+        for anchor in (
+            "reservation_cif_link",
+            "optimisation fiscale",
+            "bande passante",
+            "cvg/conseil-financier",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, body)
 
     def test_comptable_buyer_prompt_covers_objections(self) -> None:
         prompt_path = (

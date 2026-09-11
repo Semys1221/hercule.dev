@@ -1,6 +1,6 @@
 import { SALES_SKIP_VALUE, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export const AGENCY_PRESET_IDS = [
   "serial",
@@ -252,7 +252,7 @@ export const AGENCY_PRESET_REASON_STRINGS = [
 ] as const;
 
 function localizePresetReasons(reasons: string[], audience: Audience): string[] {
-  if (!isComptableSalesAudience(audience)) {
+  if (!isCabinetBuyerSalesAudience(audience)) {
     return reasons;
   }
   return reasons.map((reason) => COMPTABLE_PRESET_REASONS[reason] ?? reason);

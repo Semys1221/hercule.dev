@@ -2,7 +2,7 @@ import {
   getOpportunityCardBlueprints,
   type OpportunityCardBlueprint,
 } from "@/lib/admin/funnels/opportunity-card-blueprints";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 import {
   budgetKindFromPrestationType,
@@ -275,7 +275,7 @@ export function composeOpportunityCards(
   validateOpportunityCardSet(cards, floorCents);
 
   // #region agent log
-  if (isComptableSalesAudience(audience) && typeof fetch !== "undefined") {
+  if (isCabinetBuyerSalesAudience(audience) && typeof fetch !== "undefined") {
     fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
       method: "POST",
       headers: {

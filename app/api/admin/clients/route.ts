@@ -21,12 +21,14 @@ export type ClientRow = {
   retractionWaivedAt: string | null;
 };
 
-const CATEGORY_VALUES: LeadCategory[] = ["agence", "comptable", "entreprise"];
+const CATEGORY_VALUES: LeadCategory[] = ["agence", "comptable", "entreprise", "cif"];
 
 const SELECT_FIELDS: Record<LeadCategory, string> = {
   agence:
     "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
   comptable:
+    "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
+  cif:
     "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
   entreprise:
     "id, email, first_name, company, slug, product_statut, onboarding_completed_at, profile",

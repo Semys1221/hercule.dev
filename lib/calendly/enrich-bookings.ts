@@ -15,15 +15,18 @@ import {
 } from "@/lib/sales-calls/supabase";
 import type { SalesCallStatus } from "@/lib/sales-calls/types";
 import {
+  buildCifLeadUrls,
   buildComptableLeadUrls,
   buildDashboardUrl,
   buildLeadUrls,
   buildEntreprisePostBookingUrl,
   confirmationAgenceLinkFor,
+  confirmationCifLinkFor,
   confirmationComptableLinkFor,
   dashboardLinkFor,
   postBookingLinkFor,
   reservationAgenceLinkFor,
+  reservationCifLinkFor,
   reservationComptableLinkFor,
   reservationEntrepriseLinkFor,
 } from "@/lib/link-tracking/urls";
@@ -100,12 +103,17 @@ export function buildCrmLinks(
   if (lead) {
     const reservationAgence = reservationAgenceLinkFor(lead);
     const reservationEntreprise = reservationEntrepriseLinkFor(lead);
-    const reservationComptable = reservationComptableLinkFor(lead);
+    const reservationComptable =
+      leadCategory === "cif"
+        ? reservationCifLinkFor(lead)
+        : reservationComptableLinkFor(lead);
     const confirmationLink =
       leadCategory === "entreprise"
         ? postBookingLinkFor(lead)
         : leadCategory === "comptable"
           ? confirmationComptableLinkFor(lead)
+          : leadCategory === "cif"
+            ? confirmationCifLinkFor(lead)
           : confirmationAgenceLinkFor(lead);
     return {
       reservation_agence_link: reservationAgence || null,
@@ -113,7 +121,9 @@ export function buildCrmLinks(
       reservation_comptable_link: reservationComptable || null,
       confirmation_agence_link: confirmationLink,
       confirmation_comptable_link:
-        leadCategory === "comptable" ? confirmationLink : confirmationComptableLinkFor(lead),
+        leadCategory === "comptable" || leadCategory === "cif"
+          ? confirmationLink
+          : confirmationComptableLinkFor(lead),
       dashboard_link: dashboardLinkFor(lead),
     };
   }
@@ -143,6 +153,17 @@ export function buildCrmLinks(
       dashboard_link: comptableUrls.dashboard_link,
     };
   }
+  if (category === "cif") {
+    const cifUrls = buildCifLeadUrls(resolvedSlug, email);
+    return {
+      reservation_agence_link: urls.reservation_agence_link,
+      reservation_entreprise_link: urls.reservation_entreprise_link,
+      reservation_comptable_link: cifUrls.reservation_cif_link,
+      confirmation_agence_link: urls.confirmation_agence_link,
+      confirmation_comptable_link: cifUrls.confirmation_cif_link,
+      dashboard_link: cifUrls.dashboard_link,
+    };
+  }
   return {
     reservation_agence_link: urls.reservation_agence_link,
     reservation_entreprise_link: urls.reservation_entreprise_link,
@@ -166,7 +187,7 @@ export function primaryReservationLink(
   if (leadCategory === "entreprise") {
     return links.reservation_entreprise_link ?? links.reservation_agence_link;
   }
-  if (leadCategory === "comptable") {
+  if (leadCategory === "comptable" || leadCategory === "cif") {
     return links.reservation_comptable_link ?? links.reservation_agence_link;
   }
   return links.reservation_agence_link ?? links.reservation_entreprise_link;
@@ -179,7 +200,7 @@ export function primaryConfirmationLink(
   >,
   leadCategory: LeadCategory | null,
 ): string | null {
-  if (leadCategory === "comptable") {
+  if (leadCategory === "comptable" || leadCategory === "cif") {
     return links.confirmation_comptable_link ?? links.confirmation_agence_link;
   }
   return links.confirmation_agence_link ?? links.confirmation_comptable_link;

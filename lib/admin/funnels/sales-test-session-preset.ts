@@ -28,7 +28,18 @@ export const SALES_TEST_SESSION_FIRST_NAME = "Test";
 
 export const SALES_TEST_SESSION_COMPANY = "Agence Test Hercule";
 
-export const SALES_TEST_SESSION_COMPTABLE_COMPANY = "Cabinet Test Hercule EC";
+export const SALES_TEST_SESSION_CIF_SLUG = `${SEED_PREFIX}sales-session-cif`;
+
+export const SALES_TEST_SESSION_CIF_INVITEE_URI =
+  "https://api.calendly.com/scheduled_events/test-session-cif/invitees/sales-funnel";
+
+export const SALES_TEST_SESSION_CIF_COMPANY = "Cabinet Test Hercule CIF";
+
+export const SALES_TEST_SESSION_CIF_CALENDLY_QUESTIONS: Record<string, string> = {
+  "Combien d'associés ou collaborateurs compte votre cabinet ?": "4 collaborateurs",
+  "Quelles missions proposez-vous ?": "Optimisation fiscale et trésorerie",
+  "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+};
 
 export const SALES_TEST_SESSION_CALENDLY_QUESTIONS: Record<string, string> = {
   "Combien de personnes composent votre équipe ?": "4 collaborateurs",
@@ -119,6 +130,19 @@ export type SalesTestSessionPreset = {
 };
 
 export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionPreset {
+  if (audience === "cif") {
+    return {
+      slug: SALES_TEST_SESSION_CIF_SLUG,
+      inviteeUri: SALES_TEST_SESSION_CIF_INVITEE_URI,
+      company: SALES_TEST_SESSION_CIF_COMPANY,
+      calendlyQuestions: SALES_TEST_SESSION_CIF_CALENDLY_QUESTIONS,
+      qualification: SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+      closing: SALES_TEST_SESSION_CLOSING,
+      profileForm: {},
+      leadCategory: "cif",
+    };
+  }
+
   if (isComptableSalesAudience(audience)) {
     return {
       slug: SALES_TEST_SESSION_COMPTABLE_SLUG,
@@ -145,7 +169,7 @@ export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionP
 }
 
 export function isSalesTestSessionSlug(slug: string): boolean {
-  return slug === SALES_TEST_SESSION_SLUG || slug === SALES_TEST_SESSION_COMPTABLE_SLUG;
+  return slug === SALES_TEST_SESSION_SLUG || slug === SALES_TEST_SESSION_COMPTABLE_SLUG || slug === SALES_TEST_SESSION_CIF_SLUG;
 }
 
 export function salesTestSessionSlugForAudience(audience: Audience): string {

@@ -5,6 +5,7 @@ import {
   findLeadById,
 } from "@/lib/link-tracking/supabase";
 import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
+import { ALL_LEAD_CATEGORIES } from "@/lib/link-tracking/types";
 
 export type ResolvedBookingLead = {
   lead: LinkTrackingLead;
@@ -19,7 +20,7 @@ export async function resolveBookingLead(params: {
   const client = createLinkTrackingClient();
 
   if (params.leadId) {
-    for (const category of ["agence", "comptable", "entreprise"] as const) {
+    for (const category of ALL_LEAD_CATEGORIES) {
       const byId = await findLeadById(client, category, params.leadId);
       if (byId) {
         return { lead: byId, category };

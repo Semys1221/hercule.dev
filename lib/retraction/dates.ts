@@ -132,7 +132,7 @@ export function estimatedFirstBookingAt(
   isFastCheckout = false,
   category: LeadCategory = "agence",
 ): Date {
-  if (category === "comptable") {
+  if (category === "comptable" || category === "cif") {
     return comptableEstimatedFirstBookingAt(activation);
   }
   return agenceFirstContratAt(activation, status, isFastCheckout);

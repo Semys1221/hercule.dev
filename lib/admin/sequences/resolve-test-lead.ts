@@ -8,6 +8,9 @@ function testLeadIdFromEnv(category: LeadCategory): string | null {
   if (category === "comptable") {
     return process.env.SEQUENCE_TEST_LEAD_ID_COMPTABLE?.trim() || null;
   }
+  if (category === "cif") {
+    return process.env.SEQUENCE_TEST_LEAD_ID_CIF?.trim() || null;
+  }
   if (category === "entreprise") {
     return process.env.SEQUENCE_TEST_LEAD_ID_ENTREPRISE?.trim() || null;
   }

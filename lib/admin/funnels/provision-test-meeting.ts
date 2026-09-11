@@ -9,7 +9,7 @@ import {
 import type { CalendlyBookingRow } from "@/lib/calendly/list-bookings";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
-import { buildDashboardUrl, buildComptableLeadUrls, buildEntrepriseLeadUrls, buildLeadUrls } from "@/lib/link-tracking/urls";
+import { buildDashboardUrl, buildCifLeadUrls, buildComptableLeadUrls, buildEntrepriseLeadUrls, buildLeadUrls } from "@/lib/link-tracking/urls";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import {
   createSalesCallsClient,
@@ -43,6 +43,8 @@ export async function provisionTestMeeting(
   const urls =
     table === "comptable"
       ? buildComptableLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
+      : table === "cif"
+        ? buildCifLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
       : table === "entreprise"
         ? buildEntrepriseLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
         : buildLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL);
@@ -83,6 +85,24 @@ export async function provisionTestMeeting(
       .from("sales_calls")
       .delete()
       .eq("comptable_id", leadId);
+    if (salesCallsError) {
+      throw new Error(`sales_calls reset failed: ${salesCallsError.message}`);
+    }
+  }
+
+  if (leadId && table === "cif") {
+    const { error: paymentsError } = await client
+      .from("payments")
+      .delete()
+      .eq("cif_id", leadId);
+    if (paymentsError) {
+      throw new Error(`payments reset failed: ${paymentsError.message}`);
+    }
+
+    const { error: salesCallsError } = await client
+      .from("sales_calls")
+      .delete()
+      .eq("cif_id", leadId);
     if (salesCallsError) {
       throw new Error(`sales_calls reset failed: ${salesCallsError.message}`);
     }
@@ -145,6 +165,7 @@ export async function provisionTestMeeting(
     agenceId: table === "agence" ? leadId : null,
     entrepriseId: table === "entreprise" ? leadId : null,
     comptableId: table === "comptable" ? leadId : null,
+    cifId: table === "cif" ? leadId : null,
     email: SALES_TEST_SESSION_EMAIL,
     inviteeUri: preset.inviteeUri,
     scheduledAt,

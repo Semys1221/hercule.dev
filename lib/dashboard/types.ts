@@ -10,7 +10,7 @@ export type DashboardMode =
   | "entreprise_preview"
   | "unavailable";
 
-export type DashboardFaqAudience = "agence" | "comptable" | "entreprise";
+export type DashboardFaqAudience = "agence" | "comptable" | "entreprise" | "cif";
 
 export type TimelineStep = {
   id: string;

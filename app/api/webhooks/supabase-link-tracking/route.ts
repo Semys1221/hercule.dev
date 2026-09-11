@@ -32,8 +32,10 @@ type SupabaseWebhookPayload = {
   old_record?: SupabaseWebhookRecord;
 };
 
-function isLeadCategory(table: string | undefined): table is LeadCategory {
-  return table === "agence" || table === "comptable" || table === "entreprise";
+import { isLeadCategory } from "@/lib/link-tracking/types";
+
+function isLeadCategoryTable(table: string | undefined): table is LeadCategory {
+  return typeof table === "string" && isLeadCategory(table);
 }
 
 /** Option B: Supabase Database Webhook → sync Instantly when statut becomes BOOKED. */
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (body.type !== "UPDATE" || !isLeadCategory(body.table)) {
+  if (body.type !== "UPDATE" || !isLeadCategoryTable(body.table)) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "audience": "cif",
+  "updatedAt": "2026-09-10T18:30:00.000Z",
+  "entries": [
+    {
+      "id": "faq-cif-001",
+      "question": "D'où proviennent les demandes ?",
+      "answer": "Hercule détecte en continu, via Pappers et les sources ouvertes, des signaux de formalités sur plus de 4 M d'entreprises : créations, changements de dirigeant, sorties de micro / TVA, premières embauches et modifications statutaires. Ces dirigeants ont un besoin d'accompagnement — optimisation fiscale, trésorerie, patrimoine. Après Live Qualification, la mission est proposée au cabinet le plus compatible.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-002",
+      "question": "Qui peut postuler ?",
+      "answer": "Les cabinets avec une bande passante suffisante pour absorber de nouveaux dossiers. Le seuil de minimum 2 associés ou collaborateurs est un indicateur de capacité, pas un refus automatique. L'éligibilité est confirmée lors de l'audit de compatibilité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-003",
+      "question": "Combien coûte Hercule ?",
+      "answer": "Hercule Lite : 998 €/mois — 5 missions PME par mois, aucune garantie MRR. Hercule Starter : 1 499 €/mois — 10 missions PME/TPE/indépendants par mois, garantie 3 000 € de MRR cumulé ou 5 missions de remplacement. Pack 3 mois Starter : 3 598 € (−20 %, paiement unique) — 10 missions/mois sur 3 mois, garantie 9 000 € de MRR cumulé ou jusqu'à 15 remplacements (5 par tranche de 10 missions). 0 % de commission sur vos honoraires.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-004",
+      "question": "Comment se passe la mise en relation ?",
+      "answer": "Après souscription, le premier RDV est planifié sous 20 à 25 jours. Calendly Pro et Zoom Pro sont provisionnés par Hercule pour organiser vos rendez-vous avec les dirigeants PME.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-005",
+      "question": "Y a-t-il une garantie de signature ?",
+      "answer": "Hercule Starter et le Pack 3 mois incluent une garantie MRR : si le revenu récurrent mensuel cumulé issu des lettres de mission signées est inférieur au seuil contractuel (3 000 € ou 9 000 € selon la formule), Hercule attribue des missions de remplacement. Hercule Lite n'inclut pas de garantie MRR. Aucune formule ne garantit la conclusion d'un mandat.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-006",
+      "question": "Comment fonctionnent les emails Hercule ?",
+      "answer": "Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Le domaine principal de la société et de la plateforme est hercule.dev."
+    },
+    {
+      "id": "faq-cif-007",
+      "question": "Mon prospect ne s'est pas présenté (no-show)",
+      "answer": "L'attribution n'est pas consommée. Un rendez-vous de remplacement est planifié sous 14 jours ouvrés.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-008",
+      "question": "Qui êtes-vous ? De quelle structure dépendez-vous ?",
+      "answer": "Hercule est la dénomination commerciale de Nanguy Evan Gbeho, entrepreneur individuel immatriculé au RCS de Bordeaux (885 248 039). Siège : 4 rue Claude Bonnier, 33000 Bordeaux. Ce n'est pas une société (SARL/SAS) ni une filiale de groupe. Mentions légales : hercule.dev/mentions-legales."
+    },
+    {
+      "id": "faq-cif-009",
+      "question": "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
+      "answer": "Selon nos [Conditions générales de vente Hercule CIF](/cvg/conseil-financier) (article 9), vous nous accordez un délai supplémentaire de **7 jours** en cas de retard de livraison. Au-delà, nous vous invitons à nous écrire à contact@hercule.dev et à ne pas initier de dispute sur Stripe sans nous avoir contactés au préalable. Un règlement à l'amiable pourra être envisagé au cas par cas.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-010",
+      "question": "Ai-je un délai de rétractation ?",
+      "answer": "Oui. Par défaut, vous disposez de 4 jours calendaires après souscription pour vous rétracter, tant que l'activation n'a pas démarré. Vous pouvez renoncer à ce délai lors de l'onboarding ou à tout moment depuis votre dashboard pour lancer la recherche immédiatement.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-011",
+      "question": "Je n'ai pas 2 collaborateurs — suis-je éligible ?",
+      "answer": "L'enjeu n'est pas le décompte strict : c'est la bande passante pour intégrer des visioconférences qualifiantes (Zoom provisionné), pas des appels téléphoniques de 10 minutes, tout en assurant la production conseil. Si votre cabinet a la capacité — y compris via une sous-traitance stable à un partenaire de confiance — vous pouvez candidater via l'audit de compatibilité Calendly.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-012",
+      "question": "Les mensualités sont trop élevées — pouvez-vous expliquer ?",
+      "answer": "Hercule Starter inclut 10 missions qualifiées par mois, une garantie MRR et 0 % de commission sur vos honoraires signés. Tant que vous avez la capacité d'absorber de nouveaux dossiers, Hercule Lite (998 €/mois, 5 missions/mois) peut servir d'offre d'entrée. Détail des formules : hercule.dev/cvg/conseil-financier.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-013",
+      "question": "Puis-je vous joindre par téléphone plutôt que via le formulaire ?",
+      "answer": "Les échanges se font en visioconférence planifiée (Calendly + Zoom provisionnés par Hercule), pas en appel téléphonique ad hoc. Indiquez vos disponibilités (« à quelle heure cette semaine ? ») : si le cabinet propose un créneau précis (ex. « mardi 14h »), Hercule peut confirmer automatiquement la visio ; sinon proposez deux créneaux Calendly via le lien de réservation.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-014",
+      "question": "Rémunérez-vous les apporteurs d'affaires ?",
+      "answer": "Hercule ne rémunère pas les apporteurs. Le cabinet souscrit à Hercule pour recevoir des missions qualifiées et exclusives. Hercule ne prélève aucune commission sur les honoraires que vous signez avec le dirigeant, et le dirigeant ne paie rien à Hercule.",
+      "cvgLink": true
+    }
+  ]
+}

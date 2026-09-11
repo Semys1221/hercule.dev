@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import type { Audience } from "@/lib/admin/navigation";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import {
   interpolateClientSegment,
   type ClientSegment,
@@ -104,9 +105,9 @@ export function getSalesClosingSections(
   clientSegment?: ClientSegment,
 ): SalesClosingSection[] {
   const sections =
-    audience === "comptable" ? COMPTABLE_SALES_CLOSING_SECTIONS : SALES_CLOSING_SECTIONS;
+    isCabinetBuyerSalesAudience(audience) ? COMPTABLE_SALES_CLOSING_SECTIONS : SALES_CLOSING_SECTIONS;
 
-  if (audience !== "comptable" || !clientSegment) {
+  if (!isCabinetBuyerSalesAudience(audience) || !clientSegment) {
     return sections;
   }
 

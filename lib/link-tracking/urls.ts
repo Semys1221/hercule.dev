@@ -6,6 +6,8 @@ const DEFAULT_TRACKING_BASE_ENTREPRISE =
   "https://www.hercule.dev/reservation-entreprise.html";
 const DEFAULT_TRACKING_BASE_COMPTABLE =
   "https://www.hercule.dev/reservation-entreprise.html";
+const DEFAULT_TRACKING_BASE_CIF =
+  "https://www.hercule.dev/reservation-cif.html";
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_DASHBOARD_BASE = "https://www.hercule.dev/dashboard";
@@ -28,12 +30,19 @@ export type ComptableLeadUrls = {
   dashboard_link: string;
 };
 
+export type CifLeadUrls = {
+  reservation_cif_link: string;
+  confirmation_cif_link: string;
+  dashboard_link: string;
+};
+
 export type InstantlyCanonicalVariables = LeadUrls & {
   statut: string;
   link: string;
   confirm_link: string;
   tracking_url: string;
   post_booking_link?: string;
+  reservation_cif_link?: string;
 };
 
 export function getTrackingBaseUrl(category: LeadCategory): string {
@@ -48,6 +57,12 @@ export function getTrackingBaseUrl(category: LeadCategory): string {
     return (
       process.env.TRACKING_BASE_URL_COMPTABLE?.trim().replace(/\/$/, "") ??
       DEFAULT_TRACKING_BASE_COMPTABLE
+    );
+  }
+  if (category === "cif") {
+    return (
+      process.env.TRACKING_BASE_URL_CIF?.trim().replace(/\/$/, "") ??
+      DEFAULT_TRACKING_BASE_CIF
     );
   }
   return (
@@ -140,6 +155,14 @@ export function buildComptableLeadUrls(
   return {
     reservation_comptable_link: buildTrackingUrl(slug, "comptable"),
     confirmation_comptable_link: buildConfirmationComptableLink(slug, email),
+    dashboard_link: buildDashboardUrl(slug),
+  };
+}
+
+export function buildCifLeadUrls(slug: string, email: string): CifLeadUrls {
+  return {
+    reservation_cif_link: buildTrackingUrl(slug, "cif"),
+    confirmation_cif_link: buildConfirmationComptableLink(slug, email),
     dashboard_link: buildDashboardUrl(slug),
   };
 }
@@ -266,6 +289,24 @@ export function confirmationComptableLinkFor(
   return buildConfirmationComptableLink(lead.slug, lead.email);
 }
 
+export function reservationCifLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "email" | "reservation_cif_link">,
+): string {
+  const stored = lead.reservation_cif_link?.trim();
+  if (stored) return stored;
+  const slug = lead.slug?.trim();
+  if (!slug) return "";
+  return buildTrackingUrl(slug, "cif");
+}
+
+export function confirmationCifLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "email" | "confirmation_cif_link">,
+): string {
+  const stored = lead.confirmation_cif_link?.trim();
+  if (stored) return stored;
+  return buildConfirmationComptableLink(lead.slug, lead.email);
+}
+
 export function buildInstantlyCustomVariables(
   slug: string,
   email: string,
@@ -282,6 +323,19 @@ export function buildInstantlyCustomVariables(
       link: "",
       confirm_link: "",
       tracking_url: "",
+    };
+  }
+  if (category === "cif") {
+    const cifUrls = buildCifLeadUrls(slug, email);
+    return {
+      reservation_agence_link: "",
+      reservation_entreprise_link: cifUrls.reservation_cif_link,
+      confirmation_agence_link: cifUrls.confirmation_cif_link,
+      statut,
+      link: "",
+      confirm_link: "",
+      tracking_url: "",
+      reservation_cif_link: cifUrls.reservation_cif_link,
     };
   }
   const urls =

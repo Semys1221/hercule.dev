@@ -55,7 +55,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 0,
     status: "spec",
     provider: "instantly",
-    audiences: ["agence", "comptable", "entreprise"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description:
       "Enregistrement et analyse des stats campagnes Instantly (pas d'édition copy outreach).",
     steps: [],
@@ -72,7 +72,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 3,
     status: "built",
     provider: "instantly",
-    audiences: ["agence", "comptable", "entreprise"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description: "Séquence interested post-webhook — E1 immédiat, E2 +24h, E3 +48h.",
     steps: [
       { id: "interested_email1", label: "Email 1", delay: "Immédiat", templateKey: "interested_email1" },
@@ -92,7 +92,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 1,
     status: "built",
     provider: "hybrid",
-    audiences: ["agence", "comptable", "entreprise"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description: "Prompt IA par campagne Instantly pour réponses automatiques.",
     steps: [{ id: "prompt", label: "Prompt", delay: "—" }],
     editorKind: "reply_agent",
@@ -159,6 +159,26 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     streamlitHint: "pnpm streamlit-booking-resend",
   },
   {
+    id: "meeting-cif",
+    slug: "meeting-cif",
+    name: "Meeting sequence — CIF",
+    phase: "pre_close",
+    category: "Meeting",
+    stepCount: 3,
+    status: "spec",
+    provider: "resend",
+    audiences: ["cif"],
+    description: "Désactivée — séquence confirmation Resend et annulation auto H-20 retirées.",
+    steps: [
+      { id: "immediate", label: "Confirmation", delay: "Immédiat", emailType: "immediate" },
+      { id: "h48_confirm", label: "Confirmation requise", delay: "H-48", emailType: "h48_confirm" },
+      { id: "h24_relance", label: "Relance", delay: "H-24", emailType: "h24_relance" },
+    ],
+    editorKind: "booking",
+    bookingCategory: "cif",
+    streamlitHint: "pnpm streamlit-booking-resend",
+  },
+  {
     id: "role-recovery",
     slug: "role-recovery",
     name: "Role recovery",
@@ -186,7 +206,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 3,
     status: "built",
     provider: "instantly",
-    audiences: ["agence", "comptable", "entreprise"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description: "Séquence absence : immédiat, +24h, +48h (dernier sans lien reschedule).",
     steps: [
       { id: "no_show_email1", label: "Email 1", delay: "Immédiat", templateKey: "no_show_email1" },
@@ -320,7 +340,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 7,
     status: "built",
     provider: "resend",
-    audiences: ["agence", "comptable"],
+    audiences: ["agence", "comptable", "cif"],
     description:
       "Déclenché après complétion du formulaire onboarding (completeOnboarding=true). Si rétractation conservée : hold immédiat. Sinon (waiver) : J0 ×2, J+1, rappels J-10 → J+5 relatifs à estimated_first_booking_at.",
     steps: [
@@ -501,6 +521,9 @@ const LEGACY_EMAIL_PATH_REDIRECTS_BY_AUDIENCE: Record<
   comptable: {
     "emails/pre_close/booking": "meeting-comptable",
   },
+  cif: {
+    "emails/pre_close/booking": "meeting-cif",
+  },
 };
 
 export function resolveLegacyEmailSlugForAudience(
@@ -530,6 +553,7 @@ export function meetingSequenceSlugForNiche(niche: Niche): string {
 export const BOOKING_SEQUENCE_SLUGS: Record<string, BookingEmailType[]> = {
   "meeting-agence": ["immediate", "h48_confirm", "h24_relance"],
   "meeting-comptable": ["immediate", "h48_confirm", "h24_relance"],
+  "meeting-cif": ["immediate", "h48_confirm", "h24_relance"],
   "meeting-entreprise": ["immediate", "h48_confirm", "h24_relance"],
   "role-recovery": ["role_seq_48", "role_seq_24"],
   "calendly-seat-onboarding": [

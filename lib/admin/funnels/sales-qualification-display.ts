@@ -163,6 +163,9 @@ export function formatClosingAnswers(
 }
 
 export function getQuestionDefinitionsPath(audience: Audience): string {
+  if (audience === "cif") {
+    return "components/internal/funnels/sales/sales-questions-cif.ts";
+  }
   if (audience === "comptable") {
     return "components/internal/funnels/sales/sales-questions-comptable.ts";
   }

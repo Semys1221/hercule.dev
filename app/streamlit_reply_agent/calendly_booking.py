@@ -8,7 +8,7 @@ from typing import Any, Literal
 import requests
 
 from config import app_base_url
-from legal_content import is_comptable_niche_preset
+from legal_content import is_cif_niche_preset, is_comptable_niche_preset
 
 BookFromInboundMode = Literal["none", "suggest_slots", "try_book"]
 
@@ -40,7 +40,11 @@ def resolve_booking_context(
 ) -> str | None:
     if not _auto_book_enabled():
         return None
-    if not is_comptable_niche_preset(niche_preset_id):
+    if is_cif_niche_preset(niche_preset_id):
+        event = "cif"
+    elif is_comptable_niche_preset(niche_preset_id):
+        event = "comptable"
+    else:
         return None
 
     mode = _scheduling_mode(inbound_text)
@@ -51,7 +55,7 @@ def resolve_booking_context(
         response = requests.post(
             f"{app_base_url()}/api/calendly/book-from-inbound",
             json={
-                "event": "comptable",
+                "event": event,
                 "leadEmail": lead_email,
                 "leadName": lead_name or lead_email,
                 "inboundText": inbound_text,

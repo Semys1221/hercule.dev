@@ -15,6 +15,7 @@ export const HERCULE_LOGO_URL =
 export const SIGNATURE_TAGLINES: Record<LeadCategory, string> = {
   agence: "Courtage de projets Web & Tech",
   comptable: "Missions de tenue comptable · cabinets",
+  cif: "Conseil fiscal et trésorerie · cabinets CIF",
   entreprise: "Missions de tenue comptable · PME",
 };
 

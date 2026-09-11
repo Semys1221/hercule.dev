@@ -15,9 +15,9 @@ import type { LeadCategory } from "@/lib/link-tracking/types";
 const querySchema = z.object({
   daysAhead: z.coerce.number().int().min(1).max(90).optional(),
   daysBehind: z.coerce.number().int().min(0).max(90).optional(),
-  niche: z.enum(["agence", "entreprise", "comptable"]).optional(),
+  niche: z.enum(["agence", "entreprise", "comptable", "cif"]).optional(),
   /** @deprecated Use niche — kept for rendez-vous panel during transition */
-  category: z.enum(["agence", "entreprise", "comptable"]).optional(),
+  category: z.enum(["agence", "entreprise", "comptable", "cif"]).optional(),
   fresh: z.enum(["1", "true"]).optional(),
 });
 

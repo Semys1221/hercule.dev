@@ -33,6 +33,7 @@ import {
   resolveClientSegment,
 } from "@/lib/admin/funnels/client-segment";
 import type { Audience } from "@/lib/admin/navigation";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import {
   getSalesQuestions,
   formatSliderLabel,
@@ -418,7 +419,7 @@ export function SalesClosingPanel({
                 );
               })}
             </ItemGroup>
-            {audience === "comptable" ? <SalesComptableNicheBenchmark /> : null}
+            {isCabinetBuyerSalesAudience(audience) ? <SalesComptableNicheBenchmark /> : null}
             <Separator />
             <div className="flex items-start gap-3">
               <Checkbox
@@ -498,7 +499,7 @@ export function SalesClosingPanel({
             {showDashboardLinkBlock ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  {audience === "comptable"
+                  {isCabinetBuyerSalesAudience(audience)
                     ? "Lien dashboard cabinet :"
                     : "Lien dashboard client :"}
                 </p>

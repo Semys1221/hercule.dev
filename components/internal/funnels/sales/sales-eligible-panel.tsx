@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { DemandeFlipCard } from "@/components/demandes/demande-flip-card";
-import { COMPTABLE_DEMANDE_VERSO_CRITERIA } from "@/lib/commercial/qualification-criteria";
+import { COMPTABLE_DEMANDE_VERSO_CRITERIA, CIF_DEMANDE_VERSO_CRITERIA } from "@/lib/commercial/qualification-criteria";
 import { HerculeMark } from "@/components/hercule-mark";
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ import {
 } from "@/lib/admin/funnels/sales-preset-scoring";
 import type { Audience } from "@/lib/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import { DemandeMetaRow } from "@/components/demandes/demande-meta-row";
 import { MaskedContactLine } from "@/components/demandes/masked-contact-line";
 import { getSecteurConfig } from "@/lib/agence/secteur-config";
@@ -211,9 +212,14 @@ export function SalesEligiblePanel({
   const [phase, setPhase] = useState<RevealPhase>("loading");
   const [flippedIndex, setFlippedIndex] = useState<number | null>(null);
 
-  const isComptable = audience === "comptable";
+  const isCif = audience === "cif";
+  const isComptable = isCabinetBuyerSalesAudience(audience);
   const cardLabel = isComptable ? "mission" : "opportunité";
-  const versoCriteria = isComptable ? COMPTABLE_DEMANDE_VERSO_CRITERIA : undefined;
+  const versoCriteria = isCif
+    ? CIF_DEMANDE_VERSO_CRITERIA
+    : isComptable
+      ? COMPTABLE_DEMANDE_VERSO_CRITERIA
+      : undefined;
 
   const result = useMemo(
     () => scoreAgencyPresets(qualificationValues, audience),

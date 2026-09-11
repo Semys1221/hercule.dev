@@ -14,7 +14,7 @@ type PricingWidgetProps = {
 function isPricingAudience(
   audience: PricingWidgetProps["audience"],
 ): audience is PricingAudience {
-  return audience === "agence" || audience === "comptable";
+  return audience === "agence" || audience === "comptable" || audience === "cif";
 }
 
 export function PricingWidget({ audience, config, compact = true, plans }: PricingWidgetProps) {

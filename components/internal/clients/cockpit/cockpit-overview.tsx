@@ -53,7 +53,9 @@ export function CockpitOverview({ data }: CockpitOverviewProps) {
               ? new Date(data.onboardingCompletedAt).toLocaleDateString("fr-FR")
               : "—"}
           </p>
-          {data.category === "agence" || data.category === "comptable" ? (
+          {data.category === "agence" ||
+          data.category === "comptable" ||
+          data.category === "cif" ? (
             <>
               <p>
                 <span className="text-muted-foreground">Rétractation : </span>
@@ -98,7 +100,7 @@ export function CockpitOverview({ data }: CockpitOverviewProps) {
             <span className="text-muted-foreground">Capacité : </span>
             {data.form.capacite ?? "—"}
           </p>
-          {data.category === "comptable" ? (
+          {data.category === "comptable" || data.category === "cif" ? (
             <>
               <p>
                 <span className="text-muted-foreground">Honoraires annuels min. : </span>

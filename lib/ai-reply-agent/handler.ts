@@ -71,7 +71,7 @@ async function resolveBookingContext(params: {
 }): Promise<string | null> {
   try {
     const category = await resolveCategoryForCampaign(params.campaignId);
-    if (category !== "comptable") {
+    if (category !== "comptable" && category !== "cif") {
       return null;
     }
 
@@ -84,7 +84,7 @@ async function resolveBookingContext(params: {
         : "none";
 
     const result = await bookFromInbound({
-      event: "comptable",
+      event: category,
       leadEmail: params.leadEmail,
       leadName: params.leadName,
       inboundText: params.inboundText,

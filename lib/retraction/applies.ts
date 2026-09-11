@@ -5,5 +5,5 @@ import type { RetractionAudience } from "./types";
 export function retractionAppliesTo(
   category: LeadCategory,
 ): category is RetractionAudience {
-  return category === "agence" || category === "comptable";
+  return category === "agence" || category === "comptable" || category === "cif";
 }

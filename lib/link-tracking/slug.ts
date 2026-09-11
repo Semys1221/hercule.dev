@@ -1,12 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { LeadCategory } from "./types";
+import { ALL_LEAD_CATEGORIES } from "./types";
 
 const SLUG_ALPHABET =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const SLUG_LENGTH = 6;
 const MAX_ATTEMPTS = 20;
-const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise"];
+const TABLES: LeadCategory[] = [...ALL_LEAD_CATEGORIES];
 
 function isMissingRelationError(message: string): boolean {
   return (

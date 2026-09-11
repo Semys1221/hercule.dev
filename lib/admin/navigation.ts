@@ -27,6 +27,7 @@ export const NICHE_LABELS: Record<Niche, string> = {
   agence: "Agence",
   entreprise: "Entreprise",
   comptable: "Comptable",
+  cif: "Conseiller financier",
 };
 
 /** @deprecated Use NICHE_LABELS */
@@ -36,6 +37,7 @@ export const NICHE_ICONS: Record<Niche, string> = {
   agence: "🏢",
   entreprise: "🏭",
   comptable: "📊",
+  cif: "💼",
 };
 
 /** @deprecated Use NICHE_ICONS */
@@ -45,12 +47,15 @@ export const NICHE_CAPTIONS: Record<Niche, string> = {
   agence: "Buyer — agences partenaires qui reçoivent des contrats.",
   entreprise: "Seller — entreprises qui recherchent une agence.",
   comptable: "Buyer — cabinets d'expertise comptable partenaires.",
+  cif: "Buyer — cabinets CIF / CGP partenaires.",
 };
 
 /** @deprecated Use NICHE_CAPTIONS */
 export const AUDIENCE_CAPTIONS = NICHE_CAPTIONS;
 
-export const ALL_NICHES: Niche[] = ["agence", "entreprise", "comptable"];
+export const ALL_NICHES: Niche[] = ["agence", "entreprise", "comptable", "cif"];
+
+const NICHE_PATH_SEGMENT = "agence|comptable|entreprise|cif";
 
 /** @deprecated Use ALL_NICHES */
 const ALL_AUDIENCES = ALL_NICHES;
@@ -115,9 +120,7 @@ export function isAudience(value: string): value is Audience {
   return isNiche(value);
 }
 
-export function isLeadCategory(value: string): value is LeadCategory {
-  return value === "agence" || value === "comptable" || value === "entreprise";
-}
+export { isLeadCategory } from "@/lib/link-tracking/types";
 
 export function isLegalDocSegment(value: string): value is LegalDocSegment {
   return (LEGAL_DOC_SEGMENTS as readonly string[]).includes(value);
@@ -282,11 +285,11 @@ export function emailsHref(niche: Niche, slug?: string): string {
 }
 
 const MODULE_FIRST_PATTERNS: Array<{ module: string; pattern: RegExp }> = [
-  { module: "session", pattern: /^\/internal\/funnels\/session\/(agence|comptable|entreprise)/ },
-  { module: "bookings", pattern: /^\/internal\/funnels\/bookings\/(agence|comptable|entreprise)/ },
-  { module: "clients", pattern: /^\/internal\/funnels\/clients\/(agence|comptable|entreprise)/ },
-  { module: "legal", pattern: /^\/internal\/funnels\/legal\/(agence|comptable|entreprise)/ },
-  { module: "emails", pattern: /^\/internal\/funnels\/emails\/(agence|comptable|entreprise)/ },
+  { module: "session", pattern: new RegExp(`^/internal/funnels/session/(${NICHE_PATH_SEGMENT})`) },
+  { module: "bookings", pattern: new RegExp(`^/internal/funnels/bookings/(${NICHE_PATH_SEGMENT})`) },
+  { module: "clients", pattern: new RegExp(`^/internal/funnels/clients/(${NICHE_PATH_SEGMENT})`) },
+  { module: "legal", pattern: new RegExp(`^/internal/funnels/legal/(${NICHE_PATH_SEGMENT})`) },
+  { module: "emails", pattern: new RegExp(`^/internal/funnels/emails/(${NICHE_PATH_SEGMENT})`) },
 ];
 
 /**
@@ -301,14 +304,14 @@ export function nicheFromPathname(pathname: string): Niche {
   }
 
   const legacyFunnel = pathname.match(
-    /^\/internal\/funnels\/(agence|comptable|entreprise)/,
+    new RegExp(`^/internal/funnels/(${NICHE_PATH_SEGMENT})`),
   );
   if (legacyFunnel?.[1] && isNiche(legacyFunnel[1])) {
     return legacyFunnel[1];
   }
 
   const cockpitMatch = pathname.match(
-    /^\/internal\/clients\/(agence|comptable|entreprise)/,
+    new RegExp(`^/internal/clients/(${NICHE_PATH_SEGMENT})`),
   );
   if (cockpitMatch?.[1] && isNiche(cockpitMatch[1])) {
     return cockpitMatch[1];
@@ -325,7 +328,7 @@ export function moduleFromPathname(pathname: string): string | null {
   }
 
   const legacy = pathname.match(
-    /^\/internal\/funnels\/(agence|comptable|entreprise)\/([^/]+)/,
+    new RegExp(`^/internal/funnels/(${NICHE_PATH_SEGMENT})/([^/]+)`),
   );
   if (legacy?.[2]) {
     return legacy[2];

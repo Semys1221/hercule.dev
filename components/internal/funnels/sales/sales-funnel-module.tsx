@@ -23,6 +23,7 @@ import {
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import { sessionHubHref, pathToHref, type Audience } from "@/lib/admin/navigation";
 import { SESSION_PHASE_QUALIFICATION } from "@/lib/admin/funnels/ui-copy";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
@@ -295,6 +296,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           agenceId: booking.lead_category === "agence" ? booking.lead_id : null,
           entrepriseId: booking.lead_category === "entreprise" ? booking.lead_id : null,
           comptableId: booking.lead_category === "comptable" ? booking.lead_id : null,
+          cifId: booking.lead_category === "cif" ? booking.lead_id : null,
           email: booking.email,
           inviteeUri: booking.invitee_uri,
           scheduledAt: booking.start_time,
@@ -385,7 +387,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   }, [canEnterClosing, developerModeEnabled, enterClosingPhase, phase, pitchSidebarEnabled]);
 
   useEffect(() => {
-    if (audience === "comptable" && activeClosingId === "activation") {
+    if (isCabinetBuyerSalesAudience(audience) && activeClosingId === "activation") {
       setActiveClosingId("envoi-dashboard");
     }
   }, [activeClosingId, audience]);

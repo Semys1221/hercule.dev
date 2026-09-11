@@ -59,10 +59,11 @@ const Q15_SOCIAL_LABELS: Record<string, string> = {
  */
 export function mapQualificationToForm(
   q: Partial<SalesQualificationValues>,
-  audience: "agence" | "comptable" | "entreprise" = "agence",
+  audience: "agence" | "comptable" | "entreprise" | "cif" = "agence",
 ): Partial<DashboardFormData> {
   const result: Partial<DashboardFormData> = {};
-  const q2Labels = audience === "comptable" ? Q2_LABELS_COMPTABLE : Q2_LABELS_AGENCE;
+  const q2Labels =
+    audience === "comptable" || audience === "cif" ? Q2_LABELS_COMPTABLE : Q2_LABELS_AGENCE;
 
   if (Array.isArray(q.q2) && q.q2.length > 0) {
     const resolved = q.q2
@@ -82,7 +83,7 @@ export function mapQualificationToForm(
     result.capacite = q.q20;
   }
 
-  if (audience === "comptable") {
+  if (audience === "comptable" || audience === "cif") {
     if (typeof q.q13 === "number" && q.q13 > 0) {
       result.honorairesAnnuelsMin = q.q13;
     }

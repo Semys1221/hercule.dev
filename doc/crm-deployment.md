@@ -20,11 +20,14 @@ Use this after merging CRM migrations to production.
    - `CALENDLY_EVENT_TYPE_URI_AGENCE` — `https://calendly.com/hercule-connect/30min`
    - `CALENDLY_EVENT_TYPE_URI_ENTREPRISE` — `https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone`
    - `CALENDLY_EVENT_TYPE_URI_COMPTABLE` — `https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone` (API: `https://api.calendly.com/event_types/50e0a618-e5d8-4851-97ae-00940328c650`)
+   - `CALENDLY_EVENT_TYPE_URI_CIF` — `https://calendly.com/hercule-connect/hercule-comptable-clone` (API: `https://api.calendly.com/event_types/6d51da2b-5d25-40f4-ba29-e43e268c0cc0`)
 5. Optional Instantly campaign IDs for Bookings outreach (fallback if `niche_outreach_config` row missing):
    - `INSTANTLY_CAMPAIGN_ID_COMPTABLE` — `e4c58718-ca00-4e27-b714-68e522fe4db6` (alias legacy: `COMPTABLE_CAMPAIGN_ID`)
+   - `INSTANTLY_CAMPAIGN_ID_CIF` — `e3bdb573-fe9f-437d-bd96-4ceb52869dd4`
 6. Tracking URLs (already in `.env.example`):
    - `TRACKING_BASE_URL_AGENCE=https://www.hercule.dev/reservation.html`
    - `TRACKING_BASE_URL_ENTREPRISE=https://www.hercule.dev/reservation-entreprise.html`
+   - `TRACKING_BASE_URL_CIF=https://www.hercule.dev/reservation-cif.html`
    - `BOOKING_CONFIRM_BASE_URL=https://www.hercule.dev/confirm-reservation.html`
 
 ## 2. vercel.json

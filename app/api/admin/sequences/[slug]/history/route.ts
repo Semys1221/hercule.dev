@@ -6,7 +6,7 @@ import { listSequenceHistory } from "@/lib/admin/sequences/sequence-history";
 import { isNiche } from "@/lib/admin/navigation";
 
 const querySchema = z.object({
-  niche: z.enum(["agence", "comptable", "entreprise"]),
+  niche: z.enum(["agence", "comptable", "entreprise", "cif"]),
   days: z.coerce.number().int().min(1).max(90).optional(),
 });
 

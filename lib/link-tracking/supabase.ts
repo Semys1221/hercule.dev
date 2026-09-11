@@ -10,7 +10,7 @@ import {
 import { buildDashboardUrl } from "./urls";
 
 // Lookup order: agence → comptable → entreprise (deterministic, no ambiguous matches).
-const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise"];
+const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise", "cif"];
 
 function getServiceRoleKey(): string {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -264,7 +264,11 @@ async function ensureDashboardLink(
   client: SupabaseClient,
   lookup: LeadLookup,
 ): Promise<LeadLookup> {
-  if (lookup.category !== "agence" && lookup.category !== "comptable") {
+  if (
+    lookup.category !== "agence" &&
+    lookup.category !== "comptable" &&
+    lookup.category !== "cif"
+  ) {
     return lookup;
   }
   if (lookup.lead.dashboard_link?.trim()) {
@@ -313,7 +317,11 @@ export async function markLeadBooked(
     booked_at: now,
     calendly_invitee_uri: params.calendlyInviteeUri || lookup.lead.calendly_invitee_uri,
   };
-  if (lookup.category === "agence" || lookup.category === "comptable") {
+  if (
+    lookup.category === "agence" ||
+    lookup.category === "comptable" ||
+    lookup.category === "cif"
+  ) {
     patch.dashboard_link = buildDashboardUrl(lookup.lead.slug);
   }
   if (params.firstName) patch.first_name = params.firstName;

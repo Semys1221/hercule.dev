@@ -14,7 +14,11 @@ import requests
 from config import grok_api_key
 from lead_links import apply_prompt_link_variables, resolve_prompt_links
 from lead_tags import TAG_LABELS, TAG_NOT_INTERESTED
-from legal_content import build_knowledge_pack_cached, is_comptable_niche_preset
+from legal_content import (
+    build_knowledge_pack_cached,
+    is_cif_niche_preset,
+    is_comptable_niche_preset,
+)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -58,7 +62,9 @@ def build_global_rules(
         else f"Maximum {n} phrases courtes dans reply_text (hors signature et lien CTA)."
     )
     pricing_url = (
-        "https://hercule.dev/cvg/comptable"
+        "https://hercule.dev/cvg/conseil-financier"
+        if is_cif_niche_preset(niche_preset_id or "")
+        else "https://hercule.dev/cvg/comptable"
         if is_comptable_niche_preset(niche_preset_id or "")
         else "https://hercule.dev/cvg"
     )

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 import {
   ALL_NICHES,
   NICHE_LABELS,
@@ -27,13 +28,13 @@ function hrefForModule(module: string | null, niche: Niche, pathname: string): s
       return clientsHubHref(niche);
     case "legal": {
       const legalDoc = pathname.match(
-        /^\/internal\/funnels\/legal\/(?:agence|comptable|entreprise)\/([^/]+)/,
+        /^\/internal\/funnels\/legal\/(?:agence|comptable|entreprise|cif)\/([^/]+)/,
       )?.[1];
       return legalDoc ? legalHref(niche, legalDoc as Parameters<typeof legalHref>[1]) : legalHref(niche);
     }
     case "emails": {
       const slug = pathname.match(
-        /^\/internal\/funnels\/emails\/(?:agence|comptable|entreprise)\/([^/]+)/,
+        /^\/internal\/funnels\/emails\/(?:agence|comptable|entreprise|cif)\/([^/]+)/,
       )?.[1];
       return slug ? emailsHref(niche, slug) : emailsHref(niche);
     }
@@ -66,7 +67,7 @@ export function NicheSwitcher({ className }: NicheSwitcherProps) {
       type="single"
       value={currentNiche}
       onValueChange={onNicheChange}
-      className={className}
+      className={cn("flex-wrap", className)}
       variant="outline"
       size="sm"
     >

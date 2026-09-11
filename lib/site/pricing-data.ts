@@ -1,4 +1,5 @@
 import agencePricingData from "@/content/pricing/agence.json";
+import cifPricingData from "@/content/pricing/cif.json";
 import comptablePricingData from "@/content/pricing/comptable.json";
 import type {
   PricingAudience,
@@ -11,6 +12,7 @@ import { pricingDocumentSchema } from "@/lib/site/pricing-types";
 const BUNDLED_PRICING: Record<PricingAudience, PricingDocument> = {
   agence: pricingDocumentSchema.parse(agencePricingData),
   comptable: pricingDocumentSchema.parse(comptablePricingData),
+  cif: pricingDocumentSchema.parse(cifPricingData),
 };
 
 export function getBundledPricingDocument(audience: PricingAudience): PricingDocument | null {

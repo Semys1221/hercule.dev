@@ -18,13 +18,14 @@ import { buildDashboardUrl } from "@/lib/link-tracking/urls";
 import { isComptableSubscriptionOffer } from "@/lib/payments/comptable-offers";
 import type { OfferTypeComptable } from "@/lib/commercial/constants";
 
-type ComptableOwner = "comptable" | "entreprise";
+type ComptableOwner = "comptable" | "entreprise" | "cif";
 
-function ownerTable(owner: ComptableOwner): "comptable" | "entreprise" {
+function ownerTable(owner: ComptableOwner): "comptable" | "entreprise" | "cif" {
   return owner;
 }
 
-function templateCategory(owner: ComptableOwner): "comptable" | "entreprise" {
+function templateCategory(owner: ComptableOwner): "comptable" | "entreprise" | "cif" {
+  if (owner === "cif") return "cif";
   return owner === "comptable" ? "comptable" : "entreprise";
 }
 
@@ -147,13 +148,14 @@ export async function handleComptableCheckoutCompleted(
   const paymentId = session.metadata?.payment_id;
   const comptableId = session.metadata?.comptable_id;
   const entrepriseId = session.metadata?.entreprise_id;
+  const cifId = session.metadata?.cif_id;
 
-  if (!paymentId || (!comptableId && !entrepriseId)) {
+  if (!paymentId || (!comptableId && !entrepriseId && !cifId)) {
     return false;
   }
 
-  const owner: ComptableOwner = comptableId ? "comptable" : "entreprise";
-  const leadId = comptableId ?? entrepriseId!;
+  const owner: ComptableOwner = cifId ? "cif" : comptableId ? "comptable" : "entreprise";
+  const leadId = cifId ?? comptableId ?? entrepriseId!;
 
   const { data: existingPayment } = await client
     .from("payments")
@@ -227,14 +229,14 @@ export async function handleComptableInvoicePaid(
 
   const { data: anchorPayment } = await client
     .from("payments")
-    .select("comptable_id, entreprise_id, offer_type")
+    .select("comptable_id, entreprise_id, cif_id, offer_type")
     .eq("stripe_subscription_id", subscriptionId)
     .eq("status", "succeeded")
     .order("succeeded_at", { ascending: true })
     .limit(1)
     .maybeSingle();
 
-  if (!anchorPayment?.comptable_id && !anchorPayment?.entreprise_id) {
+  if (!anchorPayment?.comptable_id && !anchorPayment?.entreprise_id && !anchorPayment?.cif_id) {
     return false;
   }
 
@@ -257,7 +259,9 @@ export async function handleComptableInvoicePaid(
     succeeded_at: new Date().toISOString(),
   };
 
-  if (anchorPayment.comptable_id) {
+  if (anchorPayment.cif_id) {
+    insertRow.cif_id = anchorPayment.cif_id;
+  } else if (anchorPayment.comptable_id) {
     insertRow.comptable_id = anchorPayment.comptable_id;
   } else {
     insertRow.entreprise_id = anchorPayment.entreprise_id;
@@ -279,20 +283,26 @@ export async function handleComptableSubscriptionDeleted(
   const subscriptionId = subscription.id;
   const comptableId = subscription.metadata?.comptable_id;
   const entrepriseId = subscription.metadata?.entreprise_id;
+  const cifId = subscription.metadata?.cif_id;
 
-  if (!comptableId && !entrepriseId) {
+  if (!comptableId && !entrepriseId && !cifId) {
     const { data: anchorPayment } = await client
       .from("payments")
-      .select("comptable_id, entreprise_id")
+      .select("comptable_id, entreprise_id, cif_id")
       .eq("stripe_subscription_id", subscriptionId)
       .limit(1)
       .maybeSingle();
 
-    if (!anchorPayment?.comptable_id && !anchorPayment?.entreprise_id) {
+    if (!anchorPayment?.comptable_id && !anchorPayment?.entreprise_id && !anchorPayment?.cif_id) {
       return false;
     }
 
-    if (anchorPayment.comptable_id) {
+    if (anchorPayment.cif_id) {
+      await client
+        .from("cif")
+        .update({ product_statut: "CANCELLED" })
+        .eq("id", anchorPayment.cif_id);
+    } else if (anchorPayment.comptable_id) {
       await client
         .from("comptable")
         .update({ product_statut: "CANCELLED" })
@@ -307,7 +317,12 @@ export async function handleComptableSubscriptionDeleted(
     return true;
   }
 
-  if (comptableId) {
+  if (cifId) {
+    await client
+      .from("cif")
+      .update({ product_statut: "CANCELLED" })
+      .eq("id", cifId);
+  } else if (comptableId) {
     await client
       .from("comptable")
       .update({ product_statut: "CANCELLED" })

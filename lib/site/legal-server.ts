@@ -10,6 +10,7 @@ function filenameForDoc(docType: LegalDocType, audience: LegalAudience): string 
   if (docType === "cgv") {
     if (audience === "entreprise") return "cvg_entreprise.md";
     if (audience === "comptable") return "cvg_comptable.md";
+    if (audience === "cif") return "cvg_cif.md";
     return "cvg_master.md";
   }
   if (docType === "mentions") {

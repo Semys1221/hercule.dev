@@ -13,14 +13,15 @@ const postSchema = z
     agenceId: z.string().uuid().nullable().optional(),
     entrepriseId: z.string().uuid().nullable().optional(),
     comptableId: z.string().uuid().nullable().optional(),
+    cifId: z.string().uuid().nullable().optional(),
     email: z.string().email(),
     inviteeUri: z.string().min(1),
     scheduledAt: z.string().datetime().nullable().optional(),
   })
   .refine(
     (data) =>
-      Boolean(data.agenceId) || Boolean(data.entrepriseId) || Boolean(data.comptableId),
-    { message: "agenceId, entrepriseId, or comptableId is required" },
+      Boolean(data.agenceId) || Boolean(data.entrepriseId) || Boolean(data.comptableId) || Boolean(data.cifId),
+    { message: "agenceId, entrepriseId, comptableId, or cifId is required" },
   );
 
 export async function POST(request: Request) {
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       agenceId: parsed.data.agenceId ?? null,
       entrepriseId: parsed.data.entrepriseId ?? null,
       comptableId: parsed.data.comptableId ?? null,
+      cifId: parsed.data.cifId ?? null,
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
       scheduledAt: parsed.data.scheduledAt ?? null,

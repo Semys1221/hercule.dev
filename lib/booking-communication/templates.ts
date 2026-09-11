@@ -527,7 +527,7 @@ export function defaultBookingEmailTemplate(
   category: LeadCategory,
   emailType: BookingEmailTemplateType,
 ): Omit<BookingEmailTemplateRecord, "email_type"> {
-  if (category === "entreprise" || category === "comptable") {
+  if (category === "entreprise" || category === "comptable" || category === "cif") {
     const override = ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES[emailType];
     if (override) {
       return override;

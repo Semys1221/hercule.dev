@@ -8,7 +8,7 @@ import type {
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 import contactPool from "@/lib/admin/funnels/contact-pool.json";
 import type { Audience } from "@/lib/admin/navigation";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export type { BudgetKind };
 
@@ -945,7 +945,7 @@ export const COMPTABLE_OPPORTUNITY_CARD_BLUEPRINTS: OpportunityCardBlueprint[] =
 export function getOpportunityCardBlueprints(
   audience: Audience = "agence",
 ): OpportunityCardBlueprint[] {
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return COMPTABLE_OPPORTUNITY_CARD_BLUEPRINTS;
   }
 

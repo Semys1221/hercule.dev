@@ -263,11 +263,12 @@ export async function deleteSeedClient(
     }
   }
 
-  if (category === "comptable") {
+  if (category === "comptable" || category === "cif") {
+    const ownerColumn = category === "cif" ? "cif_id" : "comptable_id";
     const { error: paymentsError } = await client
       .from("payments")
       .delete()
-      .eq("comptable_id", leadId);
+      .eq(ownerColumn, leadId);
     if (paymentsError) {
       throw new Error(`payments delete failed: ${paymentsError.message}`);
     }

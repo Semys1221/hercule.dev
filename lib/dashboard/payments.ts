@@ -138,9 +138,12 @@ export async function getAgencePaymentSchedule(
   };
 }
 
-export type ComptablePaymentOwner = "comptable" | "entreprise";
+export type ComptablePaymentOwner = "comptable" | "entreprise" | "cif";
 
-function paymentOwnerColumn(owner: ComptablePaymentOwner): "comptable_id" | "entreprise_id" {
+function paymentOwnerColumn(
+  owner: ComptablePaymentOwner,
+): "comptable_id" | "entreprise_id" | "cif_id" {
+  if (owner === "cif") return "cif_id";
   return owner === "comptable" ? "comptable_id" : "entreprise_id";
 }
 

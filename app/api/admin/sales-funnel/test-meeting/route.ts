@@ -5,7 +5,7 @@ import { provisionTestMeeting } from "@/lib/admin/funnels/provision-test-meeting
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 
 const postSchema = z.object({
-  audience: z.enum(["agence", "comptable"]).optional(),
+  audience: z.enum(["agence", "comptable", "cif"]).optional(),
 });
 
 export async function POST(request: Request) {

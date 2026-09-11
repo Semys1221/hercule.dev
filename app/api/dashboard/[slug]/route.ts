@@ -103,21 +103,22 @@ export async function GET(_request: Request, { params }: RouteParams) {
     }
 
     // ── Comptable dashboard (comptable table) ───────────────────────────────
-    if (lookup.category === "comptable") {
+    if (lookup.category === "comptable" || lookup.category === "cif") {
       const lead = lookup.lead;
+      const paymentOwner = lookup.category === "cif" ? "cif" : "comptable";
       if (lead.product_statut === "CANCELLED") {
-        return NextResponse.json(unavailableDashboardResponse(lead, "comptable"));
+        return NextResponse.json(unavailableDashboardResponse(lead, lookup.category));
       }
       const profile = (lead.profile ?? {}) as Record<string, unknown>;
       const profileForm = (profile.form ?? {}) as DashboardFormData;
-      const isPaid = await hasSucceededPaymentComptable(client, lead.id, "comptable");
+      const isPaid = await hasSucceededPaymentComptable(client, lead.id, paymentOwner);
       const paymentDetails = isPaid
-        ? await getComptablePaymentDetails(client, lead.id, "comptable")
+        ? await getComptablePaymentDetails(client, lead.id, paymentOwner)
         : null;
       const isOnboarded = Boolean(lead.onboarding_completed_at);
       const productStatut = lead.product_statut ?? "NONE";
       const { retraction, milestones } = buildDashboardRetractionFields({
-        category: "comptable",
+        category: lookup.category,
         lead,
       });
 
@@ -173,7 +174,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         form: profileForm,
         faq: [],
         isPaid,
-        audience: "comptable",
+        audience: lookup.category === "cif" ? "cif" : "comptable",
         dashboardMode,
         deliveryPlan: null,
         enterpriseBrief: null,
@@ -404,16 +405,19 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const isComptableBuyer =
       category === "comptable" ||
+      category === "cif" ||
       (category === "entreprise" && isLegacyComptableEntrepriseLead(lead));
 
     if (isComptableBuyer) {
-      const table = category === "comptable" ? "comptable" : "entreprise";
-      const paymentCategory = category === "comptable" ? "comptable" : "entreprise";
+      const table =
+        category === "cif" ? "cif" : category === "comptable" ? "comptable" : "entreprise";
+      const paymentCategory =
+        category === "cif" ? "cif" : category === "comptable" ? "comptable" : "entreprise";
 
       if (body.waiveRetraction === true && !body.completeOnboarding) {
         const waiver = await waiveRetractionNow({
           client,
-          category: "comptable",
+          category: category === "cif" ? "cif" : "comptable",
           leadId: lead.id,
           slug: normalizedSlug,
           currentStatus: lead.retraction_status,

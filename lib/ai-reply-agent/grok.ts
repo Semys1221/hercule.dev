@@ -3,7 +3,10 @@ import {
   resolvePromptLinks,
 } from "./lead-links";
 import { truncateInboundText } from "./inbound";
-import { isComptableNichePreset } from "@/lib/site/legal-content";
+import {
+  isCifNichePreset,
+  isComptableNichePreset,
+} from "@/lib/site/legal-content";
 
 import type { AiReplyTargetType, GroqReplyDecision } from "./types";
 
@@ -34,9 +37,11 @@ export function buildGlobalRules(
     n === 1
       ? "Maximum 1 phrase courte dans reply_text (hors signature et lien CTA)."
       : `Maximum ${n} phrases courtes dans reply_text (hors signature et lien CTA).`;
-  const pricingUrl = isComptableNichePreset(nichePresetId ?? "")
-    ? "https://hercule.dev/cvg/comptable"
-    : "https://hercule.dev/cvg";
+  const pricingUrl = isCifNichePreset(nichePresetId ?? "")
+    ? "https://hercule.dev/cvg/conseil-financier"
+    : isComptableNichePreset(nichePresetId ?? "")
+      ? "https://hercule.dev/cvg/comptable"
+      : "https://hercule.dev/cvg";
   return `Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
 Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string).

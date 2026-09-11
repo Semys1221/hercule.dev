@@ -78,31 +78,6 @@ export function SalesQualificationForm({
     applyQuestionSegmentCopy(question, clientSegment),
   );
 
-  // #region agent log
-  if (section.id === "objectifs" && typeof fetch !== "undefined") {
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "848ca9",
-      },
-      body: JSON.stringify({
-        sessionId: "848ca9",
-        runId: "pre-fix",
-        hypothesisId: "H4-H5",
-        location: "sales-qualification-form.tsx:SalesQualificationForm",
-        message: "Objectifs questions rendered",
-        data: {
-          audience,
-          clientSegment,
-          renderedOrder: questions.map((q) => ({ id: q.id, number: q.number, prompt: q.prompt.slice(0, 60) })),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-
   return (
     <Card className={COMPACT_CARD_CLASS}>
       <CardContent className="divide-y divide-border p-0">

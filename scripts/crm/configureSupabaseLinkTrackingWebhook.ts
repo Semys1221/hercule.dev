@@ -14,7 +14,7 @@
  *   pnpm configure-supabase-link-tracking-webhook --table comptable
  *   pnpm configure-supabase-link-tracking-webhook --table agence --table entreprise --table comptable
  */
-const LEAD_TABLES = ["agence", "comptable", "entreprise"] as const;
+const LEAD_TABLES = ["agence", "comptable", "entreprise", "cif"] as const;
 type LeadTable = (typeof LEAD_TABLES)[number];
 
 function requireEnv(name: string): string {

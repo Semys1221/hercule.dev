@@ -1,7 +1,7 @@
 import { HERCULE_MONTHLY_MIN } from "@/components/internal/funnels/sales/sales-questions";
 import { COMPTABLE_ANNUAL_MIN } from "@/components/internal/funnels/sales/sales-questions-comptable";
 import type { Audience } from "@/lib/admin/navigation";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
@@ -15,7 +15,7 @@ function isQ14Matrix(
 export type BudgetKind = "one_off" | "monthly" | "annual";
 
 export function getHerculeFloorCents(audience: Audience = "agence"): number {
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return COMPTABLE_ANNUAL_MIN * 100;
   }
   const min = HERCULE_MONTHLY_MIN;
@@ -85,7 +85,7 @@ export function getPresetFloorOverrideCents(
   presetId: AgencyPresetId,
   audience: Audience = "agence",
 ): number {
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return COMPTABLE_PRESET_FLOOR_OVERRIDE_CENTS[presetId];
   }
   return PRESET_FLOOR_OVERRIDE_CENTS[presetId];
@@ -256,7 +256,7 @@ export function budgetKindFromPrestationType(
   type: PrestationType,
   audience: Audience = "agence",
 ): BudgetKind {
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     if (ANNUAL_PRESTATION_TYPES.has(type)) {
       return "annual";
     }
@@ -289,7 +289,7 @@ export function resolveBudgetFloorCents(
   presetId: AgencyPresetId,
   audience: Audience = "agence",
 ): number {
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     const declaredAnnualEur =
       typeof values.q13 === "number" && values.q13 > 0 ? values.q13 : COMPTABLE_ANNUAL_MIN;
 
@@ -488,7 +488,7 @@ export function resolveTailleClassForSlot(
   const declared = q11.map(asTailleClass).filter((value): value is TailleClass => value !== null);
   const classes = declared.length > 0 ? declared : PRESET_TAILLE_FALLBACKS[presetId];
 
-  if (isComptableSalesAudience(audience) && declared.length > 0) {
+  if (isCabinetBuyerSalesAudience(audience) && declared.length > 0) {
     return classes[slotIndex % classes.length];
   }
 

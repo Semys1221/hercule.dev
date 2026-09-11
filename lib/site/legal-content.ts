@@ -3,7 +3,7 @@ import { join } from "path"
 
 const DOC_DIR = join(process.cwd(), "doc/tech-stack")
 
-export type LegalAudience = "agence" | "entreprise" | "comptable"
+export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif"
 
 export const CVG_DOC_FILES = {
   onboarding: "cvg_onboarding.md",
@@ -51,6 +51,7 @@ export function getCvgDocMarkdown(slug: CvgDocSlug): string {
 function cvgFilenameForAudience(audience: LegalAudience): string {
   if (audience === "entreprise") return "cvg_entreprise.md"
   if (audience === "comptable") return "cvg_comptable.md"
+  if (audience === "cif") return "cvg_cif.md"
   return "cvg_master.md"
 }
 
@@ -66,13 +67,18 @@ export function getConfidentialiteMarkdown(): string {
   return readDocFile("confidentialite.md")
 }
 
-export function isComptableNichePreset(presetId: string): boolean {
-  return presetId.includes("comptable")
-}
+export {
+  isCifNichePreset,
+  isComptableNichePreset,
+  legalAudienceFromNichePreset,
+} from "@/lib/site/niche-preset"
 
 export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "comptable"): string {
   if (audience === "comptable") {
     return readDocFile("ai-reply-knowledge-comptable.md")
+  }
+  if (audience === "cif") {
+    return readDocFile("ai-reply-knowledge-cif.md")
   }
   return readDocFile("ai-reply-knowledge.md")
 }

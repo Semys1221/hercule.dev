@@ -36,7 +36,7 @@ type PricingEditorProps = {
 };
 
 function isPricingAudience(audience: Audience): audience is PricingAudience {
-  return audience === "agence" || audience === "comptable";
+  return audience === "agence" || audience === "comptable" || audience === "cif";
 }
 
 function PricingEditorSkeleton() {

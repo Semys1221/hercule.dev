@@ -46,6 +46,8 @@ assert.equal(
 
 assert.equal(sessionHubHref("agence"), "/internal/funnels/session/agence");
 assert.equal(bookingsHref("comptable"), "/internal/funnels/bookings/comptable");
+assert.equal(bookingsHref("cif"), "/internal/funnels/bookings/cif");
+assert.equal(nicheFromPathname("/internal/funnels/bookings/cif"), "cif");
 
 assert.equal(nicheFromPathname("/internal/funnels/bookings/comptable"), "comptable");
 assert.equal(nicheFromPathname("/internal/funnels/agence/bookings"), "agence");

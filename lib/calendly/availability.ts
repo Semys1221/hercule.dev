@@ -7,12 +7,13 @@ const WINDOW_DAYS = 7;
 const DEFAULT_HORIZON_DAYS = 42;
 const MIN_FUTURE_BUFFER_MS = 60_000;
 
-export type CalendlyBookingEvent = "agence" | "comptable" | "entreprise";
+export type CalendlyBookingEvent = "agence" | "comptable" | "entreprise" | "cif";
 
 export const CALENDLY_BOOKING_EVENTS: CalendlyBookingEvent[] = [
   "agence",
   "comptable",
   "entreprise",
+  "cif",
 ];
 
 export const CALENDLY_SCHEDULING_URLS: Record<CalendlyBookingEvent, string | null> = {
@@ -21,12 +22,14 @@ export const CALENDLY_SCHEDULING_URLS: Record<CalendlyBookingEvent, string | nul
     "https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone",
   comptable:
     "https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone",
+  cif: "https://calendly.com/hercule-connect/hercule-comptable-clone",
 };
 
 const EVENT_TYPE_URI_ENV: Record<CalendlyBookingEvent, string> = {
   agence: "CALENDLY_EVENT_TYPE_URI_AGENCE",
   entreprise: "CALENDLY_EVENT_TYPE_URI_ENTREPRISE",
   comptable: "CALENDLY_EVENT_TYPE_URI_COMPTABLE",
+  cif: "CALENDLY_EVENT_TYPE_URI_CIF",
 };
 
 const eventTypeUriCache: Partial<Record<CalendlyBookingEvent, string>> = {};
@@ -63,7 +66,8 @@ export function parseBookingEvent(
   if (
     normalized === "agence" ||
     normalized === "entreprise" ||
-    normalized === "comptable"
+    normalized === "comptable" ||
+    normalized === "cif"
   ) {
     return normalized;
   }

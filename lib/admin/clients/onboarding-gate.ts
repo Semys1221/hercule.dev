@@ -4,6 +4,7 @@ export const CLIENTS_ONBOARDING_GATE_TABLES: LeadCategory[] = [
   "agence",
   "comptable",
   "entreprise",
+  "cif",
 ];
 
 export function filterOnboardedRows<T extends { onboarding_completed_at: string | null }>(

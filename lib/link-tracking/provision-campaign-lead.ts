@@ -7,8 +7,9 @@ import {
   normalizeEmail,
 } from "@/lib/link-tracking/supabase";
 import { allocateSlugs, loadSlugSet } from "@/lib/link-tracking/slug";
-import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
+import { ALL_LEAD_CATEGORIES, isLeadCategory, type LeadCategory, type LinkTrackingLead } from "@/lib/link-tracking/types";
 import {
+  buildCifLeadUrls,
   buildComptableLeadUrls,
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
@@ -23,6 +24,7 @@ export type EnsureCampaignLeadLinksResult =
 
 const KNOWN_CAMPAIGN_CATEGORY: Record<string, LeadCategory> = {
   "e4c58718-ca00-4e27-b714-68e522fe4db6": "comptable",
+  "e3bdb573-fe9f-437d-bd96-4ceb52869dd4": "cif",
 };
 
 export async function resolveCategoryForCampaign(
@@ -45,11 +47,11 @@ export async function resolveCategoryForCampaign(
   }
 
   const niche = data?.niche;
-  if (niche === "agence" || niche === "comptable" || niche === "entreprise") {
+  if (typeof niche === "string" && isLeadCategory(niche)) {
     return niche;
   }
 
-  for (const candidate of ["agence", "comptable", "entreprise"] as const) {
+  for (const candidate of ALL_LEAD_CATEGORIES) {
     if (campaignIdFromEnv(candidate) === campaignId) {
       return candidate;
     }
@@ -65,6 +67,9 @@ function urlFieldsForCategory(
 ): Record<string, string> {
   if (category === "comptable") {
     return buildComptableLeadUrls(slug, email);
+  }
+  if (category === "cif") {
+    return buildCifLeadUrls(slug, email);
   }
   if (category === "entreprise") {
     return buildEntrepriseLeadUrls(slug, email);

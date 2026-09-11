@@ -58,7 +58,7 @@ export async function patchProfileEstimatedBooking(
           (estimated.getTime() - activation.getTime()) / (24 * 60 * 60 * 1000),
         ),
         expectedComptableDaysMax:
-          category === "comptable" ? COMMERCIAL_COMPTABLE.firstRdvDaysMax : null,
+          category === "comptable" || category === "cif" ? COMMERCIAL_COMPTABLE.firstRdvDaysMax : null,
       },
       timestamp: Date.now(),
     }),

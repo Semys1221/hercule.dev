@@ -9,13 +9,14 @@ from typing import Literal
 from config import _env, require_supabase
 from supabase import create_client
 
-Niche = Literal["agence", "comptable", "entreprise"]
-NICHE_ORDER: tuple[Niche, ...] = ("agence", "comptable", "entreprise")
+Niche = Literal["agence", "comptable", "entreprise", "cif"]
+NICHE_ORDER: tuple[Niche, ...] = ("agence", "comptable", "entreprise", "cif")
 
 _CAMPAIGN_ENV: dict[Niche, str] = {
     "agence": "INSTANTLY_CAMPAIGN_ID_AGENCE",
     "comptable": "INSTANTLY_CAMPAIGN_ID_COMPTABLE",
     "entreprise": "INSTANTLY_CAMPAIGN_ID_ENTREPRISE",
+    "cif": "INSTANTLY_CAMPAIGN_ID_CIF",
 }
 
 

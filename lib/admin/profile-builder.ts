@@ -27,7 +27,8 @@ export function buildDefaultProfile(
   form: ProfileFormFields,
   category: Audience,
 ): Record<string, unknown> {
-  const appliesRetraction = category === "agence" || category === "comptable";
+  const appliesRetraction =
+    category === "agence" || category === "comptable" || category === "cif";
   const keepRetraction =
     appliesRetraction &&
     (form.droit_retractation === undefined || form.droit_retractation === true);
@@ -35,7 +36,7 @@ export function buildDefaultProfile(
   const timeline =
     category === "agence"
       ? AGENCE_TIMELINE
-      : category === "comptable"
+      : category === "comptable" || category === "cif"
         ? COMPTABLE_TIMELINE
         : ENTREPRISE_TIMELINE;
 

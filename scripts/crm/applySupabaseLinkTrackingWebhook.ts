@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const LEAD_TABLES = ["agence", "comptable", "entreprise"] as const;
+const LEAD_TABLES = ["agence", "comptable", "entreprise", "cif"] as const;
 type LeadTable = (typeof LEAD_TABLES)[number];
 
 function loadEnvFile(): Record<string, string> {

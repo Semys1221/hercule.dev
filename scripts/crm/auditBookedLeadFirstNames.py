@@ -105,7 +105,7 @@ def _is_real_calendly_uri(uri: str | None) -> bool:
 def list_booked_leads() -> list[dict[str, Any]]:
     client = get_client()
     rows: list[dict[str, Any]] = []
-    for category in ("agence", "comptable", "entreprise"):
+    for category in ("agence", "comptable", "entreprise", "cif"):
         res = (
             client.table(category)
             .select("*")

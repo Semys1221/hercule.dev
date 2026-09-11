@@ -31,6 +31,12 @@ export function Navbar() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
+            <Link
+              href="/conseil-financier"
+              className="hidden sm:inline text-sm text-zinc-400 hover:text-white transition-colors"
+            >
+              Je suis un conseiller financier
+            </Link>
             <a
               href={CALENDLY_ENTREPRISE_URL}
               className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors"

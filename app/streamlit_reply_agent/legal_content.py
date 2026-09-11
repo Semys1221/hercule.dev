@@ -15,8 +15,26 @@ def _read_doc_file(filename: str) -> str:
     return (_DOC_DIR / filename).read_text(encoding="utf-8")
 
 
+def legal_audience_from_niche_preset(niche_preset_id: str) -> str:
+    ident = niche_preset_id.strip().lower()
+    if "comptable" in ident:
+        return "comptable"
+    if (
+        "gestion_patrimoine" in ident
+        or "conseiller" in ident
+        or ident == "cif"
+        or ident.startswith("cif_")
+    ):
+        return "cif"
+    return "agence"
+
+
 def is_comptable_niche_preset(niche_preset_id: str) -> bool:
-    return "comptable" in niche_preset_id
+    return legal_audience_from_niche_preset(niche_preset_id) == "comptable"
+
+
+def is_cif_niche_preset(niche_preset_id: str) -> bool:
+    return legal_audience_from_niche_preset(niche_preset_id) == "cif"
 
 
 def get_cvg_markdown(*, audience: str = "buyer") -> str:
@@ -33,9 +51,11 @@ def get_confidentialite_markdown() -> str:
     return _read_doc_file("confidentialite.md")
 
 
-def get_ai_reply_knowledge_markdown(*, comptable: bool = False) -> str:
-    if comptable:
+def get_ai_reply_knowledge_markdown(*, audience: str = "agence") -> str:
+    if audience == "comptable":
         return _read_doc_file("ai-reply-knowledge-comptable.md")
+    if audience == "cif":
+        return _read_doc_file("ai-reply-knowledge-cif.md")
     return _read_doc_file("ai-reply-knowledge.md")
 
 
@@ -72,8 +92,8 @@ def extract_entreprise_faq(markdown: str) -> str:
     return "\n\n".join(rows)
 
 
-def format_comptable_faq() -> str:
-    faq_path = _REPO_ROOT / "content" / "faq" / "comptable.json"
+def format_faq_for_audience(audience: str) -> str:
+    faq_path = _REPO_ROOT / "content" / "faq" / f"{audience}.json"
     if not faq_path.is_file():
         return ""
     data = json.loads(faq_path.read_text(encoding="utf-8"))
@@ -87,9 +107,15 @@ def format_comptable_faq() -> str:
     return "\n\n".join(rows)
 
 
-def _speaking_to_label(target_type: str, comptable: bool) -> str:
-    if comptable:
+def format_comptable_faq() -> str:
+    return format_faq_for_audience("comptable")
+
+
+def _speaking_to_label(target_type: str, audience: str) -> str:
+    if audience == "comptable":
         return "cabinet EC (Buyer)" if target_type == "buyer" else "dirigeant TPE (Seller)"
+    if audience == "cif":
+        return "cabinet CIF (Buyer)" if target_type == "buyer" else "dirigeant PME (Seller)"
     return "agence (Buyer)" if target_type == "buyer" else "entreprise (Seller)"
 
 
@@ -115,14 +141,19 @@ def _build_knowledge_pack_uncached(
     niche_angle: str,
     niche_effectif: str,
 ) -> str:
-    comptable = is_comptable_niche_preset(niche_preset_id)
-    ai_reply_knowledge = get_ai_reply_knowledge_markdown(comptable=comptable)
-    overview = (_REPO_ROOT / "doc/tech-stack/00-overview.md").read_text(encoding="utf-8")
+    audience = legal_audience_from_niche_preset(niche_preset_id)
+    pack_audience = audience if audience in {"comptable", "cif"} else "agence"
+    ai_reply_knowledge = get_ai_reply_knowledge_markdown(audience=pack_audience)
+    overview = (_REPO_ROOT / "doc/tech-stack" / "00-overview.md").read_text(encoding="utf-8")
 
-    if comptable:
+    if pack_audience == "comptable":
         faq_section = format_comptable_faq()
         faq_heading = "## FAQ comptable (Buyer/Seller)"
         faq_fallback = "Cabinet > 3 associés. Dirigeant TPE : service gratuit."
+    elif pack_audience == "cif":
+        faq_section = format_faq_for_audience("cif")
+        faq_heading = "## FAQ CIF (Buyer/Seller)"
+        faq_fallback = "Cabinet CIF min. 2 associés. Dirigeant PME : service gratuit."
     else:
         deliverance = (_REPO_ROOT / "doc/tech-stack/deliverance/front-client.md").read_text(
             encoding="utf-8"
@@ -149,5 +180,5 @@ def _build_knowledge_pack_uncached(
     ]
     if niche_effectif:
         parts.append(f"Target size: {niche_effectif}")
-    parts.append(f"Speaking to: {_speaking_to_label(target_type, comptable)}")
+    parts.append(f"Speaking to: {_speaking_to_label(target_type, pack_audience)}")
     return "\n".join(parts)

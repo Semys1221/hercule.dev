@@ -9,6 +9,7 @@ import {
   markLeadBooked,
 } from "./supabase";
 import {
+  isCabinetBuyerCategory,
   isMeetingBookedStatus,
   type LeadCategory,
   type LeadLookup,
@@ -103,7 +104,7 @@ async function persistBookingSideEffects(
   lookup: LeadLookup,
   params: BookLeadFromCalendlyParams,
 ): Promise<LeadLookup> {
-  if (lookup.category !== "agence" && lookup.category !== "comptable") {
+  if (lookup.category !== "agence" && !isCabinetBuyerCategory(lookup.category)) {
     return lookup;
   }
 
@@ -112,6 +113,7 @@ async function persistBookingSideEffects(
     await upsertSalesCallFromBooking(client, {
       agenceId: lookup.category === "agence" ? lookup.lead.id : null,
       comptableId: lookup.category === "comptable" ? lookup.lead.id : null,
+      cifId: lookup.category === "cif" ? lookup.lead.id : null,
       email: lookup.lead.email,
       inviteeUri: params.invitee.inviteeUri,
       scheduledAt: params.scheduledAt ?? lookup.lead.scheduled_at,

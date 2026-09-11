@@ -12,6 +12,7 @@ export type UpsertSalesCallParams = {
   agenceId?: string | null;
   entrepriseId?: string | null;
   comptableId?: string | null;
+  cifId?: string | null;
   email: string;
   inviteeUri: string;
   scheduledAt?: string | null;
@@ -44,6 +45,9 @@ export async function upsertSalesCallFromBooking(
     if (params.comptableId && !existing.comptable_id) {
       patch.comptable_id = params.comptableId;
     }
+    if (params.cifId && !existing.cif_id) {
+      patch.cif_id = params.cifId;
+    }
     if (params.scheduledAt) {
       patch.scheduled_at = params.scheduledAt;
     }
@@ -70,6 +74,7 @@ export async function upsertSalesCallFromBooking(
       agence_id: params.agenceId ?? null,
       entreprise_id: params.entrepriseId ?? null,
       comptable_id: params.comptableId ?? null,
+      cif_id: params.cifId ?? null,
       email: normalizedEmail,
       calendly_invitee_uri: params.inviteeUri,
       scheduled_at: params.scheduledAt ?? null,

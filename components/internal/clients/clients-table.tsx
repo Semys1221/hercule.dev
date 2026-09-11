@@ -41,7 +41,7 @@ function StatutBadge({ statut }: { statut: string }) {
 
 function dashboardPreviewUrl(row: ClientRow): string | null {
   if (row.dashboardLink) return row.dashboardLink;
-  if (row.category === "agence" || row.category === "comptable") {
+  if (row.category === "agence" || row.category === "comptable" || row.category === "cif") {
     return `/dashboard/${row.slug}`;
   }
   return null;

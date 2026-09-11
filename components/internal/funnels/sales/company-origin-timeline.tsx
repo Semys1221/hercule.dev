@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { LEGAL_ENTITY } from "@/lib/constants";
 import type { Audience } from "@/lib/admin/navigation";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import { cn } from "@/lib/utils";
 
 type CompanyOriginStep = {
@@ -51,8 +52,21 @@ const COMPTABLE_COMPANY_ORIGIN_STEPS: CompanyOriginStep[] = [
   },
 ];
 
+const CIF_COMPANY_ORIGIN_STEPS: CompanyOriginStep[] = [
+  ...AGENCE_COMPANY_ORIGIN_STEPS.slice(0, -1),
+  {
+    year: "2026",
+    title: "Hercule CIF",
+    description:
+      "Extension du modèle Hercule aux cabinets CIF / CGP : Live Qualification dirigeants PME, provision Calendly/Zoom, 0 % commission sur les honoraires.",
+  },
+];
+
 function getCompanyOriginSteps(audience: Audience): CompanyOriginStep[] {
-  return audience === "comptable"
+  if (audience === "cif") {
+    return CIF_COMPANY_ORIGIN_STEPS;
+  }
+  return isCabinetBuyerSalesAudience(audience)
     ? COMPTABLE_COMPANY_ORIGIN_STEPS
     : AGENCE_COMPANY_ORIGIN_STEPS;
 }

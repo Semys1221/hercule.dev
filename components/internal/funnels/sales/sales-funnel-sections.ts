@@ -3,6 +3,7 @@ import {
   interpolateClientSegment,
   type ClientSegment,
 } from "@/lib/admin/funnels/client-segment";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export type SalesFunnelSectionId =
   | "rendez-vous"
@@ -102,7 +103,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Objectifs",
     title: "Objectifs & douleur",
     subtitle:
-      "Comprendre la situation actuelle, la capacité disponible pour de nouveaux dossiers {clientSegment} et l'écart avec l'objectif avant de présenter Hercule Comptable.",
+      "Comprendre la situation actuelle, la capacité disponible et l'écart avec l'objectif avant de présenter Hercule Comptable.",
   },
   {
     id: "presentation-societe",
@@ -156,11 +157,14 @@ const COMPTABLE_INTRO_CONFIRMATION_TEXT =
 const COMPTABLE_PRESENTATION_CONFIRMATION_TEXT =
   "J'ai pris connaissance de la présentation de Hercule Comptable et des conditions générales de vente.";
 
+const CIF_PRESENTATION_CONFIRMATION_TEXT =
+  "J'ai pris connaissance de la présentation de Hercule CIF et des conditions générales de vente.";
+
 export function getIntroConfirmationText(
   audience: Audience = "agence",
   clientSegment?: ClientSegment,
 ): string {
-  if (audience === "comptable") {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return clientSegment
       ? interpolateClientSegment(COMPTABLE_INTRO_CONFIRMATION_TEXT, clientSegment)
       : COMPTABLE_INTRO_CONFIRMATION_TEXT.replace("{clientSegment}", "TPE");
@@ -169,6 +173,9 @@ export function getIntroConfirmationText(
 }
 
 export function getPresentationConfirmationText(audience: Audience = "agence"): string {
+  if (audience === "cif") {
+    return CIF_PRESENTATION_CONFIRMATION_TEXT;
+  }
   return audience === "comptable"
     ? COMPTABLE_PRESENTATION_CONFIRMATION_TEXT
     : PRESENTATION_CONFIRMATION_TEXT;
@@ -179,9 +186,9 @@ export function getSalesFunnelSections(
   clientSegment?: ClientSegment,
 ): SalesFunnelSection[] {
   const sections =
-    audience === "comptable" ? COMPTABLE_SALES_FUNNEL_SECTIONS : AGENCE_SALES_FUNNEL_SECTIONS;
+    isCabinetBuyerSalesAudience(audience) ? COMPTABLE_SALES_FUNNEL_SECTIONS : AGENCE_SALES_FUNNEL_SECTIONS;
 
-  if (audience !== "comptable" || !clientSegment) {
+  if (!isCabinetBuyerSalesAudience(audience) || !clientSegment) {
     return sections;
   }
 

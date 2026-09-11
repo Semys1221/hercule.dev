@@ -25,4 +25,4 @@ export type DashboardRetraction = {
   firstContratWorkingDays: number;
 };
 
-export type RetractionAudience = Extract<LeadCategory, "agence" | "comptable">;
+export type RetractionAudience = Extract<LeadCategory, "agence" | "comptable" | "cif">;

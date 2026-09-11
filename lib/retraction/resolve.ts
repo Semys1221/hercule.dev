@@ -52,7 +52,7 @@ export function resolveDashboardRetraction(params: {
     canWaive,
     activationAt: activation?.toISOString() ?? null,
     firstContratWorkingDays:
-      params.category === "comptable"
+      params.category === "comptable" || params.category === "cif"
         ? comptableFirstRdvCalendarDays(status)
         : firstContratWorkingDays(status, params.isFastCheckout ?? false),
   };

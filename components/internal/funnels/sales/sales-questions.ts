@@ -450,19 +450,30 @@ import {
   COMPTABLE_SALES_QUESTIONS,
   COMPTABLE_SLIDER_CONFIGS,
 } from "./sales-questions-comptable";
+import {
+  COMPTABLE_MONTHLY_MIN as CIF_MONTHLY_MIN,
+  COMPTABLE_SALES_QUESTIONS as CIF_SALES_QUESTIONS,
+  COMPTABLE_SLIDER_CONFIGS as CIF_SLIDER_CONFIGS,
+} from "./sales-questions-cif";
 import { AGENCE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-agence";
 import { COMPTABLE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-comptable";
+import { COMPTABLE_OBJECTIFS_QUESTIONS as CIF_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-cif";
 import { ENTREPRISE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-entreprise";
 
 export function getHerculeMonthlyMin(audience: Audience = "agence"): number {
+  if (audience === "cif") return CIF_MONTHLY_MIN;
   return isComptableSalesAudience(audience) ? COMPTABLE_MONTHLY_MIN : HERCULE_MONTHLY_MIN;
 }
 
 export function getSliderConfigs(audience: Audience = "agence") {
+  if (audience === "cif") return CIF_SLIDER_CONFIGS;
   return isComptableSalesAudience(audience) ? COMPTABLE_SLIDER_CONFIGS : SLIDER_CONFIGS;
 }
 
 function getObjectifsQuestions(audience: Audience): SalesQuestion[] {
+  if (audience === "cif") {
+    return CIF_OBJECTIFS_QUESTIONS;
+  }
   if (isComptableSalesAudience(audience)) {
     return COMPTABLE_OBJECTIFS_QUESTIONS;
   }
@@ -473,9 +484,12 @@ function getObjectifsQuestions(audience: Audience): SalesQuestion[] {
 }
 
 export function getSalesQuestions(audience: Audience = "agence"): SalesQuestion[] {
-  const baseQuestions = isComptableSalesAudience(audience)
-    ? COMPTABLE_SALES_QUESTIONS
-    : SALES_QUESTIONS;
+  const baseQuestions =
+    audience === "cif"
+      ? CIF_SALES_QUESTIONS
+      : isComptableSalesAudience(audience)
+        ? COMPTABLE_SALES_QUESTIONS
+        : SALES_QUESTIONS;
   return [...getObjectifsQuestions(audience), ...baseQuestions];
 }
 
@@ -483,41 +497,7 @@ export function getSalesQuestionsForSection(
   sectionId: Exclude<SalesFunnelSectionId, "rendez-vous">,
   audience: Audience = "agence",
 ): SalesQuestion[] {
-  const questions = getSalesQuestions(audience).filter(
-    (question) => question.sectionId === sectionId,
-  );
-
-  // #region agent log
-  if (sectionId === "objectifs" && typeof fetch !== "undefined") {
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "848ca9",
-      },
-      body: JSON.stringify({
-        sessionId: "848ca9",
-        runId: "pre-fix",
-        hypothesisId: "H1-H3",
-        location: "sales-questions.ts:getSalesQuestionsForSection",
-        message: "Objectifs question order resolved",
-        data: {
-          audience,
-          sectionId,
-          questionOrder: questions.map((q) => ({ id: q.id, number: q.number, type: q.type })),
-          sourceArray: isComptableSalesAudience(audience)
-            ? "COMPTABLE_OBJECTIFS_QUESTIONS"
-            : audience === "entreprise"
-              ? "ENTREPRISE_OBJECTIFS_QUESTIONS"
-              : "AGENCE_OBJECTIFS_QUESTIONS",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-
-  return questions;
+  return getSalesQuestions(audience).filter((question) => question.sectionId === sectionId);
 }
 
 export function getSalesQuestionById(

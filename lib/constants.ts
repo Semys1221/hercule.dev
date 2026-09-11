@@ -1,5 +1,6 @@
 export const CALENDLY_AGENCE_URL = "/reservation.html"
 export const CALENDLY_ENTREPRISE_URL = "/reservation-entreprise.html"
+export const CALENDLY_CIF_URL = "/reservation-cif.html"
 
 /** When true, agence Calendly booking is disabled — reservation.html shows a waitlist message. */
 export const AGENCE_BOOKING_CLOSED = true

@@ -5,6 +5,7 @@ import { formatContractWindow } from "@/lib/admin/funnels/sales-preset-registry"
 import type { ClientSegment } from "@/lib/admin/funnels/client-segment";
 import { interpolateClientSegment } from "@/lib/admin/funnels/client-segment";
 import type { Audience } from "@/lib/admin/navigation";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import { getSecteurConfig } from "@/lib/agence/secteur-config";
 import {
   Item,
@@ -47,7 +48,7 @@ export function SalesCalendrierBookingLegend({
         className="space-y-2"
         aria-live={showBookingLive ? "polite" : undefined}
         aria-label={
-          audience === "comptable"
+          isCabinetBuyerSalesAudience(audience)
             ? clientSegment
               ? interpolateClientSegment(
                   "Rendez-vous planifiés par mission {clientSegment}",

@@ -332,7 +332,7 @@ def _campaign_calendly_event(campaign_id: str) -> str | None:
             .execute()
         )
         niche = str((resp.data or {}).get("niche") or "").strip()
-        if niche in {"agence", "comptable", "entreprise"}:
+        if niche in {"agence", "comptable", "entreprise", "cif"}:
             return niche
     except Exception:
         return None
@@ -706,6 +706,43 @@ def _execute_send(
 
     body_html = template["body_html"]
     source_html = html_override if html_override is not None else body_html
+    if flow == "interested_email1":
+        # #region agent log
+        import json
+        import urllib.request
+
+        try:
+            payload = json.dumps(
+                {
+                    "sessionId": "7cb08d",
+                    "location": "send_queue.py:_dispatch_one",
+                    "message": "E1 template loaded for send",
+                    "data": {
+                        "hasPartenaires": "cabinets partenaires" in source_html,
+                        "ctaBeforeEligibility": source_html.find("19 septembre")
+                        < source_html.find("au minimum 2"),
+                        "hasEcommerce": "agences e-commerce" in source_html,
+                    },
+                    "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
+                    "hypothesisId": "B,C",
+                    "runId": "post-fix",
+                }
+            ).encode()
+            urllib.request.urlopen(
+                urllib.request.Request(
+                    "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
+                    data=payload,
+                    headers={
+                        "Content-Type": "application/json",
+                        "X-Debug-Session-Id": "7cb08d",
+                    },
+                    method="POST",
+                ),
+                timeout=1,
+            )
+        except Exception:
+            pass
+        # #endregion
     vars_map = _template_vars(lead, body_html=source_html, campaign_id=campaign_id)
     html = _render_template(source_html, vars_map)
     subject = thread["subject"] or template["subject"] or "your message"

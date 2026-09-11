@@ -15,7 +15,7 @@ import {
   type ComptableSocialPaieMode,
 } from "@/components/internal/funnels/sales/sales-questions-comptable";
 import type { SalesFunnelSectionId } from "@/components/internal/funnels/sales/sales-funnel-sections";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 
 export const SALES_SKIP_VALUE = "__skip__";
@@ -92,7 +92,7 @@ function buildComptableQualificationSchema() {
 }
 
 export function getSalesQualificationSchema(audience: Audience = "agence") {
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return buildComptableQualificationSchema();
   }
   return buildAgenceQualificationSchema(getHerculeMonthlyMin(audience));
@@ -146,7 +146,7 @@ export function getSalesQualificationDefaultValues(
 ): SalesQualificationValues {
   const sliders = getSliderConfigs(audience);
 
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return {
       introConfirmed: false,
       presentationConfirmed: false,
@@ -268,14 +268,14 @@ function isFieldComplete(
   }
 
   if (key === "q13") {
-    if (isComptableSalesAudience(audience)) {
+    if (isCabinetBuyerSalesAudience(audience)) {
       return typeof value === "number" && value >= COMPTABLE_ANNUAL_MIN;
     }
     return value === null || typeof value === "number";
   }
 
   if (key === "q14") {
-    if (isComptableSalesAudience(audience)) {
+    if (isCabinetBuyerSalesAudience(audience)) {
       return isComptableQ14(values.q14);
     }
     const matrix = values.q14;
@@ -290,21 +290,21 @@ function isFieldComplete(
   }
 
   if (key === "q15") {
-    if (isComptableSalesAudience(audience)) {
+    if (isCabinetBuyerSalesAudience(audience)) {
       return typeof value === "string" && value.length > 0;
     }
     return isConditionalSliderComplete(value as ConditionalSliderValue);
   }
 
   if (key === "q16") {
-    if (isComptableSalesAudience(audience)) {
+    if (isCabinetBuyerSalesAudience(audience)) {
       return value === null || typeof value === "number";
     }
     return isConditionalSliderComplete(value as ConditionalSliderValue);
   }
 
   if (key === "q17" || key === "q18") {
-    if (isComptableSalesAudience(audience)) {
+    if (isCabinetBuyerSalesAudience(audience)) {
       return value === SALES_SKIP_VALUE;
     }
     return isConditionalSliderComplete(value as ConditionalSliderValue);
@@ -345,7 +345,7 @@ export function isSalesSectionComplete(
     return Boolean(values.q2Other?.trim());
   }
 
-  if (sectionId === "standards" && isComptableSalesAudience(audience)) {
+  if (sectionId === "standards" && isCabinetBuyerSalesAudience(audience)) {
     return values.q21.length > 0 && values.q21.length <= 3;
   }
 
@@ -403,7 +403,7 @@ export function mergeSalesQualificationValues(
     ...partial,
   };
 
-  if (isComptableSalesAudience(audience)) {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return merged;
   }
 

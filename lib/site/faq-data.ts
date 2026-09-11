@@ -1,4 +1,5 @@
 import agenceFaqData from "@/content/faq/agence.json";
+import cifFaqData from "@/content/faq/cif.json";
 import comptableFaqData from "@/content/faq/comptable.json";
 import entrepriseFaqData from "@/content/faq/entreprise.json";
 import type { FaqAudience, FaqComponentConfig, FaqDocument, FaqEntry } from "@/lib/site/faq-types";
@@ -8,6 +9,7 @@ const BUNDLED_FAQ: Record<FaqAudience, FaqDocument> = {
   agence: faqDocumentSchema.parse(agenceFaqData),
   entreprise: faqDocumentSchema.parse(entrepriseFaqData),
   comptable: faqDocumentSchema.parse(comptableFaqData),
+  cif: faqDocumentSchema.parse(cifFaqData),
 };
 
 export function getFaqEntries(audience: FaqAudience): FaqEntry[] {
@@ -32,6 +34,7 @@ const FAQ_TITLES: Record<FaqAudience, string> = {
   agence: "FAQ agence",
   entreprise: "FAQ entreprise",
   comptable: "FAQ comptable",
+  cif: "FAQ conseiller financier",
 };
 
 export function faqEntriesToMarkdown(audience: FaqAudience, entries: FaqEntry[]): string {

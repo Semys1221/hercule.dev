@@ -13,17 +13,17 @@ export type EmailVariableDefinition = {
 export const EMAIL_VARIABLE_CATALOG: EmailVariableDefinition[] = [
   {
     key: "firstNameLine",
-    niches: ["agence", "comptable", "entreprise"],
+    niches: ["agence", "comptable", "entreprise", "cif"],
     family: "booking",
   },
   {
     key: "date",
-    niches: ["agence", "comptable", "entreprise"],
+    niches: ["agence", "comptable", "entreprise", "cif"],
     family: "booking",
   },
   {
     key: "heure",
-    niches: ["agence", "comptable", "entreprise"],
+    niches: ["agence", "comptable", "entreprise", "cif"],
     family: "booking",
   },
   {
@@ -34,7 +34,7 @@ export const EMAIL_VARIABLE_CATALOG: EmailVariableDefinition[] = [
   },
   {
     key: "confirmLink",
-    niches: ["agence", "comptable", "entreprise"],
+    niches: ["agence", "comptable", "entreprise", "cif"],
     family: "booking",
   },
   {
@@ -61,20 +61,32 @@ export const EMAIL_VARIABLE_CATALOG: EmailVariableDefinition[] = [
     supabaseColumn: "reservation_comptable_link",
   },
   {
+    key: "reservation_cif_link",
+    niches: ["cif"],
+    family: "outreach",
+    supabaseColumn: "reservation_cif_link",
+  },
+  {
+    key: "confirmation_cif_link",
+    niches: ["cif"],
+    family: "booking",
+    supabaseColumn: "confirmation_cif_link",
+  },
+  {
     key: "dashboardLink",
-    niches: ["agence", "comptable", "entreprise"],
+    niches: ["agence", "comptable", "entreprise", "cif"],
     family: "product",
     supabaseColumn: "dashboard_link",
   },
   {
     key: "email",
-    niches: ["agence", "comptable", "entreprise"],
+    niches: ["agence", "comptable", "entreprise", "cif"],
     family: "product",
     supabaseColumn: "email",
   },
   {
     key: "company",
-    niches: ["agence", "comptable", "entreprise"],
+    niches: ["agence", "comptable", "entreprise", "cif"],
     family: "product",
     supabaseColumn: "company",
   },
