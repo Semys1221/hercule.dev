@@ -89,7 +89,7 @@ export function buildComptableActivationMilestones(params: {
     },
     {
       id: "first_rdv",
-      label: "Premier RDV planifié",
+      label: "Premier RDV planifié (délai maximal)",
       estimatedAt: formatFrenchDateRange(firstRdvMin, firstRdvMax),
       status: status === "pending" ? "pending" : isPast(firstRdvMax) ? "done" : "active",
     },

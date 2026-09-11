@@ -92,7 +92,7 @@ describe("buildComptableActivationMilestones", () => {
       now: new Date("2026-09-09T00:00:00.000Z"),
     });
 
-    expect(milestones[1]?.label).toBe("Premier RDV planifié");
+    expect(milestones[1]?.label).toBe("Premier RDV planifié (délai maximal)");
     expect(milestones[1]?.estimatedAt).toMatch(/à/);
     expect(milestones[2]?.label).toBe("2ème mission attribuée");
     expect(milestones[3]?.label).toBe("3ème mission attribuée");
