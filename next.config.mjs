@@ -61,6 +61,21 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/agence",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/agence/:path*",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/cvg/comptable",
+        destination: "/cvg",
+        permanent: true,
+      },
+      {
         source: "/dashboard.html",
         destination: "/",
         permanent: false,

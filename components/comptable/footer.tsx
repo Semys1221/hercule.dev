@@ -10,9 +10,9 @@ const footerLinks: Record<string, { label: string; href: string }[]> = {
     { label: "FAQ", href: "/faq" },
     { label: "Contact", href: "#contact" },
   ],
-  Hercule: [{ label: "Espace agences web", href: "/agence" }],
+  Hercule: [{ label: "La société", href: "/a-propos" }],
   Légal: [
-    { label: "CGV", href: "/cvg/comptable" },
+    { label: "CGV", href: "/cvg" },
     { label: "Mentions légales", href: "/mentions-legales" },
     { label: "Confidentialité", href: "/confidentialite" },
   ],

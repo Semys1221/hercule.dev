@@ -263,13 +263,49 @@ export function PricingCard({
               <div
                 className={cn(
                   "flex flex-col",
-                  compact ? "mt-auto gap-6 pt-6" : showCheckoutCta || (plan.featured && !compact) ? "mt-6 gap-6" : "",
+                  compact ? "mt-auto gap-4 pt-6" : showCheckoutCta || (plan.featured && !compact) ? "mt-6 gap-6" : "",
                 )}
               >
+                {showCollapsible && compact ? (
+                  <Collapsible open={open} onOpenChange={setOpen}>
+                    <CollapsibleTrigger
+                      type="button"
+                      onClick={(event) => event.stopPropagation()}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-4 py-2.5 text-sm font-medium text-neutral-200 transition-colors hover:bg-white/[0.06] data-[state=open]:border-white/15 data-[state=open]:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-white/20"
+                    >
+                      Ce qui est inclus
+                      <ChevronDown
+                        className={cn(
+                          "size-4 shrink-0 text-neutral-500 transition-transform duration-200",
+                          open && "rotate-180",
+                        )}
+                      />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0">
+                      <ul className="flex flex-col gap-3 px-1 pt-3">
+                        {plan.features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-3 text-sm text-neutral-400">
+                            <Check
+                              className={cn(
+                                "mt-0.5 size-4 shrink-0",
+                                plan.featured ? "text-[#0070F3]" : "text-neutral-400",
+                              )}
+                            />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
+                ) : null}
+
                 {showCheckoutCta ? (
                   <Button
                     type="button"
-                    onClick={onCtaClick}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onCtaClick?.();
+                    }}
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
                   >
                     {ctaLabel}
@@ -287,36 +323,35 @@ export function PricingCard({
                   </Button>
                 ) : null}
 
-                {showCollapsible ? (
+                {showCollapsible && !compact ? (
                   <Collapsible open={open} onOpenChange={setOpen}>
-                    <div className="border border-white/10 rounded-md overflow-hidden">
-                      <CollapsibleTrigger className="w-full flex items-center justify-between gap-2 px-4 py-2.5 border-0 rounded-none bg-transparent text-neutral-200 text-sm font-medium hover:bg-white/[0.04] transition-colors focus-visible:ring-2 focus-visible:ring-white/20">
-                        Ce qui est inclus
-                        <ChevronDown
-                          className={cn(
-                            "w-4 h-4 text-neutral-500 shrink-0 transition-transform duration-200",
-                            open && "rotate-180",
-                          )}
-                        />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out data-[state=closed]:grid-rows-[0fr] data-[state=open]:grid-rows-[1fr]">
-                        <div className="min-h-0 overflow-hidden">
-                          <ul className="space-y-3 px-4 pb-4 pt-3 border-t border-white/[0.06]">
-                            {plan.features.map((feature) => (
-                              <li key={feature} className="flex items-start gap-3 text-neutral-400 text-sm">
-                                <Check
-                                  className={cn(
-                                    "w-4 h-4 mt-0.5 shrink-0",
-                                    plan.featured ? "text-[#0070F3]" : "text-neutral-400",
-                                  )}
-                                />
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </CollapsibleContent>
-                    </div>
+                    <CollapsibleTrigger
+                      type="button"
+                      className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-4 py-2.5 text-sm font-medium text-neutral-200 transition-colors hover:bg-white/[0.06] data-[state=open]:border-white/15 data-[state=open]:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-white/20"
+                    >
+                      Ce qui est inclus
+                      <ChevronDown
+                        className={cn(
+                          "size-4 shrink-0 text-neutral-500 transition-transform duration-200",
+                          open && "rotate-180",
+                        )}
+                      />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0">
+                      <ul className="flex flex-col gap-3 px-1 pt-3">
+                        {plan.features.map((feature) => (
+                          <li key={feature} className="flex items-start gap-3 text-sm text-neutral-400">
+                            <Check
+                              className={cn(
+                                "mt-0.5 size-4 shrink-0",
+                                plan.featured ? "text-[#0070F3]" : "text-neutral-400",
+                              )}
+                            />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </CollapsibleContent>
                   </Collapsible>
                 ) : null}
               </div>

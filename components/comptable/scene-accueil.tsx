@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { motion } from "framer-motion"
 import { ApercuCrm } from "./apercu-crm"
 import { Navbar } from "./navbar"
@@ -91,13 +90,6 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 >
                   Voir les missions disponibles
                 </a>
-                <Link
-                  href="/agence"
-                  className="text-zinc-300 font-medium hover:text-white transition-colors flex items-center gap-2 text-sm"
-                >
-                  Je suis une agence web
-                  <span aria-hidden="true">→</span>
-                </Link>
               </motion.div>
             </div>
           </div>

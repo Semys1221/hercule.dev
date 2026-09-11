@@ -136,19 +136,19 @@ export const COMPTABLE_PERFORMANCE_REPORTING_INTRO =
 
 export const COMPTABLE_NICHE_BENCHMARK = {
   disadvantages: {
-    title: "Inconvénients de la niche",
+    title: "Contraintes de la niche",
     items: [
-      "Offre perçue comme une commodité — peu d'enthousiasme, peu de « rêve ».",
-      `Ticket bas : ~${formatComptableTypicalMonthlyHonoraires()} de tenue TPE (${COMPTABLE_TYPICAL_ANNUAL_HONORAIRES_LABEL} / an).`,
-      "Moins de marge narrative qu'un designer ou un SEO.",
+      "Service perçu comme interchangeable : faible projection aspirationnelle en vente.",
+      `Honoraires modérés : ~${formatComptableTypicalMonthlyHonoraires()} de tenue TPE (${COMPTABLE_TYPICAL_ANNUAL_HONORAIRES_LABEL} / an).`,
+      "Moins de marge argumentaire qu'en designer ou en SEO.",
     ],
   },
   advantages: {
-    title: "Avantages — pourquoi ça se signe",
+    title: "Atouts — pourquoi la lettre se signe",
     items: [
-      "Signature la plus simple des niches Hercule : process administratif plus que vente émotionnelle.",
-      "Besoin matériel et légal (compta, TVA, paie) — pas un achat de prestige comme un designer.",
-      "Peu besoin de convaincre : le dirigeant traite ça comme une obligation de première nécessité. Le vrai sujet est le changement de cabinet, pas « est-ce que j'ai besoin d'un comptable ».",
+      "Niche à la conversion la plus directe chez Hercule : démarche administrative plutôt que vente relationnelle.",
+      "Besoin réglementaire avéré (comptabilité, TVA, paie) — pas un achat d'image comme une identité visuelle.",
+      "Peu de conviction préalable à construire : le dirigeant considère l'expertise comme une obligation légale. L'enjeu du RDV est le changement de cabinet, pas la justification du recours à un expert-comptable.",
     ],
   },
 } as const;

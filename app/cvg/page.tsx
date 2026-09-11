@@ -5,12 +5,12 @@ import { MarkdownDocument } from "@/components/site/markdown-document"
 import { getCvgMarkdown } from "@/lib/site/cvg-content"
 
 export const metadata: Metadata = {
-  title: "Conditions Générales de Vente — Hercule",
-  description: "Conditions Générales de Vente du service Hercule.",
+  title: "Conditions Générales de Vente — Hercule Comptable",
+  description: "Conditions Générales de Vente du service Hercule pour les cabinets d'expertise comptable.",
 }
 
 export default function CvgPage() {
-  const content = getCvgMarkdown()
+  const content = getCvgMarkdown("comptable")
 
   return (
     <LegalPageShell>

@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,44 @@ export function OnboardingFormFields({
 
   const isPreview = mode === "preview";
   const fieldId = (suffix: string) => `${idPrefix}-${suffix}`;
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isPreview) {
+      return;
+    }
+
+    const root = rootRef.current;
+    const inputCount = root?.querySelectorAll("input").length ?? 0;
+    const labelCount = root?.querySelectorAll("label").length ?? 0;
+    const contentHeight = root?.scrollHeight ?? 0;
+
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "c39d02",
+      },
+      body: JSON.stringify({
+        sessionId: "c39d02",
+        runId: "pre-fix",
+        hypothesisId: "A,D",
+        location: "onboarding-form-fields.tsx:preview",
+        message: "agence preview form metrics",
+        data: {
+          component: "OnboardingFormFields",
+          mode,
+          inputCount,
+          labelCount,
+          contentHeight,
+          formFieldKeys: Object.keys(data.form ?? {}),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [isPreview, mode, data.form]);
 
   async function handleSubmit() {
     if (isPreview) return;
@@ -107,7 +145,7 @@ export function OnboardingFormFields({
   }
 
   return (
-    <div className="flex flex-col gap-4 py-2">
+    <div ref={rootRef} className="flex flex-col gap-4 py-2">
       {isPreview ? (
         <div>
           <h2 className="text-lg font-medium">Onboarding — aperçu</h2>

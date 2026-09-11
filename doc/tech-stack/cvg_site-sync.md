@@ -22,10 +22,10 @@ do_not:
 4. **2 500 €/mois** : **vitrine** uniquement avec footnote « non souscriptible » — jamais garanties MRR 3 000 € ni CTA de souscription réelle.
 5. **Rétractation** : **4 jours calendaires** (CGV §8) — cohérent FAQ + reservation.html.
 6. Après rewrite CGV, rejouer cette checklist sur :
-   - `components/agence/*`
-   - `content/pricing/agence.json`
-   - `content/faq/*`
-   - `public/reservation.html`
+   - `components/comptable/*`
+   - `content/pricing/comptable.json`
+   - `content/faq/comptable.json`
+   - `public/modalites-hercule.html`
 7. Tests : `FORBIDDEN_COPY` dans ENG-16 · `offer_type` `starter_1489_5` pour checkout entrée.
 
 ## Écarts historiques (ne plus rétablir)
@@ -43,7 +43,7 @@ do_not:
 
 ## Vertical comptable (2026-09-09)
 
-**CGV de référence :** [/cvg/comptable](/cvg/comptable) · **Knowledge reply agent :** [`ai-reply-knowledge-comptable.md`](./ai-reply-knowledge-comptable.md)
+**CGV de référence :** [/cvg](/cvg) · **Knowledge reply agent :** [`ai-reply-knowledge-comptable.md`](./ai-reply-knowledge-comptable.md)
 
 1. `content/pricing/comptable.json` ↔ `cvg_comptable.md` ↔ `COMMERCIAL_COMPTABLE` dans `lib/commercial/constants.ts`.
 2. Nomenclature canonique : **Hercule Lite** (998 €/mois, 5 missions/mois, abonnement) · **Hercule Starter** (1 499 €/mois, 10 missions/mois, abonnement) · **Pack 3 mois Starter** (3 598 €, paiement unique).
@@ -51,7 +51,7 @@ do_not:
 4. Site marketing : `components/comptable/comptable-pricing-grid.tsx` (flip Lite ↔ Pack + Starter).
 5. Sales live : `SalesComptablePricingPanel` → `ComptablePricingCheckout` (même grille).
 6. Dashboard onboarding : `StepPricingCardComptable` doit réutiliser `ComptablePricingGrid` — pas de plan ID `plan-comptable-croissance`.
-7. Reply agent : preset `cabinets_expertise_comptable` — prompts `prompts/cabinets_expertise_comptable_*.md`, knowledge pack comptable, CTA `{reservation_comptable_link}`, tarifs → `hercule.dev/cvg/comptable` sans chiffrer.
+7. Reply agent : preset `cabinets_expertise_comptable` — prompts `prompts/cabinets_expertise_comptable_*.md`, knowledge pack comptable, CTA `{reservation_comptable_link}`, tarifs → `hercule.dev/cvg` sans chiffrer.
 
 ### Interdits comptable (copy)
 

@@ -47,6 +47,7 @@ export type OpportunityCardBlueprint = {
   prestation: string;
   historiqueAgences: string;
   zone: string;
+  origine?: string;
   companyNameBlurred: string;
   domainBlurred: string;
   contactEmail: string;
@@ -864,6 +865,7 @@ const COMPTABLE_RAW_BLUEPRINTS: Omit<
     prestation: "Reprise tenue + déclarations TVA — brasserie 12 couverts",
     historiqueAgences: "Gestion interne — dirigeant saturé",
     zone: "Lyon",
+    origine: "Saison estivale",
     companyNameBlurred: "Brasserie ****",
     domainBlurred: "****.fr",
   },
@@ -879,6 +881,7 @@ const COMPTABLE_RAW_BLUEPRINTS: Omit<
     prestation: "Liasse fiscale + TVA — artisan BTP local",
     historiqueAgences: "Expert-comptable indépendant — départ retraite",
     zone: "Nantes",
+    origine: "Passage micro → réel",
     companyNameBlurred: "Sarl ****",
     domainBlurred: "****.artisan",
   },
@@ -894,6 +897,7 @@ const COMPTABLE_RAW_BLUEPRINTS: Omit<
     prestation: "Mission social / paie récurrente — structure en croissance",
     historiqueAgences: "Gestion interne — charge sociale croissante",
     zone: "Bordeaux",
+    origine: "Marchés publics remportés",
     companyNameBlurred: "**** BTP",
     domainBlurred: "****.pro",
   },
@@ -909,6 +913,7 @@ const COMPTABLE_RAW_BLUEPRINTS: Omit<
     prestation: "Tenue e-commerce + TVA marketplace — boutique en ligne",
     historiqueAgences: "Cabinet précédent — suivi insuffisant",
     zone: "Paris",
+    origine: "Croissance CA",
     companyNameBlurred: "**** Shop",
     domainBlurred: "****.store",
   },
@@ -924,6 +929,7 @@ const COMPTABLE_RAW_BLUEPRINTS: Omit<
     prestation: "Reprise dossier structuré + obligations fiscales — profession libérale",
     historiqueAgences: "Première externalisation comptable",
     zone: "Île-de-France",
+    origine: "Recrutement salariés",
     companyNameBlurred: "Cabinet ****",
     domainBlurred: "****.med",
   },

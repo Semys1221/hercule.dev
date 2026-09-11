@@ -35,7 +35,7 @@ export function DashboardComptable({
 
   if (data.dashboardMode === "comptable_pending") {
     return (
-      <OnboardingComptableWizard data={data} />
+      <OnboardingComptableWizard data={data} onRefresh={onRefresh} />
     );
   }
 

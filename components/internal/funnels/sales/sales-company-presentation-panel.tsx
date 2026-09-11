@@ -181,7 +181,7 @@ export function SalesCompanyPresentationPanel({
   const teamMembers = isComptable ? COMPTABLE_TEAM : TEAM;
   const modelHighlights = isComptable ? COMPTABLE_MODEL_HIGHLIGHTS : MODEL_HIGHLIGHTS;
   const qualificationCriteria = getEnterpriseQualificationCriteria(audience);
-  const cvgHref = isComptable ? "/cvg/comptable" : "/cvg";
+  const cvgHref = "/cvg"
   return (
     <div className="mx-auto w-full max-w-3xl space-y-12 text-left">
       <div className="flex justify-center">

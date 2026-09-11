@@ -1,11 +1,21 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  DASHBOARD_DEV_SKIP_PAYMENT_CTA,
+  DASHBOARD_DEV_SKIP_PAYMENT_ERROR,
+  DASHBOARD_DEV_SKIP_PAYMENT_LOADING,
+} from "@/lib/admin/funnels/ui-copy";
 import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
+import {
+  getDashboardDeveloperModeEnabledServerSnapshot,
+  getDashboardDeveloperModeEnabledSnapshot,
+  subscribeDashboardDeveloperModeEnabled,
+} from "@/lib/dashboard/developer-mode";
 import type { DashboardData } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
@@ -21,9 +31,13 @@ const STEP_COUNT = 6;
 
 type OnboardingComptableWizardProps = {
   data: DashboardData;
+  onRefresh?: () => void;
 };
 
-export function OnboardingComptableWizard({ data }: OnboardingComptableWizardProps) {
+export function OnboardingComptableWizard({
+  data,
+  onRefresh,
+}: OnboardingComptableWizardProps) {
   const [step, setStep] = useState(0);
   const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable>(
     OFFER_TYPES_COMPTABLE.monthly1499,
@@ -31,7 +45,14 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
+  const [skipLoading, setSkipLoading] = useState(false);
+  const [skipError, setSkipError] = useState<string | null>(null);
   const checkoutPreloadStartedRef = useRef(false);
+  const developerModeEnabled = useSyncExternalStore(
+    subscribeDashboardDeveloperModeEnabled,
+    getDashboardDeveloperModeEnabledSnapshot,
+    getDashboardDeveloperModeEnabledServerSnapshot,
+  );
   const progressValue = ((step + 1) / STEP_COUNT) * 100;
 
   const greeting = data.firstName || "Bonjour";
@@ -69,11 +90,11 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Debug-Session-Id": "569fa6",
+          "X-Debug-Session-Id": "de73f5",
         },
         body: JSON.stringify({
-          sessionId: "569fa6",
-          runId: "pre-fix",
+          sessionId: "de73f5",
+          runId: "post-fix",
           hypothesisId: "A",
           location: "onboarding-comptable-wizard.tsx:preloadCheckout",
           message: "checkout-comptable preload response",
@@ -84,6 +105,7 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
             error: body.error ?? null,
             offerType: selectedOffer,
             slug: data.slug,
+            developerModeEnabled,
           },
           timestamp: Date.now(),
         }),
@@ -104,7 +126,7 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
       setCheckoutPreloadError("Paiement indisponible");
       setCheckoutClientSecret(null);
     }
-  }, [data.slug, selectedOffer]);
+  }, [data.slug, selectedOffer, developerModeEnabled]);
 
   useEffect(() => {
     checkoutPreloadStartedRef.current = false;
@@ -130,18 +152,19 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Debug-Session-Id": "c71c85",
+        "X-Debug-Session-Id": "c39d02",
       },
       body: JSON.stringify({
-        sessionId: "c71c85",
+        sessionId: "c39d02",
         runId: "pre-fix",
-        hypothesisId: "A,C,D",
+        hypothesisId: "B,C",
         location: "onboarding-comptable-wizard.tsx:step2",
         message: "comptable wizard step 2 render context",
         data: {
           step,
           dashboardMode: data.dashboardMode,
           component: "StepComptableOnboardingFormPreview",
+          passesDataToFormStep: false,
           form: data.form,
           formKeys: Object.keys(data.form ?? {}),
         },
@@ -160,6 +183,31 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
 
   function goPrev() {
     setStep((current) => Math.max(current - 1, 0));
+  }
+
+  async function simulatePayment() {
+    setSkipLoading(true);
+    setSkipError(null);
+
+    try {
+      const response = await fetch(
+        `/api/dashboard/${encodeURIComponent(data.slug)}/dev-skip-payment`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ offerType: selectedOffer }),
+        },
+      );
+      const body = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(body.error ?? DASHBOARD_DEV_SKIP_PAYMENT_ERROR);
+      }
+      onRefresh?.();
+    } catch (err) {
+      setSkipError(err instanceof Error ? err.message : DASHBOARD_DEV_SKIP_PAYMENT_ERROR);
+    } finally {
+      setSkipLoading(false);
+    }
   }
 
   return (
@@ -238,20 +286,35 @@ export function OnboardingComptableWizard({ data }: OnboardingComptableWizardPro
             </AnimatePresence>
           </div>
 
-          {!isCheckoutStep && (
+          {(developerModeEnabled && isCheckoutStep) || !isCheckoutStep ? (
             <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" variant="outline" onClick={goPrev} disabled={step === 0}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={goPrev}
+                disabled={step === 0 || skipLoading}
+              >
                 Précédent
               </Button>
               <div className="ml-auto flex flex-wrap items-center gap-3">
-                {!isPricingStep && (
+                {developerModeEnabled && isCheckoutStep ? (
+                  <Button
+                    type="button"
+                    onClick={() => void simulatePayment()}
+                    disabled={skipLoading}
+                  >
+                    {skipLoading ? DASHBOARD_DEV_SKIP_PAYMENT_LOADING : DASHBOARD_DEV_SKIP_PAYMENT_CTA}
+                  </Button>
+                ) : null}
+                {!isPricingStep && !isCheckoutStep && (
                   <Button type="button" onClick={goNext} disabled={!canGoNext}>
                     Suivant
                   </Button>
                 )}
               </div>
             </div>
-          )}
+          ) : null}
+          {skipError ? <p className="text-sm text-destructive">{skipError}</p> : null}
         </div>
       </main>
     </div>

@@ -1,5 +1,5 @@
-import { Navbar } from "@/components/agence/navbar"
-import { Footer } from "@/components/agence/footer"
+import { Navbar } from "@/components/comptable/navbar"
+import { Footer } from "@/components/comptable/footer"
 
 export function LegalPageShell({ children }: { children: React.ReactNode }) {
   return (

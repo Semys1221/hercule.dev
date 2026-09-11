@@ -483,7 +483,41 @@ export function getSalesQuestionsForSection(
   sectionId: Exclude<SalesFunnelSectionId, "rendez-vous">,
   audience: Audience = "agence",
 ): SalesQuestion[] {
-  return getSalesQuestions(audience).filter((question) => question.sectionId === sectionId);
+  const questions = getSalesQuestions(audience).filter(
+    (question) => question.sectionId === sectionId,
+  );
+
+  // #region agent log
+  if (sectionId === "objectifs" && typeof fetch !== "undefined") {
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "848ca9",
+      },
+      body: JSON.stringify({
+        sessionId: "848ca9",
+        runId: "pre-fix",
+        hypothesisId: "H1-H3",
+        location: "sales-questions.ts:getSalesQuestionsForSection",
+        message: "Objectifs question order resolved",
+        data: {
+          audience,
+          sectionId,
+          questionOrder: questions.map((q) => ({ id: q.id, number: q.number, type: q.type })),
+          sourceArray: isComptableSalesAudience(audience)
+            ? "COMPTABLE_OBJECTIFS_QUESTIONS"
+            : audience === "entreprise"
+              ? "ENTREPRISE_OBJECTIFS_QUESTIONS"
+              : "AGENCE_OBJECTIFS_QUESTIONS",
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
+
+  return questions;
 }
 
 export function getSalesQuestionById(

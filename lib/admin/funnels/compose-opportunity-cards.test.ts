@@ -228,6 +228,14 @@ function main() {
     comptableCards.every((card) => card.budget.includes("/ an") || !card.budget.includes("/ mois")),
     "comptable cards should use annual honoraires, not monthly retainers",
   );
+  assert.ok(
+    comptableCards.every((card) => typeof card.origine === "string" && card.origine.length > 0),
+    "comptable cards should expose an origine signal",
+  );
+  assert.ok(
+    comptableCards.some((card) => card.origine === "Marchés publics remportés"),
+    "comptable cards should include Marchés publics remportés signal",
+  );
 
   function countTailleClasses(
     cards: ReturnType<typeof composeOpportunityCards>,

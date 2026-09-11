@@ -17,6 +17,7 @@ export type PresetOpportunityCard = {
   id: string;
   secteur: string;
   zone: string;
+  origine?: string;
   prestation: string;
   budget: string;
   budgetCents: number;

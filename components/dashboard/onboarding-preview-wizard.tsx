@@ -30,6 +30,35 @@ import { StepEmbeddedCheckout } from "./steps/step-embedded-checkout";
 
 const STEP_COUNT = 6;
 
+// #region agent log helper
+function logAgenceStep2Context(step: number, data: DashboardData) {
+  if (step !== 2) return;
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "c39d02",
+    },
+    body: JSON.stringify({
+      sessionId: "c39d02",
+      runId: "pre-fix",
+      hypothesisId: "B,D",
+      location: "onboarding-preview-wizard.tsx:step2",
+      message: "agence wizard step 2 render context",
+      data: {
+        step,
+        dashboardMode: data.dashboardMode,
+        component: "OnboardingFormFields",
+        passesDataToFormStep: true,
+        form: data.form,
+        formKeys: Object.keys(data.form ?? {}),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+}
+// #endregion
+
 type OnboardingPreviewWizardProps = {
   data: DashboardData;
   onRefresh: () => void;
@@ -112,6 +141,10 @@ export function OnboardingPreviewWizard({
 
     void preloadCheckout();
   }, [step, preloadCheckout]);
+
+  useEffect(() => {
+    logAgenceStep2Context(step, data);
+  }, [step, data]);
 
   function goNext() {
     setStep((current) => Math.min(current + 1, STEP_COUNT - 1));

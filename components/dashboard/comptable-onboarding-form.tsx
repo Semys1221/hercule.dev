@@ -65,7 +65,7 @@ export function ComptableOnboardingForm({ data, onSuccess }: ComptableOnboarding
           <Label htmlFor="comptable-cgv" className="cursor-pointer text-sm leading-snug font-normal">
             J&apos;accepte les{" "}
             <a
-              href="/cvg/comptable"
+              href="/cvg"
               target="_blank"
               rel="noopener noreferrer"
               className="underline underline-offset-2 hover:text-foreground"
@@ -79,7 +79,7 @@ export function ComptableOnboardingForm({ data, onSuccess }: ComptableOnboarding
 
       <RetractionWaiverFields
         idPrefix="comptable"
-        cvgHref="/cvg/comptable"
+        cvgHref="/cvg"
         checked={waiveRetraction}
         onCheckedChange={setWaiveRetraction}
       />

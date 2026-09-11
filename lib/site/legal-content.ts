@@ -28,11 +28,11 @@ export const CVG_DOC_METADATA: Record<
   },
   "sla-client": {
     title: "SLA client — Promesses externes",
-    description: "Délais et volumes promis aux agences partenaires Hercule.",
+    description: "Délais et volumes promis aux cabinets partenaires Hercule.",
   },
   "constants-commercial": {
     title: "Constantes commerciales",
-    description: "Source de vérité code pour les montants et offer types Hercule agence.",
+    description: "Source de vérité code pour les montants et offer types Hercule comptable.",
   },
 }
 
@@ -54,7 +54,7 @@ function cvgFilenameForAudience(audience: LegalAudience): string {
   return "cvg_master.md"
 }
 
-export function getCvgMarkdown(audience: LegalAudience = "agence"): string {
+export function getCvgMarkdown(audience: LegalAudience = "comptable"): string {
   return readDocFile(cvgFilenameForAudience(audience))
 }
 
@@ -70,14 +70,14 @@ export function isComptableNichePreset(presetId: string): boolean {
   return presetId.includes("comptable")
 }
 
-export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "agence"): string {
+export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "comptable"): string {
   if (audience === "comptable") {
     return readDocFile("ai-reply-knowledge-comptable.md")
   }
   return readDocFile("ai-reply-knowledge.md")
 }
 
-export function buildLegalKnowledgeMarkdown(audience: LegalAudience = "agence"): string {
+export function buildLegalKnowledgeMarkdown(audience: LegalAudience = "comptable"): string {
   return [
     "# Legal knowledge (ground truth)",
     "",

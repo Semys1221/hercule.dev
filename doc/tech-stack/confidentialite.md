@@ -6,7 +6,7 @@ audience: coding-agent
 ```
 
 > **Version :** 2026-09-06  
-> **Documents associés :** [cvg_master.md](./cvg_master.md) · [mentions_legales.md](./mentions_legales.md)
+> **Documents associés :** [cvg_comptable.md](./cvg_comptable.md) · [mentions_legales.md](./mentions_legales.md)
 
 ---
 
@@ -25,7 +25,7 @@ Contact : contact@hercule.dev
 ## Finalités
 
 - Exécution du contrat et fourniture du service Hercule
-- Qualification des demandes clients et audit de compatibilité des agences
+- Qualification des demandes clients et audit de compatibilité des cabinets d'expertise comptable
 - Organisation des rendez-vous commerciaux
 - Facturation, support et communication opérationnelle
 - Amélioration du service et suivi qualité

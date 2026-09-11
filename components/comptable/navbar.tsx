@@ -29,9 +29,6 @@ export function Navbar() {
             <Link href="/faq" className="text-sm text-zinc-400 hover:text-white transition-colors">
               FAQ
             </Link>
-            <Link href="/agence" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-              Je suis une agence →
-            </Link>
           </div>
           <div className="flex items-center gap-4">
             <a

@@ -1,8 +1,8 @@
 import Image from "next/image"
 import Link from "next/link"
 
-import { Navbar } from "@/components/agence/navbar"
-import { Footer } from "@/components/agence/footer"
+import { Navbar } from "@/components/comptable/navbar"
+import { Footer } from "@/components/comptable/footer"
 import { TEAM_IMAGE_URL } from "@/lib/constants"
 
 const TEAM = [
@@ -12,7 +12,7 @@ const TEAM = [
   },
   {
     name: "Béatrice",
-    role: "Qualification des demandes et relation avec les agences partenaires.",
+    role: "Qualification des demandes et relation avec les cabinets partenaires.",
   },
   {
     name: "Thomas",
@@ -55,9 +55,9 @@ export function CompanyAbout() {
               de la plateforme.
             </p>
             <p>
-              Aujourd&apos;hui, nous générons plus de 20 contrats par mois dans différents secteurs.
-              Nous auditons et qualifions les agences partenaires pour mettre en relation ces demandes avec les
-              profils les plus compatibles.
+              Aujourd&apos;hui, nous recevons et qualifions des demandes de dirigeants PME, puis sélectionnons les
+              cabinets d&apos;expertise comptable les plus compatibles pour leur attribuer des missions de tenue en
+              exclusivité.
             </p>
           </div>
 

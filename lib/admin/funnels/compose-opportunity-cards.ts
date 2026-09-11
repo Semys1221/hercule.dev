@@ -2,6 +2,7 @@ import {
   getOpportunityCardBlueprints,
   type OpportunityCardBlueprint,
 } from "@/lib/admin/funnels/opportunity-card-blueprints";
+import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 import {
   budgetKindFromPrestationType,
@@ -202,6 +203,7 @@ function blueprintToCard(
     id: `${blueprint.id}-${index}`,
     secteur: blueprint.secteur,
     zone: blueprint.zone,
+    origine: blueprint.origine,
     prestation: blueprint.prestation,
     budget: formatOpportunityBudget(budgetCents, budgetKind),
     budgetCents,
@@ -271,6 +273,36 @@ export function composeOpportunityCards(
   });
 
   validateOpportunityCardSet(cards, floorCents);
+
+  // #region agent log
+  if (isComptableSalesAudience(audience) && typeof fetch !== "undefined") {
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "848ca9",
+      },
+      body: JSON.stringify({
+        sessionId: "848ca9",
+        runId: "post-fix",
+        hypothesisId: "H1-H4",
+        location: "compose-opportunity-cards.ts:composeOpportunityCards",
+        message: "Comptable eligible cards composed",
+        data: {
+          audience,
+          cards: cards.map((card) => ({
+            id: card.id,
+            secteur: card.secteur,
+            origine: card.origine ?? null,
+          })),
+          hasMarchesPublics: cards.some((card) => card.origine === "Marchés publics remportés"),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
+
   return cards;
 }
 

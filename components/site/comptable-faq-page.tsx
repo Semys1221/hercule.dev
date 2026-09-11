@@ -14,7 +14,7 @@ function FaqAnswer({ answer, cvgLink }: { answer: string; cvgLink?: boolean }) {
       {cvgLink && (
         <>
           {" "}
-          <Link href="/cvg/comptable" className="text-zinc-300 hover:text-white underline underline-offset-2">
+          <Link href="/cvg" className="text-zinc-300 hover:text-white underline underline-offset-2">
             Voir les CGV
           </Link>
         </>

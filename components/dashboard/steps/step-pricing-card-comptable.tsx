@@ -25,13 +25,12 @@ export function StepPricingCardComptable({
         </p>
       </div>
 
-      <div className="rounded-xl ring-1 ring-border p-4 md:p-6">
-        <ComptablePricingGrid
-          variant="checkout"
-          ctaLabel="Sélectionner"
-          onSelectOffer={onSelectOffer}
-        />
-      </div>
+      <ComptablePricingGrid
+        variant="checkout"
+        selectedOffer={selectedOffer}
+        ctaLabel="Sélectionner"
+        onSelectOffer={onSelectOffer}
+      />
 
       <p className="text-sm text-muted-foreground">
         Formule sélectionnée :{" "}

@@ -28,13 +28,13 @@ describe("RetractionWaiverFields", () => {
       <RetractionWaiverFields
         checked={false}
         onCheckedChange={() => {}}
-        cvgHref="/cvg/comptable"
+        cvgHref="/cvg"
       />,
     );
 
     expect(screen.getByRole("link", { name: "Voir les CGV §8" })).toHaveAttribute(
       "href",
-      "/cvg/comptable",
+      "/cvg",
     );
   });
 });

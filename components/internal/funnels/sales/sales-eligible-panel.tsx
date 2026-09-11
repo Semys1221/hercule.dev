@@ -88,6 +88,7 @@ type OpportunityCardProps = {
   show: boolean;
   reducedMotion: boolean;
   isBlurred: boolean;
+  isComptable: boolean;
   versoCriteria?: typeof COMPTABLE_DEMANDE_VERSO_CRITERIA;
   onFlipChange: (flipped: boolean) => void;
 };
@@ -98,6 +99,7 @@ function OpportunityCard({
   show,
   reducedMotion,
   isBlurred,
+  isComptable,
   versoCriteria,
   onFlipChange,
 }: OpportunityCardProps) {
@@ -156,8 +158,11 @@ function OpportunityCard({
                   </Badge>
                 </div>
                 <p className="w-full text-center text-xs text-muted-foreground">
-                  {card.zone} · {card.taille}
+                  {isComptable ? card.zone : `${card.zone} · ${card.taille}`}
                 </p>
+                {isComptable && card.origine ? (
+                  <p className="text-xs font-medium text-emerald-400/90">{card.origine}</p>
+                ) : null}
                 <MaskedContactLine
                   contactEmail={card.contactEmail}
                   contactPhone={card.contactPhone}
@@ -170,11 +175,19 @@ function OpportunityCard({
               </p>
               <div className="mt-auto border-t border-border pt-3">
                 <DemandeMetaRow
-                  label="Budget"
+                  label={isComptable ? "Honoraires" : "Budget"}
                   value={card.budget}
                   variant="internal"
                   valueClassName="font-medium"
                 />
+                {isComptable ? (
+                  <DemandeMetaRow
+                    label="Profil PME"
+                    value={card.taille}
+                    variant="internal"
+                    valueClassName="font-medium"
+                  />
+                ) : null}
                 <p className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground/80">
                   {windowLabel}
                 </p>
@@ -211,6 +224,35 @@ export function SalesEligiblePanel({
     () => composeOpportunityCards(qualificationValues, result.id, audience),
     [audience, qualificationValues, result.id],
   );
+
+  // #region agent log
+  useEffect(() => {
+    if (!isComptable || cards.length === 0 || typeof fetch === "undefined") {
+      return;
+    }
+
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "848ca9",
+      },
+      body: JSON.stringify({
+        sessionId: "848ca9",
+        runId: "post-fix",
+        hypothesisId: "H3",
+        location: "sales-eligible-panel.tsx:SalesEligiblePanel",
+        message: "Comptable eligible cards rendered",
+        data: {
+          cardCount: cards.length,
+          origines: cards.map((card) => card.origine ?? null),
+          hasMarchesPublics: cards.some((card) => card.origine === "Marchés publics remportés"),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [cards, isComptable]);
+  // #endregion
 
   useEffect(() => {
     setPhase("loading");
@@ -340,6 +382,7 @@ export function SalesEligiblePanel({
             show={showCards}
             reducedMotion={reducedMotion ?? false}
             isBlurred={flippedIndex !== null && flippedIndex !== index}
+            isComptable={isComptable}
             versoCriteria={versoCriteria}
             onFlipChange={(flipped) => setFlippedIndex(flipped ? index : null)}
           />

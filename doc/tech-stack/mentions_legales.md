@@ -6,7 +6,7 @@ audience: coding-agent
 ```
 
 > **Version :** 2026-09-06  
-> **Documents associés :** [cvg_master.md](./cvg_master.md) · [confidentialite.md](./confidentialite.md)
+> **Documents associés :** [cvg_comptable.md](./cvg_comptable.md) · [confidentialite.md](./confidentialite.md)
 
 ---
 
@@ -27,7 +27,7 @@ audience: coding-agent
 
 ## Activité
 
-Prestations de services en marketing digital, génération de leads via campagnes publicitaires et mise en relation B2B.
+Prestations de services de mise en relation B2B entre dirigeants PME et cabinets d'expertise comptable.
 
 ---
 
