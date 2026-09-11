@@ -108,14 +108,43 @@ export function buildTemplateVariables(
     return "";
   };
 
-  return {
+  const vars = {
     first_name: read("first_name", "firstName") || "there",
     last_name: read("last_name", "lastName"),
     company_name: read("company_name", "companyName"),
     subject: read("subject", "reply_subject") || "your message",
     reservation_agence_link: read("reservation_agence_link"),
     reservation_entreprise_link: read("reservation_entreprise_link"),
+    reservation_cif_link: read("reservation_cif_link"),
+    reservation_comptable_link: read("reservation_comptable_link"),
   };
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "802b69",
+    },
+    body: JSON.stringify({
+      sessionId: "802b69",
+      location: "lib/instantly-bypass/templates.ts:buildTemplateVariables",
+      message: "bypass template vars",
+      data: {
+        returnedKeys: Object.keys(vars),
+        cifKeyInPayload:
+          typeof payload.reservation_cif_link === "string" ||
+          typeof leadPayload.reservation_cif_link === "string",
+        returnedHasCifLink: Boolean(vars.reservation_cif_link),
+        cifVarValue: vars.reservation_cif_link || null,
+        hypothesisId: "B",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "B",
+      runId: "post-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
+  return vars;
 }
 
 export async function loadBypassConfig(campaignId: string): Promise<BypassConfig | null> {

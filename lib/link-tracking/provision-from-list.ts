@@ -244,6 +244,32 @@ export async function provisionLinksFromList(
     resyncAll,
   };
 
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/link-tracking/provision-from-list.ts:selected",
+      message: "CIF/comptable provision selection",
+      data: {
+        category,
+        campaignId,
+        fromCampaign,
+        totalInList: parsed.length,
+        selected: selected.length,
+        skippedWrongCategory,
+        resyncAll,
+      },
+      timestamp: Date.now(),
+      hypothesisId: "provision-cif",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
   if (selected.length === 0) {
     return result;
   }
@@ -358,6 +384,41 @@ export async function provisionLinksFromList(
     result.failed += patchStats.failed;
     result.errors.push(...patchStats.errors.slice(0, 10));
   }
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/link-tracking/provision-from-list.ts:complete",
+      message: "provision complete",
+      data: {
+        category: result.category,
+        campaignId: result.campaignId,
+        totalInList: result.totalInList,
+        selected: result.selected,
+        created: result.created,
+        updated: result.updated,
+        patched: result.patched,
+        failed: result.failed,
+        sampleVarKeys: patchItems[0]
+          ? Object.keys(patchItems[0].customVariables)
+          : [],
+        hasCifLinkVar: Boolean(
+          patchItems[0]?.customVariables.reservation_cif_link,
+        ),
+        errorCount: result.errors.length,
+      },
+      timestamp: Date.now(),
+      hypothesisId: "provision-cif",
+      runId: "post-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
 
   return result;
 }

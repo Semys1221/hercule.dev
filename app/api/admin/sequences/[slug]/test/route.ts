@@ -54,6 +54,35 @@ export async function POST(
   const category =
     sequence.bookingCategory ??
     (parsed.data.niche === "entreprise" ? "entreprise" : parsed.data.niche);
+  const categoryAllowed =
+    category === "agence" ||
+    category === "entreprise" ||
+    category === "comptable";
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "app/api/admin/sequences/[slug]/test/route.ts:category-gate",
+      message: "sequence test category gate",
+      data: {
+        slug,
+        niche: parsed.data.niche,
+        bookingCategory: sequence.bookingCategory ?? null,
+        category,
+        categoryAllowed,
+        hypothesisId: "A",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "A",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
   if (category !== "agence" && category !== "entreprise" && category !== "comptable") {
     return NextResponse.json({ error: "Unsupported category" }, { status: 400 });
   }

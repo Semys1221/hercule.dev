@@ -124,7 +124,33 @@ export function evaluateSequenceSafety(
   const allTypesCompliant = sequenceTypes.every((type) =>
     typeCompliesWithPattern(type, category),
   );
-  return allTypesCompliant ? "on" : "off";
+  const safety = allTypesCompliant ? "on" : "off";
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/admin/email-sequences/safety.ts:evaluateSequenceSafety",
+      message: "sequence safety result",
+      data: {
+        slug: entry.slug,
+        audience,
+        safety,
+        types: sequenceTypes,
+        validFamilies: sequenceTypesFormValidFamilies(sequenceTypes),
+        hypothesisId: "E,F",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "E,F",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
+  return safety;
 }
 
 export const SAFETY_LABELS: Record<Exclude<SequenceSafety, null>, string> = {

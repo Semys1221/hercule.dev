@@ -87,6 +87,7 @@
     "configure-link-provisioning-cron": "tsx --env-file=.env ./scripts/crm/configureLinkProvisioningCronJob.ts",
     "provision-list-links": "python3 ./scripts/crm/provisionListLinks.py",
     "provision-comptable-links": "tsx --env-file=.env ./scripts/crm/provisionComptableLinks.ts",
+    "provision-cif-links": "tsx --env-file=.env ./scripts/crm/provisionCifLinks.ts",
     "smoke-comptable-flow-e2e": "tsx --env-file=.env ./scripts/streamlit_scraper/smokeComptableFlowE2e.ts",
     "clone-campaign-emails": "python3 ./scripts/streamlit_scraper/cloneCampaignEmails.py",
     "swap-subsequence-link-vars": "python3 ./scripts/streamlit_scraper/swapSubsequenceLinkVars.py",

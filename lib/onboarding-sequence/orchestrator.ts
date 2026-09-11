@@ -6,6 +6,37 @@ import type { BookingEmailType } from "@/lib/booking-communication/types";
 import type { LeadCategory, LinkTrackingLead } from "@/lib/link-tracking/types";
 import { retractionAppliesTo } from "@/lib/retraction/applies";
 
+export const ONBOARDING_REMINDER_CATEGORIES: LeadCategory[] = [
+  "agence",
+  "comptable",
+];
+
+export function listOnboardingReminderCategories(): LeadCategory[] {
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/onboarding-sequence/orchestrator.ts:listOnboardingReminderCategories",
+      message: "onboarding reminder categories",
+      data: {
+        categories: ONBOARDING_REMINDER_CATEGORIES,
+        includesCif: ONBOARDING_REMINDER_CATEGORIES.includes("cif"),
+        hypothesisId: "B",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "B",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
+  return ONBOARDING_REMINDER_CATEGORIES;
+}
+
 function parisWallTime(base: Date, hour: number, dayOffset: number): Date {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Europe/Paris",
@@ -148,7 +179,29 @@ export async function scheduleOnboardingReminders(): Promise<{
   let scheduled = 0;
   let processed = 0;
 
-  for (const category of ["agence", "comptable"] as const) {
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/onboarding-sequence/orchestrator.ts:scheduleOnboardingReminders",
+      message: "onboarding reminder categories",
+      data: {
+        categories: ONBOARDING_REMINDER_CATEGORIES,
+        includesCif: ONBOARDING_REMINDER_CATEGORIES.includes("cif"),
+        hypothesisId: "B",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "B",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
+  for (const category of listOnboardingReminderCategories()) {
     const { data, error } = await client
       .from(category)
       .select("*")

@@ -70,7 +70,31 @@ export async function executeBypassFlow(
   params: ExecuteBypassFlowParams,
 ): Promise<ExecuteBypassFlowResult> {
   const flow = params.flow;
-  if (!SENDABLE_FLOWS.has(flow)) {
+  const sendable = SENDABLE_FLOWS.has(flow);
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/instantly-bypass/send-flow.ts:executeBypassFlow",
+      message: "bypass flow sendable check",
+      data: {
+        flow,
+        sendable,
+        campaignId: params.campaignId,
+        hypothesisId: "C",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "C",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
+  if (!sendable) {
     return { ok: false, error: `unsupported_flow:${flow}` };
   }
 

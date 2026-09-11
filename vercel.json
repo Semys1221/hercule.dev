@@ -9,6 +9,10 @@
       "destination": "/reservation-entreprise.html?code=:slug"
     },
     {
+      "source": "/reservation-cif.html/:slug",
+      "destination": "/reservation-cif.html?code=:slug"
+    },
+    {
       "source": "/confirm-reservation.html/:slug",
       "destination": "/confirm-reservation.html?code=:slug"
     },

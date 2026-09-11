@@ -84,6 +84,8 @@ SENDABLE_FLOWS: list[Flow] = [
 EMAIL_SIGNATURE = "Béatrice Meyer"
 RESERVATION_AGENCE_PLACEHOLDER = "{{reservation_agence_link}}"
 RESERVATION_ENTREPRISE_PLACEHOLDER = "{{reservation_entreprise_link}}"
+RESERVATION_CIF_PLACEHOLDER = "{{reservation_cif_link}}"
+RESERVATION_COMPTABLE_PLACEHOLDER = "{{reservation_comptable_link}}"
 SLOT_PLACEHOLDERS = ("{{slot_1}}", "{{slot_2}}")
 
 KNOWN_CAMPAIGN_CALENDLY_EVENT: dict[str, str] = {
@@ -96,6 +98,8 @@ def template_requires_reservation_link(body_html: str) -> bool:
     return (
         RESERVATION_AGENCE_PLACEHOLDER in text
         or RESERVATION_ENTREPRISE_PLACEHOLDER in text
+        or RESERVATION_CIF_PLACEHOLDER in text
+        or RESERVATION_COMPTABLE_PLACEHOLDER in text
     )
 
 
@@ -389,6 +393,8 @@ def _template_vars(
     payload = lead.get("payload") if isinstance(lead.get("payload"), dict) else {}
     reservation_agence_link = lead_custom_var(lead, "reservation_agence_link") or ""
     reservation_entreprise_link = lead_custom_var(lead, "reservation_entreprise_link") or ""
+    reservation_cif_link = lead_custom_var(lead, "reservation_cif_link") or ""
+    reservation_comptable_link = lead_custom_var(lead, "reservation_comptable_link") or ""
     first = str(
         lead.get("first_name") or payload.get("firstName") or payload.get("first_name") or ""
     )
@@ -401,6 +407,8 @@ def _template_vars(
         "company_name": company,
         "reservation_agence_link": reservation_agence_link,
         "reservation_entreprise_link": reservation_entreprise_link,
+        "reservation_cif_link": reservation_cif_link,
+        "reservation_comptable_link": reservation_comptable_link,
     }
     if body_html and campaign_id:
         vars_map.update(_resolve_slot_vars(campaign_id, body_html))
@@ -420,6 +428,29 @@ def _load_template(campaign_id: str, template_key: str) -> dict[str, str]:
         .execute()
     )
     row = resp.data if resp else None
+    # #region agent log
+    try:
+        import json
+        from pathlib import Path
+        Path("/Users/evqn/dev/hercule.dev/.cursor/debug-8b6caf.log").open("a").write(
+            json.dumps({
+                "sessionId": "8b6caf",
+                "location": "send_queue.py:_load_template",
+                "message": "bypass template load",
+                "data": {
+                    "campaign_id": campaign_id,
+                    "template_key": template_key,
+                    "found": bool(row),
+                    "has_cif_placeholder": "{{reservation_cif_link}}" in str((row or {}).get("body_html") or ""),
+                },
+                "timestamp": int(__import__("time").time() * 1000),
+                "hypothesisId": "C,D",
+                "runId": "pre-fix",
+            }) + "\n"
+        )
+    except Exception:
+        pass
+    # #endregion
     if not row:
         raise RuntimeError(f"Template not found: {template_key} for campaign {campaign_id}")
     return {"subject": row["subject"], "body_html": row["body_html"]}
@@ -440,14 +471,15 @@ def _interest_label(lead: dict[str, Any]) -> str:
 
 def _missing_reservation_link(lead: dict[str, Any], body_html: str = "") -> bool:
     text = body_html or ""
-    needs_agence = RESERVATION_AGENCE_PLACEHOLDER in text
-    needs_entreprise = RESERVATION_ENTREPRISE_PLACEHOLDER in text
-    if not needs_agence and not needs_entreprise:
-        return False
-    if needs_agence and not lead_custom_var(lead, "reservation_agence_link"):
-        return True
-    if needs_entreprise and not lead_custom_var(lead, "reservation_entreprise_link"):
-        return True
+    checks = (
+        (RESERVATION_AGENCE_PLACEHOLDER, "reservation_agence_link"),
+        (RESERVATION_ENTREPRISE_PLACEHOLDER, "reservation_entreprise_link"),
+        (RESERVATION_CIF_PLACEHOLDER, "reservation_cif_link"),
+        (RESERVATION_COMPTABLE_PLACEHOLDER, "reservation_comptable_link"),
+    )
+    for placeholder, key in checks:
+        if placeholder in text and not lead_custom_var(lead, key):
+            return True
     return False
 
 
