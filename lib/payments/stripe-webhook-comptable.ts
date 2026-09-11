@@ -3,10 +3,12 @@ import type Stripe from "stripe";
 
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 import {
+  cancelPendingJobsForLead,
   insertJob,
   markJobFailed,
   markJobSent,
 } from "@/lib/booking-communication/jobs";
+import type { BookingEmailType } from "@/lib/booking-communication/types";
 import { sendBookingEmail } from "@/lib/booking-communication/send";
 import { defaultUseHtml } from "@/lib/booking-communication/signatures";
 import {
@@ -186,6 +188,13 @@ export async function handleComptableCheckoutCompleted(
   }
 
   revalidateBookingsCache();
+
+  const closeIndecisTypes: BookingEmailType[] = [
+    "close_indecis_1",
+    "close_indecis_2",
+    "close_indecis_3",
+  ];
+  await cancelPendingJobsForLead(leadId, closeIndecisTypes);
 
   const salesCallOwnerColumn =
     owner === "cif" ? "cif_id" : owner === "comptable" ? "comptable_id" : "entreprise_id";
