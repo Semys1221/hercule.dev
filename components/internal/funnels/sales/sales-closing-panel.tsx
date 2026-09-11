@@ -42,6 +42,10 @@ import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
 import {
   COMPTABLE_PERFORMANCE_REPORTING_RULE,
 } from "@/lib/admin/funnels/comptable-sales-copy";
+import {
+  formatComptableFirstRdvAfterActivationLabel,
+  formatComptableOnboardingAccessLabel,
+} from "@/lib/commercial/constants";
 import { SESSION_DEVELOPER_MODE_FAKE_LINK } from "@/lib/admin/funnels/ui-copy";
 import { SALES_SKIP_VALUE, type Q14Matrix, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
@@ -222,10 +226,9 @@ const AGENCE_DASHBOARD_NEXT_STEPS = [
 ] as const;
 
 const COMPTABLE_DASHBOARD_NEXT_STEPS = [
-  "Accès onboarding — sous 48h après réception du lien",
+  `Accès onboarding — sous ${formatComptableOnboardingAccessLabel()} après réception du lien`,
   "Activation — première mission {clientSegment} lancée dès l'onboarding complété",
-  "Proposition de mission — RDV dirigeant planifié sous 5–10 jours ouvrés",
-  "Premier RDV honoré — ≤ 25 jours après activation",
+  `Premier RDV planifié — ${formatComptableFirstRdvAfterActivationLabel()}`,
 ] as const;
 
 function getDashboardFeatures(

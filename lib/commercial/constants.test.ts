@@ -10,6 +10,8 @@ import {
   OFFER_TYPES,
   OFFER_TYPES_COMPTABLE,
   VITRINE_ONLY,
+  formatComptableFirstRdvAfterActivationLabel,
+  formatComptableFirstRdvLabel,
 } from "./constants";
 
 // ---------------------------------------------------------------------------
@@ -84,6 +86,13 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
   it("firstRdvDaysMin/Max is 20–25", () => {
     expect(COMMERCIAL_COMPTABLE.firstRdvDaysMin).toBe(20);
     expect(COMMERCIAL_COMPTABLE.firstRdvDaysMax).toBe(25);
+  });
+
+  it("formatComptableFirstRdvLabel matches CGV article 9", () => {
+    expect(formatComptableFirstRdvLabel()).toBe("20 à 25 jours");
+    expect(formatComptableFirstRdvAfterActivationLabel()).toBe(
+      "20 à 25 jours après activation",
+    );
   });
 
   it("growthMissionsPerMonth is 10", () => {

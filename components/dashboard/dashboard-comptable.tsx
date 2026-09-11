@@ -10,6 +10,7 @@ import {
   DASHBOARD_RETRACTION_BADGE_PENDING,
 } from "@/lib/dashboard/copy";
 import type { DashboardData } from "@/lib/dashboard/types";
+import { formatComptableFirstRdvAfterActivationLabel } from "@/lib/commercial/constants";
 
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
 import { ChronologieSection } from "./chronologie-section";
@@ -143,7 +144,10 @@ export function DashboardComptable({
               <ul className="ml-4 list-disc space-y-1">
                 <li>Provisionnement de votre compte Calendly Pro</li>
                 <li>Provisionnement de votre compte Zoom Pro</li>
-                <li>Premier rendez-vous PME planifié sous 20 à 25 jours</li>
+                <li>
+                  Premier rendez-vous PME planifié sous{" "}
+                  {formatComptableFirstRdvAfterActivationLabel()}
+                </li>
               </ul>
               <Separator className="my-2" />
               <p>

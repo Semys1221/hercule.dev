@@ -128,26 +128,29 @@ export async function GET(_request: Request, { params }: RouteParams) {
           : "comptable_active";
 
       // #region agent log
+      const profileDashboard = (profile.dashboard ?? {}) as Record<string, unknown>;
       fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Debug-Session-Id": "c71c85",
+          "X-Debug-Session-Id": "9c08cc",
         },
         body: JSON.stringify({
-          sessionId: "c71c85",
+          sessionId: "9c08cc",
           runId: "pre-fix",
-          hypothesisId: "B,C",
+          hypothesisId: "A,B,D",
           location: "app/api/dashboard/[slug]/route.ts:comptable",
-          message: "comptable dashboard GET form state",
+          message: "comptable dashboard GET delivery dates",
           data: {
             slug: lead.slug,
             dashboardMode,
-            isPaid,
-            isOnboarded,
-            profileForm,
-            isFormSparse: isFormSparse(profileForm),
-            resolvesQualification: false,
+            retractionStatus: retraction?.status ?? null,
+            storedEstimatedFirstBookingAt:
+              typeof profileDashboard.estimated_first_booking_at === "string"
+                ? profileDashboard.estimated_first_booking_at
+                : null,
+            timelineFirstRdv: milestones.find((m) => m.id === "first_rdv") ?? null,
+            milestones: milestones.map((m) => ({ id: m.id, meta: m.meta })),
           },
           timestamp: Date.now(),
         }),

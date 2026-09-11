@@ -9,6 +9,7 @@ import {
   modalitesCancelBody,
   MODALITES_SUBJECT,
 } from "@/lib/modalites-campaign/copy";
+import { formatComptableFirstRdvAfterActivationLabel } from "@/lib/commercial/constants";
 
 import type { BookingEmailType } from "./types";
 
@@ -505,7 +506,7 @@ Votre paiement a bien été reçu. Votre accès Hercule Comptable est maintenant
 L'équipe Hercule configure votre espace dans les prochaines 48 heures :
 - Provisionnement de votre compte Calendly Pro
 - Provisionnement de votre compte Zoom Pro
-- Premier rendez-vous PME planifié sous 20 à 25 jours
+- Premier rendez-vous PME planifié sous ${formatComptableFirstRdvAfterActivationLabel()}
 
 Retrouvez votre espace cabinet :
 {{dashboardLink}}

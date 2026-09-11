@@ -25,6 +25,7 @@
     "apply-comptable-e1-e2-slots-migration": "tsx --env-file=.env ./scripts/crm/applyComptableE1E2SlotsMigration.ts",
     "apply-comptable-e1-copy-demande-link-migration": "tsx --env-file=.env ./scripts/crm/applyComptableE1CopyDemandeLinkMigration.ts",
     "apply-comptable-remove-site-links-migration": "tsx --env-file=.env ./scripts/crm/applyComptableRemoveSiteLinksMigration.ts",
+    "apply-comptable-e1-e2-urgency-migration": "tsx --env-file=.env ./scripts/crm/applyComptableE1E2UrgencyMigration.ts",
     "configure-calendly-link-tracking-webhook": "tsx --env-file=.env ./scripts/crm/configureCalendlyLinkTrackingWebhook.ts",
     "repair-confirmed-without-booking-email": "tsx --env-file=.env ./scripts/crm/repairConfirmedWithoutBookingEmail.ts",
     "cancel-unconfirmed-agence-meetings": "tsx --env-file=.env ./scripts/crm/cancelUnconfirmedAgenceMeetings.ts",

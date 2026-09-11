@@ -34,11 +34,14 @@ FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
         "au minimum 2 associes",
         "plus de 3 associes",
         "proposer mon cabinet",
-        "reprendre ces sujets en main",
+        "agences e-commerce",
+        "approche a 360",
+        "echanges entre cabinets et entreprise",
     ],
     "interested_email2": [
         "contrat annuel en attente",
         "mensuellement",
+        "echanges entre cabinets et entreprise",
         "confirmer que votre reservation calendly",
     ],
     "interested_email3": [

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { isSeedSlug } from "@/lib/admin/clients/seed";
+import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import { cancelPendingJobsForLead } from "@/lib/booking-communication/jobs";
 import type { BookingEmailType } from "@/lib/booking-communication/types";
 import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
@@ -32,8 +33,37 @@ export async function patchProfileEstimatedBooking(
 
   const profile = { ...(lead.profile ?? {}) } as Record<string, unknown>;
   const dashboard = { ...((profile.dashboard ?? {}) as Record<string, unknown>) };
-  const estimated = estimatedFirstBookingAt(activation, status);
+  const estimated = estimatedFirstBookingAt(activation, status, false, category);
   dashboard.estimated_first_booking_at = estimated.toISOString();
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "9c08cc",
+    },
+    body: JSON.stringify({
+      sessionId: "9c08cc",
+      runId: "pre-fix",
+      hypothesisId: "A",
+      location: "lib/retraction/activate.ts:patchProfileEstimatedBooking",
+      message: "estimated_first_booking_at persisted",
+      data: {
+        category,
+        leadId,
+        retractionStatus: status,
+        activationAt: activation.toISOString(),
+        estimatedFirstBookingAt: estimated.toISOString(),
+        daysFromActivation: Math.round(
+          (estimated.getTime() - activation.getTime()) / (24 * 60 * 60 * 1000),
+        ),
+        expectedComptableDaysMax:
+          category === "comptable" ? COMMERCIAL_COMPTABLE.firstRdvDaysMax : null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   profile.dashboard = dashboard;
 
   await client.from(category).update({ profile }).eq("id", leadId);

@@ -113,6 +113,19 @@ export function formatAgenceFastFirstRdvLabel(): string {
   return `${COMMERCIAL.agenceFastFirstRdvWorkingDays} jours ouvrés`;
 }
 
+/** Comptable — fourchette SLA premier RDV planifié (jours calendaires après activation). */
+export function formatComptableFirstRdvLabel(): string {
+  return `${COMMERCIAL_COMPTABLE.firstRdvDaysMin} à ${COMMERCIAL_COMPTABLE.firstRdvDaysMax} jours`;
+}
+
+export function formatComptableFirstRdvAfterActivationLabel(): string {
+  return `${formatComptableFirstRdvLabel()} après activation`;
+}
+
+export function formatComptableOnboardingAccessLabel(): string {
+  return `${COMMERCIAL.onboardingAccessHours} heures`;
+}
+
 export function depositCents(totalCents: number): number {
   return Math.floor(totalCents / 2);
 }

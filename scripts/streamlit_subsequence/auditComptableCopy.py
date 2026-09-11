@@ -26,8 +26,11 @@ COMPTABLE_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6"
 COMPTABLE_POSITIVE_MARKERS = (
     "cabinets partenaires",
     "proposer mon cabinet",
-    "reprendre ces sujets en main",
+    "agences e-commerce",
+    "approche a 360",
     "au minimum 2 associes",
+    "echanges entre cabinets et entreprise",
+    "19 septembre",
 )
 
 COMPTABLE_E1_MARKERS = COMPTABLE_POSITIVE_MARKERS + (

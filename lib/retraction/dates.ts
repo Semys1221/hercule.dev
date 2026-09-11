@@ -1,6 +1,7 @@
-import { COMMERCIAL } from "@/lib/commercial/constants";
+import { COMMERCIAL, COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 
 import type { RetractionStatus } from "./types";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 
 /** Add N calendar days to a reference date. */
 export function addCalendarDays(from: Date, days: number): Date {
@@ -48,6 +49,23 @@ export function agenceFirstContratAt(
 ): Date {
   const days = agenceFirstContratCalendarDays(status, isFastCheckout);
   return isFastCheckout ? addWorkingDays(activation, days) : addCalendarDays(activation, days);
+}
+
+/** Comptable — fourchette SLA premier RDV planifié (jours calendaires après activation). */
+export function comptableFirstRdvRangeAt(activation: Date): { min: Date; max: Date } {
+  return {
+    min: addCalendarDays(activation, COMMERCIAL_COMPTABLE.firstRdvDaysMin),
+    max: addCalendarDays(activation, COMMERCIAL_COMPTABLE.firstRdvDaysMax),
+  };
+}
+
+/** Borne haute utilisée pour estimated_first_booking_at (emails, rappels J±N). */
+export function comptableEstimatedFirstBookingAt(activation: Date): Date {
+  return comptableFirstRdvRangeAt(activation).max;
+}
+
+export function comptableFirstRdvCalendarDays(_status: RetractionStatus): number {
+  return COMMERCIAL_COMPTABLE.firstRdvDaysMax;
 }
 
 /** @deprecated Prefer agenceFirstContratCalendarDays — kept for DashboardRetraction field. */
@@ -112,6 +130,10 @@ export function estimatedFirstBookingAt(
   activation: Date,
   status: RetractionStatus,
   isFastCheckout = false,
+  category: LeadCategory = "agence",
 ): Date {
+  if (category === "comptable") {
+    return comptableEstimatedFirstBookingAt(activation);
+  }
   return agenceFirstContratAt(activation, status, isFastCheckout);
 }

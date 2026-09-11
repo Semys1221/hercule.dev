@@ -1,4 +1,5 @@
 import type { DashboardFaqAudience } from "@/lib/dashboard/types";
+import { formatComptableFirstRdvAfterActivationLabel } from "@/lib/commercial/constants";
 
 export type OnboardingFaqItem = {
   id: string;
@@ -91,7 +92,7 @@ const COMPTABLE_FAQ: OnboardingFaqConfig = {
     {
       id: "cp-delai-rdv",
       q: "Combien de temps avant mon premier RDV dirigeant TPE ?",
-      a: "Premier rendez-vous planifié sous 20 à 25 jours après activation, avec Calendly Pro et Zoom Pro provisionnés par Hercule.",
+      a: `Premier rendez-vous planifié sous ${formatComptableFirstRdvAfterActivationLabel()}, avec Calendly Pro et Zoom Pro provisionnés par Hercule.`,
     },
     {
       id: "cp-retard-livraison",

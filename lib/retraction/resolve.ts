@@ -1,7 +1,7 @@
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 import { retractionAppliesTo } from "./applies";
-import { activationAt, firstContratWorkingDays } from "./dates";
+import { activationAt, firstContratWorkingDays, comptableFirstRdvCalendarDays } from "./dates";
 import type { DashboardRetraction, RetractionRow, RetractionStatus } from "./types";
 
 function normalizeStatus(raw: string | null | undefined): RetractionStatus {
@@ -51,9 +51,9 @@ export function resolveDashboardRetraction(params: {
     waivedAt,
     canWaive,
     activationAt: activation?.toISOString() ?? null,
-    firstContratWorkingDays: firstContratWorkingDays(
-      status,
-      params.isFastCheckout ?? false,
-    ),
+    firstContratWorkingDays:
+      params.category === "comptable"
+        ? comptableFirstRdvCalendarDays(status)
+        : firstContratWorkingDays(status, params.isFastCheckout ?? false),
   };
 }

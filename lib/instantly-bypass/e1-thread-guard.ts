@@ -10,7 +10,9 @@ const E1_FINGERPRINTS = [
   "au minimum 2 associes",
   "plus de 3 associes",
   "proposer mon cabinet",
-  "reprendre ces sujets en main",
+  "agences e-commerce",
+  "approche a 360",
+  "echanges entre cabinets et entreprise",
   PARTNER_CABINETS_MARKER,
 ] as const;
 

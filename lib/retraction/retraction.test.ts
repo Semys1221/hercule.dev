@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { retractionAppliesTo } from "./applies";
+import { COMMERCIAL, COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import {
   addCalendarDays,
   addWorkingDays,
+  comptableEstimatedFirstBookingAt,
+  comptableFirstRdvRangeAt,
   computeRetractionEndsAt,
+  estimatedFirstBookingAt,
   firstContratWorkingDays,
 } from "./dates";
 import { droitRetractationFromStatus, retractionDaysForStatus } from "./profile-sync";
@@ -92,6 +96,40 @@ describe("buildComptableActivationMilestones", () => {
     expect(milestones[1]?.estimatedAt).toMatch(/à/);
     expect(milestones[2]?.label).toBe("2ème mission attribuée");
     expect(milestones[3]?.label).toBe("3ème mission attribuée");
+  });
+
+  it("shifts first RDV range when retraction is pending via delayed activation", () => {
+    const onboardingComplete = new Date("2026-09-10T12:00:00.000Z");
+    const activation = addCalendarDays(onboardingComplete, COMMERCIAL.retractationDays);
+    const milestones = buildComptableActivationMilestones({
+      activationAt: activation,
+      status: "pending",
+      now: onboardingComplete,
+    });
+    const range = comptableFirstRdvRangeAt(activation);
+
+    expect(milestones[0]?.label).toBe("Activation prévue");
+    expect(milestones[1]?.estimatedAt).toContain(String(range.min.getDate()));
+    expect(milestones[1]?.estimatedAt).toContain(String(range.max.getDate()));
+  });
+});
+
+describe("estimatedFirstBookingAt", () => {
+  it("uses comptable SLA max (25 calendar days) after activation", () => {
+    const activation = new Date("2026-09-10T12:00:00.000Z");
+    const estimated = estimatedFirstBookingAt(activation, "waived", false, "comptable");
+    expect(estimated.getTime()).toBe(comptableEstimatedFirstBookingAt(activation).getTime());
+    expect(
+      Math.round((estimated.getTime() - activation.getTime()) / (24 * 60 * 60 * 1000)),
+    ).toBe(COMMERCIAL_COMPTABLE.firstRdvDaysMax);
+  });
+
+  it("keeps agence SLA for agence category", () => {
+    const activation = new Date("2026-09-10T12:00:00.000Z");
+    const estimated = estimatedFirstBookingAt(activation, "waived", false, "agence");
+    expect(
+      Math.round((estimated.getTime() - activation.getTime()) / (24 * 60 * 60 * 1000)),
+    ).toBe(COMMERCIAL.agenceStandardFirstRdvCalendarDays);
   });
 });
 

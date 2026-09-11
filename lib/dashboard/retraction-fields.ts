@@ -63,5 +63,33 @@ export function buildDashboardRetractionFields(params: {
     meta: m.estimatedAt,
   }));
 
+  // #region agent log
+  if (params.category === "comptable") {
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "9c08cc",
+      },
+      body: JSON.stringify({
+        sessionId: "9c08cc",
+        runId: "pre-fix",
+        hypothesisId: "A,B,E",
+        location: "lib/dashboard/retraction-fields.ts:buildDashboardRetractionFields",
+        message: "comptable milestone dates computed",
+        data: {
+          retractionStatus: retraction.status,
+          activationAt: activation.toISOString(),
+          retractionEndsAt: retraction.endsAt,
+          onboardingCompletedAt: params.lead.onboarding_completed_at ?? null,
+          firstRdvMilestone: milestones.find((m) => m.id === "first_rdv") ?? null,
+          allMilestones: milestones.map((m) => ({ id: m.id, meta: m.meta, status: m.status })),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }
+  // #endregion
+
   return { retraction, milestones };
 }
