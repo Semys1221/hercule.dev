@@ -71,29 +71,6 @@ export async function executeBypassFlow(
 ): Promise<ExecuteBypassFlowResult> {
   const flow = params.flow;
   const sendable = SENDABLE_FLOWS.has(flow);
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "8b6caf",
-    },
-    body: JSON.stringify({
-      sessionId: "8b6caf",
-      location: "lib/instantly-bypass/send-flow.ts:executeBypassFlow",
-      message: "bypass flow sendable check",
-      data: {
-        flow,
-        sendable,
-        campaignId: params.campaignId,
-        hypothesisId: "C",
-      },
-      timestamp: Date.now(),
-      hypothesisId: "C",
-      runId: "pre-fix",
-    }),
-  }).catch(() => {});
-  // #endregion
   if (!sendable) {
     return { ok: false, error: `unsupported_flow:${flow}` };
   }
@@ -137,31 +114,6 @@ export async function executeBypassFlow(
   }
 
   const bodyHtml = customBodyHtml ?? template.body_html;
-  if (flow === "interested_email1") {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "7cb08d",
-      },
-      body: JSON.stringify({
-        sessionId: "7cb08d",
-        location: "send-flow.ts:executeBypassFlow",
-        message: "E1 template loaded for send",
-        data: {
-          hasPartenaires: bodyHtml.includes("cabinets partenaires"),
-          ctaBeforeEligibility:
-            bodyHtml.indexOf("19 septembre") < bodyHtml.indexOf("au minimum 2"),
-          hasEcommerce: bodyHtml.includes("agences e-commerce"),
-        },
-        timestamp: Date.now(),
-        hypothesisId: "B,C",
-        runId: "post-fix",
-      }),
-    }).catch(() => {});
-    // #endregion
-  }
   const needsReservationLink = templateRequiresReservationLink(bodyHtml);
   let reservationLink = readReservationLink(
     lead ?? undefined,

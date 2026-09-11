@@ -9,6 +9,7 @@ import {
   composeOutreachConfigView,
   getOutreachConfigRow,
   getOutreachConfigViewWithClient,
+  listIdFromEnv,
   upsertOutreachConfigWithClient,
 } from "@/lib/admin/niches/outreach-config";
 
@@ -78,11 +79,13 @@ const dbRowView = composeOutreachConfigView({
   row: {
     niche: "agence",
     instantly_campaign_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    instantly_list_id: null,
     calendly_event_type_uri: "https://api.calendly.com/event_types/DB",
     updated_at: "2026-01-01T00:00:00.000Z",
     updated_by: "ops",
   },
   envCampaignId: campaignIdFromEnv("agence"),
+  envListId: listIdFromEnv("agence"),
   envCalendlyUri: null,
   resolvedCalendlyFallback: null,
 });
@@ -95,6 +98,7 @@ const envOnlyView = composeOutreachConfigView({
   niche: "comptable",
   row: null,
   envCampaignId: campaignIdFromEnv("comptable"),
+  envListId: listIdFromEnv("comptable"),
   envCalendlyUri: calendlyUriFromEnv("comptable"),
   resolvedCalendlyFallback: null,
 });
@@ -106,6 +110,7 @@ const fallbackCalendlyView = composeOutreachConfigView({
   niche: "comptable",
   row: null,
   envCampaignId: null,
+  envListId: null,
   envCalendlyUri: null,
   resolvedCalendlyFallback: "https://api.calendly.com/event_types/FALLBACK",
 });
@@ -121,6 +126,7 @@ async function runAsyncTests(): Promise<void> {
   const dbRow = {
     niche: "agence" as const,
     instantly_campaign_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    instantly_list_id: null,
     calendly_event_type_uri: "https://api.calendly.com/event_types/DB",
     updated_at: "2026-01-01T00:00:00.000Z",
     updated_by: "ops",

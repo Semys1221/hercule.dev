@@ -129,7 +129,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     label: "Niche outreach config",
     domain: "marketing",
     purpose: "Campagne Instantly + event type Calendly par niche (Bookings CRM)",
-    keyColumns: "niche, instantly_campaign_id, calendly_event_type_uri, updated_at, updated_by",
+    keyColumns: "niche, instantly_campaign_id, instantly_list_id, calendly_event_type_uri, updated_at, updated_by",
     writers: ["admin"],
     readers: ["admin", "cron"],
     profileKeys: "—",

@@ -10,6 +10,7 @@ import type { Niche } from "@/lib/admin/navigation";
 export type NicheOutreachConfig = {
   niche: Niche;
   instantly_campaign_id: string;
+  instantly_list_id: string | null;
   calendly_event_type_uri: string | null;
   updated_at: string;
   updated_by: string | null;
@@ -18,10 +19,12 @@ export type NicheOutreachConfig = {
 export type OutreachConfigView = {
   niche: Niche;
   instantly_campaign_id: string | null;
+  instantly_list_id: string | null;
   calendly_event_type_uri: string | null;
   resolved_calendly_event_type_uri: string | null;
   calendly_configured: boolean;
   campaign_linked: boolean;
+  list_linked: boolean;
   source: "database" | "env" | "none";
 };
 
@@ -37,6 +40,11 @@ const CALENDLY_ENV: Record<Niche, string> = {
   entreprise: "CALENDLY_EVENT_TYPE_URI_ENTREPRISE",
   comptable: "CALENDLY_EVENT_TYPE_URI_COMPTABLE",
   cif: "CALENDLY_EVENT_TYPE_URI_CIF",
+};
+
+const LIST_ENV: Partial<Record<Niche, string>> = {
+  cif: "INSTANTLY_LIST_ID_CIF",
+  comptable: "INSTANTLY_LIST_ID_COMPTABLE",
 };
 
 /** @internal Exported for unit tests. */
@@ -59,13 +67,22 @@ export function calendlyUriFromEnv(niche: Niche): string | null {
   return process.env[CALENDLY_ENV[niche]]?.trim() || null;
 }
 
+/** @internal Exported for unit tests. */
+export function listIdFromEnv(niche: Niche): string | null {
+  const key = LIST_ENV[niche];
+  if (!key) return null;
+  return process.env[key]?.trim() || null;
+}
+
 export async function getOutreachConfigRow(
   client: SupabaseClient,
   niche: Niche,
 ): Promise<NicheOutreachConfig | null> {
   const { data, error } = await client
     .from("niche_outreach_config")
-    .select("niche, instantly_campaign_id, calendly_event_type_uri, updated_at, updated_by")
+    .select(
+      "niche, instantly_campaign_id, instantly_list_id, calendly_event_type_uri, updated_at, updated_by",
+    )
     .eq("niche", niche)
     .maybeSingle();
 
@@ -84,11 +101,14 @@ export function composeOutreachConfigView(params: {
   niche: Niche;
   row: NicheOutreachConfig | null;
   envCampaignId: string | null;
+  envListId: string | null;
   envCalendlyUri: string | null;
   resolvedCalendlyFallback: string | null;
 }): OutreachConfigView {
-  const { niche, row, envCampaignId, envCalendlyUri, resolvedCalendlyFallback } = params;
+  const { niche, row, envCampaignId, envListId, envCalendlyUri, resolvedCalendlyFallback } =
+    params;
   const instantly_campaign_id = row?.instantly_campaign_id ?? envCampaignId;
+  const instantly_list_id = row?.instantly_list_id ?? envListId;
   const storedCalendlyUri = row?.calendly_event_type_uri ?? envCalendlyUri;
   const resolved_calendly_event_type_uri =
     storedCalendlyUri?.trim() || resolvedCalendlyFallback?.trim() || null;
@@ -97,10 +117,12 @@ export function composeOutreachConfigView(params: {
   return {
     niche,
     instantly_campaign_id,
+    instantly_list_id,
     calendly_event_type_uri: storedCalendlyUri,
     resolved_calendly_event_type_uri,
     calendly_configured: Boolean(resolved_calendly_event_type_uri),
     campaign_linked: Boolean(instantly_campaign_id),
+    list_linked: Boolean(instantly_list_id),
     source,
   };
 }
@@ -113,6 +135,7 @@ export async function getOutreachConfigViewWithClient(
 ): Promise<OutreachConfigView> {
   const row = await getOutreachConfigRow(client, niche);
   const envCampaignId = campaignIdFromEnv(niche);
+  const envListId = listIdFromEnv(niche);
   const envCalendlyUri = calendlyUriFromEnv(niche);
 
   let resolvedCalendlyFallback: string | null = null;
@@ -132,6 +155,7 @@ export async function getOutreachConfigViewWithClient(
     niche,
     row,
     envCampaignId,
+    envListId,
     envCalendlyUri,
     resolvedCalendlyFallback,
   });
@@ -154,12 +178,18 @@ export async function resolveInstantlyCampaignId(niche: Niche): Promise<string |
   return view.instantly_campaign_id;
 }
 
+export async function resolveInstantlyListId(niche: Niche): Promise<string | null> {
+  const view = await getOutreachConfigView(niche);
+  return view.instantly_list_id;
+}
+
 /** @internal Exported for unit tests. */
 export async function upsertOutreachConfigWithClient(
   client: SupabaseClient,
   niche: Niche,
   payload: {
     instantly_campaign_id: string;
+    instantly_list_id?: string | null;
     calendly_event_type_uri?: string | null;
     updated_by?: string | null;
   },
@@ -170,13 +200,16 @@ export async function upsertOutreachConfigWithClient(
       {
         niche,
         instantly_campaign_id: payload.instantly_campaign_id,
+        instantly_list_id: payload.instantly_list_id ?? null,
         calendly_event_type_uri: payload.calendly_event_type_uri ?? null,
         updated_at: new Date().toISOString(),
         updated_by: payload.updated_by ?? null,
       },
       { onConflict: "niche" },
     )
-    .select("niche, instantly_campaign_id, calendly_event_type_uri, updated_at, updated_by")
+    .select(
+      "niche, instantly_campaign_id, instantly_list_id, calendly_event_type_uri, updated_at, updated_by",
+    )
     .single();
 
   if (error) {
@@ -190,6 +223,7 @@ export async function upsertOutreachConfig(
   niche: Niche,
   payload: {
     instantly_campaign_id: string;
+    instantly_list_id?: string | null;
     calendly_event_type_uri?: string | null;
     updated_by?: string | null;
   },

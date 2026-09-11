@@ -118,32 +118,6 @@ export function buildTemplateVariables(
     reservation_cif_link: read("reservation_cif_link"),
     reservation_comptable_link: read("reservation_comptable_link"),
   };
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "802b69",
-    },
-    body: JSON.stringify({
-      sessionId: "802b69",
-      location: "lib/instantly-bypass/templates.ts:buildTemplateVariables",
-      message: "bypass template vars",
-      data: {
-        returnedKeys: Object.keys(vars),
-        cifKeyInPayload:
-          typeof payload.reservation_cif_link === "string" ||
-          typeof leadPayload.reservation_cif_link === "string",
-        returnedHasCifLink: Boolean(vars.reservation_cif_link),
-        cifVarValue: vars.reservation_cif_link || null,
-        hypothesisId: "B",
-      },
-      timestamp: Date.now(),
-      hypothesisId: "B",
-      runId: "post-fix",
-    }),
-  }).catch(() => {});
-  // #endregion
   return vars;
 }
 

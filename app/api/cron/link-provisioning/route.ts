@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { resolveInstantlyCampaignId } from "@/lib/admin/niches/outreach-config";
+import {
+  resolveInstantlyCampaignId,
+  resolveInstantlyListId,
+} from "@/lib/admin/niches/outreach-config";
 import { provisionLinksFromList } from "@/lib/link-tracking/provision-from-list";
 
 function isAuthorized(request: Request): boolean {
@@ -31,6 +34,16 @@ export async function GET(request: Request) {
           fromCampaign: true,
         }),
       );
+      const listId = await resolveInstantlyListId(niche);
+      if (listId) {
+        nicheResults.push(
+          await provisionLinksFromList({
+            listId,
+            campaignId,
+            category: niche,
+          }),
+        );
+      }
     }
     const list = await provisionLinksFromList();
     const created =

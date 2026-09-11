@@ -10,6 +10,7 @@ import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 
 const patchSchema = z.object({
   instantly_campaign_id: z.string().uuid(),
+  instantly_list_id: z.string().uuid().nullable().optional(),
   calendly_event_type_uri: z.string().trim().nullable().optional(),
   updated_by: z.string().trim().min(1).optional(),
 });

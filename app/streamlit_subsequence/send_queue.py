@@ -90,6 +90,7 @@ SLOT_PLACEHOLDERS = ("{{slot_1}}", "{{slot_2}}")
 
 KNOWN_CAMPAIGN_CALENDLY_EVENT: dict[str, str] = {
     "e4c58718-ca00-4e27-b714-68e522fe4db6": "comptable",
+    "e3bdb573-fe9f-437d-bd96-4ceb52869dd4": "cif",
 }
 
 
@@ -428,29 +429,6 @@ def _load_template(campaign_id: str, template_key: str) -> dict[str, str]:
         .execute()
     )
     row = resp.data if resp else None
-    # #region agent log
-    try:
-        import json
-        from pathlib import Path
-        Path("/Users/evqn/dev/hercule.dev/.cursor/debug-8b6caf.log").open("a").write(
-            json.dumps({
-                "sessionId": "8b6caf",
-                "location": "send_queue.py:_load_template",
-                "message": "bypass template load",
-                "data": {
-                    "campaign_id": campaign_id,
-                    "template_key": template_key,
-                    "found": bool(row),
-                    "has_cif_placeholder": "{{reservation_cif_link}}" in str((row or {}).get("body_html") or ""),
-                },
-                "timestamp": int(__import__("time").time() * 1000),
-                "hypothesisId": "C,D",
-                "runId": "pre-fix",
-            }) + "\n"
-        )
-    except Exception:
-        pass
-    # #endregion
     if not row:
         raise RuntimeError(f"Template not found: {template_key} for campaign {campaign_id}")
     return {"subject": row["subject"], "body_html": row["body_html"]}
@@ -738,43 +716,6 @@ def _execute_send(
 
     body_html = template["body_html"]
     source_html = html_override if html_override is not None else body_html
-    if flow == "interested_email1":
-        # #region agent log
-        import json
-        import urllib.request
-
-        try:
-            payload = json.dumps(
-                {
-                    "sessionId": "7cb08d",
-                    "location": "send_queue.py:_dispatch_one",
-                    "message": "E1 template loaded for send",
-                    "data": {
-                        "hasPartenaires": "cabinets partenaires" in source_html,
-                        "ctaBeforeEligibility": source_html.find("19 septembre")
-                        < source_html.find("au minimum 2"),
-                        "hasEcommerce": "agences e-commerce" in source_html,
-                    },
-                    "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
-                    "hypothesisId": "B,C",
-                    "runId": "post-fix",
-                }
-            ).encode()
-            urllib.request.urlopen(
-                urllib.request.Request(
-                    "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
-                    data=payload,
-                    headers={
-                        "Content-Type": "application/json",
-                        "X-Debug-Session-Id": "7cb08d",
-                    },
-                    method="POST",
-                ),
-                timeout=1,
-            )
-        except Exception:
-            pass
-        # #endregion
     vars_map = _template_vars(lead, body_html=source_html, campaign_id=campaign_id)
     html = _render_template(source_html, vars_map)
     subject = thread["subject"] or template["subject"] or "your message"
