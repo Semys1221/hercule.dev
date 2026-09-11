@@ -6,6 +6,7 @@ import { mapQualificationToForm } from "@/lib/admin/onboarding/qualification-map
 import {
   createOnboardingClient,
   prefillAgenceFormFromQualification,
+  prefillComptableFormFromQualification,
 } from "@/lib/admin/onboarding/supabase";
 import {
   createSalesCallsClient,
@@ -13,11 +14,14 @@ import {
   replaceSalesCallNotesSection,
   updateSalesCallStatus,
 } from "@/lib/sales-calls/supabase";
+import { resolveSalesCallLead } from "@/lib/sales-calls/resolve-lead";
 
 const patchSchema = z.object({
   qualification: z.record(z.string(), z.unknown()).optional(),
   closing: z.record(z.string(), z.unknown()).optional(),
   status: z.enum(["completed", "not_paid", "no_show"]).optional(),
+  /** When false, status change does not start close-indecis / no-show jobs. */
+  startSequence: z.boolean().optional().default(true),
 });
 
 type RouteParams = {
@@ -73,11 +77,20 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
       // Fire-and-forget: pre-fill agence.profile.form from qualification answers.
       // Runs after the notes are saved; does not block the response.
+      const onboardingClient = createOnboardingClient();
+      const resolvedLead = resolveSalesCallLead(salesCall);
+      const audience =
+        resolvedLead?.category === "cif"
+          ? "cif"
+          : resolvedLead?.category === "comptable"
+            ? "comptable"
+            : "agence";
+      const formPatch = mapQualificationToForm(
+        parsed.data.qualification as Parameters<typeof mapQualificationToForm>[0],
+        audience,
+      );
+
       if (salesCall.agence_id) {
-        const onboardingClient = createOnboardingClient();
-        const formPatch = mapQualificationToForm(
-          parsed.data.qualification as Parameters<typeof mapQualificationToForm>[0],
-        );
         prefillAgenceFormFromQualification(onboardingClient, salesCall.agence_id, formPatch).catch(
           (err: unknown) => {
             console.error(
@@ -86,6 +99,19 @@ export async function PATCH(request: Request, { params }: RouteParams) {
             );
           },
         );
+      }
+
+      if (salesCall.comptable_id) {
+        prefillComptableFormFromQualification(
+          onboardingClient,
+          salesCall.comptable_id,
+          formPatch,
+        ).catch((err: unknown) => {
+          console.error(
+            "[sales-calls/id] prefillComptableForm failed:",
+            err instanceof Error ? err.message : err,
+          );
+        });
       }
     }
 
@@ -113,31 +139,35 @@ export async function PATCH(request: Request, { params }: RouteParams) {
           );
         });
       }
-      if (parsed.data.status === "not_paid") {
-        const leadId = salesCall.agence_id ?? salesCall.entreprise_id;
-        if (!leadId) {
+      if (parsed.data.startSequence) {
+        const resolved = resolveSalesCallLead(salesCall);
+        if (!resolved) {
           return NextResponse.json(
             { error: "Lead introuvable pour la séquence" },
             { status: 422 },
           );
         }
-        const { startCloseIndecisSequence } = await import(
-          "@/lib/close-indecis-sequence/orchestrator"
-        );
-        sequence = await startCloseIndecisSequence(salesCall, leadId);
-      }
-      if (parsed.data.status === "no_show") {
-        const leadId = salesCall.agence_id ?? salesCall.entreprise_id;
-        if (!leadId) {
-          return NextResponse.json(
-            { error: "Lead introuvable pour la séquence" },
-            { status: 422 },
+
+        if (parsed.data.status === "not_paid") {
+          const { startCloseIndecisSequence } = await import(
+            "@/lib/close-indecis-sequence/orchestrator"
+          );
+          sequence = await startCloseIndecisSequence(
+            salesCall,
+            resolved.leadId,
+            resolved.category,
           );
         }
-        const { startNoShowSequence } = await import(
-          "@/lib/no-show-sequence/orchestrator"
-        );
-        sequence = await startNoShowSequence(salesCall, leadId);
+        if (parsed.data.status === "no_show") {
+          const { startNoShowSequence } = await import(
+            "@/lib/no-show-sequence/orchestrator"
+          );
+          sequence = await startNoShowSequence(
+            salesCall,
+            resolved.leadId,
+            resolved.category,
+          );
+        }
       }
     }
 

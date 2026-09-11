@@ -4,11 +4,13 @@ import { z } from "zod";
 import { resolveBookingLead } from "@/lib/admin/bookings/resolve-booking-lead";
 import type { SalesCallSequenceResult } from "@/lib/admin/bookings/sales-call-sequence";
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 import {
   createSalesCallsClient,
   updateSalesCallStatus,
   upsertSalesCallFromBooking,
 } from "@/lib/sales-calls/supabase";
+import { upsertIdsForLeadCategory } from "@/lib/sales-calls/resolve-lead";
 import type { SalesCall, SalesCallStatus } from "@/lib/sales-calls/types";
 
 const bodySchema = z.object({
@@ -17,22 +19,25 @@ const bodySchema = z.object({
   email: z.string().email(),
   startTime: z.string().min(1).nullable().optional(),
   status: z.enum(["no_show", "not_paid"]),
+  /** When false, only updates status — does not insert close-indecis / no-show jobs. */
+  startSequence: z.boolean().optional().default(true),
 });
 
 async function startSequenceForStatus(
   salesCall: SalesCall,
   leadId: string,
+  category: LeadCategory,
   status: "no_show" | "not_paid",
-): Promise<SalesCallSequenceResult> {
+): Promise<SalesCallSequenceResult | null> {
   if (status === "not_paid") {
     const { startCloseIndecisSequence } = await import(
       "@/lib/close-indecis-sequence/orchestrator"
     );
-    return startCloseIndecisSequence(salesCall, leadId);
+    return startCloseIndecisSequence(salesCall, leadId, category);
   }
 
   const { startNoShowSequence } = await import("@/lib/no-show-sequence/orchestrator");
-  return startNoShowSequence(salesCall, leadId);
+  return startNoShowSequence(salesCall, leadId, category);
 }
 
 export async function POST(request: Request) {
@@ -61,7 +66,7 @@ export async function POST(request: Request) {
 
     const client = createSalesCallsClient();
     let salesCall = await upsertSalesCallFromBooking(client, {
-      agenceId: resolved.lead.id,
+      ...upsertIdsForLeadCategory(resolved.category, resolved.lead.id),
       email: parsed.data.email,
       inviteeUri: parsed.data.inviteeUri,
       scheduledAt: parsed.data.startTime ?? null,
@@ -80,15 +85,19 @@ export async function POST(request: Request) {
       salesCall = await updateSalesCallStatus(client, salesCall.id, parsed.data.status);
     }
 
-    const sequence = await startSequenceForStatus(
-      salesCall,
-      resolved.lead.id,
-      parsed.data.status,
-    );
+    const sequence =
+      parsed.data.startSequence
+        ? await startSequenceForStatus(
+            salesCall,
+            resolved.lead.id,
+            resolved.category,
+            parsed.data.status,
+          )
+        : null;
 
     revalidateBookingsCache();
 
-    if (statusChanged && !sequence.started) {
+    if (statusChanged && parsed.data.startSequence && sequence && !sequence.started) {
       return NextResponse.json(
         {
           salesCallId: salesCall.id,

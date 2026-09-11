@@ -98,9 +98,26 @@ function confirmButtonLabel(
   if (emailType === "modalites_ask") {
     return "Confirmer le rendez-vous";
   }
+  if (emailType === "close_indecis_1") {
+    return "Accéder à mon dashboard";
+  }
   return usesConsulterLinkLabel(emailType, confirmUrl ?? "", body)
     ? "Consulter"
     : "Confirmer ma présence";
+}
+
+function shouldRenderHtml(params: {
+  category: LeadCategory;
+  emailType: BookingEmailType;
+  useHtml?: boolean;
+}): boolean {
+  if (params.emailType === "close_indecis_1" && params.category === "comptable") {
+    return true;
+  }
+  if (isSequenceRoot(params.emailType)) {
+    return false;
+  }
+  return params.useHtml ?? defaultUseHtml(params.emailType);
 }
 
 function enhanceConfirmLinksInText(
@@ -156,9 +173,11 @@ export async function finalizeRenderedEmail(params: {
 }): Promise<{ subject: string; text: string; html?: string }> {
   const cleanedBody = stripLegacyClosing(params.body);
   const confirmUrl = params.confirmUrl?.trim() || "";
-  const useHtml = isSequenceRoot(params.emailType)
-    ? false
-    : (params.useHtml ?? defaultUseHtml(params.emailType));
+  const useHtml = shouldRenderHtml({
+    category: params.category,
+    emailType: params.emailType,
+    useHtml: params.useHtml,
+  });
   const meetingActionsLine = params.meetingActionLinks
     ? buildMeetingActionsPlainText(params.meetingActionLinks)
     : null;

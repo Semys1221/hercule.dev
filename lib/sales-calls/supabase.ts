@@ -174,6 +174,25 @@ export async function findLatestSalesCallByAgenceId(
   return (data as SalesCall | null) ?? null;
 }
 
+export async function findLatestSalesCallByComptableId(
+  client: SupabaseClient,
+  comptableId: string,
+): Promise<SalesCall | null> {
+  const { data, error } = await client
+    .from("sales_calls")
+    .select("*")
+    .eq("comptable_id", comptableId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`sales_calls comptable lookup failed: ${error.message}`);
+  }
+
+  return (data as SalesCall | null) ?? null;
+}
+
 export async function updateSalesCallNotes(
   client: SupabaseClient,
   salesCallId: string,

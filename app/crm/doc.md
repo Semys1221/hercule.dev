@@ -109,6 +109,10 @@ Or run `pnpm configure-link-provisioning-cron` after adding `CRON_JOB_ORG_API_KE
 
 Manual run: `pnpm provision-list-links` (or `--dry-run`, `--email lead@example.com`).
 
+CIF scraper auto-provision (post-push hook):
+
+`POST /api/link-tracking/provision-leads` — batch-provision slug + CIF URLs after scraper push. Auth: `Authorization: Bearer <CRON_SECRET>` (or `LINK_TRACKING_WEBHOOK_SECRET`). Body: `{ "emails": ["a@b.com"], "niche": "cif" }`. Enabled on the CGP preset via `INSTANTLY_PROVISION_LINKS: true` in [`conseillers_gestion_patrimoine_config.py`](../streamlit_scraper/configs/conseillers_gestion_patrimoine_config.py). VPS scraper `.env` needs `CRM_BACKEND_URL` + `CRON_SECRET`.
+
 E2E smoke (comptable list → links → subsequence → reply agent):
 
 ```bash

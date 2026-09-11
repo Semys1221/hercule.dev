@@ -16,6 +16,7 @@ import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
 import { ChronologieSection } from "./chronologie-section";
 import { ComptableOnboardingForm } from "./comptable-onboarding-form";
 import { OnboardingComptableWizard } from "./onboarding-comptable-wizard";
+import { StepEmbeddedCheckoutComptable } from "./steps/step-embedded-checkout-comptable";
 import { comptableOfferLabel } from "@/lib/commercial/comptable-pricing";
 
 import { RetractionWaiverCard } from "./retraction-waiver-card";
@@ -37,6 +38,47 @@ export function DashboardComptable({
   if (data.dashboardMode === "comptable_pending") {
     return (
       <OnboardingComptableWizard data={data} onRefresh={onRefresh} />
+    );
+  }
+
+  if (data.dashboardMode === "comptable_not_paid") {
+    const chronologieSteps = (data.milestones ?? data.timeline).map((step) => ({
+      id: step.id,
+      label: step.label,
+      meta: step.meta,
+      status: step.status,
+    }));
+
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <DashboardBrandHeader />
+        <main className="mx-auto max-w-2xl px-6 py-12">
+          <DashboardPageHeader
+            eyebrow="Espace cabinet"
+            title={`Bienvenue, ${displayName}`}
+            subtitle="Finalisez votre paiement pour activer Hercule Comptable."
+          />
+
+          {chronologieSteps.length > 0 ? (
+            <div className="mt-8">
+              <ChronologieSection
+                steps={chronologieSteps}
+                description="Suivi de votre activation après paiement."
+                activeStatusLabel="En cours"
+              />
+            </div>
+          ) : null}
+
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="text-base">Finaliser votre souscription</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <StepEmbeddedCheckoutComptable slug={data.slug} />
+            </CardContent>
+          </Card>
+        </main>
+      </div>
     );
   }
 

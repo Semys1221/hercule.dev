@@ -19,6 +19,7 @@ import {
   completeBuyerOnboarding,
   waiveRetractionNow,
 } from "@/lib/dashboard/onboarding-complete";
+import { buildComptableNotPaidMilestones } from "@/lib/dashboard/comptable-not-paid-milestones";
 import { buildDashboardRetractionFields } from "@/lib/dashboard/retraction-fields";
 import type {
   DashboardFaqAudience,
@@ -34,6 +35,7 @@ import { dashboardLinkFor } from "@/lib/link-tracking/urls";
 import {
   createSalesCallsClient,
   findLatestSalesCallByAgenceId,
+  findLatestSalesCallByComptableId,
 } from "@/lib/sales-calls/supabase";
 
 type RouteParams = {
@@ -117,41 +119,73 @@ export async function GET(_request: Request, { params }: RouteParams) {
         : null;
       const isOnboarded = Boolean(lead.onboarding_completed_at);
       const productStatut = lead.product_statut ?? "NONE";
-      const { retraction, milestones } = buildDashboardRetractionFields({
+      const salesCallsClient = createSalesCallsClient();
+      const latestSalesCall = await findLatestSalesCallByComptableId(
+        salesCallsClient,
+        lead.id,
+      );
+      const isNotPaidPostCall = latestSalesCall?.status === "not_paid";
+
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "454528",
+        },
+        body: JSON.stringify({
+          sessionId: "454528",
+          runId: "dashboard-mode-debug",
+          hypothesisId: "A,B,C",
+          location: "app/api/dashboard/[slug]/route.ts:comptable",
+          message: "comptable dashboard mode resolution",
+          data: {
+            slug: lead.slug,
+            leadId: lead.id,
+            isPaid,
+            salesCallId: latestSalesCall?.id ?? null,
+            salesCallStatus: latestSalesCall?.status ?? null,
+            isNotPaidPostCall,
+            hasNotPaidModeCode: true,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
+      const { retraction, milestones: paidMilestones } = buildDashboardRetractionFields({
         category: lookup.category,
         lead,
       });
 
+      const notPaidMilestones = buildComptableNotPaidMilestones();
+      const milestones = isNotPaidPostCall && !isPaid ? notPaidMilestones : paidMilestones;
+
       const dashboardMode = !isPaid
-        ? "comptable_pending"
+        ? isNotPaidPostCall
+          ? "comptable_not_paid"
+          : "comptable_pending"
         : !isOnboarded
           ? "comptable_onboarding"
           : "comptable_active";
 
       // #region agent log
-      const profileDashboard = (profile.dashboard ?? {}) as Record<string, unknown>;
       fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Debug-Session-Id": "9c08cc",
+          "X-Debug-Session-Id": "454528",
         },
         body: JSON.stringify({
-          sessionId: "9c08cc",
-          runId: "pre-fix",
-          hypothesisId: "A,B,D",
-          location: "app/api/dashboard/[slug]/route.ts:comptable",
-          message: "comptable dashboard GET delivery dates",
+          sessionId: "454528",
+          runId: "dashboard-mode-debug",
+          hypothesisId: "A,D",
+          location: "app/api/dashboard/[slug]/route.ts:comptable:resolved",
+          message: "comptable dashboardMode resolved",
           data: {
             slug: lead.slug,
             dashboardMode,
-            retractionStatus: retraction?.status ?? null,
-            storedEstimatedFirstBookingAt:
-              typeof profileDashboard.estimated_first_booking_at === "string"
-                ? profileDashboard.estimated_first_booking_at
-                : null,
-            timelineFirstRdv: milestones.find((m) => m.id === "first_rdv") ?? null,
-            milestones: milestones.map((m) => ({ id: m.id, meta: m.meta })),
+            milestoneIds: milestones.map((m) => m.id),
           },
           timestamp: Date.now(),
         }),

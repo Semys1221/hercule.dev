@@ -1,6 +1,7 @@
 import type { SalesCallSequenceResult } from "@/lib/admin/bookings/sales-call-sequence";
 import { insertJob } from "@/lib/booking-communication/jobs";
 import { dispatchDueJobsForLead } from "@/lib/booking-communication/orchestrator";
+import type { LeadCategory } from "@/lib/link-tracking/types";
 import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
 import type { SalesCall } from "@/lib/sales-calls/types";
 
@@ -9,9 +10,10 @@ const HOUR_MS = 60 * 60 * 1000;
 export async function startCloseIndecisSequence(
   salesCall: SalesCall,
   leadId: string,
+  category: LeadCategory = "agence",
 ): Promise<SalesCallSequenceResult> {
   const client = createLinkTrackingClient();
-  const lead = await findLeadById(client, "agence", leadId);
+  const lead = await findLeadById(client, category, leadId);
   if (!lead) {
     return { started: false, reason: "lead_not_found", dispatched: false };
   }
@@ -38,12 +40,13 @@ export async function startCloseIndecisSequence(
   let inserted = 0;
   for (const job of jobs) {
     const row = await insertJob({
-      category: "agence",
+      category,
       leadId: lead.id,
       emailType: job.emailType,
       scheduledFor: job.scheduledFor,
       triggeredBy: "sales_call_not_paid",
       idempotencyKey: job.idempotencyKey,
+      useHtml: category === "comptable" && job.emailType === "close_indecis_1",
     });
     if (row) {
       inserted += 1;

@@ -61,3 +61,45 @@ export async function prefillAgenceFormFromQualification(
     throw new Error(`prefillAgenceForm: update failed — ${updateError.message}`);
   }
 }
+
+/**
+ * Overwrites `comptable.profile.form` with the provided formPatch.
+ * Same fetch-merge-update pattern as {@link prefillAgenceFormFromQualification}.
+ */
+export async function prefillComptableFormFromQualification(
+  client: SupabaseClient,
+  comptableId: string,
+  formPatch: Partial<DashboardFormData>,
+): Promise<void> {
+  const { data, error: fetchError } = await client
+    .from("comptable")
+    .select("profile")
+    .eq("id", comptableId)
+    .maybeSingle();
+
+  if (fetchError) {
+    throw new Error(`prefillComptableForm: fetch failed — ${fetchError.message}`);
+  }
+
+  if (!data) {
+    return;
+  }
+
+  const existingProfile = (data.profile ?? {}) as Record<string, unknown>;
+  const updatedProfile: Record<string, unknown> = {
+    ...existingProfile,
+    form: {
+      ...((existingProfile.form ?? {}) as Record<string, unknown>),
+      ...formPatch,
+    },
+  };
+
+  const { error: updateError } = await client
+    .from("comptable")
+    .update({ profile: updatedProfile })
+    .eq("id", comptableId);
+
+  if (updateError) {
+    throw new Error(`prefillComptableForm: update failed — ${updateError.message}`);
+  }
+}

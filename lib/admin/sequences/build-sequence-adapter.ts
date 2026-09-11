@@ -30,7 +30,10 @@ export function buildSequenceAdapter(
 
   if (sequence.editorKind === "booking") {
     const emailTypes = bookingSequenceTypesFor(sequence.slug, niche);
-    const rawCategory = sequence.bookingCategory ?? niche;
+    const rawCategory =
+      niche === "comptable" && sequence.audiences.includes("comptable")
+        ? "comptable"
+        : sequence.bookingCategory ?? niche;
     if (!isLeadCategory(rawCategory)) {
       return { adapter: null, needsCampaign: false };
     }

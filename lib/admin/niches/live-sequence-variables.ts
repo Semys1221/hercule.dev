@@ -61,6 +61,9 @@ function bookingCategoryForSlug(
   niche: Niche,
 ): LeadCategory {
   const sequence = getEmailSequence(slug);
+  if (niche === "comptable" && sequence?.audiences.includes("comptable")) {
+    return "comptable";
+  }
   if (sequence?.bookingCategory) {
     return sequence.bookingCategory;
   }

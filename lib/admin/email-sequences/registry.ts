@@ -276,7 +276,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 3,
     status: "built",
     provider: "resend",
-    audiences: ["agence"],
+    audiences: ["agence", "comptable"],
     description:
       "Séquence déclenchée via le bouton Non Payé dans Bookings (ou le statut not_paid). Envoie le lien dashboard pour finaliser le paiement.",
     steps: [

@@ -1022,6 +1022,12 @@ async def _flush_instantly_buffer(
     if label:
         log_cb(f"Instantly flush ({label}) — {len(pending)} lead(s) in buffer")
 
+    batch_emails = [
+        str(row.get("Email") or "").strip().lower()
+        for row in pending
+        if "@" in str(row.get("Email") or "")
+    ]
+
     push_stats = await push_leads_to_list(
         config["INSTANTLY_API_KEY"],
         config["INSTANTLY_LIST_ID"],
@@ -1031,6 +1037,16 @@ async def _flush_instantly_buffer(
         log_cb=log_cb,
     )
     pending.clear()
+
+    if push_stats["pushed"] > 0 and config.get("INSTANTLY_PROVISION_LINKS"):
+        from link_provision_client import provision_leads_after_push
+
+        await provision_leads_after_push(
+            batch_emails,
+            config=config,
+            log_cb=log_cb,
+        )
+
     return {
         "pushed": push_stats["pushed"],
         "skipped_duplicate": push_stats["skipped_duplicate"],

@@ -6,11 +6,14 @@ const PARTNER_CABINETS_MARKER = "cabinets partenaires";
 
 const E1_FINGERPRINTS = [
   "voici plus de precisions",
+  "pour faire simple",
   "cabinets partenaires",
   "au minimum 2 associes",
   "plus de 3 associes",
   "proposer mon cabinet",
+  "mon cabinet est compatible",
   "agences e-commerce",
+  "dentistes et veterinaires",
   "approche a 360",
   "echanges entre cabinets et entreprise",
   PARTNER_CABINETS_MARKER,

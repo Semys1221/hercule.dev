@@ -36,7 +36,8 @@ Required in repo root [`.env`](../../.env):
 |----------|---------|
 | `OUTSCRAPER_API_KEY` | Outscraper Google Maps API |
 | `INSTANTLY_API_KEY` | Instantly list/campaign/push |
-| `CRON_SECRET` / `INSTANTLY_BYPASS_WEBHOOK_SECRET` | Subsequence webhook (tab 5) |
+| `CRON_SECRET` / `INSTANTLY_BYPASS_WEBHOOK_SECRET` | Subsequence webhook (tab 5); CIF post-push link provision |
+| `CRM_BACKEND_URL` | Hercule API base for auto link provision (default `https://www.hercule.dev`) |
 
 Optional VPS remote control (Scrape page):
 

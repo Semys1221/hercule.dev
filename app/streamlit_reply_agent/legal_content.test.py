@@ -141,7 +141,8 @@ class LegalContentTests(unittest.TestCase):
         body = prompt_path.read_text(encoding="utf-8").lower()
         for anchor in (
             "reservation_cif_link",
-            "optimisation fiscale",
+            "dentistes et vétérinaires",
+            "stocks de trésorerie",
             "bande passante",
             "cvg/conseil-financier",
         ):

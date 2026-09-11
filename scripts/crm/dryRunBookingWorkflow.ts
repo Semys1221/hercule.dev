@@ -31,6 +31,9 @@ async function main() {
     {
       id: "00000000-0000-0000-0000-000000000000",
       agence_id: null,
+      entreprise_id: null,
+      comptable_id: null,
+      cif_id: null,
       email: MOCK_EMAIL,
       calendly_invitee_uri: MOCK_INVITEE,
       scheduled_at: new Date().toISOString(),

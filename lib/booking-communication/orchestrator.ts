@@ -29,7 +29,7 @@ import { renderEmailFromStore } from "./template-store";
 import { meetingActionLinksForRender, retryUnsyncedMeetingLinks } from "./meeting-links";
 import { buildTemporaryConfirmUrl, buildEntreprisePostBookingUrl } from "./templates";
 import { defaultUseHtml } from "./signatures";
-import { confirmationAgenceLinkFor } from "@/lib/link-tracking/urls";
+import { confirmationAgenceLinkFor, dashboardLinkFor } from "@/lib/link-tracking/urls";
 import { modalitesConfirmUrlFor } from "@/lib/modalites-campaign/urls";
 import { enforceModalitesCancelForLead } from "@/lib/modalites-campaign/enforce-cancel";
 import { prepareThreadedSend } from "./threaded-send";
@@ -482,6 +482,12 @@ function confirmUrlForJob(job: BookingEmailJob, lead: LinkTrackingLead): string 
     job.email_type === "h24_relance"
   ) {
     return "";
+  }
+  if (
+    job.email_type.startsWith("close_indecis_") &&
+    (job.lead_category === "comptable" || job.lead_category === "cif")
+  ) {
+    return dashboardLinkFor(lead) ?? "";
   }
   return confirmationAgenceLinkFor(lead);
 }

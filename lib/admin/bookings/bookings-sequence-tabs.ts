@@ -102,7 +102,7 @@ export const BOOKINGS_SEQUENCE_TABS: BookingsSequenceTabDef[] = [
     needsCampaign: false,
     availability: {
       agence: "live",
-      comptable: "empty",
+      comptable: "live",
       entreprise: "empty",
       cif: "empty",
     },

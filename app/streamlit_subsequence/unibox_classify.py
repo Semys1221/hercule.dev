@@ -30,11 +30,14 @@ ALL_HERCULE_FLOWS: list[Flow] = [*INTERESTED_FLOWS, *NO_SHOW_FLOWS]
 FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
     "interested_email1": [
         "voici plus de precisions",
+        "pour faire simple",
         "cabinets partenaires",
         "au minimum 2 associes",
         "plus de 3 associes",
         "proposer mon cabinet",
+        "mon cabinet est compatible",
         "agences e-commerce",
+        "dentistes et veterinaires",
         "approche a 360",
         "echanges entre cabinets et entreprise",
     ],

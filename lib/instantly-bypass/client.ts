@@ -98,6 +98,64 @@ export async function findLeadByEmailInCampaign(
   return null;
 }
 
+export async function findLeadByEmailInList(
+  apiKey: string,
+  listId: string,
+  leadEmail: string,
+): Promise<InstantlyLeadRecord | null> {
+  const normalized = leadEmail.trim().toLowerCase();
+
+  const searched = await instantlyFetch<{ items?: InstantlyLeadRecord[] }>(
+    apiKey,
+    "/leads/list",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        list_id: listId,
+        search: normalized,
+        limit: 20,
+      }),
+    },
+  );
+  const searchedMatch =
+    searched.items?.find(
+      (item) => (item.email ?? "").trim().toLowerCase() === normalized,
+    ) ?? null;
+  if (searchedMatch) return searchedMatch;
+
+  let startingAfter: string | null = null;
+
+  while (true) {
+    const body: Record<string, unknown> = {
+      list_id: listId,
+      limit: 100,
+    };
+    if (startingAfter) body.starting_after = startingAfter;
+
+    const page = await instantlyFetch<{
+      items?: InstantlyLeadRecord[];
+      next_starting_after?: string;
+    }>(apiKey, "/leads/list", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+
+    const items = page.items ?? [];
+    const match =
+      items.find((item) => (item.email ?? "").trim().toLowerCase() === normalized) ??
+      null;
+    if (match) return match;
+
+    const next =
+      page.next_starting_after ??
+      (items.length > 0 ? (items[items.length - 1]?.id ?? null) : null);
+    if (!next || items.length < 100) break;
+    startingAfter = next;
+  }
+
+  return null;
+}
+
 export async function removeLeadFromSubsequence(
   apiKey: string,
   leadId: string,

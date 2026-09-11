@@ -142,6 +142,19 @@ async function main() {
   });
   assert.ok(!override.html, "useHtml:false must skip html");
 
+  const dashboardUrl = "https://www.hercule.dev/dashboard/ItSAm6";
+  const comptableClose = await finalizeRenderedEmail({
+    category: "comptable",
+    subject: "Bienvenue chez Hercule",
+    body: `Bonjour Meniaud,\n\nBienvenue chez Hercule !\n\nVoici le lien vers votre dashboard :\n\n{{dashboardLink}}\n\nL'équipe Hercule`,
+    emailType: "close_indecis_1",
+    confirmUrl: dashboardUrl,
+    useHtml: true,
+  });
+  assert.ok(comptableClose.html, "comptable close_indecis_1 must include html");
+  assert.match(comptableClose.html!, /Accéder à mon dashboard/i);
+  assert.ok(comptableClose.text.includes(SIGNATURE_TAGLINES.comptable));
+
   console.log("booking email render smoke passed");
 }
 

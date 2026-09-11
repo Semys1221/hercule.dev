@@ -21,6 +21,7 @@ const CONFIRM_MARKERS = [
   "{{confirmLink}}",
   "{{confirmUrl}}",
   "{{post_booking_link}}",
+  "{{dashboardLink}}",
 ] as const;
 
 const PLAIN_BODY_STYLE = {
@@ -108,6 +109,7 @@ export function BookingHtmlEmail({
     ?.replace(/\{\{confirmLink\}\}/g, "Consulter")
     ?.replace(/\{\{confirmation_agence_link\}\}/g, "Confirmer")
     ?.replace(/\{\{post_booking_link\}\}/g, "Consulter")
+    ?.replace(/\{\{dashboardLink\}\}/g, "Dashboard")
     ?.slice(0, 120);
 
   return (

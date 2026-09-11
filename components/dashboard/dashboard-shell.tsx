@@ -97,6 +97,7 @@ export function DashboardShell({ slug, paidQuery }: DashboardShellProps) {
   if (
     data.dashboardMode === "comptable_active" ||
     data.dashboardMode === "comptable_pending" ||
+    data.dashboardMode === "comptable_not_paid" ||
     data.dashboardMode === "comptable_onboarding"
   ) {
     return (

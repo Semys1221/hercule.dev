@@ -6,6 +6,7 @@ export type DashboardMode =
   | "dashboard_active"
   | "comptable_active"
   | "comptable_pending"
+  | "comptable_not_paid"
   | "comptable_onboarding"
   | "entreprise_preview"
   | "unavailable";
