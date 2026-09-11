@@ -20,15 +20,27 @@ import {
 type DashboardShellProps = {
   slug: string;
   paidQuery?: string | null;
+  checkoutSessionId?: string | null;
 };
 
-export function DashboardShell({ slug, paidQuery }: DashboardShellProps) {
+const POST_PAYMENT_MODES = new Set<DashboardData["dashboardMode"]>([
+  "comptable_onboarding",
+  "comptable_active",
+  "dashboard_active",
+  "dashboard_state",
+]);
+
+export function DashboardShell({
+  slug,
+  paidQuery,
+  checkoutSessionId,
+}: DashboardShellProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTransition, setShowTransition] = useState(false);
 
-  const loadDashboard = useCallback(async () => {
+  const loadDashboard = useCallback(async (): Promise<DashboardData | null> => {
     setLoading(true);
     setError(null);
 
@@ -38,18 +50,115 @@ export function DashboardShell({ slug, paidQuery }: DashboardShellProps) {
       if (!response.ok) {
         throw new Error(body.error || "Impossible de charger le dashboard");
       }
-      setData(body as DashboardData);
+      const nextData = body as DashboardData;
+      setData(nextData);
+      return nextData;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur de chargement");
       setData(null);
+      return null;
     } finally {
       setLoading(false);
     }
   }, [slug]);
 
   useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard, paidQuery]);
+    let cancelled = false;
+
+    async function bootstrapAfterPayment() {
+      if (paidQuery !== "1") {
+        await loadDashboard();
+        return;
+      }
+
+      if (checkoutSessionId) {
+        try {
+          const syncResponse = await fetch("/api/payments/sync-comptable-checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId: checkoutSessionId }),
+          });
+          const syncBody = (await syncResponse.json()) as {
+            synced?: boolean;
+            reason?: string;
+          };
+
+          // #region agent log
+          fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Debug-Session-Id": "454528",
+            },
+            body: JSON.stringify({
+              sessionId: "454528",
+              runId: "post-payment-sync",
+              hypothesisId: "A,C",
+              location: "dashboard-shell.tsx:bootstrapAfterPayment",
+              message: "client sync after Stripe return",
+              data: {
+                slug,
+                hasCheckoutSessionId: Boolean(checkoutSessionId),
+                synced: syncBody.synced ?? null,
+                reason: syncBody.reason ?? null,
+              },
+              timestamp: Date.now(),
+            }),
+          }).catch(() => {});
+          // #endregion
+        } catch (syncError) {
+          console.error("[dashboard-shell] comptable checkout sync failed:", syncError);
+        }
+      }
+
+      let latest = await loadDashboard();
+      let attempts = 0;
+      while (
+        !cancelled &&
+        latest &&
+        !POST_PAYMENT_MODES.has(latest.dashboardMode) &&
+        attempts < 6
+      ) {
+        attempts += 1;
+        await new Promise<void>((resolve) => {
+          window.setTimeout(resolve, 1500);
+        });
+        if (cancelled) {
+          return;
+        }
+        latest = await loadDashboard();
+      }
+
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "454528",
+        },
+        body: JSON.stringify({
+          sessionId: "454528",
+          runId: "post-payment-sync",
+          hypothesisId: "D",
+          location: "dashboard-shell.tsx:bootstrapAfterPayment:done",
+          message: "dashboard loaded after payment return",
+          data: {
+            slug,
+            dashboardMode: latest?.dashboardMode ?? null,
+            attempts,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+    }
+
+    void bootstrapAfterPayment();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadDashboard, paidQuery, checkoutSessionId, slug]);
 
   /** Called after the onboarding form is submitted successfully. */
   function handleOnboardingComplete() {

@@ -110,7 +110,7 @@ export async function POST(request: Request) {
     const sharedSessionParams = {
       ui_mode: "embedded_page" as const,
       line_items: [{ price: priceId, quantity: 1 }],
-      return_url: `${baseUrl}/dashboard/${lead.slug}?paid=1`,
+      return_url: `${baseUrl}/dashboard/${lead.slug}?paid=1&session_id={CHECKOUT_SESSION_ID}`,
       customer_email: lead.email,
       branding_settings: getCheckoutBrandingSettings(),
       wallet_options: {

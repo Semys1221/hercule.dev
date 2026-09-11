@@ -187,6 +187,14 @@ export async function handleComptableCheckoutCompleted(
 
   revalidateBookingsCache();
 
+  const salesCallOwnerColumn =
+    owner === "cif" ? "cif_id" : owner === "comptable" ? "comptable_id" : "entreprise_id";
+  await client
+    .from("sales_calls")
+    .update({ status: "paid" })
+    .eq(salesCallOwnerColumn, leadId)
+    .in("status", ["scheduled", "not_paid", "completed", "no_show"]);
+
   try {
     await sendComptableWelcomeEmail(client, owner, leadId);
   } catch (emailError) {
