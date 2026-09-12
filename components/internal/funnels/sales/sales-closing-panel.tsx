@@ -334,10 +334,11 @@ export function SalesClosingPanel({
       resolveSalesSessionDashboardLink({
         lead: selectedLead,
         bookingDashboardLink: selectedBooking?.links?.dashboard_link,
+        bookingSlug: selectedBooking?.slug,
         developerMode,
         origin: typeof window !== "undefined" ? window.location.origin : undefined,
       }),
-    [developerMode, selectedBooking?.links?.dashboard_link, selectedLead],
+    [developerMode, selectedBooking?.links?.dashboard_link, selectedBooking?.slug, selectedLead],
   );
   const dashboardLink = dashboardResolution.link;
   const usingFakeDashboardLink = dashboardResolution.isFake;

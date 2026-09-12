@@ -248,10 +248,16 @@ export function RendezVousPanel({
       resolveSalesSessionDashboardLink({
         lead: selectedLead,
         bookingDashboardLink: selectedBooking?.links?.dashboard_link,
+        bookingSlug: selectedBooking?.slug,
         developerMode: developerModeEnabled,
         origin: typeof window !== "undefined" ? window.location.origin : undefined,
       }).link,
-    [developerModeEnabled, selectedBooking?.links?.dashboard_link, selectedLead],
+    [
+      developerModeEnabled,
+      selectedBooking?.links?.dashboard_link,
+      selectedBooking?.slug,
+      selectedLead,
+    ],
   );
   const leadCategory =
     selectedBooking?.lead_category ??

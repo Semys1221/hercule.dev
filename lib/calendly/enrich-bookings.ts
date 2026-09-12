@@ -115,6 +115,32 @@ export function buildCrmLinks(
           : leadCategory === "cif"
             ? confirmationCifLinkFor(lead)
           : confirmationAgenceLinkFor(lead);
+    const dashboardLink = dashboardLinkFor(lead);
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d13f4c",
+      },
+      body: JSON.stringify({
+        sessionId: "d13f4c",
+        runId: "pre-fix",
+        hypothesisId: "H3-H5",
+        location: "enrich-bookings.ts:buildCrmLinks:lead",
+        message: "crm links for matched lead",
+        data: {
+          leadSlug: lead.slug?.trim() || null,
+          leadDashboardLink: lead.dashboard_link?.trim() || null,
+          slugParam: slug?.trim() || null,
+          dashboardLink,
+          reservationEntreprise: reservationEntreprise || null,
+          confirmationLink,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     return {
       reservation_agence_link: reservationAgence || null,
       reservation_entreprise_link: reservationEntreprise || null,
@@ -124,7 +150,9 @@ export function buildCrmLinks(
         leadCategory === "comptable" || leadCategory === "cif"
           ? confirmationLink
           : confirmationComptableLinkFor(lead),
-      dashboard_link: dashboardLinkFor(lead),
+      dashboard_link:
+        dashboardLink ??
+        (slug?.trim() ? buildDashboardUrl(slug.trim()) : null),
     };
   }
 

@@ -120,6 +120,22 @@ function main() {
   );
   assert.match(crmFromSlugOnLead.reservation_agence_link ?? "", /abc123/);
 
+  const leadMissingSlug = baseLead({
+    slug: "",
+    dashboard_link: null,
+    reservation_entreprise_link:
+      "https://www.hercule.dev/reservation-entreprise.html/dWvyPC",
+    confirmation_agence_link:
+      "https://www.hercule.dev/confirm-reservation.html/dWvyPC?email=prospect%40example.com",
+  });
+  const crmFromStoredTrackingLinks = buildCrmLinks(
+    leadMissingSlug,
+    "dWvyPC",
+    "prospect@example.com",
+    "entreprise",
+  );
+  assert.match(crmFromStoredTrackingLinks.dashboard_link ?? "", /dWvyPC/);
+
   const display = buildDisplayLinks(booking, lead);
   assert.equal(display.reservation_agence_link, lead.reservation_agence_link);
   assert.equal(display.calendly_cancel_url, booking.calendly_cancel_url);

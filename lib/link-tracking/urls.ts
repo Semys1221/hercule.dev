@@ -168,13 +168,88 @@ export function buildCifLeadUrls(slug: string, email: string): CifLeadUrls {
 }
 
 export function dashboardLinkFor(
-  lead: Pick<LinkTrackingLead, "slug" | "dashboard_link">,
+  lead: Pick<
+    LinkTrackingLead,
+    | "slug"
+    | "dashboard_link"
+    | "reservation_agence_link"
+    | "reservation_entreprise_link"
+    | "reservation_comptable_link"
+    | "reservation_cif_link"
+    | "confirmation_agence_link"
+    | "post_booking_link"
+  >,
 ): string | null {
   const stored = lead.dashboard_link?.trim();
   if (stored) return stored;
-  const slug = lead.slug?.trim();
+  const slug = resolveLeadSlug(lead);
   if (!slug) return null;
   return buildDashboardUrl(slug);
+}
+
+export function extractTrackingSlug(url: string | null | undefined): string | null {
+  const trimmed = url?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const pathname = new URL(trimmed, "https://example.com").pathname;
+    const parts = pathname.split("/").filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (!last || last.endsWith(".html")) {
+      return null;
+    }
+    return decodeURIComponent(last);
+  } catch {
+    return null;
+  }
+}
+
+export function resolveLeadSlug(
+  lead: Pick<
+    LinkTrackingLead,
+    | "slug"
+    | "dashboard_link"
+    | "reservation_agence_link"
+    | "reservation_entreprise_link"
+    | "reservation_comptable_link"
+    | "reservation_cif_link"
+    | "confirmation_agence_link"
+    | "confirmation_comptable_link"
+    | "confirmation_cif_link"
+    | "post_booking_link"
+  >,
+): string | null {
+  const direct = lead.slug?.trim();
+  if (direct) {
+    return direct;
+  }
+
+  const candidates = [
+    lead.dashboard_link,
+    lead.reservation_entreprise_link,
+    lead.reservation_agence_link,
+    lead.reservation_comptable_link,
+    lead.reservation_cif_link,
+    lead.confirmation_agence_link,
+    lead.confirmation_comptable_link,
+    lead.confirmation_cif_link,
+    lead.post_booking_link,
+  ];
+
+  for (const candidate of candidates) {
+    const fromDashboard = extractDashboardSlug(candidate);
+    if (fromDashboard) {
+      return fromDashboard;
+    }
+    const fromTracking = extractTrackingSlug(candidate);
+    if (fromTracking) {
+      return fromTracking;
+    }
+  }
+
+  return null;
 }
 
 export function extractDashboardSlug(dashboardLink: string | null | undefined): string | null {
@@ -197,16 +272,60 @@ export function extractDashboardSlug(dashboardLink: string | null | undefined): 
 }
 
 export function resolveSalesSessionDashboardLink(params: {
-  lead: Pick<LinkTrackingLead, "slug" | "dashboard_link"> | null;
+  lead: Pick<
+    LinkTrackingLead,
+    | "slug"
+    | "dashboard_link"
+    | "reservation_agence_link"
+    | "reservation_entreprise_link"
+    | "reservation_comptable_link"
+    | "reservation_cif_link"
+    | "confirmation_agence_link"
+    | "confirmation_comptable_link"
+    | "confirmation_cif_link"
+    | "post_booking_link"
+  > | null;
   bookingDashboardLink?: string | null;
+  bookingSlug?: string | null;
   developerMode?: boolean;
   origin?: string;
 }): { link: string | null; isFake: boolean } {
   const leadLink = params.lead ? dashboardLinkFor(params.lead) : null;
   const slug =
     params.lead?.slug?.trim() ||
+    params.bookingSlug?.trim() ||
+    (params.lead ? resolveLeadSlug(params.lead) : null) ||
     extractDashboardSlug(params.bookingDashboardLink) ||
-    extractDashboardSlug(leadLink);
+    extractDashboardSlug(leadLink) ||
+    extractTrackingSlug(params.bookingDashboardLink);
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "d13f4c",
+    },
+    body: JSON.stringify({
+      sessionId: "d13f4c",
+      runId: "pre-fix",
+      hypothesisId: "H1-H2-H4",
+      location: "urls.ts:resolveSalesSessionDashboardLink",
+      message: "dashboard slug resolution",
+      data: {
+        leadSlug: params.lead?.slug?.trim() || null,
+        bookingSlug: params.bookingSlug?.trim() || null,
+        leadDashboardLink: params.lead?.dashboard_link?.trim() || null,
+        bookingDashboardLink: params.bookingDashboardLink?.trim() || null,
+        leadLink,
+        resolvedSlug: slug || null,
+        developerMode: Boolean(params.developerMode),
+        willUseDevPreview: !slug && Boolean(params.developerMode),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   if (slug) {
     if (params.developerMode && params.origin) {
