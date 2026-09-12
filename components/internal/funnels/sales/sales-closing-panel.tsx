@@ -33,7 +33,7 @@ import {
   resolveClientSegment,
 } from "@/lib/admin/funnels/client-segment";
 import type { Audience } from "@/lib/admin/navigation";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience, isCifSalesAudience, isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import {
   getSalesQuestions,
   formatSliderLabel,
@@ -43,6 +43,9 @@ import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
 import {
   COMPTABLE_PERFORMANCE_REPORTING_RULE,
 } from "@/lib/admin/funnels/comptable-sales-copy";
+import {
+  CIF_PERFORMANCE_REPORTING_RULE,
+} from "@/lib/admin/funnels/cif-sales-copy";
 import {
   formatComptableFirstRdvAfterActivationLabel,
   formatComptableOnboardingAccessLabel,
@@ -193,11 +196,52 @@ const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
   },
 ];
 
+const CIF_TREATMENT_RULES: TreatmentRule[] = [
+  {
+    id: "reactivite",
+    title: "Réactivité",
+    description: "Répondre à toute mission {clientSegment} proposée sous 24h ouvrées.",
+    icon: Clock,
+  },
+  {
+    id: "traitement",
+    title: "Traitement",
+    description:
+      "Chaque mandat {clientSegment} est traité avec sérieux dans un délai raisonnable.",
+    icon: ClipboardCheck,
+  },
+  {
+    id: "no-show",
+    title: "No-show",
+    description:
+      "Signaler tout no-show dirigeant {clientSegment} sous 48h → remplacement ≤ 14 jours.",
+    icon: UserX,
+  },
+  {
+    id: "disponibilite",
+    title: "Disponibilité",
+    description: "Informer Hercule en cas d'indisponibilité avant la date prévue.",
+    icon: CalendarOff,
+  },
+  {
+    id: "reporting",
+    title: CIF_PERFORMANCE_REPORTING_RULE.title,
+    description: CIF_PERFORMANCE_REPORTING_RULE.description,
+    icon: BarChart3,
+  },
+];
+
 function getTreatmentRules(
   audience: Audience,
   clientSegment = resolveClientSegment([]),
 ): TreatmentRule[] {
-  if (audience !== "comptable") {
+  if (isCifSalesAudience(audience)) {
+    return CIF_TREATMENT_RULES.map((rule) => ({
+      ...rule,
+      description: interpolateClientSegment(rule.description, clientSegment),
+    }));
+  }
+  if (isComptableSalesAudience(audience)) {
     return AGENCE_TREATMENT_RULES;
   }
 
@@ -236,7 +280,7 @@ function getDashboardFeatures(
   audience: Audience,
   clientSegment = resolveClientSegment([]),
 ): readonly string[] {
-  if (audience !== "comptable") {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return AGENCE_DASHBOARD_FEATURES;
   }
 
@@ -249,7 +293,7 @@ function getDashboardNextSteps(
   audience: Audience,
   clientSegment = resolveClientSegment([]),
 ): readonly string[] {
-  if (audience !== "comptable") {
+  if (isCabinetBuyerSalesAudience(audience)) {
     return AGENCE_DASHBOARD_NEXT_STEPS;
   }
 
@@ -419,7 +463,9 @@ export function SalesClosingPanel({
                 );
               })}
             </ItemGroup>
-            {isCabinetBuyerSalesAudience(audience) ? <SalesComptableNicheBenchmark /> : null}
+            {isCabinetBuyerSalesAudience(audience) ? (
+              <SalesComptableNicheBenchmark audience={audience} />
+            ) : null}
             <Separator />
             <div className="flex items-start gap-3">
               <Checkbox

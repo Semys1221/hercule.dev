@@ -1,7 +1,12 @@
 import { HERCULE_MONTHLY_MIN } from "@/components/internal/funnels/sales/sales-questions";
 import { COMPTABLE_ANNUAL_MIN } from "@/components/internal/funnels/sales/sales-questions-comptable";
+import { CIF_ANNUAL_MIN } from "@/components/internal/funnels/sales/sales-questions-cif";
 import type { Audience } from "@/lib/admin/navigation";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import {
+  isCabinetBuyerSalesAudience,
+  isCifSalesAudience,
+  isComptableSalesAudience,
+} from "@/lib/admin/funnels/sales-audience";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
@@ -15,8 +20,8 @@ function isQ14Matrix(
 export type BudgetKind = "one_off" | "monthly" | "annual";
 
 export function getHerculeFloorCents(audience: Audience = "agence"): number {
-  if (isCabinetBuyerSalesAudience(audience)) {
-    return COMPTABLE_ANNUAL_MIN * 100;
+  if (isCifSalesAudience(audience) || isComptableSalesAudience(audience)) {
+    return (isCifSalesAudience(audience) ? CIF_ANNUAL_MIN : COMPTABLE_ANNUAL_MIN) * 100;
   }
   const min = HERCULE_MONTHLY_MIN;
   return min * 100;
@@ -41,7 +46,12 @@ export type PrestationType =
   | "tenue_comptable"
   | "social_paie"
   | "fiscal_liasse"
-  | "reprise_dossier";
+  | "reprise_dossier"
+  | "patrimoine_epargne"
+  | "tresorerie_entreprise"
+  | "transmission"
+  | "retraite_prevoyance"
+  | "immobilier_scpi";
 
 export type TimingClass = "fast" | "normal" | "slow";
 
@@ -85,7 +95,7 @@ export function getPresetFloorOverrideCents(
   presetId: AgencyPresetId,
   audience: Audience = "agence",
 ): number {
-  if (isCabinetBuyerSalesAudience(audience)) {
+  if (isCifSalesAudience(audience) || isComptableSalesAudience(audience)) {
     return COMPTABLE_PRESET_FLOOR_OVERRIDE_CENTS[presetId];
   }
   return PRESET_FLOOR_OVERRIDE_CENTS[presetId];
@@ -154,6 +164,11 @@ const ANNUAL_PRESTATION_TYPES = new Set<PrestationType>([
   "tenue_comptable",
   "social_paie",
   "reprise_dossier",
+  "patrimoine_epargne",
+  "tresorerie_entreprise",
+  "transmission",
+  "retraite_prevoyance",
+  "immobilier_scpi",
 ]);
 
 const HORIZON_COPY: Record<PrestationType, readonly [string, string, string, string, string]> = {
@@ -241,6 +256,41 @@ const HORIZON_COPY: Record<PrestationType, readonly [string, string, string, str
     "Dossier opérationnel avant échéance fiscale",
     "Reprise calée après audit initial du dirigeant",
   ],
+  patrimoine_epargne: [
+    "Mandat patrimonial opérationnel dès le 1er mois",
+    "Architecture épargne stabilisée au 2e mois",
+    "Suivi patrimonial cadré dès le 3e trimestre",
+    "Mandat annuel sur l'exercice en cours",
+    "Structuration calée après audit patrimonial",
+  ],
+  tresorerie_entreprise: [
+    "Mandat trésorerie opérationnel dès le 1er mois",
+    "Placement cash stabilisé au 2e mois",
+    "Suivi trésorerie cadré dès le 3e trimestre",
+    "Mandat trésorerie sur l'exercice en cours",
+    "Structuration calée après audit de trésorerie",
+  ],
+  transmission: [
+    "Ingénierie transmission cadrée sous 45 jours",
+    "Pacte Dutreil / holding stabilisés sous 60 jours",
+    "Mission transmission avant fin de trimestre",
+    "Structuration cession avant clôture annuelle",
+    "Transmission calée après audit patrimonial",
+  ],
+  retraite_prevoyance: [
+    "Mandat retraite opérationnel dès le 1er mois",
+    "PER / prévoyance stabilisés au 2e mois",
+    "Suivi retraite cadré dès le 3e trimestre",
+    "Mandat retraite sur l'exercice en cours",
+    "Structuration calée après bilan patrimonial",
+  ],
+  immobilier_scpi: [
+    "Étude immobilière cadrée sous 30 jours",
+    "Arbitrage SCPI stabilisé sous 45 jours",
+    "Mission immobilière avant fin de trimestre",
+    "Structuration calée avant fin d'année",
+    "Ingénierie immobilière après audit patrimonial",
+  ],
 };
 
 const TAILLE_CLASS_IDS = new Set<string>([
@@ -289,9 +339,10 @@ export function resolveBudgetFloorCents(
   presetId: AgencyPresetId,
   audience: Audience = "agence",
 ): number {
-  if (isCabinetBuyerSalesAudience(audience)) {
+  if (isCifSalesAudience(audience) || isComptableSalesAudience(audience)) {
+    const annualMin = isCifSalesAudience(audience) ? CIF_ANNUAL_MIN : COMPTABLE_ANNUAL_MIN;
     const declaredAnnualEur =
-      typeof values.q13 === "number" && values.q13 > 0 ? values.q13 : COMPTABLE_ANNUAL_MIN;
+      typeof values.q13 === "number" && values.q13 > 0 ? values.q13 : annualMin;
 
     return Math.max(
       getHerculeFloorCents(audience),
@@ -397,11 +448,66 @@ export function computeDuration(
 
   if (type === "reprise_dossier") {
     const labels = [
-      "Reprise dossier puis lettre annuelle de tenue",
-      "Reprise tenue — lettre de mission annuelle",
-      "Reprise structurée — lettre annuelle",
-      "Reprise avant clôture — lettre annuelle",
-      "Reprise complexe — lettre annuelle",
+      "Reprise portefeuille puis mandat annuel de conseil",
+      "Reprise mandat — contrat annuel",
+      "Reprise structurée — mandat annuel",
+      "Reprise avant clôture — mandat annuel",
+      "Reprise complexe — mandat annuel",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "patrimoine_epargne") {
+    const labels = [
+      "Mandat annuel — patrimoine / épargne",
+      "Mandat annuel — architecture patrimoniale",
+      "Mandat annuel — épargne + placements",
+      "Mandat annuel — patrimoine dirigeant",
+      "Mandat annuel — conseil patrimonial complet",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "tresorerie_entreprise") {
+    const labels = [
+      "Mandat annuel — trésorerie d'entreprise",
+      "Mandat annuel — cash-flow + placements",
+      "Mandat annuel — trésorerie récurrente",
+      "Mandat annuel — trésorerie dirigeant",
+      "Mandat annuel — trésorerie + liquidités",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "transmission") {
+    const labels = [
+      "Mission transmission — Dutreil / holding",
+      "Mission transmission — cession structurée",
+      "Mission transmission — ingénierie patrimoniale",
+      "Mission transmission — plus-value dirigeant",
+      "Mission transmission — restructuration holding",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "retraite_prevoyance") {
+    const labels = [
+      "Mandat annuel — retraite / prévoyance",
+      "Mandat annuel — PER + Madelin",
+      "Mandat annuel — retraite dirigeant",
+      "Mandat annuel — prévoyance complète",
+      "Mandat annuel — retraite + assurance-vie",
+    ];
+    return labels[slot];
+  }
+
+  if (type === "immobilier_scpi") {
+    const labels = [
+      "Mission immobilière — SCPI / défiscalisation",
+      "Mission immobilière — arbitrage patrimonial",
+      "Mission immobilière — structuration immobilière",
+      "Mission immobilière — ingénierie SCPI",
+      "Mission immobilière — patrimoine immobilier",
     ];
     return labels[slot];
   }

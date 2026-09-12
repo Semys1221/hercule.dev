@@ -8,7 +8,7 @@ import type {
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
 import contactPool from "@/lib/admin/funnels/contact-pool.json";
 import type { Audience } from "@/lib/admin/navigation";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience, isCifSalesAudience, isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export type { BudgetKind };
 
@@ -22,7 +22,17 @@ export type ServiceId =
   | "nocode"
   | "shopify"
   | "maintenance"
-  | "consulting";
+  | "consulting"
+  | "patrimoine_epargne"
+  | "tresorerie_entreprise"
+  | "retraite_prevoyance"
+  | "transmission"
+  | "immobilier_scpi"
+  | "credit"
+  | "assurance"
+  | "fiscal_patrimonial"
+  | "obligations_declaratives"
+  | "conseil_gestion";
 
 export type OperationId =
   | "one_off"
@@ -33,7 +43,12 @@ export type OperationId =
   | "seo"
   | "development"
   | "maintenance"
-  | "high_value";
+  | "high_value"
+  | "tresorerie"
+  | "transmission"
+  | "retraite"
+  | "immobilier"
+  | "patrimoine_recurrent";
 
 export type OpportunityCardBlueprint = {
   id: string;
@@ -942,10 +957,106 @@ export const COMPTABLE_OPPORTUNITY_CARD_BLUEPRINTS: OpportunityCardBlueprint[] =
     contactPhone: contactPool[i % contactPool.length].phone,
   }));
 
+const CIF_RAW_BLUEPRINTS: Omit<
+  OpportunityCardBlueprint,
+  "contactEmail" | "contactPhone"
+>[] = [
+  {
+    id: "bp-cif-restauration",
+    secteur: "Restauration",
+    services: ["tresorerie_entreprise", "patrimoine_epargne"],
+    operations: ["recurring", "tresorerie"],
+    presetAffinity: ["serial", "growth"],
+    prestationType: "tresorerie_entreprise",
+    timingClass: "fast",
+    tailleClass: "tpe",
+    prestation: "Mandat trésorerie + placement cash — brasserie 12 couverts",
+    historiqueAgences: "Banque privée — suivi trésorerie insuffisant",
+    zone: "Lyon",
+    origine: "Croissance CA",
+    companyNameBlurred: "Brasserie ****",
+    domainBlurred: "****.fr",
+  },
+  {
+    id: "bp-cif-artisanat",
+    secteur: "Artisanat",
+    services: ["transmission", "fiscal_patrimonial"],
+    operations: ["transmission", "one_off"],
+    presetAffinity: ["serial", "specialist"],
+    prestationType: "transmission",
+    timingClass: "normal",
+    tailleClass: "tpe",
+    prestation: "Transmission entreprise — Dutreil / holding — artisan BTP",
+    historiqueAgences: "CGP réseau — pas d'ingénierie transmission",
+    zone: "Nantes",
+    origine: "Cession / transmission d'entreprise",
+    companyNameBlurred: "Sarl ****",
+    domainBlurred: "****.artisan",
+  },
+  {
+    id: "bp-cif-btp",
+    secteur: "BTP / rénovation",
+    services: ["tresorerie_entreprise", "conseil_gestion"],
+    operations: ["recurring", "tresorerie"],
+    presetAffinity: ["growth", "serial"],
+    prestationType: "tresorerie_entreprise",
+    timingClass: "normal",
+    tailleClass: "pme_small",
+    prestation: "Placement trésorerie excédentaire — structure en croissance",
+    historiqueAgences: "Compte courant bloqué — cash-flow à structurer",
+    zone: "Bordeaux",
+    origine: "Besoin de cash-flow / placement de trésorerie",
+    companyNameBlurred: "**** BTP",
+    domainBlurred: "****.pro",
+  },
+  {
+    id: "bp-cif-conseil",
+    secteur: "Conseil financier",
+    services: ["patrimoine_epargne", "fiscal_patrimonial"],
+    operations: ["recurring", "patrimoine_recurrent"],
+    presetAffinity: ["growth", "specialist"],
+    prestationType: "patrimoine_epargne",
+    timingClass: "fast",
+    tailleClass: "tpe",
+    prestation: "Structuration patrimoine dirigeant — PER, AV, épargne",
+    historiqueAgences: "Premier externalisation conseil patrimonial",
+    zone: "Paris",
+    origine: "Création / transmission de patrimoine",
+    companyNameBlurred: "**** Conseil",
+    domainBlurred: "****.finance",
+  },
+  {
+    id: "bp-cif-sante",
+    secteur: "Santé libérale",
+    services: ["retraite_prevoyance", "patrimoine_epargne"],
+    operations: ["recurring", "retraite"],
+    presetAffinity: ["premium", "specialist"],
+    prestationType: "retraite_prevoyance",
+    timingClass: "slow",
+    tailleClass: "freelancers",
+    prestation: "Retraite / prévoyance dirigeant — PER, Madelin, assurance-vie",
+    historiqueAgences: "Banque — pas de suivi retraite structuré",
+    zone: "Île-de-France",
+    origine: "Retraite / prévoyance du dirigeant",
+    companyNameBlurred: "Cabinet ****",
+    domainBlurred: "****.med",
+  },
+];
+
+export const CIF_OPPORTUNITY_CARD_BLUEPRINTS: OpportunityCardBlueprint[] =
+  CIF_RAW_BLUEPRINTS.map((bp, i) => ({
+    ...bp,
+    contactEmail: contactPool[i % contactPool.length].email,
+    contactPhone: contactPool[i % contactPool.length].phone,
+  }));
+
 export function getOpportunityCardBlueprints(
   audience: Audience = "agence",
 ): OpportunityCardBlueprint[] {
-  if (isCabinetBuyerSalesAudience(audience)) {
+  if (isCifSalesAudience(audience)) {
+    return CIF_OPPORTUNITY_CARD_BLUEPRINTS;
+  }
+  if (isComptableSalesAudience(audience)) {
     return COMPTABLE_OPPORTUNITY_CARD_BLUEPRINTS;
   }
 

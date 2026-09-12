@@ -214,7 +214,7 @@ export function SalesEligiblePanel({
 
   const isCif = audience === "cif";
   const isComptable = isCabinetBuyerSalesAudience(audience);
-  const cardLabel = isComptable ? "mission" : "opportunité";
+  const cardLabel = isCif ? "mandat" : isComptable ? "mission" : "opportunité";
   const versoCriteria = isCif
     ? CIF_DEMANDE_VERSO_CRITERIA
     : isComptable

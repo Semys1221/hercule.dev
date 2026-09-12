@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 import type { Audience } from "@/lib/admin/navigation";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience, isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import {
   interpolateClientSegment,
   type ClientSegment,
@@ -100,12 +100,50 @@ const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
   },
 ];
 
+const CIF_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
+  {
+    id: "recap",
+    label: "Récapitulatif",
+    title: "Votre récapitulatif",
+    subtitle: "Synthèse des réponses de qualification avant le closing.",
+  },
+  {
+    id: "regles-traitement",
+    label: "Règles de traitement",
+    title: "Vos règles de traitement",
+    subtitle:
+      "Confirmez que vous acceptez nos règles de traitement des mandats {clientSegment}.",
+  },
+  {
+    id: "demandes-eligibles",
+    label: "Mandats éligibles",
+    title: "Vos mandats {clientSegment} éligibles",
+    subtitle: "Profils sélectionnés selon votre questionnaire de qualification cabinet.",
+  },
+  {
+    id: "calendrier",
+    label: "Calendrier de collaboration",
+    title: "Votre calendrier",
+    subtitle:
+      "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants {clientSegment}.",
+  },
+  {
+    id: "envoi-dashboard",
+    label: "Lien dashboard",
+    title: "Accès dashboard",
+    subtitle: "Copiez et envoyez le lien de suivi dashboard au cabinet.",
+  },
+];
+
 export function getSalesClosingSections(
   audience: Audience = "agence",
   clientSegment?: ClientSegment,
 ): SalesClosingSection[] {
-  const sections =
-    isCabinetBuyerSalesAudience(audience) ? COMPTABLE_SALES_CLOSING_SECTIONS : SALES_CLOSING_SECTIONS;
+  const sections = isCifSalesAudience(audience)
+    ? CIF_SALES_CLOSING_SECTIONS
+    : isCabinetBuyerSalesAudience(audience)
+      ? COMPTABLE_SALES_CLOSING_SECTIONS
+      : SALES_CLOSING_SECTIONS;
 
   if (!isCabinetBuyerSalesAudience(audience) || !clientSegment) {
     return sections;

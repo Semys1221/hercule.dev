@@ -294,6 +294,36 @@ function main() {
     pme_small: 1,
   });
 
+  const cifValues = {
+    ...getSalesQualificationDefaultValues("cif"),
+    q1: ["patrimoine_epargne", "tresorerie_entreprise", "transmission"],
+    q19: ["recurring", "tresorerie", "transmission"],
+    q13: 3600,
+    q14: "monthly_12",
+    q15: "mixte",
+    q16: null,
+    q17: SALES_SKIP_VALUE,
+    q18: SALES_SKIP_VALUE,
+    q21: ["architecture_ouverte", "acces_associe"],
+  };
+  const cifFloor = resolveBudgetFloorCents(cifValues, "serial", "cif");
+  assert.equal(cifFloor, 360_000);
+  const cifCards = composeOpportunityCards(cifValues, "serial", "cif");
+  assertCardSetConstraints(cifCards, cifFloor);
+  assert.equal(new Set(cifCards.map((card) => card.secteur)).size, 5);
+  assert.ok(
+    cifCards.every((card) => card.budget.includes("/ an") || !card.budget.includes("/ mois")),
+    "cif cards should use annual honoraires, not monthly retainers",
+  );
+  assert.ok(
+    cifCards.every((card) => typeof card.origine === "string" && card.origine.length > 0),
+    "cif cards should expose an origine signal",
+  );
+  assert.ok(
+    !cifCards.some((card) => /tenue|paie|liasse|expert-comptable/i.test(card.prestation)),
+    "cif cards should not use comptable vocabulary",
+  );
+
   console.log("OK lib/admin/funnels/compose-opportunity-cards.test.ts");
 }
 

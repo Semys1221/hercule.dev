@@ -14,8 +14,20 @@ import {
   type ComptableFacturationMode,
   type ComptableSocialPaieMode,
 } from "@/components/internal/funnels/sales/sales-questions-comptable";
+import {
+  CIF_ANNUAL_MIN,
+  CIF_FACTURATION_MODES,
+  CIF_PONCTUEL_MIN,
+  CIF_REMUNERATION_MODES,
+  type CifFacturationMode,
+  type CifRemunerationMode,
+} from "@/components/internal/funnels/sales/sales-questions-cif";
 import type { SalesFunnelSectionId } from "@/components/internal/funnels/sales/sales-funnel-sections";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import {
+  isCabinetBuyerSalesAudience,
+  isCifSalesAudience,
+  isComptableSalesAudience,
+} from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 
 export const SALES_SKIP_VALUE = "__skip__";
@@ -91,8 +103,24 @@ function buildComptableQualificationSchema() {
   });
 }
 
+function buildCifQualificationSchema() {
+  return z.object({
+    ...sharedQualificationFields,
+    q13: z.number().min(CIF_ANNUAL_MIN),
+    q14: z.enum(CIF_FACTURATION_MODES),
+    q15: z.enum(CIF_REMUNERATION_MODES),
+    q16: z.number().min(CIF_PONCTUEL_MIN).nullable(),
+    q17: z.literal(SALES_SKIP_VALUE),
+    q18: z.literal(SALES_SKIP_VALUE),
+    q21: multiChoiceSchema,
+  });
+}
+
 export function getSalesQualificationSchema(audience: Audience = "agence") {
-  if (isCabinetBuyerSalesAudience(audience)) {
+  if (isCifSalesAudience(audience)) {
+    return buildCifQualificationSchema();
+  }
+  if (isComptableSalesAudience(audience)) {
     return buildComptableQualificationSchema();
   }
   return buildAgenceQualificationSchema(getHerculeMonthlyMin(audience));
@@ -129,8 +157,8 @@ export type SalesQualificationValues = {
   q11: string[];
   q12: string;
   q13: number | null;
-  q14: Q14Matrix | ComptableFacturationMode;
-  q15: ConditionalSliderValue | ComptableSocialPaieMode;
+  q14: Q14Matrix | ComptableFacturationMode | CifFacturationMode;
+  q15: ConditionalSliderValue | ComptableSocialPaieMode | CifRemunerationMode;
   q16: ConditionalSliderValue | number | null;
   q17: ConditionalSliderValue;
   q18: ConditionalSliderValue;
@@ -146,7 +174,42 @@ export function getSalesQualificationDefaultValues(
 ): SalesQualificationValues {
   const sliders = getSliderConfigs(audience);
 
-  if (isCabinetBuyerSalesAudience(audience)) {
+  if (isCifSalesAudience(audience)) {
+    return {
+      introConfirmed: false,
+      presentationConfirmed: false,
+      o1: [],
+      o2: "",
+      o3: "",
+      o4: [],
+      o5: [],
+      o6: "",
+      q1: [],
+      q2: [],
+      q2Other: "",
+      q3: sliders.projectCapacity.defaultValue,
+      q4: "",
+      q5: "",
+      q6: sliders.delayCount.defaultValue,
+      q7: sliders.lostClients.defaultValue,
+      q8: [],
+      q9: "",
+      q10: "",
+      q11: [],
+      q12: "",
+      q13: sliders.annualMin.defaultValue,
+      q14: "monthly_12",
+      q15: "mixte",
+      q16: null,
+      q17: SALES_SKIP_VALUE,
+      q18: SALES_SKIP_VALUE,
+      q19: [],
+      q20: sliders.herculeCapacity.defaultValue,
+      q21: [],
+    };
+  }
+
+  if (isComptableSalesAudience(audience)) {
     return {
       introConfirmed: false,
       presentationConfirmed: false,
@@ -235,7 +298,9 @@ const SECTION_QUESTION_KEYS: Record<
   conditions: ["q15", "q16", "q17", "q18", "q19", "q20"],
 };
 
-function isComptableQ14(value: SalesQualificationValues["q14"]): value is ComptableFacturationMode {
+function isCabinetFacturationMode(
+  value: SalesQualificationValues["q14"],
+): value is ComptableFacturationMode | CifFacturationMode {
   return typeof value === "string";
 }
 
@@ -268,7 +333,10 @@ function isFieldComplete(
   }
 
   if (key === "q13") {
-    if (isCabinetBuyerSalesAudience(audience)) {
+    if (isCifSalesAudience(audience)) {
+      return typeof value === "number" && value >= CIF_ANNUAL_MIN;
+    }
+    if (isComptableSalesAudience(audience)) {
       return typeof value === "number" && value >= COMPTABLE_ANNUAL_MIN;
     }
     return value === null || typeof value === "number";
@@ -276,7 +344,7 @@ function isFieldComplete(
 
   if (key === "q14") {
     if (isCabinetBuyerSalesAudience(audience)) {
-      return isComptableQ14(values.q14);
+      return isCabinetFacturationMode(values.q14);
     }
     const matrix = values.q14;
     if (!isQ14Matrix(matrix)) {

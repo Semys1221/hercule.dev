@@ -3,7 +3,7 @@ import {
   interpolateClientSegment,
   type ClientSegment,
 } from "@/lib/admin/funnels/client-segment";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience, isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export type SalesFunnelSectionId =
   | "rendez-vous"
@@ -142,6 +142,65 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   },
 ];
 
+const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
+  {
+    id: "rendez-vous",
+    label: "Rendez-vous",
+    title: "Rendez-vous",
+  },
+  {
+    id: "introduction",
+    label: "Audit de compatibilité",
+    title: "Avant-propos",
+    duration: "Durée : 20min",
+    subtitle:
+      "Avant de commencer, quelques informations nous permettront d'évaluer votre cabinet et de vous orienter vers les mandats {clientSegment} les plus adaptés.",
+    hasIntroCheckbox: true,
+  },
+  {
+    id: "objectifs",
+    label: "Objectifs",
+    title: "Objectifs",
+    subtitle:
+      "Comprendre la situation actuelle, la capacité disponible et l'écart avec l'objectif avant de présenter Hercule CIF.",
+  },
+  {
+    id: "presentation-societe",
+    label: "Présentation de la société",
+    title: "Présentation de la société",
+    subtitle:
+      "Découvrez Hercule CIF, notre modèle et la provision Calendly / Zoom avant de poursuivre la qualification.",
+  },
+  {
+    id: "capacite",
+    label: "Capacité opérationnelle",
+    title: "Capacité opérationnelle",
+    subtitle:
+      "Évaluez votre capacité actuelle à prendre en charge de nouveaux mandats {clientSegment} — patrimoine, trésorerie et transmission.",
+  },
+  {
+    id: "historique",
+    label: "Historique & fiabilité",
+    title: "Historique & fiabilité",
+    subtitle:
+      "Évaluez la fiabilité opérationnelle de votre cabinet sur les 12 derniers mois (RDV honorés, no-shows, reprises de portefeuille).",
+  },
+  {
+    id: "standards",
+    label: "Modèle différenciant",
+    title: "Modèle différenciant",
+    subtitle:
+      "Ce qui distingue votre cabinet d'une banque privée ou d'un CGP déjà en place, puis vos honoraires.",
+  },
+  {
+    id: "conditions",
+    label: "Conditions commerciales",
+    title: "Conditions commerciales",
+    subtitle:
+      "Rémunération, missions ponctuelles, formules Hercule (Lite 998 €/mois, Starter 1 499 €/mois, pack 3 598 €) et priorités de mandats.",
+  },
+];
+
 /** @deprecated Use getSalesFunnelSections(audience) */
 export const SALES_FUNNEL_SECTIONS = AGENCE_SALES_FUNNEL_SECTIONS;
 
@@ -150,6 +209,9 @@ export const INTRO_CONFIRMATION_TEXT =
 
 export const PRESENTATION_CONFIRMATION_TEXT =
   "J'ai pris connaissance de la présentation de la société Hercule et des conditions générales de vente.";
+
+const CIF_INTRO_CONFIRMATION_TEXT =
+  "Je confirme fournir des réponses honnêtes et précises afin que les mandats {clientSegment} qui me sont proposés correspondent au mieux à mon expertise, ma capacité et mes conditions de collaboration.";
 
 const COMPTABLE_INTRO_CONFIRMATION_TEXT =
   "Je confirme fournir des réponses honnêtes et précises afin que les missions {clientSegment} qui me sont proposées correspondent au mieux à mon expertise, ma capacité et mes conditions de collaboration.";
@@ -164,7 +226,12 @@ export function getIntroConfirmationText(
   audience: Audience = "agence",
   clientSegment?: ClientSegment,
 ): string {
-  if (isCabinetBuyerSalesAudience(audience)) {
+  if (isCifSalesAudience(audience)) {
+    return clientSegment
+      ? interpolateClientSegment(CIF_INTRO_CONFIRMATION_TEXT, clientSegment)
+      : CIF_INTRO_CONFIRMATION_TEXT.replace("{clientSegment}", "TPE");
+  }
+  if (isComptableSalesAudience(audience)) {
     return clientSegment
       ? interpolateClientSegment(COMPTABLE_INTRO_CONFIRMATION_TEXT, clientSegment)
       : COMPTABLE_INTRO_CONFIRMATION_TEXT.replace("{clientSegment}", "TPE");
@@ -185,8 +252,11 @@ export function getSalesFunnelSections(
   audience: Audience,
   clientSegment?: ClientSegment,
 ): SalesFunnelSection[] {
-  const sections =
-    isCabinetBuyerSalesAudience(audience) ? COMPTABLE_SALES_FUNNEL_SECTIONS : AGENCE_SALES_FUNNEL_SECTIONS;
+  const sections = isCifSalesAudience(audience)
+    ? CIF_SALES_FUNNEL_SECTIONS
+    : isCabinetBuyerSalesAudience(audience)
+      ? COMPTABLE_SALES_FUNNEL_SECTIONS
+      : AGENCE_SALES_FUNNEL_SECTIONS;
 
   if (!isCabinetBuyerSalesAudience(audience) || !clientSegment) {
     return sections;

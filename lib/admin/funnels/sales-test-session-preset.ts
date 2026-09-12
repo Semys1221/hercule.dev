@@ -1,5 +1,6 @@
 import { SLIDER_CONFIGS } from "@/components/internal/funnels/sales/sales-questions";
 import { COMPTABLE_SLIDER_CONFIGS } from "@/components/internal/funnels/sales/sales-questions-comptable";
+import { CIF_SLIDER_CONFIGS } from "@/components/internal/funnels/sales/sales-questions-cif";
 import type { SalesClosingValues } from "@/components/internal/funnels/sales/sales-closing-sections";
 import { SEED_PREFIX } from "@/lib/admin/clients/seed";
 import {
@@ -105,6 +106,27 @@ export const SALES_TEST_SESSION_COMPTABLE_QUALIFICATION: SalesQualificationValue
   q21: ["reactivite", "pilotage", "honoraires_lisibles"],
 };
 
+export const SALES_TEST_SESSION_CIF_QUALIFICATION: SalesQualificationValues = {
+  ...SALES_TEST_SESSION_QUALIFICATION,
+  o1: ["qualified_dossiers", "bank_competition"],
+  o2: "moderate",
+  o3: "insufficient_prospects",
+  o4: ["weak_network", "fee_competition"],
+  o5: ["partnerships", "events"],
+  o6: "significant_gap",
+  q11: ["freelancers", "tpe"],
+  q1: ["patrimoine_epargne", "tresorerie_entreprise", "transmission"],
+  q2: ["cif_amf", "ingenierie", "tresorerie"],
+  q13: CIF_SLIDER_CONFIGS.annualMin.defaultValue,
+  q14: "monthly_12",
+  q15: "mixte",
+  q16: null,
+  q17: SALES_SKIP_VALUE,
+  q18: SALES_SKIP_VALUE,
+  q19: ["recurring", "tresorerie", "transmission"],
+  q21: ["architecture_ouverte", "acces_associe", "remuneration_lisible"],
+};
+
 export const SALES_TEST_SESSION_CLOSING: SalesClosingValues = {
   reglesAccepted: true,
   calendrierAccepted: true,
@@ -136,7 +158,7 @@ export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionP
       inviteeUri: SALES_TEST_SESSION_CIF_INVITEE_URI,
       company: SALES_TEST_SESSION_CIF_COMPANY,
       calendlyQuestions: SALES_TEST_SESSION_CIF_CALENDLY_QUESTIONS,
-      qualification: SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+      qualification: SALES_TEST_SESSION_CIF_QUALIFICATION,
       closing: SALES_TEST_SESSION_CLOSING,
       profileForm: {},
       leadCategory: "cif",

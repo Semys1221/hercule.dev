@@ -6,23 +6,34 @@ import {
   COMPTABLE_NICHE_BENCHMARK,
   COMPTABLE_PERFORMANCE_REPORTING_INTRO,
 } from "@/lib/admin/funnels/comptable-sales-copy";
+import {
+  CIF_NICHE_BENCHMARK,
+  CIF_PERFORMANCE_REPORTING_INTRO,
+} from "@/lib/admin/funnels/cif-sales-copy";
+import type { Audience } from "@/lib/admin/navigation";
 
-export function SalesComptableNicheBenchmark() {
+type SalesComptableNicheBenchmarkProps = {
+  audience?: Audience;
+};
+
+export function SalesComptableNicheBenchmark({
+  audience = "comptable",
+}: SalesComptableNicheBenchmarkProps) {
+  const isCif = audience === "cif";
+  const benchmark = isCif ? CIF_NICHE_BENCHMARK : COMPTABLE_NICHE_BENCHMARK;
+  const intro = isCif ? CIF_PERFORMANCE_REPORTING_INTRO : COMPTABLE_PERFORMANCE_REPORTING_INTRO;
+
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm leading-relaxed text-muted-foreground">
-        {COMPTABLE_PERFORMANCE_REPORTING_INTRO}
-      </p>
+      <p className="text-sm leading-relaxed text-muted-foreground">{intro}</p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {COMPTABLE_NICHE_BENCHMARK.disadvantages.title}
-            </CardTitle>
+            <CardTitle className="text-base">{benchmark.disadvantages.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="flex flex-col gap-2 text-sm leading-relaxed text-muted-foreground">
-              {COMPTABLE_NICHE_BENCHMARK.disadvantages.items.map((item) => (
+              {benchmark.disadvantages.items.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -30,13 +41,11 @@ export function SalesComptableNicheBenchmark() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {COMPTABLE_NICHE_BENCHMARK.advantages.title}
-            </CardTitle>
+            <CardTitle className="text-base">{benchmark.advantages.title}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="flex flex-col gap-2 text-sm leading-relaxed text-muted-foreground">
-              {COMPTABLE_NICHE_BENCHMARK.advantages.items.map((item) => (
+              {benchmark.advantages.items.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>

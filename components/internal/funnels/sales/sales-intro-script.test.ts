@@ -48,6 +48,28 @@ function main() {
   const comptableChecklist = buildSalesIntroChecklist(comptableBooking, "comptable");
   assert.match(comptableChecklist[0], /Hercule Comptable/);
 
+  const cifBooking = {
+    first_name: "Sophie",
+    name: "Sophie Leroy",
+    questions: {
+      "Combien d'associés ou collaborateurs compte votre cabinet ?": "4 collaborateurs",
+      "Quelles missions proposez-vous ?": "Patrimoine et trésorerie dirigeant",
+      "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+    },
+  };
+
+  const cifScript = buildSalesIntroScript(cifBooking, "cif");
+  assert.match(cifScript, /Hercule CIF/);
+  assert.match(cifScript, /mandats PME qui vous sont éligibles/);
+  assert.ok(!/Hercule Comptable/.test(cifScript));
+  assert.ok(!/reprise comptable/.test(cifScript));
+
+  const cifChecklist = buildSalesIntroChecklist(cifBooking, "cif");
+  assert.match(cifChecklist[0], /Hercule CIF/);
+  assert.match(cifChecklist[2], /patrimoine \/ trésorerie \/ transmission/);
+  assert.ok(!cifChecklist.some((item) => /Hercule Comptable/.test(item)));
+  assert.ok(!cifChecklist.some((item) => /tenue|paie|expert-comptable/i.test(item)));
+
   const script = buildSalesIntroScript(booking);
   assert.match(script, /Marie, ravi de t'avoir en ligne/);
   assert.match(script, /2 à 5/);

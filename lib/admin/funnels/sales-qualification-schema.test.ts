@@ -7,10 +7,14 @@ import {
   COMPTABLE_ANNUAL_TYPICAL,
 } from "@/components/internal/funnels/sales/sales-questions-comptable";
 import {
+  CIF_ANNUAL_MIN,
+  CIF_ANNUAL_TYPICAL,
+} from "@/components/internal/funnels/sales/sales-questions-cif";
+import {
   getSalesQualificationDefaultValues,
   isSalesSectionComplete,
 } from "@/lib/admin/funnels/sales-qualification-schema";
-import { SALES_TEST_SESSION_COMPTABLE_QUALIFICATION } from "@/lib/admin/funnels/sales-test-session-preset";
+import { SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, SALES_TEST_SESSION_CIF_QUALIFICATION } from "@/lib/admin/funnels/sales-test-session-preset";
 
 function main() {
   const comptableDefaults = getSalesQualificationDefaultValues("comptable");
@@ -95,6 +99,35 @@ function main() {
       "comptable",
     ),
     false,
+  );
+
+  const cifDefaults = getSalesQualificationDefaultValues("cif");
+  assert.equal(cifDefaults.q14, "monthly_12");
+  assert.equal(cifDefaults.q13, CIF_ANNUAL_TYPICAL);
+  assert.equal(cifDefaults.q15, "mixte");
+
+  assert.equal(
+    isSalesSectionComplete(
+      "standards",
+      {
+        ...SALES_TEST_SESSION_CIF_QUALIFICATION,
+        q21: [],
+      },
+      "cif",
+    ),
+    false,
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "standards",
+      {
+        ...SALES_TEST_SESSION_CIF_QUALIFICATION,
+        q13: CIF_ANNUAL_MIN,
+      },
+      "cif",
+    ),
+    true,
   );
 
   console.log("OK lib/admin/funnels/sales-qualification-schema.test.ts");

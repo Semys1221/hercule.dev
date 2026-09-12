@@ -13,6 +13,10 @@ export function isComptableSalesAudience(audience: Audience): boolean {
   return audience === "comptable";
 }
 
+export function isCifSalesAudience(audience: Audience): boolean {
+  return audience === "cif";
+}
+
 export function isCabinetBuyerSalesAudience(audience: Audience): boolean {
   return audience === "comptable" || audience === "cif";
 }

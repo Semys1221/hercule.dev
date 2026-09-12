@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import type { Audience } from "@/lib/admin/navigation";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience, isCifSalesAudience, isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 import type { BudgetKind } from "@/lib/admin/funnels/opportunity-card-formulas";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";
@@ -118,8 +118,44 @@ const COMPTABLE_AGENCY_PRESETS: Record<AgencyPresetId, AgencyPreset> = {
   },
 };
 
+const CIF_AGENCY_PRESETS: Record<AgencyPresetId, AgencyPreset> = {
+  serial: {
+    ...AGENCY_PRESETS.serial,
+    tagline: "Volume élevé, processus documentés, honoraires accessibles.",
+    description:
+      "Votre cabinet dispose d'une forte capacité de conseil, avec des processus documentés et un volume de mandats élevé. Les missions les plus adaptées sont des mandats patrimoniaux récurrents, à honoraires cadrés et démarrage rapide.",
+  },
+  growth: {
+    ...AGENCY_PRESETS.growth,
+    tagline: "Patrimoine et trésorerie récurrents, mandats dirigeants stables.",
+    description:
+      "Votre cabinet est orienté mandats récurrents — patrimoine, trésorerie, retraite. Les demandes ciblées sont des dirigeants PME avec un besoin de continuité et un horizon de mission clair.",
+  },
+  architect: {
+    ...AGENCY_PRESETS.architect,
+    tagline: "Ingénierie patrimoniale, transmission et structuration.",
+    description:
+      "Votre cabinet est orienté ingénierie. Transmission, crédit, fiscal patrimonial : vous structurez la relation dirigeant-cabinet. Les missions ciblées demandent un interlocuteur capable de cadrer un périmètre complexe.",
+  },
+  specialist: {
+    ...AGENCY_PRESETS.specialist,
+    tagline: "Expertise étroite, mandats complexes, honoraires premium.",
+    description:
+      "Votre cabinet est spécialisé. Peu de verticales, un haut niveau d'exigence, des honoraires plus élevés. Les missions ciblées sont des dossiers à forte composante d'ingénierie ou sectorielle.",
+  },
+  premium: {
+    ...AGENCY_PRESETS.premium,
+    tagline: "Faible volume, haute valeur, encours élevés.",
+    description:
+      "Votre cabinet est à faible volume et honoraires élevés. Vous sélectionnez vos mandats. Les missions ciblées sont des dirigeants PME structurés avec un besoin stratégique et un encours à la hauteur.",
+  },
+};
+
 export function getAgencyPreset(id: AgencyPresetId, audience: Audience = "agence"): AgencyPreset {
-  if (isCabinetBuyerSalesAudience(audience)) {
+  if (isCifSalesAudience(audience)) {
+    return CIF_AGENCY_PRESETS[id];
+  }
+  if (isComptableSalesAudience(audience)) {
     return COMPTABLE_AGENCY_PRESETS[id];
   }
   return AGENCY_PRESETS[id];

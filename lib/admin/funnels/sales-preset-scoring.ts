@@ -1,6 +1,6 @@
 import { SALES_SKIP_VALUE, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
-import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience, isCifSalesAudience, isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
 export const AGENCY_PRESET_IDS = [
   "serial",
@@ -52,9 +52,32 @@ function scoreSerial(values: SalesQualificationValues): { score: number; reasons
   return { score, reasons };
 }
 
-function scoreGrowth(values: SalesQualificationValues): { score: number; reasons: string[] } {
+function scoreGrowth(
+  values: SalesQualificationValues,
+  audience: Audience = "agence",
+): { score: number; reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
+
+  if (isCifSalesAudience(audience)) {
+    if (includesAny(values.q1, ["patrimoine_epargne", "tresorerie_entreprise", "retraite_prevoyance"])) {
+      score += 30;
+      reasons.push("offre patrimoine / trésorerie / retraite");
+    }
+    if (includesAny(values.q2, ["cif_amf", "tresorerie", "ingenierie"])) {
+      score += 30;
+      reasons.push("expertise CIF / trésorerie / ingénierie");
+    }
+    if (includesAny(values.q19, ["recurring", "patrimoine_recurrent", "tresorerie"])) {
+      score += 25;
+      reasons.push("priorité aux mandats récurrents patrimoniaux");
+    }
+    if (typeof values.q15 === "string" && values.q15.length > 0) {
+      score += 15;
+      reasons.push("modèle de rémunération déclaré");
+    }
+    return { score, reasons };
+  }
 
   if (includesAny(values.q1, ["google_ads", "meta_ads", "seo"])) {
     score += 30;
@@ -76,9 +99,32 @@ function scoreGrowth(values: SalesQualificationValues): { score: number; reasons
   return { score, reasons };
 }
 
-function scoreArchitect(values: SalesQualificationValues): { score: number; reasons: string[] } {
+function scoreArchitect(
+  values: SalesQualificationValues,
+  audience: Audience = "agence",
+): { score: number; reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
+
+  if (isCifSalesAudience(audience)) {
+    if (includesAny(values.q1, ["credit", "fiscal_patrimonial", "obligations_declaratives"])) {
+      score += 30;
+      reasons.push("offre crédit / fiscal patrimonial / obligations");
+    }
+    if (includesAny(values.q2, ["iobsp", "ingenierie", "transmission"])) {
+      score += 30;
+      reasons.push("expertise IOBSP / ingénierie / transmission");
+    }
+    if (values.q12 === "technical") {
+      score += 25;
+      reasons.push("appétit pour les mandats d'ingénierie");
+    }
+    if (includesAny(values.q19, ["one_off", "redesign", "transmission"])) {
+      score += 15;
+      reasons.push("priorité aux missions ponctuelles / transmission");
+    }
+    return { score, reasons };
+  }
 
   if (includesAny(values.q1, ["dev", "nocode", "shopify"])) {
     score += 30;
@@ -166,13 +212,13 @@ function scorePremium(values: SalesQualificationValues): { score: number; reason
 
 const SCORERS: Record<
   AgencyPresetId,
-  (values: SalesQualificationValues) => { score: number; reasons: string[] }
+  (values: SalesQualificationValues, audience?: Audience) => { score: number; reasons: string[] }
 > = {
-  serial: scoreSerial,
+  serial: (values) => scoreSerial(values),
   growth: scoreGrowth,
   architect: scoreArchitect,
-  specialist: scoreSpecialist,
-  premium: scorePremium,
+  specialist: (values) => scoreSpecialist(values),
+  premium: (values) => scorePremium(values),
 };
 
 export function scoreAgencyPresets(
@@ -183,7 +229,7 @@ export function scoreAgencyPresets(
   const reasonsByPreset = {} as Record<AgencyPresetId, string[]>;
 
   for (const id of AGENCY_PRESET_IDS) {
-    const result = SCORERS[id](values);
+    const result = SCORERS[id](values, audience);
     scores[id] = result.score;
     reasonsByPreset[id] = localizePresetReasons(result.reasons, audience);
   }
@@ -251,11 +297,40 @@ export const AGENCY_PRESET_REASON_STRINGS = [
   "appétit pour les projets complexes",
 ] as const;
 
+export const CIF_PRESET_REASONS: Record<string, string> = {
+  "capacité ≥ 5 projets / mois": "capacité ≥ 5 mandats / mois",
+  "ticket ponctuel ≤ 3 000 €": "honoraires annuels ≤ 3 000 €",
+  "capacité Hercule ≥ 3 projets / mois": "capacité Hercule ≥ 3 mandats / mois",
+  "offre patrimoine / trésorerie / retraite": "offre patrimoine / trésorerie / retraite",
+  "expertise CIF / trésorerie / ingénierie": "expertise CIF / trésorerie / ingénierie",
+  "priorité aux mandats récurrents patrimoniaux": "priorité aux mandats récurrents patrimoniaux",
+  "modèle de rémunération déclaré": "modèle de rémunération déclaré",
+  "offre crédit / fiscal patrimonial / obligations": "offre crédit / fiscal patrimonial / obligations",
+  "expertise IOBSP / ingénierie / transmission": "expertise IOBSP / ingénierie / transmission",
+  "appétit pour les mandats d'ingénierie": "appétit pour les mandats d'ingénierie",
+  "priorité aux missions ponctuelles / transmission": "priorité aux missions ponctuelles / transmission",
+  "projets complexes ou techniques": "mandats complexes ou d'ingénierie",
+  "ticket ponctuel ≥ 3 500 €": "honoraires ponctuels ≥ 3 500 €",
+  "priorité aux projets à forte valeur": "priorité aux mandats à encours élevés",
+  "ticket ponctuel ≥ 5 000 €": "honoraires ponctuels ≥ 5 000 €",
+  "honoraires annuels ≥ 7 200 €": "honoraires annuels ≥ 7 200 €",
+  "appétit pour les projets complexes": "appétit pour les mandats complexes",
+  "disponibilité élevée ou modérée": "capacité disponible élevée ou modérée",
+  "processus standardisés": "processus cabinet standardisés",
+  "périmètre d'expertise étroit": "périmètre de missions étroit",
+  "cible PME / ETI": "cible TPE / PME dirigeants",
+  "volume volontairement limité": "volume mandats volontairement limité",
+  "cible ETI / grandes entreprises": "cible PME structurée / multi-établissements",
+};
+
 function localizePresetReasons(reasons: string[], audience: Audience): string[] {
-  if (!isCabinetBuyerSalesAudience(audience)) {
-    return reasons;
+  if (isCifSalesAudience(audience)) {
+    return reasons.map((reason) => CIF_PRESET_REASONS[reason] ?? reason);
   }
-  return reasons.map((reason) => COMPTABLE_PRESET_REASONS[reason] ?? reason);
+  if (isComptableSalesAudience(audience)) {
+    return reasons.map((reason) => COMPTABLE_PRESET_REASONS[reason] ?? reason);
+  }
+  return reasons;
 }
 
 export function scoreAgency(

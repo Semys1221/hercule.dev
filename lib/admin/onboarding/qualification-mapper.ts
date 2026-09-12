@@ -18,6 +18,22 @@ const Q2_LABELS_COMPTABLE: Record<string, string> = {
 };
 
 /**
+ * Q2 option ID → human label lookup (CIF session).
+ */
+const Q2_LABELS_CIF: Record<string, string> = {
+  cif_amf: "Conseiller en investissements financiers (AMF)",
+  orias_assurance: "Courtage assurance (ORIAS)",
+  iobsp: "Intermédiaire en opérations de banque (IOBSP)",
+  cgp_independant: "CGP indépendant / cabinet associatif",
+  reseau: "Réseau ou enseigne",
+  ingenierie: "Ingénierie patrimoniale / fiscale",
+  tresorerie: "Trésorerie d'entreprise / dirigeant",
+  transmission: "Transmission / cession d'entreprise",
+  immobilier: "Immobilier / SCPI",
+  other: "Autre",
+};
+
+/**
  * Q2 option ID → human label lookup (agence session).
  */
 const Q2_LABELS_AGENCE: Record<string, string> = {
@@ -37,6 +53,7 @@ const Q14_FACTURATION_LABELS: Record<string, string> = {
   monthly_12: "Mensualisé (12 acomptes)",
   quarterly: "Trimestriel",
   annual: "Annuel",
+  encours: "Frais sur encours / commissions produits",
   variable: "Selon le dossier",
 };
 
@@ -63,7 +80,11 @@ export function mapQualificationToForm(
 ): Partial<DashboardFormData> {
   const result: Partial<DashboardFormData> = {};
   const q2Labels =
-    audience === "comptable" || audience === "cif" ? Q2_LABELS_COMPTABLE : Q2_LABELS_AGENCE;
+    audience === "cif"
+      ? Q2_LABELS_CIF
+      : audience === "comptable"
+        ? Q2_LABELS_COMPTABLE
+        : Q2_LABELS_AGENCE;
 
   if (Array.isArray(q.q2) && q.q2.length > 0) {
     const resolved = q.q2
@@ -92,7 +113,7 @@ export function mapQualificationToForm(
       result.facturationMode = q.q14;
     }
 
-    if (typeof q.q15 === "string" && q.q15 in Q15_SOCIAL_LABELS) {
+    if (audience === "comptable" && typeof q.q15 === "string" && q.q15 in Q15_SOCIAL_LABELS) {
       result.socialPaieMode = q.q15;
     }
 

@@ -451,9 +451,9 @@ import {
   COMPTABLE_SLIDER_CONFIGS,
 } from "./sales-questions-comptable";
 import {
-  COMPTABLE_MONTHLY_MIN as CIF_MONTHLY_MIN,
-  COMPTABLE_SALES_QUESTIONS as CIF_SALES_QUESTIONS,
-  COMPTABLE_SLIDER_CONFIGS as CIF_SLIDER_CONFIGS,
+  CIF_MONTHLY_MIN,
+  CIF_SALES_QUESTIONS,
+  CIF_SLIDER_CONFIGS,
 } from "./sales-questions-cif";
 import { AGENCE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-agence";
 import { COMPTABLE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-comptable";

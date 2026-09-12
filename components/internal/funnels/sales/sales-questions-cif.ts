@@ -7,40 +7,41 @@ import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 
 import type { SalesQuestion, SalesSliderConfig, SalesSliderUnit } from "./sales-questions";
 
-/** Prix Hercule Starter — utilisé pour l'éligibilité Calendly, pas pour les honoraires TPE. */
-export const COMPTABLE_MONTHLY_MIN = Math.round(
+/** Prix Hercule Starter — utilisé pour l'éligibilité Calendly, pas pour les honoraires dirigeant. */
+export const CIF_MONTHLY_MIN = Math.round(
   COMMERCIAL_COMPTABLE.monthlyPriceCents / 100,
 );
 
-/** Plancher honoraires annuels lettre de mission TPE. */
-export const COMPTABLE_ANNUAL_MIN = Math.round(
+/** Plancher honoraires annuels mandat de conseil dirigeant. */
+export const CIF_ANNUAL_MIN = Math.round(
   COMMERCIAL_COMPTABLE.honorairesAnnuelsMinCents / 100,
 );
 
-export const COMPTABLE_PONCTUEL_MIN = Math.round(
+export const CIF_PONCTUEL_MIN = Math.round(
   COMMERCIAL_COMPTABLE.honorairesPonctuelMinCents / 100,
 );
 
-export const COMPTABLE_ANNUAL_TYPICAL = Math.round(
+export const CIF_ANNUAL_TYPICAL = Math.round(
   COMMERCIAL_COMPTABLE.valueShowcaseAnnualHonorairesCents / 100,
 );
 
-export const COMPTABLE_FACTURATION_MODES = [
+export const CIF_FACTURATION_MODES = [
   "monthly_12",
   "quarterly",
   "annual",
+  "encours",
   "variable",
 ] as const;
 
-export type CifFacturationMode = (typeof COMPTABLE_FACTURATION_MODES)[number];
+export type CifFacturationMode = (typeof CIF_FACTURATION_MODES)[number];
 
-export const COMPTABLE_SOCIAL_PAIE_MODES = [
-  "included",
-  "separate",
-  "not_offered",
+export const CIF_REMUNERATION_MODES = [
+  "honoraires",
+  "commissions",
+  "mixte",
 ] as const;
 
-export type CifSocialPaieMode = (typeof COMPTABLE_SOCIAL_PAIE_MODES)[number];
+export type CifRemunerationMode = (typeof CIF_REMUNERATION_MODES)[number];
 
 const countFormatter = new Intl.NumberFormat("fr-FR");
 
@@ -83,18 +84,18 @@ const BASE_SLIDER_CONFIGS = {
     defaultValue: 0,
   },
   annualMin: {
-    min: COMPTABLE_ANNUAL_MIN,
+    min: CIF_ANNUAL_MIN,
     max: 12_000,
     step: 100,
     unit: "eur_year" as const,
-    defaultValue: COMPTABLE_ANNUAL_TYPICAL,
+    defaultValue: CIF_ANNUAL_TYPICAL,
   },
   ponctuelMin: {
-    min: COMPTABLE_PONCTUEL_MIN,
+    min: CIF_PONCTUEL_MIN,
     max: 5_000,
     step: 100,
     unit: "eur" as const,
-    defaultValue: COMPTABLE_PONCTUEL_MIN,
+    defaultValue: CIF_PONCTUEL_MIN,
   },
   herculeCapacity: {
     min: 1,
@@ -105,11 +106,11 @@ const BASE_SLIDER_CONFIGS = {
   },
 } satisfies Record<string, SalesSliderConfig>;
 
-export const COMPTABLE_SLIDER_CONFIGS = BASE_SLIDER_CONFIGS;
+export const CIF_SLIDER_CONFIGS = BASE_SLIDER_CONFIGS;
 
-const annualFloorLabel = formatSliderLabel(COMPTABLE_ANNUAL_MIN, "eur_year");
+const annualFloorLabel = formatSliderLabel(CIF_ANNUAL_MIN, "eur_year");
 
-export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
+export const CIF_SALES_QUESTIONS: SalesQuestion[] = [
   {
     id: "q1",
     number: 1,
@@ -119,16 +120,16 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     prompt: "Quelles missions votre cabinet propose-t-il actuellement ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
-      { id: "web_creation", label: "Tenue cif générale" },
-      { id: "ecommerce", label: "Comptabilité e-commerce / marketplace" },
-      { id: "seo", label: "Social / paie / DSN" },
-      { id: "google_ads", label: "Fiscal / optimisation fiscale" },
-      { id: "meta_ads", label: "Juridique des sociétés (création, modification)" },
-      { id: "dev", label: "Conseil en gestion / pilotage" },
-      { id: "nocode", label: "Audit / commissariat aux comptes" },
-      { id: "shopify", label: "Consolidation / groupe" },
-      { id: "maintenance", label: "Obligations déclaratives récurrentes" },
-      { id: "consulting", label: "Conseil fiscal / patrimonial" },
+      { id: "patrimoine_epargne", label: "Patrimoine / épargne (AV, PER, PEA, assurance-vie)" },
+      { id: "tresorerie_entreprise", label: "Trésorerie d'entreprise / cash-flow dirigeant" },
+      { id: "retraite_prevoyance", label: "Retraite / prévoyance dirigeant (PER, Madelin)" },
+      { id: "transmission", label: "Transmission / cession (Dutreil, holding, plus-value)" },
+      { id: "immobilier_scpi", label: "Immobilier / SCPI / défiscalisation" },
+      { id: "credit", label: "Crédit / financement (IOBSP)" },
+      { id: "assurance", label: "Courtage assurance (ORIAS)" },
+      { id: "fiscal_patrimonial", label: "Ingénierie fiscale patrimoniale" },
+      { id: "obligations_declaratives", label: "Obligations déclaratives patrimoniales" },
+      { id: "conseil_gestion", label: "Conseil en gestion de patrimoine global" },
     ],
   },
   {
@@ -139,19 +140,19 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     maxSelections: 3,
     hasOtherInput: true,
     otherInputFieldId: "q2Other",
-    prompt: "Quels sont vos principaux domaines d'expertise ?",
+    prompt: "Quels sont vos principaux agréments et domaines d'expertise ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
-      { id: "paid_acquisition", label: "Fiscalité des entreprises" },
-      { id: "organic_seo", label: "Social / paie" },
-      { id: "design_ux", label: "Juridique des sociétés" },
-      { id: "frontend", label: "Tenue cif TPE" },
-      { id: "backend", label: "Tenue cif PME" },
-      { id: "ecommerce", label: "E-commerce / activités digitales" },
-      { id: "automation", label: "Outils digitaux / intégrations" },
-      { id: "branding", label: "Transmission / cession" },
-      { id: "consulting", label: "Conseil en gestion" },
-      { id: "other", label: "Autre spécialité proposée par le cabinet" },
+      { id: "cif_amf", label: "Conseiller en investissements financiers (AMF)" },
+      { id: "orias_assurance", label: "Courtage assurance (ORIAS)" },
+      { id: "iobsp", label: "Intermédiaire en opérations de banque (IOBSP)" },
+      { id: "cgp_independant", label: "CGP indépendant / cabinet associatif" },
+      { id: "reseau", label: "Réseau ou enseigne (banque, assurance, CGP)" },
+      { id: "ingenierie", label: "Ingénierie patrimoniale / fiscale" },
+      { id: "tresorerie", label: "Trésorerie d'entreprise / dirigeant" },
+      { id: "transmission", label: "Transmission / cession d'entreprise" },
+      { id: "immobilier", label: "Immobilier / SCPI" },
+      { id: "other", label: "Autre agrément ou spécialité" },
     ],
   },
   {
@@ -159,9 +160,9 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 3,
     sectionId: "capacite",
     type: "slider",
-    prompt: "Combien de nouveaux dossiers pouvez-vous actuellement accepter par mois ?",
-    description: "Dossiers par mois.",
-    slider: COMPTABLE_SLIDER_CONFIGS.projectCapacity,
+    prompt: "Combien de nouveaux mandats pouvez-vous actuellement accepter par mois ?",
+    description: "Mandats par mois.",
+    slider: CIF_SLIDER_CONFIGS.projectCapacity,
   },
   {
     id: "q4",
@@ -174,7 +175,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
       { id: "moderate", label: "Capacité disponible modérée" },
       { id: "limited", label: "Capacité limitée" },
       { id: "full", label: "Équipe actuellement complète" },
-      { id: "variable", label: "Variable selon le type de dossier" },
+      { id: "variable", label: "Variable selon le type de mandat" },
     ],
   },
   {
@@ -183,7 +184,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "capacite",
     type: "single",
     prompt:
-      "Quel est votre délai habituel pour démarrer un nouveau dossier après validation ?",
+      "Quel est votre délai habituel pour tenir un premier RDV de conseil après validation du mandat ?",
     options: [
       { id: "lt_48h", label: "Moins de 48 heures" },
       { id: "2_5_days", label: "2 à 5 jours" },
@@ -198,9 +199,9 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "historique",
     type: "slider",
     prompt:
-      "Au cours des 12 derniers mois, combien de dossiers ont connu un retard significatif ?",
-    description: "Nombre de dossiers en retard.",
-    slider: COMPTABLE_SLIDER_CONFIGS.delayCount,
+      "Au cours des 12 derniers mois, combien de mandats ont connu un retard significatif de mise en place ou de reporting ?",
+    description: "Nombre de mandats en retard.",
+    slider: CIF_SLIDER_CONFIGS.delayCount,
   },
   {
     id: "q7",
@@ -210,7 +211,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     prompt:
       "Au cours des 12 derniers mois, combien de clients avez-vous perdus en raison d'un problème lié à la mission ?",
     description: "Nombre de clients perdus.",
-    slider: COMPTABLE_SLIDER_CONFIGS.lostClients,
+    slider: CIF_SLIDER_CONFIGS.lostClients,
     optOutLabel: "Je ne dispose pas de cette information",
   },
   {
@@ -223,12 +224,14 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     prompt: "Parmi les difficultés suivantes, lesquelles avez-vous principalement rencontrées ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
-      { id: "delays", label: "Retards de production / clôture" },
-      { id: "technical", label: "Problèmes outils / logiciels" },
+      { id: "delays", label: "Retards de mise en place / reporting patrimonial" },
+      { id: "technical", label: "Problèmes outils / plateformes / agrégateurs" },
       { id: "communication", label: "Communication / suivi client" },
-      { id: "scope", label: "Périmètre du dossier mal défini" },
+      { id: "scope", label: "Périmètre du mandat mal défini" },
       { id: "availability", label: "Manque de disponibilité de l'équipe" },
-      { id: "external", label: "Dépendance à des prestataires externes" },
+      { id: "external", label: "Dépendance à des prestataires externes (notaire, avocat)" },
+      { id: "kyc", label: "Blocages KYC / LCB-FT / collecte d'encours trop petits" },
+      { id: "bank_competition", label: "Concurrence banque privée / réseau sur le dossier" },
       { id: "client", label: "Difficultés liées au dirigeant {clientSegment}" },
       { id: "none", label: "Aucune difficulté significative" },
     ],
@@ -239,14 +242,14 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "historique",
     type: "single",
     prompt:
-      "Lorsqu'un dossier dépasse votre capacité disponible, quelle solution utilisez-vous généralement ?",
+      "Lorsqu'un mandat dépasse votre capacité disponible, quelle solution utilisez-vous généralement ?",
     options: [
-      { id: "refuse", label: "Nous refusons le dossier" },
+      { id: "refuse", label: "Nous refusons le mandat" },
       { id: "delay", label: "Nous reportons son démarrage" },
-      { id: "freelance", label: "Nous faisons appel à des collaborateurs externes" },
-      { id: "outsource", label: "Nous sous-traitons une partie du dossier" },
+      { id: "freelance", label: "Nous faisons appel à des conseillers externes" },
+      { id: "outsource", label: "Nous sous-traitons une partie du mandat" },
       { id: "hire", label: "Nous recrutons / renforçons temporairement l'équipe" },
-      { id: "depends", label: "Cela dépend du dossier" },
+      { id: "depends", label: "Cela dépend du mandat" },
     ],
   },
   {
@@ -287,28 +290,28 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
         label: "Indépendants / professions libérales",
         helpTitle: "Indépendants / professions libérales",
         helpText:
-          "Reprise de conseil fiscal et obligations d'un indépendant ou libéral (BNC/BIC), volume limité, relation directe avec le dirigeant.",
+          "Patrimoine personnel, retraite, prévoyance — encours limité, relation directe avec le dirigeant.",
       },
       {
         id: "tpe",
         label: "TPE — 1 à 10 salariés",
         helpTitle: "TPE — 1 à 10 salariés",
         helpText:
-          "Optimisation fiscale et trésorerie d'une TPE. Dirigeant souvent saturé, honoraires au plancher cabinet.",
+          "Trésorerie d'entreprise et patrimoine du dirigeant. Dirigeant souvent saturé, honoraires au plancher cabinet.",
       },
       {
         id: "pme_small",
         label: "PME — 11 à 50 salariés",
         helpTitle: "PME — 11 à 50 salariés",
         helpText:
-          "Dossiers plus structurés (cash-flow, holding, multi-établissements). Fiscal, trésorerie et patrimoine.",
+          "Dossiers plus structurés (cash-flow, holding, multi-activités). Patrimoine, trésorerie et transmission.",
       },
       {
         id: "pme_medium",
         label: "PME — 51 à 250 salariés",
         helpTitle: "PME — 51 à 250 salariés",
         helpText:
-          "Dossiers plus structurés (cash-flow, holding, multi-établissements). Fiscal, trésorerie et patrimoine.",
+          "Dossiers plus structurés (cash-flow, holding, multi-établissements). Patrimoine, trésorerie et transmission.",
       },
       {
         id: "eti",
@@ -333,35 +336,35 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 13,
     sectionId: "standards",
     type: "single",
-    prompt: "Quel niveau de complexité de dossier souhaitez-vous principalement traiter ?",
+    prompt: "Quel niveau de complexité de mandat souhaitez-vous principalement traiter ?",
     options: [
       {
         id: "simple",
-        label: "Dossiers simples / standardisés",
-        helpTitle: "Dossiers simples / standardisés",
+        label: "Mandats simples / standardisés",
+        helpTitle: "Mandats simples / standardisés",
         helpText:
-          "Régime simplifié, peu d'écritures, process répétitif (TVA standard, optimisation peu spécifique).",
+          "Épargne standard, PER, assurance-vie — peu de structuration spécifique.",
       },
       {
         id: "intermediate",
-        label: "Dossiers intermédiaires",
-        helpTitle: "Dossiers intermédiaires",
+        label: "Mandats intermédiaires",
+        helpTitle: "Mandats intermédiaires",
         helpText:
-          "Volume moyen, quelques spécificités (TVA, social de base, reprise simple).",
+          "Patrimoine moyen, trésorerie d'entreprise, quelques spécificités sectorielles.",
       },
       {
         id: "complex",
-        label: "Dossiers complexes",
-        helpTitle: "Dossiers complexes",
+        label: "Mandats complexes",
+        helpTitle: "Mandats complexes",
         helpText:
-          "Multi-activités, reprise de dossier, restructurations légères, plusieurs établissements.",
+          "Multi-activités, reprise de portefeuille, restructurations légères, plusieurs établissements.",
       },
       {
         id: "technical",
-        label: "Dossiers à forte composante réglementaire",
-        helpTitle: "Dossiers à forte composante réglementaire",
+        label: "Mandats à forte composante d'ingénierie",
+        helpTitle: "Mandats à forte composante d'ingénierie",
         helpText:
-          "Fiscal avancé, social/paie structuré, optimisation et obligations lourdes.",
+          "Transmission Dutreil, holding, ingénierie fiscale avancée, encours élevés.",
       },
       {
         id: "all",
@@ -377,22 +380,23 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "standards",
     type: "slider",
     prompt:
-      "Quel montant minimum d'honoraires annuels acceptez-vous pour une lettre de mission de conseil fiscal ({clientSegment}) ?",
-    description: `Plancher marché : ${annualFloorLabel} / an.`,
-    slider: COMPTABLE_SLIDER_CONFIGS.annualMin,
+      "Quel montant minimum d'honoraires annuels acceptez-vous pour un mandat de conseil ({clientSegment}) ?",
+    description: `Plancher marché : ${annualFloorLabel}.`,
+    slider: CIF_SLIDER_CONFIGS.annualMin,
   },
   {
     id: "q14",
     number: 15,
     sectionId: "standards",
     type: "single",
-    prompt: "Comment facturez-vous habituellement vos lettres de mission de conseil fiscal ?",
+    prompt: "Comment facturez-vous habituellement vos mandats de conseil ?",
     description: "Modalité de facturation — pas la durée du contrat.",
     options: [
       { id: "monthly_12", label: "Mensualisé (12 acomptes)" },
       { id: "quarterly", label: "Trimestriel" },
       { id: "annual", label: "Annuel" },
-      { id: "variable", label: "Selon le dossier" },
+      { id: "encours", label: "Frais sur encours / commissions produits" },
+      { id: "variable", label: "Selon le mandat" },
     ],
   },
   {
@@ -400,11 +404,11 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 16,
     sectionId: "conditions",
     type: "single",
-    prompt: "Comment traitez-vous le social / paie pour vos dossiers {clientSegment} ?",
+    prompt: "Comment êtes-vous principalement rémunéré sur vos mandats {clientSegment} ?",
     options: [
-      { id: "included", label: "Inclus dans la lettre de mission de conseil fiscal" },
-      { id: "separate", label: "Facturé à part (forfait annuel social / paie)" },
-      { id: "not_offered", label: "Non proposé" },
+      { id: "honoraires", label: "Honoraires de conseil (forfait / mandat)" },
+      { id: "commissions", label: "Commissions produits (assurance, placements, SCPI…)" },
+      { id: "mixte", label: "Mixte honoraires + commissions" },
     ],
   },
   {
@@ -413,10 +417,10 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "conditions",
     type: "slider",
     prompt:
-      "Quel montant minimum d'honoraires facturez-vous pour une mission ponctuelle (création, reprise hors conseil fiscal, conseil) ?",
-    description: "Création, reprise, conseil — hors lettre de mission annuelle.",
-    slider: COMPTABLE_SLIDER_CONFIGS.ponctuelMin,
-    optOutLabel: "Toujours packagée dans la lettre annuelle",
+      "Quel montant minimum d'honoraires facturez-vous pour une mission ponctuelle (étude patrimoniale, bilan, conseil) ?",
+    description: "Étude, bilan patrimonial, conseil — hors mandat annuel.",
+    slider: CIF_SLIDER_CONFIGS.ponctuelMin,
+    optOutLabel: "Toujours packagée dans le mandat récurrent",
   },
   {
     id: "q19",
@@ -427,15 +431,15 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     prompt: "Quels types de missions {clientSegment} souhaitez-vous recevoir en priorité ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
-      { id: "one_off", label: "Missions ponctuelles (création, conseil)" },
-      { id: "recurring", label: "Lettres de mission annuelles de conseil fiscal" },
-      { id: "redesign", label: "Reprises de dossier" },
-      { id: "ecommerce", label: "Dossiers e-commerce / digital" },
-      { id: "acquisition", label: "Missions fiscales" },
-      { id: "seo", label: "Missions social / paie" },
-      { id: "development", label: "Missions juridiques" },
-      { id: "maintenance", label: "Obligations déclaratives" },
-      { id: "high_value", label: "Dossiers à honoraires élevés" },
+      { id: "one_off", label: "Missions ponctuelles (étude, bilan patrimonial)" },
+      { id: "recurring", label: "Mandats annuels de conseil patrimonial / trésorerie" },
+      { id: "redesign", label: "Reprises de portefeuille / changement de CGP" },
+      { id: "tresorerie", label: "Trésorerie d'entreprise / cash-flow" },
+      { id: "transmission", label: "Transmission / cession (Dutreil, holding)" },
+      { id: "retraite", label: "Retraite / prévoyance dirigeant" },
+      { id: "immobilier", label: "Immobilier / SCPI" },
+      { id: "patrimoine_recurrent", label: "Patrimoine récurrent (épargne, placements)" },
+      { id: "high_value", label: "Mandats à encours élevés" },
     ],
   },
   {
@@ -444,7 +448,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "conditions",
     type: "slider",
     prompt: "Quelle capacité souhaitez-vous réserver aux missions {clientSegment} provenant d'Hercule ?",
-    description: "Dossiers par mois réservés à Hercule.",
-    slider: COMPTABLE_SLIDER_CONFIGS.herculeCapacity,
+    description: "Mandats par mois réservés à Hercule.",
+    slider: CIF_SLIDER_CONFIGS.herculeCapacity,
   },
 ];
