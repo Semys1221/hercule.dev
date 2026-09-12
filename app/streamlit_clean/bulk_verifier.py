@@ -10,8 +10,8 @@ import time
 from typing import Callable, Optional
 
 # #region agent log
-_DEBUG_LOG_PATH = "/Users/evqn/dev/hercule.dev/.cursor/debug-4f6dae.log"
-_DEBUG_SESSION_ID = "4f6dae"
+_DEBUG_LOG_PATH = "/Users/evqn/dev/hercule.dev/.cursor/debug-62b9d7.log"
+_DEBUG_SESSION_ID = "62b9d7"
 
 
 def _debug_log(
@@ -57,6 +57,10 @@ _POLL_INTERVAL = 30
 _DOWNLOAD_RETRY_ATTEMPTS = 10
 _DOWNLOAD_RETRY_INTERVAL = 30
 _MAX_CHUNK_SIZE = 100_000
+# MEV accepts up to 100k per file, but large single uploads can phantom-complete
+# (status=completed, credit_used=0). Smaller chunks are more reliable.
+_BULK_UPLOAD_CHUNK_SIZE = 500
+_PHANTOM_COMPLETE_MAX_POLLS = 6
 
 BulkProgressCallback = Callable[[str, float], None]
 
@@ -89,6 +93,47 @@ def _normalize_email(email: object) -> str:
     if email is None or (isinstance(email, float) and pd.isna(email)):
         return ""
     return str(email).strip().lower()
+
+
+def _ready_for_download(file_info: dict) -> bool:
+    """MEV sets ready_for_download=1 only when the CSV export is actually ready."""
+    value = file_info.get("ready_for_download")
+    return value in (1, "1", True) or str(value).strip() == "1"
+
+
+def _bulk_job_counts(file_info: dict) -> tuple[int, int, int]:
+    total = int(file_info.get("total_emails") or file_info.get("total") or 0)
+    credit_used = int(file_info.get("credit_used") or 0)
+    processed = int(file_info.get("processed_res") or 0)
+    return total, credit_used, processed
+
+
+def _is_bulk_job_ready(file_info: dict) -> bool:
+    """
+    True when MEV has actually finished verification (not a phantom 'completed').
+    Runtime evidence: large jobs can show completed + downloadable with credit_used=0.
+    """
+    status_label = str(file_info.get("status_label") or "").lower()
+    if status_label != "completed":
+        return False
+    if not file_info.get("downloadable"):
+        return False
+    if not _ready_for_download(file_info):
+        return False
+
+    total, credit_used, processed = _bulk_job_counts(file_info)
+    if total > 0 and credit_used == 0 and processed == 0:
+        return False
+    if total > 0 and credit_used < total and processed < total:
+        # Allow partial only while still processing; completed should have full counts.
+        result_total = sum(
+            int(file_info.get(key) or 0)
+            for key in ("valid", "invalid", "catchall", "unknown", "duplicates")
+        )
+        if result_total == 0:
+            return False
+
+    return True
 
 
 def _find_column(df: pd.DataFrame, candidates: tuple[str, ...]) -> Optional[str]:
@@ -202,12 +247,25 @@ class BulkEmailVerifierClient:
 
         return int(file_id)
 
+    def _probe_download_url(self, file_info: dict) -> bool:
+        download_url = file_info.get("download_all_csv") or file_info.get("file_path")
+        if not download_url:
+            return False
+        try:
+            response = self.session.get(str(download_url), timeout=(10, 30))
+            return response.status_code == 200 and "text/csv" in (
+                response.headers.get("Content-Type") or ""
+            )
+        except requests.exceptions.RequestException:
+            return False
+
     def poll_until_complete(
         self,
         file_id: int,
         on_progress: Optional[BulkProgressCallback] = None,
     ) -> dict:
         url = f"{_BASE_URL}/verifier/file_info/{self.api_key}/{file_id}"
+        phantom_complete_polls = 0
 
         while True:
             response = self._request_with_retry("GET", url)
@@ -222,32 +280,66 @@ class BulkEmailVerifierClient:
 
             file_info = data.get("file") or {}
             status_label = str(file_info.get("status_label") or "").lower()
+            total, credit_used, processed = _bulk_job_counts(file_info)
 
             if on_progress:
                 message, fraction = _format_bulk_progress(file_info)
                 on_progress(message, fraction)
 
+            if status_label == "failed":
+                raise RuntimeError(
+                    f"MEV bulk job {file_id} failed on MyEmailVerifier's side"
+                )
+
             if status_label == "completed":
-                if not file_info.get("downloadable"):
-                    raise RuntimeError("Bulk job completed but results are not downloadable yet")
+                download_probe_ok = self._probe_download_url(file_info)
+                if _is_bulk_job_ready(file_info) and download_probe_ok:
+                    # #region agent log
+                    _debug_log(
+                        "bulk_verifier.py:poll_until_complete",
+                        "MEV bulk job ready for download",
+                        {
+                            "file_id": file_id,
+                            "status_label": status_label,
+                            "ready_for_download": file_info.get("ready_for_download"),
+                            "credit_used": credit_used,
+                            "processed_res": processed,
+                            "total_emails": total,
+                        },
+                        hypothesis_id="H1,H3,H5",
+                    )
+                    # #endregion
+                    return file_info
+
+                phantom_complete_polls += 1
                 # #region agent log
                 _debug_log(
                     "bulk_verifier.py:poll_until_complete",
-                    "MEV bulk job marked completed",
+                    "MEV reported completed but job not ready yet",
                     {
                         "file_id": file_id,
                         "status_label": status_label,
-                        "downloadable": file_info.get("downloadable"),
                         "ready_for_download": file_info.get("ready_for_download"),
-                        "progress_percent": file_info.get("progress_percent"),
-                        "download_all_csv": file_info.get("download_all_csv"),
-                        "file_path": file_info.get("file_path"),
-                        "download_xls": file_info.get("download_xls"),
+                        "downloadable": file_info.get("downloadable"),
+                        "credit_used": credit_used,
+                        "processed_res": processed,
+                        "total_emails": total,
+                        "phantom_poll": phantom_complete_polls,
+                        "download_probe_ok": download_probe_ok,
                     },
                     hypothesis_id="H1,H3,H5",
                 )
                 # #endregion
-                return file_info
+
+                if phantom_complete_polls >= _PHANTOM_COMPLETE_MAX_POLLS:
+                    raise RuntimeError(
+                        f"MEV bulk job {file_id} reported completed but no verification "
+                        f"ran (credit_used={credit_used}, processed={processed}, "
+                        f"total={total}). Check the MEV dashboard and retry the upload."
+                    )
+
+            else:
+                phantom_complete_polls = 0
 
             time.sleep(_POLL_INTERVAL)
 
@@ -476,9 +568,10 @@ def verify_emails_bulk(
 
     client = BulkEmailVerifierClient(api_key)
     prefix = artifact_prefix or "bulk"
+    chunk_size = min(_BULK_UPLOAD_CHUNK_SIZE, _MAX_CHUNK_SIZE)
     chunks = [
-        pending_emails[index : index + _MAX_CHUNK_SIZE]
-        for index in range(0, len(pending_emails), _MAX_CHUNK_SIZE)
+        pending_emails[index : index + chunk_size]
+        for index in range(0, len(pending_emails), chunk_size)
     ]
 
     if on_progress:

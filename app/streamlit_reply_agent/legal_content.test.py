@@ -142,7 +142,7 @@ class LegalContentTests(unittest.TestCase):
         for anchor in (
             "reservation_cif_link",
             "dentistes et vétérinaires",
-            "stocks de trésorerie",
+            "placement des avoirs",
             "bande passante",
             "cvg/conseil-financier",
         ):

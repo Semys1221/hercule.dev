@@ -29,6 +29,7 @@
     "apply-comptable-e1-ecommerce-order-migration": "tsx --env-file=.env ./scripts/crm/applyComptableE1EcommerceOrderMigration.ts",
     "apply-cif-e1-e2-ecommerce-tresorerie-migration": "tsx --env-file=.env ./scripts/crm/applyCifE1E2EcommerceTresorerieMigration.ts",
     "apply-cif-e1-e2-dentiste-veterinaire-migration": "tsx --env-file=.env ./scripts/crm/applyCifE1E2DentisteVeterinaireMigration.ts",
+    "apply-cif-e1-expertise-placement-avoirs-migration": "tsx --env-file=.env ./scripts/crm/applyCifE1ExpertisePlacementAvoirsMigration.ts",
     "configure-calendly-link-tracking-webhook": "tsx --env-file=.env ./scripts/crm/configureCalendlyLinkTrackingWebhook.ts",
     "repair-confirmed-without-booking-email": "tsx --env-file=.env ./scripts/crm/repairConfirmedWithoutBookingEmail.ts",
     "cancel-unconfirmed-agence-meetings": "tsx --env-file=.env ./scripts/crm/cancelUnconfirmedAgenceMeetings.ts",
