@@ -19,8 +19,8 @@ import {
 import type { DashboardData } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
+import { ComptableOnboardingFormFields } from "./comptable-onboarding-form-fields";
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
-import { StepComptableOnboardingFormPreview } from "./steps/step-comptable-onboarding-form-preview";
 import { StepDashboardPreviewComptable } from "./steps/step-dashboard-preview-comptable";
 import { StepEmbeddedCheckoutComptable } from "./steps/step-embedded-checkout-comptable";
 import { StepFaqTieDown } from "./steps/step-faq-tie-down";
@@ -152,19 +152,19 @@ export function OnboardingComptableWizard({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Debug-Session-Id": "820c81",
+        "X-Debug-Session-Id": "983675",
       },
       body: JSON.stringify({
-        sessionId: "820c81",
-        runId: "pre-fix",
+        sessionId: "983675",
+        runId: "post-fix",
         hypothesisId: "B,C",
         location: "onboarding-comptable-wizard.tsx:step2",
         message: "comptable wizard step 2 render context",
         data: {
           step,
           dashboardMode: data.dashboardMode,
-          component: "StepComptableOnboardingFormPreview",
-          passesDataToFormStep: false,
+          component: "ComptableOnboardingFormFields",
+          passesDataToFormStep: true,
           form: data.form,
           formKeys: Object.keys(data.form ?? {}),
         },
@@ -257,7 +257,13 @@ export function OnboardingComptableWizard({
               >
                 {step === 0 && <StepScreenShare />}
                 {step === 1 && <StepDashboardPreviewComptable />}
-                {step === 2 && <StepComptableOnboardingFormPreview />}
+                {step === 2 && (
+                  <ComptableOnboardingFormFields
+                    mode="preview"
+                    data={data}
+                    idPrefix="preview-comptable"
+                  />
+                )}
                 {step === 3 && (
                   <StepFaqTieDown
                     audience="comptable"
