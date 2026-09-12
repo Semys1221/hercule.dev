@@ -94,9 +94,84 @@ def checkpoints_cmd() -> None:
         )
 
 
+@app.command("from-csv")
+def from_csv(
+    csv_path: str = typer.Argument(..., help="Local CSV path (e.g. saved quick_clean backup)"),
+    mode: str = typer.Option(
+        "test_50",
+        "--mode",
+        help="dry_run | test_50 | full | custom",
+    ),
+    resume_prefix: Optional[str] = typer.Option(
+        None,
+        "--resume-prefix",
+        help="Artifact prefix to resume from checkpoint",
+    ),
+    allowed_statuses: str = typer.Option(
+        "Valid,Catch All",
+        "--allowed-statuses",
+        help="Comma-separated MEV statuses to keep",
+    ),
+    custom_limit: Optional[int] = typer.Option(
+        None,
+        "--custom-limit",
+        help="Row limit when --mode custom",
+    ),
+    email_column: Optional[str] = typer.Option(
+        None,
+        "--email-column",
+        help="Email column name (defaults to 'email' or first column)",
+    ),
+) -> None:
+    """Verify a local CSV via MEV bulk API (no Instantly list required)."""
+    run_mode = _resolve_run_mode(mode)
+    statuses = _parse_allowed_statuses(allowed_statuses)
+
+    if run_mode != RUN_MODE_DRY and not get_api_key():
+        raise typer.BadParameter("MYEMAILVERIFIER_API_KEY is missing")
+
+    if not os.path.isfile(csv_path):
+        raise typer.BadParameter(f"CSV not found: {csv_path}")
+
+    source_df = pd.read_csv(csv_path)
+    resolved_email_column = email_column
+    if not resolved_email_column:
+        resolved_email_column = "email" if "email" in source_df.columns else source_df.columns[0]
+
+    _log(f"Loaded {len(source_df)} row(s) from {csv_path}")
+
+    result = run_cleaning_pipeline(
+        source_df=source_df,
+        run_mode=run_mode,
+        custom_limit=custom_limit,
+        allowed_statuses=statuses,
+        destination_campaign_id=None,
+        source_list_id=None,
+        purge_source=False,
+        email_column=resolved_email_column,
+        on_progress=_on_progress,
+        resume_prefix=resume_prefix,
+        skip_quick_verify=True,
+    )
+
+    typer.secho(
+        f"Done — {result.final_clean_count} clean / {result.rejected_count} rejected "
+        f"({result.credits_used} MEV credits)",
+        fg=typer.colors.GREEN,
+    )
+    if result.credits_before is not None and result.credits_remaining is not None:
+        typer.echo(f"Credits: {result.credits_before} → {result.credits_remaining}")
+    for label, path in result.artifact_paths.items():
+        typer.echo(f"  {label}: {path}")
+
+
 @app.command()
 def run(
-    list_id: str = typer.Option(..., "--list-id", help="Instantly source list UUID"),
+    list_id: Optional[str] = typer.Option(
+        None,
+        "--list-id",
+        help="Instantly source list UUID (not needed with --resume-prefix)",
+    ),
     campaign_id: Optional[str] = typer.Option(
         None,
         "--campaign-id",
@@ -165,6 +240,10 @@ def run(
         email_column = "email" if "email" in source_df.columns else source_df.columns[0]
         _log(f"Resuming from {quick_clean_path} ({len(source_df)} rows)")
     else:
+        if not list_id:
+            raise typer.BadParameter(
+                "Provide --list-id or pass --resume-prefix to use a saved quick_clean.csv"
+            )
         _log(f"Downloading leads from Instantly list {list_id}...")
         leads = fetch_leads_from_list(list_id, on_progress=lambda n: _log(f"Downloaded {n} leads"))
         source_df = leads_to_dataframe(leads)

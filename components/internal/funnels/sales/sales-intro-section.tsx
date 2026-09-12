@@ -40,6 +40,9 @@ type SalesIntroSectionProps = {
 export function SalesIntroSection({ audience, section, form }: SalesIntroSectionProps) {
   const watchedQ11 = useWatch({ control: form.control, name: "q11" }) as string[] | undefined;
   const clientSegment = resolveClientSegment(watchedQ11 ?? []);
+  // #region agent log
+  fetch('http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fbe33c'},body:JSON.stringify({sessionId:'fbe33c',location:'sales-intro-section.tsx:render',message:'SalesIntroSection render',data:{audience,clientSegment,q11Type:Array.isArray(watchedQ11)?'array':typeof watchedQ11},timestamp:Date.now(),hypothesisId:'B',runId:'pre-fix'})}).catch(()=>{});
+  // #endregion
   const benefits =
     isCabinetBuyerSalesAudience(audience)
       ? COMPTABLE_INTRO_BENEFITS.map((item) => interpolateClientSegment(item, clientSegment))

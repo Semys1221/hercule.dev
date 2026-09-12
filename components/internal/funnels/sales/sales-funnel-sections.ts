@@ -3,7 +3,11 @@ import {
   interpolateClientSegment,
   type ClientSegment,
 } from "@/lib/admin/funnels/client-segment";
-import { isCabinetBuyerSalesAudience, isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import {
+  isCabinetBuyerSalesAudience,
+  isCifSalesAudience,
+  isComptableSalesAudience,
+} from "@/lib/admin/funnels/sales-audience";
 
 export type SalesFunnelSectionId =
   | "rendez-vous"
@@ -226,6 +230,9 @@ export function getIntroConfirmationText(
   audience: Audience = "agence",
   clientSegment?: ClientSegment,
 ): string {
+  // #region agent log
+  fetch('http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fbe33c'},body:JSON.stringify({sessionId:'fbe33c',location:'sales-funnel-sections.ts:getIntroConfirmationText:entry',message:'getIntroConfirmationText called',data:{audience,clientSegment,hasIsComptableFn:typeof (globalThis as {isComptableSalesAudience?:unknown}).isComptableSalesAudience},timestamp:Date.now(),hypothesisId:'A',runId:'pre-fix'})}).catch(()=>{});
+  // #endregion
   if (isCifSalesAudience(audience)) {
     return clientSegment
       ? interpolateClientSegment(CIF_INTRO_CONFIRMATION_TEXT, clientSegment)

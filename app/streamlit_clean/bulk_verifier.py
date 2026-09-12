@@ -54,6 +54,8 @@ _HTTP_TIMEOUT = (10, 120)
 _MAX_RETRIES = 4
 _BACKOFF_BASE = 2.0
 _POLL_INTERVAL = 30
+_DOWNLOAD_RETRY_ATTEMPTS = 10
+_DOWNLOAD_RETRY_INTERVAL = 30
 _MAX_CHUNK_SIZE = 100_000
 
 BulkProgressCallback = Callable[[str, float], None]
@@ -249,36 +251,87 @@ class BulkEmailVerifierClient:
 
             time.sleep(_POLL_INTERVAL)
 
-    def download_results(self, download_url: str) -> pd.DataFrame:
-        # #region agent log
-        _debug_log(
-            "bulk_verifier.py:download_results",
-            "Attempting MEV bulk CSV download",
-            {
-                "download_url": download_url,
-                "url_has_token": "/" in download_url.rsplit("/", 1)[-1]
-                and not download_url.rsplit("/", 1)[-1].isdigit(),
-            },
-            hypothesis_id="H2,H3,H4",
-        )
-        # #endregion
-        response = self._request_with_retry("GET", download_url)
-        # #region agent log
-        _debug_log(
-            "bulk_verifier.py:download_results",
-            "MEV bulk CSV download response",
-            {
-                "download_url": download_url,
-                "status_code": response.status_code,
-                "content_type": response.headers.get("Content-Type"),
-                "content_length": len(response.content),
-                "body_preview": response.text[:200] if response.text else "",
-            },
-            hypothesis_id="H2,H4",
-        )
-        # #endregion
-        response.raise_for_status()
-        return pd.read_csv(io.StringIO(response.text))
+    def _download_url_candidates(
+        self,
+        download_url: str,
+        file_info: dict | None = None,
+    ) -> list[str]:
+        candidates: list[str] = []
+        for key in ("download_all_csv", "file_path", "download_xls"):
+            url = (file_info or {}).get(key)
+            if url and url not in candidates:
+                candidates.append(str(url))
+        if download_url and download_url not in candidates:
+            candidates.insert(0, download_url)
+        return candidates
+
+    def download_results(
+        self,
+        download_url: str,
+        *,
+        file_info: dict | None = None,
+    ) -> pd.DataFrame:
+        last_error: requests.HTTPError | None = None
+
+        for candidate_url in self._download_url_candidates(download_url, file_info):
+            for attempt in range(1, _DOWNLOAD_RETRY_ATTEMPTS + 1):
+                # #region agent log
+                _debug_log(
+                    "bulk_verifier.py:download_results",
+                    "Attempting MEV bulk CSV download",
+                    {
+                        "download_url": candidate_url,
+                        "attempt": attempt,
+                        "max_attempts": _DOWNLOAD_RETRY_ATTEMPTS,
+                    },
+                    hypothesis_id="H2,H3,H4",
+                )
+                # #endregion
+                response = self._request_with_retry("GET", candidate_url)
+                # #region agent log
+                _debug_log(
+                    "bulk_verifier.py:download_results",
+                    "MEV bulk CSV download response",
+                    {
+                        "download_url": candidate_url,
+                        "attempt": attempt,
+                        "status_code": response.status_code,
+                        "content_type": response.headers.get("Content-Type"),
+                        "content_length": len(response.content),
+                        "body_preview": response.text[:200] if response.text else "",
+                    },
+                    hypothesis_id="H2,H4",
+                )
+                # #endregion
+
+                if response.status_code == 200:
+                    return pd.read_csv(io.StringIO(response.text))
+
+                if response.status_code == 404 and attempt < _DOWNLOAD_RETRY_ATTEMPTS:
+                    # #region agent log
+                    _debug_log(
+                        "bulk_verifier.py:download_results",
+                        "MEV download not ready yet; retrying after backoff",
+                        {
+                            "download_url": candidate_url,
+                            "attempt": attempt,
+                            "retry_in_seconds": _DOWNLOAD_RETRY_INTERVAL,
+                        },
+                        hypothesis_id="H2",
+                    )
+                    # #endregion
+                    time.sleep(_DOWNLOAD_RETRY_INTERVAL)
+                    continue
+
+                try:
+                    response.raise_for_status()
+                except requests.HTTPError as exc:
+                    last_error = exc
+                break
+
+        if last_error:
+            raise last_error
+        raise RuntimeError("Bulk job completed but CSV download failed for all URLs")
 
     def parse_results_df(self, df: pd.DataFrame) -> dict[str, str]:
         email_col = _find_column(df, ("Address", "Email", "email", "E-mail"))
@@ -494,7 +547,7 @@ def verify_emails_bulk(
             if on_progress:
                 on_progress("Downloading bulk verification results...", 0.92)
 
-            results_df = client.download_results(download_url)
+            results_df = client.download_results(download_url, file_info=file_info)
             merged.update(client.parse_results_df(results_df))
 
             if on_status_map_updated:

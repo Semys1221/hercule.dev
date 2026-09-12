@@ -163,6 +163,54 @@ def _render_validation_screen(result, *, show_push: bool) -> None:
             st.rerun()
 
 
+def _list_local_csv_backups() -> list[dict]:
+    directory = data_dir()
+    if not os.path.isdir(directory):
+        return []
+
+    backups: list[dict] = []
+    for name in os.listdir(directory):
+        if not name.endswith(".csv"):
+            continue
+        if "_quick_clean" not in name and not name.endswith("_raw.csv"):
+            continue
+        path = os.path.join(directory, name)
+        if not os.path.isfile(path):
+            continue
+        backups.append(
+            {
+                "name": name,
+                "path": path,
+                "kind": "quick_clean" if "_quick_clean" in name else "raw",
+            }
+        )
+
+    backups.sort(key=lambda item: item["name"], reverse=True)
+    return backups
+
+
+def _resolve_email_column(df: pd.DataFrame, preferred: str | None = None) -> str:
+    if preferred and preferred in df.columns:
+        return preferred
+    for candidate in ("email", "Email", "E-mail"):
+        if candidate in df.columns:
+            return candidate
+    return str(df.columns[0])
+
+
+def _source_summary() -> str:
+    if st.session_state.get("source_type") == "local_csv":
+        kind = "quick-clean backup" if st.session_state.get("skip_quick_verify") else "raw backup"
+        return (
+            f"Local CSV: **{st.session_state.get('list_name')}** "
+            f"({st.session_state.get('list_count', 0)} leads, {kind})"
+        )
+    return (
+        f"Instantly list: **{st.session_state.get('list_name')}** "
+        f"({st.session_state.get('list_count', 0)} leads)"
+    )
+
+
 def _reset_funnel() -> None:
     for key in (
         "funnel_step",
@@ -171,6 +219,10 @@ def _reset_funnel() -> None:
         "list_id",
         "list_name",
         "list_count",
+        "source_type",
+        "local_csv_path",
+        "email_column",
+        "skip_quick_verify",
         "campaign_id",
         "campaign_name",
         "campaign_count",
@@ -417,59 +469,141 @@ with tab_instantly:
     step = st.session_state.funnel_step
 
     if step == 1:
-        st.subheader("Step 1 — Source Instantly list")
+        st.subheader("Step 1 — Source list or CSV backup")
 
-        refresh_col, _ = st.columns([1, 3])
-        with refresh_col:
-            if st.button("Refresh lists", key="refresh_lists"):
-                _cached_lead_lists.clear()
-                st.rerun()
-
-        try:
-            lead_lists = _cached_lead_lists()
-        except Exception as exc:
-            st.error(f"Could not load Instantly lists: {exc}")
-            lead_lists = []
-
-        selected_list = _select_instantly_resource(
-            resources=lead_lists,
-            label="Select source list",
-            key="source_list_select",
-            current_id=st.session_state.get("list_id"),
+        source_type = st.radio(
+            "Source type",
+            ("Instantly list", "Local CSV backup"),
+            horizontal=True,
+            key="step1_source_type",
         )
 
-        if selected_list:
-            st.caption(f"List ID: `{selected_list['id']}`")
+        if source_type == "Instantly list":
+            refresh_col, _ = st.columns([1, 3])
+            with refresh_col:
+                if st.button("Refresh lists", key="refresh_lists"):
+                    _cached_lead_lists.clear()
+                    st.rerun()
 
-        if st.button(
-            "Validate list",
-            type="primary",
-            disabled=selected_list is None,
-        ):
             try:
-                count = count_leads_in_list(selected_list["id"])
-                st.session_state.list_id = selected_list["id"]
-                st.session_state.list_name = selected_list["name"]
-                st.session_state.list_count = count
-                st.session_state.list_validated = True
-                st.session_state.funnel_step = 2
-                st.rerun()
+                lead_lists = _cached_lead_lists()
             except Exception as exc:
-                st.error(f"Could not validate list: {exc}")
+                st.error(f"Could not load Instantly lists: {exc}")
+                lead_lists = []
+
+            selected_list = _select_instantly_resource(
+                resources=lead_lists,
+                label="Select source list",
+                key="source_list_select",
+                current_id=st.session_state.get("list_id"),
+            )
+
+            if selected_list:
+                st.caption(f"List ID: `{selected_list['id']}`")
+
+            if st.button(
+                "Validate list",
+                type="primary",
+                disabled=selected_list is None,
+            ):
+                try:
+                    count = count_leads_in_list(selected_list["id"])
+                    st.session_state.source_type = "instantly"
+                    st.session_state.list_id = selected_list["id"]
+                    st.session_state.list_name = selected_list["name"]
+                    st.session_state.list_count = count
+                    st.session_state.local_csv_path = None
+                    st.session_state.email_column = None
+                    st.session_state.skip_quick_verify = False
+                    st.session_state.list_validated = True
+                    st.session_state.funnel_step = 2
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"Could not validate list: {exc}")
+        else:
+            st.caption(
+                "Use a saved pipeline backup when the Instantly source list was purged. "
+                "Prefer `*_quick_clean.csv` backups to skip the free local pre-filter."
+            )
+
+            local_backups = _list_local_csv_backups()
+            local_mode = st.radio(
+                "CSV source",
+                ("Saved backup", "Upload file"),
+                horizontal=True,
+                key="step1_local_csv_mode",
+            )
+
+            preview_df: pd.DataFrame | None = None
+            selected_path: str | None = None
+            skip_quick = False
+
+            if local_mode == "Saved backup":
+                if not local_backups:
+                    st.warning(
+                        f"No saved backups found in `{data_dir()}`. "
+                        "Upload a CSV instead, or run once from Instantly to create backups."
+                    )
+                else:
+                    backup_labels = [
+                        f"{item['name']} ({item['kind'].replace('_', ' ')})"
+                        for item in local_backups
+                    ]
+                    backup_index = st.selectbox(
+                        "Saved CSV backup",
+                        options=range(len(local_backups)),
+                        format_func=lambda index: backup_labels[index],
+                        key="step1_saved_backup_select",
+                    )
+                    selected_backup = local_backups[backup_index]
+                    selected_path = selected_backup["path"]
+                    skip_quick = selected_backup["kind"] == "quick_clean"
+                    preview_df = pd.read_csv(selected_path)
+            else:
+                uploaded_file = st.file_uploader(
+                    "Upload CSV file",
+                    type=["csv"],
+                    key="step1_local_csv_upload",
+                )
+                if uploaded_file is not None:
+                    preview_df = pd.read_csv(uploaded_file)
+                    uploads_dir = os.path.join(data_dir(), "uploads")
+                    os.makedirs(uploads_dir, exist_ok=True)
+                    selected_path = os.path.join(uploads_dir, uploaded_file.name)
+                    with open(selected_path, "wb") as handle:
+                        handle.write(uploaded_file.getbuffer())
+
+            if preview_df is not None and selected_path:
+                st.write("### Data preview")
+                st.dataframe(preview_df.head(3))
+                email_column = st.selectbox(
+                    "Email column",
+                    preview_df.columns,
+                    index=preview_df.columns.get_loc(
+                        _resolve_email_column(preview_df)
+                    ),
+                    key="step1_local_email_column",
+                )
+
+                if st.button("Validate CSV source", type="primary"):
+                    st.session_state.source_type = "local_csv"
+                    st.session_state.list_id = None
+                    st.session_state.list_name = os.path.basename(selected_path)
+                    st.session_state.list_count = len(preview_df)
+                    st.session_state.local_csv_path = selected_path
+                    st.session_state.email_column = email_column
+                    st.session_state.skip_quick_verify = skip_quick
+                    st.session_state.list_validated = True
+                    st.session_state.funnel_step = 2
+                    st.rerun()
 
         if st.session_state.list_validated:
-            st.info(
-                f"List **{st.session_state.get('list_name')}** — "
-                f"{st.session_state.get('list_count', 0)} leads"
-            )
+            st.info(_source_summary())
 
     elif step == 2:
         st.subheader("Step 2 — Destination campaign")
         if st.session_state.list_validated:
-            st.info(
-                f"Source: **{st.session_state.get('list_name')}** "
-                f"({st.session_state.get('list_count', 0)} leads)"
-            )
+            st.info(f"Source: {_source_summary()}")
 
         refresh_col, _ = st.columns([1, 3])
         with refresh_col:
@@ -519,10 +653,7 @@ with tab_instantly:
 
     elif step == 3:
         st.subheader("Step 3 — Run configuration")
-        st.info(
-            f"Source list: **{st.session_state.get('list_name')}** "
-            f"({st.session_state.get('list_count', 0)} leads)"
-        )
+        st.info(f"Source: {_source_summary()}")
         st.info(
             f"Destination campaign: **{st.session_state.get('campaign_name')}** "
             f"({st.session_state.get('campaign_count', 0)} leads)"
@@ -552,11 +683,16 @@ with tab_instantly:
                 f"Estimated: ~{credits} credits, ~{minutes} min via MEV bulk API "
                 f"(after quick verify reduces the set)."
             )
-            if run_mode == RUN_MODE_FULL:
+            if run_mode == RUN_MODE_FULL and st.session_state.get("source_type") == "instantly":
                 st.warning(
                     "Full Clean will permanently remove all leads from the source "
                     "Instantly list after download (local raw.csv backup). "
                     "Clean leads are then pushed to the destination campaign."
+                )
+            elif run_mode == RUN_MODE_FULL:
+                st.info(
+                    "Full Clean will verify the entire local CSV backup and push "
+                    "clean leads to the destination campaign."
                 )
 
         col_back, col_next = st.columns(2)
@@ -589,10 +725,14 @@ with tab_instantly:
         custom_limit = st.session_state.get("custom_limit")
         allowed_statuses = st.session_state.get("allowed_statuses", ["Valid", "Catch All"])
 
+        source_line = _source_summary()
+        if st.session_state.get("source_type") == "local_csv":
+            source_line += f"\n  - File: `{st.session_state.get('local_csv_path')}`"
+        else:
+            source_line += f"\n  - List ID: `{st.session_state.get('list_id')}`"
+
         st.markdown(
-            f"- **List:** {st.session_state.get('list_name')} "
-            f"(`{st.session_state.get('list_id')}`) — "
-            f"{st.session_state.get('list_count', 0)} leads\n"
+            f"- **Source:** {source_line}\n"
             f"- **Campaign:** {st.session_state.get('campaign_name')} "
             f"(`{st.session_state.get('campaign_id')}`) — "
             f"{st.session_state.get('campaign_count', 0)} leads\n"
@@ -601,7 +741,7 @@ with tab_instantly:
             + f"\n- **Allowed statuses:** {', '.join(allowed_statuses)}"
         )
 
-        if run_mode == RUN_MODE_FULL:
+        if run_mode == RUN_MODE_FULL and st.session_state.get("source_type") == "instantly":
             st.warning(
                 "Full Clean: the source list will be emptied on Instantly after "
                 "download (backup in local raw.csv). This cannot be undone on Instantly."
@@ -633,16 +773,35 @@ with tab_instantly:
                         st.text("\n".join(log_lines[-30:]))
 
                 try:
-                    on_progress("Downloading leads from Instantly list...", 0.02)
-                    leads = fetch_leads_from_list(
-                        st.session_state.list_id,
-                        on_progress=lambda n: on_progress(
-                            f"Downloaded {n} leads...",
-                            0.02 + min(n / max(st.session_state.list_count, 1), 1) * 0.03,
-                        ),
-                    )
-                    source_df = leads_to_dataframe(leads)
-                    on_progress(f"Downloaded {len(source_df)} leads.", 0.05)
+                    if st.session_state.get("source_type") == "local_csv":
+                        csv_path = st.session_state.get("local_csv_path")
+                        if not csv_path or not os.path.isfile(csv_path):
+                            raise FileNotFoundError(
+                                f"Local CSV backup not found: {csv_path}"
+                            )
+                        on_progress(f"Loading local CSV backup ({csv_path})...", 0.02)
+                        source_df = pd.read_csv(csv_path)
+                        on_progress(f"Loaded {len(source_df)} leads from local CSV.", 0.05)
+                        email_column = st.session_state.get("email_column")
+                        skip_quick = bool(st.session_state.get("skip_quick_verify"))
+                        source_list_id = None
+                        purge_source = False
+                    else:
+                        on_progress("Downloading leads from Instantly list...", 0.02)
+                        leads = fetch_leads_from_list(
+                            st.session_state.list_id,
+                            on_progress=lambda n: on_progress(
+                                f"Downloaded {n} leads...",
+                                0.02
+                                + min(n / max(st.session_state.list_count, 1), 1) * 0.03,
+                            ),
+                        )
+                        source_df = leads_to_dataframe(leads)
+                        on_progress(f"Downloaded {len(source_df)} leads.", 0.05)
+                        email_column = None
+                        skip_quick = False
+                        source_list_id = st.session_state.list_id
+                        purge_source = run_mode == RUN_MODE_FULL
 
                     result = run_cleaning_pipeline(
                         source_df=source_df,
@@ -650,8 +809,10 @@ with tab_instantly:
                         custom_limit=custom_limit,
                         allowed_statuses=allowed_statuses,
                         destination_campaign_id=st.session_state.campaign_id,
-                        source_list_id=st.session_state.list_id,
-                        purge_source=(run_mode == RUN_MODE_FULL),
+                        source_list_id=source_list_id,
+                        purge_source=purge_source,
+                        email_column=email_column,
+                        skip_quick_verify=skip_quick,
                         on_progress=on_progress,
                     )
                     st.session_state.pipeline_result = result
