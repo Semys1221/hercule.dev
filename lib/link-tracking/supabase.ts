@@ -7,7 +7,13 @@ import {
   type LeadStatut,
   type LinkTrackingLead,
 } from "./types";
-import { buildDashboardUrl } from "./urls";
+import {
+  buildCifLeadUrls,
+  buildComptableLeadUrls,
+  buildDashboardUrl,
+  buildEntrepriseLeadUrls,
+  buildLeadUrls,
+} from "./urls";
 
 // Lookup order: agence → comptable → entreprise (deterministic, no ambiguous matches).
 const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise", "cif"];
@@ -138,7 +144,48 @@ async function findLeadsInTableByColumn(
     return [];
   }
 
+  // #region agent log
+  const bulkLookupStartedAt = Date.now();
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    body: JSON.stringify({
+      sessionId: "081f8d",
+      runId: "pre-fix",
+      hypothesisId: "H1-H2",
+      location: "supabase.ts:findLeadsInTableByColumn:start",
+      message: "Bulk lookup starting",
+      data: { category, column, valueCount: values.length },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   const { data, error } = await client.from(category).select("*").in(column, values);
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    body: JSON.stringify({
+      sessionId: "081f8d",
+      runId: "pre-fix",
+      hypothesisId: "H1-H2",
+      location: "supabase.ts:findLeadsInTableByColumn:end",
+      message: "Bulk lookup finished",
+      data: {
+        category,
+        column,
+        valueCount: values.length,
+        durationMs: Date.now() - bulkLookupStartedAt,
+        rowCount: data?.length ?? 0,
+        error: error?.message ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   if (error) {
     if (isMissingRelationError(error.message)) {
       return [];
@@ -160,6 +207,25 @@ export async function findLeadsByEmails(
   if (normalized.length === 0) {
     return map;
   }
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    body: JSON.stringify({
+      sessionId: "081f8d",
+      runId: "pre-fix",
+      hypothesisId: "H3",
+      location: "supabase.ts:findLeadsByEmails",
+      message: "Email bulk lookup tables resolved",
+      data: {
+        emailCount: normalized.length,
+        tablesQueried: TABLES,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   for (let offset = 0; offset < normalized.length; offset += BULK_EMAIL_LOOKUP_BATCH) {
     const batch = normalized.slice(offset, offset + BULK_EMAIL_LOOKUP_BATCH);
@@ -260,6 +326,75 @@ export type MarkBookedResult =
   | { updated: true; lookup: LeadLookup }
   | { updated: false; lookup: LeadLookup | null; reason: string };
 
+function buildBookingIdentityPatch(
+  lookup: LeadLookup,
+  params: MarkBookedParams,
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  const slug = lookup.lead.slug?.trim();
+
+  if (params.calendlyInviteeUri?.trim()) {
+    patch.calendly_invitee_uri = params.calendlyInviteeUri.trim();
+  }
+  if (params.scheduledAt) {
+    patch.scheduled_at = params.scheduledAt;
+  }
+  if (params.firstName?.trim()) {
+    patch.first_name = params.firstName.trim();
+  }
+  if (params.company?.trim()) {
+    patch.company = params.company.trim();
+  }
+  if (params.calendlyPayload) {
+    patch.calendly_payload = params.calendlyPayload;
+  }
+  if (params.calendlyQuestions) {
+    patch.calendly_questions = params.calendlyQuestions;
+  }
+
+  const bookingEmail = normalizeEmail(params.email);
+  const leadEmail = normalizeEmail(lookup.lead.email);
+  if (bookingEmail && bookingEmail !== leadEmail) {
+    patch.email = bookingEmail;
+    if (slug) {
+      if (lookup.category === "comptable") {
+        Object.assign(patch, buildComptableLeadUrls(slug, bookingEmail));
+      } else if (lookup.category === "cif") {
+        Object.assign(patch, buildCifLeadUrls(slug, bookingEmail));
+      } else if (lookup.category === "agence") {
+        Object.assign(patch, buildLeadUrls(slug, bookingEmail));
+      } else if (lookup.category === "entreprise") {
+        Object.assign(patch, buildEntrepriseLeadUrls(slug, bookingEmail));
+      }
+    }
+  }
+
+  return patch;
+}
+
+async function applyBookingIdentityPatch(
+  client: SupabaseClient,
+  lookup: LeadLookup,
+  patch: Record<string, unknown>,
+): Promise<LinkTrackingLead> {
+  if (Object.keys(patch).length === 0) {
+    return lookup.lead;
+  }
+
+  const { data, error } = await client
+    .from(lookup.category)
+    .update(patch)
+    .eq("id", lookup.lead.id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase booking identity sync failed: ${error.message}`);
+  }
+
+  return (data as LinkTrackingLead | null) ?? lookup.lead;
+}
+
 async function ensureDashboardLink(
   client: SupabaseClient,
   lookup: LeadLookup,
@@ -307,15 +442,50 @@ export async function markLeadBooked(
   }
 
   if (isMeetingBookedStatus(lookup.lead.statut)) {
-    const withDashboard = await ensureDashboardLink(client, lookup);
-    return { updated: false, lookup: withDashboard, reason: "already_booked" };
+    const identityPatch = buildBookingIdentityPatch(lookup, params);
+    const syncedLead = await applyBookingIdentityPatch(client, lookup, identityPatch);
+    const syncedLookup = { category: lookup.category, lead: syncedLead };
+    const withDashboard = await ensureDashboardLink(client, syncedLookup);
+
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "820c81",
+      },
+      body: JSON.stringify({
+        sessionId: "820c81",
+        runId: "post-fix",
+        hypothesisId: "H1-H2",
+        location: "supabase.ts:markLeadBooked:already_booked",
+        message: "synced booking identity on already_booked lead",
+        data: {
+          slug: params.slug,
+          bookingEmail: params.email,
+          leadEmailBefore: lookup.lead.email,
+          leadEmailAfter: withDashboard.lead.email,
+          firstNameAfter: withDashboard.lead.first_name,
+          companyAfter: withDashboard.lead.company,
+          patchKeys: Object.keys(identityPatch),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
+    return {
+      updated: Object.keys(identityPatch).length > 0,
+      lookup: withDashboard,
+      reason: "already_booked",
+    };
   }
 
   const now = new Date().toISOString();
   const patch: Record<string, unknown> = {
     statut: "MEETING_BOOKED",
     booked_at: now,
-    calendly_invitee_uri: params.calendlyInviteeUri || lookup.lead.calendly_invitee_uri,
+    ...buildBookingIdentityPatch(lookup, params),
   };
   if (
     lookup.category === "agence" ||
@@ -324,11 +494,6 @@ export async function markLeadBooked(
   ) {
     patch.dashboard_link = buildDashboardUrl(lookup.lead.slug);
   }
-  if (params.firstName) patch.first_name = params.firstName;
-  if (params.company) patch.company = params.company;
-  if (params.scheduledAt) patch.scheduled_at = params.scheduledAt;
-  if (params.calendlyPayload) patch.calendly_payload = params.calendlyPayload;
-  if (params.calendlyQuestions) patch.calendly_questions = params.calendlyQuestions;
 
   const { data, error } = await client
     .from(lookup.category)

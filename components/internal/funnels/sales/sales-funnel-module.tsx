@@ -436,7 +436,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
               {phase === "closing"
                 ? closingSections.find((section) => section.id === activeClosingId)
                     ?.label
-                : activeQualificationSection?.title ?? SESSION_PHASE_QUALIFICATION}
+                : activeQualificationSection?.label ?? SESSION_PHASE_QUALIFICATION}
             </p>
           </header>
           <div className="flex-1 overflow-auto p-3 md:p-4">
@@ -472,6 +472,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
               <SalesCompanyPresentationPanel audience={audience} form={form} />
             ) : activeQualificationSection ? (
               <SalesFunnelSectionPage
+                key={activeQualificationId}
                 audience={audience}
                 section={activeQualificationSection}
                 form={form}

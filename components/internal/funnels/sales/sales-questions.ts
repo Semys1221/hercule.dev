@@ -457,7 +457,7 @@ import {
 } from "./sales-questions-cif";
 import { AGENCE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-agence";
 import { COMPTABLE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-comptable";
-import { COMPTABLE_OBJECTIFS_QUESTIONS as CIF_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-cif";
+import { CIF_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-cif";
 import { ENTREPRISE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-entreprise";
 
 export function getHerculeMonthlyMin(audience: Audience = "agence"): number {

@@ -256,6 +256,26 @@ export async function batchResolveLeadLookups(
   candidates: InviteeCandidate[],
 ): Promise<Map<string, LeadLookup | null>> {
   const client = createLinkTrackingClient();
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    body: JSON.stringify({
+      sessionId: "081f8d",
+      runId: "pre-fix",
+      hypothesisId: "H3-H5",
+      location: "list-bookings.ts:batchResolveLeadLookups",
+      message: "Batch lead lookup scope",
+      data: {
+        candidateCount: candidates.length,
+        scopeCategory: null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   const [byEmail, bySlug, byInviteeUri] = await Promise.all([
     findLeadsByEmails(client, candidates.map((candidate) => candidate.email)),
     findLeadsBySlugs(client, candidates.map((candidate) => candidate.utmContent)),
@@ -399,6 +419,30 @@ export async function listUpcomingBookings(options: {
       inviteeUri: String(invitee.uri ?? "").trim(),
     });
   }
+
+  const lookupScope = options.niche ?? options.category;
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    body: JSON.stringify({
+      sessionId: "081f8d",
+      runId: "pre-fix",
+      hypothesisId: "H5",
+      location: "list-bookings.ts:listUpcomingBookings",
+      message: "Bookings pipeline niche/category",
+      data: {
+        niche: options.niche ?? null,
+        category: options.category ?? null,
+        lookupScope: lookupScope ?? null,
+        candidateCount: candidates.length,
+        eventCount: events.length,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   const lookupByKey = await batchResolveLeadLookups(candidates);
   const rows: CalendlyBookingRow[] = [];

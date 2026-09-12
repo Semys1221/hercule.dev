@@ -42,7 +42,7 @@ const AGENCE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   {
     id: "objectifs",
     label: "Objectifs",
-    title: "Objectifs & douleur",
+    title: "Objectifs",
     subtitle:
       "Comprendre la situation actuelle, la capacité disponible et l'écart avec l'objectif avant de présenter Hercule.",
   },
@@ -101,7 +101,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   {
     id: "objectifs",
     label: "Objectifs",
-    title: "Objectifs & douleur",
+    title: "Objectifs",
     subtitle:
       "Comprendre la situation actuelle, la capacité disponible et l'écart avec l'objectif avant de présenter Hercule Comptable.",
   },

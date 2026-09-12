@@ -167,7 +167,7 @@ export async function POST(request: Request) {
       email: invitee.email,
       slug: bookingSlug,
       invitee,
-      firstName: firstNameFromFullName(invitee.name),
+      firstName: invitee.name.trim() || firstNameFromFullName(invitee.name),
       company: companyFromQuestions(invitee.questionsAndAnswers),
       scheduledAt: invitee.startTime || null,
       calendlyPayload:

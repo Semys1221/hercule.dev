@@ -51,6 +51,9 @@ export async function upsertSalesCallFromBooking(
     if (params.scheduledAt) {
       patch.scheduled_at = params.scheduledAt;
     }
+    if (normalizedEmail && normalizedEmail !== String(existing.email ?? "").trim().toLowerCase()) {
+      patch.email = normalizedEmail;
+    }
     if (Object.keys(patch).length === 0) {
       return existing as SalesCall;
     }

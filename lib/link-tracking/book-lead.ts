@@ -114,7 +114,7 @@ async function persistBookingSideEffects(
       agenceId: lookup.category === "agence" ? lookup.lead.id : null,
       comptableId: lookup.category === "comptable" ? lookup.lead.id : null,
       cifId: lookup.category === "cif" ? lookup.lead.id : null,
-      email: lookup.lead.email,
+      email: params.email.trim().toLowerCase() || lookup.lead.email,
       inviteeUri: params.invitee.inviteeUri,
       scheduledAt: params.scheduledAt ?? lookup.lead.scheduled_at,
     });

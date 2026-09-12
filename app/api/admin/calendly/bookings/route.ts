@@ -80,6 +80,22 @@ export async function GET(request: Request) {
   }
 
   try {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+      body: JSON.stringify({
+        sessionId: "081f8d",
+        runId: "pre-fix",
+        hypothesisId: "H5",
+        location: "bookings/route.ts:GET",
+        message: "Admin bookings request",
+        data: { niche, daysBehind, useLegacyCategory, bypassCache },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     const outreach = await getOutreachConfigView(niche);
     const enriched = bypassCache
       ? await loadEnrichedBookings(daysAhead, niche, daysBehind, useLegacyCategory)

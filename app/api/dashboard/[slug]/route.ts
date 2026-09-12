@@ -192,6 +192,32 @@ export async function GET(_request: Request, { params }: RouteParams) {
       }).catch(() => {});
       // #endregion
 
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "820c81",
+        },
+        body: JSON.stringify({
+          sessionId: "820c81",
+          runId: "post-fix",
+          hypothesisId: "H3",
+          location: "app/api/dashboard/[slug]/route.ts:comptable:response",
+          message: "comptable dashboard identity payload",
+          data: {
+            slug: lead.slug,
+            email: lead.email,
+            firstName: lead.first_name,
+            company: lead.company,
+            scheduledAt: lead.scheduled_at,
+            dashboardMode,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
       return NextResponse.json({
         slug: lead.slug,
         email: lead.email,

@@ -152,10 +152,10 @@ export function OnboardingComptableWizard({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Debug-Session-Id": "c39d02",
+        "X-Debug-Session-Id": "820c81",
       },
       body: JSON.stringify({
-        sessionId: "c39d02",
+        sessionId: "820c81",
         runId: "pre-fix",
         hypothesisId: "B,C",
         location: "onboarding-comptable-wizard.tsx:step2",
