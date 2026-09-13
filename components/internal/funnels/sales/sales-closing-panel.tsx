@@ -242,13 +242,13 @@ function getTreatmentRules(
     }));
   }
   if (isComptableSalesAudience(audience)) {
-    return AGENCE_TREATMENT_RULES;
+    return COMPTABLE_TREATMENT_RULES.map((rule) => ({
+      ...rule,
+      description: interpolateClientSegment(rule.description, clientSegment),
+    }));
   }
 
-  return COMPTABLE_TREATMENT_RULES.map((rule) => ({
-    ...rule,
-    description: interpolateClientSegment(rule.description, clientSegment),
-  }));
+  return AGENCE_TREATMENT_RULES;
 }
 
 const AGENCE_DASHBOARD_FEATURES = [
@@ -276,30 +276,52 @@ const COMPTABLE_DASHBOARD_NEXT_STEPS = [
   `Premier RDV planifié — ${formatComptableFirstRdvAfterActivationLabel()}`,
 ] as const;
 
+const CIF_DASHBOARD_FEATURES = [
+  "Le suivi de vos mandats {clientSegment} en cours et leur statut",
+  "L'historique de vos mises en relation et résultats",
+  "Les informations liées à votre offre et votre facturation",
+] as const;
+
+const CIF_DASHBOARD_NEXT_STEPS = [
+  `Accès onboarding — sous ${formatComptableOnboardingAccessLabel()} après réception du lien`,
+  "Activation — premier mandat {clientSegment} lancé dès l'onboarding complété",
+  `Premier RDV planifié — ${formatComptableFirstRdvAfterActivationLabel()}`,
+] as const;
+
 function getDashboardFeatures(
   audience: Audience,
   clientSegment = resolveClientSegment([]),
 ): readonly string[] {
-  if (isCabinetBuyerSalesAudience(audience)) {
-    return AGENCE_DASHBOARD_FEATURES;
+  if (isCifSalesAudience(audience)) {
+    return CIF_DASHBOARD_FEATURES.map((item) =>
+      interpolateClientSegment(item, clientSegment),
+    );
+  }
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_DASHBOARD_FEATURES.map((item) =>
+      interpolateClientSegment(item, clientSegment),
+    );
   }
 
-  return COMPTABLE_DASHBOARD_FEATURES.map((item) =>
-    interpolateClientSegment(item, clientSegment),
-  );
+  return AGENCE_DASHBOARD_FEATURES;
 }
 
 function getDashboardNextSteps(
   audience: Audience,
   clientSegment = resolveClientSegment([]),
 ): readonly string[] {
-  if (isCabinetBuyerSalesAudience(audience)) {
-    return AGENCE_DASHBOARD_NEXT_STEPS;
+  if (isCifSalesAudience(audience)) {
+    return CIF_DASHBOARD_NEXT_STEPS.map((item) =>
+      interpolateClientSegment(item, clientSegment),
+    );
+  }
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_DASHBOARD_NEXT_STEPS.map((item) =>
+      interpolateClientSegment(item, clientSegment),
+    );
   }
 
-  return COMPTABLE_DASHBOARD_NEXT_STEPS.map((item) =>
-    interpolateClientSegment(item, clientSegment),
-  );
+  return AGENCE_DASHBOARD_NEXT_STEPS;
 }
 
 export function SalesClosingPanel({

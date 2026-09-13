@@ -299,34 +299,6 @@ export function resolveSalesSessionDashboardLink(params: {
     extractDashboardSlug(leadLink) ||
     extractTrackingSlug(params.bookingDashboardLink);
 
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "d13f4c",
-    },
-    body: JSON.stringify({
-      sessionId: "d13f4c",
-      runId: "pre-fix",
-      hypothesisId: "H1-H2-H4",
-      location: "urls.ts:resolveSalesSessionDashboardLink",
-      message: "dashboard slug resolution",
-      data: {
-        leadSlug: params.lead?.slug?.trim() || null,
-        bookingSlug: params.bookingSlug?.trim() || null,
-        leadDashboardLink: params.lead?.dashboard_link?.trim() || null,
-        bookingDashboardLink: params.bookingDashboardLink?.trim() || null,
-        leadLink,
-        resolvedSlug: slug || null,
-        developerMode: Boolean(params.developerMode),
-        willUseDevPreview: !slug && Boolean(params.developerMode),
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-
   if (slug) {
     if (params.developerMode && params.origin) {
       return {
