@@ -25,11 +25,9 @@ import {
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import { sessionHubHref, pathToHref, type Audience } from "@/lib/admin/navigation";
-import { SESSION_PHASE_QUALIFICATION } from "@/lib/admin/funnels/ui-copy";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 
-import { RendezVousPanel } from "./rendez-vous-panel";
-import { SalesClosingPanel } from "./sales-closing-panel";
+import { SalesFunnelWorkspace } from "./sales-funnel-workspace";
 import {
   getSalesClosingSections,
   isSalesClosingSectionComplete,
@@ -38,8 +36,6 @@ import {
   type SalesClosingSectionId,
   type SalesClosingValues,
 } from "./sales-closing-sections";
-import { SalesCompanyPresentationPanel } from "./sales-company-presentation-panel";
-import { SalesFunnelSectionPage } from "./sales-funnel-section-page";
 import {
   getSalesFunnelSection,
   getSalesFunnelSections,
@@ -437,57 +433,31 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
             setActiveQualificationId(sectionId as SalesFunnelSectionId);
           }}
         />
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <header className="flex h-12 shrink-0 items-center border-b border-border px-4 md:px-6">
-            <p className="truncate text-sm text-muted-foreground">
-              {phase === "closing"
-                ? closingSections.find((section) => section.id === activeClosingId)
-                    ?.label
-                : activeQualificationSection?.label ?? SESSION_PHASE_QUALIFICATION}
-            </p>
-          </header>
-          <div className="flex-1 overflow-auto p-3 md:p-4">
-            {phase === "closing" ? (
-              <SalesClosingPanel
-                audience={audience}
-                sectionId={activeClosingId}
-                qualificationForm={form}
-                closingValues={closingValues}
-                onClosingChange={(patch) =>
-                  setClosingValues((current) => ({ ...current, ...patch }))
-                }
-                selectedLead={selectedLead}
-                selectedBooking={selectedBooking}
-                salesCallId={salesCallId}
-                developerMode={developerModeEnabled}
-                onRefreshLead={refreshLead}
-                onPersistClosing={persistClosingNotes}
-              />
-            ) : activeQualificationId === "rendez-vous" ? (
-              <RendezVousPanel
-                audience={audience}
-                selectedLead={selectedLead}
-                selectedBooking={selectedBooking}
-                hasSelectedBooking={selectedBooking !== null}
-                sessionResetKey={sessionResetKey}
-                onMeetingNameChange={setMeetingName}
-                onBookingSelect={loadLeadForBooking}
-                onApplyTestPreset={applyTestPreset}
-                onResetSession={resetSessionUiState}
-              />
-            ) : activeQualificationId === "presentation-societe" ? (
-              <SalesCompanyPresentationPanel audience={audience} form={form} />
-            ) : activeQualificationSection ? (
-              <SalesFunnelSectionPage
-                key={activeQualificationId}
-                audience={audience}
-                section={activeQualificationSection}
-                form={form}
-                prospectFirstName={prospectFirstName}
-              />
-            ) : null}
-          </div>
-        </div>
+        <SalesFunnelWorkspace
+          audience={audience}
+          phase={phase}
+          activeQualificationId={activeQualificationId}
+          activeClosingId={activeClosingId}
+          activeQualificationSection={activeQualificationSection}
+          closingSections={closingSections}
+          form={form}
+          closingValues={closingValues}
+          selectedLead={selectedLead}
+          selectedBooking={selectedBooking}
+          salesCallId={salesCallId}
+          sessionResetKey={sessionResetKey}
+          developerModeEnabled={developerModeEnabled}
+          prospectFirstName={prospectFirstName}
+          onClosingChange={(patch) =>
+            setClosingValues((current) => ({ ...current, ...patch }))
+          }
+          onMeetingNameChange={setMeetingName}
+          onBookingSelect={loadLeadForBooking}
+          onApplyTestPreset={applyTestPreset}
+          onResetSession={resetSessionUiState}
+          onRefreshLead={refreshLead}
+          onPersistClosing={persistClosingNotes}
+        />
       </SidebarProvider>
     </Form>
   );

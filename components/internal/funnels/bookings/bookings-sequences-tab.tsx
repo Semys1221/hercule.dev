@@ -118,30 +118,6 @@ export function BookingsSequencesTab({
         config?: OutreachConfigView;
         error?: string;
       };
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "cf0893",
-        },
-        body: JSON.stringify({
-          sessionId: "cf0893",
-          runId: "post-fix",
-          hypothesisId: "H1",
-          location: "bookings-sequences-tab.tsx:loadConfig",
-          message: "outreach-config response shape",
-          data: {
-            niche,
-            ok: response.ok,
-            nestedCampaignId: body.config?.instantly_campaign_id ?? null,
-            nestedCampaignLinked: body.config?.campaign_linked ?? null,
-            hasConfigKey: Boolean(body.config),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       if (!response.ok) {
         throw new Error(body.error ?? "Chargement config impossible");
       }
@@ -157,59 +133,8 @@ export function BookingsSequencesTab({
     void loadConfig();
   }, [loadConfig, connectionsRevision]);
 
-  const campaignId = config?.instantly_campaign_id ?? null;
-  // #region agent log
-  useEffect(() => {
-    if (loading) return;
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "cf0893",
-      },
-      body: JSON.stringify({
-        sessionId: "cf0893",
-        runId: "post-fix",
-        hypothesisId: "H1-H4",
-        location: "bookings-sequences-tab.tsx:campaignId",
-        message: "derived campaignId for sequences tab",
-        data: {
-          niche,
-          campaignId,
-          configCampaignLinked: config?.campaign_linked ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, [loading, niche, campaignId, config]);
-  // #endregion
-
   const liveTabs = useMemo(() => bookingsSequenceTabsForNiche(niche), [niche]);
   const defaultTab = liveTabs[0]?.id ?? "confirm";
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "66e41f",
-      },
-      body: JSON.stringify({
-        sessionId: "66e41f",
-        runId: "post-fix",
-        hypothesisId: "H1",
-        location: "bookings-sequences-tab.tsx:liveTabs",
-        message: "bookings sequence tabs for niche",
-        data: {
-          niche,
-          tabCount: liveTabs.length,
-          tabIds: liveTabs.map((tab) => tab.id),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, [niche, liveTabs]);
-  // #endregion
 
   if (loading) {
     return <Skeleton className="h-64 w-full" />;

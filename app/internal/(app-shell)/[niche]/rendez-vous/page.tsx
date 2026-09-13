@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { BookingsShell } from "@/components/internal/funnels/bookings/bookings-shell";
 import { segmentsFromModulePath } from "@/components/internal/funnels/ui/breadcrumb-segments";
@@ -29,7 +30,9 @@ export default async function RendezVousPage({
         description={`${BOOKINGS_MODULE_CAPTION} — ${label}.`}
         segments={segmentsFromModulePath("bookings", niche)}
       />
-      <BookingsShell niche={niche} />
+      <Suspense fallback={null}>
+        <BookingsShell niche={niche} />
+      </Suspense>
     </InternalPageShell>
   );
 }

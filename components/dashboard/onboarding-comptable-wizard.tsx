@@ -1,15 +1,9 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  DASHBOARD_DEV_SKIP_PAYMENT_CTA,
-  DASHBOARD_DEV_SKIP_PAYMENT_ERROR,
-  DASHBOARD_DEV_SKIP_PAYMENT_LOADING,
-} from "@/lib/admin/funnels/ui-copy";
+import { DASHBOARD_DEV_SKIP_PAYMENT_ERROR } from "@/lib/admin/funnels/ui-copy";
 import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
 import { requestCabinetCheckoutClientSecret } from "@/lib/payments/cabinet-checkout";
 import {
@@ -20,13 +14,9 @@ import {
 import type { DashboardData } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
-import { ComptableOnboardingFormFields } from "./comptable-onboarding-form-fields";
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
-import { StepDashboardPreviewComptable } from "./steps/step-dashboard-preview-comptable";
-import { StepEmbeddedCheckoutComptable } from "./steps/step-embedded-checkout-comptable";
-import { StepFaqTieDown } from "./steps/step-faq-tie-down";
-import { StepPricingCardComptable } from "./steps/step-pricing-card-comptable";
-import { StepScreenShare } from "./steps/step-screen-share";
+import { ComptableWizardControls } from "./onboarding-comptable-wizard-controls";
+import { ComptableWizardStepView } from "./onboarding-comptable-wizard-step";
 
 const STEP_COUNT = 6;
 
@@ -60,7 +50,6 @@ export function OnboardingComptableWizard({
   const prospectLine = data.company ? `${greeting} · ${data.company}` : greeting;
 
   const isFaqStep = step === 3;
-  const isPricingStep = step === 4;
   const isCheckoutStep = step === 5;
   const canGoNext = !isFaqStep || tieDownAccepted;
 
@@ -110,50 +99,18 @@ export function OnboardingComptableWizard({
     void preloadCheckout();
   }, [step, preloadCheckout]);
 
-  useEffect(() => {
-    if (step !== 2) {
-      return;
-    }
-
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "983675",
-      },
-      body: JSON.stringify({
-        sessionId: "983675",
-        runId: "post-fix",
-        hypothesisId: "B,C",
-        location: "onboarding-comptable-wizard.tsx:step2",
-        message: "comptable wizard step 2 render context",
-        data: {
-          step,
-          dashboardMode: data.dashboardMode,
-          component: "ComptableOnboardingFormFields",
-          passesDataToFormStep: true,
-          form: data.form,
-          formKeys: Object.keys(data.form ?? {}),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [step, data.dashboardMode, data.form]);
-
-  function goNext() {
+  const goNext = useCallback(() => {
     if (isFaqStep && tieDownAccepted) {
       void persistTieDown();
     }
     setStep((current) => Math.min(current + 1, STEP_COUNT - 1));
-  }
+  }, [isFaqStep, persistTieDown, tieDownAccepted]);
 
-  function goPrev() {
+  const goPrev = useCallback(() => {
     setStep((current) => Math.max(current - 1, 0));
-  }
+  }, []);
 
-  async function simulatePayment() {
+  const simulatePayment = useCallback(async () => {
     setSkipLoading(true);
     setSkipError(null);
 
@@ -176,7 +133,7 @@ export function OnboardingComptableWizard({
     } finally {
       setSkipLoading(false);
     }
-  }
+  }, [data.slug, onRefresh, selectedOffer]);
 
   return (
     <div
@@ -209,87 +166,28 @@ export function OnboardingComptableWizard({
             <Progress value={progressValue} />
           </div>
 
-          <div
-            className={cn(
-              "overflow-hidden rounded-xl border border-border bg-card",
-              isCheckoutStep ? "min-h-[720px] p-4" : "min-h-[360px] p-6",
-            )}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-              >
-                {step === 0 && <StepScreenShare />}
-                {step === 1 && <StepDashboardPreviewComptable />}
-                {step === 2 && (
-                  <ComptableOnboardingFormFields
-                    mode="preview"
-                    data={data}
-                    idPrefix="preview-comptable"
-                  />
-                )}
-                {step === 3 && (
-                  <StepFaqTieDown
-                    audience="comptable"
-                    tieDownId="tie-down-comptable"
-                    tieDownAccepted={tieDownAccepted}
-                    onTieDownChange={setTieDownAccepted}
-                  />
-                )}
-                {step === 4 && (
-                  <StepPricingCardComptable
-                    selectedOffer={selectedOffer}
-                    onSelectOffer={setSelectedOffer}
-                    onProceed={goNext}
-                  />
-                )}
-                {step === 5 && (
-                  <StepEmbeddedCheckoutComptable
-                    slug={data.slug}
-                    audience={data.audience === "cif" ? "cif" : "comptable"}
-                    selectedOffer={selectedOffer}
-                    startImmediately
-                    clientSecret={checkoutClientSecret}
-                    preloadError={checkoutPreloadError}
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+          <ComptableWizardStepView
+            step={step}
+            data={data}
+            selectedOffer={selectedOffer}
+            tieDownAccepted={tieDownAccepted}
+            checkoutClientSecret={checkoutClientSecret}
+            checkoutPreloadError={checkoutPreloadError}
+            onTieDownChange={setTieDownAccepted}
+            onSelectOffer={setSelectedOffer}
+            onProceedFromPricing={goNext}
+          />
 
-          {(developerModeEnabled && isCheckoutStep) || !isCheckoutStep ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={goPrev}
-                disabled={step === 0 || skipLoading}
-              >
-                Précédent
-              </Button>
-              <div className="ml-auto flex flex-wrap items-center gap-3">
-                {developerModeEnabled && isCheckoutStep ? (
-                  <Button
-                    type="button"
-                    onClick={() => void simulatePayment()}
-                    disabled={skipLoading}
-                  >
-                    {skipLoading ? DASHBOARD_DEV_SKIP_PAYMENT_LOADING : DASHBOARD_DEV_SKIP_PAYMENT_CTA}
-                  </Button>
-                ) : null}
-                {!isPricingStep && !isCheckoutStep && (
-                  <Button type="button" onClick={goNext} disabled={!canGoNext}>
-                    Suivant
-                  </Button>
-                )}
-              </div>
-            </div>
-          ) : null}
-          {skipError ? <p className="text-sm text-destructive">{skipError}</p> : null}
+          <ComptableWizardControls
+            step={step}
+            canGoNext={canGoNext}
+            developerModeEnabled={developerModeEnabled}
+            skipLoading={skipLoading}
+            skipError={skipError}
+            onPrev={goPrev}
+            onNext={goNext}
+            onSimulatePayment={() => void simulatePayment()}
+          />
         </div>
       </main>
     </div>

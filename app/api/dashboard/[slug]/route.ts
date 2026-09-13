@@ -127,33 +127,6 @@ export async function GET(_request: Request, { params }: RouteParams) {
           : await findLatestSalesCallByComptableId(salesCallsClient, lead.id);
       const isNotPaidPostCall = latestSalesCall?.status === "not_paid";
 
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "454528",
-        },
-        body: JSON.stringify({
-          sessionId: "454528",
-          runId: "dashboard-mode-debug",
-          hypothesisId: "A,B,C",
-          location: "app/api/dashboard/[slug]/route.ts:comptable",
-          message: "comptable dashboard mode resolution",
-          data: {
-            slug: lead.slug,
-            leadId: lead.id,
-            isPaid,
-            salesCallId: latestSalesCall?.id ?? null,
-            salesCallStatus: latestSalesCall?.status ?? null,
-            isNotPaidPostCall,
-            hasNotPaidModeCode: true,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-
       const { retraction, milestones: paidMilestones } = buildDashboardRetractionFields({
         category: lookup.category,
         lead,
@@ -169,55 +142,6 @@ export async function GET(_request: Request, { params }: RouteParams) {
         : !isOnboarded
           ? "comptable_onboarding"
           : "comptable_active";
-
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "454528",
-        },
-        body: JSON.stringify({
-          sessionId: "454528",
-          runId: "dashboard-mode-debug",
-          hypothesisId: "A,D",
-          location: "app/api/dashboard/[slug]/route.ts:comptable:resolved",
-          message: "comptable dashboardMode resolved",
-          data: {
-            slug: lead.slug,
-            dashboardMode,
-            milestoneIds: milestones.map((m) => m.id),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "820c81",
-        },
-        body: JSON.stringify({
-          sessionId: "820c81",
-          runId: "post-fix",
-          hypothesisId: "H3",
-          location: "app/api/dashboard/[slug]/route.ts:comptable:response",
-          message: "comptable dashboard identity payload",
-          data: {
-            slug: lead.slug,
-            email: lead.email,
-            firstName: lead.first_name,
-            company: lead.company,
-            scheduledAt: lead.scheduled_at,
-            dashboardMode,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
 
       return NextResponse.json({
         slug: lead.slug,
