@@ -60,6 +60,7 @@ export const SALES_TEST_SESSION_QUALIFICATION: SalesQualificationValues = {
   o1: ["qualified_leads", "bench_time"],
   o2: "high",
   o3: "insufficient_leads",
+  o3FollowUp: "",
   o4: ["no_prospecting", "weak_channels"],
   o5: ["direct_prospecting", "paid_ads"],
   o6: "significant_gap",
@@ -93,6 +94,8 @@ export const SALES_TEST_SESSION_QUALIFICATION: SalesQualificationValues = {
 
 export const SALES_TEST_SESSION_COMPTABLE_QUALIFICATION: SalesQualificationValues = {
   ...SALES_TEST_SESSION_QUALIFICATION,
+  o3: "insufficient_prospects",
+  o3FollowUp: "6 mois",
   q11: ["freelancers", "tpe"],
   q1: ["google_ads", "seo", "web_creation"],
   q2: ["paid_acquisition", "organic_seo"],
@@ -111,6 +114,7 @@ export const SALES_TEST_SESSION_CIF_QUALIFICATION: SalesQualificationValues = {
   o1: ["qualified_dossiers", "bank_competition"],
   o2: "moderate",
   o3: "insufficient_prospects",
+  o3FollowUp: "6 mois",
   o4: ["weak_network", "fee_competition"],
   o5: ["partnerships", "events"],
   o6: "significant_gap",

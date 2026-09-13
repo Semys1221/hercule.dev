@@ -94,6 +94,18 @@ function main() {
       "objectifs",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        o3FollowUp: "",
+      },
+      "comptable",
+    ),
+    false,
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
         o6: "",
       },
       "comptable",

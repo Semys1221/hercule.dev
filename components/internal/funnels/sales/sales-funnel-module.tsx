@@ -45,6 +45,7 @@ import {
   getSalesFunnelSections,
   type SalesFunnelSectionId,
 } from "./sales-funnel-sections";
+import { extractSalesIntroFields } from "./sales-intro-script";
 import { SalesFunnelSidebar, type MeetingInfo } from "./sales-funnel-sidebar";
 
 const DEFAULT_MEETING_NAME = "No meetings";
@@ -109,6 +110,12 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     () => resolveClientSegment(watchedValues.q11),
     [watchedValues.q11],
   );
+  const prospectFirstName = useMemo(() => {
+    if (!selectedBooking) {
+      return "vous";
+    }
+    return extractSalesIntroFields(selectedBooking, audience).firstName;
+  }, [audience, selectedBooking]);
 
   const exitHref = sessionHubHref(audience);
   const settingsHref = useMemo(() => {
@@ -476,6 +483,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
                 audience={audience}
                 section={activeQualificationSection}
                 form={form}
+                prospectFirstName={prospectFirstName}
               />
             ) : null}
           </div>
