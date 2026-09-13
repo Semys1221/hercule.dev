@@ -11,7 +11,7 @@ import {
   DASHBOARD_DEV_SKIP_PAYMENT_LOADING,
 } from "@/lib/admin/funnels/ui-copy";
 import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
-import { cabinetCheckoutApiPath } from "@/lib/payments/cabinet-checkout";
+import { requestCabinetCheckoutClientSecret } from "@/lib/payments/cabinet-checkout";
 import {
   getDashboardDeveloperModeEnabledServerSnapshot,
   getDashboardDeveloperModeEnabledSnapshot,
@@ -80,55 +80,21 @@ export function OnboardingComptableWizard({
 
     try {
       const checkoutAudience = data.audience === "cif" ? "cif" : "comptable";
-      const response = await fetch(cabinetCheckoutApiPath(checkoutAudience), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: data.slug, offerType: selectedOffer }),
-      });
-      const body = (await response.json()) as { clientSecret?: string; error?: string };
-
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "de73f5",
-        },
-        body: JSON.stringify({
-          sessionId: "de73f5",
-          runId: "post-fix",
-          hypothesisId: "A",
-          location: "onboarding-comptable-wizard.tsx:preloadCheckout",
-          message: "checkout-comptable preload response",
-          data: {
-            ok: response.ok,
-            status: response.status,
-            hasClientSecret: Boolean(body.clientSecret),
-            error: body.error ?? null,
-            offerType: selectedOffer,
-            slug: data.slug,
-            developerModeEnabled,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-
-      if (!response.ok || !body.clientSecret) {
-        checkoutPreloadStartedRef.current = false;
-        setCheckoutPreloadError(body.error ?? "Paiement indisponible");
-        setCheckoutClientSecret(null);
-        return;
-      }
-
-      setCheckoutClientSecret(body.clientSecret);
+      const clientSecret = await requestCabinetCheckoutClientSecret(
+        checkoutAudience,
+        data.slug,
+        selectedOffer,
+      );
+      setCheckoutClientSecret(clientSecret);
       setCheckoutPreloadError(null);
-    } catch {
+    } catch (checkoutError) {
       checkoutPreloadStartedRef.current = false;
-      setCheckoutPreloadError("Paiement indisponible");
+      setCheckoutPreloadError(
+        checkoutError instanceof Error ? checkoutError.message : "Paiement indisponible",
+      );
       setCheckoutClientSecret(null);
     }
-  }, [data.audience, data.slug, selectedOffer, developerModeEnabled]);
+  }, [data.audience, data.slug, selectedOffer]);
 
   useEffect(() => {
     checkoutPreloadStartedRef.current = false;
@@ -200,8 +166,8 @@ export function OnboardingComptableWizard({
           body: JSON.stringify({ offerType: selectedOffer }),
         },
       );
-      const body = (await response.json()) as { error?: string };
       if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? DASHBOARD_DEV_SKIP_PAYMENT_ERROR);
       }
       onRefresh?.();
