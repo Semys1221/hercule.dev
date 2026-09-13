@@ -133,6 +133,7 @@ export function BookingsSequencesTab({
     void loadConfig();
   }, [loadConfig, connectionsRevision]);
 
+  const campaignId = config?.instantly_campaign_id ?? null;
   const liveTabs = useMemo(() => bookingsSequenceTabsForNiche(niche), [niche]);
   const defaultTab = liveTabs[0]?.id ?? "confirm";
 

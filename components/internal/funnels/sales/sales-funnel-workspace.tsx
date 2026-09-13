@@ -32,7 +32,7 @@ type SalesFunnelWorkspaceProps = {
   prospectFirstName: string;
   onClosingChange: (patch: Partial<SalesClosingValues>) => void;
   onMeetingNameChange: (name: string) => void;
-  onBookingSelect: (booking: EnrichedCalendlyBooking | null) => void;
+  onBookingSelect: (booking: EnrichedCalendlyBooking | null) => Promise<void>;
   onApplyTestPreset: (preset: {
     qualification: SalesQualificationValues;
     closing: SalesClosingValues;
