@@ -197,6 +197,53 @@ export async function fetchLeadsFromCampaign(
   return leads;
 }
 
+export type InstantlyCampaignStep = {
+  type?: string;
+  delay?: number;
+  variants?: Array<{ subject?: string; body?: string }>;
+};
+
+export type InstantlyCampaign = {
+  id?: string;
+  name?: string;
+  sequences?: Array<{ steps?: InstantlyCampaignStep[] }>;
+};
+
+export async function fetchCampaign(
+  apiKey: string,
+  campaignId: string,
+): Promise<InstantlyCampaign> {
+  return instantlyFetch<InstantlyCampaign>(
+    apiKey,
+    `/campaigns/${campaignId.trim()}`,
+    { method: "GET" },
+  );
+}
+
+export function extractColdEmailStepsFromCampaign(
+  campaign: InstantlyCampaign,
+): Array<{ subject: string; body: string; delay: string }> {
+  const steps = campaign.sequences?.[0]?.steps ?? [];
+  const result: Array<{ subject: string; body: string; delay: string }> = [];
+
+  for (const [index, step] of steps.entries()) {
+    if (step.type !== "email") {
+      continue;
+    }
+    const variant = step.variants?.[0];
+    const subject = variant?.subject?.trim() ?? "";
+    const body = variant?.body?.trim() ?? "";
+    if (!subject && !body) {
+      continue;
+    }
+    const delay =
+      index === 0 ? "Immédiat" : `+${step.delay ?? 0}j`;
+    result.push({ subject, body, delay });
+  }
+
+  return result;
+}
+
 export async function patchLeadsCustomVariablesParallel(
   apiKey: string,
   items: Array<{ leadId: string; customVariables: Record<string, string> }>,

@@ -63,6 +63,33 @@ export function syncBypassSequenceToFile(options: {
   });
 }
 
+export function syncColdOutreachToFile(options: {
+  niche: Niche;
+  campaignId?: string;
+  steps: Array<{
+    id: string;
+    label: string;
+    delay: string;
+    subject: string;
+    body: string;
+  }>;
+}): void {
+  writeSequenceFile({
+    slug: "cold-email",
+    provider: "instantly",
+    niche: options.niche,
+    campaignId: options.campaignId,
+    steps: options.steps.map((step) => ({
+      id: step.id,
+      label: step.label,
+      delay: step.delay,
+      subject: step.subject,
+      body: step.body,
+      bodyFormat: "text",
+    })),
+  });
+}
+
 export function syncReplyAgentSequenceToFile(options: {
   niche: Niche;
   slug: string;

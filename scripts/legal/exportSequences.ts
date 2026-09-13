@@ -1,33 +1,92 @@
 /**
  * Export Supabase sequence templates to doc/legal-documentation/{niche}/sequences/*.md
  *
- * Usage: pnpm sequences:export
+ * Usage:
+ *   pnpm sequences:export
+ *   pnpm sequences:export --niche=comptable,cif
  */
 
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import {
   BOOKINGS_SEQUENCE_TABS,
   bookingsSequenceTabsForNiche,
 } from "@/lib/admin/bookings/bookings-sequence-tabs";
+import { bookingCategoryForSlug } from "@/lib/admin/email-sequences/booking-category";
 import {
   bookingSequenceTypesFor,
   getEmailSequence,
 } from "@/lib/admin/email-sequences/registry";
+import { getOutreachConfigView } from "@/lib/admin/niches/outreach-config";
+import { loadAiReplyConfig } from "@/lib/ai-reply-agent/config";
+import { getBookingEmailTemplates } from "@/lib/booking-communication/template-store";
+import {
+  extractColdEmailStepsFromCampaign,
+  fetchCampaign,
+  getInstantlyApiKey,
+} from "@/lib/instantly";
+import { listAllTemplates } from "@/lib/instantly-bypass/templates";
+import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
 import { sequencesDir } from "@/lib/legal-documentation/paths";
 import {
   syncBookingSequenceToFile,
   syncBypassSequenceToFile,
+  syncColdOutreachToFile,
   syncReplyAgentSequenceToFile,
 } from "@/lib/legal-documentation/sync-sequences";
-import { getOutreachConfigView } from "@/lib/admin/niches/outreach-config";
-import { getBookingEmailTemplates } from "@/lib/booking-communication/template-store";
-import { listAllTemplates } from "@/lib/instantly-bypass/templates";
-import { loadAiReplyConfig } from "@/lib/ai-reply-agent/config";
 import type { Niche } from "@/lib/admin/navigation";
-import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
 
 const ALL_NICHES: Niche[] = ["agence", "entreprise", "comptable", "cif"];
+
+const PRODUCTION_SLUGS_BY_NICHE: Partial<Record<Niche, string[]>> = {
+  comptable: ["payment-welcome", "onboarding-sequence"],
+  cif: ["payment-welcome", "onboarding-sequence"],
+};
+
+const ARCHIVE_COLD_EMAIL_BY_NICHE: Partial<Record<Niche, string>> = {
+  comptable: join(process.cwd(), "archive/email_outreach_copy/comptable"),
+};
+
+function parseNicheFilter(): Niche[] {
+  const arg = process.argv.find((value) => value.startsWith("--niche="));
+  if (!arg) {
+    return ALL_NICHES;
+  }
+  const values = arg.slice("--niche=".length).split(",").map((value) => value.trim());
+  const filtered = values.filter((value): value is Niche =>
+    ALL_NICHES.includes(value as Niche),
+  );
+  if (filtered.length === 0) {
+    throw new Error(`Invalid --niche value. Expected one of: ${ALL_NICHES.join(", ")}`);
+  }
+  return filtered;
+}
+
+function slugsToExport(niche: Niche): string[] {
+  const bookingSlugs = bookingsSequenceTabsForNiche(niche).map((tab) =>
+    tab.resolveSlug(niche),
+  );
+  const productionSlugs = PRODUCTION_SLUGS_BY_NICHE[niche] ?? [];
+  return [...new Set([...bookingSlugs, ...productionSlugs])];
+}
+
+function tabNeedsCampaign(slug: string, niche: Niche): boolean {
+  const tab = bookingsSequenceTabsForNiche(niche).find(
+    (entry) => entry.resolveSlug(niche) === slug,
+  );
+  return tab?.needsCampaign ?? false;
+}
+
+function parseArchiveColdEmail(path: string): Array<{ subject: string; body: string }> {
+  const raw = readFileSync(path, "utf-8");
+  const mail1Section = raw.split(/\nReply\n/)[0] ?? raw;
+  const body = mail1Section.replace(/^Mail 1\n\n?/, "").trim();
+  if (!body) {
+    return [];
+  }
+  return [{ subject: "", body }];
+}
 
 async function exportBookingSequence(niche: Niche, slug: string): Promise<boolean> {
   const sequence = getEmailSequence(slug);
@@ -38,9 +97,12 @@ async function exportBookingSequence(niche: Niche, slug: string): Promise<boolea
   if (emailTypes.length === 0) {
     return false;
   }
-  const category = sequence.bookingCategory ?? niche;
+  const category = bookingCategoryForSlug(slug, niche);
   const templates = await getBookingEmailTemplates(category);
-  const filtered = templates.filter((row) => emailTypes.includes(row.email_type));
+  const byType = new Map(templates.map((row) => [row.email_type, row]));
+  const filtered = emailTypes
+    .map((emailType) => byType.get(emailType))
+    .filter((row): row is NonNullable<typeof row> => Boolean(row));
   if (filtered.length === 0) {
     return false;
   }
@@ -121,49 +183,106 @@ async function exportReplyAgent(niche: Niche, campaignId: string): Promise<boole
   return true;
 }
 
+async function exportColdOutreach(niche: Niche, campaignId: string): Promise<boolean> {
+  let steps: Array<{ subject: string; body: string; delay: string }> = [];
+
+  try {
+    const apiKey = getInstantlyApiKey();
+    const campaign = await fetchCampaign(apiKey, campaignId);
+    steps = extractColdEmailStepsFromCampaign(campaign);
+  } catch (error) {
+    const archivePath = ARCHIVE_COLD_EMAIL_BY_NICHE[niche];
+    if (!archivePath || !existsSync(archivePath)) {
+      console.warn(
+        `skip ${niche}/cold-email: Instantly fetch failed and no archive fallback`,
+        error instanceof Error ? error.message : error,
+      );
+      return false;
+    }
+    const archived = parseArchiveColdEmail(archivePath);
+    steps = archived.map((step, index) => ({
+      subject: step.subject,
+      body: step.body,
+      delay: index === 0 ? "Immédiat" : `+${index}j`,
+    }));
+    console.warn(
+      `warn ${niche}/cold-email: using archive fallback (${archivePath})`,
+    );
+  }
+
+  if (steps.length === 0) {
+    return false;
+  }
+
+  syncColdOutreachToFile({
+    niche,
+    campaignId,
+    steps: steps.map((step, index) => ({
+      id: `mail_${index + 1}`,
+      label: `Mail ${index + 1}`,
+      delay: step.delay,
+      subject: step.subject,
+      body: step.body,
+    })),
+  });
+  return true;
+}
+
+async function exportSequenceSlug(
+  niche: Niche,
+  slug: string,
+  campaignId: string | null,
+): Promise<boolean> {
+  const sequence = getEmailSequence(slug);
+  if (!sequence) {
+    return false;
+  }
+
+  if (sequence.editorKind === "booking") {
+    return exportBookingSequence(niche, slug);
+  }
+
+  if (!campaignId) {
+    console.warn(`skip ${niche}/${slug}: no campaign linked`);
+    return false;
+  }
+
+  if (sequence.editorKind === "bypass") {
+    return exportBypassSequence(niche, slug, campaignId);
+  }
+
+  if (sequence.editorKind === "reply_agent" && slug === "reply-agent") {
+    return exportReplyAgent(niche, campaignId);
+  }
+
+  return false;
+}
+
 async function main(): Promise<void> {
+  const niches = parseNicheFilter();
   let exported = 0;
 
-  for (const niche of ALL_NICHES) {
+  for (const niche of niches) {
     mkdirSync(sequencesDir(niche), { recursive: true });
-    const tabs = bookingsSequenceTabsForNiche(niche);
+    const outreach = await getOutreachConfigView(niche);
+    const campaignId = outreach.instantly_campaign_id;
 
-    for (const tab of tabs) {
-      const sequence = getEmailSequence(tab.resolveSlug(niche));
-      if (!sequence) {
-        continue;
+    if (campaignId) {
+      if (await exportColdOutreach(niche, campaignId)) {
+        exported += 1;
+        console.log(`exported cold-email ${niche}`);
       }
-      const slug = sequence.slug;
+    } else {
+      console.warn(`skip ${niche}/cold-email: no campaign linked`);
+    }
 
-      if (sequence.editorKind === "booking") {
-        if (await exportBookingSequence(niche, slug)) {
-          exported += 1;
-          console.log(`exported booking ${niche}/${slug}`);
-        }
-        continue;
-      }
+    for (const slug of slugsToExport(niche)) {
+      const needsCampaign = tabNeedsCampaign(slug, niche);
+      const resolvedCampaignId = needsCampaign ? campaignId : null;
 
-      if (!tab.needsCampaign) {
-        continue;
-      }
-
-      const outreach = await getOutreachConfigView(niche);
-      const campaignId = outreach.instantly_campaign_id;
-      if (!campaignId) {
-        console.warn(`skip ${niche}/${slug}: no campaign linked`);
-        continue;
-      }
-
-      if (sequence.editorKind === "bypass") {
-        if (await exportBypassSequence(niche, slug, campaignId)) {
-          exported += 1;
-          console.log(`exported bypass ${niche}/${slug}`);
-        }
-      } else if (sequence.editorKind === "reply_agent" && slug === "reply-agent") {
-        if (await exportReplyAgent(niche, campaignId)) {
-          exported += 1;
-          console.log(`exported reply-agent ${niche}`);
-        }
+      if (await exportSequenceSlug(niche, slug, resolvedCampaignId)) {
+        exported += 1;
+        console.log(`exported ${niche}/${slug}`);
       }
     }
   }

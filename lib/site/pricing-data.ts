@@ -1,7 +1,6 @@
 import agencePricingData from "@/doc/legal-documentation/agence/pricing.json";
 import cifPricingData from "@/doc/legal-documentation/cif/pricing.json";
 import comptablePricingData from "@/doc/legal-documentation/comptable/pricing.json";
-import { pricingJsonPath, type LegalDocumentationNiche } from "@/lib/legal-documentation/paths";
 import type {
   PricingAudience,
   PricingComponentConfig,
@@ -38,9 +37,4 @@ export function resolvePricingForComponent(
   }
   const hidden = new Set(config.hiddenPlanIds);
   return plans.filter((plan) => !hidden.has(plan.id));
-}
-
-/** @deprecated Use pricingJsonPath from lib/legal-documentation/paths */
-export function pricingContentPath(audience: LegalDocumentationNiche): string {
-  return pricingJsonPath(audience as PricingAudience);
 }

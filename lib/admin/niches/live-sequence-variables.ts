@@ -1,3 +1,4 @@
+import { bookingCategoryForSlug } from "@/lib/admin/email-sequences/booking-category";
 import {
   bookingSequenceTypesFor,
   getEmailSequence,
@@ -17,7 +18,6 @@ import {
 import { getBookingEmailTemplates } from "@/lib/booking-communication/template-store";
 import { listAllTemplates } from "@/lib/instantly-bypass/templates";
 import type { Niche } from "@/lib/admin/navigation";
-import type { LeadCategory } from "@/lib/link-tracking/types";
 
 export function getLiveSequenceSlugsForNiche(niche: Niche): string[] {
   const bookingSlugs = bookingsSequenceTabsForNiche(niche).map((tab) =>
@@ -54,20 +54,6 @@ export function collectUsedVariableKeys(
 ): Set<string> {
   const map = buildVariableToSequenceSlugsMap(entries);
   return new Set(map.keys());
-}
-
-function bookingCategoryForSlug(
-  slug: string,
-  niche: Niche,
-): LeadCategory {
-  const sequence = getEmailSequence(slug);
-  if (niche === "comptable" && sequence?.audiences.includes("comptable")) {
-    return "comptable";
-  }
-  if (sequence?.bookingCategory) {
-    return sequence.bookingCategory;
-  }
-  return niche;
 }
 
 async function loadBookingSequenceTexts(

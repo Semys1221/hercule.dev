@@ -16,8 +16,16 @@ const MODULE_LABELS: Record<string, string> = {
   session: MODULES.sales.label,
   bookings: MODULES.bookings.label,
   clients: MODULES.clients.label,
-  legal: MODULES.legal.label,
-  emails: MODULES.emails.label,
+  legal: "Legal",
+  emails: "Emails",
+};
+
+const LEGAL_DOC_SEGMENT_LABELS: Record<LegalDocSegment, string> = {
+  cgv: "CGV",
+  mentions: "Mentions légales",
+  confidentialite: "Confidentialité",
+  faq: "FAQ",
+  pricing: "Tarification",
 };
 
 function moduleHref(module: string, niche: Niche): string {
@@ -52,14 +60,11 @@ export function segmentsFromModulePath(
   ];
 
   if (doc) {
-    const legalNode = MODULES.legal.children?.[doc];
-    if (legalNode) {
-      segments.splice(2, 0, {
-        label: MODULES.legal.label,
-        href: legalHref(niche),
-      });
-      segments.push({ label: legalNode.label });
-    }
+    segments.splice(2, 0, {
+      label: MODULE_LABELS.legal,
+      href: legalHref(niche),
+    });
+    segments.push({ label: LEGAL_DOC_SEGMENT_LABELS[doc] });
   }
 
   const last = segments[segments.length - 1];

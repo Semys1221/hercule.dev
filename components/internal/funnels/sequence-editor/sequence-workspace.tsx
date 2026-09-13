@@ -5,8 +5,6 @@ import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { sequenceFileRelativePath } from "@/lib/legal-documentation/sequences";
-
 import { SequenceDropdown, type SequenceEditorActions } from "./sequence-dropdown";
 import { SequenceHistoryTab } from "./sequence-history-tab";
 import { SequenceJobLogsSheet } from "./sequence-job-logs-sheet";
@@ -58,7 +56,7 @@ export function SequenceWorkspace({
         ) : null}
         <p className="mt-2 text-xs text-muted-foreground">
           Fichier git :{" "}
-          <code>{sequenceFileRelativePath(adapter.niche, adapter.slug)}</code>
+          <code>{`doc/legal-documentation/${adapter.niche}/sequences/${adapter.slug}.md`}</code>
         </p>
       </div>
 

@@ -4,7 +4,11 @@ import { dirname } from "node:path";
 import type { Niche } from "@/lib/admin/navigation";
 import { sequenceMarkdownPath, sequencesDir } from "@/lib/legal-documentation/paths";
 
-export type SequenceFileProvider = "resend" | "instantly_bypass" | "reply_agent";
+export type SequenceFileProvider =
+  | "resend"
+  | "instantly"
+  | "instantly_bypass"
+  | "reply_agent";
 
 export type SequenceFileStep = {
   id: string;
