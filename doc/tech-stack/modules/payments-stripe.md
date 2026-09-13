@@ -55,12 +55,12 @@ Legacy (clients antérieurs) :
 | `STRIPE_PRICE_COMPTABLE_MONTHLY` | **Hercule Starter** | 2 199 €/mois | `subscription` (recurring) | `monthly_1499` |
 | `STRIPE_PRICE_COMPTABLE_PACK3` | **Pack 3 mois Starter** | 5 277,60 € | `payment` (one-shot) | `pack_3x1499` |
 
-Lookup keys Stripe comptable (prod) — **recurring monthly** pour Lite et Starter :
-- `comptable_lite_998_monthly` → `STRIPE_PRICE_COMPTABLE_STARTER`
-- `comptable_starter_1499_monthly` → `STRIPE_PRICE_COMPTABLE_MONTHLY`
-- `comptable_pack3_3598` → `STRIPE_PRICE_COMPTABLE_PACK3` (one-shot)
+Lookup keys Stripe comptable (prod, sept. 2026) — **recurring monthly** pour Lite et Starter :
+- `comptable_lite_1799_monthly` → `price_1UFE8oBd01AMeiaQV6PauMkI` (`STRIPE_PRICE_COMPTABLE_STARTER`, 1 799 €/mois)
+- `comptable_starter_2199_monthly` → `price_1UFE8rBd01AMeiaQcfNXx6kC` (`STRIPE_PRICE_COMPTABLE_MONTHLY`, 2 199 €/mois)
+- `comptable_pack3_5277` → `price_1UFE8sBd01AMeiaQjwDBB5Ry` (`STRIPE_PRICE_COMPTABLE_PACK3`, one-shot 5 277,60 €)
 
-Montants attendus = `COMMERCIAL_COMPTABLE` (`179_900` / `219_900` / `527_760` centimes). Les noms de variables env et lookup keys Stripe sont conservés (legacy `998` / `1499` / `3598`) — mettre à jour les Prices dans le dashboard Stripe.
+Montants attendus = `COMMERCIAL_COMPTABLE` (`179_900` / `219_900` / `527_760` centimes). Anciens price IDs (`price_1UE5g*`) désactivés.
 
 Checkout embarqué : session de vente live (`/internal/funnels/comptable/sales/funnel` → closing **Activation & paiement**) et dashboard client (`/dashboard/{slug}`).
 

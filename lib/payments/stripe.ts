@@ -78,9 +78,9 @@ export function getAgenceGrowthBalancePriceId(): string {
  * Env vars override these defaults (see doc/tech-stack/modules/payments-stripe.md).
  */
 const COMPTABLE_STRIPE_PRICE_IDS = {
-  liteMonthly: "price_1UE5gUBd01AMeiaQqyit0dNU",
-  starterMonthly: "price_1UE5gVBd01AMeiaQOrZNfbRk",
-  pack3: "price_1UE5gWBd01AMeiaQp4gkn1sq",
+  liteMonthly: "price_1UFE8oBd01AMeiaQV6PauMkI",
+  starterMonthly: "price_1UFE8rBd01AMeiaQcfNXx6kC",
+  pack3: "price_1UFE8sBd01AMeiaQjwDBB5Ry",
 } as const;
 
 /** Hercule Starter — 2 199 €/mois (recurring). */
