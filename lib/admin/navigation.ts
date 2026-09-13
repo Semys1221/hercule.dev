@@ -324,3 +324,15 @@ export function hubTitle(path: string[]): string {
   }
   return "Choisissez une étape";
 }
+
+export function internalHomeHref(): string {
+  return "/internal";
+}
+
+export function databaseHref(): string {
+  return "/internal/base-de-donnees";
+}
+
+export function deliverabilityHref(): string {
+  return "/internal/deliverability";
+}

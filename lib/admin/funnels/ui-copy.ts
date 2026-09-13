@@ -13,6 +13,7 @@ import { E2E_TEST_EMAIL } from "@/lib/test/e2e-identity";
 
 export const PRODUCT_ROOT_LABEL = "Parcours";
 export const ADMIN_ROOT_LABEL = "Admin";
+export const INTERNAL_HOME_LABEL = ADMIN_ROOT_LABEL;
 export const PRODUCT_BUILDER_LABEL = "Éditeur de parcours";
 export const PRODUCT_BUILDER_TOOLTIP = PRODUCT_BUILDER_LABEL;
 
@@ -133,6 +134,21 @@ export const CLIENTS_MODULE_LABEL = "Clients";
 export const CLIENTS_MODULE_CAPTION =
   "Agences et entreprises produit — liste et cockpit ops.";
 export const CLIENTS_LIST_HREF = "/internal/funnels/agence/clients";
+
+export const ACCOUNTS_MODULE_LABEL = "Comptes";
+export const ACCOUNTS_MODULE_CAPTION = CLIENTS_MODULE_CAPTION;
+
+export const BOOKINGS_MODULE_LABEL = "Rendez-vous";
+export const BOOKINGS_MODULE_CAPTION =
+  "RDV Calendly, liens prospect et séquences email.";
+
+export const COMPONENTS_LABEL = "Inventaire composants";
+export const COMPONENTS_CAPTION =
+  "Cartographie recipient / trigger / edition + orchestrateurs (webhooks, crons, API).";
+
+export const DATABASE_LABEL = "Inventaire base de données";
+export const DATABASE_CAPTION =
+  "Tables Supabase — domaine, colonnes clés, acteurs d'écriture/lecture et dépendances.";
 
 export const LANDING_DESCRIPTION =
   "Cockpit interne — sélectionnez une audience pour accéder aux onglets Session, Onboarding, Clients, CVG et Emails.";
