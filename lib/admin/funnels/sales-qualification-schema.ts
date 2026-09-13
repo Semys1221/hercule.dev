@@ -28,9 +28,12 @@ import {
   isCifSalesAudience,
   isComptableSalesAudience,
 } from "@/lib/admin/funnels/sales-audience";
+import type { O3DurationId } from "@/lib/admin/funnels/sales-bleed-track";
 import type { Audience } from "@/lib/admin/navigation";
 
 export const SALES_SKIP_VALUE = "__skip__";
+
+const O3_DURATION_IDS = ["<3m", "6m", "12m", "24m+"] as const satisfies readonly O3DurationId[];
 
 const multiChoiceSchema = z.array(z.string()).min(1).max(3);
 
@@ -61,17 +64,29 @@ const sharedQualificationFields = {
   o5: multiChoiceSchema,
   o6: z.string().min(1),
   o3FollowUp: z.string().optional(),
+  o3Duration: z.enum(O3_DURATION_IDS).optional(),
+  bleedDiagnosticAccepted: z.boolean(),
+  b1: z.enum(["more_dossiers", "better_quality", "monthly_growth"]).optional(),
+  b2: z.number().optional(),
+  b3: z.enum(["y2015", "y2017", "y2020", "y2022", "y2024"]).optional(),
+  b3Year: z.number().int().optional(),
+  b4: z.number().optional(),
+  b5: z.array(z.string()).max(2).optional(),
+  b5b: z.string().optional(),
+  b6Acknowledged: z.boolean().optional(),
+  b7: z.string().optional(),
+  b8: z.string().optional(),
   q1: multiChoiceSchema,
   q2: multiChoiceSchema,
   q2Other: z.string().optional(),
   q3: z.number().min(SLIDER_CONFIGS.projectCapacity.min),
-  q4: z.string().min(1),
-  q5: z.string().min(1),
-  q6: z.number().min(SLIDER_CONFIGS.delayCount.min),
-  q7: z.number().min(SLIDER_CONFIGS.lostClients.min).nullable(),
-  q8: multiChoiceSchema,
-  q9: z.string().min(1),
-  q10: z.string().min(1),
+  q4: z.string().optional(),
+  q5: z.string().optional(),
+  q6: z.number().optional(),
+  q7: z.number().nullable().optional(),
+  q8: z.array(z.string()).optional(),
+  q9: z.string().optional(),
+  q10: z.string().optional(),
   q11: multiChoiceSchema,
   q12: z.string().min(1),
   q19: multiChoiceSchema,
@@ -92,22 +107,19 @@ function buildAgenceQualificationSchema(monthlyMin: number) {
 }
 
 function withCabinetO3FollowUpRefinement<T extends z.ZodTypeAny>(schema: T) {
-  return schema.superRefine((values, ctx) => {
-    const record = values as SalesQualificationValues;
-    if (record.o3 === "insufficient_prospects" && !record.o3FollowUp?.trim()) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Précisez depuis combien de temps ce manque de flux pèse sur le portefeuille.",
-        path: ["o3FollowUp"],
-      });
-    }
-  });
+  return schema;
 }
 
 function buildComptableQualificationSchema() {
   return withCabinetO3FollowUpRefinement(
     z.object({
       ...sharedQualificationFields,
+      o1: z.array(z.string()).default([]),
+      o2: z.string().optional(),
+      o3: z.string().optional(),
+      o4: z.array(z.string()).default([]),
+      o5: z.array(z.string()).default([]),
+      o6: z.string().optional(),
       q13: z.number().min(COMPTABLE_ANNUAL_MIN),
       q14: z.enum(COMPTABLE_FACTURATION_MODES),
       q15: z.enum(COMPTABLE_SOCIAL_PAIE_MODES),
@@ -123,6 +135,12 @@ function buildCifQualificationSchema() {
   return withCabinetO3FollowUpRefinement(
     z.object({
       ...sharedQualificationFields,
+      o1: z.array(z.string()).default([]),
+      o2: z.string().optional(),
+      o3: z.string().optional(),
+      o4: z.array(z.string()).default([]),
+      o5: z.array(z.string()).default([]),
+      o6: z.string().optional(),
       q13: z.number().min(CIF_ANNUAL_MIN),
       q14: z.enum(CIF_FACTURATION_MODES),
       q15: z.enum(CIF_REMUNERATION_MODES),
@@ -162,17 +180,29 @@ export type SalesQualificationValues = {
   o5: string[];
   o6: string;
   o3FollowUp?: string;
+  o3Duration?: O3DurationId;
+  bleedDiagnosticAccepted: boolean;
+  b1?: "more_dossiers" | "better_quality" | "monthly_growth";
+  b2?: number;
+  b3?: "y2015" | "y2017" | "y2020" | "y2022" | "y2024";
+  b3Year?: number;
+  b4?: number;
+  b5?: string[];
+  b5b?: string;
+  b6Acknowledged?: boolean;
+  b7?: string;
+  b8?: string;
   q1: string[];
   q2: string[];
   q2Other?: string;
   q3: number;
-  q4: string;
-  q5: string;
-  q6: number;
-  q7: number | null;
-  q8: string[];
-  q9: string;
-  q10: string;
+  q4?: string;
+  q5?: string;
+  q6?: number;
+  q7?: number | null;
+  q8?: string[];
+  q9?: string;
+  q10?: string;
   q11: string[];
   q12: string;
   q13: number | null;
@@ -204,6 +234,18 @@ export function getSalesQualificationDefaultValues(
       o5: [],
       o6: "",
       o3FollowUp: "",
+      o3Duration: undefined,
+      bleedDiagnosticAccepted: false,
+      b1: undefined,
+      b2: undefined,
+      b3: undefined,
+      b3Year: undefined,
+      b4: undefined,
+      b5: [],
+      b5b: undefined,
+      b6Acknowledged: false,
+      b7: undefined,
+      b8: undefined,
       q1: [],
       q2: [],
       q2Other: "",
@@ -240,6 +282,18 @@ export function getSalesQualificationDefaultValues(
       o5: [],
       o6: "",
       o3FollowUp: "",
+      o3Duration: undefined,
+      bleedDiagnosticAccepted: false,
+      b1: undefined,
+      b2: undefined,
+      b3: undefined,
+      b3Year: undefined,
+      b4: undefined,
+      b5: [],
+      b5b: undefined,
+      b6Acknowledged: false,
+      b7: undefined,
+      b8: undefined,
       q1: [],
       q2: [],
       q2Other: "",
@@ -275,6 +329,8 @@ export function getSalesQualificationDefaultValues(
     o5: [],
     o6: "",
     o3FollowUp: "",
+    o3Duration: undefined,
+    bleedDiagnosticAccepted: false,
     q1: [],
     q2: [],
     q2Other: "",
@@ -312,13 +368,42 @@ const SECTION_QUESTION_KEYS: Record<
   Array<keyof SalesQualificationValues>
 > = {
   introduction: ["introConfirmed"],
-  objectifs: ["o1", "o2", "o3", "o4", "o5", "o6", "o3FollowUp"],
+  objectifs: [
+    "o1",
+    "o2",
+    "o3",
+    "o4",
+    "o5",
+    "o6",
+    "o3FollowUp",
+    "bleedDiagnosticAccepted",
+  ],
   "presentation-societe": ["presentationConfirmed"],
-  capacite: ["q1", "q2", "q3", "q4", "q5"],
-  historique: ["q6", "q7", "q8", "q9", "q10"],
+  capacite: ["q1", "q2", "q3"],
   standards: ["q11", "q12", "q13", "q14"],
   conditions: ["q15", "q16", "q17", "q18", "q19", "q20"],
 };
+
+const CABINET_OBJECTIFS_KEYS: Array<keyof SalesQualificationValues> = [
+  "b1",
+  "b2",
+  "b3",
+  "b4",
+  "b5",
+  "b7",
+  "b8",
+  "bleedDiagnosticAccepted",
+];
+
+export function getSectionQuestionKeys(
+  sectionId: Exclude<SalesFunnelSectionId, "rendez-vous">,
+  audience: Audience = "agence",
+): Array<keyof SalesQualificationValues> {
+  if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
+    return CABINET_OBJECTIFS_KEYS;
+  }
+  return SECTION_QUESTION_KEYS[sectionId];
+}
 
 function isCabinetFacturationMode(
   value: SalesQualificationValues["q14"],
@@ -346,6 +431,26 @@ function isFieldComplete(
     return value === true;
   }
 
+  if (key === "bleedDiagnosticAccepted") {
+    return value === true;
+  }
+
+  if (key === "o3Duration") {
+    return true;
+  }
+
+  if (key === "b5b") {
+    const b5Count = values.b5?.length ?? 0;
+    if (b5Count <= 1) {
+      return true;
+    }
+    return typeof value === "string" && value.length > 0;
+  }
+
+  if (key === "b6Acknowledged") {
+    return true;
+  }
+
   if (key === "q2Other" || key === "o3FollowUp") {
     if (key === "o3FollowUp") {
       if (
@@ -357,10 +462,6 @@ function isFieldComplete(
       return true;
     }
     return true;
-  }
-
-  if (key === "q7") {
-    return value === null || typeof value === "number";
   }
 
   if (key === "q13") {
@@ -433,7 +534,7 @@ export function isSalesSectionComplete(
     return false;
   }
 
-  const keys = SECTION_QUESTION_KEYS[sectionId];
+  const keys = getSectionQuestionKeys(sectionId, audience);
   const baseComplete = keys.every((key) => isFieldComplete(key, values, audience));
 
   if (!baseComplete) {
@@ -441,6 +542,13 @@ export function isSalesSectionComplete(
   }
 
   if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
+    const b5Count = values.b5?.length ?? 0;
+    if (b5Count > 1 && !values.b5b) {
+      return false;
+    }
+  }
+
+  if (sectionId === "objectifs" && !isCabinetBuyerSalesAudience(audience)) {
     if (values.o3 === "insufficient_prospects" && !values.o3FollowUp?.trim()) {
       return false;
     }
@@ -464,7 +572,6 @@ const QUALIFICATION_SECTION_IDS: Array<
   "objectifs",
   "presentation-societe",
   "capacite",
-  "historique",
   "standards",
   "conditions",
 ];

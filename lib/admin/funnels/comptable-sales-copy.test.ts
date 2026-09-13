@@ -14,6 +14,11 @@ import {
   COMPTABLE_SIGNALS,
   COMPTABLE_TYPICAL_MONTHLY_HONORAIRES_CENTS,
   formatComptableTypicalMonthlyHonoraires,
+  formatFoundationRoiScript,
+  FOUNDATION_COMPARISON_ROWS,
+  FOUNDATION_DEPLOYMENT_PHASES,
+  FOUNDATION_MODEL_HIGHLIGHTS,
+  FOUNDATION_PRESENTATION_SCRIPT_PARAGRAPHS,
 } from "./comptable-sales-copy";
 
 function main() {
@@ -31,6 +36,20 @@ function main() {
   assert.doesNotMatch(presentation, /Papers[^s]/);
   assert.doesNotMatch(presentation, /site\.gouv/i);
   assert.doesNotMatch(presentation, /recrutement massif/i);
+  assert.doesNotMatch(presentation, /10 missions/i);
+  assert.doesNotMatch(presentation, /Starter/i);
+
+  assert.equal(FOUNDATION_DEPLOYMENT_PHASES.length, 3);
+  assert.equal(FOUNDATION_COMPARISON_ROWS.length, 6);
+  assert.match(FOUNDATION_PRESENTATION_SCRIPT_PARAGRAPHS[0], /Foundation/);
+  assert.match(FOUNDATION_MODEL_HIGHLIGHTS[0].title, /5 000/);
+  assert.doesNotMatch(FOUNDATION_MODEL_HIGHLIGHTS[0].description, /10 missions/i);
+
+  const roiScript = formatFoundationRoiScript(3_600, "l'invisibilité de zone");
+  assert.match(roiScript, /7\s?197/);
+  assert.match(roiScript, /5\s?000/);
+  assert.match(roiScript, /60\s?000/);
+  assert.doesNotMatch(roiScript, /10 RDV/i);
 
   assert.equal(COMPTABLE_DIFFERENTIATOR_OPTIONS.length, 7);
   const labels = COMPTABLE_DIFFERENTIATOR_OPTIONS.map((option) => option.label).join(" ");

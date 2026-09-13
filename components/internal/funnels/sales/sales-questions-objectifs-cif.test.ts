@@ -1,4 +1,4 @@
-/** Unit tests for CIF objectifs question order (aligned with comptable & agence). */
+/** Unit tests for CIF bleed tunnel objectifs questions. */
 
 import assert from "node:assert/strict";
 
@@ -11,29 +11,23 @@ function main() {
 
   assert.deepEqual(
     questions.map((question) => question.id),
-    ["o2", "o3", "o4", "o5", "o6", "o1"],
+    ["b1", "b2", "b3", "b4", "b5", "b5b", "b6", "b7", "b8", "diagnostic_card"],
   );
 
-  assert.equal(questions[0]?.number, 1);
-  assert.equal(questions[0]?.id, "o2");
-  assert.equal(questions[5]?.number, 6);
-  assert.equal(questions[5]?.id, "o1");
-
-  assert.match(
-    questions[5]?.prompt ?? "",
-    /^En synthèse, quelles difficultés/,
+  assert.match(questions[0]?.prompt ?? "", /priorité du cabinet/);
+  assert.ok(
+    (questions[0]?.type === "single" ? questions[0].options : []).some((option) =>
+      /mandats \/ études/i.test(option.label),
+    ),
   );
-  assert.match(
-    questions[1]?.prompt ?? "",
-    /^Pourquoi êtes-vous à cette capacité/,
-  );
-  assert.match(
-    questions[2]?.prompt ?? "",
-    /^Qu'est-ce qui vous freine pour remplir davantage cette capacité/,
-  );
+  const promptCopy = questions
+    .filter((question) => question.id !== "diagnostic_card")
+    .map((question) => question.prompt)
+    .join(" ");
+  assert.ok(!/lead/i.test(promptCopy));
+  assert.ok(!/audit/i.test(promptCopy));
 
   assert.equal(section?.title, "Objectifs");
-  assert.notEqual(section?.title, "Objectifs & douleur");
 
   console.log("OK components/internal/funnels/sales/sales-questions-objectifs-cif.test.ts");
 }

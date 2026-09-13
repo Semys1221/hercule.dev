@@ -6,14 +6,18 @@ import { fr } from "date-fns/locale";
 
 import { composeOpportunityCards } from "@/lib/admin/funnels/compose-opportunity-cards";
 import type { ClientSegment } from "@/lib/admin/funnels/client-segment";
+import { buildBleedTrack, interpolateBleed } from "@/lib/admin/funnels/sales-bleed-track";
 import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
+import { COMMERCIAL } from "@/lib/commercial/constants";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 import { SalesCalendrierBookingLegend } from "./sales-calendrier-booking-legend";
+import { SalesFoundationDeploymentPanel } from "./sales-foundation-deployment-panel";
 import {
   CalendrierDataContext,
   CalendrierPhaseContext,
@@ -44,6 +48,39 @@ import type { SalesClosingValues } from "./sales-closing-sections";
 const CALENDRIER_CHECKBOX_LABEL =
   "Calendrier susceptible d'être modifié en fonction des disponibilités des deux parties";
 
+const AGENCE_CALENDRIER_ROI_TEMPLATE =
+  "Le calendrier est dimensionné pour {missions} RDV. Avec {honoraires} €/an et un taux de 20–30 %, l'agence vise {roi} € de récurrent. C'est le potentiel vs l'écart {gap} validé tout à l'heure.";
+
+const euroFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+
+function formatAgenceCalendrierRoiReminder(
+  qualificationValues: SalesQualificationValues,
+  audience: Audience,
+): string | null {
+  const bleed = buildBleedTrack(qualificationValues, audience);
+  if (!bleed.gap) {
+    return null;
+  }
+
+  const missions = COMMERCIAL.growth1498Attributions;
+  const ticketMonthly =
+    typeof qualificationValues.q13 === "number" && qualificationValues.q13 > 0
+      ? qualificationValues.q13
+      : 2_500;
+  const annualTicket = ticketMonthly * 12;
+  const roiLow = Math.round(missions * 0.2 * annualTicket);
+  const roiHigh = Math.round(missions * 0.3 * annualTicket);
+  const roiLabel = `${euroFormatter.format(roiLow)}–${euroFormatter.format(roiHigh)}`;
+
+  return interpolateBleed(
+    AGENCE_CALENDRIER_ROI_TEMPLATE
+      .replace(/\{missions\}/g, String(missions))
+      .replace(/\{honoraires\}/g, euroFormatter.format(annualTicket))
+      .replace(/\{roi\}/g, roiLabel),
+    bleed,
+  );
+}
+
 const CALENDAR_CLASS_NAMES = {
   root: "w-full p-0",
   month: "w-full gap-2",
@@ -66,7 +103,7 @@ type SalesCalendrierPanelProps = {
   clientSegment?: ClientSegment;
 };
 
-export function SalesCalendrierPanel({
+function AgenceCalendrierPanel({
   audience,
   qualificationValues,
   closingValues,
@@ -75,6 +112,7 @@ export function SalesCalendrierPanel({
   clientSegment,
 }: SalesCalendrierPanelProps) {
   const reducedMotion = useReducedMotion() ?? false;
+  const agenceRoiReminder = formatAgenceCalendrierRoiReminder(qualificationValues, audience);
   const [phase, setPhase] = useState<RevealPhase>(reducedMotion ? "complete" : "idle");
   const [hasEntered, setHasEntered] = useState(reducedMotion);
   const [month, setMonth] = useState(() => new Date());
@@ -222,6 +260,12 @@ export function SalesCalendrierPanel({
             clientSegment={clientSegment}
           />
 
+          {agenceRoiReminder ? (
+            <p className="mx-auto max-w-3xl text-sm leading-relaxed text-muted-foreground">
+              {agenceRoiReminder}
+            </p>
+          ) : null}
+
           <div
             ref={calendarContainerRef}
             className="mx-auto w-full max-w-3xl overflow-hidden p-1"
@@ -277,4 +321,19 @@ export function SalesCalendrierPanel({
       </CalendrierDataContext.Provider>
     </CalendrierPhaseContext.Provider>
   );
+}
+
+export function SalesCalendrierPanel(props: SalesCalendrierPanelProps) {
+  if (isCabinetBuyerSalesAudience(props.audience)) {
+    return (
+      <SalesFoundationDeploymentPanel
+        audience={props.audience}
+        closingValues={props.closingValues}
+        saving={props.saving}
+        persistTieDown={props.persistTieDown}
+      />
+    );
+  }
+
+  return <AgenceCalendrierPanel {...props} />;
 }

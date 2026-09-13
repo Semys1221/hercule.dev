@@ -31,6 +31,14 @@ type SalesQuestionBase = {
   prompt: string;
   description?: string;
   sectionId: Exclude<SalesFunnelSectionId, "rendez-vous">;
+  coachCue?: string;
+  bleedBenefit?: string;
+  showCoachCueWhen?: string[];
+  visibleWhen?: {
+    field: string;
+    op: "eq" | "gt" | "includes" | "lengthGt";
+    value: string | number;
+  };
 };
 
 export type SalesSingleQuestion = SalesQuestionBase & {
@@ -66,12 +74,25 @@ export type SalesConditionalSliderQuestion = SalesQuestionBase & {
   dependsOn?: string;
 };
 
+export type SalesAcknowledgmentQuestion = SalesQuestionBase & {
+  type: "acknowledgment";
+  trapTemplate: string;
+};
+
+export type SalesDiagnosticCardQuestion = SalesQuestionBase & {
+  type: "diagnostic_card";
+  mirrorTemplate: string;
+  checkboxLabel: string;
+};
+
 export type SalesQuestion =
   | SalesSingleQuestion
   | SalesMultiQuestion
   | SalesSliderQuestion
   | SalesSliderMatrixQuestion
-  | SalesConditionalSliderQuestion;
+  | SalesConditionalSliderQuestion
+  | SalesAcknowledgmentQuestion
+  | SalesDiagnosticCardQuestion;
 
 export const SLIDER_CONFIGS = {
   projectCapacity: {
@@ -207,112 +228,34 @@ export const SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "capacite",
     type: "slider",
     prompt: "Combien de nouveaux projets pouvez-vous actuellement accepter par mois ?",
-    description: "Projets par mois.",
+    description:
+      "Combien de nouveaux projets {business} peut absorber par mois pour traiter {cause} ?",
     slider: SLIDER_CONFIGS.projectCapacity,
   },
   {
-    id: "q4",
+    id: "q21",
     number: 4,
-    sectionId: "capacite",
-    type: "single",
-    prompt: "Quel est actuellement votre principal niveau de disponibilité ?",
-    options: [
-      { id: "high", label: "Forte capacité disponible" },
-      { id: "moderate", label: "Capacité disponible modérée" },
-      { id: "limited", label: "Capacité limitée" },
-      { id: "full", label: "Équipe actuellement complète" },
-      { id: "variable", label: "Variable selon le type de projet" },
-    ],
-  },
-  {
-    id: "q5",
-    number: 5,
-    sectionId: "capacite",
-    type: "single",
-    prompt:
-      "Quel est votre délai habituel pour démarrer un nouveau projet après validation ?",
-    options: [
-      { id: "lt_48h", label: "Moins de 48 heures" },
-      { id: "2_5_days", label: "2 à 5 jours" },
-      { id: "1_2_weeks", label: "1 à 2 semaines" },
-      { id: "gt_2_weeks", label: "Plus de 2 semaines" },
-      { id: "variable", label: "Variable selon le projet" },
-    ],
-  },
-  {
-    id: "q6",
-    number: 6,
-    sectionId: "historique",
-    type: "slider",
-    prompt:
-      "Au cours des 12 derniers mois, combien de projets ont connu un retard significatif ?",
-    description: "Nombre de projets en retard.",
-    slider: SLIDER_CONFIGS.delayCount,
-  },
-  {
-    id: "q7",
-    number: 7,
-    sectionId: "historique",
-    type: "slider",
-    prompt:
-      "Au cours des 12 derniers mois, combien de clients avez-vous perdus en raison d'un problème lié à la prestation ?",
-    description: "Nombre de clients perdus.",
-    slider: SLIDER_CONFIGS.lostClients,
-    optOutLabel: "Je ne dispose pas de cette information",
-  },
-  {
-    id: "q8",
-    number: 8,
-    sectionId: "historique",
+    sectionId: "standards",
     type: "multi",
     maxSelections: 3,
-    exclusiveOptionId: "none",
-    prompt: "Parmi les difficultés suivantes, lesquelles avez-vous principalement rencontrées ?",
-    description: "Sélectionnez jusqu'à 3 réponses.",
+    prompt: "Sur quels points votre agence est-elle réellement meilleure que la concurrence ?",
+    description:
+      "Sélectionnez jusqu'à 3 réponses — c'est le positionnement que les PME retiendront.",
+    coachCue:
+      "L'agence se distingue sur {atout}. Les PME qu'Hercule met en relation recherchent ce positionnement pour résoudre {cause} — le pipeline est calibré sur cet écart.",
     options: [
-      { id: "delays", label: "Retards de production" },
-      { id: "technical", label: "Problèmes techniques" },
-      { id: "communication", label: "Communication / suivi client" },
-      { id: "scope", label: "Périmètre du projet mal défini" },
-      { id: "availability", label: "Manque de disponibilité de l'équipe" },
-      { id: "external", label: "Dépendance à des prestataires externes" },
-      { id: "client", label: "Difficultés liées au client" },
-      { id: "none", label: "Aucune difficulté significative" },
-    ],
-  },
-  {
-    id: "q9",
-    number: 9,
-    sectionId: "historique",
-    type: "single",
-    prompt:
-      "Lorsqu'un projet dépasse votre capacité disponible, quelle solution utilisez-vous généralement ?",
-    options: [
-      { id: "refuse", label: "Nous refusons le projet" },
-      { id: "delay", label: "Nous reportons son démarrage" },
-      { id: "freelance", label: "Nous faisons appel à des freelances / partenaires" },
-      { id: "outsource", label: "Nous sous-traitons une partie du projet" },
-      { id: "hire", label: "Nous recrutons / renforçons temporairement l'équipe" },
-      { id: "depends", label: "Cela dépend du projet" },
-    ],
-  },
-  {
-    id: "q10",
-    number: 10,
-    sectionId: "historique",
-    type: "single",
-    prompt:
-      "Disposez-vous de processus internes standardisés pour vos prestations principales ?",
-    options: [
-      { id: "all", label: "Oui, pour toutes nos prestations" },
-      { id: "majority", label: "Oui, pour la majorité" },
-      { id: "partial", label: "Partiellement" },
-      { id: "no", label: "Non" },
+      { id: "acquisition", label: "Expertise acquisition (SEO, paid, contenu)" },
+      { id: "design_ux", label: "Design / UX à fort impact business" },
+      { id: "delivery", label: "Livraison rapide et prévisible" },
+      { id: "tech_stack", label: "Stack technique / intégrations avancées" },
+      { id: "sector", label: "Spécialisation sectorielle" },
+      { id: "transparency", label: "Reporting et transparence client" },
+      { id: "pricing", label: "Rapport qualité-prix compétitif" },
     ],
   },
   {
     id: "q11",
-    number: 11,
+    number: 5,
     sectionId: "standards",
     type: "multi",
     maxSelections: 3,
@@ -438,7 +381,8 @@ export const SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "conditions",
     type: "slider",
     prompt: "Quelle capacité souhaitez-vous réserver aux opportunités provenant d'Hercule ?",
-    description: "Projets par mois réservés à Hercule.",
+    description:
+      "Quelle bande passante {business} réserve à Hercule pour traiter {cause} ? Les créneaux provisionnés dimensionnent directement le calendrier de collaboration.",
     slider: SLIDER_CONFIGS.herculeCapacity,
   },
 ];

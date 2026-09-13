@@ -7,6 +7,7 @@ import {
   getComptablePaymentDetails,
 } from "@/lib/dashboard/payments";
 import { loadDeliveryContext } from "@/lib/dashboard/load-delivery-context";
+import { buildDashboardBleedContext } from "@/lib/dashboard/bleed-context";
 import { isFormSparse, resolvePreviewForm } from "@/lib/dashboard/resolve-preview-form";
 import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
@@ -143,6 +144,22 @@ export async function GET(_request: Request, { params }: RouteParams) {
           ? "comptable_onboarding"
           : "comptable_active";
 
+      const audience = lookup.category === "cif" ? "cif" : "comptable";
+      const qualification = latestSalesCall?.notes?.qualification as
+        | Partial<SalesQualificationValues>
+        | undefined;
+      const resolvedForm =
+        dashboardMode === "comptable_pending" && qualification
+          ? resolvePreviewForm(profileForm, qualification)
+          : profileForm;
+      const bleedContext =
+        dashboardMode === "comptable_pending"
+          ? buildDashboardBleedContext(qualification, audience, {
+              firstName: lead.first_name,
+              zone: resolvedForm.zone,
+            })
+          : undefined;
+
       return NextResponse.json({
         slug: lead.slug,
         email: lead.email,
@@ -156,14 +173,15 @@ export async function GET(_request: Request, { params }: RouteParams) {
         milestones,
         onboardingCompleted: isOnboarded,
         tieDownAccepted: tieDownAcceptedFromProfile(profile),
-        form: profileForm,
+        form: resolvedForm,
         faq: [],
         isPaid,
-        audience: lookup.category === "cif" ? "cif" : "comptable",
+        audience,
         dashboardMode,
         deliveryPlan: null,
         enterpriseBrief: null,
         retraction,
+        bleedContext,
         comptable: {
           offerType: paymentDetails?.offerType ?? null,
           succeededAt: paymentDetails?.succeededAt ?? null,
@@ -270,6 +288,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         : "dashboard_active";
 
     let resolvedForm = profileForm;
+    let bleedContext: ReturnType<typeof buildDashboardBleedContext>;
     if (dashboardMode === "onboarding_preview") {
       const salesClient = createSalesCallsClient();
       const salesCall = await findLatestSalesCallByAgenceId(salesClient, lead.id);
@@ -295,6 +314,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
           }
         }
       }
+
+      bleedContext = buildDashboardBleedContext(qualification, "agence", {
+        firstName: lead.first_name,
+        zone: resolvedForm.zone,
+      });
     }
 
     const rawFaq = Array.isArray(profile.faq) ? profile.faq : [];
@@ -356,6 +380,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
       offerType: paymentSchedule?.offerType ?? null,
       paymentSchedule,
       retraction,
+      bleedContext,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Dashboard fetch failed";

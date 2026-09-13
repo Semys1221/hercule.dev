@@ -1,7 +1,7 @@
 # Patch Sales — handoff agents
 
 ```
-status: implementation-orchestration
+status: phase-9-done
 audience: coding-agent
 date: 2026-09-13
 depends_on:
@@ -170,14 +170,16 @@ Remplacer `[N]` et `[titre]` par la phase à exécuter.
 
 | # | Titre | Audiences |
 |---|--------|-----------|
-| 1 | Moteur bleed | toutes |
-| 2 | Coupe session + scoring | toutes |
-| 3 | **Bleed tunnel cabinets** | comptable + cif |
-| 4 | Objectifs agence / entreprise | agence + entreprise |
-| 5 | Chrome bleed + qualif | toutes (copy split) |
-| 6 | Présentation, règles, calendrier, ROI | split agence vs comptable/cif |
-| 7 | Dashboard objections | split |
-| 8 | Offre écran cabinets | comptable + cif |
-| 9 | QA finale | toutes |
+| 1 | Moteur bleed ✅ | toutes |
+| 2 | Coupe session + scoring ✅ | toutes |
+| 3 | **Bleed tunnel cabinets** ✅ | comptable + cif |
+| 4 | Objectifs agence / entreprise ✅ | agence + entreprise |
+| 5 | Chrome bleed + qualif ✅ | toutes (copy split) |
+| 6 | Présentation, règles, calendrier, ROI ✅ | split agence vs comptable/cif |
+| 7 | Dashboard objections ✅ | split |
+| 8 | Offre écran cabinets ✅ | comptable + cif |
+| 9 | QA finale ✅ | toutes |
 
 Détail : [`PLAN.md`](./PLAN.md).
+
+**Note :** patch Sales terminé (phases 1–9). Prochaine étape : PR / déploiement. Reporté hors patch : migration Stripe (Horizon 2 399 € facturé), CGV garantie 5 000 €, labels checkout legacy Lite/Starter.

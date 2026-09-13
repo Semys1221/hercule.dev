@@ -1,3 +1,18 @@
+import {
+  FOUNDATION_CALENDRIER_CLOSER_COPY,
+  FOUNDATION_COMPARISON_ROWS,
+  FOUNDATION_DEPLOYMENT_PHASES,
+  FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES,
+  FOUNDATION_DASHBOARD_LIVE_STEP,
+  FOUNDATION_INBOUND_SLA_RULE,
+  FOUNDATION_MECHANISM_BLOCKS,
+  FOUNDATION_MODEL_HIGHLIGHTS,
+  FOUNDATION_ROI_DISPLAY,
+  formatFoundationRoiScript,
+  type FoundationComparisonRow,
+  type FoundationDeploymentPhase,
+  type FoundationMechanismBlock,
+} from "@/lib/admin/funnels/comptable-sales-copy";
 import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", {
@@ -56,28 +71,61 @@ export const CIF_SIGNALS: CifSignal[] = [
   },
 ];
 
-export const CIF_PRESENTATION_PARAGRAPHS = [
-  "Hercule CIF capte en temps réel les changements d'entreprise sur plus de 4 M d'unités légales, via l'API Pappers et les sources ouvertes (INSEE Sirene, BODACC, data.gouv.fr).",
-  `Cinq signaux produisent un mandat de conseil patrimonial, fiscal ou trésorerie : ${CIF_SIGNALS.map((signal) => signal.label).join(", ")}.`,
-  "Chaque demande est ensuite qualifiée par Live Qualification. Nous provisionnons Calendly Pro et Zoom Pro pour vos RDV, et attribuons jusqu'à 10 missions PME par mois en Hercule Starter — sans commission sur vos honoraires.",
+/** Foundation framing — écran session CIF (pitch §6.3, transposition CIF). */
+export const CIF_FOUNDATION_PRESENTATION_MIRROR_TEMPLATE =
+  "Aujourd'hui : {cause} · écart {gap}. La suite dimensionne le Moteur Hercule Foundation pour cette zone — pas un stock de mandats.";
+
+export const CIF_FOUNDATION_PRESENTATION_SCRIPT_PARAGRAPHS = [
+  "[Prénom], voici pourquoi on déploie le Moteur Hercule Foundation sur 60 jours. Pendant que le cabinet dépend du bouche-à-oreille, les confrères les plus agressifs ont déjà acheté du SEO et de la pub — 6 à 12 mois, zéro garantie, et le jour où ils arrêtent de payer, la visibilité s'éteint. Ce n'est pas un actif. C'est une location.",
+  "Foundation n'est pas une agence SEO. Le SEO indexe des pages. Nous interceptons des événements légaux sur la zone exclusive du cabinet : cession, transmission, trésorerie, retraite. Au moment du besoin, le dirigeant voit ce cabinet et prend RDV pour une étude.",
+  "Si on ne pose pas cette infrastructure maintenant, dans 6 mois le portefeuille est au même point — et la zone peut être verrouillée par un confrère. Le premier mois est du déploiement : verrou, cartographie, filtres, capture. C'est le prix d'un actif. Le contrat porte une garantie 5 000 € de récurrent cumulé sur 90 jours. Le risque est sur notre bilan, pas sur celui du cabinet. On lance la configuration ?",
 ] as const;
 
-export const CIF_MODEL_HIGHLIGHTS = [
-  {
-    title: "3 000 €",
-    description:
-      "de revenus récurrents garantis en Hercule Starter après 10 missions — mandats signés, pas une promesse de volume seul.",
-  },
-  {
-    title: CIF_ENTERPRISES_MONITORED_LABEL,
-    description:
-      "d'entreprises suivies via Pappers et Sirene — signaux patrimoniaux et trésorerie en temps réel.",
-  },
-  {
-    title: "0 %",
-    description: "de commission sur vos honoraires — vous facturez à vos tarifs.",
-  },
+export const CIF_FOUNDATION_SIGNALS_SUMMARY =
+  "Hercule Foundation cartographie en continu les flux légaux de la zone (Pappers, INSEE Sirene, BODACC). Cinq signaux = un moment de besoin — et donc une demande d'étude possible vers ce cabinet, pas une fiche vendue à trois confrères.";
+
+export const CIF_FOUNDATION_MECHANISM_BLOCKS: FoundationMechanismBlock[] =
+  FOUNDATION_MECHANISM_BLOCKS.map((block) =>
+    block.id === "inbound"
+      ? {
+          ...block,
+          description: "RDV d'étude routé vers l'inbox / l'agenda du cabinet.",
+        }
+      : block,
+  );
+
+export const CIF_FOUNDATION_COMPARISON_ROWS: FoundationComparisonRow[] =
+  FOUNDATION_COMPARISON_ROWS;
+
+export const CIF_FOUNDATION_MODEL_HIGHLIGHTS = FOUNDATION_MODEL_HIGHLIGHTS;
+
+export const CIF_FOUNDATION_DEPLOYMENT_PHASES: FoundationDeploymentPhase[] =
+  FOUNDATION_DEPLOYMENT_PHASES;
+
+export const CIF_FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES =
+  FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES;
+
+export const CIF_FOUNDATION_CALENDRIER_CLOSER_COPY = FOUNDATION_CALENDRIER_CLOSER_COPY;
+
+export const CIF_FOUNDATION_ROI_DISPLAY = FOUNDATION_ROI_DISPLAY;
+
+export { formatFoundationRoiScript as formatCifFoundationRoiScript };
+
+export const CIF_FOUNDATION_INBOUND_SLA_RULE = FOUNDATION_INBOUND_SLA_RULE.replace(
+  "audit / RDV conseil",
+  "RDV d'étude / conseil",
+);
+
+export const CIF_FOUNDATION_DASHBOARD_LIVE_STEP = FOUNDATION_DASHBOARD_LIVE_STEP;
+
+/** @deprecated Legacy — use CIF Foundation exports for session presentation. */
+export const CIF_PRESENTATION_PARAGRAPHS = [
+  CIF_FOUNDATION_SIGNALS_SUMMARY,
+  `Cinq signaux produisent un mandat de conseil patrimonial, fiscal ou trésorerie : ${CIF_SIGNALS.map((signal) => signal.label).join(", ")}.`,
 ] as const;
+
+/** @deprecated Use CIF_FOUNDATION_MODEL_HIGHLIGHTS in session presentation. */
+export const CIF_MODEL_HIGHLIGHTS = CIF_FOUNDATION_MODEL_HIGHLIGHTS;
 
 export const CIF_Q21_PROMPT =
   "La plupart des dirigeants {clientSegment} ont déjà une banque privée ou un CGP. Sur quels points votre cabinet est-il réellement meilleur qu'un interlocuteur déjà en place ?";

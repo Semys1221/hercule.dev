@@ -32,17 +32,9 @@ function scoreSerial(values: SalesQualificationValues): { score: number; reasons
     score += 30;
     reasons.push("capacité ≥ 5 projets / mois");
   }
-  if (values.q4 === "high" || values.q4 === "moderate") {
-    score += 20;
-    reasons.push("disponibilité élevée ou modérée");
-  }
   if (typeof values.q13 === "number" && values.q13 <= 3000) {
     score += 20;
     reasons.push("ticket ponctuel ≤ 3 000 €");
-  }
-  if (values.q10 === "all" || values.q10 === "majority") {
-    score += 15;
-    reasons.push("processus standardisés");
   }
   if (values.q20 >= 3) {
     score += 15;

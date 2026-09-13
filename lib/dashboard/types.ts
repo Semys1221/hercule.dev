@@ -1,4 +1,5 @@
 import type { DashboardRetraction } from "@/lib/retraction";
+import type { DashboardBleedContext } from "@/lib/dashboard/bleed-context";
 
 export type DashboardMode =
   | "onboarding_preview"
@@ -100,4 +101,7 @@ export type DashboardData = {
   paymentSchedule?: DashboardPaymentSchedule | null;
   retraction?: DashboardRetraction | null;
   milestones?: TimelineStep[];
+  bleedContext?: DashboardBleedContext;
 };
+
+export type OnboardingIntentionLevel = "strong" | "moderate" | "hesitate";

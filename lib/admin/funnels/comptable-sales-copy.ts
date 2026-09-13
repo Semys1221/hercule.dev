@@ -56,28 +56,173 @@ export const COMPTABLE_SIGNALS: ComptableSignal[] = [
   },
 ];
 
-export const COMPTABLE_PRESENTATION_PARAGRAPHS = [
-  "Hercule Comptable capte en temps réel les changements d'entreprise sur plus de 4 M d'unités légales, via l'API Pappers et les sources ouvertes (INSEE Sirene, BODACC, data.gouv.fr).",
-  `Cinq signaux produisent du papier — et donc un dossier de tenue, de social ou de formalités : ${COMPTABLE_SIGNALS.map((signal) => signal.label).join(", ")}.`,
-  "Chaque demande est ensuite qualifiée par Live Qualification. Nous provisionnons Calendly Pro et Zoom Pro pour vos RDV, et attribuons jusqu'à 10 missions TPE par mois en Hercule Starter — sans commission sur vos honoraires.",
+/** Foundation framing — écran session comptable (pitch §6.3). */
+export const FOUNDATION_PRESENTATION_MIRROR_TEMPLATE =
+  "Aujourd'hui : {cause} · écart {gap}. La suite dimensionne le Moteur Hercule Foundation pour cette zone — pas un stock de dossiers.";
+
+export const FOUNDATION_PRESENTATION_SCRIPT_PARAGRAPHS = [
+  "[Prénom], voici pourquoi on déploie le Moteur Hercule Foundation sur 60 jours. Pendant que le cabinet dépend du bouche-à-oreille, les confrères les plus agressifs ont déjà acheté du SEO et de la pub — 6 à 12 mois, zéro garantie, et le jour où ils arrêtent de payer, la visibilité s'éteint. Ce n'est pas un actif. C'est une location.",
+  "Foundation n'est pas une agence SEO. Le SEO indexe des pages. Nous interceptons des événements légaux sur la zone exclusive du cabinet : création, changement de régime, dirigeant, embauche. Au moment du besoin, la TPE voit ce cabinet et prend contact.",
+  "Si on ne pose pas cette infrastructure maintenant, dans 6 mois le portefeuille est au même point — et la zone peut être verrouillée par un confrère. Le premier mois est du déploiement : verrou, cartographie, filtres, capture. C'est le prix d'un actif. Le contrat porte une garantie 5 000 € de récurrent cumulé sur 90 jours. Le risque est sur notre bilan, pas sur celui du cabinet. On lance la configuration ?",
 ] as const;
 
-export const COMPTABLE_MODEL_HIGHLIGHTS = [
+export const FOUNDATION_SIGNALS_SUMMARY =
+  "Hercule Foundation cartographie en continu les flux légaux de la zone (Pappers, INSEE Sirene, BODACC). Cinq signaux = un moment de besoin — et donc une demande d'audit possible vers ce cabinet, pas une fiche vendue à trois confrères.";
+
+export type FoundationMechanismBlock = {
+  id: string;
+  title: string;
+  description: string;
+};
+
+export const FOUNDATION_MECHANISM_BLOCKS: FoundationMechanismBlock[] = [
   {
-    title: "3 000 €",
+    id: "signals",
+    title: "Flux légaux de zone",
+    description: "INSEE, BODACC, Pappers — événements sur la zone exclusive du cabinet.",
+  },
+  {
+    id: "map",
+    title: "Cartographie exclusive",
+    description: "Verrou 1 cabinet / zone · filtres cabinet · signaux qualifiés.",
+  },
+  {
+    id: "capture",
+    title: "Capture au nom du cabinet",
+    description: "Identité, landing et tracking brandés cabinet — pas un apporteur.",
+  },
+  {
+    id: "inbound",
+    title: "Le dirigeant initie",
+    description: "Demande d'audit routée vers l'inbox / l'agenda du cabinet.",
+  },
+];
+
+export type FoundationComparisonRow = {
+  criterion: string;
+  seo: string;
+  foundation: string;
+};
+
+export const FOUNDATION_COMPARISON_ROWS: FoundationComparisonRow[] = [
+  { criterion: "Mécanisme", seo: "Google, enchères, contenu", foundation: "Événement légal de zone" },
+  { criterion: "Délai", seo: "6–12 mois, souvent sans preuve", foundation: "60 jours pour un système live" },
+  {
+    criterion: "Actif",
+    seo: "Locataire : ça s'arrête avec la facture",
+    foundation: "Infrastructure exclusive, au nom du cabinet",
+  },
+  { criterion: "Qui contacte", seo: "Le cabinet chasse", foundation: "Le dirigeant initie" },
+  {
+    criterion: "Exclusivité",
+    seo: "N'importe quel confrère achète les mêmes mots-clés",
+    foundation: "1 cabinet / zone",
+  },
+  {
+    criterion: "Garantie",
+    seo: "Trafic, parfois rien",
+    foundation: "5 000 € de récurrent signé (90 jours)",
+  },
+];
+
+export const FOUNDATION_MODEL_HIGHLIGHTS = [
+  {
+    title: "5 000 €",
     description:
-      "de revenus récurrents garantis en Hercule Starter après 10 missions — lettres de mission signées, pas une promesse de volume seul.",
+      "de récurrent cumulé garanti sur 90 jours — lettres signées, pas un volume de sollicitations.",
   },
   {
     title: COMPTABLE_ENTERPRISES_MONITORED_LABEL,
-    description:
-      "d'entreprises suivies via Pappers et Sirene — signaux de formalités en temps réel.",
+    description: "d'unités légales suivies — cartographie de zone, pas une liste achetée.",
   },
   {
     title: "0 %",
-    description: "de commission sur vos honoraires — vous facturez à vos tarifs.",
+    description: "de commission sur les honoraires.",
   },
 ] as const;
+
+export type FoundationDeploymentPhase = {
+  id: string;
+  window: string;
+  title: string;
+  artifacts: string[];
+};
+
+export const FOUNDATION_DEPLOYMENT_PHASES: FoundationDeploymentPhase[] = [
+  {
+    id: "phase-1",
+    window: "J+1 → J+20",
+    title: "Verrouillage & cartographie",
+    artifacts: [
+      "Verrou 1 cabinet / zone (carte)",
+      "Cartographie des flux légaux",
+      "Filtres cabinet",
+      "Capture brandée cabinet (identité / landing / tracking)",
+    ],
+  },
+  {
+    id: "phase-2",
+    window: "J+21 → J+45",
+    title: "Capture & calibrage",
+    artifacts: [
+      "Tests de friction",
+      "Montée en charge du ciblage",
+      "Rapport hebdo « ce qui a été raccordé » (pas de volume promis)",
+    ],
+  },
+  {
+    id: "phase-3",
+    window: "J+46 → J+60",
+    title: "Activation — système live",
+    artifacts: [
+      "Capture allumée",
+      "Demandes qui routent vers inbox / agenda du cabinet",
+    ],
+  },
+];
+
+export const FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES = [
+  "Semaine 1 — verrou de zone posé, cartographie lancée",
+  "Semaine 2 — filtres cabinet calibrés sur la zone",
+  "Semaine 3 — capture brandée raccordée (identité / landing)",
+  "Semaine 4 — tests de friction sur le parcours dirigeant",
+  "Semaine 5 — montée en charge du ciblage",
+  "Semaine 6 — rapport hebdo : signaux raccordés à la capture",
+] as const;
+
+export const FOUNDATION_CALENDRIER_CLOSER_COPY =
+  "Le calendrier n'est pas une file de leads. C'est le déploiement Foundation sur la zone du cabinet. À J+60 le système est live. Si une demande arrive plus tôt, c'est du bonus — on ne le promet pas à l'écran.";
+
+export const FOUNDATION_ROI_DISPLAY = {
+  horizonMonthlyEur: 2_399,
+  investment90DaysEur: 7_197,
+  guaranteeMrrEur: 5_000,
+  yearOneValueEur: 60_000,
+} as const;
+
+export const FOUNDATION_ROI_SCRIPT_TEMPLATE =
+  "Honoraires déclarés : {honoraires} €/an. Sur 90 jours le cabinet investit 7 197 €. Le contrat garantit 5 000 € de récurrent — 60 000 € de valeur dès l'année 1. Ne pas signer, c'est laisser {cause} ouvert et la zone disponible.";
+
+export function formatFoundationRoiScript(honorairesEur: number, cause: string): string {
+  const honorairesLabel = euroFormatter.format(honorairesEur);
+  return FOUNDATION_ROI_SCRIPT_TEMPLATE
+    .replace(/\{honoraires\}/g, honorairesLabel)
+    .replace(/\{cause\}/g, cause || "l'écart déclaré");
+}
+
+export const FOUNDATION_INBOUND_SLA_RULE =
+  "Ces règles ne sont pas une affiliation. Toute demande inbound (audit / RDV conseil) qui arrive sur le cabinet est répondue sous 24 h. Sinon la capture de zone se vide vers un confrère, et la garantie se suspend. On fait équipe là-dessous.";
+
+export const FOUNDATION_DASHBOARD_LIVE_STEP = "Système live — J+60 après activation";
+
+/** @deprecated Legacy paragraphs — use Foundation exports for session presentation. */
+export const COMPTABLE_PRESENTATION_PARAGRAPHS = [
+  FOUNDATION_SIGNALS_SUMMARY,
+  `Cinq signaux produisent du papier — et donc un dossier de tenue, de social ou de formalités : ${COMPTABLE_SIGNALS.map((signal) => signal.label).join(", ")}.`,
+] as const;
+
+/** @deprecated Use FOUNDATION_MODEL_HIGHLIGHTS in session presentation. */
+export const COMPTABLE_MODEL_HIGHLIGHTS = FOUNDATION_MODEL_HIGHLIGHTS;
 
 export const COMPTABLE_Q21_PROMPT =
   "La plupart des dirigeants {clientSegment} ont déjà un expert-comptable. Sur quels points votre cabinet est-il réellement meilleur qu'un cabinet déjà en place ?";

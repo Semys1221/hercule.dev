@@ -15,7 +15,6 @@ export type SalesFunnelSectionId =
   | "objectifs"
   | "presentation-societe"
   | "capacite"
-  | "historique"
   | "standards"
   | "conditions";
 
@@ -63,13 +62,6 @@ const AGENCE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     title: "Capacité opérationnelle",
     subtitle:
       "Évaluez votre capacité actuelle à prendre en charge de nouveaux projets, de l'affectation à la livraison.",
-  },
-  {
-    id: "historique",
-    label: "Historique & fiabilité",
-    title: "Historique & fiabilité",
-    subtitle:
-      "Évaluez la fiabilité opérationnelle de votre agence sur les 12 derniers mois.",
   },
   {
     id: "standards",
@@ -124,13 +116,6 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
       "Évaluez votre capacité actuelle à prendre en charge de nouveaux dossiers {clientSegment} — tenue, fiscal et obligations administratives.",
   },
   {
-    id: "historique",
-    label: "Historique & fiabilité",
-    title: "Historique & fiabilité",
-    subtitle:
-      "Évaluez la fiabilité opérationnelle de votre cabinet sur les 12 derniers mois (honorés RDV, no-shows, reprises de dossiers).",
-  },
-  {
     id: "standards",
     label: "Modèle différenciant",
     title: "Modèle différenciant",
@@ -142,7 +127,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Social / paie, missions ponctuelles, formules Hercule (Lite 1 799 €/mois, Starter 2 199 €/mois, pack 5 277,60 €) et priorités de dossiers.",
+      "Social / paie, missions ponctuelles et priorités de dossiers {clientSegment}.",
   },
 ];
 
@@ -183,13 +168,6 @@ const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
       "Évaluez votre capacité actuelle à prendre en charge de nouveaux mandats {clientSegment} — patrimoine, trésorerie et transmission.",
   },
   {
-    id: "historique",
-    label: "Historique & fiabilité",
-    title: "Historique & fiabilité",
-    subtitle:
-      "Évaluez la fiabilité opérationnelle de votre cabinet sur les 12 derniers mois (RDV honorés, no-shows, reprises de portefeuille).",
-  },
-  {
     id: "standards",
     label: "Modèle différenciant",
     title: "Modèle différenciant",
@@ -201,7 +179,7 @@ const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Rémunération, missions ponctuelles, formules Hercule (Lite 1 799 €/mois, Starter 2 199 €/mois, pack 5 277,60 €) et priorités de mandats.",
+      "Rémunération, missions ponctuelles et priorités de mandats {clientSegment}.",
   },
 ];
 
@@ -230,9 +208,6 @@ export function getIntroConfirmationText(
   audience: Audience = "agence",
   clientSegment?: ClientSegment,
 ): string {
-  // #region agent log
-  fetch('http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fbe33c'},body:JSON.stringify({sessionId:'fbe33c',location:'sales-funnel-sections.ts:getIntroConfirmationText:entry',message:'getIntroConfirmationText called',data:{audience,clientSegment,hasIsComptableFn:typeof (globalThis as {isComptableSalesAudience?:unknown}).isComptableSalesAudience},timestamp:Date.now(),hypothesisId:'A',runId:'pre-fix'})}).catch(()=>{});
-  // #endregion
   if (isCifSalesAudience(audience)) {
     return clientSegment
       ? interpolateClientSegment(CIF_INTRO_CONFIRMATION_TEXT, clientSegment)

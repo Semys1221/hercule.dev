@@ -1,4 +1,9 @@
+import { LINEAR_DIAGNOSTIC_MIRROR_TEMPLATE } from "@/lib/admin/funnels/sales-bleed-copy";
+
 import type { SalesQuestion } from "./sales-questions";
+
+export const ENTREPRISE_OBJECTIFS_SUBTITLE =
+  "Qualification courte : capacité, écart, ce qui bloque l'activité. On va droit au but.";
 
 export const ENTREPRISE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
   {
@@ -40,6 +45,8 @@ export const ENTREPRISE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     sectionId: "objectifs",
     type: "single",
     prompt: "Quelle est la principale raison de cette situation ?",
+    coachCue:
+      "{business} coche {cause}. Depuis combien de temps cet écart pèse sur les objectifs digitaux ?",
     options: [
       { id: "other_priorities", label: "Priorités internes ailleurs (production, commercial…)" },
       { id: "slow_hiring", label: "Recrutement impossible ou trop lent" },
@@ -55,7 +62,8 @@ export const ENTREPRISE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     sectionId: "objectifs",
     type: "multi",
     maxSelections: 3,
-    prompt: "Qu'est-ce qui fait que vos objectifs ne sont pas atteints aujourd'hui ?",
+    prompt:
+      "Parmi ces freins, lequel bride le plus la capacité de {business} sur les 6 prochains mois ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
       { id: "no_strategy", label: "Pas de stratégie digitale claire" },
@@ -91,6 +99,9 @@ export const ENTREPRISE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     type: "single",
     prompt:
       "Quel écart observez-vous entre votre scénario idéal (objectifs atteints) et votre réalité actuelle ?",
+    coachCue:
+      "Si dans 6 mois l'écart est le même : qu'est-ce que ça fait au budget et à l'occupation de {business} ?",
+    showCoachCueWhen: ["major_gap", "significant_gap"],
     options: [
       { id: "major_gap", label: "Écart majeur : résultats très en deçà des attentes" },
       { id: "significant_gap", label: "Écart significatif : progrès lents" },
@@ -99,5 +110,15 @@ export const ENTREPRISE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
       { id: "at_target", label: "Objectifs déjà atteints" },
       { id: "no_target", label: "Pas d'objectif chiffré défini" },
     ],
+  },
+  {
+    id: "diagnostic_card",
+    number: 7,
+    sectionId: "objectifs",
+    type: "diagnostic_card",
+    prompt: "Diagnostic signé",
+    mirrorTemplate: LINEAR_DIAGNOSTIC_MIRROR_TEMPLATE,
+    checkboxLabel:
+      "L'activité valide ce cadre pour la suite de l'audit de compatibilité.",
   },
 ];

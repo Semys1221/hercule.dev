@@ -14,7 +14,11 @@ import {
   getSalesQualificationDefaultValues,
   isSalesSectionComplete,
 } from "@/lib/admin/funnels/sales-qualification-schema";
-import { SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, SALES_TEST_SESSION_CIF_QUALIFICATION } from "@/lib/admin/funnels/sales-test-session-preset";
+import {
+  SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+  SALES_TEST_SESSION_CIF_QUALIFICATION,
+  SALES_TEST_SESSION_QUALIFICATION,
+} from "@/lib/admin/funnels/sales-test-session-preset";
 
 function main() {
   const comptableDefaults = getSalesQualificationDefaultValues("comptable");
@@ -22,6 +26,8 @@ function main() {
   assert.equal(comptableDefaults.q13, COMPTABLE_ANNUAL_TYPICAL);
   assert.equal(comptableDefaults.q15, "included");
   assert.equal(comptableDefaults.q16, null);
+  assert.equal(comptableDefaults.bleedDiagnosticAccepted, false);
+  assert.equal(comptableDefaults.o3Duration, undefined);
 
   assert.deepEqual(comptableDefaults.q21, []);
 
@@ -90,55 +96,21 @@ function main() {
   );
 
   assert.equal(
-    isSalesSectionComplete(
-      "objectifs",
-      {
-        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        o3FollowUp: "",
-      },
-      "comptable",
-    ),
-    false,
-  );
-
-  assert.equal(
-    isSalesSectionComplete(
-      "objectifs",
-      {
-        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        o3FollowUp: "   ",
-      },
-      "comptable",
-    ),
-    false,
-    "whitespace-only o3FollowUp should not satisfy validation",
-  );
-
-  assert.equal(
-    isSalesSectionComplete(
-      "objectifs",
-      {
-        ...SALES_TEST_SESSION_CIF_QUALIFICATION,
-        o3FollowUp: "",
-      },
-      "cif",
-    ),
-    false,
-    "cif o3FollowUp required when o3 is insufficient_prospects",
-  );
-
-  assert.equal(
-    isSalesSectionComplete(
-      "objectifs",
-      {
-        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        o3: "full_capacity",
-        o3FollowUp: "",
-      },
-      "comptable",
-    ),
+    isSalesSectionComplete("objectifs", SALES_TEST_SESSION_QUALIFICATION, "agence"),
     true,
-    "o3FollowUp not required when o3 is not insufficient_prospects",
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_QUALIFICATION,
+        bleedDiagnosticAccepted: false,
+      },
+      "agence",
+    ),
+    false,
+    "agence objectifs requires bleedDiagnosticAccepted",
   );
 
   assert.equal(
@@ -146,7 +118,34 @@ function main() {
       "objectifs",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        o6: "",
+        bleedDiagnosticAccepted: false,
+      },
+      "comptable",
+    ),
+    false,
+    "objectifs requires bleedDiagnosticAccepted",
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        b5b: undefined,
+        b5: ["word_of_mouth", "seo"],
+      },
+      "comptable",
+    ),
+    false,
+    "b5b required when two methods selected",
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        b8: "",
       },
       "comptable",
     ),

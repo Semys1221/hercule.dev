@@ -42,14 +42,16 @@ import {
 import { scoreAgencyPresets } from "@/lib/admin/funnels/sales-preset-scoring";
 import {
   COMPTABLE_PERFORMANCE_REPORTING_RULE,
+  FOUNDATION_DASHBOARD_LIVE_STEP,
+  FOUNDATION_INBOUND_SLA_RULE,
 } from "@/lib/admin/funnels/comptable-sales-copy";
 import {
+  CIF_FOUNDATION_DASHBOARD_LIVE_STEP,
+  CIF_FOUNDATION_INBOUND_SLA_RULE,
   CIF_PERFORMANCE_REPORTING_RULE,
 } from "@/lib/admin/funnels/cif-sales-copy";
-import {
-  formatComptableFirstRdvAfterActivationLabel,
-  formatComptableOnboardingAccessLabel,
-} from "@/lib/commercial/constants";
+import { buildBleedTrack, interpolateBleed } from "@/lib/admin/funnels/sales-bleed-track";
+import { formatComptableOnboardingAccessLabel } from "@/lib/commercial/constants";
 import { SESSION_DEVELOPER_MODE_FAKE_LINK } from "@/lib/admin/funnels/ui-copy";
 import { SALES_SKIP_VALUE, type Q14Matrix, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
@@ -164,22 +166,23 @@ const AGENCE_TREATMENT_RULES: TreatmentRule[] = [
 const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
   {
     id: "reactivite",
-    title: "Réactivité",
-    description: "Répondre à toute mission {clientSegment} proposée sous 24h ouvrées.",
+    title: "Réactivité inbound",
+    description:
+      "Répondre à toute demande inbound {clientSegment} (audit / RDV) sous 24 h ouvrées.",
     icon: Clock,
   },
   {
     id: "traitement",
     title: "Traitement",
     description:
-      "Chaque mission {clientSegment} est traitée avec sérieux dans un délai raisonnable.",
+      "Chaque demande inbound {clientSegment} est traitée avec sérieux dans un délai raisonnable.",
     icon: ClipboardCheck,
   },
   {
     id: "no-show",
     title: "No-show",
     description:
-      "Signaler tout no-show dirigeant {clientSegment} sous 48h → remplacement ≤ 14 jours.",
+      "Signaler tout no-show dirigeant {clientSegment} sous 48 h — la garantie se suspend si la capture se vide.",
     icon: UserX,
   },
   {
@@ -191,7 +194,8 @@ const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
   {
     id: "reporting",
     title: COMPTABLE_PERFORMANCE_REPORTING_RULE.title,
-    description: COMPTABLE_PERFORMANCE_REPORTING_RULE.description,
+    description:
+      "Signaler l'issue de chaque demande inbound {clientSegment} (honoré, no-show, lettre signée, refus).",
     icon: BarChart3,
   },
 ];
@@ -199,22 +203,23 @@ const COMPTABLE_TREATMENT_RULES: TreatmentRule[] = [
 const CIF_TREATMENT_RULES: TreatmentRule[] = [
   {
     id: "reactivite",
-    title: "Réactivité",
-    description: "Répondre à toute mission {clientSegment} proposée sous 24h ouvrées.",
+    title: "Réactivité inbound",
+    description:
+      "Répondre à toute demande inbound {clientSegment} (RDV d'étude / conseil) sous 24 h ouvrées.",
     icon: Clock,
   },
   {
     id: "traitement",
     title: "Traitement",
     description:
-      "Chaque mandat {clientSegment} est traité avec sérieux dans un délai raisonnable.",
+      "Chaque demande inbound {clientSegment} est traitée avec sérieux dans un délai raisonnable.",
     icon: ClipboardCheck,
   },
   {
     id: "no-show",
     title: "No-show",
     description:
-      "Signaler tout no-show dirigeant {clientSegment} sous 48h → remplacement ≤ 14 jours.",
+      "Signaler tout no-show dirigeant {clientSegment} sous 48 h — la garantie se suspend si la capture se vide.",
     icon: UserX,
   },
   {
@@ -226,10 +231,14 @@ const CIF_TREATMENT_RULES: TreatmentRule[] = [
   {
     id: "reporting",
     title: CIF_PERFORMANCE_REPORTING_RULE.title,
-    description: CIF_PERFORMANCE_REPORTING_RULE.description,
+    description:
+      "Signaler l'issue de chaque demande inbound {clientSegment} (honoré, no-show, mandat signé, refus).",
     icon: BarChart3,
   },
 ];
+
+const AGENCE_TREATMENT_RECADRAGE_TEMPLATE =
+  "Ces règles ne sont pas des contraintes unilatérales : elles garantissent que le dossier est encore chaud quand l'agence répond. Réponse sous 24 h = l'écart {gap} se convertit plus vite. On fait équipe là-dessus.";
 
 function getTreatmentRules(
   audience: Audience,
@@ -272,8 +281,8 @@ const AGENCE_DASHBOARD_NEXT_STEPS = [
 
 const COMPTABLE_DASHBOARD_NEXT_STEPS = [
   `Accès onboarding — sous ${formatComptableOnboardingAccessLabel()} après réception du lien`,
-  "Activation — première mission {clientSegment} lancée dès l'onboarding complété",
-  `Premier RDV planifié — ${formatComptableFirstRdvAfterActivationLabel()}`,
+  "Activation — déploiement Foundation lancé dès l'onboarding complété",
+  FOUNDATION_DASHBOARD_LIVE_STEP,
 ] as const;
 
 const CIF_DASHBOARD_FEATURES = [
@@ -284,8 +293,8 @@ const CIF_DASHBOARD_FEATURES = [
 
 const CIF_DASHBOARD_NEXT_STEPS = [
   `Accès onboarding — sous ${formatComptableOnboardingAccessLabel()} après réception du lien`,
-  "Activation — premier mandat {clientSegment} lancé dès l'onboarding complété",
-  `Premier RDV planifié — ${formatComptableFirstRdvAfterActivationLabel()}`,
+  "Activation — déploiement Foundation lancé dès l'onboarding complété",
+  CIF_FOUNDATION_DASHBOARD_LIVE_STEP,
 ] as const;
 
 function getDashboardFeatures(
@@ -384,6 +393,18 @@ export function SalesClosingPanel({
     () => getDashboardNextSteps(audience, clientSegment),
     [audience, clientSegment],
   );
+  const bleedTrack = useMemo(
+    () => buildBleedTrack(qualificationValues, audience),
+    [audience, qualificationValues],
+  );
+  const treatmentRecadrage = useMemo(() => {
+    if (isCabinetBuyerSalesAudience(audience)) {
+      return isCifSalesAudience(audience)
+        ? CIF_FOUNDATION_INBOUND_SLA_RULE
+        : FOUNDATION_INBOUND_SLA_RULE;
+    }
+    return interpolateBleed(AGENCE_TREATMENT_RECADRAGE_TEMPLATE, bleedTrack);
+  }, [audience, bleedTrack]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -470,6 +491,7 @@ export function SalesClosingPanel({
       {sectionId === "regles-traitement" ? (
         <Card>
           <CardContent className="space-y-5 pt-6 text-sm">
+            <p className="text-sm leading-relaxed text-muted-foreground">{treatmentRecadrage}</p>
             <ItemGroup className="gap-3">
               {treatmentRules.map((rule) => {
                 const Icon = rule.icon;

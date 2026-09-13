@@ -24,6 +24,10 @@ import {
 } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import {
+  buildBleedTrack,
+  formatBleedStickyChips,
+} from "@/lib/admin/funnels/sales-bleed-track";
 import { sessionHubHref, pathToHref, type Audience } from "@/lib/admin/navigation";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 
@@ -153,6 +157,13 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
 
     return [...qualificationCompleted, ...closingCompleted];
   }, [audience, closingCompletionContext, funnelSections, watchedValues]);
+
+  const bleedChips = useMemo(() => {
+    if (!completedSectionIds.includes("objectifs")) {
+      return [];
+    }
+    return formatBleedStickyChips(buildBleedTrack(watchedValues, audience));
+  }, [audience, completedSectionIds, watchedValues]);
 
   const { progress, progressLabel } = useMemo(() => {
     if (phase === "closing") {
@@ -421,6 +432,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           developerModeEnabled={developerModeEnabled}
           clientSegment={clientSegment}
           meetingInfo={meetingInfo}
+          bleedChips={bleedChips}
           onEnterClosing={() => enterClosingPhase({ animated: true })}
           onBackToQualification={backToQualification}
           onSectionChange={(sectionId) => {

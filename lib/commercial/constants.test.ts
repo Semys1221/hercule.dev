@@ -7,11 +7,13 @@ import {
   COMMERCIAL,
   COMMERCIAL_COMPTABLE,
   FORBIDDEN_COPY,
+  FOUNDATION_PRICING_PLANS,
   OFFER_TYPES,
   OFFER_TYPES_COMPTABLE,
   VITRINE_ONLY,
   formatComptableFirstRdvAfterActivationLabel,
   formatComptableFirstRdvLabel,
+  foundationOfferLabel,
 } from "./constants";
 
 // ---------------------------------------------------------------------------
@@ -119,6 +121,39 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
 
   it("honorairesPonctuelMinCents is 80 000", () => {
     expect(COMMERCIAL_COMPTABLE.honorairesPonctuelMinCents).toBe(80_000);
+  });
+
+  it("Foundation display prices are Core 1 799 € and Horizon 2 399 €", () => {
+    expect(COMMERCIAL_COMPTABLE.coreDisplayPriceCents).toBe(179_900);
+    expect(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents).toBe(239_900);
+  });
+
+  it("Horizon guarantee is 5 000 € over 90 days", () => {
+    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeMrrCents).toBe(500_000);
+    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeDays).toBe(90);
+  });
+
+  it("Stripe charge amount for monthly1499 remains 2 199 €", () => {
+    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(219_900);
+  });
+
+  it("foundationOfferLabel uses Core / Horizon names", () => {
+    const coreLabel = foundationOfferLabel(OFFER_TYPES_COMPTABLE.starter999_5);
+    const horizonLabel = foundationOfferLabel(OFFER_TYPES_COMPTABLE.monthly1499);
+
+    expect(coreLabel).toMatch(/Core/);
+    expect(coreLabel).not.toMatch(/Lite/i);
+    expect(horizonLabel).toMatch(/Horizon/);
+    expect(horizonLabel).not.toMatch(/Starter/i);
+  });
+
+  it("FOUNDATION_PRICING_PLANS exposes Core and Horizon only", () => {
+    expect(FOUNDATION_PRICING_PLANS).toHaveLength(2);
+    expect(FOUNDATION_PRICING_PLANS.map((plan) => plan.offerType)).toEqual([
+      OFFER_TYPES_COMPTABLE.starter999_5,
+      OFFER_TYPES_COMPTABLE.monthly1499,
+    ]);
+    expect(FOUNDATION_PRICING_PLANS.some((plan) => plan.recommended)).toBe(true);
   });
 });
 

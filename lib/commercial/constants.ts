@@ -281,4 +281,85 @@ export const COMMERCIAL_COMPTABLE = {
   /** No-show : recrédit + remplacement (aligné agence) */
   noshowReplaceWorkingDays: 14,
   honorMinutesMin: 15,
+
+  /** Display-only Foundation pricing — Stripe charge amounts unchanged until payment patch. */
+  coreDisplayName: "Hercule Core",
+  horizonDisplayName: "Hercule Horizon",
+  coreDisplayPriceCents: 179_900,
+  horizonDisplayPriceCents: 239_900,
+  horizonGuaranteeMrrCents: 500_000,
+  horizonGuaranteeDays: 90,
+  coreTagline: "Bases du système + zone standard",
+  horizonTagline: "Capture max + exclusivité totale + profondeur de zone",
 } as const;
+
+export type FoundationPricingPlanId = "core" | "horizon";
+
+export type FoundationPricingPlan = {
+  id: FoundationPricingPlanId;
+  offerType: OfferTypeComptable;
+  name: string;
+  priceCents: number;
+  tagline: string;
+  features: readonly string[];
+  recommended?: boolean;
+};
+
+const foundationEuroFormatter = new Intl.NumberFormat("fr-FR", {
+  style: "currency",
+  currency: "EUR",
+  maximumFractionDigits: 0,
+});
+
+export function formatFoundationEuros(cents: number): string {
+  return foundationEuroFormatter.format(cents / 100);
+}
+
+export function formatFoundationGuaranteeMrrLabel(): string {
+  return formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonGuaranteeMrrCents);
+}
+
+export const FOUNDATION_PRICING_PLANS: readonly FoundationPricingPlan[] = [
+  {
+    id: "core",
+    offerType: OFFER_TYPES_COMPTABLE.starter999_5,
+    name: COMMERCIAL_COMPTABLE.coreDisplayName,
+    priceCents: COMMERCIAL_COMPTABLE.coreDisplayPriceCents,
+    tagline: COMMERCIAL_COMPTABLE.coreTagline,
+    features: [
+      "Déploiement du Moteur Hercule Foundation sur la zone du cabinet.",
+      "Capture inbound standard — événements légaux, demandes qualifiées.",
+      "0 % de commission sur vos honoraires signés.",
+      "Garantie no-show : recrédit et remplacement sous 14 jours ouvrés.",
+    ],
+  },
+  {
+    id: "horizon",
+    offerType: OFFER_TYPES_COMPTABLE.monthly1499,
+    name: COMMERCIAL_COMPTABLE.horizonDisplayName,
+    priceCents: COMMERCIAL_COMPTABLE.horizonDisplayPriceCents,
+    tagline: COMMERCIAL_COMPTABLE.horizonTagline,
+    recommended: true,
+    features: [
+      "Exclusivité totale sur la zone économique du cabinet.",
+      "Profondeur de zone maximale — cartographie et capture intensives.",
+      "0 % de commission sur vos honoraires signés.",
+      `Garantie contractuelle : ${formatFoundationGuaranteeMrrLabel()} de récurrent cumulé sur ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours.`,
+    ],
+  },
+] as const;
+
+export const FOUNDATION_HORIZON_GUARANTEE_COPY =
+  `Garantie contractuelle Horizon ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours. Déploiement complet du Moteur Hercule Foundation. Si au bout des ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} premiers jours d'activation le cabinet n'a pas sécurisé ${formatFoundationGuaranteeMrrLabel()} de revenus récurrents cumulés (lettres / mandats signés), Hercule maintient l'infrastructure à ses frais jusqu'à l'atteinte de l'objectif. Le risque financier est sur notre bilan.`;
+
+export function foundationOfferLabel(
+  offerType: OfferTypeComptable | string | null | undefined,
+): string {
+  if (offerType === OFFER_TYPES_COMPTABLE.starter999_5) {
+    return `${COMMERCIAL_COMPTABLE.coreDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.coreDisplayPriceCents)}/mois`;
+  }
+  if (offerType === OFFER_TYPES_COMPTABLE.monthly1499) {
+    return `${COMMERCIAL_COMPTABLE.horizonDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents)}/mois`;
+  }
+  return `${COMMERCIAL_COMPTABLE.horizonDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents)}/mois`;
+}

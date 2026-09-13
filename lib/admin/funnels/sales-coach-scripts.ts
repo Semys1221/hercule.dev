@@ -1,15 +1,17 @@
-import { COMPTABLE_DIFFERENTIATOR_OPTIONS } from "@/lib/admin/funnels/comptable-sales-copy";
+import {
+  COMPTABLE_DIFFERENTIATOR_OPTIONS,
+  formatFoundationRoiScript,
+  FOUNDATION_ROI_DISPLAY,
+} from "@/lib/admin/funnels/comptable-sales-copy";
 import { CIF_DIFFERENTIATOR_OPTIONS } from "@/lib/admin/funnels/cif-sales-copy";
 import {
   isCabinetBuyerSalesAudience,
   isCifSalesAudience,
 } from "@/lib/admin/funnels/sales-audience";
 import { interpolateClientSegment, type ClientSegment } from "@/lib/admin/funnels/client-segment";
-import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import type { Audience } from "@/lib/admin/navigation";
 
-import { COMPTABLE_OBJECTIFS_QUESTIONS } from "@/components/internal/funnels/sales/sales-questions-objectifs-comptable";
-import { CIF_OBJECTIFS_QUESTIONS } from "@/components/internal/funnels/sales/sales-questions-objectifs-cif";
+import type { SalesQuestion } from "@/components/internal/funnels/sales/sales-questions";
 
 const euroFormatter = new Intl.NumberFormat("fr-FR", {
   maximumFractionDigits: 0,
@@ -24,32 +26,36 @@ export type SalesCoachContext = {
   sliderValue?: number | null;
   o3Value?: string;
   o6Value?: string;
+  bleedCause?: string;
 };
 
 export type HonorairesRoiAnchoring = {
-  missions: number;
-  closeRateLow: number;
-  closeRateHigh: number;
-  signedLow: number;
-  signedHigh: number;
-  recurringLowEur: number;
-  recurringHighEur: number;
-  recurringMidEur: number;
+  horizonMonthlyEur: number;
+  investment90DaysEur: number;
+  guaranteeMrrEur: number;
+  yearOneValueEur: number;
   script: string;
 };
-
-const CLOSE_RATE_LOW = 20;
-const CLOSE_RATE_HIGH = 30;
-const CLOSE_RATE_MID = 25;
 
 function formatEuros(value: number): string {
   return `${euroFormatter.format(value)} €`;
 }
 
-function getObjectifsQuestions(audience: Audience) {
-  return isCifSalesAudience(audience)
-    ? CIF_OBJECTIFS_QUESTIONS
-    : COMPTABLE_OBJECTIFS_QUESTIONS;
+function getObjectifsQuestions(audience: Audience): SalesQuestion[] {
+  if (isCifSalesAudience(audience)) {
+    // Lazy import avoids circular dependency with sales-bleed-tunnel at module init.
+    const { CIF_OBJECTIFS_QUESTIONS } =
+      require("@/components/internal/funnels/sales/sales-questions-objectifs-cif") as {
+        CIF_OBJECTIFS_QUESTIONS: SalesQuestion[];
+      };
+    return CIF_OBJECTIFS_QUESTIONS;
+  }
+
+  const { COMPTABLE_OBJECTIFS_QUESTIONS } =
+    require("@/components/internal/funnels/sales/sales-questions-objectifs-comptable") as {
+      COMPTABLE_OBJECTIFS_QUESTIONS: SalesQuestion[];
+    };
+  return COMPTABLE_OBJECTIFS_QUESTIONS;
 }
 
 function getOptionLabel(
@@ -89,38 +95,23 @@ function cabinetNoun(audience: Audience): string {
   return isCifSalesAudience(audience) ? "mandats" : "dossiers";
 }
 
-function missionNoun(audience: Audience): string {
-  return isCifSalesAudience(audience) ? "mandat" : "lettre";
-}
-
 export function computeHonorairesRoiAnchoring(
   annualHonorairesEur: number,
-  audience: Audience = "comptable",
+  cause = "l'écart déclaré",
 ): HonorairesRoiAnchoring {
-  const missions = COMMERCIAL_COMPTABLE.growthMissionsPerMonth;
-  const signedLow = missions * (CLOSE_RATE_LOW / 100);
-  const signedHigh = missions * (CLOSE_RATE_HIGH / 100);
-  const recurringLowEur = Math.round(missions * (CLOSE_RATE_LOW / 100) * annualHonorairesEur);
-  const recurringHighEur = Math.round(missions * (CLOSE_RATE_HIGH / 100) * annualHonorairesEur);
-  const recurringMidEur = Math.round(missions * (CLOSE_RATE_MID / 100) * annualHonorairesEur);
-  const honorairesLabel = formatEuros(annualHonorairesEur);
-  const missionWord = missionNoun(audience);
-
   const script = [
-    `**${honorairesLabel}**/an par ${missionWord}. Starter = **${missions} RDV**.`,
-    `À **${CLOSE_RATE_LOW}–${CLOSE_RATE_HIGH} %** de signature : **${formatEuros(recurringLowEur)}–${formatEuros(recurringHighEur)}** de récurrent annuel pour le cabinet.`,
-    "**À garder en tête** pour la suite.",
+    `Ticket Horizon : **${formatEuros(FOUNDATION_ROI_DISPLAY.horizonMonthlyEur)}**/mois.`,
+    `Investissement 90 j : **${formatEuros(FOUNDATION_ROI_DISPLAY.investment90DaysEur)}**.`,
+    `Garantie : **${formatEuros(FOUNDATION_ROI_DISPLAY.guaranteeMrrEur)}** de récurrent cumulé.`,
+    `Valeur année 1 : **${formatEuros(FOUNDATION_ROI_DISPLAY.yearOneValueEur)}**.`,
+    formatFoundationRoiScript(annualHonorairesEur, cause),
   ].join(" ");
 
   return {
-    missions,
-    closeRateLow: CLOSE_RATE_LOW,
-    closeRateHigh: CLOSE_RATE_HIGH,
-    signedLow,
-    signedHigh,
-    recurringLowEur,
-    recurringHighEur,
-    recurringMidEur,
+    horizonMonthlyEur: FOUNDATION_ROI_DISPLAY.horizonMonthlyEur,
+    investment90DaysEur: FOUNDATION_ROI_DISPLAY.investment90DaysEur,
+    guaranteeMrrEur: FOUNDATION_ROI_DISPLAY.guaranteeMrrEur,
+    yearOneValueEur: FOUNDATION_ROI_DISPLAY.yearOneValueEur,
     script,
   };
 }
@@ -131,7 +122,9 @@ function buildO3Script(context: SalesCoachContext): string | null {
   }
 
   const cause =
-    getOptionLabel(context.audience, "o3", context.o3Value) ?? "cette cause";
+    context.bleedCause ||
+    (context.o3Value ? getOptionLabel(context.audience, "o3", context.o3Value) : null) ||
+    "cette cause";
   const firstName = context.firstName;
 
   return interpolateClientSegment(
@@ -199,7 +192,8 @@ function buildQ13Script(
     return null;
   }
 
-  return computeHonorairesRoiAnchoring(context.sliderValue, context.audience).script;
+  const cause = context.bleedCause || context.o3Value || "l'écart déclaré";
+  return computeHonorairesRoiAnchoring(context.sliderValue, cause).script;
 }
 
 export function getCoachScriptForQuestion(

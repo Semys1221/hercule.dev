@@ -17,7 +17,7 @@ import {
   getDashboardDeveloperModeEnabledSnapshot,
   subscribeDashboardDeveloperModeEnabled,
 } from "@/lib/dashboard/developer-mode";
-import type { DashboardData } from "@/lib/dashboard/types";
+import type { DashboardData, OnboardingIntentionLevel } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
@@ -25,10 +25,21 @@ import { OnboardingFormFields } from "./onboarding-form-fields";
 import { StepScreenShare } from "./steps/step-screen-share";
 import { StepDashboardPreview } from "./steps/step-dashboard-preview";
 import { StepFaqTieDown } from "./steps/step-faq-tie-down";
+import { StepHesitationSlides } from "./steps/step-hesitation-slides";
+import { StepIntentionWindow } from "./steps/step-intention-window";
 import { StepPricingCard } from "./steps/step-pricing-card";
 import { StepEmbeddedCheckout } from "./steps/step-embedded-checkout";
+const STEP_COUNT = 7;
 
-const STEP_COUNT = 6;
+function agenceOfferDisplayLabel(offer: AgenceCheckoutOfferType): string {
+  if (offer === OFFER_TYPES.starter998_5) {
+    return "Hercule Starter";
+  }
+  if (offer === OFFER_TYPES.growth1498_10) {
+    return "Hercule Growth";
+  }
+  return "la formule";
+}
 
 // #region agent log helper
 function logAgenceStep2Context(step: number, data: DashboardData) {
@@ -73,6 +84,8 @@ export function OnboardingPreviewWizard({
     OFFER_TYPES.starter998_5,
   );
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
+  const [intentionLevel, setIntentionLevel] = useState<OnboardingIntentionLevel | null>(null);
+  const [showHesitationSlides, setShowHesitationSlides] = useState(false);
   const [fastCheckout, setFastCheckout] = useState(false);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
@@ -89,8 +102,9 @@ export function OnboardingPreviewWizard({
   const greeting = data.firstName || "Bonjour";
   const prospectLine = data.company ? `${greeting} · ${data.company}` : greeting;
 
-  const isCheckoutStep = step === 5;
-  const isPricingStep = step === 4;
+  const isCheckoutStep = step === 6;
+  const isPricingStep = step === 5;
+  const isIntentionStep = step === 4;
   const isFaqStep = step === 3;
   const canGoNext = !isFaqStep || tieDownAccepted;
 
@@ -135,7 +149,7 @@ export function OnboardingPreviewWizard({
   }, [data.slug, selectedOfferType, fastCheckout]);
 
   useEffect(() => {
-    if (step < 4) {
+    if (step < 5) {
       return;
     }
 
@@ -143,11 +157,25 @@ export function OnboardingPreviewWizard({
   }, [step, preloadCheckout]);
 
   useEffect(() => {
+    if (isPricingStep && intentionLevel === "hesitate") {
+      setShowHesitationSlides(true);
+    }
+  }, [intentionLevel, isPricingStep]);
+
+  useEffect(() => {
     logAgenceStep2Context(step, data);
   }, [step, data]);
 
   function goNext() {
     setStep((current) => Math.min(current + 1, STEP_COUNT - 1));
+  }
+
+  function handleIntentionSelect(level: OnboardingIntentionLevel) {
+    setIntentionLevel(level);
+    if (level === "strong") {
+      setSelectedOfferType(OFFER_TYPES.starter998_5);
+    }
+    setStep(5);
   }
 
   function goPrev() {
@@ -222,20 +250,34 @@ export function OnboardingPreviewWizard({
               {step === 3 && (
                 <StepFaqTieDown
                   audience="agence"
+                  bleedContext={data.bleedContext}
                   tieDownAccepted={tieDownAccepted}
                   onTieDownChange={setTieDownAccepted}
                 />
               )}
               {step === 4 && (
-                <StepPricingCard
-                  selectedOffer={selectedOfferType}
-                  onSelectOffer={setSelectedOfferType}
-                  fastEnabled={fastCheckout}
-                  onFastChange={setFastCheckout}
-                  onProceed={goNext}
-                />
+                <StepIntentionWindow audience="agence" onSelect={handleIntentionSelect} />
               )}
               {step === 5 && (
+                <>
+                  <StepPricingCard
+                    selectedOffer={selectedOfferType}
+                    onSelectOffer={setSelectedOfferType}
+                    fastEnabled={fastCheckout}
+                    onFastChange={setFastCheckout}
+                    onProceed={goNext}
+                  />
+                  <StepHesitationSlides
+                    open={showHesitationSlides}
+                    audience="agence"
+                    bleedContext={data.bleedContext}
+                    selectedOfferLabel={agenceOfferDisplayLabel(selectedOfferType)}
+                    onOpenChange={setShowHesitationSlides}
+                    onActivateCheckout={goNext}
+                  />
+                </>
+              )}
+              {step === 6 && (
                 <StepEmbeddedCheckout
                   slug={data.slug}
                   offerType={selectedOfferType}
@@ -268,7 +310,7 @@ export function OnboardingPreviewWizard({
                   {skipLoading ? DASHBOARD_DEV_SKIP_PAYMENT_LOADING : DASHBOARD_DEV_SKIP_PAYMENT_CTA}
                 </Button>
               ) : null}
-              {!isPricingStep && !isCheckoutStep && (
+              {!isIntentionStep && !isPricingStep && !isCheckoutStep && (
                 <Button
                   type="button"
                   onClick={goNext}

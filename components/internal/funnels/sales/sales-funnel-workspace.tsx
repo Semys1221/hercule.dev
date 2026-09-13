@@ -103,7 +103,11 @@ export function SalesFunnelWorkspace({
             onResetSession={onResetSession}
           />
         ) : activeQualificationId === "presentation-societe" ? (
-          <SalesCompanyPresentationPanel audience={audience} form={form} />
+          <SalesCompanyPresentationPanel
+            audience={audience}
+            form={form}
+            prospectFirstName={prospectFirstName}
+          />
         ) : activeQualificationSection ? (
           <SalesFunnelSectionPage
             key={activeQualificationId}

@@ -3,13 +3,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { OfferTypeComptable } from "@/lib/commercial/constants";
-import type { DashboardData } from "@/lib/dashboard/types";
+import { comptableOfferLabel } from "@/lib/commercial/comptable-pricing";
+import type { DashboardData, OnboardingIntentionLevel } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
 import { ComptableOnboardingFormFields } from "./comptable-onboarding-form-fields";
 import { StepDashboardPreviewComptable } from "./steps/step-dashboard-preview-comptable";
 import { StepEmbeddedCheckoutComptable } from "./steps/step-embedded-checkout-comptable";
 import { StepFaqTieDown } from "./steps/step-faq-tie-down";
+import { StepHesitationSlides } from "./steps/step-hesitation-slides";
+import { StepIntentionWindow } from "./steps/step-intention-window";
 import { StepPricingCardComptable } from "./steps/step-pricing-card-comptable";
 import { StepScreenShare } from "./steps/step-screen-share";
 
@@ -20,9 +23,12 @@ type ComptableWizardStepViewProps = {
   tieDownAccepted: boolean;
   checkoutClientSecret: string | null;
   checkoutPreloadError: string | null;
+  showHesitationSlides: boolean;
   onTieDownChange: (accepted: boolean) => void;
   onSelectOffer: (offer: OfferTypeComptable) => void;
+  onIntentionSelect: (level: OnboardingIntentionLevel) => void;
   onProceedFromPricing: () => void;
+  onHesitationOpenChange: (open: boolean) => void;
 };
 
 export function ComptableWizardStepView({
@@ -32,11 +38,15 @@ export function ComptableWizardStepView({
   tieDownAccepted,
   checkoutClientSecret,
   checkoutPreloadError,
+  showHesitationSlides,
   onTieDownChange,
   onSelectOffer,
+  onIntentionSelect,
   onProceedFromPricing,
+  onHesitationOpenChange,
 }: ComptableWizardStepViewProps) {
-  const isCheckoutStep = step === 5;
+  const isCheckoutStep = step === 6;
+  const audience = data.audience === "cif" ? "cif" : "comptable";
 
   return (
     <div
@@ -64,23 +74,37 @@ export function ComptableWizardStepView({
           ) : null}
           {step === 3 ? (
             <StepFaqTieDown
-              audience="comptable"
+              audience={audience}
+              bleedContext={data.bleedContext}
               tieDownId="tie-down-comptable"
               tieDownAccepted={tieDownAccepted}
               onTieDownChange={onTieDownChange}
             />
           ) : null}
           {step === 4 ? (
-            <StepPricingCardComptable
-              selectedOffer={selectedOffer}
-              onSelectOffer={onSelectOffer}
-              onProceed={onProceedFromPricing}
-            />
+            <StepIntentionWindow audience={audience} onSelect={onIntentionSelect} />
           ) : null}
           {step === 5 ? (
+            <>
+              <StepPricingCardComptable
+                selectedOffer={selectedOffer}
+                onSelectOffer={onSelectOffer}
+                onProceed={onProceedFromPricing}
+              />
+              <StepHesitationSlides
+                open={showHesitationSlides}
+                audience={audience}
+                bleedContext={data.bleedContext}
+                selectedOfferLabel={comptableOfferLabel(selectedOffer)}
+                onOpenChange={onHesitationOpenChange}
+                onActivateCheckout={onProceedFromPricing}
+              />
+            </>
+          ) : null}
+          {step === 6 ? (
             <StepEmbeddedCheckoutComptable
               slug={data.slug}
-              audience={data.audience === "cif" ? "cif" : "comptable"}
+              audience={audience}
               selectedOffer={selectedOffer}
               startImmediately
               clientSecret={checkoutClientSecret}

@@ -1,11 +1,19 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
+import { useWatch, type UseFormReturn } from "react-hook-form";
 
 import { Badge } from "@/components/ui/badge";
 import type { Audience } from "@/lib/admin/navigation";
 import { RESERVATION_BODY_TEXT } from "@/lib/admin/funnels/reservation-surface";
-import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { resolveBleedSectionSubtitle } from "@/lib/admin/funnels/sales-bleed-track";
+import {
+  mergeSalesQualificationValues,
+  type SalesQualificationValues,
+} from "@/lib/admin/funnels/sales-qualification-schema";
+import { AGENCE_OBJECTIFS_SUBTITLE } from "@/components/internal/funnels/sales/sales-questions-objectifs-agence";
+import { CABINET_OBJECTIFS_SUBTITLE } from "@/components/internal/funnels/sales/sales-questions-objectifs-comptable";
+import { ENTREPRISE_OBJECTIFS_SUBTITLE } from "@/components/internal/funnels/sales/sales-questions-objectifs-entreprise";
 
 import { SalesIntroSection } from "./sales-intro-section";
 import { SalesQualificationForm } from "./sales-qualification-form";
@@ -24,9 +32,27 @@ export function SalesFunnelSectionPage({
   form,
   prospectFirstName,
 }: SalesFunnelSectionPageProps) {
+  const watchedValues = mergeSalesQualificationValues(
+    useWatch({ control: form.control }) as Partial<SalesQualificationValues>,
+    audience,
+  );
+
   if (section.id === "introduction") {
     return <SalesIntroSection audience={audience} section={section} form={form} />;
   }
+
+  const bleedSubtitle = resolveBleedSectionSubtitle(section.id, audience, watchedValues);
+  const subtitle =
+    bleedSubtitle ??
+    (section.id === "objectifs"
+      ? isCabinetBuyerSalesAudience(audience)
+        ? CABINET_OBJECTIFS_SUBTITLE
+        : audience === "agence"
+          ? AGENCE_OBJECTIFS_SUBTITLE
+          : audience === "entreprise"
+            ? ENTREPRISE_OBJECTIFS_SUBTITLE
+            : section.subtitle
+      : section.subtitle);
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-5 text-left">
@@ -39,8 +65,8 @@ export function SalesFunnelSectionPage({
             </Badge>
           ) : null}
         </div>
-        {section.subtitle ? (
-          <p className={RESERVATION_BODY_TEXT}>{section.subtitle}</p>
+        {subtitle ? (
+          <p className={RESERVATION_BODY_TEXT}>{subtitle}</p>
         ) : null}
       </div>
       <SalesQualificationForm

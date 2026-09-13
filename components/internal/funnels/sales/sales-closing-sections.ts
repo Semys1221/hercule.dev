@@ -90,7 +90,7 @@ const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
     label: "Calendrier de collaboration",
     title: "Votre calendrier",
     subtitle:
-      "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants {clientSegment}.",
+      "Déploiement Foundation sur 60 jours — confirmez le calendrier de mise en service.",
   },
   {
     id: "envoi-dashboard",
@@ -125,7 +125,7 @@ const CIF_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
     label: "Calendrier de collaboration",
     title: "Votre calendrier",
     subtitle:
-      "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants {clientSegment}.",
+      "Déploiement Foundation sur 60 jours — confirmez le calendrier de mise en service.",
   },
   {
     id: "envoi-dashboard",

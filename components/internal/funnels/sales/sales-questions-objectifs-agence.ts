@@ -1,4 +1,9 @@
+import { LINEAR_DIAGNOSTIC_MIRROR_TEMPLATE } from "@/lib/admin/funnels/sales-bleed-copy";
+
 import type { SalesQuestion } from "./sales-questions";
+
+export const AGENCE_OBJECTIFS_SUBTITLE =
+  "Qualification courte : capacité, écart, ce qui bloque l'agence. On va droit au but.";
 
 export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
   {
@@ -21,6 +26,8 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     sectionId: "objectifs",
     type: "single",
     prompt: "Pourquoi êtes-vous à cette capacité aujourd'hui ?",
+    coachCue:
+      "Le {business} coche {cause}. Depuis combien de temps cet écart de flux pèse sur le portefeuille ?",
     options: [
       { id: "insufficient_leads", label: "Flux de leads insuffisant" },
       { id: "unqualified_leads", label: "Leads non qualifiés / hors cible" },
@@ -37,7 +44,8 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     sectionId: "objectifs",
     type: "multi",
     maxSelections: 3,
-    prompt: "Qu'est-ce qui vous freine pour remplir davantage cette capacité ?",
+    prompt:
+      "Parmi ces freins, lequel bride le plus la capacité du {business} sur les 6 prochains mois ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
       { id: "no_prospecting", label: "Pas assez de prospection active" },
@@ -74,6 +82,9 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     type: "single",
     prompt:
       "Quel écart observez-vous entre votre scénario idéal (activité à pleine capacité) et votre réalité actuelle ?",
+    coachCue:
+      "Si dans 6 mois l'écart de capacité est le même : qu'est-ce que ça fait à la marge et à l'occupation du {business} ?",
+    showCoachCueWhen: ["major_gap", "significant_gap"],
     options: [
       { id: "major_gap", label: "Écart majeur : moins de 30 % de la capacité cible" },
       { id: "significant_gap", label: "Écart significatif : 30–60 %" },
@@ -100,5 +111,15 @@ export const AGENCE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
       { id: "hiring_skills", label: "Difficulté à recruter ou monter en compétences" },
       { id: "key_clients", label: "Forte dépendance à 1–2 gros clients" },
     ],
+  },
+  {
+    id: "diagnostic_card",
+    number: 7,
+    sectionId: "objectifs",
+    type: "diagnostic_card",
+    prompt: "Diagnostic signé",
+    mirrorTemplate: LINEAR_DIAGNOSTIC_MIRROR_TEMPLATE,
+    checkboxLabel:
+      "L'agence valide ce cadre pour la suite de l'audit de compatibilité.",
   },
 ];

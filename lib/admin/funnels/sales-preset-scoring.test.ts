@@ -20,8 +20,6 @@ function main() {
   const serial = scoreAgency({
     ...salesQualificationDefaultValues,
     q3: 8,
-    q4: "high",
-    q10: "all",
     q13: 2000,
     q20: 5,
   });
@@ -49,8 +47,6 @@ function main() {
     {
       ...salesQualificationDefaultValues,
       q3: 8,
-      q4: "high",
-      q10: "all",
       q13: 2000,
       q20: 5,
     },

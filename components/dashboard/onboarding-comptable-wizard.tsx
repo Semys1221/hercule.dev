@@ -11,14 +11,14 @@ import {
   getDashboardDeveloperModeEnabledSnapshot,
   subscribeDashboardDeveloperModeEnabled,
 } from "@/lib/dashboard/developer-mode";
-import type { DashboardData } from "@/lib/dashboard/types";
+import type { DashboardData, OnboardingIntentionLevel } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
 import { ComptableWizardControls } from "./onboarding-comptable-wizard-controls";
 import { ComptableWizardStepView } from "./onboarding-comptable-wizard-step";
 
-const STEP_COUNT = 6;
+const STEP_COUNT = 7;
 
 type OnboardingComptableWizardProps = {
   data: DashboardData;
@@ -34,6 +34,8 @@ export function OnboardingComptableWizard({
     OFFER_TYPES_COMPTABLE.monthly1499,
   );
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
+  const [intentionLevel, setIntentionLevel] = useState<OnboardingIntentionLevel | null>(null);
+  const [showHesitationSlides, setShowHesitationSlides] = useState(false);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
   const [skipLoading, setSkipLoading] = useState(false);
@@ -50,7 +52,9 @@ export function OnboardingComptableWizard({
   const prospectLine = data.company ? `${greeting} · ${data.company}` : greeting;
 
   const isFaqStep = step === 3;
-  const isCheckoutStep = step === 5;
+  const isIntentionStep = step === 4;
+  const isPricingStep = step === 5;
+  const isCheckoutStep = step === 6;
   const canGoNext = !isFaqStep || tieDownAccepted;
 
   const persistTieDown = useCallback(async () => {
@@ -92,12 +96,18 @@ export function OnboardingComptableWizard({
   }, [data.slug, selectedOffer]);
 
   useEffect(() => {
-    if (step < 4) {
+    if (step < 5) {
       return;
     }
 
     void preloadCheckout();
   }, [step, preloadCheckout]);
+
+  useEffect(() => {
+    if (isPricingStep && intentionLevel === "hesitate") {
+      setShowHesitationSlides(true);
+    }
+  }, [intentionLevel, isPricingStep]);
 
   const goNext = useCallback(() => {
     if (isFaqStep && tieDownAccepted) {
@@ -108,6 +118,14 @@ export function OnboardingComptableWizard({
 
   const goPrev = useCallback(() => {
     setStep((current) => Math.max(current - 1, 0));
+  }, []);
+
+  const handleIntentionSelect = useCallback((level: OnboardingIntentionLevel) => {
+    setIntentionLevel(level);
+    if (level === "strong") {
+      setSelectedOffer(OFFER_TYPES_COMPTABLE.monthly1499);
+    }
+    setStep(5);
   }, []);
 
   const simulatePayment = useCallback(async () => {
@@ -173,9 +191,12 @@ export function OnboardingComptableWizard({
             tieDownAccepted={tieDownAccepted}
             checkoutClientSecret={checkoutClientSecret}
             checkoutPreloadError={checkoutPreloadError}
+            showHesitationSlides={showHesitationSlides}
             onTieDownChange={setTieDownAccepted}
             onSelectOffer={setSelectedOffer}
+            onIntentionSelect={handleIntentionSelect}
             onProceedFromPricing={goNext}
+            onHesitationOpenChange={setShowHesitationSlides}
           />
 
           <ComptableWizardControls

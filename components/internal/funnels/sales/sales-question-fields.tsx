@@ -17,13 +17,19 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
+import {
+  O3_DURATION_OPTIONS,
+  type O3DurationId,
+} from "@/lib/admin/funnels/sales-bleed-track";
 import { SALES_SKIP_VALUE } from "@/lib/admin/funnels/sales-qualification-schema";
 import { cn } from "@/lib/utils";
 
 import {
   formatSliderLabel,
   formatSliderRange,
+  type SalesAcknowledgmentQuestion,
   type SalesConditionalSliderQuestion,
+  type SalesDiagnosticCardQuestion,
   type SalesMultiQuestion,
   type SalesQuestionOption,
   type SalesSingleQuestion,
@@ -113,11 +119,13 @@ function SalesQuestionHeader({
   number,
   prompt,
   description,
+  bleedBenefit,
   trailing,
 }: {
   number: number;
   prompt: string;
   description?: string;
+  bleedBenefit?: string;
   trailing?: React.ReactNode;
 }) {
   return (
@@ -130,6 +138,9 @@ function SalesQuestionHeader({
       </div>
       {description ? (
         <p className="text-xs text-muted-foreground">{description}</p>
+      ) : null}
+      {bleedBenefit ? (
+        <p className="text-xs text-muted-foreground">{bleedBenefit}</p>
       ) : null}
     </div>
   );
@@ -156,6 +167,7 @@ export function SalesSingleChoiceField({
         number={question.number}
         prompt={question.prompt}
         description={question.description}
+        bleedBenefit={question.bleedBenefit}
       />
       <RadioGroup
         value={value}
@@ -236,6 +248,7 @@ export function SalesMultiChoiceField({
         number={question.number}
         prompt={question.prompt}
         description={question.description}
+        bleedBenefit={question.bleedBenefit}
         trailing={counterBadge}
       />
       <FieldGroup
@@ -300,16 +313,21 @@ type SalesSliderFieldProps = {
   question: SalesSliderQuestion;
   value: number | null;
   onChange: (value: number | null) => void;
+  sliderConfig?: SalesSliderConfig;
+  alertMessage?: string;
 };
 
 export function SalesSliderField({
   question,
   value,
   onChange,
+  sliderConfig,
+  alertMessage,
 }: SalesSliderFieldProps) {
   const { slider, optOutLabel } = question;
+  const config = sliderConfig ?? slider;
   const optedOut = value === null;
-  const displayValue = optedOut ? slider.defaultValue : value;
+  const displayValue = optedOut ? config.defaultValue : value;
 
   return (
     <FieldSet className={QUESTION_FIELD_SET}>
@@ -317,13 +335,17 @@ export function SalesSliderField({
         number={question.number}
         prompt={question.prompt}
         description={question.description}
+        bleedBenefit={question.bleedBenefit}
       />
       <SliderControl
-        config={slider}
+        config={config}
         value={displayValue}
         disabled={optedOut}
         onChange={(next) => onChange(next)}
       />
+      {alertMessage ? (
+        <p className="text-xs text-amber-600 dark:text-amber-400">{alertMessage}</p>
+      ) : null}
       {optOutLabel ? (
         <Field orientation="horizontal">
           <Checkbox
@@ -371,6 +393,7 @@ export function SalesSliderMatrixField({
         number={question.number}
         prompt={question.prompt}
         description={question.description}
+        bleedBenefit={question.bleedBenefit}
       />
       <FieldGroup className="grid gap-3 sm:grid-cols-3">
         {question.subQuestions.map((subQuestion) => (
@@ -421,6 +444,7 @@ export function SalesConditionalSliderField({
         number={question.number}
         prompt={question.prompt}
         description={question.description}
+        bleedBenefit={question.bleedBenefit}
       />
       <SliderControl
         config={question.slider}
@@ -443,6 +467,132 @@ export function SalesConditionalSliderField({
           {question.skipLabel}
         </FieldLabel>
       </Field>
+    </FieldSet>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Acknowledgment trap (b6)
+// ---------------------------------------------------------------------------
+
+type SalesAcknowledgmentFieldProps = {
+  question: SalesAcknowledgmentQuestion;
+  trapText: string;
+  acknowledged: boolean;
+  onAcknowledgedChange: (value: boolean) => void;
+};
+
+export function SalesAcknowledgmentField({
+  question,
+  trapText,
+  acknowledged,
+  onAcknowledgedChange,
+}: SalesAcknowledgmentFieldProps) {
+  const paragraphs = trapText.split("\n").filter((line) => line.length > 0);
+
+  return (
+    <FieldSet className={QUESTION_FIELD_SET}>
+      <SalesQuestionHeader number={question.number} prompt={question.prompt} />
+      <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm leading-relaxed">
+        {paragraphs.map((paragraph, index) => (
+          <p key={index} className={index > 0 ? "mt-3 font-medium" : undefined}>
+            {paragraph.replace(/\*\*(.*?)\*\*/g, "$1")}
+          </p>
+        ))}
+      </div>
+      <Field orientation="horizontal">
+        <Checkbox
+          id={`${question.id}-ack`}
+          checked={acknowledged}
+          onCheckedChange={(checked) => onAcknowledgedChange(checked === true)}
+        />
+        <FieldLabel htmlFor={`${question.id}-ack`} className="text-sm font-normal">
+          Le cabinet reconnaît ce constat
+        </FieldLabel>
+      </Field>
+    </FieldSet>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Diagnostic card
+// ---------------------------------------------------------------------------
+
+type SalesDiagnosticCardFieldProps = {
+  question: SalesDiagnosticCardQuestion;
+  mirrorText: string;
+  accepted: boolean;
+  onAcceptedChange: (value: boolean) => void;
+};
+
+export function SalesDiagnosticCardField({
+  question,
+  mirrorText,
+  accepted,
+  onAcceptedChange,
+}: SalesDiagnosticCardFieldProps) {
+  return (
+    <FieldSet className={QUESTION_FIELD_SET}>
+      <SalesQuestionHeader number={question.number} prompt={question.prompt} />
+      <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm leading-relaxed">
+        {mirrorText.replace(/\*\*(.*?)\*\*/g, "$1")}
+      </div>
+      <Field orientation="horizontal">
+        <Checkbox
+          id={`${question.id}-accept`}
+          checked={accepted}
+          onCheckedChange={(checked) => onAcceptedChange(checked === true)}
+        />
+        <FieldLabel htmlFor={`${question.id}-accept`} className="text-sm font-normal">
+          {question.checkboxLabel}
+        </FieldLabel>
+      </Field>
+    </FieldSet>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Coach cue
+// ---------------------------------------------------------------------------
+
+export function SalesCoachCue({ cue }: { cue: string }) {
+  return (
+    <p className="mt-3 text-sm italic text-muted-foreground">{cue}</p>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// O3 duration chips (agence / entreprise)
+// ---------------------------------------------------------------------------
+
+type SalesO3DurationChipsFieldProps = {
+  value?: O3DurationId;
+  onChange: (value: O3DurationId) => void;
+};
+
+export function SalesO3DurationChipsField({
+  value,
+  onChange,
+}: SalesO3DurationChipsFieldProps) {
+  return (
+    <FieldSet className="mt-4 gap-3">
+      <FieldLegend className="mb-0 text-sm font-medium leading-snug">
+        Depuis combien de temps cet écart pèse sur le portefeuille ?
+      </FieldLegend>
+      <div className={CHOICE_GROUP_CLASS}>
+        {O3_DURATION_OPTIONS.map((option) => (
+          <Button
+            key={option.id}
+            type="button"
+            variant={value === option.id ? "default" : "outline"}
+            size="sm"
+            className="h-auto min-h-10 whitespace-normal px-3 py-2 text-left text-xs"
+            onClick={() => onChange(option.id)}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
     </FieldSet>
   );
 }

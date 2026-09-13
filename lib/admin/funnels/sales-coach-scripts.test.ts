@@ -2,14 +2,16 @@
 
 import assert from "node:assert/strict";
 
-import { COMPTABLE_ANNUAL_MIN } from "@/components/internal/funnels/sales/sales-questions-comptable";
+import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
 import {
   computeHonorairesRoiAnchoring,
   getCoachScriptForQuestion,
   requiresO3FollowUp,
   type SalesCoachContext,
 } from "@/lib/admin/funnels/sales-coach-scripts";
-import { COMMERCIAL_COMPTABLE } from "@/lib/commercial/constants";
+import { FOUNDATION_ROI_DISPLAY } from "@/lib/admin/funnels/comptable-sales-copy";
+
+const COMPTABLE_ANNUAL_MIN = COMMERCIAL_COMPTABLE.honorairesAnnuelsMinCents / 100;
 
 const baseContext: SalesCoachContext = {
   audience: "comptable",
@@ -20,29 +22,29 @@ const baseContext: SalesCoachContext = {
 };
 
 function main() {
-  const roi = computeHonorairesRoiAnchoring(3_600, "comptable");
-  assert.equal(roi.missions, COMMERCIAL_COMPTABLE.growthMissionsPerMonth);
-  assert.equal(roi.closeRateLow, 20);
-  assert.equal(roi.closeRateHigh, 30);
-  assert.equal(roi.signedLow, 2);
-  assert.equal(roi.signedHigh, 3);
-  assert.equal(roi.recurringLowEur, 7_200);
-  assert.equal(roi.recurringHighEur, 10_800);
-  assert.equal(roi.recurringMidEur, 9_000);
+  const roi = computeHonorairesRoiAnchoring(3_600, "l'invisibilité de zone");
+  assert.equal(roi.horizonMonthlyEur, FOUNDATION_ROI_DISPLAY.horizonMonthlyEur);
+  assert.equal(roi.investment90DaysEur, FOUNDATION_ROI_DISPLAY.investment90DaysEur);
+  assert.equal(roi.guaranteeMrrEur, FOUNDATION_ROI_DISPLAY.guaranteeMrrEur);
+  assert.equal(roi.yearOneValueEur, FOUNDATION_ROI_DISPLAY.yearOneValueEur);
   assert.match(roi.script, /3\s?600\s?€/);
-  assert.match(roi.script, /10 RDV/);
-  assert.match(roi.script, /20–30 %/);
+  assert.match(roi.script, /7\s?197/);
+  assert.match(roi.script, /5\s?000/);
+  assert.match(roi.script, /60\s?000/);
+  assert.doesNotMatch(roi.script, /10 RDV/i);
+  assert.doesNotMatch(roi.script, /20–30 %/);
 
-  const cifRoi = computeHonorairesRoiAnchoring(3_600, "cif");
-  assert.match(cifRoi.script, /mandat/);
+  const cifRoi = computeHonorairesRoiAnchoring(3_600, "la trésorerie dirigeant");
+  assert.match(cifRoi.script, /7\s?197/);
 
   const o3Script = getCoachScriptForQuestion({
     ...baseContext,
     questionId: "o3",
+    bleedCause: "l'invisibilité de zone",
   });
   assert.ok(o3Script);
   assert.match(o3Script!, /Marie/);
-  assert.match(o3Script!, /Flux de prospects insuffisant/);
+  assert.match(o3Script!, /invisibilité de zone/);
 
   const o4Script = getCoachScriptForQuestion({
     ...baseContext,
@@ -51,21 +53,6 @@ function main() {
   });
   assert.ok(o4Script);
   assert.match(o4Script!, /6 prochains mois/);
-
-  const o6Script = getCoachScriptForQuestion({
-    ...baseContext,
-    questionId: "o6",
-    o6Value: "major_gap",
-  });
-  assert.ok(o6Script);
-  assert.match(o6Script!, /6 mois/);
-
-  const o6Hidden = getCoachScriptForQuestion({
-    ...baseContext,
-    questionId: "o6",
-    o6Value: "near_target",
-  });
-  assert.equal(o6Hidden, null);
 
   const historiqueIntro = getCoachScriptForQuestion({
     ...baseContext,
@@ -96,11 +83,13 @@ function main() {
       ...baseContext,
       questionId: "q13",
       sliderValue: 3_600,
+      bleedCause: "l'invisibilité de zone",
     },
     COMPTABLE_ANNUAL_MIN,
   );
   assert.ok(q13Script);
-  assert.match(q13Script!, /7\s?200/);
+  assert.match(q13Script!, /7\s?197/);
+  assert.doesNotMatch(q13Script!, /10 RDV/i);
 
   const q13Hidden = getCoachScriptForQuestion(
     {

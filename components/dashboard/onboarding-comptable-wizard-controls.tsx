@@ -27,8 +27,9 @@ export function ComptableWizardControls({
   onNext,
   onSimulatePayment,
 }: ComptableWizardControlsProps) {
-  const isPricingStep = step === 4;
-  const isCheckoutStep = step === 5;
+  const isIntentionStep = step === 4;
+  const isPricingStep = step === 5;
+  const isCheckoutStep = step === 6;
   const showNavigation = (developerModeEnabled && isCheckoutStep) || !isCheckoutStep;
 
   if (!showNavigation) {
@@ -52,7 +53,7 @@ export function ComptableWizardControls({
               {skipLoading ? DASHBOARD_DEV_SKIP_PAYMENT_LOADING : DASHBOARD_DEV_SKIP_PAYMENT_CTA}
             </Button>
           ) : null}
-          {!isPricingStep && !isCheckoutStep ? (
+          {!isIntentionStep && !isPricingStep && !isCheckoutStep ? (
             <Button type="button" onClick={onNext} disabled={!canGoNext}>
               Suivant
             </Button>

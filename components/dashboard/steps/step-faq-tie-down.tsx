@@ -9,11 +9,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { FaqRichText } from "@/components/dashboard/faq-rich-text";
+import type { DashboardBleedContext } from "@/lib/dashboard/bleed-context";
 import { getOnboardingFaq } from "@/lib/dashboard/onboarding-faq";
 import type { DashboardFaqAudience } from "@/lib/dashboard/types";
 
 type StepFaqTieDownProps = {
   audience?: DashboardFaqAudience;
+  bleedContext?: DashboardBleedContext;
   tieDownAccepted: boolean;
   onTieDownChange: (accepted: boolean) => void;
   tieDownId?: string;
@@ -21,11 +23,12 @@ type StepFaqTieDownProps = {
 
 export function StepFaqTieDown({
   audience = "agence",
+  bleedContext,
   tieDownAccepted,
   onTieDownChange,
   tieDownId = "tie-down-intention",
 }: StepFaqTieDownProps) {
-  const config = getOnboardingFaq(audience);
+  const config = getOnboardingFaq(audience, bleedContext);
 
   return (
     <div className="space-y-5">

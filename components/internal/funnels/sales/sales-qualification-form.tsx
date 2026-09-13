@@ -25,9 +25,24 @@ import {
 } from "@/lib/admin/funnels/sales-coach-scripts";
 import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import {
+  buildBleedTrack,
+  interpolateBleed,
+  type O3DurationId,
+} from "@/lib/admin/funnels/sales-bleed-track";
+import {
+  B3_YEAR_MAP,
+  formatCabinetBleedInterpolation,
+  getB5bOptions,
+  getB7Options,
+  getCabinetSliderConfig,
+  isBleedQuestionVisible,
+  resolvePrimaryMethodId,
+} from "@/lib/admin/funnels/sales-bleed-tunnel";
+import {
   SALES_SKIP_VALUE,
   mergeSalesQualificationValues,
   type ConditionalSliderValue,
+  type Q14Matrix,
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
 import {
@@ -39,8 +54,12 @@ import type { Audience } from "@/lib/admin/navigation";
 
 import { SalesCoachCallout } from "./sales-coach-callout";
 import {
+  SalesAcknowledgmentField,
+  SalesCoachCue,
   SalesConditionalSliderField,
+  SalesDiagnosticCardField,
   SalesMultiChoiceField,
+  SalesO3DurationChipsField,
   SalesSingleChoiceField,
   SalesSliderField,
   SalesSliderMatrixField,
@@ -75,6 +94,12 @@ export function SalesQualificationForm({
     [watchedQ11, watchedValues.q11],
   );
   const showCoachScripts = isCabinetBuyerSalesAudience(audience);
+  const isLinearBleedAudience = audience === "agence" || audience === "entreprise";
+  const cabinetAudience = audience === "cif" ? "cif" : "comptable";
+  const bleedTrack = useMemo(
+    () => buildBleedTrack(watchedValues, audience),
+    [audience, watchedValues],
+  );
   const annualHonorairesMin =
     audience === "cif" ? CIF_ANNUAL_MIN : audience === "comptable" ? COMPTABLE_ANNUAL_MIN : undefined;
 
@@ -93,28 +118,37 @@ export function SalesQualificationForm({
     }
   }, [audience, form, watchedQ11]);
 
+  useEffect(() => {
+    if (!showCoachScripts || !watchedValues.b3) {
+      return;
+    }
+    const year = B3_YEAR_MAP[watchedValues.b3];
+    if (year && watchedValues.b3Year !== year) {
+      form.setValue("b3Year", year, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [form, showCoachScripts, watchedValues.b3, watchedValues.b3Year]);
+
+  useEffect(() => {
+    if (!showCoachScripts) {
+      return;
+    }
+    const b5Count = watchedValues.b5?.length ?? 0;
+    if (b5Count <= 1 && watchedValues.b5b) {
+      form.setValue("b5b", undefined, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [form, showCoachScripts, watchedValues.b5, watchedValues.b5b]);
+
   if (section.id === "rendez-vous" || section.id === "introduction") {
     return null;
   }
 
-  const questions = getSalesQuestionsForSection(section.id, audience).map((question) =>
-    applyQuestionSegmentCopy(question, clientSegment),
-  );
-
-  const historiqueIntro =
-    showCoachScripts && section.id === "historique"
-      ? getCoachScriptForQuestion({
-          audience,
-          firstName: prospectFirstName,
-          clientSegment,
-          questionId: "historique_intro",
-          o3Value: watchedValues.o3,
-        })
-      : null;
+  const questions = getSalesQuestionsForSection(section.id, audience)
+    .map((question) => applyQuestionSegmentCopy(question, clientSegment))
+    .map((question) => applyBleedQuestionCopy(question, bleedTrack))
+    .filter((question) => isQuestionVisible(question, watchedValues, showCoachScripts));
 
   return (
     <div className="space-y-5">
-      {historiqueIntro ? <SalesCoachCallout script={historiqueIntro} /> : null}
       <Card className={COMPACT_CARD_CLASS}>
         <CardContent className="divide-y divide-border p-0">
           {questions.map((question) => (
@@ -122,43 +156,82 @@ export function SalesQualificationForm({
               {question.type === "single" ? (
                 <FormField
                   control={form.control}
-                  name={
-                    question.id as
-                      | "o2"
-                      | "o3"
-                      | "o6"
-                      | "q4"
-                      | "q5"
-                      | "q9"
-                      | "q10"
-                      | "q12"
-                      | "q14"
-                      | "q15"
-                  }
-                  render={({ field }) => (
-                    <FormItem>
-                      <SalesSingleChoiceField
-                        question={question}
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  name={question.id as keyof SalesQualificationValues}
+                  render={({ field }) => {
+                    const singleValue = typeof field.value === "string" ? field.value : "";
+                    const resolvedQuestion =
+                      question.id === "b5b"
+                        ? { ...question, options: getB5bOptions(watchedValues).map((o) => ({ ...o })) }
+                        : question.id === "b7"
+                          ? {
+                              ...question,
+                              options: getB7Options(resolvePrimaryMethodId(watchedValues)).map(
+                                (o) => ({ ...o }),
+                              ),
+                              prompt: formatCabinetBleedInterpolation(
+                                question.prompt,
+                                watchedValues,
+                                cabinetAudience,
+                              ),
+                            }
+                          : question.id === "b8"
+                            ? {
+                                ...question,
+                                prompt: formatCabinetBleedInterpolation(
+                                  question.prompt,
+                                  watchedValues,
+                                  cabinetAudience,
+                                ),
+                              }
+                            : question;
+
+                    return (
+                      <FormItem>
+                        <SalesSingleChoiceField
+                          question={resolvedQuestion}
+                          value={singleValue}
+                          onChange={field.onChange}
+                        />
+                        {question.coachCue &&
+                        singleValue &&
+                        (!question.showCoachCueWhen ||
+                          question.showCoachCueWhen.includes(singleValue)) ? (
+                          <SalesCoachCue cue={question.coachCue} />
+                        ) : null}
+                        {isLinearBleedAudience &&
+                        section.id === "objectifs" &&
+                        question.id === "o3" &&
+                        singleValue ? (
+                          <FormField
+                            control={form.control}
+                            name="o3Duration"
+                            render={({ field }) => (
+                              <FormItem>
+                                <SalesO3DurationChipsField
+                                  value={field.value as O3DurationId | undefined}
+                                  onChange={field.onChange}
+                                />
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ) : null}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               ) : null}
 
               {question.type === "multi" ? (
                 <FormField
                   control={form.control}
-                  name={
-                    question.id as "q1" | "o1" | "o4" | "o5" | "q8" | "q11" | "q19" | "q21"
-                  }
+                  name={question.id as keyof SalesQualificationValues}
                   render={({ field }) => (
                     <FormItem>
                       <SalesMultiChoiceField
                         question={question}
-                        value={field.value}
+                        value={Array.isArray(field.value) ? field.value : []}
                         onChange={field.onChange}
                         otherValue={
                           question.hasOtherInput ? form.watch("q2Other") : undefined
@@ -173,6 +246,20 @@ export function SalesQualificationForm({
                             : undefined
                         }
                       />
+                      {question.id === "q21" &&
+                      question.coachCue &&
+                      Array.isArray(field.value) &&
+                      field.value.length > 0 &&
+                      question.type === "multi" ? (
+                        <SalesCoachCue
+                          cue={resolveQ21CoachCue(
+                            question.coachCue,
+                            field.value,
+                            question.options,
+                            bleedTrack,
+                          )}
+                        />
+                      ) : null}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -182,17 +269,35 @@ export function SalesQualificationForm({
               {question.type === "slider" ? (
                 <FormField
                   control={form.control}
-                  name={question.id as "q3" | "q6" | "q7" | "q13" | "q16" | "q20"}
-                  render={({ field }) => (
-                    <FormItem>
-                      <SalesSliderField
-                        question={question}
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  name={question.id as keyof SalesQualificationValues}
+                  render={({ field }) => {
+                    const numericValue = typeof field.value === "number" ? field.value : null;
+                    const role = question.id === "b4" ? "target" : "current";
+                    const sliderConfig =
+                      question.id === "b2" || question.id === "b4"
+                        ? getCabinetSliderConfig(watchedValues.b1, role, cabinetAudience)
+                        : undefined;
+                    const alertMessage =
+                      question.id === "b4" &&
+                      typeof watchedValues.b2 === "number" &&
+                      typeof numericValue === "number" &&
+                      numericValue <= watchedValues.b2
+                        ? "Objectif ≤ actuel — vérifiez la cible H."
+                        : undefined;
+
+                    return (
+                      <FormItem>
+                        <SalesSliderField
+                          question={question}
+                          value={numericValue}
+                          onChange={field.onChange}
+                          sliderConfig={sliderConfig}
+                          alertMessage={alertMessage}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               ) : null}
 
@@ -204,7 +309,7 @@ export function SalesQualificationForm({
                     <FormItem>
                       <SalesSliderMatrixField
                         question={question}
-                        value={field.value}
+                        value={field.value as Q14Matrix}
                         onChange={field.onChange}
                       />
                       <FormMessage />
@@ -221,7 +326,55 @@ export function SalesQualificationForm({
                 />
               ) : null}
 
-              {showCoachScripts ? (
+              {question.type === "acknowledgment" ? (
+                <FormField
+                  control={form.control}
+                  name="b6Acknowledged"
+                  render={({ field }) => (
+                    <FormItem>
+                      <SalesAcknowledgmentField
+                        question={question}
+                        trapText={formatCabinetBleedInterpolation(
+                          question.trapTemplate,
+                          watchedValues,
+                          cabinetAudience,
+                        )}
+                        acknowledged={field.value ?? false}
+                        onAcknowledgedChange={field.onChange}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+
+              {question.type === "diagnostic_card" ? (
+                <FormField
+                  control={form.control}
+                  name="bleedDiagnosticAccepted"
+                  render={({ field }) => (
+                    <FormItem>
+                      <SalesDiagnosticCardField
+                        question={question}
+                        mirrorText={
+                          showCoachScripts
+                            ? formatCabinetBleedInterpolation(
+                                question.mirrorTemplate,
+                                watchedValues,
+                                cabinetAudience,
+                              )
+                            : interpolateBleed(question.mirrorTemplate, bleedTrack)
+                        }
+                        accepted={field.value ?? false}
+                        onAcceptedChange={field.onChange}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+
+              {showCoachScripts && section.id !== "objectifs" ? (
                 <QuestionCoachCallout
                   audience={audience}
                   question={question}
@@ -229,10 +382,11 @@ export function SalesQualificationForm({
                   clientSegment={clientSegment}
                   values={watchedValues}
                   annualHonorairesMin={annualHonorairesMin}
+                  bleedCause={bleedTrack.cause}
                 />
               ) : null}
 
-              {showCoachScripts && question.id === "o3" && requiresO3FollowUp(watchedValues.o3) ? (
+              {showCoachScripts && section.id === "objectifs" && question.id === "o3" && requiresO3FollowUp(watchedValues.o3) ? (
                 <FormField
                   control={form.control}
                   name="o3FollowUp"
@@ -263,6 +417,20 @@ export function SalesQualificationForm({
   );
 }
 
+function isQuestionVisible(
+  question: SalesQuestion,
+  values: SalesQualificationValues,
+  isCabinet: boolean,
+): boolean {
+  if (!isCabinet) {
+    return true;
+  }
+  if (!question.id.startsWith("b") && question.id !== "diagnostic_card") {
+    return true;
+  }
+  return isBleedQuestionVisible(question.id, values);
+}
+
 function QuestionCoachCallout({
   audience,
   question,
@@ -270,6 +438,7 @@ function QuestionCoachCallout({
   clientSegment,
   values,
   annualHonorairesMin,
+  bleedCause,
 }: {
   audience: Audience;
   question: SalesQuestion;
@@ -277,6 +446,7 @@ function QuestionCoachCallout({
   clientSegment: ReturnType<typeof resolveClientSegment>;
   values: SalesQualificationValues;
   annualHonorairesMin?: number;
+  bleedCause?: string;
 }) {
   const coachQuestionIds = new Set(["o3", "o4", "o6", "q21", "q13"]);
   if (!coachQuestionIds.has(question.id)) {
@@ -298,6 +468,7 @@ function QuestionCoachCallout({
       sliderValue: question.id === "q13" ? values.q13 : undefined,
       o3Value: values.o3,
       o6Value: values.o6,
+      bleedCause,
     },
     annualHonorairesMin,
   );
@@ -315,6 +486,38 @@ function applyQuestionSegmentCopy(question: SalesQuestion, clientSegment: Return
   }
 
   return interpolateQuestionCopy(question, clientSegment);
+}
+
+const BLEED_EXCLUDED_QUESTION_IDS = new Set(["q1", "q2"]);
+
+function applyBleedQuestionCopy(
+  question: SalesQuestion,
+  bleedTrack: ReturnType<typeof buildBleedTrack>,
+): SalesQuestion {
+  if (BLEED_EXCLUDED_QUESTION_IDS.has(question.id)) {
+    return question;
+  }
+
+  const resolve = (template?: string) =>
+    template ? interpolateBleed(template, bleedTrack) : undefined;
+
+  return {
+    ...question,
+    prompt: resolve(question.prompt) ?? question.prompt,
+    description: resolve(question.description) ?? question.description,
+    coachCue: resolve(question.coachCue) ?? question.coachCue,
+    bleedBenefit: resolve(question.bleedBenefit) ?? question.bleedBenefit,
+  };
+}
+
+function resolveQ21CoachCue(
+  template: string,
+  selectedIds: string[],
+  options: Array<{ id: string; label: string }>,
+  bleedTrack: ReturnType<typeof buildBleedTrack>,
+): string {
+  const atout = options.find((option) => option.id === selectedIds[0])?.label ?? "";
+  return interpolateBleed(template.replace(/\{atout\}/g, atout), bleedTrack);
 }
 
 function ConditionalSliderQuestionField({

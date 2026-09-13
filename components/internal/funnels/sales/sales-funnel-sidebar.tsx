@@ -11,7 +11,6 @@ import {
   ClipboardCheck,
   ClipboardList,
   Handshake,
-  History,
   LogOut,
   Settings,
   Target,
@@ -59,7 +58,6 @@ const SECTION_ICONS: Record<SalesFunnelSectionId, LucideIcon> = {
   objectifs: Target,
   "presentation-societe": Building2,
   capacite: Briefcase,
-  historique: History,
   standards: ClipboardList,
   conditions: Handshake,
 };
@@ -92,6 +90,7 @@ type SalesFunnelSidebarProps = {
   developerModeEnabled: boolean;
   clientSegment?: ClientSegment;
   meetingInfo?: MeetingInfo | null;
+  bleedChips?: string[];
   onEnterClosing: () => void;
   onBackToQualification: () => void;
   onSectionChange: (sectionId: SalesFunnelSectionId | SalesClosingSectionId) => void;
@@ -114,6 +113,7 @@ export function SalesFunnelSidebar({
   developerModeEnabled,
   clientSegment,
   meetingInfo,
+  bleedChips = [],
   onEnterClosing,
   onBackToQualification,
   onSectionChange,
@@ -198,6 +198,16 @@ export function SalesFunnelSidebar({
       <SidebarContent className="overflow-auto">
         {/* Separator between header and nav */}
         <Separator className="mb-2" />
+
+        {bleedChips.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5 px-3 pb-2">
+            {bleedChips.map((chip) => (
+              <Badge key={chip} variant="outline" className="max-w-full truncate font-normal">
+                {chip}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
 
         <div
           key={contentPhase}
