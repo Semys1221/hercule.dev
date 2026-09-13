@@ -113,16 +113,13 @@ def onboarding_status(preset_id: str) -> OnboardingStatus:
     ids = _read_config_ids(preset_id)
     list_id = ids["list_id"]
     campaign_id = ids["campaign_id"]
-    subsequence_id = ids["subsequence_id"]
 
     list_linked = bool(list_id and UUID_RE.fullmatch(list_id))
     campaign_linked = bool(campaign_id and UUID_RE.fullmatch(campaign_id))
 
     state = load_onboarding_state(preset_id)
     campaign_emails_saved = bool(state.get("campaign_emails_saved"))
-    subsequence_saved = bool(state.get("subsequence_saved")) and bool(
-        subsequence_id and UUID_RE.fullmatch(subsequence_id)
-    )
+    subsequence_saved = bool(state.get("subsequence_saved")) and campaign_linked
 
     buyer_path = _REPLY_PROMPTS / f"{preset_id}_buyer.md"
     buyer_prompt_saved = buyer_path.is_file() and bool(buyer_path.read_text(encoding="utf-8").strip())

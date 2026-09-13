@@ -431,7 +431,11 @@ class InstantlyClient:
             body={
                 "campaign_id": campaign_id.strip(),
                 "leads": leads,
-                "skip_if_in_workspace": True,
+                # Leads cleaned from an Instantly list still exist in that list;
+                # workspace-level skip would block the entire push to campaign.
+                "skip_if_in_workspace": False,
+                "skip_if_in_campaign": True,
+                "skip_if_in_list": False,
             },
         )
 
@@ -1169,7 +1173,9 @@ def push_leads_to_campaign(
             body={
                 "campaign_id": campaign_id.strip(),
                 "leads": batch_leads,
-                "skip_if_in_workspace": True,
+                "skip_if_in_workspace": False,
+                "skip_if_in_campaign": True,
+                "skip_if_in_list": False,
             },
         )
         stats = _parse_add_response(response, batch_size)

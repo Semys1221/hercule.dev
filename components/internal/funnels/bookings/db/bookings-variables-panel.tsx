@@ -219,7 +219,7 @@ export function BookingsVariablesPanel({
       {!campaignLinked ? (
         <InternalStatusAlert
           variant="info"
-          message="Liez une campagne Instantly ci-dessous pour activer Vérifier et Provisionner."
+          message="Liez une campagne Instantly via Connexions pour activer Vérifier et Provisionner."
         />
       ) : null}
 

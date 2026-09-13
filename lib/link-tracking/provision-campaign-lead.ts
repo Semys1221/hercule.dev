@@ -8,6 +8,7 @@ import {
 } from "@/lib/link-tracking/supabase";
 import { allocateSlugs, loadSlugSet } from "@/lib/link-tracking/slug";
 import { ALL_LEAD_CATEGORIES, isLeadCategory, type LeadCategory, type LinkTrackingLead } from "@/lib/link-tracking/types";
+import { readReservationLink } from "@/lib/instantly-bypass/reservation-links";
 import {
   buildCifLeadUrls,
   buildComptableLeadUrls,
@@ -200,11 +201,13 @@ export async function ensureCampaignLeadLinks(params: {
     };
   }
 
-  const reservationEntrepriseLink =
-    customVariables.reservation_entreprise_link?.trim() ?? "";
-  if (!reservationEntrepriseLink) {
+  const reservationLink = readReservationLink(
+    { payload: customVariables },
+    customVariables,
+  );
+  if (!reservationLink) {
     return { ok: false, reason: "reservation_link_empty_after_patch" };
   }
 
-  return { ok: true, reservationEntrepriseLink, created };
+  return { ok: true, reservationEntrepriseLink: reservationLink, created };
 }

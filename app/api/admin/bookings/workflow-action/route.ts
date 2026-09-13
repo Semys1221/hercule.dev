@@ -18,7 +18,7 @@ const bodySchema = z.object({
   leadId: z.string().uuid().nullable().optional(),
   email: z.string().email(),
   startTime: z.string().min(1).nullable().optional(),
-  status: z.enum(["no_show", "not_paid"]),
+  status: z.enum(["no_show", "not_paid", "lost"]),
   /** When false, only updates status — does not insert close-indecis / no-show jobs. */
   startSequence: z.boolean().optional().default(true),
 });
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     }
 
     const sequence =
-      parsed.data.startSequence
+      parsed.data.status !== "lost" && parsed.data.startSequence
         ? await startSequenceForStatus(
             salesCall,
             resolved.lead.id,

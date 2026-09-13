@@ -39,14 +39,19 @@ Requires in repo root `.env`:
 |----------|---------|
 | `MYEMAILVERIFIER_API_KEY` | Bulk email verification |
 | `INSTANTLY_API_KEY` | List fetch, purge, campaign push |
+| `CRON_SECRET` or `LINK_TRACKING_WEBHOOK_SECRET` | Link provisioning before campaign push |
+| `CRM_BACKEND_URL` | Hercule API base (default `https://www.hercule.dev`) |
+| `CLEAN_SKIP_PROVISION` | Set `1` to skip link provisioning |
 
 ## Pipeline
 
 1. Select source Instantly list
 2. Select target campaign
 3. Choose run mode (dry / test-50 / full / custom)
-4. Execute: quick pre-filter → MyEmailVerifier → optional list purge → push valid leads
+4. Execute: quick pre-filter → MyEmailVerifier → provision tracking URLs → optional list purge → push valid leads
 5. Review results; workspace duplicate check always on during push
+
+Niche for link provisioning is auto-resolved from the destination campaign ID.
 
 ## Checkpoint recovery
 

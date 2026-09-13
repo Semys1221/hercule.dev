@@ -5,6 +5,8 @@ import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { sequenceFileRelativePath } from "@/lib/legal-documentation/sequences";
+
 import { SequenceDropdown, type SequenceEditorActions } from "./sequence-dropdown";
 import { SequenceHistoryTab } from "./sequence-history-tab";
 import { SequenceJobLogsSheet } from "./sequence-job-logs-sheet";
@@ -15,6 +17,7 @@ type SequenceWorkspaceProps = {
   title: string;
   description?: string;
   adapter: SequenceEditorAdapter;
+  campaignId?: string | null;
   defaultTestRecipientEmail?: string;
 };
 
@@ -22,6 +25,7 @@ export function SequenceWorkspace({
   title,
   description,
   adapter,
+  campaignId,
   defaultTestRecipientEmail,
 }: SequenceWorkspaceProps) {
   const [editorActions, setEditorActions] = useState<SequenceEditorActions | null>(null);
@@ -52,6 +56,10 @@ export function SequenceWorkspace({
         {description ? (
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         ) : null}
+        <p className="mt-2 text-xs text-muted-foreground">
+          Fichier git :{" "}
+          <code>{sequenceFileRelativePath(adapter.niche, adapter.slug)}</code>
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -110,6 +118,8 @@ export function SequenceWorkspace({
         onOpenChange={setTestOpen}
         slug={adapter.slug}
         niche={adapter.niche}
+        provider={adapter.provider}
+        campaignId={campaignId}
         steps={steps}
         defaultRecipientEmail={testRecipient}
         onSent={() => setHistoryRefresh((value) => value + 1)}

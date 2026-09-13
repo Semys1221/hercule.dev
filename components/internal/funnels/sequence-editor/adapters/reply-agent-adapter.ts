@@ -57,7 +57,11 @@ export function createReplyAgentAdapter(
       const response = await fetch(`/api/admin/ai-reply-agent/${campaignId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt_snapshot: prompt }),
+        body: JSON.stringify({
+          prompt_snapshot: prompt,
+          sequence_slug: slug,
+          sequence_niche: niche,
+        }),
       });
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {

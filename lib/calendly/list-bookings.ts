@@ -15,11 +15,14 @@ import {
   findLeadsBySlugs,
   normalizeEmail,
 } from "@/lib/link-tracking/supabase";
+import { finalizeBookingRows } from "@/lib/admin/bookings/booking-row-filters";
 import { resolveCalendlyEventTypeUri } from "@/lib/admin/niches/outreach-config";
 import type { LeadCategory, LeadLookup } from "@/lib/link-tracking/types";
 
 const CALENDLY_API = "https://api.calendly.com";
 const INVITEE_FETCH_CONCURRENCY = 5;
+
+export type CalendlyBookingLifecycleStatus = "active" | "canceled";
 
 export type CalendlyBookingRow = {
   email: string;
@@ -29,6 +32,8 @@ export type CalendlyBookingRow = {
   start_time: string;
   invitee_uri: string;
   event_uri: string;
+  event_status: CalendlyBookingLifecycleStatus;
+  invitee_status: CalendlyBookingLifecycleStatus;
   questions: Record<string, string>;
   slug: string | null;
   lead_id: string | null;
@@ -38,6 +43,18 @@ export type CalendlyBookingRow = {
   calendly_reschedule_url: string | null;
   calendly_cancel_url: string | null;
 };
+
+export function isCalendlyBookingCanceled(
+  booking: Pick<CalendlyBookingRow, "event_status" | "invitee_status">,
+): boolean {
+  return booking.event_status === "canceled" || booking.invitee_status === "canceled";
+}
+
+function lifecycleStatusFromRecord(
+  value: unknown,
+): CalendlyBookingLifecycleStatus {
+  return String(value ?? "active").toLowerCase() === "canceled" ? "canceled" : "active";
+}
 
 type CalendlyListPayload = {
   collection?: Record<string, unknown>[];
@@ -353,10 +370,11 @@ export function buildScheduledEventsListParams(options: {
   minTime: string;
   maxTime: string;
   eventTypeUri?: string | null;
+  status?: CalendlyBookingLifecycleStatus;
 }): Record<string, string> {
   const params: Record<string, string> = {
     user: options.userUri,
-    status: "active",
+    status: options.status ?? "active",
     min_start_time: options.minTime,
     max_start_time: options.maxTime,
     count: "100",
@@ -365,6 +383,33 @@ export function buildScheduledEventsListParams(options: {
     params.event_type = options.eventTypeUri;
   }
   return params;
+}
+
+/** @internal Exported for unit tests. */
+export function mergeScheduledEventsByUri(
+  events: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  const byUri = new Map<string, Record<string, unknown>>();
+  for (const event of events) {
+    const uri = String(event.uri ?? "").trim();
+    if (uri) {
+      byUri.set(uri, event);
+    }
+  }
+  return [...byUri.values()];
+}
+
+async function listScheduledEventsInWindow(
+  options: Parameters<typeof buildScheduledEventsListParams>[0],
+): Promise<Record<string, unknown>[]> {
+  const [activeEvents, canceledEvents] = await Promise.all([
+    paginate("/scheduled_events", buildScheduledEventsListParams({ ...options, status: "active" })),
+    paginate(
+      "/scheduled_events",
+      buildScheduledEventsListParams({ ...options, status: "canceled" }),
+    ),
+  ]);
+  return mergeScheduledEventsByUri([...activeEvents, ...canceledEvents]);
 }
 
 export async function listUpcomingBookings(options: {
@@ -384,20 +429,38 @@ export async function listUpcomingBookings(options: {
   const minTime = new Date(now.getTime() - daysBehind * 24 * 60 * 60 * 1000);
   const maxTime = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
 
-  const listParams = buildScheduledEventsListParams({
+  const resolvedEventTypeUri = options.niche
+    ? await resolveCalendlyEventTypeUri(options.niche)
+    : null;
+
+  const eventListOptions = {
     userUri,
     minTime: minTime.toISOString(),
     maxTime: maxTime.toISOString(),
-    eventTypeUri: options.niche
-      ? await resolveCalendlyEventTypeUri(options.niche)
-      : undefined,
-  });
+    eventTypeUri: resolvedEventTypeUri,
+  };
+  const listParams = buildScheduledEventsListParams(eventListOptions);
 
   if (bookingsPipelineBlockedByMissingEventType(options.niche, listParams.event_type)) {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
+      body: JSON.stringify({
+        sessionId: "d17331",
+        runId: "pre-fix",
+        hypothesisId: "H1",
+        location: "list-bookings.ts:blocked-missing-event-type",
+        message: "Bookings pipeline blocked — no event type URI",
+        data: { niche: options.niche ?? null },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     return [];
   }
 
-  const events = await paginate("/scheduled_events", listParams);
+  const events = await listScheduledEventsInWindow(eventListOptions);
 
   const parsedInvitees = (
     await mapWithConcurrency(events, INVITEE_FETCH_CONCURRENCY, (event) =>
@@ -420,24 +483,21 @@ export async function listUpcomingBookings(options: {
     });
   }
 
-  const lookupScope = options.niche ?? options.category;
-
   // #region agent log
   fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
     body: JSON.stringify({
-      sessionId: "081f8d",
+      sessionId: "d17331",
       runId: "pre-fix",
-      hypothesisId: "H5",
-      location: "list-bookings.ts:listUpcomingBookings",
-      message: "Bookings pipeline niche/category",
+      hypothesisId: "H1",
+      location: "list-bookings.ts:listUpcomingBookings:pre-filter",
+      message: "Calendly events fetched before row build",
       data: {
         niche: options.niche ?? null,
-        category: options.category ?? null,
-        lookupScope: lookupScope ?? null,
-        candidateCount: candidates.length,
+        resolvedEventTypeUri,
         eventCount: events.length,
+        candidateCount: candidates.length,
       },
       timestamp: Date.now(),
     }),
@@ -446,11 +506,22 @@ export async function listUpcomingBookings(options: {
 
   const lookupByKey = await batchResolveLeadLookups(candidates);
   const rows: CalendlyBookingRow[] = [];
+  const seenInviteeUris = new Set<string>();
+
+  let skippedWrongEventType = 0;
 
   for (const { event, eventUri, eventStart, invitee } of parsedInvitees) {
     const email = normalizeEmail(String(invitee.email ?? ""));
     if (!email) {
       continue;
+    }
+
+    if (resolvedEventTypeUri) {
+      const rowEventTypeUri = String(event.event_type ?? "").trim();
+      if (rowEventTypeUri !== resolvedEventTypeUri) {
+        skippedWrongEventType += 1;
+        continue;
+      }
     }
 
     const rawQA = Array.isArray(invitee.questions_and_answers)
@@ -460,6 +531,12 @@ export async function listUpcomingBookings(options: {
     const tracking = (invitee.tracking ?? {}) as Record<string, string>;
     const utmContent = String(tracking.utm_content ?? "").trim();
     const inviteeUri = String(invitee.uri ?? "").trim();
+    if (inviteeUri) {
+      if (seenInviteeUris.has(inviteeUri)) {
+        continue;
+      }
+      seenInviteeUris.add(inviteeUri);
+    }
     const lookupKey = inviteeUri || email;
     const lookup = lookupByKey.get(lookupKey) ?? null;
     const bookingCategory = resolveBookingCategory(utmContent, lookup);
@@ -480,6 +557,8 @@ export async function listUpcomingBookings(options: {
       start_time: eventStart,
       invitee_uri: inviteeUri,
       event_uri: eventUri,
+      event_status: lifecycleStatusFromRecord(event.status),
+      invitee_status: lifecycleStatusFromRecord(invitee.status),
       questions,
       slug,
       lead_id: lookup?.lead.id ?? null,
@@ -489,6 +568,30 @@ export async function listUpcomingBookings(options: {
     });
   }
 
-  rows.sort((a, b) => a.start_time.localeCompare(b.start_time));
-  return rows;
+  const finalizedRows = finalizeBookingRows(rows);
+  finalizedRows.sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
+    body: JSON.stringify({
+      sessionId: "d17331",
+      runId: "pre-fix",
+      hypothesisId: "H1",
+      location: "list-bookings.ts:listUpcomingBookings:post-filter",
+      message: "Bookings rows after event-type filter",
+      data: {
+        niche: options.niche ?? null,
+        resolvedEventTypeUri,
+        rowCount: finalizedRows.length,
+        rawRowCount: rows.length,
+        skippedWrongEventType,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  return finalizedRows;
 }

@@ -354,7 +354,7 @@ export function StepComponentsPanel({ scope, funnel, step, onSaved }: StepCompon
                   </Field>
                 </RadioGroup>
                 <FieldDescription>
-                  Les ajouts permanents mettent à jour <code>content/faq/{scope.audience}.json</code>
+                  Les ajouts permanents mettent à jour <code>doc/legal-documentation/{scope.audience}/faq.json</code>
                   .
                 </FieldDescription>
               </Field>

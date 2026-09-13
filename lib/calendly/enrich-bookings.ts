@@ -345,18 +345,15 @@ async function resolveBookingLeadLookup(
   return null;
 }
 
-const UNTRACKED_AGENCE_WARNING =
-  "Réservation sans lead CRM — séquence email non démarrée. Utiliser bootstrap-untracked-booking.";
+const UNTRACKED_BOOKING_WARNING =
+  "Réservation sans lead CRM — utiliser Fix all pour aligner sans envoyer d'email.";
 
 async function enrichSingleBooking(
   booking: CalendlyBookingRow,
 ): Promise<EnrichedCalendlyBooking> {
   const client = createLinkTrackingClient();
   let lookup = await resolveBookingLeadLookup(client, booking);
-  const warning =
-    !lookup && booking.booking_category === "agence"
-      ? UNTRACKED_AGENCE_WARNING
-      : null;
+  const warning = !lookup ? UNTRACKED_BOOKING_WARNING : null;
 
   const resolvedSlug =
     lookup?.lead.slug?.trim() || booking.slug?.trim() || null;

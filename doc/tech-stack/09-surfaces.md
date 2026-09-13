@@ -22,7 +22,7 @@ UI : **un** langage shadcn, **y compris marketing** (UI-01 C).
 | Surface | URL | Auth | Notes |
 |---------|-----|------|-------|
 | Marketing agence / entreprise | `/` `/entreprise` | public | |
-| FAQ / CGV / légal | `/faq` `/cvg` … | public | CGV charge markdown |
+| FAQ / CGV / légal | `/faq` `/cvg` … | public | SoT : `doc/legal-documentation/{niche}/` |
 | Réservation vente | `reservation.html/{slug}` etc. | slug | **Famille Calendly vente** |
 | Internal | `/internal` | none + noindex | Builder funnels, wiki, registry |
 

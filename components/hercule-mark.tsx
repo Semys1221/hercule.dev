@@ -30,7 +30,7 @@ export function HerculeMark({
       <path
         d={HERCULE_MARK_RIGHT}
         fill="currentColor"
-        className={variant === "dual" ? "text-zinc-400" : undefined}
+        className={variant === "dual" ? "text-muted-foreground" : undefined}
       />
     </svg>
   )

@@ -201,6 +201,31 @@ export function sequenceIsLive(lines: ReminderLine[]): boolean {
   );
 }
 
+export function reminderSummary(lines: ReminderLine[]): string {
+  if (lines.length === 0) {
+    return "Aucune relance configurée";
+  }
+
+  const sent = lines.filter((line) => line.status === "sent").length;
+  const active = lines.filter(
+    (line) => line.status === "live" || line.status === "planned",
+  ).length;
+  const failed = lines.filter((line) => line.status === "failed").length;
+  const parts: string[] = [];
+
+  if (sent > 0) {
+    parts.push(`${sent}/${lines.length} envoyée${sent > 1 ? "s" : ""}`);
+  }
+  if (active > 0) {
+    parts.push(`${active} en cours`);
+  }
+  if (failed > 0) {
+    parts.push(`${failed} en échec`);
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : "Séquence inactive";
+}
+
 export function reminderStatusLabel(status: ReminderLineStatus): string {
   switch (status) {
     case "live":

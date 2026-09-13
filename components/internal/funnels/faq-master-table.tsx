@@ -288,7 +288,7 @@ export function FaqMasterTable({ audience }: FaqMasterTableProps) {
         footer={
           document ? (
             <p className="text-sm text-muted-foreground">
-              Source : <code>content/faq/{audience}.json</code>
+              Source : <code>doc/legal-documentation/{audience}/faq.json</code>
               {" · "}
               Dernière mise à jour : {new Date(document.updatedAt).toLocaleString("fr-FR")}
             </p>

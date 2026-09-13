@@ -22,30 +22,6 @@ async function main(): Promise<void> {
   const category = "cif" as const;
   const results: Record<string, unknown> = {};
 
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "8b6caf",
-    },
-    body: JSON.stringify({
-      sessionId: "8b6caf",
-      location: "scripts/crm/provisionCifLinks.ts:main",
-      message: "CIF provision target",
-      data: {
-        campaignId,
-        listOnly,
-        resyncAll,
-        listId: listOnly ? CIF_LIST_ID : null,
-      },
-      timestamp: Date.now(),
-      hypothesisId: "campaign-mismatch",
-      runId: "post-fix",
-    }),
-  }).catch(() => {});
-  // #endregion
-
   if (listOnly) {
     results.list = await provisionLinksFromList({
       listId: CIF_LIST_ID,

@@ -94,11 +94,6 @@ def provision_instantly_cmd(
         "--dry-run",
         help="Show what would be created without calling Instantly",
     ),
-    with_subsequence: bool = typer.Option(
-        False,
-        "--with-subsequence",
-        help="Also create interested bypass subsequence + onboard webhook",
-    ),
 ) -> None:
     """Create or reuse Instantly list + draft campaign for niche presets."""
     import os
@@ -131,7 +126,6 @@ def provision_instantly_cmd(
                 pid,
                 api_key=api_key,
                 dry_run=dry_run,
-                with_subsequence=with_subsequence,
             )
         except Exception as exc:
             failed = True

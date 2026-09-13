@@ -1,4 +1,4 @@
-export type WorkflowAction = "no_show" | "not_paid";
+export type WorkflowAction = "no_show" | "not_paid" | "lost";
 
 export function formatWorkflowFeedback(
   status: WorkflowAction,
@@ -8,7 +8,8 @@ export function formatWorkflowFeedback(
     dispatched?: boolean;
   },
 ): string {
-  const label = status === "no_show" ? "No Show" : "Non Payé";
+  const label =
+    status === "no_show" ? "No Show" : status === "not_paid" ? "Non Payé" : "Perdu";
   if (!sequence?.started) {
     const reason = sequence?.reason ?? "erreur inconnue";
     return `Séquence ${label} non démarrée : ${reason}`;

@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 
 import {
   bookingsHref,
+  bookingsSequencesHref,
   breadcrumb,
   clientsHubHref,
   emailsHref,
@@ -33,7 +34,6 @@ assert.deepEqual(normalizePath(["agence", "sales", "unknown", "extra"]), [
 
 assert.equal(isHub(["agence"]), true);
 assert.equal(isHub(["agence", "sales"]), false);
-assert.equal(isHub(["agence", "legal"]), true);
 
 assert.equal(leafKey(["agence", "sales"]), null);
 assert.equal(leafKey(["agence", "sales", "funnel"]), null);
@@ -67,21 +67,19 @@ assert.equal(
 );
 
 assert.equal(clientsHubHref("comptable"), "/internal/funnels/clients/comptable");
-assert.equal(legalHref("agence", "cgv"), "/internal/funnels/legal/agence/cgv");
+assert.equal(legalHref("agence", "cgv"), bookingsSequencesHref("agence"));
 assert.equal(
   emailsHref("entreprise", "meeting-agence"),
-  "/internal/funnels/emails/entreprise/meeting-agence",
+  bookingsSequencesHref("entreprise"),
 );
 
 assert.equal(moduleFromPathname("/internal/funnels/bookings/agence"), "bookings");
-assert.equal(moduleFromPathname("/internal/funnels/legal/comptable/cgv"), "legal");
 assert.equal(moduleFromPathname("/internal/funnels/agence/bookings"), "bookings");
 
 const redirectSources = [
   "/internal/funnels/agence",
   "/internal/funnels/agence/bookings",
   "/internal/funnels/comptable/clients",
-  "/internal/funnels/entreprise/emails",
 ];
 for (const source of redirectSources) {
   assert.ok(nicheFromPathname(source), `nicheFromPathname(${source})`);

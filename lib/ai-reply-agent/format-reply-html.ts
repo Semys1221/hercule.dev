@@ -1,9 +1,14 @@
-const HERCULE_WEBSITE_URL = "https://hercule.dev";
-export const BEATRICE_SIGNATURE = "Béatrice Meyer";
+import {
+  BEATRICE_SIGNATURE,
+  ensureOutreachSignature,
+} from "@/lib/outreach-email/signature";
+
+export { BEATRICE_SIGNATURE, ensureBeatriceSignature } from "@/lib/outreach-email/signature";
 
 const RESERVATION_PATH_RE = /reservation(?:-entreprise)?\.html|\/r\/comptable\//i;
 const URL_RE =
   /https?:\/\/[^\s<>]+|(?:www\.)?hercule\.dev[/\w\-.?=&%]*/gi;
+const HTTPS_ONLY_URL_RE = /https?:\/\/[^\s<>]+/gi;
 
 function escapeHtml(text: string): string {
   return text
@@ -94,20 +99,6 @@ function structureReplyPlaintext(text: string): string {
   return body.trim();
 }
 
-export function ensureBeatriceSignature(text: string): string {
-  let body = text;
-  if (signatureIndex(body) < 0) {
-    body = `${body.replace(/\s+$/, "")}\n\n${BEATRICE_SIGNATURE}`;
-  }
-
-  const idx = signatureIndex(body);
-  const afterSignature = body.slice(idx).toLowerCase();
-  if (!afterSignature.includes("hercule.dev")) {
-    body = `${body.replace(/\s+$/, "")}\n${HERCULE_WEBSITE_URL}`;
-  }
-  return body;
-}
-
 export function ensureCtaPresent(text: string, ctaLink: string): string {
   const link = ctaLink.trim();
   if (!link || text.includes(link) || hasReservationUrl(text)) {
@@ -128,10 +119,13 @@ function anchorForUrl(url: string): string {
   return `<a href="${escapedHref}">${escapeHtml(url)}</a>`;
 }
 
-function plainToLinkedHtml(plain: string): string {
+function linkifyPlainSegment(plain: string, options?: { httpsOnly?: boolean }): string {
   const parts: string[] = [];
   let last = 0;
-  const urlPattern = new RegExp(URL_RE.source, URL_RE.flags);
+  const urlPattern = new RegExp(
+    options?.httpsOnly ? HTTPS_ONLY_URL_RE.source : URL_RE.source,
+    "gi",
+  );
   let match = urlPattern.exec(plain);
   while (match) {
     const start = match.index ?? 0;
@@ -147,6 +141,16 @@ function plainToLinkedHtml(plain: string): string {
     parts.push(escapeHtml(plain.slice(last)));
   }
   return parts.join("");
+}
+
+function plainToLinkedHtml(plain: string): string {
+  const idx = signatureIndex(plain);
+  if (idx < 0) {
+    return linkifyPlainSegment(plain);
+  }
+  const before = linkifyPlainSegment(plain.slice(0, idx));
+  const signatureBlock = linkifyPlainSegment(plain.slice(idx), { httpsOnly: true });
+  return before + signatureBlock;
 }
 
 function paragraphsFromLinkedText(linked: string): string {
@@ -174,7 +178,7 @@ export function formatReplyHtml(
     body = ensureCtaPresent(body, ctaLink);
   }
 
-  body = ensureBeatriceSignature(body);
+  body = ensureOutreachSignature(body);
   body = structureReplyPlaintext(body);
   const linked = plainToLinkedHtml(body);
   const htmlOut = paragraphsFromLinkedText(linked);

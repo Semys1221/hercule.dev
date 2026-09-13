@@ -13,7 +13,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  BOOKINGS_SEQUENCE_TABS,
+  bookingsSequenceTabsForNiche,
   isBookingsSequenceTabLive,
   resolveBookingsSequenceEntry,
   type BookingsSequenceTabDef,
@@ -28,6 +28,7 @@ type OutreachConfigView = {
 
 type BookingsSequencesTabProps = {
   niche: Niche;
+  connectionsRevision?: number;
 };
 
 function SequenceTabEmptyState({ tab }: { tab: BookingsSequenceTabDef }) {
@@ -74,7 +75,7 @@ function SequenceTabPanel({
       <InternalStatusAlert
         variant="info"
         title="Campagne Instantly non liée"
-        message="Liez une campagne dans l'onglet DB avant d'éditer cette séquence."
+        message="Liez une campagne Instantly via Connexions avant d'éditer cette séquence."
       />
     );
   }
@@ -95,11 +96,15 @@ function SequenceTabPanel({
       title={sequence.name}
       description={tab.description ?? sequence.description}
       adapter={adapter}
+      campaignId={campaignId}
     />
   );
 }
 
-export function BookingsSequencesTab({ niche }: BookingsSequencesTabProps) {
+export function BookingsSequencesTab({
+  niche,
+  connectionsRevision = 0,
+}: BookingsSequencesTabProps) {
   const [config, setConfig] = useState<OutreachConfigView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,11 +114,38 @@ export function BookingsSequencesTab({ niche }: BookingsSequencesTabProps) {
     setError(null);
     try {
       const response = await fetch(`/api/admin/niches/${niche}/outreach-config`);
-      const body = (await response.json()) as OutreachConfigView & { error?: string };
+      const body = (await response.json()) as {
+        config?: OutreachConfigView;
+        error?: string;
+      };
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "cf0893",
+        },
+        body: JSON.stringify({
+          sessionId: "cf0893",
+          runId: "post-fix",
+          hypothesisId: "H1",
+          location: "bookings-sequences-tab.tsx:loadConfig",
+          message: "outreach-config response shape",
+          data: {
+            niche,
+            ok: response.ok,
+            nestedCampaignId: body.config?.instantly_campaign_id ?? null,
+            nestedCampaignLinked: body.config?.campaign_linked ?? null,
+            hasConfigKey: Boolean(body.config),
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       if (!response.ok) {
         throw new Error(body.error ?? "Chargement config impossible");
       }
-      setConfig(body);
+      setConfig(body.config ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -123,13 +155,37 @@ export function BookingsSequencesTab({ niche }: BookingsSequencesTabProps) {
 
   useEffect(() => {
     void loadConfig();
-  }, [loadConfig]);
+  }, [loadConfig, connectionsRevision]);
 
   const campaignId = config?.instantly_campaign_id ?? null;
-  const defaultTab = useMemo(
-    () => BOOKINGS_SEQUENCE_TABS.find((tab) => isBookingsSequenceTabLive(tab, niche))?.id ?? "confirm",
-    [niche],
-  );
+  // #region agent log
+  useEffect(() => {
+    if (loading) return;
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "cf0893",
+      },
+      body: JSON.stringify({
+        sessionId: "cf0893",
+        runId: "post-fix",
+        hypothesisId: "H1-H4",
+        location: "bookings-sequences-tab.tsx:campaignId",
+        message: "derived campaignId for sequences tab",
+        data: {
+          niche,
+          campaignId,
+          configCampaignLinked: config?.campaign_linked ?? null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [loading, niche, campaignId, config]);
+  // #endregion
+
+  const liveTabs = useMemo(() => bookingsSequenceTabsForNiche(niche), [niche]);
+  const defaultTab = liveTabs[0]?.id ?? "confirm";
 
   if (loading) {
     return <Skeleton className="h-64 w-full" />;
@@ -141,14 +197,14 @@ export function BookingsSequencesTab({ niche }: BookingsSequencesTabProps) {
 
       <Tabs defaultValue={defaultTab} className="flex flex-col gap-4">
         <TabsList className="flex h-auto flex-wrap">
-          {BOOKINGS_SEQUENCE_TABS.map((tab) => (
+          {liveTabs.map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id}>
               {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {BOOKINGS_SEQUENCE_TABS.map((tab) => (
+        {liveTabs.map((tab) => (
           <TabsContent key={tab.id} value={tab.id} className="mt-0">
             <SequenceTabPanel tab={tab} niche={niche} campaignId={campaignId} />
           </TabsContent>

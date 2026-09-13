@@ -51,8 +51,7 @@ Référence archivée : `archive/2026-09-pre-architecture/documentations_2/` (da
 | funnel-editor | component | sales_funnel | `funnel-editor.tsx` |
 | funnels-api-crud | api_route | sales_funnel | `/api/admin/funnels/*` |
 | faq-editor | component | sales_funnel | `faq-editor.tsx` |
-| pricing-editor | component | sales_funnel | `pricing-editor.tsx` |
-| legal-doc | component | sales_funnel | `legal-doc.tsx` |
+| bookings-sequences-tab | component | communication | `bookings-sequences-tab.tsx` (séquences + mirror `doc/legal-documentation/`) |
 | mockup-editor | component | marketing | `mockup-editor.tsx` |
 | admin-demandes-api | api_route | marketing | `/api/admin/demandes` |
 | agence-carousel | component | marketing | `components/agence/bande-projets.tsx` |
@@ -84,7 +83,6 @@ Référence archivée : `archive/2026-09-pre-architecture/documentations_2/` (da
 | streamlit-stats | component | sales_funnel | `app/streamlit_stats/app.py` |
 | dashboard-onboarding-form | component | dashboard_client | `onboarding-form-modal.tsx` |
 | dashboard-kpis | component | dashboard_internal | `components/internal/funnels/dashboard/dashboard-state-table.tsx` (archived) |
-| modalites-campaign-page | component | dashboard_internal | `/internal/modalites` |
 | deliverability-panel | component | dashboard_internal | `/internal/deliverability` |
 | deliverability-api | api_route | dashboard_internal | `/api/admin/deliverability` |
 

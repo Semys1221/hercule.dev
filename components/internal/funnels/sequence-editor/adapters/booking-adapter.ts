@@ -75,7 +75,12 @@ export function createBookingAdapter(options: BookingAdapterOptions): SequenceEd
       const response = await fetch(`/api/admin/booking-templates/${category}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templates }),
+        body: JSON.stringify({
+          templates,
+          sequence_slug: slug,
+          sequence_niche: niche,
+          sequence_step_meta: stepMeta,
+        }),
       });
       const body = (await response.json()) as { error?: string };
       if (!response.ok) {

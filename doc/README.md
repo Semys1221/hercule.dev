@@ -39,6 +39,8 @@ Ce fichier reste la **source de vérité** pour décisions métier, machines d'�
 
 Compléments selon l’étape : composants, orchestrateurs, API, surfaces, emails, intégrations, sécurité, CGV, capacity, constantes.
 
+**Copy éditable (CGV, pricing, FAQ, séquences)** : [`legal-documentation/README.md`](./legal-documentation/README.md) — une arborescence par niche, plus `_shared/` pour mentions et confidentialité.
+
 ---
 
 ## Ce dossier

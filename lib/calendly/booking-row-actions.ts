@@ -1,15 +1,16 @@
 import type { SalesCallStatus } from "@/lib/sales-calls/types";
 
-export type BookingWorkflowAction = "no_show" | "not_paid";
+export type BookingWorkflowAction = "no_show" | "not_paid" | "lost";
 
 export type BookingRowActionState = {
-  badge: "PAID" | "NO SHOW" | "NON PAYÉ" | null;
+  badge: "PAID" | "NO SHOW" | "NON PAYÉ" | "PERDU" | null;
   isPaid: boolean;
   isNoShow: boolean;
   canToggleNoShow: boolean;
   showNoShow: boolean;
   showNotPaid: boolean;
-  showNotPresent: boolean;
+  showLost: boolean;
+  showUnqualified: boolean;
   showResetNoShow: boolean;
 };
 
@@ -24,7 +25,21 @@ export function bookingRowActionState(
       canToggleNoShow: false,
       showNoShow: false,
       showNotPaid: false,
-      showNotPresent: false,
+      showLost: false,
+      showUnqualified: false,
+      showResetNoShow: false,
+    };
+  }
+  if (status === "lost") {
+    return {
+      badge: "PERDU",
+      isPaid: false,
+      isNoShow: false,
+      canToggleNoShow: false,
+      showNoShow: false,
+      showNotPaid: false,
+      showLost: false,
+      showUnqualified: false,
       showResetNoShow: false,
     };
   }
@@ -36,7 +51,8 @@ export function bookingRowActionState(
       canToggleNoShow: true,
       showNoShow: false,
       showNotPaid: false,
-      showNotPresent: false,
+      showLost: false,
+      showUnqualified: false,
       showResetNoShow: true,
     };
   }
@@ -48,7 +64,8 @@ export function bookingRowActionState(
       canToggleNoShow: true,
       showNoShow: false,
       showNotPaid: false,
-      showNotPresent: false,
+      showLost: false,
+      showUnqualified: false,
       showResetNoShow: false,
     };
   }
@@ -59,7 +76,8 @@ export function bookingRowActionState(
     canToggleNoShow: true,
     showNoShow: true,
     showNotPaid: true,
-    showNotPresent: true,
+    showLost: true,
+    showUnqualified: true,
     showResetNoShow: false,
   };
 }

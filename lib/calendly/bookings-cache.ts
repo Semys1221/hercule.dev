@@ -15,4 +15,5 @@ export function revalidateBookingsCache(niche?: string) {
   revalidateTag("bookings:agence", "max");
   revalidateTag("bookings:comptable", "max");
   revalidateTag("bookings:entreprise", "max");
+  revalidateTag("bookings:cif", "max");
 }

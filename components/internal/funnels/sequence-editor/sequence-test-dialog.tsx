@@ -30,6 +30,8 @@ type SequenceTestDialogProps = {
   onOpenChange: (open: boolean) => void;
   slug: string;
   niche: Niche;
+  provider: "resend" | "instantly";
+  campaignId?: string | null;
   steps: SequenceStep[];
   defaultRecipientEmail?: string;
   onSent?: () => void;
@@ -40,6 +42,8 @@ export function SequenceTestDialog({
   onOpenChange,
   slug,
   niche,
+  provider,
+  campaignId,
   steps,
   defaultRecipientEmail,
   onSent,
@@ -75,13 +79,15 @@ export function SequenceTestDialog({
           recipientEmail,
           subject: selectedStep?.subject,
           body: selectedStep?.body,
+          ...(campaignId ? { campaignId } : {}),
         }),
       });
       const body = (await response.json()) as { error?: string; resendEmailId?: string };
       if (!response.ok) {
         throw new Error(body.error ?? "Envoi test impossible");
       }
-      setSuccess(`Email test envoyé (Resend ${body.resendEmailId ?? "—"}).`);
+      const providerLabel = provider === "instantly" ? "ops (preview Resend)" : "Resend";
+      setSuccess(`Email test envoyé (${providerLabel} ${body.resendEmailId ?? "—"}).`);
       onSent?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Envoi test impossible");

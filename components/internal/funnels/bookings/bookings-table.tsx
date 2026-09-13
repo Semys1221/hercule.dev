@@ -1,28 +1,62 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
+import { BookingEtatCell } from "@/components/internal/funnels/bookings/booking-etat-cell";
 import { BookingReminderStatus } from "@/components/internal/funnels/bookings/booking-reminder-status";
-import { BookingRowToggles } from "@/components/internal/funnels/bookings/booking-row-toggles";
+import {
+  BookingRowMenu,
+  type BookingLinkItem,
+} from "@/components/internal/funnels/bookings/booking-row-menu";
 import { BookingsStatsBar } from "@/components/internal/funnels/bookings/bookings-stats-bar";
+import {
+  clearBookingsPageCache,
+  formatBookingsCacheAge,
+  type BookingsCampaignStats,
+} from "@/lib/admin/bookings/bookings-page-cache";
 import type { BookingEmailJobSummary } from "@/lib/admin/bookings/email-jobs";
+import {
+  loadBookingsPage,
+  patchBookingsPageCache,
+} from "@/lib/admin/bookings/load-bookings-page";
 import {
   buildReminderLines,
   sequenceIsLive,
 } from "@/lib/admin/bookings/reminder-status";
 import {
+  readAllBookingLocalDocs,
+  requiresBookingLocalNote,
+  writeBookingLocalDoc,
+  type BookingLocalDoc,
+} from "@/lib/admin/bookings/booking-local-docs";
+import {
   formatWorkflowFeedback,
   type WorkflowAction,
 } from "@/lib/admin/bookings/workflow-feedback";
-import { Button } from "@/components/ui/button";
+import { workflowSequencesEnabled } from "@/lib/admin/bookings/workflow-sequences-enabled";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  bookingRelativeHint,
+  formatParisDateTime,
+  matchesBookingTimeFilter,
+  type BookingTimeFilter,
+} from "@/lib/admin/bookings/booking-rdv-label";
 import {
   Table,
   TableBody,
@@ -31,271 +65,175 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  bookingRowActionState,
-  type BookingRowActionState,
-} from "@/lib/calendly/booking-row-actions";
+import { bookingRowActionState } from "@/lib/calendly/booking-row-actions";
+import { isCalendlyBookingCanceled } from "@/lib/calendly/list-bookings";
 import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
-import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import {
   primaryConfirmationLink,
   primaryReservationLink,
 } from "@/lib/calendly/enrich-bookings";
-import {
-  WORKFLOW_SEQUENCES_DISABLED_TOOLTIP,
-  workflowSequencesEnabled,
-} from "@/lib/admin/bookings/workflow-sequences-enabled";
 import type { Niche } from "@/lib/admin/navigation";
 import type { SalesCallStatus } from "@/lib/sales-calls/types";
 
 type BookingsTableProps = {
   niche: Niche;
+  connectionsRevision?: number;
+  refreshNonce?: number;
 };
 
-type ChannelStatus = "sent" | "skipped" | "error";
+type WorkflowDialogKind = "no_show" | "not_paid" | "lost" | "unqualified";
 
-function formatParisDateTime(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-  return new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
+type WorkflowDialogState = {
+  row: EnrichedCalendlyBooking;
+  kind: WorkflowDialogKind;
+};
 
-async function copyText(value: string) {
-  await navigator.clipboard.writeText(value);
-}
+function buildBookingLinks(row: EnrichedCalendlyBooking): BookingLinkItem[] {
+  const category = row.lead_category ?? row.booking_category;
+  const candidates = [
+    {
+      label: "Réservation",
+      href: primaryReservationLink(row.links, category),
+    },
+    {
+      label: "Confirmation",
+      href: primaryConfirmationLink(row.links, category),
+    },
+    { label: "Dashboard", href: row.links.dashboard_link },
+    { label: "Visio", href: row.links.calendly_join_url },
+    { label: "Reporter", href: row.links.calendly_reschedule_url },
+    { label: "Annuler", href: row.links.calendly_cancel_url },
+  ];
 
-function LinkActions({ href, label }: { href: string | null | undefined; label: string }) {
-  if (!href) {
-    return <span className="text-muted-foreground">—</span>;
-  }
-
-  return (
-    <div className="flex flex-wrap gap-1">
-      <Button type="button" variant="outline" size="sm" onClick={() => copyText(href)}>
-        Copier
-      </Button>
-      <Button type="button" variant="ghost" size="sm" asChild>
-        <a href={href} target="_blank" rel="noreferrer">
-          <ExternalLink className="size-3.5" />
-          <span className="sr-only">{label}</span>
-        </a>
-      </Button>
-    </div>
+  return candidates.flatMap((item) =>
+    item.href ? [{ label: item.label, href: item.href }] : [],
   );
 }
 
-function CalendlyLinkRow({
-  label,
-  href,
-}: {
-  label: string;
-  href: string | null | undefined;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="w-14 shrink-0 text-muted-foreground">{label}</span>
-      <LinkActions href={href} label={label} />
-    </div>
-  );
-}
-
-function SalesCallStatusHint({
-  salesCallStatus,
-  leadStatut,
-}: {
-  salesCallStatus: SalesCallStatus | null;
-  leadStatut: string | null;
-}) {
-  const { badge } = bookingRowActionState(salesCallStatus);
-  if (!badge || leadStatut !== "MEETING_BOOKED") {
-    return null;
-  }
-
-  const callLabel =
-    badge === "NO SHOW" ? "no-show" : badge === "NON PAYÉ" ? "non payé" : "payé";
-
-  return (
-    <p className="mt-1 text-xs text-muted-foreground">
-      Statut appel : {callLabel} (CRM inchangé)
-    </p>
-  );
-}
-
-function BookingRowActionsMenu({
-  actions,
-  pending,
-  pendingNotPresent,
-  onNotPresent,
-}: {
-  actions: BookingRowActionState;
-  pending: boolean;
-  pendingNotPresent: boolean;
-  onNotPresent: () => void;
-}) {
-  if (!actions.showNotPresent) {
-    return null;
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="size-8"
-          disabled={pending || pendingNotPresent}
-          aria-label="Actions"
-        >
-          <span className="text-base leading-none" aria-hidden="true">…</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={() => onNotPresent()}>Absent ?</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function formatNotPresentFeedback(
-  resend: ChannelStatus,
-  instantly: ChannelStatus,
-  resendError?: string,
-): string {
-  const parts: string[] = [];
-  if (resend === "sent") {
-    parts.push("Resend");
-  } else if (resend === "error") {
-    parts.push(resendError ? `Resend en échec : ${resendError}` : "Resend en échec");
-  }
-
-  if (instantly === "sent") {
-    parts.push("Instantly");
-  } else if (instantly === "skipped") {
-    parts.push("Instantly ignoré (pas de campagne)");
-  } else if (instantly === "error") {
-    parts.push("Instantly en échec");
-  }
-
-  const sentCount = [resend, instantly].filter((status) => status === "sent").length;
-  if (sentCount === 2) {
-    return "Email envoyé (Resend + Instantly)";
-  }
-  if (sentCount === 1) {
-    return `Email envoyé (${parts.filter((part) => !part.includes("échec") && !part.includes("ignoré")).join(" + ")})`;
-  }
-  return parts.join(" · ");
-}
-
-export function BookingsTable({ niche }: BookingsTableProps) {
-  const sequencesEnabled = workflowSequencesEnabled(niche);
+export function BookingsTable({
+  niche,
+  connectionsRevision = 0,
+  refreshNonce = 0,
+}: BookingsTableProps) {
   const [rows, setRows] = useState<EnrichedCalendlyBooking[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<BookingTimeFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cacheFetchedAt, setCacheFetchedAt] = useState<number | null>(null);
   const [pendingInvitee, setPendingInvitee] = useState<string | null>(null);
-  const [pendingNotPresentInvitee, setPendingNotPresentInvitee] = useState<string | null>(
-    null,
-  );
   const [pendingConfirmInvitee, setPendingConfirmInvitee] = useState<string | null>(null);
+  const [pendingFixAll, setPendingFixAll] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [notPresentMessage, setNotPresentMessage] = useState<string | null>(null);
   const [workflowMessage, setWorkflowMessage] = useState<string | null>(null);
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
+  const [fixMessage, setFixMessage] = useState<string | null>(null);
+  const [workflowDialog, setWorkflowDialog] = useState<WorkflowDialogState | null>(null);
+  const [workflowDialogNote, setWorkflowDialogNote] = useState("");
+  const [localDocs, setLocalDocs] = useState<Record<string, BookingLocalDoc>>({});
   const [jobsByLeadId, setJobsByLeadId] = useState<
     Record<string, BookingEmailJobSummary[]>
   >({});
 
+  const [campaignStats, setCampaignStats] = useState<BookingsCampaignStats | null>(null);
   const [campaignLinked, setCampaignLinked] = useState(false);
   const [calendlyConfigured, setCalendlyConfigured] = useState(true);
 
-  const fetchEmailJobs = useCallback(async (bookings: EnrichedCalendlyBooking[]) => {
-    const leadIds = [
-      ...new Set(
-        bookings.map((booking) => booking.lead_id?.trim() ?? "").filter(Boolean),
-      ),
-    ];
-
-    if (leadIds.length === 0) {
-      setJobsByLeadId({});
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `/api/admin/bookings/email-jobs?leadIds=${encodeURIComponent(leadIds.join(","))}`,
-      );
-      const body = (await response.json()) as {
-        jobsByLeadId?: Record<string, BookingEmailJobSummary[]>;
-        error?: string;
-      };
-      if (!response.ok) {
-        throw new Error(body.error ?? "Impossible de charger les relances email");
-      }
-      setJobsByLeadId(body.jobsByLeadId ?? {});
-    } catch (fetchError) {
-      console.error(
-        "[bookings-table] email jobs fetch failed:",
-        fetchError instanceof Error ? fetchError.message : fetchError,
-      );
-      setJobsByLeadId({});
-    }
+  useEffect(() => {
+    setLocalDocs(readAllBookingLocalDocs());
   }, []);
 
-  const fetchBookings = useCallback(
-    async (fresh = false) => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const {
-          bookings,
-          error: fetchError,
-          calendlyConfigured: configured,
-          campaignLinked: linked,
-        } = await fetchEnrichedBookings(niche, {
-          fresh,
-          daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
-        });
-        setCalendlyConfigured(configured ?? true);
-        setCampaignLinked(linked ?? false);
-        if (fetchError) {
-          throw new Error(fetchError);
-        }
-
-        setRows(bookings);
-        await fetchEmailJobs(bookings);
-        if (bookings.length === 0 && configured) {
-          setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
-        }
-      } catch (fetchError) {
-        setRows([]);
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Impossible de récupérer les rendez-vous",
-        );
-      } finally {
-        setLoading(false);
-      }
+  const persistRowsToCache = useCallback(
+    (nextRows: EnrichedCalendlyBooking[]) => {
+      patchBookingsPageCache(niche, CALENDLY_BOOKINGS_DAYS_BEHIND, {
+        bookings: nextRows,
+      });
     },
-    [niche, fetchEmailJobs],
+    [niche],
   );
 
+  const refreshBookings = useCallback(async (fresh = true) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const page = await loadBookingsPage(niche, {
+        fresh,
+        daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
+      });
+      setRows(page.bookings);
+      setJobsByLeadId(page.jobsByLeadId);
+      setCampaignStats(page.campaignStats);
+      setCalendlyConfigured(page.calendlyConfigured);
+      setCampaignLinked(page.campaignLinked);
+      setCacheFetchedAt(page.fetchedAt);
+
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8f3f56" },
+        body: JSON.stringify({
+          sessionId: "8f3f56",
+          runId: "post-fix",
+          hypothesisId: "A",
+          location: "bookings-table.tsx:refreshBookings",
+          message: "page data loaded",
+          data: {
+            niche,
+            fromCache: page.fromCache,
+            rowsCount: page.bookings.length,
+            campaignLinked: page.campaignLinked,
+            campaignStatsLinked: page.campaignStats?.linked ?? null,
+            campaignStatsSent: page.campaignStats?.sent ?? null,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+
+      if (page.error) {
+        setError(page.error);
+      } else if (page.bookings.length === 0 && page.calendlyConfigured) {
+        setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
+      }
+    } catch (fetchError) {
+      setError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : "Impossible de récupérer les rendez-vous",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [niche]);
+
   useEffect(() => {
-    void fetchBookings(false);
-  }, [fetchBookings]);
+    void refreshBookings(false);
+  }, [refreshBookings]);
+
+  useEffect(() => {
+    if (connectionsRevision > 0) {
+      clearBookingsPageCache(niche, CALENDLY_BOOKINGS_DAYS_BEHIND);
+      void refreshBookings(true);
+    }
+  }, [connectionsRevision, niche, refreshBookings]);
+
+  useEffect(() => {
+    if (refreshNonce === 0) {
+      return;
+    }
+    void refreshBookings(true);
+  }, [refreshNonce, refreshBookings]);
 
   const runWorkflowAction = useCallback(
-    async (row: EnrichedCalendlyBooking, status: WorkflowAction) => {
+    async (
+      row: EnrichedCalendlyBooking,
+      status: WorkflowAction,
+      options?: { startSequence?: boolean; successMessage?: string },
+    ) => {
       const previousStatus = row.sales_call_status;
+      const startSequence = options?.startSequence ?? true;
       setActionError(null);
       setWorkflowMessage(null);
       setPendingInvitee(row.invitee_uri);
@@ -317,6 +255,7 @@ export function BookingsTable({ niche }: BookingsTableProps) {
             email: row.email,
             startTime: row.start_time,
             status,
+            startSequence,
           }),
         });
         const body = (await response.json()) as {
@@ -343,16 +282,26 @@ export function BookingsTable({ niche }: BookingsTableProps) {
           throw new Error(body.error ?? "Action impossible");
         }
         if (body.status) {
-          setRows((current) =>
-            current.map((item) =>
+          setRows((current) => {
+            const next = current.map((item) =>
               item.invitee_uri === row.invitee_uri
                 ? { ...item, sales_call_status: body.status ?? status }
                 : item,
-            ),
-          );
+            );
+            persistRowsToCache(next);
+            return next;
+          });
         }
-        if (body.sequence) {
+        if (options?.successMessage) {
+          setWorkflowMessage(options.successMessage);
+        } else if (body.sequence) {
           setWorkflowMessage(formatWorkflowFeedback(status, body.sequence));
+        } else if (status === "lost") {
+          setWorkflowMessage("Prospect marqué comme perdu");
+        } else if (status === "no_show" && !startSequence) {
+          setWorkflowMessage("No-show marqué (séquence non lancée)");
+        } else if (status === "not_paid" && !startSequence) {
+          setWorkflowMessage("Non payé marqué (séquence non lancée)");
         }
       } catch (err) {
         setRows((current) =>
@@ -367,53 +316,8 @@ export function BookingsTable({ niche }: BookingsTableProps) {
         setPendingInvitee(null);
       }
     },
-    [],
+    [niche],
   );
-
-  const sendNotPresentEmail = useCallback(async (row: EnrichedCalendlyBooking) => {
-    setActionError(null);
-    setNotPresentMessage(null);
-    setPendingNotPresentInvitee(row.invitee_uri);
-
-    try {
-      const response = await fetch("/api/admin/bookings/not-present", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          inviteeUri: row.invitee_uri,
-          leadId: row.lead_id,
-          email: row.email,
-          startTime: row.start_time,
-        }),
-      });
-      const body = (await response.json()) as {
-        resend?: ChannelStatus;
-        instantly?: ChannelStatus;
-        resendError?: string;
-        error?: string;
-      };
-
-      if (!response.ok) {
-        if (body.resend && body.instantly) {
-          setActionError(
-            formatNotPresentFeedback(body.resend, body.instantly, body.resendError),
-          );
-          return;
-        }
-        throw new Error(body.error ?? "Envoi impossible");
-      }
-
-      if (body.resend && body.instantly) {
-        setNotPresentMessage(
-          formatNotPresentFeedback(body.resend, body.instantly, body.resendError),
-        );
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Envoi impossible");
-    } finally {
-      setPendingNotPresentInvitee(null);
-    }
-  }, []);
 
   const runResetNoShow = useCallback(async (row: EnrichedCalendlyBooking) => {
     const previousStatus = row.sales_call_status;
@@ -455,7 +359,10 @@ export function BookingsTable({ niche }: BookingsTableProps) {
           ? "1 email en attente annulé"
           : `${cancelledJobs} emails en attente annulés`;
       setResetMessage(`No-show annulé · ${jobsLabel}`);
-      void fetchBookings(false);
+      setRows((current) => {
+        persistRowsToCache(current);
+        return current;
+      });
     } catch (err) {
       setRows((current) =>
         current.map((item) =>
@@ -468,18 +375,165 @@ export function BookingsTable({ niche }: BookingsTableProps) {
     } finally {
       setPendingInvitee(null);
     }
-  }, [fetchBookings]);
+  }, [persistRowsToCache]);
 
-  const handleNoShowChange = useCallback(
-    (row: EnrichedCalendlyBooking, checked: boolean) => {
-      if (checked) {
-        void runWorkflowAction(row, "no_show");
+  const openWorkflowDialog = useCallback(
+    (row: EnrichedCalendlyBooking, kind: WorkflowDialogKind) => {
+      setActionError(null);
+      setWorkflowDialogNote(localDocs[row.invitee_uri]?.note ?? "");
+      setWorkflowDialog({ row, kind });
+    },
+    [localDocs],
+  );
+
+  const confirmWorkflowDialog = useCallback(
+    (startSequence: boolean) => {
+      const dialog = workflowDialog;
+      if (!dialog) {
         return;
       }
-      void runResetNoShow(row);
+
+      const note = workflowDialogNote.trim();
+      const markedAs =
+        dialog.kind === "unqualified" || dialog.kind === "lost" ? "lost" : dialog.kind;
+
+      if (requiresBookingLocalNote(markedAs) && !note) {
+        setActionError("Ajoutez une note de documentation avant de confirmer.");
+        return;
+      }
+
+      if (note) {
+        const doc = writeBookingLocalDoc(dialog.row.invitee_uri, {
+          note,
+          markedAs,
+          lostVariant:
+            dialog.kind === "unqualified"
+              ? "unqualified"
+              : dialog.kind === "lost"
+                ? "lost"
+                : undefined,
+        });
+        setLocalDocs((current) => ({ ...current, [dialog.row.invitee_uri]: doc }));
+      }
+
+      setWorkflowDialog(null);
+      setWorkflowDialogNote("");
+
+      if (dialog.kind === "lost" || dialog.kind === "unqualified") {
+        void runWorkflowAction(dialog.row, "lost", {
+          startSequence: false,
+          successMessage:
+            dialog.kind === "unqualified"
+              ? "Prospect marqué unqualified"
+              : "Prospect marqué comme perdu",
+        });
+        return;
+      }
+
+      void runWorkflowAction(dialog.row, dialog.kind, { startSequence });
     },
-    [runResetNoShow, runWorkflowAction],
+    [workflowDialog, workflowDialogNote, runWorkflowAction],
   );
+
+  type FixUntrackedResult = {
+    ok: boolean;
+    created?: boolean;
+    leadId?: string;
+    leadCategory?: EnrichedCalendlyBooking["lead_category"];
+    slug?: string;
+    statut?: string;
+    links?: EnrichedCalendlyBooking["links"];
+    error?: string;
+    reason?: string;
+  };
+
+  const fixUntrackedBooking = useCallback(
+    async (row: EnrichedCalendlyBooking): Promise<FixUntrackedResult> => {
+      const response = await fetch("/api/admin/bookings/fix-untracked", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inviteeUri: row.invitee_uri,
+          email: row.email,
+          firstName: row.first_name || row.name || null,
+          company: row.company,
+          startTime: row.start_time,
+          eventUri: row.event_uri,
+          bookingCategory: row.booking_category ?? row.lead_category ?? niche,
+          slug: row.slug,
+          questions: row.questions,
+          calendlyJoinUrl: row.calendly_join_url,
+          calendlyRescheduleUrl: row.calendly_reschedule_url,
+          calendlyCancelUrl: row.calendly_cancel_url,
+        }),
+      });
+      const body = (await response.json()) as FixUntrackedResult;
+      if (!response.ok || !body.ok) {
+        throw new Error(body.error ?? body.reason ?? "Alignement impossible");
+      }
+      return body;
+    },
+    [niche],
+  );
+
+  const applyFixResult = useCallback(
+    (row: EnrichedCalendlyBooking, body: FixUntrackedResult) => {
+      setRows((current) => {
+        const next = current.map((item) =>
+          item.invitee_uri === row.invitee_uri
+            ? {
+                ...item,
+                lead_id: body.leadId ?? item.lead_id,
+                lead_category: body.leadCategory ?? item.lead_category,
+                slug: body.slug ?? item.slug,
+                statut: (body.statut as EnrichedCalendlyBooking["statut"]) ?? item.statut,
+                links: body.links ?? item.links,
+                lead_matched: true,
+                warning: null,
+              }
+            : item,
+        );
+        persistRowsToCache(next);
+        return next;
+      });
+    },
+    [persistRowsToCache],
+  );
+
+  const runFixAllUntracked = useCallback(async () => {
+    const targets = rows.filter((row) => !row.lead_matched);
+    if (targets.length === 0) {
+      return;
+    }
+
+    setActionError(null);
+    setFixMessage(null);
+    setPendingFixAll(true);
+
+    let aligned = 0;
+    let created = 0;
+
+    try {
+      for (const row of targets) {
+        const body = await fixUntrackedBooking(row);
+        applyFixResult(row, body);
+        aligned += 1;
+        if (body.created) {
+          created += 1;
+        }
+      }
+
+      const createdLabel =
+        created > 0 ? ` (${created} créé${created > 1 ? "s" : ""})` : "";
+      setFixMessage(
+        `${aligned} lead${aligned > 1 ? "s" : ""} aligné${aligned > 1 ? "s" : ""}${createdLabel}`,
+      );
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Alignement impossible");
+    } finally {
+      setPendingFixAll(false);
+    }
+  }, [applyFixResult, fixUntrackedBooking, rows]);
 
   const runStartConfirmSequence = useCallback(
     async (row: EnrichedCalendlyBooking) => {
@@ -509,14 +563,13 @@ export function BookingsTable({ niche }: BookingsTableProps) {
         }
 
         setConfirmMessage("Séquence de confirmation démarrée");
-        void fetchBookings(false);
       } catch (err) {
         setActionError(err instanceof Error ? err.message : "Séquence impossible");
       } finally {
         setPendingConfirmInvitee(null);
       }
     },
-    [fetchBookings],
+    [],
   );
 
   const sortedRows = useMemo(
@@ -524,34 +577,160 @@ export function BookingsTable({ niche }: BookingsTableProps) {
     [rows],
   );
 
-  const tableCaption = useMemo(
-    () => `${sortedRows.length} rendez-vous`,
-    [sortedRows.length],
+  const filteredRows = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return sortedRows.filter((row) => {
+      if (!matchesBookingTimeFilter(row.start_time, timeFilter)) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      const haystack = [
+        row.first_name,
+        row.name,
+        row.email,
+        row.statut,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [searchQuery, sortedRows, timeFilter]);
+
+  const tableCaption = useMemo(() => {
+    if (filteredRows.length === sortedRows.length) {
+      return `${filteredRows.length} rendez-vous`;
+    }
+    return `${filteredRows.length} sur ${sortedRows.length} rendez-vous`;
+  }, [filteredRows.length, sortedRows.length]);
+
+  const cacheHint = useMemo(() => {
+    if (cacheFetchedAt) {
+      const age = formatBookingsCacheAge(cacheFetchedAt);
+      const suffix = loading ? " · actualisation…" : " · ↻ pour mettre à jour";
+      return `Données en cache ${age}${suffix}`;
+    }
+    return "Aucune donnée en cache — cliquez sur ↻ pour charger le pipeline.";
+  }, [cacheFetchedAt, loading]);
+
+  const untrackedCount = useMemo(
+    () => rows.filter((row) => !row.lead_matched).length,
+    [rows],
   );
 
+  const sequencesEnabled = workflowSequencesEnabled(niche);
+
+  const workflowDialogIsLostKind =
+    workflowDialog?.kind === "lost" || workflowDialog?.kind === "unqualified";
+
+  const workflowDialogRequiresNote =
+    workflowDialog?.kind === "not_paid" ||
+    workflowDialog?.kind === "lost" ||
+    workflowDialog?.kind === "unqualified";
+
+  const workflowDialogTitle = (() => {
+    switch (workflowDialog?.kind) {
+      case "not_paid":
+        return "Marquer ce prospect en non payé ?";
+      case "lost":
+        return "Marquer ce prospect comme perdu ?";
+      case "unqualified":
+        return "Marquer ce prospect comme unqualified ?";
+      default:
+        return "Marquer ce prospect en no-show ?";
+    }
+  })();
+
+  const workflowDialogDescription = (() => {
+    if (!workflowDialog) {
+      return null;
+    }
+    const name =
+      workflowDialog.row.first_name ||
+      workflowDialog.row.name ||
+      workflowDialog.row.email;
+
+    switch (workflowDialog.kind) {
+      case "not_paid":
+        return `${name} sera marqué non payé. Ajoutez une note de documentation, puis choisissez si vous lancez la séquence close indécis.`;
+      case "lost":
+        return `${name} sera marqué perdu (sans séquence). La note reste en local sur cet appareil.`;
+      case "unqualified":
+        return `${name} sera marqué unqualified en interface (statut lost en base). Ajoutez une note de documentation locale.`;
+      default:
+        return `${name} sera marqué absent. Vous pouvez ajouter une note locale, puis lancer la séquence no-show si besoin.`;
+    }
+  })();
+
   return (
-    <div className="space-y-4 text-left">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
-          <p className="text-sm text-muted-foreground">
-            RDV Calendly des 30 derniers jours et à venir.
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={() => void fetchBookings(true)}
-          disabled={loading}
-        >
-          {loading ? "Chargement…" : "Rafraîchir"}
-        </Button>
-      </div>
+    <div className="flex min-w-0 flex-col gap-4 text-left">
+      <AlertDialog
+        open={workflowDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setWorkflowDialog(null);
+            setWorkflowDialogNote("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{workflowDialogTitle}</AlertDialogTitle>
+            <AlertDialogDescription>{workflowDialogDescription}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-2 px-1">
+            <Label htmlFor="booking-workflow-note">
+              Note de documentation
+              {workflowDialogRequiresNote ? " (obligatoire)" : " (optionnelle)"}
+            </Label>
+            <Textarea
+              id="booking-workflow-note"
+              value={workflowDialogNote}
+              onChange={(event) => setWorkflowDialogNote(event.target.value)}
+              placeholder="Contexte, raison du statut, prochaine action…"
+              rows={3}
+            />
+            <p className="text-xs text-muted-foreground">
+              Stockée localement dans ce navigateur — non synchronisée avec Supabase.
+            </p>
+          </div>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-col sm:items-stretch">
+            {workflowDialogIsLostKind ? (
+              <AlertDialogAction
+                className="w-full sm:w-full"
+                onClick={() => confirmWorkflowDialog(false)}
+              >
+                Marquer
+              </AlertDialogAction>
+            ) : (
+              <>
+                {sequencesEnabled ? (
+                  <AlertDialogAction
+                    className="w-full sm:w-full"
+                    onClick={() => confirmWorkflowDialog(true)}
+                  >
+                    Marquer et lancer la séquence
+                  </AlertDialogAction>
+                ) : null}
+                <Button
+                  type="button"
+                  variant={sequencesEnabled ? "outline" : "default"}
+                  className="w-full sm:w-full"
+                  onClick={() => confirmWorkflowDialog(false)}
+                >
+                  Marquer seulement
+                </Button>
+              </>
+            )}
+            <AlertDialogCancel className="w-full sm:w-full">Annuler</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {error ? <InternalStatusAlert variant="error" message={error} /> : null}
       {actionError ? <InternalStatusAlert variant="error" message={actionError} /> : null}
-      {notPresentMessage ? (
-        <InternalStatusAlert variant="success" message={notPresentMessage} />
-      ) : null}
       {workflowMessage ? (
         <InternalStatusAlert variant="success" message={workflowMessage} />
       ) : null}
@@ -561,49 +740,101 @@ export function BookingsTable({ niche }: BookingsTableProps) {
       {confirmMessage ? (
         <InternalStatusAlert variant="success" message={confirmMessage} />
       ) : null}
+      {fixMessage ? <InternalStatusAlert variant="success" message={fixMessage} /> : null}
 
       {!calendlyConfigured ? (
         <InternalStatusAlert
           variant="error"
           message={
             niche === "comptable"
-              ? "Event Calendly comptable non configuré — renseignez l'URI dans l'onglet DB ou CALENDLY_EVENT_TYPE_URI_COMPTABLE."
-              : `Event Calendly ${niche} non configuré — renseignez l'URI dans l'onglet DB.`
+              ? "Event Calendly comptable non configuré — sélectionnez l'event via Connexions ou CALENDLY_EVENT_TYPE_URI_COMPTABLE."
+              : `Event Calendly ${niche} non configuré — sélectionnez l'event via Connexions.`
           }
         />
       ) : null}
 
       {calendlyConfigured ? (
         <BookingsStatsBar
-          niche={niche}
           rows={sortedRows}
           campaignLinked={campaignLinked}
+          campaignStats={campaignStats}
+          statsLoading={loading}
         />
       ) : null}
 
       {sortedRows.length > 0 ? (
         <>
-          <div className="rounded-md border border-border">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <ToggleGroup
+                  type="single"
+                  value={timeFilter}
+                  onValueChange={(value) => {
+                    if (value) {
+                      setTimeFilter(value as BookingTimeFilter);
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                >
+                  <ToggleGroupItem value="upcoming">À venir</ToggleGroupItem>
+                  <ToggleGroupItem value="past">Passés</ToggleGroupItem>
+                  <ToggleGroupItem value="all">Tous</ToggleGroupItem>
+                </ToggleGroup>
+                {untrackedCount > 0 ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={pendingFixAll || loading}
+                    onClick={() => void runFixAllUntracked()}
+                  >
+                    {pendingFixAll
+                      ? `Alignement… (${untrackedCount})`
+                      : `Fix all (${untrackedCount})`}
+                  </Button>
+                ) : null}
+              </div>
+              <p className="hidden text-xs text-muted-foreground sm:block">{cacheHint}</p>
+              <div className="relative w-full sm:max-w-xs">
+                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Rechercher un prospect…"
+                  className="pl-8"
+                  aria-label="Rechercher un prospect"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground sm:hidden">{cacheHint}</p>
+          </div>
+
+          <div className="min-w-0 overflow-hidden rounded-md border border-border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Prospect</TableHead>
                 <TableHead>RDV</TableHead>
-                <TableHead>Statut CRM</TableHead>
+                <TableHead>État</TableHead>
                 <TableHead>Relances</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
-                <TableHead>Réservation</TableHead>
-                <TableHead>Confirmation</TableHead>
-                <TableHead>Dashboard</TableHead>
-                <TableHead>Calendly</TableHead>
+                <TableHead className="w-12">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedRows.map((row) => {
+              {filteredRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
+                    Aucun rendez-vous pour ce filtre.
+                  </TableCell>
+                </TableRow>
+              ) : null}
+              {filteredRows.map((row) => {
                 const actions = bookingRowActionState(row.sales_call_status);
                 const pending = pendingInvitee === row.invitee_uri;
-                const pendingNotPresent = pendingNotPresentInvitee === row.invitee_uri;
                 const pendingConfirm = pendingConfirmInvitee === row.invitee_uri;
                 const reminderLines = buildReminderLines({
                   scheduledAt: row.start_time,
@@ -611,26 +842,39 @@ export function BookingsTable({ niche }: BookingsTableProps) {
                   jobs: row.lead_id ? jobsByLeadId[row.lead_id] ?? [] : [],
                 });
                 const canConfirm = row.lead_matched && !sequenceIsLive(reminderLines);
+                const bookingLinks = buildBookingLinks(row);
+                const relativeHint = bookingRelativeHint(row.start_time);
+
                 return (
                   <TableRow key={row.invitee_uri}>
-                    <TableCell>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div>
-                          <div className="font-medium">
-                            {row.first_name || row.name || row.email}
-                          </div>
-                          <div className="text-xs text-muted-foreground">{row.email}</div>
+                    <TableCell className="max-w-[14rem] whitespace-normal">
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">
+                          {row.first_name || row.name || row.email}
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">
+                          {row.email}
                         </div>
                       </div>
                       {row.warning ? (
                         <p className="mt-1 text-xs text-muted-foreground">{row.warning}</p>
                       ) : null}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-sm">
-                      {formatParisDateTime(row.start_time)}
+                    <TableCell className="whitespace-normal text-sm">
+                      <div>{formatParisDateTime(row.start_time)}</div>
+                      {relativeHint ? (
+                        <div className="text-xs text-muted-foreground">{relativeHint}</div>
+                      ) : null}
                     </TableCell>
-                    <TableCell className="text-sm">{row.statut ?? "—"}</TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-normal">
+                      <BookingEtatCell
+                        statut={row.statut}
+                        salesCallStatus={row.sales_call_status}
+                        localDoc={localDocs[row.invitee_uri] ?? null}
+                        calendlyCanceled={isCalendlyBookingCanceled(row)}
+                      />
+                    </TableCell>
+                    <TableCell className="whitespace-normal">
                       <BookingReminderStatus
                         leadId={row.lead_id}
                         scheduledAt={row.start_time}
@@ -638,79 +882,22 @@ export function BookingsTable({ niche }: BookingsTableProps) {
                         jobs={row.lead_id ? jobsByLeadId[row.lead_id] ?? [] : []}
                       />
                     </TableCell>
-                    <TableCell className="min-w-[6rem]">
-                      <BookingRowToggles
+                    <TableCell>
+                      <BookingRowMenu
                         niche={niche}
-                        inviteeUri={row.invitee_uri}
-                        salesCallStatus={row.sales_call_status}
-                        pendingNoShow={pending}
-                        onNoShowChange={(checked) => handleNoShowChange(row, checked)}
+                        links={bookingLinks}
+                        actions={actions}
+                        leadMatched={row.lead_matched}
+                        canConfirm={canConfirm}
+                        pending={pending || pendingFixAll}
+                        pendingConfirm={pendingConfirm}
+                        onConfirm={() => void runStartConfirmSequence(row)}
+                        onMarkNotPaid={() => openWorkflowDialog(row, "not_paid")}
+                        onMarkNoShow={() => openWorkflowDialog(row, "no_show")}
+                        onMarkLost={() => openWorkflowDialog(row, "lost")}
+                        onMarkUnqualified={() => openWorkflowDialog(row, "unqualified")}
+                        onResetNoShow={() => void runResetNoShow(row)}
                       />
-                    </TableCell>
-                    <TableCell className="min-w-[10rem]">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {canConfirm && sequencesEnabled ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={pendingConfirm}
-                            onClick={() => void runStartConfirmSequence(row)}
-                          >
-                            {pendingConfirm ? "…" : "Confirmer"}
-                          </Button>
-                        ) : null}
-                        {sequencesEnabled ? (
-                          <BookingRowActionsMenu
-                            actions={actions}
-                            pending={pending}
-                            pendingNotPresent={pendingNotPresent}
-                            onNotPresent={() => void sendNotPresentEmail(row)}
-                          />
-                        ) : (
-                          <span
-                            className="text-xs text-muted-foreground"
-                            title={WORKFLOW_SEQUENCES_DISABLED_TOOLTIP}
-                          >
-                            —
-                          </span>
-                        )}
-                      </div>
-                      <SalesCallStatusHint
-                        salesCallStatus={row.sales_call_status}
-                        leadStatut={row.statut}
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[7rem]">
-                      <LinkActions
-                        href={primaryReservationLink(
-                          row.links,
-                          row.lead_category ?? row.booking_category,
-                        )}
-                        label="Réservation"
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[7rem]">
-                      <LinkActions
-                        href={primaryConfirmationLink(
-                          row.links,
-                          row.lead_category ?? row.booking_category,
-                        )}
-                        label="Confirmation"
-                      />
-                    </TableCell>
-                    <TableCell className="min-w-[7rem]">
-                      <LinkActions href={row.links.dashboard_link} label="Dashboard" />
-                    </TableCell>
-                    <TableCell className="min-w-[9rem]">
-                      <div className="space-y-1 text-xs">
-                        <CalendlyLinkRow label="Visio" href={row.links.calendly_join_url} />
-                        <CalendlyLinkRow
-                          label="Reporter"
-                          href={row.links.calendly_reschedule_url}
-                        />
-                        <CalendlyLinkRow label="Annuler" href={row.links.calendly_cancel_url} />
-                      </div>
                     </TableCell>
                   </TableRow>
                 );

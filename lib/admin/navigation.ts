@@ -72,16 +72,6 @@ export const LEGAL_DOC_SEGMENTS = [
 
 export type LegalDocSegment = (typeof LEGAL_DOC_SEGMENTS)[number];
 
-function legalTree(): Record<string, NavNode> {
-  return {
-    cgv: { label: "CGV", leaf: "legal_cgv" },
-    mentions: { label: "Mentions légales", leaf: "legal_mentions" },
-    confidentialite: { label: "Confidentialité", leaf: "legal_confidentialite" },
-    faq: { label: "FAQ", leaf: "legal_faq" },
-    pricing: { label: "Pricing", leaf: "legal_pricing" },
-  };
-}
-
 const FULL_MODULES: Record<string, NavNode> = {
   sales: {
     label: SESSION_MODULE_LABEL,
@@ -89,23 +79,13 @@ const FULL_MODULES: Record<string, NavNode> = {
   },
   bookings: {
     label: "Bookings",
-    caption: "RDV Calendly et liens prospect.",
+    caption: "RDV Calendly, liens prospect et séquences email.",
     leaf: "bookings_hub",
   },
   clients: {
     label: CLIENTS_MODULE_LABEL,
     caption: CLIENTS_MODULE_CAPTION,
     leaf: "clients_hub",
-  },
-  legal: {
-    label: "CVG & légal",
-    caption: "Documents légaux par niche.",
-    children: legalTree(),
-  },
-  emails: {
-    label: "Emails",
-    caption: "Séquences email PRE-CLOSE et CLOSE.",
-    leaf: "emails_hub",
   },
 };
 
@@ -270,26 +250,24 @@ export function clientsHubHref(niche: Niche = "agence"): string {
   return `/internal/funnels/clients/${niche}`;
 }
 
-export function legalHref(niche: Niche, doc?: LegalDocSegment): string {
-  if (!doc) {
-    return `/internal/funnels/legal/${niche}`;
-  }
-  return `/internal/funnels/legal/${niche}/${doc}`;
+/** @deprecated Legal docs live in doc/legal-documentation — redirects to bookings. */
+export function legalHref(niche: Niche, _doc?: LegalDocSegment): string {
+  return bookingsSequencesHref(niche);
 }
 
-export function emailsHref(niche: Niche, slug?: string): string {
-  if (!slug) {
-    return `/internal/funnels/emails/${niche}`;
-  }
-  return `/internal/funnels/emails/${niche}/${slug}`;
+/** @deprecated Email sequences are edited under Bookings → Séquences. */
+export function emailsHref(niche: Niche, _slug?: string): string {
+  return bookingsSequencesHref(niche);
+}
+
+export function bookingsSequencesHref(niche: Niche): string {
+  return `/internal/funnels/bookings/${niche}?tab=sequences`;
 }
 
 const MODULE_FIRST_PATTERNS: Array<{ module: string; pattern: RegExp }> = [
   { module: "session", pattern: new RegExp(`^/internal/funnels/session/(${NICHE_PATH_SEGMENT})`) },
   { module: "bookings", pattern: new RegExp(`^/internal/funnels/bookings/(${NICHE_PATH_SEGMENT})`) },
   { module: "clients", pattern: new RegExp(`^/internal/funnels/clients/(${NICHE_PATH_SEGMENT})`) },
-  { module: "legal", pattern: new RegExp(`^/internal/funnels/legal/(${NICHE_PATH_SEGMENT})`) },
-  { module: "emails", pattern: new RegExp(`^/internal/funnels/emails/(${NICHE_PATH_SEGMENT})`) },
 ];
 
 /**

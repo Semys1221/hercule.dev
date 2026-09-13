@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import {
   bookingsPipelineBlockedByMissingEventType,
   buildScheduledEventsListParams,
+  isCalendlyBookingCanceled,
+  mergeScheduledEventsByUri,
 } from "@/lib/calendly/list-bookings";
 
 const base = {
@@ -21,6 +23,25 @@ const withEvent = buildScheduledEventsListParams({
 assert.equal(withEvent.event_type, "https://api.calendly.com/event_types/XYZ");
 assert.equal(withEvent.user, base.userUri);
 assert.equal(withEvent.status, "active");
+
+const canceled = buildScheduledEventsListParams({ ...base, status: "canceled" });
+assert.equal(canceled.status, "canceled");
+
+const merged = mergeScheduledEventsByUri([
+  { uri: "https://api.calendly.com/scheduled_events/A", status: "active" },
+  { uri: "https://api.calendly.com/scheduled_events/A", status: "canceled" },
+  { uri: "https://api.calendly.com/scheduled_events/B", status: "canceled" },
+]);
+assert.equal(merged.length, 2);
+
+assert.equal(
+  isCalendlyBookingCanceled({ event_status: "active", invitee_status: "canceled" }),
+  true,
+);
+assert.equal(
+  isCalendlyBookingCanceled({ event_status: "active", invitee_status: "active" }),
+  false,
+);
 
 const withoutEvent = buildScheduledEventsListParams(base);
 assert.equal(withoutEvent.event_type, undefined);

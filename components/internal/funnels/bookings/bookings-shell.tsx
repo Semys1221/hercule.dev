@@ -1,37 +1,60 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Niche } from "@/lib/admin/navigation";
 
+import { BookingsConnectionsSettings } from "./bookings-connections-settings";
 import { BookingsTable } from "./bookings-table";
-import { BookingsDbTab } from "./bookings-db-tab";
 import { BookingsSequencesTab } from "./bookings-sequences-tab";
-import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
 
 type BookingsShellProps = {
   niche: Niche;
 };
 
 export function BookingsShell({ niche }: BookingsShellProps) {
+  const searchParams = useSearchParams();
+  const [connectionsRevision, setConnectionsRevision] = useState(0);
+  const [refreshNonce, setRefreshNonce] = useState(0);
+  const [activeTab, setActiveTab] = useState<"pipeline" | "sequences">("pipeline");
+
+  useEffect(() => {
+    if (searchParams.get("tab") === "sequences") {
+      setActiveTab("sequences");
+    }
+  }, [searchParams]);
+
   return (
-    <div className="flex flex-col gap-4">
-      <NicheSwitcher />
-      <Tabs defaultValue="pipeline" className="flex flex-col gap-4">
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => setActiveTab(value as "pipeline" | "sequences")}
+      className="flex min-w-0 flex-col gap-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <TabsList>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="sequences">Séquences</TabsTrigger>
-          <TabsTrigger value="db">DB</TabsTrigger>
         </TabsList>
-        <TabsContent value="pipeline" className="mt-0">
-          <BookingsTable niche={niche} />
-        </TabsContent>
-        <TabsContent value="sequences" className="mt-0">
-          <BookingsSequencesTab niche={niche} />
-        </TabsContent>
-        <TabsContent value="db" className="mt-0">
-          <BookingsDbTab niche={niche} />
-        </TabsContent>
-      </Tabs>
-    </div>
+
+        <BookingsConnectionsSettings
+          niche={niche}
+          onConfigSaved={() => setConnectionsRevision((value) => value + 1)}
+          onRefresh={() => setRefreshNonce((value) => value + 1)}
+        />
+      </div>
+
+      <TabsContent value="pipeline" className="mt-0">
+        <BookingsTable
+          niche={niche}
+          connectionsRevision={connectionsRevision}
+          refreshNonce={refreshNonce}
+        />
+      </TabsContent>
+      <TabsContent value="sequences" className="mt-0">
+        <BookingsSequencesTab niche={niche} connectionsRevision={connectionsRevision} />
+      </TabsContent>
+    </Tabs>
   );
 }

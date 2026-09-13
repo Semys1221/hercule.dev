@@ -3,7 +3,8 @@ export type SalesCallStatus =
   | "completed"
   | "no_show"
   | "not_paid"
-  | "paid";
+  | "paid"
+  | "lost";
 
 export type SalesCall = {
   id: string;

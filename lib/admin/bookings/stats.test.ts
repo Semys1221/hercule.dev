@@ -23,6 +23,7 @@ function main() {
   );
 
   assert.equal(stats.totalBooked, 4);
+  assert.equal(stats.upcomingBooked, 1);
   assert.equal(stats.pastBooked, 3);
   assert.equal(stats.noShowCount, 1);
   assert.equal(stats.noShowPercent, 33.3);

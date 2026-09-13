@@ -1,23 +1,38 @@
-"""Tab 5 — E1/E2/E3 subsequence + Supabase CRM templates."""
+"""Tab 5 — E1/E2/E3 bypass templates (Supabase + webhook, no Instantly subsequence)."""
 
 from __future__ import annotations
 
+import json
+import time
 from pathlib import Path
 
 import streamlit as st
 
-from bootstrap.discovery import preset_config_path
 from bootstrap.onboarding_state import save_onboarding_state
-from bootstrap.provision import write_instantly_ids
-from bootstrap.ui_helpers import get_api_key, load_preset_config, reload_presets
-from instantly_client import (
-    ensure_subsequence_sequences,
-    instantly_resource_name,
-    patch_subsequence_sequences,
-)
+from bootstrap.ui_helpers import get_api_key, load_preset_config
+from instantly_client import instantly_resource_name
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _SUBSEQUENCE_APP = _REPO_ROOT / "app" / "streamlit_subsequence"
+_DEBUG_LOG_PATH = _REPO_ROOT / ".cursor" / "debug-b2bdef.log"
+
+
+def _agent_debug_log(message: str, data: dict[str, str], hypothesis_id: str) -> None:
+    # region agent log
+    try:
+        payload = {
+            "sessionId": "b2bdef",
+            "hypothesisId": hypothesis_id,
+            "location": "bootstrap/ui_tab_subsequence.py",
+            "message": message,
+            "data": data,
+            "timestamp": int(time.time() * 1000),
+        }
+        with _DEBUG_LOG_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+    # endregion
 
 
 def _save_supabase_templates(campaign_id: str, campaign_name: str, emails: list[dict[str, str]]) -> None:
@@ -81,7 +96,10 @@ def render_subsequence_tab(preset_id: str) -> None:
         st.error("INSTANTLY_API_KEY manquant dans le .env")
         return
 
-    st.caption("Rédigez E1, E2, E3 à la main. Enregistrement → Instantly subsequence + Supabase.")
+    st.caption(
+        "Rédigez E1, E2, E3 à la main. Enregistrement → Supabase + webhook bypass "
+        "(pas de subsequence Instantly — évite le double envoi E1)."
+    )
 
     for idx, key in enumerate(("e1", "e2", "e3"), start=1):
         st.markdown(f"**Email {idx}**")
@@ -98,38 +116,27 @@ def render_subsequence_tab(preset_id: str) -> None:
                 return
             emails.append({"subject": subject, "body": body})
 
-        sub_id = str(config.get("INSTANTLY_SUBSEQUENCE_ID") or "").strip()
-        if sub_id:
-            patch_subsequence_sequences(api_key, sub_id, emails, default_delay_days=1)
-        else:
-            saved = ensure_subsequence_sequences(
-                api_key,
-                parent_campaign_id=campaign_id,
-                name=sub_name,
-                emails=emails,
-                default_delay_days=1,
-            )
-            sub_id = str(saved.get("id") or "")
-
-        if not sub_id:
-            st.error("Subsequence ID manquant après création.")
-            return
-
-        list_id = str(config.get("INSTANTLY_LIST_ID") or "").strip()
-        write_instantly_ids(
-            preset_config_path(preset_id),
-            list_id=list_id,
-            campaign_id=campaign_id,
-            subsequence_id=sub_id,
+        _agent_debug_log(
+            "bootstrap_save_e1_e3",
+            {
+                "preset_id": preset_id,
+                "campaign_id": campaign_id,
+                "instantly_subsequence_skipped": "true",
+            },
+            "A",
         )
-        reload_presets()
 
         try:
             _save_supabase_templates(campaign_id, sub_name, emails)
         except Exception as exc:
-            st.warning(f"Instantly OK, Supabase : {exc}")
-        else:
-            st.success("Subsequence + templates Supabase enregistrés.")
+            st.error(f"Enregistrement Supabase / webhook : {exc}")
+            return
 
+        _agent_debug_log(
+            "bootstrap_save_e1_e3_done",
+            {"preset_id": preset_id, "campaign_id": campaign_id},
+            "A",
+        )
+        st.success("Templates bypass E1–E3 + webhook enregistrés (sans subsequence Instantly).")
         save_onboarding_state(preset_id, {"subsequence_saved": True})
         st.rerun()

@@ -1,3 +1,4 @@
+import json
 import os
 
 import pandas as pd
@@ -23,14 +24,17 @@ from pipeline import (
     RUN_MODE_TEST_50,
     estimate_credits,
     estimate_minutes,
+    partial_push_manifest_path,
+    push_partial_clean,
     run_cleaning_pipeline,
 )
 
 st.set_page_config(page_title="Email CSV Cleaner", layout="wide")
 st.title("📧 Email Cleaner & Instantly Pipeline")
 st.caption(
-    "Quick local pre-filter → MyEmailVerifier → purge source list (Full Clean) "
-    "→ push to Instantly campaign (workspace duplicate check always on)."
+    "Quick local pre-filter → MyEmailVerifier → provision tracking URLs "
+    "→ purge source list (Full Clean) → push to Instantly campaign "
+    "(skip duplicates already in target campaign)."
 )
 
 if "funnel_step" not in st.session_state:
@@ -111,6 +115,20 @@ def _render_validation_screen(result, *, show_push: bool) -> None:
         q1.metric("Bad format", result.quick_stats.get("format_errors", 0))
         q2.metric("Garbage domain", result.quick_stats.get("garbage_domains", 0))
         q3.metric("Dead DNS", result.quick_stats.get("dns_errors", 0))
+
+    if show_push and (
+        result.provision_created
+        or result.provision_patched
+        or result.provision_failed
+        or result.provision_skipped
+    ):
+        st.info(
+            "Link provision — "
+            f"created {result.provision_created}, "
+            f"patched {result.provision_patched}, "
+            f"skipped {result.provision_skipped}, "
+            f"failed {result.provision_failed}."
+        )
 
     if show_push and result.push_attempted:
         st.info(
@@ -241,16 +259,27 @@ def _reset_funnel() -> None:
     st.rerun()
 
 
+def _list_resumable_checkpoints() -> list[dict]:
+    """Jobs with MEV verification still in progress (checkpoint < total)."""
+    resumable: list[dict] = []
+    for item in list_checkpoints():
+        total = item.get("total_target")
+        verified = item.get("verified_count", 0)
+        if total and verified < total:
+            resumable.append(item)
+    return resumable
+
+
 def _render_resume_panel(*, show_push: bool) -> None:
-    checkpoints = list_checkpoints()
+    checkpoints = _list_resumable_checkpoints()
     if not checkpoints:
         return
 
     st.divider()
     st.subheader("Resume interrupted job")
     st.caption(
-        "Verified emails are saved in checkpoints. Resume only verifies the remaining "
-        "addresses (no duplicate MEV credits for emails already checked)."
+        "Verified emails are saved in checkpoints. You can push partial clean leads now "
+        "and resume MEV later — the checkpoint is never deleted by a partial push."
     )
 
     options = {}
@@ -290,12 +319,67 @@ def _render_resume_panel(*, show_push: bool) -> None:
                 mime="text/csv",
             )
 
+    manifest_path = partial_push_manifest_path(selected["prefix"])
+    if os.path.isfile(manifest_path):
+        with open(manifest_path, encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        st.success(
+            f"Partial push already done: {manifest.get('pushed', 0)} uploaded, "
+            f"{manifest.get('skipped_duplicate', 0)} skipped duplicate "
+            f"({manifest.get('verified_count_at_push', '?')} verified at that time)."
+        )
+
     allowed_statuses = st.multiselect(
         "Include these statuses",
         options=["Valid", "Catch All", "Unknown"],
         default=["Valid", "Catch All"],
         key=f"resume_statuses_{selected['prefix']}",
     )
+
+    try:
+        campaigns = _cached_campaigns()
+    except Exception as exc:
+        st.error(f"Could not load Instantly campaigns: {exc}")
+        campaigns = []
+    selected_campaign = _select_instantly_resource(
+        resources=campaigns,
+        label="Destination campaign",
+        key=f"resume_campaign_{selected['prefix']}",
+        current_id=st.session_state.get("campaign_id"),
+    )
+    destination_campaign_id = selected_campaign["id"] if selected_campaign else None
+    if destination_campaign_id:
+        st.caption(f"Campaign ID: `{destination_campaign_id}`")
+
+    push_partial_clicked = st.button(
+        "Push partial clean now (pause-safe)",
+        key=f"push_partial_{selected['prefix']}",
+        disabled=not destination_campaign_id,
+    )
+    if push_partial_clicked:
+        if not destination_campaign_id:
+            st.error("Select a destination campaign first.")
+        else:
+            try:
+                partial_stats = push_partial_clean(
+                    selected["prefix"],
+                    destination_campaign_id,
+                    allowed_statuses,
+                    source_list_id=st.session_state.get("list_id"),
+                    provision_links=os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower()
+                    not in {"1", "true", "yes"},
+                )
+                st.success(
+                    f"Pushed {partial_stats['pushed']} lead(s) "
+                    f"({partial_stats['skipped_duplicate']} skipped as workspace duplicates, "
+                    f"{partial_stats['failed']} failed). "
+                    f"Link provision: created={partial_stats.get('provision_created', 0)}, "
+                    f"patched={partial_stats.get('provision_patched', 0)}. "
+                    f"Checkpoint preserved — resume MEV whenever ready."
+                )
+            except Exception as exc:
+                st.error(f"Partial push failed: {exc}")
+
     run_mode = st.selectbox(
         "Run mode",
         options=[RUN_MODE_FULL, RUN_MODE_TEST_50, RUN_MODE_DRY],
@@ -307,9 +391,24 @@ def _render_resume_panel(*, show_push: bool) -> None:
         key=f"resume_mode_{selected['prefix']}",
     )
 
+    push_when_complete = st.checkbox(
+        "Also push to campaign when verification completes",
+        value=False,
+        key=f"resume_push_complete_{selected['prefix']}",
+        help="Leave unchecked to verify only. Duplicates are skipped automatically if you already pushed partial clean.",
+    )
+
     if st.button("Resume verification", type="primary", key=f"resume_btn_{selected['prefix']}"):
         if run_mode != RUN_MODE_DRY and not get_api_key():
             st.error("MYEMAILVERIFIER_API_KEY is missing.")
+            return
+        if (
+            show_push
+            and run_mode != RUN_MODE_DRY
+            and push_when_complete
+            and not destination_campaign_id
+        ):
+            st.error("Select a destination campaign before resuming with push.")
             return
 
         progress_bar = st.progress(0)
@@ -331,12 +430,14 @@ def _render_resume_panel(*, show_push: bool) -> None:
                 run_mode=run_mode,
                 custom_limit=None,
                 allowed_statuses=allowed_statuses,
-                destination_campaign_id=st.session_state.get("campaign_id")
-                if show_push
+                destination_campaign_id=destination_campaign_id
+                if show_push and run_mode != RUN_MODE_DRY and push_when_complete
                 else None,
-                source_list_id=None,
+                source_list_id=st.session_state.get("list_id"),
                 purge_source=False,
                 email_column=email_col,
+                provision_links=os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower()
+                not in {"1", "true", "yes"},
                 on_progress=on_progress,
                 resume_prefix=selected["prefix"],
                 skip_quick_verify=True,
@@ -459,6 +560,7 @@ tab_instantly, tab_csv = st.tabs(["Instantly Pipeline", "CSV Upload"])
 
 with tab_instantly:
     _step_indicator(st.session_state.funnel_step)
+    _render_resume_panel(show_push=True)
 
     if not get_instantly_api_key():
         st.error(
@@ -813,6 +915,8 @@ with tab_instantly:
                         purge_source=purge_source,
                         email_column=email_column,
                         skip_quick_verify=skip_quick,
+                        provision_links=os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower()
+                        not in {"1", "true", "yes"},
                         on_progress=on_progress,
                     )
                     st.session_state.pipeline_result = result

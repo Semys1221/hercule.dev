@@ -8,11 +8,20 @@ from functools import lru_cache
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+_LEGAL_DOC_ROOT = _REPO_ROOT / "doc" / "legal-documentation"
 _DOC_DIR = _REPO_ROOT / "doc" / "tech-stack"
 
 
-def _read_doc_file(filename: str) -> str:
-    return (_DOC_DIR / filename).read_text(encoding="utf-8")
+def _read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def _cgv_path(audience: str) -> Path:
+    return _LEGAL_DOC_ROOT / audience / "cgv.md"
+
+
+def _faq_path(audience: str) -> Path:
+    return _LEGAL_DOC_ROOT / audience / "faq.json"
 
 
 def legal_audience_from_niche_preset(niche_preset_id: str) -> str:
@@ -39,24 +48,24 @@ def is_cif_niche_preset(niche_preset_id: str) -> bool:
 
 def get_cvg_markdown(*, audience: str = "buyer") -> str:
     if audience == "seller":
-        return _read_doc_file("cvg_entreprise.md")
-    return _read_doc_file("cvg_master.md")
+        return _read_text(_cgv_path("entreprise"))
+    return _read_text(_cgv_path("agence"))
 
 
 def get_mentions_legales_markdown() -> str:
-    return _read_doc_file("mentions_legales.md")
+    return _read_text(_LEGAL_DOC_ROOT / "_shared" / "mentions-legales.md")
 
 
 def get_confidentialite_markdown() -> str:
-    return _read_doc_file("confidentialite.md")
+    return _read_text(_LEGAL_DOC_ROOT / "_shared" / "confidentialite.md")
 
 
 def get_ai_reply_knowledge_markdown(*, audience: str = "agence") -> str:
     if audience == "comptable":
-        return _read_doc_file("ai-reply-knowledge-comptable.md")
+        return _read_text(_DOC_DIR / "ai-reply-knowledge-comptable.md")
     if audience == "cif":
-        return _read_doc_file("ai-reply-knowledge-cif.md")
-    return _read_doc_file("ai-reply-knowledge.md")
+        return _read_text(_DOC_DIR / "ai-reply-knowledge-cif.md")
+    return _read_text(_DOC_DIR / "ai-reply-knowledge.md")
 
 
 def build_legal_knowledge_markdown(*, audience: str = "buyer") -> str:
@@ -93,7 +102,7 @@ def extract_entreprise_faq(markdown: str) -> str:
 
 
 def format_faq_for_audience(audience: str) -> str:
-    faq_path = _REPO_ROOT / "content" / "faq" / f"{audience}.json"
+    faq_path = _faq_path(audience)
     if not faq_path.is_file():
         return ""
     data = json.loads(faq_path.read_text(encoding="utf-8"))
@@ -144,7 +153,7 @@ def _build_knowledge_pack_uncached(
     audience = legal_audience_from_niche_preset(niche_preset_id)
     pack_audience = audience if audience in {"comptable", "cif"} else "agence"
     ai_reply_knowledge = get_ai_reply_knowledge_markdown(audience=pack_audience)
-    overview = (_REPO_ROOT / "doc/tech-stack" / "00-overview.md").read_text(encoding="utf-8")
+    overview = (_DOC_DIR / "00-overview.md").read_text(encoding="utf-8")
 
     if pack_audience == "comptable":
         faq_section = format_comptable_faq()
@@ -155,7 +164,7 @@ def _build_knowledge_pack_uncached(
         faq_heading = "## FAQ CIF (Buyer/Seller)"
         faq_fallback = "Cabinet CIF min. 2 associés. Dirigeant PME : service gratuit."
     else:
-        deliverance = (_REPO_ROOT / "doc/tech-stack/deliverance/front-client.md").read_text(
+        deliverance = (_DOC_DIR / "deliverance" / "front-client.md").read_text(
             encoding="utf-8"
         )
         faq_section = extract_entreprise_faq(deliverance)

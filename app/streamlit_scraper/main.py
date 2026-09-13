@@ -654,6 +654,7 @@ def push_instantly_cmd(
             config["INSTANTLY_API_KEY"],
             config["INSTANTLY_LIST_ID"],
             log_cb=_log,
+            provision_config=config,
         )
     )
     typer.secho(

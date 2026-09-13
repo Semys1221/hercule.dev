@@ -491,11 +491,11 @@ export function isEmailSequenceSlug(slug: string): boolean {
 }
 
 export function emailSequenceHref(audience: Audience, slug: string): string {
-  return `/internal/funnels/emails/${audience}/${slug}`;
+  return `/internal/funnels/bookings/${audience}?tab=sequences&sequence=${slug}`;
 }
 
 export function emailsHubHref(audience: Audience): string {
-  return `/internal/funnels/emails/${audience}`;
+  return `/internal/funnels/bookings/${audience}?tab=sequences`;
 }
 
 /** Legacy nav paths → new slugs (audience-specific overrides first) */

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, Database, Flame, TrendingUp } from "lucide-react";
+import { Boxes, Database, TrendingUp } from "lucide-react";
 
 import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
 import { Button } from "@/components/ui/button";
@@ -24,14 +24,6 @@ const SECTIONS = [
     description: LANDING_DESCRIPTION,
     icon: TrendingUp,
     cta: `Ouvrir ${PRODUCT_ROOT_LABEL}`,
-  },
-  {
-    href: "/internal/deliverability",
-    title: "Deliverability",
-    description:
-      "Santé des inboxes Instantly — placement warmup, DNS et panneau de contrôle.",
-    icon: Flame,
-    cta: "Ouvrir Deliverability",
   },
   {
     href: "/internal/components",

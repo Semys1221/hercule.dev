@@ -395,6 +395,7 @@ def test_render_template_html() -> None:
 
     assert "abc123" in html
     assert "Béatrice Meyer" in html
+    assert "Courtage contrat BNC/BIC" in html
     assert "{{accountSignature}}" not in html
     print("OK render_template_html replaces legacy accountSignature placeholder")
 

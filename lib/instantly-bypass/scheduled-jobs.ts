@@ -52,6 +52,22 @@ export async function listDueBypassJobs(limit = 50): Promise<BypassJob[]> {
   return (data ?? []) as BypassJob[];
 }
 
+export async function listFailedBypassJobs(limit = 50): Promise<BypassJob[]> {
+  const client = createBypassClient();
+  const { data, error } = await client
+    .from("instantly_bypass_jobs")
+    .select("*")
+    .eq("status", "failed")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Failed to list failed bypass jobs: ${error.message}`);
+  }
+
+  return (data ?? []) as BypassJob[];
+}
+
 export async function markBypassJobSent(jobId: string): Promise<void> {
   const client = createBypassClient();
   const { error } = await client
@@ -102,6 +118,31 @@ export async function rescheduleBypassJob(
 
   if (error) {
     throw new Error(`Failed to reschedule bypass job: ${error.message}`);
+  }
+}
+
+export async function retryBypassJob(
+  job: BypassJob,
+  scheduledFor: Date,
+  retryCount: number,
+): Promise<void> {
+  const client = createBypassClient();
+  const { error } = await client
+    .from("instantly_bypass_jobs")
+    .update({
+      status: "pending",
+      scheduled_for: scheduledFor.toISOString(),
+      error_message: null,
+      payload: {
+        ...(job.payload ?? {}),
+        retry_count: retryCount,
+      },
+    })
+    .eq("id", job.id)
+    .in("status", ["pending", "failed"]);
+
+  if (error) {
+    throw new Error(`Failed to retry bypass job: ${error.message}`);
   }
 }
 

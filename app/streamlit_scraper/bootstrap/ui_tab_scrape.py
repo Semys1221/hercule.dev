@@ -306,6 +306,7 @@ def render_scrape_tab(preset_id: str, add_log) -> None:
                 push_config["INSTANTLY_API_KEY"],
                 push_config["INSTANTLY_LIST_ID"],
                 log_cb=add_log,
+                provision_config=push_config,
             )
 
         if push_btn:

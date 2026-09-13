@@ -1162,6 +1162,7 @@ async def push_csv_to_instantly(
     list_id: str,
     *,
     log_cb: Callable[[str], None] | None = None,
+    provision_config: dict[str, Any] | None = None,
 ) -> dict[str, int]:
     """Push all valid CSV rows to Instantly (native duplicate skip, no local state)."""
     if not os.path.isfile(csv_path):
@@ -1210,4 +1211,21 @@ async def push_csv_to_instantly(
             "failed": 0,
         }
 
-    return await push_leads_to_list(api_key, list_id, rows, log_cb=log_cb)
+    push_stats = await push_leads_to_list(api_key, list_id, rows, log_cb=log_cb)
+
+    if provision_config and provision_config.get("INSTANTLY_PROVISION_LINKS"):
+        batch_emails = [
+            str(row.get("Email") or "").strip().lower()
+            for row in rows
+            if "@" in str(row.get("Email") or "")
+        ]
+        if batch_emails:
+            from link_provision_client import provision_leads_after_push
+
+            await provision_leads_after_push(
+                batch_emails,
+                config=provision_config,
+                log_cb=log_cb or (lambda _message: None),
+            )
+
+    return push_stats

@@ -8,17 +8,13 @@ import {
   type EmailSequenceEntry,
 } from "@/lib/admin/email-sequences/registry";
 import type { Niche } from "@/lib/admin/navigation";
-import type { LeadCategory } from "@/lib/link-tracking/types";
+import { isLeadCategory } from "@/lib/link-tracking/types";
 import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
 
 export type BuildSequenceAdapterResult = {
   adapter: SequenceEditorAdapter | null;
   needsCampaign: boolean;
 };
-
-function isLeadCategory(value: string): value is LeadCategory {
-  return value === "agence" || value === "comptable" || value === "entreprise";
-}
 
 export function buildSequenceAdapter(
   sequence: EmailSequenceEntry,

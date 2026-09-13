@@ -13,13 +13,16 @@ function main() {
   {
     const result = ensureBeatriceSignature("Merci pour votre message.");
     assert.match(result, /Béatrice Meyer/);
-    assert.match(result, /hercule\.dev/);
-    assert.ok(result.indexOf("Béatrice Meyer") < result.indexOf("hercule.dev"));
+    assert.match(result, /Courtage contrat BNC\/BIC/);
+    assert.match(result, /https:\/\/hercule\.dev/);
+    assert.ok(result.indexOf("Béatrice Meyer") < result.indexOf("Courtage contrat"));
+    assert.ok(result.indexOf("Courtage contrat") < result.indexOf("https://hercule.dev"));
   }
 
   {
     const body = `Bonjour.\n\n${BEATRICE_SIGNATURE}`;
     const result = ensureBeatriceSignature(body);
+    assert.match(result, /Courtage contrat BNC\/BIC/);
     assert.match(result, /https:\/\/hercule\.dev/);
   }
 
@@ -42,6 +45,7 @@ function main() {
   {
     const html = formatReplyHtml("Merci pour votre retour.");
     assert.match(html, /Béatrice Meyer/);
+    assert.match(html, /Courtage contrat BNC\/BIC/);
     assert.match(html, /<a href="https:\/\/hercule\.dev">hercule\.dev<\/a>/);
   }
 

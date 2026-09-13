@@ -198,6 +198,9 @@ Create a Render **Environment Group** `hercule-outreach` and attach it to all ou
 | `CLEAN_SKIP_PUSH` | No | `0` | Set `1` for verify-only |
 | `CLEAN_RESUME_PREFIX` | No | — | Resume MEV checkpoint prefix |
 | `CLEAN_ALLOWED_STATUSES` | No | `Valid,Catch All` | Comma-separated keep list |
+| `CLEAN_SKIP_PROVISION` | No | `0` | Set `1` to skip link provisioning before push |
+| `CRON_SECRET` or `LINK_TRACKING_WEBHOOK_SECRET` | Yes (for provision) | — | Auth for `POST /api/link-tracking/provision-leads` |
+| `CRM_BACKEND_URL` | No | `https://www.hercule.dev` | Hercule API base for link provisioning |
 
 ### Optional UI
 

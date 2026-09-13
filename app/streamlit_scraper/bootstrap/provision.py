@@ -17,7 +17,6 @@ from bootstrap.discovery import (
 from instantly_client import (
     ensure_campaign,
     ensure_lead_list,
-    ensure_subsequence,
     instantly_resource_name,
 )
 
@@ -202,7 +201,6 @@ def provision_preset(
     *,
     api_key: str,
     dry_run: bool = False,
-    with_subsequence: bool = False,
     log_cb: Any = None,
 ) -> dict[str, Any]:
     presets = discover_presets(use_cache=True)
@@ -216,9 +214,8 @@ def provision_preset(
 
     needs_list = not existing_list
     needs_campaign = not existing_campaign
-    needs_subsequence = with_subsequence and not existing_subsequence
 
-    if not needs_list and not needs_campaign and not needs_subsequence:
+    if not needs_list and not needs_campaign:
         return {
             "preset_id": preset_id,
             "label": label,
@@ -228,7 +225,6 @@ def provision_preset(
             "subsequence_id": existing_subsequence,
             "created_list": False,
             "created_campaign": False,
-            "created_subsequence": False,
             "skipped": True,
         }
 
@@ -242,7 +238,6 @@ def provision_preset(
             "subsequence_id": existing_subsequence,
             "created_list": needs_list,
             "created_campaign": needs_campaign,
-            "created_subsequence": needs_subsequence,
             "skipped": False,
             "dry_run": True,
         }
@@ -252,7 +247,6 @@ def provision_preset(
     subsequence_id = existing_subsequence
     created_list = False
     created_campaign = False
-    created_subsequence = False
 
     if not list_id:
         created = ensure_lead_list(api_key, name)
@@ -262,21 +256,6 @@ def provision_preset(
         created = ensure_campaign(api_key, name)
         campaign_id = _uuid(created.get("id"))
         created_campaign = True
-
-    if with_subsequence and campaign_id and not subsequence_id:
-        created = ensure_subsequence(
-            api_key,
-            parent_campaign_id=campaign_id,
-            name=f"Interested bypass — {label}"[:80],
-        )
-        subsequence_id = _uuid(created.get("id"))
-        created_subsequence = True
-        _onboard_subsequence_app(
-            campaign_id=campaign_id,
-            campaign_name=name,
-            api_key=api_key,
-            log_cb=log_cb,
-        )
 
     write_instantly_ids(
         meta.config_path,
@@ -297,7 +276,6 @@ def provision_preset(
         "subsequence_id": subsequence_id,
         "created_list": created_list,
         "created_campaign": created_campaign,
-        "created_subsequence": created_subsequence,
         "skipped": False,
         "path": preset_config_path(preset_id),
     }

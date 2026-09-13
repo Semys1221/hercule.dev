@@ -7,13 +7,13 @@ export default function InternalAppShellLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SidebarProvider>
+    <SidebarProvider className="overflow-x-hidden">
       <InternalAppSidebar />
       <SidebarInset>
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-md">
           <SidebarTrigger />
         </header>
-        <div className="flex-1 overflow-auto">{children}</div>
+        <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

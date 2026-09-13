@@ -10,6 +10,11 @@ from lead_links import TargetType, resolve_lead_cta_link
 
 HERCULE_WEBSITE_URL = "https://hercule.dev"
 BEATRICE_SIGNATURE = "Béatrice Meyer"
+HERCULE_SIGNATURE_TAGLINE = "hercule.dev Courtage contrat BNC/BIC"
+
+OUTREACH_SIGNATURE_PLAIN = "\n".join(
+    (BEATRICE_SIGNATURE, HERCULE_SIGNATURE_TAGLINE, HERCULE_WEBSITE_URL)
+)
 
 _RESERVATION_PATH_RE = re.compile(
     r"reservation(?:-entreprise)?\.html|/r/comptable/",
@@ -17,6 +22,11 @@ _RESERVATION_PATH_RE = re.compile(
 )
 _URL_RE = re.compile(
     r"https?://[^\s<>]+|(?:www\.)?hercule\.dev[/\w\-.?=&%]*",
+    re.I,
+)
+_HTTPS_ONLY_URL_RE = re.compile(r"https?://[^\s<>]+", re.I)
+_HERCULE_URL_RE = re.compile(
+    r"https?://(?:www\.)?hercule\.dev(?:/[^\s]*)?",
     re.I,
 )
 
@@ -52,6 +62,10 @@ def _signature_index(text: str) -> int:
         if idx >= 0:
             return idx
     return -1
+
+
+def _has_explicit_hercule_url(text: str) -> bool:
+    return bool(_HERCULE_URL_RE.search(text))
 
 
 def _structure_reply_plaintext(text: str) -> str:
@@ -96,16 +110,25 @@ def _structure_reply_plaintext(text: str) -> str:
     return body.strip()
 
 
-def ensure_beatrice_signature(text: str) -> str:
-    """Ensure Béatrice Meyer signature and hercule.dev link below it."""
-    if _signature_index(text) < 0:
-        text = f"{text.rstrip()}\n\n{BEATRICE_SIGNATURE}"
+def ensure_outreach_signature(text: str) -> str:
+    """Ensure outreach signature: name, tagline, then https://hercule.dev URL."""
+    body = text
+    if _signature_index(body) < 0:
+        body = f"{body.rstrip()}\n\n{BEATRICE_SIGNATURE}"
 
-    idx = _signature_index(text)
-    after_signature = text[idx:].lower()
-    if "hercule.dev" not in after_signature:
-        text = f"{text.rstrip()}\n{HERCULE_WEBSITE_URL}"
-    return text
+    idx = _signature_index(body)
+    after_signature = body[idx:]
+    if HERCULE_SIGNATURE_TAGLINE not in after_signature:
+        body = f"{body.rstrip()}\n{HERCULE_SIGNATURE_TAGLINE}"
+
+    if not _has_explicit_hercule_url(body):
+        body = f"{body.rstrip()}\n{HERCULE_WEBSITE_URL}"
+    return body
+
+
+def ensure_beatrice_signature(text: str) -> str:
+    """Deprecated alias for ensure_outreach_signature."""
+    return ensure_outreach_signature(text)
 
 
 def ensure_cta_present(text: str, cta_link: str) -> str:
@@ -128,10 +151,11 @@ def _anchor_for_url(url: str) -> str:
     return f'<a href="{escaped_href}">{escaped_url}</a>'
 
 
-def _plain_to_linked_html(plain: str) -> str:
+def _linkify_plain_segment(plain: str, *, https_only: bool = False) -> str:
     parts: list[str] = []
     last = 0
-    for match in _URL_RE.finditer(plain):
+    pattern = _HTTPS_ONLY_URL_RE if https_only else _URL_RE
+    for match in pattern.finditer(plain):
         start, end = match.span()
         if start > last:
             parts.append(html.escape(plain[last:start], quote=False))
@@ -140,6 +164,15 @@ def _plain_to_linked_html(plain: str) -> str:
     if last < len(plain):
         parts.append(html.escape(plain[last:], quote=False))
     return "".join(parts)
+
+
+def _plain_to_linked_html(plain: str) -> str:
+    idx = _signature_index(plain)
+    if idx < 0:
+        return _linkify_plain_segment(plain)
+    before = _linkify_plain_segment(plain[:idx])
+    signature_block = _linkify_plain_segment(plain[idx:], https_only=True)
+    return before + signature_block
 
 
 def _paragraphs_from_linked_text(linked: str) -> str:
@@ -175,7 +208,7 @@ def format_reply_html(
     if resolved_cta:
         body = ensure_cta_present(body, resolved_cta)
 
-    body = ensure_beatrice_signature(body)
+    body = ensure_outreach_signature(body)
     body = _structure_reply_plaintext(body)
     linked = _plain_to_linked_html(body)
     html_out = _paragraphs_from_linked_text(linked)

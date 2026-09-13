@@ -70,7 +70,17 @@ export function createBypassAdapter(options: BypassAdapterOptions): SequenceEdit
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ templates }),
+          body: JSON.stringify({
+            templates,
+            sequence_slug: slug,
+            sequence_niche: niche,
+            sequence_step_meta: stepMeta.map((meta) => ({
+              id: meta.id,
+              label: meta.label,
+              delay: meta.delay,
+              template_key: meta.templateKey,
+            })),
+          }),
         },
       );
       const body = (await response.json()) as { error?: string };

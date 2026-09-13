@@ -18,6 +18,7 @@ import {
 
 import type {
   BypassFlow,
+  BypassTemplate,
   InstantlyLeadRecord,
   InstantlyWebhookPayload,
 } from "./types";
@@ -54,6 +55,7 @@ export type ExecuteBypassFlowParams = {
   preferredEmailId?: string;
   fallbackEaccount?: string;
   skipPipelineAdvance?: boolean;
+  templateSnapshot?: Pick<BypassTemplate, "subject" | "body_html"> | null;
 };
 
 export type ExecuteBypassFlowResult =
@@ -93,7 +95,15 @@ export async function executeBypassFlow(
     params.lead ??
     (await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail));
 
-  const template = await loadTemplate(campaignId, flow);
+  const snapshot = params.templateSnapshot;
+  const template =
+    snapshot?.body_html?.trim()
+      ? {
+          template_key: flow,
+          subject: snapshot.subject ?? "",
+          body_html: snapshot.body_html,
+        }
+      : await loadTemplate(campaignId, flow);
   const customBodyHtml =
     typeof params.customBodyHtml === "string" && params.customBodyHtml.trim()
       ? params.customBodyHtml

@@ -30,6 +30,7 @@ from pipeline import (  # noqa: E402
     RUN_MODE_DRY,
     RUN_MODE_FULL,
     RUN_MODE_TEST_50,
+    push_partial_clean,
     run_cleaning_pipeline,
 )
 
@@ -54,6 +55,13 @@ def _on_progress(message: str, fraction: float) -> None:
 
 def _parse_allowed_statuses(raw: str) -> list[str]:
     return [part.strip() for part in raw.split(",") if part.strip()]
+
+
+def _provision_enabled(skip_provision: bool) -> bool:
+    if skip_provision:
+        return False
+    env_flag = os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower()
+    return env_flag not in {"1", "true", "yes"}
 
 
 def _resolve_run_mode(mode: str) -> str:
@@ -165,6 +173,52 @@ def from_csv(
         typer.echo(f"  {label}: {path}")
 
 
+@app.command("push-partial")
+def push_partial_cmd(
+    resume_prefix: str = typer.Option(..., "--resume-prefix", help="Artifact prefix"),
+    campaign_id: str = typer.Option(..., "--campaign-id", help="Destination campaign UUID"),
+    list_id: Optional[str] = typer.Option(
+        None,
+        "--list-id",
+        help="Source Instantly list UUID (required for link provisioning)",
+    ),
+    allowed_statuses: str = typer.Option(
+        "Valid,Catch All",
+        "--allowed-statuses",
+        help="Comma-separated MEV statuses to push",
+    ),
+    skip_provision: bool = typer.Option(
+        False,
+        "--skip-provision",
+        help="Skip link-tracking URL provisioning before push",
+    ),
+) -> None:
+    """Push already-verified clean leads from checkpoint without touching MEV progress."""
+    statuses = _parse_allowed_statuses(allowed_statuses)
+    stats = push_partial_clean(
+        resume_prefix,
+        campaign_id,
+        statuses,
+        source_list_id=list_id,
+        provision_links=_provision_enabled(skip_provision),
+        on_progress=_on_progress,
+    )
+    typer.secho(
+        f"Partial push — {stats.get('clean_rows', 0)} clean rows, "
+        f"{stats['pushed']} pushed, {stats['skipped_duplicate']} skipped duplicate",
+        fg=typer.colors.GREEN,
+    )
+    if _provision_enabled(skip_provision):
+        typer.echo(
+            f"  Link provision: created={stats.get('provision_created', 0)}, "
+            f"patched={stats.get('provision_patched', 0)}, "
+            f"failed={stats.get('provision_failed', 0)}"
+        )
+    if stats.get("manifest_path"):
+        typer.echo(f"  manifest: {stats['manifest_path']}")
+    typer.echo("Checkpoint preserved — resume with: python3 -m cli run --resume-prefix ... --skip-push --mode full")
+
+
 @app.command()
 def run(
     list_id: Optional[str] = typer.Option(
@@ -206,6 +260,11 @@ def run(
         None,
         "--custom-limit",
         help="Row limit when --mode custom",
+    ),
+    skip_provision: bool = typer.Option(
+        False,
+        "--skip-provision",
+        help="Skip link-tracking URL provisioning before campaign push",
     ),
 ) -> None:
     """Fetch Instantly list → quick verify → MEV bulk → optional campaign push."""
@@ -261,6 +320,7 @@ def run(
         on_progress=_on_progress,
         resume_prefix=resume_prefix,
         skip_quick_verify=skip_quick,
+        provision_links=_provision_enabled(skip_provision),
     )
 
     typer.secho(
@@ -277,6 +337,12 @@ def run(
             f"Instantly push: {result.push_pushed} pushed, "
             f"{result.push_skipped_duplicate} skipped duplicate"
         )
+        if _provision_enabled(skip_provision):
+            typer.echo(
+                f"Link provision: created={result.provision_created}, "
+                f"patched={result.provision_patched}, "
+                f"failed={result.provision_failed}"
+            )
     for label, path in result.artifact_paths.items():
         typer.echo(f"  {label}: {path}")
 

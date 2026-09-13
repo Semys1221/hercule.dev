@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { syncBypassSequenceToFile } from "@/lib/legal-documentation/sync-sequences";
 import { listAllTemplates, saveTemplate } from "@/lib/instantly-bypass/templates";
 import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
 
@@ -20,6 +21,18 @@ const putBodySchema = z.object({
       body_html: z.string(),
     }),
   ),
+  sequence_slug: z.string().min(1).optional(),
+  sequence_niche: z.enum(["agence", "comptable", "entreprise", "cif"]).optional(),
+  sequence_step_meta: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        delay: z.string(),
+        template_key: templateKeySchema,
+      }),
+    )
+    .optional(),
 });
 
 export async function GET(
@@ -55,6 +68,26 @@ export async function PUT(
   }
 
   try {
+    if (
+      parsed.data.sequence_slug &&
+      parsed.data.sequence_niche &&
+      parsed.data.sequence_step_meta?.length
+    ) {
+      syncBypassSequenceToFile({
+        niche: parsed.data.sequence_niche,
+        slug: parsed.data.sequence_slug,
+        campaignId,
+        templateKeys: parsed.data.sequence_step_meta.map((step) => step.template_key),
+        stepMeta: parsed.data.sequence_step_meta.map((step) => ({
+          id: step.id,
+          label: step.label,
+          delay: step.delay,
+          templateKey: step.template_key,
+        })),
+        templates: parsed.data.templates,
+      });
+    }
+
     for (const template of parsed.data.templates) {
       await saveTemplate(
         campaignId,

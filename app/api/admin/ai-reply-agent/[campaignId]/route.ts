@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { syncReplyAgentSequenceToFile } from "@/lib/legal-documentation/sync-sequences";
 import { loadAiReplyConfig, saveAiReplyConfig } from "@/lib/ai-reply-agent/config";
 
 const putBodySchema = z.object({
   prompt_snapshot: z.string(),
+  sequence_slug: z.string().min(1).optional(),
+  sequence_niche: z.enum(["agence", "comptable", "entreprise", "cif"]).optional(),
 });
 
 export async function GET(
@@ -43,6 +46,15 @@ export async function PUT(
   }
 
   try {
+    if (parsed.data.sequence_slug && parsed.data.sequence_niche) {
+      syncReplyAgentSequenceToFile({
+        niche: parsed.data.sequence_niche,
+        slug: parsed.data.sequence_slug,
+        campaignId,
+        promptSnapshot: parsed.data.prompt_snapshot,
+      });
+    }
+
     const config = await saveAiReplyConfig(campaignId, parsed.data);
     return NextResponse.json({ ok: true, config });
   } catch (error) {

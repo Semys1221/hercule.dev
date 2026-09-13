@@ -36,15 +36,30 @@ async function loadEnrichedBookings(
   return enrichBookingsForAdmin(bookings);
 }
 
+function eventTypeCacheSegment(uri: string | null | undefined): string {
+  if (!uri?.trim()) {
+    return "none";
+  }
+  return uri.replace(/\/$/, "").split("/").pop() ?? "none";
+}
+
 function getCachedEnrichedBookings(
   daysAhead: number,
   niche: string,
   daysBehind: number,
   useLegacyCategory: boolean,
+  eventTypeUri: string | null,
 ) {
   return unstable_cache(
     () => loadEnrichedBookings(daysAhead, niche, daysBehind, useLegacyCategory),
-    ["admin-calendly-bookings", niche, String(daysBehind), useLegacyCategory ? "legacy" : "event"],
+    [
+      "admin-calendly-bookings",
+      "event-v2",
+      niche,
+      String(daysBehind),
+      useLegacyCategory ? "legacy" : "event",
+      eventTypeCacheSegment(eventTypeUri),
+    ],
     {
       revalidate: BOOKINGS_CACHE_REVALIDATE_SECONDS,
       tags: [bookingsCacheTag(niche)],
@@ -80,23 +95,30 @@ export async function GET(request: Request) {
   }
 
   try {
+    const outreach = await getOutreachConfigView(niche);
+
     // #region agent log
     fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
       body: JSON.stringify({
-        sessionId: "081f8d",
+        sessionId: "d17331",
         runId: "pre-fix",
-        hypothesisId: "H5",
+        hypothesisId: "H1",
         location: "bookings/route.ts:GET",
         message: "Admin bookings request",
-        data: { niche, daysBehind, useLegacyCategory, bypassCache },
+        data: {
+          niche,
+          daysBehind,
+          useLegacyCategory,
+          bypassCache,
+          resolvedEventTypeUri: outreach.resolved_calendly_event_type_uri,
+          calendlyConfigured: outreach.calendly_configured,
+        },
         timestamp: Date.now(),
       }),
     }).catch(() => {});
     // #endregion
-
-    const outreach = await getOutreachConfigView(niche);
     const enriched = bypassCache
       ? await loadEnrichedBookings(daysAhead, niche, daysBehind, useLegacyCategory)
       : await getCachedEnrichedBookings(
@@ -104,7 +126,29 @@ export async function GET(request: Request) {
           niche,
           daysBehind,
           useLegacyCategory,
+          outreach.resolved_calendly_event_type_uri,
         );
+
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
+      body: JSON.stringify({
+        sessionId: "d17331",
+        runId: "post-fix",
+        hypothesisId: "H2",
+        location: "bookings/route.ts:GET:response",
+        message: "Admin bookings response ready",
+        data: {
+          niche,
+          bypassCache,
+          resolvedEventTypeUri: outreach.resolved_calendly_event_type_uri,
+          bookingsCount: enriched.length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
 
     return NextResponse.json({
       bookings: enriched,

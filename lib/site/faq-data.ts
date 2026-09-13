@@ -1,7 +1,7 @@
-import agenceFaqData from "@/content/faq/agence.json";
-import cifFaqData from "@/content/faq/cif.json";
-import comptableFaqData from "@/content/faq/comptable.json";
-import entrepriseFaqData from "@/content/faq/entreprise.json";
+import agenceFaqData from "@/doc/legal-documentation/agence/faq.json";
+import cifFaqData from "@/doc/legal-documentation/cif/faq.json";
+import comptableFaqData from "@/doc/legal-documentation/comptable/faq.json";
+import entrepriseFaqData from "@/doc/legal-documentation/entreprise/faq.json";
 import type { FaqAudience, FaqComponentConfig, FaqDocument, FaqEntry } from "@/lib/site/faq-types";
 import { faqDocumentSchema } from "@/lib/site/faq-types";
 
@@ -13,7 +13,7 @@ const BUNDLED_FAQ: Record<FaqAudience, FaqDocument> = {
 };
 
 export function getFaqEntries(audience: FaqAudience): FaqEntry[] {
-  return BUNDLED_FAQ[audience].entries;
+  return getBundledFaqDocument(audience).entries;
 }
 
 export function getBundledFaqDocument(audience: FaqAudience): FaqDocument {
@@ -50,6 +50,7 @@ const FAQ_ID_PREFIX: Record<FaqAudience, string> = {
   agence: "faq-ag",
   entreprise: "faq-en",
   comptable: "faq-cp",
+  cif: "faq-cif",
 };
 
 export function generateFaqEntryId(audience: FaqAudience, entries: FaqEntry[]): string {

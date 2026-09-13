@@ -8,12 +8,19 @@ import {
   buildReminderLines,
   reminderMarkerTone,
   reminderStatusLabel,
+  reminderSummary,
   sequenceIsLive,
 } from "@/lib/admin/bookings/reminder-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import { cn } from "@/lib/utils";
 
@@ -74,46 +81,48 @@ export function BookingReminderStatus({
 
   const tone = reminderMarkerTone(lines);
   const live = sequenceIsLive(lines);
+  const sentCount = lines.filter((line) => line.status === "sent").length;
+  const summary = reminderSummary(lines);
+
+  const triggerButton = (
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className="relative size-8"
+      disabled={!leadId}
+      aria-label={leadId ? "Voir les relances email" : "Relances email indisponibles"}
+    >
+      <Mail className="size-4" />
+      <span
+        className={cn(
+          "absolute top-1 right-1 size-2 rounded-full",
+          leadId ? markerDotClass(tone) : "bg-destructive",
+        )}
+        aria-hidden="true"
+      />
+      {leadId && lines.length > 0 ? (
+        <span className="absolute -bottom-1 -right-1 rounded bg-background px-0.5 text-[10px] leading-none text-muted-foreground">
+          {sentCount}/{lines.length}
+        </span>
+      ) : null}
+    </Button>
+  );
 
   if (!leadId) {
-    return (
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        className="relative size-8"
-        disabled
-        aria-label="Relances email indisponibles"
-      >
-        <Mail className="size-4" />
-        <span
-          className="absolute top-1 right-1 size-2 rounded-full bg-destructive"
-          aria-hidden="true"
-        />
-      </Button>
-    );
+    return triggerButton;
   }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="relative size-8"
-          aria-label="Voir les relances email"
-        >
-          <Mail className="size-4" />
-          <span
-            className={cn(
-              "absolute top-1 right-1 size-2 rounded-full",
-              markerDotClass(tone),
-            )}
-            aria-hidden="true"
-          />
-        </Button>
-      </PopoverTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top">{summary}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent align="end" className="w-96 p-0">
         <Card className="border-0 shadow-none">
           <CardHeader className="relative gap-1 pb-3">

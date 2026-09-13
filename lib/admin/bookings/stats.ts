@@ -7,6 +7,7 @@ export type BookingStatsInput = {
 
 export type BookingStats = {
   totalBooked: number;
+  upcomingBooked: number;
   pastBooked: number;
   noShowCount: number;
   noShowPercent: number | null;
@@ -56,9 +57,13 @@ export function computeBookingStats(
   ).length;
   const soldCount = pastRows.filter((row) => row.salesCallStatus === "paid").length;
 
+  const totalBooked = rows.length;
+  const pastBooked = pastRows.length;
+
   return {
-    totalBooked: rows.length,
-    pastBooked: pastRows.length,
+    totalBooked,
+    upcomingBooked: totalBooked - pastBooked,
+    pastBooked,
     noShowCount,
     noShowPercent: percent(noShowCount, pastRows.length),
     soldCount,

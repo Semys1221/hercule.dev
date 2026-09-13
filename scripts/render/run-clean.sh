@@ -28,6 +28,9 @@ fi
 if [ -n "${CLEAN_ALLOWED_STATUSES:-}" ]; then
   args+=(--allowed-statuses "$CLEAN_ALLOWED_STATUSES")
 fi
+if [ "${CLEAN_SKIP_PROVISION:-0}" = "1" ]; then
+  args+=(--skip-provision)
+fi
 
 echo "[run-clean] list=$LIST_ID mode=$MODE data_root=$HERCULE_DATA_ROOT"
 python cli.py "${args[@]}"

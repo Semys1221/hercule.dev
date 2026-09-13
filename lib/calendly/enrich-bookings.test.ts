@@ -30,6 +30,8 @@ function baseBooking(
     calendly_join_url: "https://meet.google.com/abc-defg-hij",
     calendly_reschedule_url: "https://calendly.com/reschedulings/RS",
     calendly_cancel_url: "https://calendly.com/cancellations/CX",
+    event_status: "active",
+    invitee_status: "active",
     ...overrides,
   };
 }

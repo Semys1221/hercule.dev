@@ -10,8 +10,8 @@ import time
 from typing import Callable, Optional
 
 # #region agent log
-_DEBUG_LOG_PATH = "/Users/evqn/dev/hercule.dev/.cursor/debug-62b9d7.log"
-_DEBUG_SESSION_ID = "62b9d7"
+_DEBUG_LOG_PATH = "/Users/evqn/dev/hercule.dev/.cursor/debug-794b3b.log"
+_DEBUG_SESSION_ID = "794b3b"
 
 
 def _debug_log(
@@ -596,6 +596,21 @@ def verify_emails_bulk(
     try:
         for chunk_index, chunk in enumerate(chunks):
             chunk_label = f"chunk {chunk_index + 1}/{len(chunks)}" if len(chunks) > 1 else "list"
+            # #region agent log
+            _debug_log(
+                "bulk_verifier.py:verify_emails_bulk",
+                "Starting MEV chunk",
+                {
+                    "chunk_index": chunk_index,
+                    "chunk_count": len(chunks),
+                    "chunk_size": len(chunk),
+                    "already_verified": len(merged),
+                    "pending_total": len(pending_emails),
+                    "artifact_prefix": prefix,
+                },
+                hypothesis_id="H1",
+            )
+            # #endregion
             if on_progress:
                 on_progress(f"Uploading {len(chunk)} email(s) ({chunk_label})...", 0.05)
 

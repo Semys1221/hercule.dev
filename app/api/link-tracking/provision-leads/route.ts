@@ -10,6 +10,7 @@ import {
   normalizeProvisionEmails,
   provisionLeadsByEmails,
 } from "@/lib/link-tracking/provision-by-emails";
+import { resolveCategoryForCampaign } from "@/lib/link-tracking/provision-campaign-lead";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 const bodySchema = z.object({
@@ -49,15 +50,33 @@ export async function POST(request: Request) {
     );
   }
 
-  const nicheRaw = parsed.data.niche?.trim() || "cif";
-  if (!isNiche(nicheRaw)) {
-    return NextResponse.json({ error: "Invalid niche" }, { status: 400 });
+  const campaignIdInput = parsed.data.campaignId?.trim() || "";
+  const nicheRaw = parsed.data.niche?.trim();
+
+  let category: LeadCategory;
+  if (nicheRaw) {
+    if (!isNiche(nicheRaw)) {
+      return NextResponse.json({ error: "Invalid niche" }, { status: 400 });
+    }
+    category = nicheRaw as LeadCategory;
+  } else if (campaignIdInput) {
+    const resolved = await resolveCategoryForCampaign(campaignIdInput);
+    if (!resolved) {
+      return NextResponse.json(
+        {
+          error:
+            "Could not resolve niche from campaignId. Pass niche explicitly or configure niche_outreach_config.",
+        },
+        { status: 400 },
+      );
+    }
+    category = resolved;
+  } else {
+    category = "cif";
   }
 
-  const category = nicheRaw as LeadCategory;
   const campaignId =
-    parsed.data.campaignId?.trim() ||
-    (await resolveInstantlyCampaignId(category));
+    campaignIdInput || (await resolveInstantlyCampaignId(category));
   const listId =
     parsed.data.listId?.trim() || (await resolveInstantlyListId(category));
 

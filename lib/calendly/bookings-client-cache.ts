@@ -1,5 +1,4 @@
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
-import { BOOKINGS_CACHE_REVALIDATE_SECONDS } from "@/lib/calendly/bookings-cache-constants";
 import type { Niche } from "@/lib/admin/navigation";
 
 export type BookingsClientCacheOutreach = {
@@ -11,20 +10,32 @@ export type BookingsClientCacheEntry = {
   fetchedAt: number;
   bookings: EnrichedCalendlyBooking[];
   outreach?: BookingsClientCacheOutreach;
+  eventTypeUri?: string | null;
 };
 
 type CacheStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
-function cacheKey(niche: Niche, daysBehind = 0): string {
-  return `hercule:calendly-bookings:${niche}:${daysBehind}`;
+function eventTypeCacheSegment(uri: string | null | undefined): string {
+  if (!uri?.trim()) {
+    return "none";
+  }
+  return uri.replace(/\/$/, "").split("/").pop() ?? "none";
 }
 
-function getSessionStorage(): CacheStorage | null {
+function cacheKey(
+  niche: Niche,
+  daysBehind = 0,
+  eventTypeUri?: string | null,
+): string {
+  return `hercule:calendly-bookings:v2:${niche}:${daysBehind}:${eventTypeCacheSegment(eventTypeUri)}`;
+}
+
+function getLocalStorage(): CacheStorage | null {
   if (typeof window === "undefined") {
     return null;
   }
   try {
-    return window.sessionStorage;
+    return window.localStorage;
   } catch {
     return null;
   }
@@ -32,22 +43,23 @@ function getSessionStorage(): CacheStorage | null {
 
 export function isBookingsClientCacheEntryValid(
   entry: BookingsClientCacheEntry,
-  now = Date.now(),
+  _now = Date.now(),
 ): boolean {
-  return now - entry.fetchedAt <= BOOKINGS_CACHE_REVALIDATE_SECONDS * 1000;
+  return Boolean(entry.fetchedAt);
 }
 
 export function readBookingsClientCache(
   niche: Niche,
   daysBehind = 0,
+  eventTypeUri?: string | null,
   now = Date.now(),
-  storage: CacheStorage | null = getSessionStorage(),
+  storage: CacheStorage | null = getLocalStorage(),
 ): BookingsClientCacheEntry | null {
   if (!storage) {
     return null;
   }
 
-    const raw = storage.getItem(cacheKey(niche, daysBehind));
+  const raw = storage.getItem(cacheKey(niche, daysBehind, eventTypeUri));
   if (!raw) {
     return null;
   }
@@ -62,15 +74,21 @@ export function readBookingsClientCache(
       return null;
     }
 
-    const ageMs = now - parsed.fetchedAt;
     if (!isBookingsClientCacheEntryValid(parsed, now)) {
-      storage.removeItem(cacheKey(niche, daysBehind));
+      storage.removeItem(cacheKey(niche, daysBehind, eventTypeUri));
+      return null;
+    }
+
+    const expectedEventType = eventTypeUri?.trim() || null;
+    const cachedEventType = parsed.eventTypeUri?.trim() || null;
+    if (expectedEventType !== cachedEventType) {
+      storage.removeItem(cacheKey(niche, daysBehind, eventTypeUri));
       return null;
     }
 
     return parsed;
   } catch {
-    storage.removeItem(cacheKey(niche, daysBehind));
+    storage.removeItem(cacheKey(niche, daysBehind, eventTypeUri));
     return null;
   }
 }
@@ -80,25 +98,35 @@ export function writeBookingsClientCache(
   bookings: EnrichedCalendlyBooking[],
   daysBehind = 0,
   fetchedAt = Date.now(),
-  storage: CacheStorage | null = getSessionStorage(),
+  storage: CacheStorage | null = getLocalStorage(),
   outreach?: BookingsClientCacheOutreach,
+  eventTypeUri?: string | null,
 ): void {
   if (!storage) {
     return;
   }
 
-  const entry: BookingsClientCacheEntry = { fetchedAt, bookings, outreach };
+  const entry: BookingsClientCacheEntry = {
+    fetchedAt,
+    bookings,
+    outreach,
+    eventTypeUri: eventTypeUri?.trim() || null,
+  };
   try {
-    storage.setItem(cacheKey(niche, daysBehind), JSON.stringify(entry));
+    storage.setItem(cacheKey(niche, daysBehind, eventTypeUri), JSON.stringify(entry));
   } catch {
     // sessionStorage full or unavailable — ignore
   }
 }
 
-export function clearBookingsClientCache(niche: Niche, daysBehind = 0): void {
-  const storage = getSessionStorage();
+export function clearBookingsClientCache(
+  niche: Niche,
+  daysBehind = 0,
+  eventTypeUri?: string | null,
+): void {
+  const storage = getLocalStorage();
   if (!storage) {
     return;
   }
-  storage.removeItem(cacheKey(niche, daysBehind));
+  storage.removeItem(cacheKey(niche, daysBehind, eventTypeUri));
 }

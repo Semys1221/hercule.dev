@@ -27,6 +27,8 @@ class MemoryStorage {
   }
 }
 
+const EVENT_URI = "https://api.calendly.com/event_types/ABC123";
+
 function sampleBooking(inviteeUri: string): EnrichedCalendlyBooking {
   return {
     email: "prospect@example.com",
@@ -44,6 +46,8 @@ function sampleBooking(inviteeUri: string): EnrichedCalendlyBooking {
     calendly_join_url: null,
     calendly_reschedule_url: null,
     calendly_cancel_url: null,
+    event_status: "active",
+    invitee_status: "active",
     statut: null,
     sales_call_status: null,
     links: {
@@ -81,37 +85,50 @@ assert.equal(
     },
     now,
   ),
-  false,
+  true,
 );
 
 const storage = new MemoryStorage();
 const booking = sampleBooking("https://api.calendly.com/scheduled_events/EVT/invitees/INV");
 
-writeBookingsClientCache("agence", [booking], 0, now, storage);
+writeBookingsClientCache("agence", [booking], 0, now, storage, undefined, EVENT_URI);
 
-const cached = readBookingsClientCache("agence", 0, now, storage);
+const cached = readBookingsClientCache("agence", 0, EVENT_URI, now, storage);
 assert.ok(cached);
 assert.equal(cached.bookings.length, 1);
 assert.equal(cached.bookings[0]?.invitee_uri, booking.invitee_uri);
 
-const expired = readBookingsClientCache(
+const stillCached = readBookingsClientCache(
   "agence",
   0,
+  EVENT_URI,
   now + BOOKINGS_CACHE_REVALIDATE_SECONDS * 1000 + 1,
   storage,
 );
-assert.equal(expired, null);
-assert.equal(storage.getItem("hercule:calendly-bookings:agence:0"), null);
+assert.ok(stillCached);
+assert.equal(stillCached.bookings.length, 1);
 
-writeBookingsClientCache("agence", [booking], 0, now, storage);
+writeBookingsClientCache("agence", [booking], 0, now, storage, undefined, EVENT_URI);
+const wrongEventType = readBookingsClientCache(
+  "agence",
+  0,
+  "https://api.calendly.com/event_types/OTHER",
+  now,
+  storage,
+);
+assert.equal(wrongEventType, null);
+
 const malformed: BookingsClientCacheEntry = { fetchedAt: now, bookings: [] };
-storage.setItem("hercule:calendly-bookings:entreprise:0", "{not-json");
-assert.equal(readBookingsClientCache("entreprise", 0, now, storage), null);
+storage.setItem("hercule:calendly-bookings:v2:entreprise:0:none", "{not-json");
+assert.equal(readBookingsClientCache("entreprise", 0, null, now, storage), null);
 
-writeBookingsClientCache("agence", [booking], 30, now, storage);
-const salesCached = readBookingsClientCache("agence", 30, now, storage);
+writeBookingsClientCache("agence", [booking], 30, now, storage, undefined, EVENT_URI);
+const salesCached = readBookingsClientCache("agence", 30, EVENT_URI, now, storage);
 assert.ok(salesCached);
 assert.equal(salesCached.bookings[0]?.invitee_uri, booking.invitee_uri);
-assert.equal(readBookingsClientCache("agence", 0, now, storage)?.bookings.length, 1);
+assert.equal(
+  readBookingsClientCache("agence", 0, EVENT_URI, now, storage)?.bookings.length,
+  1,
+);
 
 console.log("bookings-client-cache.test.ts: ok");

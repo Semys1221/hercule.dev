@@ -195,24 +195,14 @@ def _check_instantly_resource(
         return LayerResult(False, "FAIL", f"Instantly {kind} {resource_id}: {exc}")
 
 
-def _check_subsequence_layer(
+def _check_bypass_layer(
     client: InstantlyClient,
     *,
     campaign_id: str,
-    subsequence_id: str,
 ) -> LayerResult:
-    if not subsequence_id:
-        return LayerResult(False, "WARN", "No subsequence id in preset config")
-
     subseq_config = _load_app_module(_SUBSEQUENCE_DIR, "config")
     subseq_repo = _load_app_module(_SUBSEQUENCE_DIR, "supabase_repo")
     subseq_onboarding = _load_app_module(_SUBSEQUENCE_DIR, "onboarding")
-
-    instantly_sub = _check_instantly_resource(
-        client, kind="subsequence", resource_id=subsequence_id
-    )
-    if not instantly_sub.ok:
-        return instantly_sub
 
     config_row = subseq_repo.get_config(campaign_id)
     templates = subseq_repo.list_templates(campaign_id) if config_row else []
@@ -234,12 +224,12 @@ def _check_subsequence_layer(
     )
 
     if status == "ready":
-        return LayerResult(True, "OK", "Subsequence bootstrap ready (E1 + webhook)")
+        return LayerResult(True, "OK", "Bypass bootstrap ready (E1 + webhook)")
     if status == "copy_incomplete" and config_row and has_webhook and e1_ready:
         return LayerResult(
             True,
             "OK",
-            "Subsequence live — E1 seeded, E2/E3 editable",
+            "Bypass live — E1 seeded, E2/E3 editable",
         )
     if not config_row:
         return LayerResult(False, "FAIL", "instantly_bypass_config missing")
@@ -249,7 +239,7 @@ def _check_subsequence_layer(
         secret = subseq_config.webhook_secret()
         hint = "register lead_interested webhook" if secret else "missing webhook secret"
         return LayerResult(False, "FAIL", f"No active lead_interested webhook ({hint})")
-    return LayerResult(False, "WARN", f"Subsequence status: {status}")
+    return LayerResult(False, "WARN", f"Bypass status: {status}")
 
 
 def _check_reply_agent_layer(campaign_id: str, preset_id: str) -> LayerResult:
@@ -328,17 +318,13 @@ def audit_preset(
         client, kind="campaign", resource_id=campaign_id
     )
 
+    audit.layers["bypass"] = _check_bypass_layer(
+        client,
+        campaign_id=campaign_id,
+    )
     if subsequence_id:
-        audit.layers["subsequence"] = _check_subsequence_layer(
-            client,
-            campaign_id=campaign_id,
-            subsequence_id=subsequence_id,
-        )
-    else:
-        audit.layers["subsequence"] = LayerResult(
-            False,
-            "WARN",
-            "No INSTANTLY_SUBSEQUENCE_ID (legacy or incomplete preset)",
+        audit.warnings.append(
+            "INSTANTLY_SUBSEQUENCE_ID still set — remove Instantly subsequence to avoid duplicate E1"
         )
 
     buyer_path, seller_path = _resolve_prompt_paths(preset_id)

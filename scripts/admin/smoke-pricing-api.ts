@@ -1,23 +1,21 @@
 /** Smoke tests for pricing admin API data layer. */
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
+import { pricingJsonPath } from "@/lib/legal-documentation/paths";
+import { readJsonFile } from "@/lib/legal-documentation/read-json";
 import { readPricingDocument, writePricingDocument } from "@/lib/site/pricing-server";
 import { pricingDocumentSchema } from "@/lib/site/pricing-types";
 
 const document = readPricingDocument("agence");
 assert.equal(document.audience, "agence");
-assert.equal(document.plans.length, 2);
+assert.equal(document.plans.length, 3);
 
-const parsed = pricingDocumentSchema.parse(
-  JSON.parse(readFileSync(join(process.cwd(), "content/pricing/agence.json"), "utf-8")),
-);
+const parsed = pricingDocumentSchema.parse(readJsonFile(pricingJsonPath("agence")));
 assert.equal(parsed.plans[0].name, "Hercule Starter");
 
 writePricingDocument(document);
 const reloaded = readPricingDocument("agence");
-assert.equal(reloaded.plans.length, 2);
+assert.equal(reloaded.plans.length, 3);
 
 console.log("smoke-pricing-api.ts: ok");

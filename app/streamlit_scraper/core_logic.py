@@ -1038,7 +1038,45 @@ async def _flush_instantly_buffer(
     )
     pending.clear()
 
-    if push_stats["pushed"] > 0 and config.get("INSTANTLY_PROVISION_LINKS"):
+    should_provision = bool(batch_emails and config.get("INSTANTLY_PROVISION_LINKS"))
+    # #region agent log
+    try:
+        with open(
+            os.path.join(_APP_DIR, "..", "..", ".cursor", "debug-9b2cb9.log"),
+            "a",
+            encoding="utf-8",
+        ) as _fh:
+            _fh.write(
+                json.dumps(
+                    {
+                        "sessionId": "9b2cb9",
+                        "runId": "post-fix",
+                        "hypothesisId": "H1-H2",
+                        "location": "core_logic.py:_flush_instantly_buffer",
+                        "message": "Instantly flush provision gate",
+                        "data": {
+                            "batchEmails": len(batch_emails),
+                            "pushed": push_stats["pushed"],
+                            "skippedDuplicate": push_stats["skipped_duplicate"],
+                            "shouldProvision": should_provision,
+                            "provisionLinksEnabled": bool(
+                                config.get("INSTANTLY_PROVISION_LINKS")
+                            ),
+                            "listId": str(config.get("INSTANTLY_LIST_ID") or "")[:8],
+                            "campaignId": str(config.get("INSTANTLY_CAMPAIGN_ID") or "")[
+                                :8
+                            ],
+                        },
+                        "timestamp": int(time.time() * 1000),
+                    }
+                )
+                + "\n"
+            )
+    except OSError:
+        pass
+    # #endregion
+
+    if should_provision:
         from link_provision_client import provision_leads_after_push
 
         await provision_leads_after_push(

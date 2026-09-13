@@ -42,6 +42,30 @@ export async function POST(request: Request) {
 
   try {
     const result = await handleLeadInterested(payload);
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "3be66b",
+      },
+      body: JSON.stringify({
+        sessionId: "3be66b",
+        location: "app/api/webhooks/instantly/route.ts:result",
+        message: "lead_interested webhook handled",
+        data: {
+          campaignId: payload.campaign_id ?? null,
+          leadEmail: payload.lead_email ?? null,
+          ok: result.ok,
+          skipped: "skipped" in result ? result.skipped : null,
+          error: "error" in result ? result.error : null,
+        },
+        timestamp: Date.now(),
+        runId: "pre-fix",
+        hypothesisId: "B,D",
+      }),
+    }).catch(() => {});
+    // #endregion
     if (!result.ok) {
       if (result.error && ACKNOWLEDGED_ERRORS.has(result.error)) {
         return NextResponse.json({ ok: true, skipped: result.error });

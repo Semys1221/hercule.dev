@@ -81,7 +81,10 @@ SENDABLE_FLOWS: list[Flow] = [
     "interested_email3",
 ]
 
-EMAIL_SIGNATURE = "Béatrice Meyer"
+EMAIL_SIGNATURE = (
+    "Béatrice Meyer<br/>hercule.dev Courtage contrat BNC/BIC<br/>"
+    '<a href="https://hercule.dev">hercule.dev</a>'
+)
 RESERVATION_AGENCE_PLACEHOLDER = "{{reservation_agence_link}}"
 RESERVATION_ENTREPRISE_PLACEHOLDER = "{{reservation_entreprise_link}}"
 RESERVATION_CIF_PLACEHOLDER = "{{reservation_cif_link}}"

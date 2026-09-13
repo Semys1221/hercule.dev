@@ -152,6 +152,7 @@ export async function executeProvisionForSelectedLeads(params: {
   patched: number;
   failed: number;
   errors: string[];
+  customVariablesByEmail: Record<string, Record<string, string>>;
 }> {
   const { lookup, campaignId, category, fromCampaign } = params;
   let selected = params.selected;
@@ -163,6 +164,7 @@ export async function executeProvisionForSelectedLeads(params: {
     patched: 0,
     failed: 0,
     errors: [] as string[],
+    customVariablesByEmail: {} as Record<string, Record<string, string>>,
   };
 
   if (selected.length === 0) {
@@ -254,17 +256,20 @@ export async function executeProvisionForSelectedLeads(params: {
   for (const lead of selected) {
     const dbRow =
       dbRowsByEmail.get(lead.email) ?? lookup.get(lead.email)?.lead ?? null;
-    if (!dbRow || !lead.instantlyLeadId) continue;
+    if (!dbRow) continue;
     const slug = leadSlug(dbRow);
     if (!slug) continue;
+    const customVariables = buildInstantlyCustomVariables(
+      slug,
+      lead.email,
+      dbRow.statut ?? "NOTBOOKED",
+      category,
+    );
+    result.customVariablesByEmail[lead.email] = customVariables;
+    if (!lead.instantlyLeadId) continue;
     patchItems.push({
       leadId: lead.instantlyLeadId,
-      customVariables: buildInstantlyCustomVariables(
-        slug,
-        lead.email,
-        dbRow.statut ?? "NOTBOOKED",
-        category,
-      ),
+      customVariables,
     });
   }
 

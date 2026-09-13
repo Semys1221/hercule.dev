@@ -1,10 +1,6 @@
 import { ClientsShell } from "@/components/internal/clients/clients-shell";
 import { BookingsShell } from "@/components/internal/funnels/bookings/bookings-shell";
-import { FaqManagementShell } from "@/components/internal/funnels/faq-management-shell";
-import { FunnelLegalDoc } from "@/components/internal/funnels/legal-doc";
-import { PricingEditor } from "@/components/internal/funnels/pricing-editor";
 import { FunnelPlaceholder } from "@/components/internal/funnels/placeholder";
-import { getLegalMarkdownForLeaf } from "@/lib/admin/legal-preview";
 import type { Audience } from "@/lib/admin/navigation";
 
 type FunnelLeafContentProps = {
@@ -24,24 +20,11 @@ export function FunnelLeafContent({
     return <ClientsShell niche={audience} />;
   }
 
-  if (leafKey === "legal_faq") {
-    return <FaqManagementShell audience={audience} />;
-  }
-
-  if (leafKey === "legal_pricing") {
-    return <PricingEditor audience={audience} />;
-  }
-
-  if (leafKey.startsWith("legal_")) {
-    const legal = getLegalMarkdownForLeaf(audience, leafKey);
-    if (!legal) {
-      return <FunnelPlaceholder title="Document introuvable" />;
-    }
+  if (leafKey.startsWith("legal_") || leafKey === "emails_hub") {
     return (
-      <FunnelLegalDoc
-        audience={audience}
-        docType={legal.docType}
-        label={legal.label}
+      <FunnelPlaceholder
+        title="Contenu déplacé"
+        detail={`Éditez les fichiers sous doc/legal-documentation/${audience}/ dans le repo. Les séquences email sont dans Bookings → Séquences.`}
       />
     );
   }

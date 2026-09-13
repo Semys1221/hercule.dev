@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { BookingsShell } from "@/components/internal/funnels/bookings/bookings-shell";
+import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
 import { segmentsFromModulePath } from "@/components/internal/funnels/ui/breadcrumb-segments";
 import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
-import { isNiche, NICHE_LABELS } from "@/lib/admin/navigation";
-import { productPageTitle } from "@/lib/admin/funnels/ui-copy";
+import { MODULES, isNiche, NICHE_LABELS } from "@/lib/admin/navigation";
 
 export default async function BookingsNichePage({
   params,
@@ -19,11 +19,15 @@ export default async function BookingsNichePage({
   const label = NICHE_LABELS[niche];
 
   return (
-    <main className="mx-auto max-w-[1400px] px-6 py-8">
+    <main className="mx-auto min-w-0 max-w-[1400px] px-6 py-8">
       <InternalPageHeader
-        title={productPageTitle(label)}
+        title={MODULES.bookings.label}
+        description={`Pipeline Calendly, stats Instantly et séquences pour ${label}.`}
         segments={segmentsFromModulePath("bookings", niche)}
       />
+      <div className="mb-6">
+        <NicheSwitcher />
+      </div>
       <BookingsShell niche={niche} />
     </main>
   );

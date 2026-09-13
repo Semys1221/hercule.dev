@@ -178,7 +178,7 @@ export function FaqEditor({ audience }: FaqEditorProps) {
         <CardHeader>
           <CardTitle>FAQ — {audience}</CardTitle>
           <CardDescription>
-            Source de vérité : <code>content/faq/{audience}.json</code>. Les modifications sont
+            Source de vérité : <code>doc/legal-documentation/{audience}/faq.json</code>. Les modifications sont
             versionnées dans git.
           </CardDescription>
         </CardHeader>

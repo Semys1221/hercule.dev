@@ -1,13 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 
-import { EmailSequenceEditor } from "@/components/internal/funnels/email-sequence-editor";
-import { EmailSequencesTable } from "@/components/internal/funnels/email-sequences-table";
 import { FunnelHub } from "@/components/internal/funnels/hub";
 import { FunnelLeafContent } from "@/components/internal/funnels/leaf-content";
 import { SalesHubLanding } from "@/components/internal/funnels/sales/sales-hub-landing";
 import { segmentsFromNavPath } from "@/components/internal/funnels/ui/breadcrumb-segments";
 import { InternalPageHeader } from "@/components/internal/funnels/ui/internal-page-header";
-import { emailSequenceHref } from "@/lib/admin/email-sequences/registry";
+import { emailSequenceHref, emailsHubHref } from "@/lib/admin/email-sequences/registry";
 import { parseWorkspacePath } from "@/lib/admin/funnels/routing";
 import { productPageTitle, CLIENTS_LIST_HREF } from "@/lib/admin/funnels/ui-copy";
 import {
@@ -48,29 +46,12 @@ export default async function FunnelWorkspacePage({
     redirect(emailSequenceHref(audience, parsed.sequenceSlug));
   }
 
-  if (parsed.kind === "emails_hub") {
-    return (
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <InternalPageHeader
-          title={productPageTitle(label)}
-          segments={segmentsFromNavPath(parsed.navPath)}
-        />
-        <EmailSequencesTable audience={audience} />
-      </main>
-    );
+  if (parsed.kind === "email_sequence_editor") {
+    redirect(emailSequenceHref(audience, parsed.sequenceSlug));
   }
 
-  if (parsed.kind === "email_sequence_editor") {
-    const crumbPath = [...parsed.navPath, parsed.sequenceSlug];
-    return (
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <InternalPageHeader
-          title={productPageTitle(label)}
-          segments={segmentsFromNavPath(crumbPath)}
-        />
-        <EmailSequenceEditor audience={audience} sequenceSlug={parsed.sequenceSlug} />
-      </main>
-    );
+  if (parsed.kind === "emails_hub") {
+    redirect(emailsHubHref(audience));
   }
 
   if (parsed.kind === "hub" && parsed.navPath[1] === "sales") {

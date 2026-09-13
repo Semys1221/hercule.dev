@@ -4,13 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarCheck,
-  ChevronDown,
-  ClipboardCheck,
-  Flame,
-  Globe,
-  Home,
-  Mail,
-  Scale,
   TrendingUp,
   Users2,
   type LucideIcon,
@@ -19,55 +12,33 @@ import {
 import { HerculeMark } from "@/components/hercule-mark";
 
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
 import {
   MODULES,
   bookingsHref,
   clientsHubHref,
-  emailsHref,
-  legalHref,
   nicheFromPathname,
   sessionHubHref,
-  type LegalDocSegment,
   type Niche,
 } from "@/lib/admin/navigation";
 import { readStoredNiche } from "@/lib/admin/niche-storage";
 import { ADMIN_ROOT_LABEL } from "@/lib/admin/funnels/ui-copy";
-import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
-
-const GLOBAL_NAV = [
-  { href: "/internal/funnels", label: "Accueil", icon: Home, exact: false },
-  { href: "/internal/deliverability", label: "Deliverability", icon: Flame, exact: false },
-  { href: "/internal/modalites", label: "Modalités", icon: ClipboardCheck, exact: false },
-  { href: "/", label: "Site public", icon: Globe, exact: true },
-] as const;
+import { useEffect, useRef, useState } from "react";
 
 const PARCOURS_MODULES: Array<{
   id: string;
   label: string;
   icon: LucideIcon;
   href: (niche: Niche) => string;
-  children?: Array<{ id: LegalDocSegment; label: string }>;
 }> = [
   {
     id: "session",
@@ -87,31 +58,9 @@ const PARCOURS_MODULES: Array<{
     icon: Users2,
     href: clientsHubHref,
   },
-  {
-    id: "legal",
-    label: MODULES.legal.label,
-    icon: Scale,
-    href: legalHref,
-    children: [
-      { id: "cgv", label: "CGV" },
-      { id: "mentions", label: "Mentions légales" },
-      { id: "confidentialite", label: "Confidentialité" },
-      { id: "faq", label: "FAQ" },
-      { id: "pricing", label: "Pricing" },
-    ],
-  },
-  {
-    id: "emails",
-    label: MODULES.emails.label,
-    icon: Mail,
-    href: emailsHref,
-  },
 ];
 
-function isPathActive(pathname: string, href: string, exact = false): boolean {
-  if (exact) {
-    return pathname === href;
-  }
+function isPathActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -126,10 +75,44 @@ function resolveSidebarNiche(pathname: string): Niche {
 export function InternalAppSidebar() {
   const pathname = usePathname();
   const [niche, setNiche] = useState<Niche>(() => resolveSidebarNiche(pathname));
+  const brandMarkRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setNiche(resolveSidebarNiche(pathname));
   }, [pathname]);
+
+  useEffect(() => {
+    const root = brandMarkRef.current;
+    const svg = root?.querySelector("svg");
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const paths = [...svg.querySelectorAll("path")].map((path, index) => ({
+      index,
+      fill: getComputedStyle(path).fill,
+      className: path.getAttribute("class"),
+    }));
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "bfa321" },
+      body: JSON.stringify({
+        sessionId: "bfa321",
+        runId: "post-fix",
+        hypothesisId: "H1-H3",
+        location: "sidebar-nav.tsx:brandMark",
+        message: "sidebar brand mark metrics",
+        data: {
+          svgWidth: rect.width,
+          svgHeight: rect.height,
+          svgClasses: svg.className,
+          containerWidth: root?.getBoundingClientRect().width,
+          paths,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, []);
 
   return (
     <Sidebar collapsible="icon">
@@ -137,7 +120,12 @@ export function InternalAppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip={ADMIN_ROOT_LABEL}>
-              <HerculeMark variant="dual" className="size-5 shrink-0 text-foreground" />
+              <div
+                ref={brandMarkRef}
+                className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md border border-border bg-card"
+              >
+                <HerculeMark variant="mono" className="size-4 text-foreground" />
+              </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Hercule</span>
                 <span className="truncate text-xs text-muted-foreground">{ADMIN_ROOT_LABEL}</span>
@@ -149,96 +137,24 @@ export function InternalAppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Ops</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {GLOBAL_NAV.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isPathActive(pathname, item.href, item.exact)}
-                    tooltip={item.label}
-                  >
-                    <Link href={item.href}>
-                      <item.icon className="size-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Parcours</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <div className="px-2 pb-3">
-              <NicheSwitcher className="w-full justify-start" />
-            </div>
             <SidebarMenu>
               {PARCOURS_MODULES.map((module) => {
                 const href = module.href(niche);
                 const Icon = module.icon;
-                const hasChildren = Boolean(module.children?.length);
-
-                if (!hasChildren) {
-                  return (
-                    <SidebarMenuItem key={module.id}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isPathActive(pathname, href)}
-                        tooltip={module.label}
-                      >
-                        <Link href={href}>
-                          <Icon className="size-4" />
-                          <span>{module.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                }
-
-                const branchOpen = isPathActive(pathname, href);
-
                 return (
-                  <Collapsible
-                    key={module.id}
-                    defaultOpen={branchOpen}
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip={module.label}>
-                          <Icon className="size-4" />
-                          <span>{module.label}</span>
-                          <ChevronDown
-                            className={cn(
-                              "ml-auto size-4 transition-transform duration-200",
-                              "group-data-[state=open]/collapsible:rotate-180",
-                            )}
-                          />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {module.children!.map((child) => {
-                            const childHref = legalHref(niche, child.id);
-                            return (
-                              <SidebarMenuSubItem key={child.id}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  isActive={isPathActive(pathname, childHref)}
-                                >
-                                  <Link href={childHref}>{child.label}</Link>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            );
-                          })}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
+                  <SidebarMenuItem key={module.id}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isPathActive(pathname, href)}
+                      tooltip={module.label}
+                    >
+                      <Link href={href}>
+                        <Icon className="size-4" />
+                        <span>{module.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 );
               })}
             </SidebarMenu>

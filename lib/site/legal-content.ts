@@ -1,6 +1,12 @@
 import { readFileSync } from "fs"
 import { join } from "path"
 
+import {
+  cgvMarkdownPath,
+  sharedLegalDocPath,
+  type LegalDocumentationNiche,
+} from "@/lib/legal-documentation/paths"
+
 const DOC_DIR = join(process.cwd(), "doc/tech-stack")
 
 export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif"
@@ -48,23 +54,16 @@ export function getCvgDocMarkdown(slug: CvgDocSlug): string {
   return readDocFile(CVG_DOC_FILES[slug])
 }
 
-function cvgFilenameForAudience(audience: LegalAudience): string {
-  if (audience === "entreprise") return "cvg_entreprise.md"
-  if (audience === "comptable") return "cvg_comptable.md"
-  if (audience === "cif") return "cvg_cif.md"
-  return "cvg_master.md"
-}
-
 export function getCvgMarkdown(audience: LegalAudience = "comptable"): string {
-  return readDocFile(cvgFilenameForAudience(audience))
+  return readFileSync(cgvMarkdownPath(audience as LegalDocumentationNiche), "utf-8")
 }
 
 export function getMentionsLegalesMarkdown(): string {
-  return readDocFile("mentions_legales.md")
+  return readFileSync(sharedLegalDocPath("mentions"), "utf-8")
 }
 
 export function getConfidentialiteMarkdown(): string {
-  return readDocFile("confidentialite.md")
+  return readFileSync(sharedLegalDocPath("confidentialite"), "utf-8")
 }
 
 export {

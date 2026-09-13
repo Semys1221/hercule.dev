@@ -14,6 +14,7 @@ import {
   parseInstantlyLead,
   type ParsedLead,
 } from "@/lib/link-tracking/provision-from-list-internals";
+import { buildInstantlyCustomVariables, leadSlug } from "@/lib/link-tracking/urls";
 
 const DEFAULT_MAX_BATCH = 100;
 
@@ -30,6 +31,7 @@ export type ProvisionLeadsByEmailsResult = {
   patched: number;
   failed: number;
   errors: string[];
+  customVariablesByEmail: Record<string, Record<string, string>>;
 };
 
 /** Normalize, dedupe, and cap email batches for provision API calls. */
@@ -112,6 +114,21 @@ export async function provisionLeadsByEmails(params: {
     fromCampaign: false,
   });
 
+  const customVariablesByEmail = { ...executed.customVariablesByEmail };
+  for (const email of normalizedEmails) {
+    if (customVariablesByEmail[email]) continue;
+    const existing = lookup.get(email);
+    if (!existing || existing.category !== category) continue;
+    const slug = leadSlug(existing.lead);
+    if (!slug) continue;
+    customVariablesByEmail[email] = buildInstantlyCustomVariables(
+      slug,
+      email,
+      existing.lead.statut ?? "NOTBOOKED",
+      category,
+    );
+  }
+
   return {
     listId,
     campaignId,
@@ -120,6 +137,11 @@ export async function provisionLeadsByEmails(params: {
     selected: selected.length,
     skipped,
     skippedWrongCategory,
-    ...executed,
+    created: executed.created,
+    updated: executed.updated,
+    patched: executed.patched,
+    failed: executed.failed,
+    errors: executed.errors,
+    customVariablesByEmail,
   };
 }

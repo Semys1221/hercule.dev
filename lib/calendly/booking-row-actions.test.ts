@@ -12,7 +12,8 @@ function main() {
     canToggleNoShow: true,
     showNoShow: true,
     showNotPaid: true,
-    showNotPresent: true,
+    showLost: true,
+    showUnqualified: true,
     showResetNoShow: false,
   });
   assert.deepEqual(bookingRowActionState("scheduled"), {
@@ -22,7 +23,8 @@ function main() {
     canToggleNoShow: true,
     showNoShow: true,
     showNotPaid: true,
-    showNotPresent: true,
+    showLost: true,
+    showUnqualified: true,
     showResetNoShow: false,
   });
   assert.deepEqual(bookingRowActionState("completed"), {
@@ -32,7 +34,8 @@ function main() {
     canToggleNoShow: true,
     showNoShow: true,
     showNotPaid: true,
-    showNotPresent: true,
+    showLost: true,
+    showUnqualified: true,
     showResetNoShow: false,
   });
   assert.deepEqual(bookingRowActionState("paid"), {
@@ -42,7 +45,19 @@ function main() {
     canToggleNoShow: false,
     showNoShow: false,
     showNotPaid: false,
-    showNotPresent: false,
+    showLost: false,
+    showUnqualified: false,
+    showResetNoShow: false,
+  });
+  assert.deepEqual(bookingRowActionState("lost"), {
+    badge: "PERDU",
+    isPaid: false,
+    isNoShow: false,
+    canToggleNoShow: false,
+    showNoShow: false,
+    showNotPaid: false,
+    showLost: false,
+    showUnqualified: false,
     showResetNoShow: false,
   });
   assert.deepEqual(bookingRowActionState("no_show"), {
@@ -52,7 +67,8 @@ function main() {
     canToggleNoShow: true,
     showNoShow: false,
     showNotPaid: false,
-    showNotPresent: false,
+    showLost: false,
+    showUnqualified: false,
     showResetNoShow: true,
   });
   assert.deepEqual(bookingRowActionState("not_paid"), {
@@ -62,7 +78,8 @@ function main() {
     canToggleNoShow: true,
     showNoShow: false,
     showNotPaid: false,
-    showNotPresent: false,
+    showLost: false,
+    showUnqualified: false,
     showResetNoShow: false,
   });
   console.log("booking-row-actions tests passed");

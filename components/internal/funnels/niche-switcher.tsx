@@ -26,22 +26,22 @@ function hrefForModule(module: string | null, niche: Niche, pathname: string): s
       return bookingsHref(niche);
     case "clients":
       return clientsHubHref(niche);
-    case "legal": {
-      const legalDoc = pathname.match(
-        /^\/internal\/funnels\/legal\/(?:agence|comptable|entreprise|cif)\/([^/]+)/,
-      )?.[1];
-      return legalDoc ? legalHref(niche, legalDoc as Parameters<typeof legalHref>[1]) : legalHref(niche);
-    }
-    case "emails": {
-      const slug = pathname.match(
-        /^\/internal\/funnels\/emails\/(?:agence|comptable|entreprise|cif)\/([^/]+)/,
-      )?.[1];
-      return slug ? emailsHref(niche, slug) : emailsHref(niche);
-    }
+    case "legal":
+      return legalHref(niche);
+    case "emails":
+      return emailsHref(niche);
     default:
       return sessionHubHref(niche);
   }
 }
+
+/** Compact labels for the toggle group — full names stay in aria-label. */
+const NICHE_SWITCHER_LABELS: Record<Niche, string> = {
+  agence: "Agence",
+  entreprise: "Entreprise",
+  comptable: "Comptable",
+  cif: "CIF",
+};
 
 type NicheSwitcherProps = {
   className?: string;
@@ -67,13 +67,18 @@ export function NicheSwitcher({ className }: NicheSwitcherProps) {
       type="single"
       value={currentNiche}
       onValueChange={onNicheChange}
-      className={cn("flex-wrap", className)}
+      className={cn("flex w-full max-w-full flex-wrap gap-1", className)}
       variant="outline"
       size="sm"
     >
       {ALL_NICHES.map((niche) => (
-        <ToggleGroupItem key={niche} value={niche} aria-label={NICHE_LABELS[niche]}>
-          {NICHE_LABELS[niche]}
+        <ToggleGroupItem
+          key={niche}
+          value={niche}
+          aria-label={NICHE_LABELS[niche]}
+          className="min-w-fit flex-none shrink-0 px-2.5"
+        >
+          {NICHE_SWITCHER_LABELS[niche]}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>

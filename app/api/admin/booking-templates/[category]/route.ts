@@ -8,6 +8,7 @@ import {
   listEnabledVariableTokens,
   validateSequenceCopy,
 } from "@/lib/admin/niches/sequence-variables";
+import { syncBookingSequenceToFile } from "@/lib/legal-documentation/sync-sequences";
 import {
   getBookingEmailTemplates,
   upsertBookingEmailTemplates,
@@ -48,6 +49,17 @@ const templateSchema = z
 
 const putBodySchema = z.object({
   templates: z.array(templateSchema).min(1),
+  sequence_slug: z.string().min(1).optional(),
+  sequence_niche: z.enum(["agence", "comptable", "entreprise", "cif"]).optional(),
+  sequence_step_meta: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        delay: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 function parseCategory(value: string): LeadCategory | null {
@@ -108,14 +120,27 @@ export async function PUT(
       );
     }
 
-    await upsertBookingEmailTemplates(
-      category,
-      parsed.data.templates as Array<{
-        email_type: BookingEmailType;
-        subject: string;
-        body: string;
-      }>,
-    );
+    const templatesPayload = parsed.data.templates as Array<{
+      email_type: BookingEmailType;
+      subject: string;
+      body: string;
+    }>;
+
+    if (
+      parsed.data.sequence_slug &&
+      parsed.data.sequence_niche &&
+      parsed.data.sequence_step_meta?.length
+    ) {
+      syncBookingSequenceToFile({
+        niche: parsed.data.sequence_niche,
+        slug: parsed.data.sequence_slug,
+        emailTypes: templatesPayload.map((row) => row.email_type),
+        stepMeta: parsed.data.sequence_step_meta,
+        templates: templatesPayload,
+      });
+    }
+
+    await upsertBookingEmailTemplates(category, templatesPayload);
     const templates = await getBookingEmailTemplates(category);
     return NextResponse.json({ ok: true, category, templates });
   } catch (error) {

@@ -66,8 +66,6 @@ const STUB_PREVIEW_IDS = new Set([
   "funnel-editor",
   "mockup-editor",
   "faq-editor",
-  "pricing-editor",
-  "legal-doc",
   "agence-carousel",
   "sequence-editor",
   "mkt-home",
@@ -241,22 +239,6 @@ function renderStubPreview(entry: ComponentEntry): ReactNode {
           title="FAQ editor"
           description="Édition markdown FAQ par audience."
           fields={["Question", "Réponse markdown"]}
-        />
-      );
-    case "pricing-editor":
-      return (
-        <EditorStubPreview
-          title="Pricing editor"
-          description="Édition markdown tarifs."
-          fields={["Contenu markdown pricing"]}
-        />
-      );
-    case "legal-doc":
-      return (
-        <EditorStubPreview
-          title="Legal doc editor"
-          description="CGV, mentions légales, confidentialité."
-          fields={["Contenu markdown legal"]}
         />
       );
     case "agence-carousel":

@@ -6,6 +6,7 @@ import unittest
 
 from email_format import (
     BEATRICE_SIGNATURE,
+    HERCULE_SIGNATURE_TAGLINE,
     ensure_beatrice_signature,
     format_reply_html,
     plain_text_to_html,
@@ -16,19 +17,24 @@ class EnsureBeatriceSignatureTests(unittest.TestCase):
     def test_appends_signature_and_site_link(self) -> None:
         result = ensure_beatrice_signature("Merci pour votre message.")
         self.assertIn(BEATRICE_SIGNATURE, result)
-        self.assertIn("hercule.dev", result)
-        self.assertLess(result.index(BEATRICE_SIGNATURE), result.index("hercule.dev"))
+        self.assertIn(HERCULE_SIGNATURE_TAGLINE, result)
+        self.assertIn("https://hercule.dev", result)
+        self.assertLess(result.index(BEATRICE_SIGNATURE), result.index(HERCULE_SIGNATURE_TAGLINE))
+        self.assertLess(result.index(HERCULE_SIGNATURE_TAGLINE), result.index("https://hercule.dev"))
 
     def test_appends_site_link_after_existing_signature(self) -> None:
         body = f"Bonjour.\n\n{BEATRICE_SIGNATURE}"
         result = ensure_beatrice_signature(body)
+        self.assertIn(HERCULE_SIGNATURE_TAGLINE, result)
         self.assertIn("https://hercule.dev", result)
         self.assertGreater(result.index(BEATRICE_SIGNATURE), 0)
 
     def test_keeps_existing_site_link_after_signature(self) -> None:
         body = f"Bonjour.\n\n{BEATRICE_SIGNATURE}\nhttps://hercule.dev/cvg"
         result = ensure_beatrice_signature(body)
-        self.assertEqual(result.count("hercule.dev"), 1)
+        self.assertIn(HERCULE_SIGNATURE_TAGLINE, result)
+        self.assertIn("https://hercule.dev/cvg", result)
+        self.assertNotIn("https://hercule.dev\n", result)
 
 
 class FormatReplyHtmlTests(unittest.TestCase):
@@ -49,6 +55,7 @@ class FormatReplyHtmlTests(unittest.TestCase):
     def test_adds_signature_when_missing(self) -> None:
         html_out = format_reply_html("Merci pour votre retour.")
         self.assertIn(BEATRICE_SIGNATURE, html_out)
+        self.assertIn(HERCULE_SIGNATURE_TAGLINE, html_out)
         self.assertIn('<a href="https://hercule.dev">hercule.dev</a>', html_out)
 
     def test_escapes_html_in_body(self) -> None:

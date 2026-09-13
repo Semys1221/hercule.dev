@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { normalizeProvisionEmails } from "@/lib/link-tracking/provision-by-emails";
 import { needsProvision } from "@/lib/link-tracking/provision-from-list-internals";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
+import { buildInstantlyCustomVariables, leadSlug } from "@/lib/link-tracking/urls";
 
 assert.deepEqual(
   normalizeProvisionEmails([
@@ -53,5 +54,17 @@ lookup.set("wrong@test.com", {
 });
 
 assert.equal(needsProvision("wrong@test.com", lookup, "cif"), false);
+
+const skippedLead = lookup.get("new@test.com")!.lead;
+const skippedSlug = leadSlug(skippedLead);
+assert.ok(skippedSlug);
+const skippedVars = buildInstantlyCustomVariables(
+  skippedSlug,
+  "new@test.com",
+  "NOTBOOKED",
+  "cif",
+);
+assert.ok(skippedVars.reservation_cif_link);
+assert.ok(skippedVars.confirmation_agence_link);
 
 console.log("OK provision-by-emails unit tests passed");

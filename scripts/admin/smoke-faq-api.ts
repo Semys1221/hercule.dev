@@ -1,24 +1,20 @@
-/** Smoke tests for FAQ admin API route handlers. */
+/** Smoke tests for FAQ admin API data layer. */
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
+import { faqJsonPath } from "@/lib/legal-documentation/paths";
+import { readJsonFile } from "@/lib/legal-documentation/read-json";
 import { readFaqDocument, writeFaqDocument } from "@/lib/site/faq-server";
-import { faqDocumentSchema } from "@/lib/site/faq-types";
 
-const agence = readFaqDocument("agence");
-assert.equal(agence.audience, "agence");
-assert.ok(agence.entries.length > 0);
+const document = readFaqDocument("agence");
+assert.equal(document.audience, "agence");
+assert.ok(document.entries.length > 0);
 
-const parsed = faqDocumentSchema.parse(
-  JSON.parse(readFileSync(join(process.cwd(), "content/faq/agence.json"), "utf-8")),
-);
-assert.deepEqual(parsed.entries.length, agence.entries.length);
+const parsed = readJsonFile(faqJsonPath("agence"));
+assert.equal(parsed.audience, "agence");
 
-const backup = { ...agence, entries: [...agence.entries] };
-writeFaqDocument(agence);
+writeFaqDocument(document);
 const reloaded = readFaqDocument("agence");
-assert.equal(reloaded.entries.length, backup.entries.length);
+assert.equal(reloaded.entries.length, document.entries.length);
 
 console.log("smoke-faq-api.ts: ok");

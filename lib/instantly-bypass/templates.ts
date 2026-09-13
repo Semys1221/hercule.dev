@@ -1,3 +1,5 @@
+import { OUTREACH_SIGNATURE_HTML } from "@/lib/outreach-email/signature";
+
 import { createBypassClient } from "./supabase";
 
 import { templateRequiresReservationLink } from "./reservation-links";
@@ -5,8 +7,6 @@ import { templateRequiresReservationLink } from "./reservation-links";
 import type { BypassConfig, BypassTemplate, BypassTemplateKey, TemplateVariables } from "./types";
 
 export { templateRequiresReservationLink } from "./reservation-links";
-
-const EMAIL_SIGNATURE = "Béatrice Meyer";
 
 export function isTemplateBodyEmpty(bodyHtml: string | null | undefined): boolean {
   return !bodyHtml?.trim();
@@ -76,7 +76,7 @@ function replaceVariables(text: string, vars: TemplateVariables): string {
   for (const [key, value] of Object.entries(vars)) {
     out = out.replaceAll(`{{${key}}}`, value);
   }
-  return out.replaceAll("{{accountSignature}}", EMAIL_SIGNATURE);
+  return out.replaceAll("{{accountSignature}}", OUTREACH_SIGNATURE_HTML);
 }
 
 export function renderTemplate(

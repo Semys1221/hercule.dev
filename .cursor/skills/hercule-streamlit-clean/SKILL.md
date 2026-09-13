@@ -26,6 +26,9 @@ Use MCP `user-instantly` for list/campaign ops.
 |----------|----------|
 | `MYEMAILVERIFIER_API_KEY` | Yes |
 | `INSTANTLY_API_KEY` | Yes |
+| `CRON_SECRET` or `LINK_TRACKING_WEBHOOK_SECRET` | Yes (before campaign push with URLs) |
+| `CRM_BACKEND_URL` | No (default prod) |
+| `CLEAN_SKIP_PROVISION` | No (`1` to skip) |
 
 Load from repo root `.env`.
 
@@ -43,8 +46,9 @@ Load from repo root `.env`.
 
 ```
 Quick local pre-filter → MyEmailVerifier bulk verify
+  → provision tracking URLs (POST /api/link-tracking/provision-leads; niche from campaign ID)
   → purge source list (Full Clean mode)
-  → push valid leads to Instantly campaign (workspace duplicate check always on)
+  → push valid leads to Instantly campaign (custom_variables merged; workspace duplicate check on)
 ```
 
 Run modes: `RUN_MODE_DRY`, `RUN_MODE_TEST_50`, `RUN_MODE_FULL`, `RUN_MODE_CUSTOM`.
@@ -54,7 +58,8 @@ Run modes: `RUN_MODE_DRY`, `RUN_MODE_TEST_50`, `RUN_MODE_FULL`, `RUN_MODE_CUSTOM
 | File | Role |
 |------|------|
 | `app.py` | 5-step Streamlit funnel |
-| `pipeline.py` | `run_cleaning_pipeline`, credit/time estimates |
+| `pipeline.py` | `run_cleaning_pipeline`, `_provision_and_merge_urls`, credit/time estimates |
+| `shared/link_provision_client.py` | Sync batch provision via Hercule API |
 | `bulk_verifier.py` | MyEmailVerifier bulk upload + poll |
 | `quick_verifier.py` | Local pre-filter |
 | `checkpoint.py` | Save/resume partial runs |
