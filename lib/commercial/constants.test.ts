@@ -64,8 +64,8 @@ describe("COMMERCIAL constants", () => {
 });
 
 describe("COMMERCIAL_COMPTABLE constants", () => {
-  it("starterPriceCents is 99 800", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_800);
+  it("starterPriceCents is 179 900", () => {
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(179_900);
   });
 
   it("starterMissions is 5", () => {
@@ -73,14 +73,14 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
   });
 
   it("growthMonthlyPriceCents equals monthlyPriceCents alias", () => {
-    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(149_900);
+    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(200_000);
     expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(
       COMMERCIAL_COMPTABLE.growthMonthlyPriceCents,
     );
   });
 
-  it("pack3TotalCents is 359 800 (1499 × 3 − 20 %, rounded)", () => {
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
+  it("pack3TotalCents is 480 000 (2000 × 3 − 20 %, rounded)", () => {
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(480_000);
   });
 
   it("firstRdvDaysMin/Max is 20–25", () => {
@@ -156,17 +156,17 @@ describe("OFFER_TYPES_COMPTABLE", () => {
   });
 
   it("monthly1499 amount matches COMMERCIAL_COMPTABLE.monthlyPriceCents", () => {
-    // 1 499 € = 149 900 cents
-    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(149_900);
+    // 2 000 € = 200 000 cents
+    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(200_000);
   });
 
   it("pack3x1499 amount matches COMMERCIAL_COMPTABLE.pack3TotalCents", () => {
-    // 3 598 € = 359 800 cents (1499 × 3 − 20 %, rounded)
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
+    // 4 800 € = 480 000 cents (2000 × 3 − 20 %, rounded)
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(480_000);
   });
 
   it("starter999_5 amount matches COMMERCIAL_COMPTABLE.starterPriceCents", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_800);
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(179_900);
   });
 });
 

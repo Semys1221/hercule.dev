@@ -514,7 +514,7 @@ Signaler l'issue de chaque RDV dirigeant TPE (honoré, no-show, lettre signée, 
 
 *[Présentation orale des offres — checkout sur le dashboard.]*
 
-### Hercule Lite — 998 €/mois
+### Hercule Lite — 1 799 €/mois
 
 > C'est l'offre d'entrée : **5 missions TPE qualifiées par mois** (tenue, fiscal, obligations administratives).
 >
@@ -524,7 +524,7 @@ Signaler l'issue de chaque RDV dirigeant TPE (honoré, no-show, lettre signée, 
 > - **0 % de commission** sur vos honoraires signés
 > - Aucune garantie de signature — uniquement garantie no-show
 
-### Hercule Starter — 1 499 €/mois *(recommandé)*
+### Hercule Starter — 2 000 €/mois *(recommandé)*
 
 > C'est la formule que je recommande aux cabinets : **10 missions TPE/indépendants qualifiées par mois**.
 >
@@ -534,9 +534,9 @@ Signaler l'issue de chaque RDV dirigeant TPE (honoré, no-show, lettre signée, 
 > - Calendly Pro et Zoom Pro provisionnés par Hercule
 > - **Garantie de revenus récurrents : 3 000 € cumulés après vos 10 missions**, ou 5 missions de remplacement offertes
 
-### Pack 3 mois Starter — 3 598 € *(−20 %)*
+### Pack 3 mois Starter — 4 800 € *(−20 %)*
 
-> Engagement 3 mois : 1 499 € × 3 − 20 %.
+> Engagement 3 mois : 2 000 € × 3 − 20 %.
 >
 > - 3 mois de service actif au rythme Hercule Starter (10 missions / mois)
 > - 30 missions TPE qualifiées sur la durée du pack
@@ -546,14 +546,14 @@ Signaler l'issue de chaque RDV dirigeant TPE (honoré, no-show, lettre signée, 
 
 ### Garantie Hercule Starter (à rappeler au closing)
 
-- 1 499 €/mois — 10 missions qualifiées, 0 % de commission sur vos honoraires
+- 2 000 €/mois — 10 missions qualifiées, 0 % de commission sur vos honoraires
 - Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés
 - Moins de 3 000 € de revenus récurrents cumulés après vos 10 missions ? 5 missions de remplacement offertes
-- Hercule Lite (998 €/mois) : aucune garantie de revenus récurrents — uniquement la garantie no-show
+- Hercule Lite (1 799 €/mois) : aucune garantie de revenus récurrents — uniquement la garantie no-show
 
 ### Argument valeur
 
-> Pour vous donner un ordre de grandeur : une mission annuelle de tenue typique tourne autour de **3 600 € d'honoraires par an**, soit environ **300 € / mois** de revenus récurrents par lettre signée. En Hercule Starter à 1 499 €/mois, dès que vous signez vos 10 missions, vous êtes à **3 000 € de MRR garanti** — ou on vous remplace.
+> Pour vous donner un ordre de grandeur : une mission annuelle de tenue typique tourne autour de **3 600 € d'honoraires par an**, soit environ **300 € / mois** de revenus récurrents par lettre signée. En Hercule Starter à 2 000 €/mois, dès que vous signez vos 10 missions, vous êtes à **3 000 € de MRR garanti** — ou on vous remplace.
 
 ---
 

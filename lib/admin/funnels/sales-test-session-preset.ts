@@ -39,7 +39,7 @@ export const SALES_TEST_SESSION_CIF_COMPANY = "Cabinet Test Hercule CIF";
 export const SALES_TEST_SESSION_CIF_CALENDLY_QUESTIONS: Record<string, string> = {
   "Combien d'associés ou collaborateurs compte votre cabinet ?": "4 collaborateurs",
   "Quelles missions proposez-vous ?": "Optimisation fiscale et trésorerie",
-  "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+  "Votre formule démarre-t-elle à 2 000 € / mois ?": "Oui, compatible 2 000 €",
 };
 
 export const SALES_TEST_SESSION_CALENDLY_QUESTIONS: Record<string, string> = {
@@ -51,7 +51,7 @@ export const SALES_TEST_SESSION_CALENDLY_QUESTIONS: Record<string, string> = {
 export const SALES_TEST_SESSION_COMPTABLE_CALENDLY_QUESTIONS: Record<string, string> = {
   "Combien d'associés ou collaborateurs compte votre cabinet ?": "5 collaborateurs",
   "Quelles missions proposez-vous ?": "Tenue comptable, fiscal et social",
-  "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+  "Votre formule démarre-t-elle à 2 000 € / mois ?": "Oui, compatible 2 000 €",
 };
 
 export const SALES_TEST_SESSION_QUALIFICATION: SalesQualificationValues = {

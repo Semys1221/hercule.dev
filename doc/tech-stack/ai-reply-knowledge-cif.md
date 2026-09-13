@@ -44,7 +44,7 @@ Renoyer vers **hercule.dev/cvg/conseil-financier** pour le détail. En résumé 
 
 | Formule | Missions | Garantie MRR |
 |---------|----------|--------------|
-| Hercule Lite | 5 missions/mois — **998 €/mois** | Aucune — no-show only |
+| Hercule Lite | 5 missions/mois — **1 799 €/mois** | Aucune — no-show only |
 | Hercule Starter | 10 missions / mois | 3 000 € cumulés après 10 missions, ou **5 remplacements** |
 | Pack 3 mois Starter | 30 missions sur 3 mois | 9 000 € cumulés après 30 missions, ou **15 remplacements** (5 par tranche de 10 missions) |
 
@@ -56,7 +56,7 @@ Renoyer vers **hercule.dev/cvg/conseil-financier** pour le détail. En résumé 
 - **D'où viennent les demandes ?** Dirigeants PME en accompagnement patrimonial, échéances fiscales, déclarations — qualifiés avant attribution.
 - **Qui peut postuler ?** Cabinets avec bande passante suffisante ; le seuil minimum 2 associés/collaborateurs est un indicateur, pas un refus automatique.
 - **« Je n'ai pas 2 collaborateurs »** : l'enjeu est la bande passante pour des visios qualifiantes (pas des appels de 10 min). Si le cabinet a la capacité (y compris sous-traitance stable), inviter à l'audit de compatibilité via Calendly.
-- **Objection tarif / « mensualités trop élevées »** : expliquer la valeur (10 missions/mois, garantie MRR, 0 % commission sur honoraires) ; mentionner Hercule Lite (998 €/mois, 5 missions/mois) comme offre d'entrée tant que le cabinet a la capacité d'absorber ; détail sur hercule.dev/cvg/conseil-financier.
+- **Objection tarif / « mensualités trop élevées »** : expliquer la valeur (10 missions/mois, garantie MRR, 0 % commission sur honoraires) ; mentionner Hercule Lite (1 799 €/mois, 5 missions/mois) comme offre d'entrée tant que le cabinet a la capacité d'absorber ; détail sur hercule.dev/cvg/conseil-financier.
 - **Demande d'appel téléphonique** : demander « à quelles heures seriez-vous disponible cette semaine ? », proposer deux créneaux Calendly (visio) — pas d'appel téléphonique ad hoc. Si le cabinet répond avec un créneau précis (« mardi 14h », « demain matin »), le système peut **confirmer automatiquement** la visio Zoom via Calendly ; Grok doit alors le mentionner explicitement (lien de replanification si fourni).
 - **Apporteurs d'affaires / rémunération** : Hercule ne rémunère pas les apporteurs. Le cabinet souscrit à Hercule pour recevoir des missions qualifiées ; 0 % de commission sur les honoraires signés ; le dirigeant ne paie rien à Hercule.
 - **Garantie signature ?** Non. Garantie MRR uniquement sur Hercule Starter et Pack (voir CGV).

@@ -5,14 +5,14 @@
   "hero": {
     "eyebrow": "Tarification",
     "title": "Accès aux missions PME. Lite en entrée. Hercule Starter recommandé.",
-    "intro": "Chaque formule ouvre l'accès à des missions de tenue qualifiées, attribuées après audit de compatibilité. Une mission annuelle de tenue à 3 600 € d'honoraires, pour 1 499 € d'investissement mensuel en Hercule Starter."
+    "intro": "Chaque formule ouvre l'accès à des missions de tenue qualifiées, attribuées après audit de compatibilité. Une mission annuelle de tenue à 3 600 € d'honoraires, pour 2 000 € d'investissement mensuel en Hercule Starter."
   },
   "plans": [
     {
       "id": "plan-comptable-lite",
       "name": "Hercule Lite",
       "label": "Offre d'entrée",
-      "price": "998 €",
+      "price": "1 799 €",
       "priceSuffix": "/mois",
       "tagline": "5 missions PME par mois",
       "summary": null,
@@ -34,7 +34,7 @@
       "id": "plan-comptable-starter",
       "name": "Hercule Starter",
       "label": "Recommandé pour les cabinets",
-      "price": "1 499 €",
+      "price": "2 000 €",
       "priceSuffix": "/mois",
       "tagline": "10 contrats PME/TPE/indépendants par mois",
       "summary": null,
@@ -56,9 +56,9 @@
       "id": "plan-comptable-pack3",
       "name": "Pack 3 mois Starter",
       "label": "Engagement 3 mois",
-      "price": "3 598 €",
+      "price": "4 800 €",
       "priceSuffix": null,
-      "tagline": "1 499 € × 3 − 20 %",
+      "tagline": "2 000 € × 3 − 20 %",
       "summary": null,
       "footer": "Premier rendez-vous sous 20 à 25 jours.",
       "featured": true,
