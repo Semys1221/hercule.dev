@@ -18,7 +18,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
   },
   {
     id: "entreprise",
-    label: "Entreprise leads",
+    label: "Leads",
     domain: "product",
     purpose: "Fiche TPE web (matière matching) — miroir agence sans niche comptable",
     keyColumns: "id, email, statut, slug, profile, matched_agence_id",

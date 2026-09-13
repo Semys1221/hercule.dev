@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
@@ -101,6 +101,101 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
   const [savingWaitingQueue, setSavingWaitingQueue] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function measureScrollState(trigger: string) {
+      const root = rootRef.current;
+      const layoutParent = root?.parentElement ?? null;
+      const html = document.documentElement;
+      const body = document.body;
+
+      const snapshot = {
+        trigger,
+        loading,
+        root: root
+          ? {
+              clientHeight: root.clientHeight,
+              scrollHeight: root.scrollHeight,
+              overflowY: getComputedStyle(root).overflowY,
+              canScroll: root.scrollHeight > root.clientHeight,
+            }
+          : null,
+        layoutParent: layoutParent
+          ? {
+              className: layoutParent.className,
+              clientHeight: layoutParent.clientHeight,
+              scrollHeight: layoutParent.scrollHeight,
+              overflowY: getComputedStyle(layoutParent).overflowY,
+              canScroll: layoutParent.scrollHeight > layoutParent.clientHeight,
+            }
+          : null,
+        html: {
+          clientHeight: html.clientHeight,
+          scrollHeight: html.scrollHeight,
+          overflowY: getComputedStyle(html).overflowY,
+        },
+        body: {
+          clientHeight: body.clientHeight,
+          scrollHeight: body.scrollHeight,
+          overflowY: getComputedStyle(body).overflowY,
+        },
+        viewportHeight: window.innerHeight,
+      };
+
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "ab741e",
+        },
+        body: JSON.stringify({
+          sessionId: "ab741e",
+          runId: "pre-fix",
+          hypothesisId: "A-B-C",
+          location: "sales-funnel-settings-page.tsx:measureScrollState",
+          message: "Scroll metrics snapshot",
+          data: snapshot,
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+    }
+
+    measureScrollState("mount-or-loading-change");
+
+    function onWheel(event: WheelEvent) {
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "ab741e",
+        },
+        body: JSON.stringify({
+          sessionId: "ab741e",
+          runId: "pre-fix",
+          hypothesisId: "E",
+          location: "sales-funnel-settings-page.tsx:onWheel",
+          message: "Wheel event observed",
+          data: {
+            deltaY: event.deltaY,
+            defaultPrevented: event.defaultPrevented,
+            targetTag:
+              event.target instanceof Element ? event.target.tagName.toLowerCase() : null,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
+    }
+
+    window.addEventListener("wheel", onWheel, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener("wheel", onWheel, { capture: true });
+    };
+  }, [loading]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -201,7 +296,10 @@ export function SalesFunnelSettingsPage({ audience }: SalesFunnelSettingsPagePro
   }
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-2xl flex-col gap-6 p-6">
+    <div
+      ref={rootRef}
+      className="mx-auto flex min-h-svh w-full max-w-2xl flex-col gap-6 p-6"
+    >
       <div className="flex items-center gap-3">
         <Button asChild variant="ghost" size="icon-sm">
           <Link href={funnelHref} aria-label={SESSION_SETTINGS_BACK_ARIA}>

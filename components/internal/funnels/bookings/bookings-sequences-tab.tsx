@@ -186,6 +186,30 @@ export function BookingsSequencesTab({
 
   const liveTabs = useMemo(() => bookingsSequenceTabsForNiche(niche), [niche]);
   const defaultTab = liveTabs[0]?.id ?? "confirm";
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "66e41f",
+      },
+      body: JSON.stringify({
+        sessionId: "66e41f",
+        runId: "post-fix",
+        hypothesisId: "H1",
+        location: "bookings-sequences-tab.tsx:liveTabs",
+        message: "bookings sequence tabs for niche",
+        data: {
+          niche,
+          tabCount: liveTabs.length,
+          tabIds: liveTabs.map((tab) => tab.id),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [niche, liveTabs]);
+  // #endregion
 
   if (loading) {
     return <Skeleton className="h-64 w-full" />;

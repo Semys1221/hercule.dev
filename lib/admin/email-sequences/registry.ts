@@ -121,7 +121,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
   {
     id: "meeting-entreprise",
     slug: "meeting-entreprise",
-    name: "Meeting sequence — Entreprise",
+    name: "Meeting sequence — Leads",
     phase: "pre_close",
     category: "Meeting",
     stepCount: 3,
@@ -187,7 +187,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 2,
     status: "spec",
     provider: "resend",
-    audiences: ["agence"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description: "Désactivée — récupération rôle agence (role_seq_48 / role_seq_24) retirée.",
     steps: [
       { id: "role_seq_48", label: "Email J-2", delay: "H-48", emailType: "role_seq_48" },
@@ -247,7 +247,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 2,
     status: "built",
     provider: "resend",
-    audiences: ["agence"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description:
       "Déclenché après complétion du formulaire onboarding (PATCH completeOnboarding=true) : email invitation Calendly, puis relance +24h si invitation non acceptée. Le siège Calendly est ajouté manuellement par ops après réception de la notification.",
     steps: [
@@ -276,7 +276,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 3,
     status: "built",
     provider: "resend",
-    audiences: ["agence", "comptable"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description:
       "Séquence déclenchée via le bouton Non Payé dans Bookings (ou le statut not_paid). Envoie le lien dashboard pour finaliser le paiement.",
     steps: [
@@ -297,7 +297,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 3,
     status: "built",
     provider: "resend",
-    audiences: ["agence"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description:
       "Séquence déclenchée via le bouton No Show dans Bookings (ou le statut no_show). Email 1 : objet « Absence — » ; emails 2 et 3 en réponse dans le même fil. CTA = lien de réservation tracké.",
     steps: [
@@ -317,7 +317,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 1,
     status: "built",
     provider: "resend",
-    audiences: ["agence"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description:
       "Email unique envoyé immédiatement après paiement Stripe (webhook checkout.session.completed). Bienvenue, invite à compléter l'onboarding, mentionne la facture (émise, reçue d'ici peu). Aucune information meeting/livraison.",
     steps: [
@@ -370,7 +370,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 4,
     status: "built",
     provider: "resend",
-    audiences: ["agence", "entreprise"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description: "Recherche lancée, mise à jour J+7, milestones, waitlist.",
     steps: [
       { id: "deliverance_search_started", label: "Recherche lancée", delay: "startedAt + offset", emailType: "deliverance_search_started" },
@@ -410,7 +410,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 1,
     status: "built",
     provider: "resend",
-    audiences: ["agence"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description:
       "Email envoyé à l'agence quand l'entreprise réserve via le lien Calendly de l'agence. Contient les informations de l'entreprise matchée.",
     steps: [
@@ -429,12 +429,12 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     stepCount: 4,
     status: "built",
     provider: "resend",
-    audiences: ["agence", "entreprise"],
+    audiences: ["agence", "comptable", "entreprise", "cif"],
     description:
       "Survey fin de RDV avec token — entreprise et agence, chacun avec une relance +24h si pas de réponse.",
     steps: [
-      { id: "post_rdv_survey_entreprise", label: "Survey Entreprise", delay: "Fin RDV", emailType: "survey_rdv_entreprise" },
-      { id: "post_rdv_survey_entreprise_followup", label: "Relance Entreprise", delay: "+24h si pas de réponse", emailType: "survey_rdv_entreprise_followup" },
+      { id: "post_rdv_survey_entreprise", label: "Survey Leads", delay: "Fin RDV", emailType: "survey_rdv_entreprise" },
+      { id: "post_rdv_survey_entreprise_followup", label: "Relance Leads", delay: "+24h si pas de réponse", emailType: "survey_rdv_entreprise_followup" },
       { id: "post_rdv_survey_agence", label: "Survey Agence", delay: "Fin RDV", emailType: "survey_rdv_agence" },
       { id: "post_rdv_survey_agence_followup", label: "Relance Agence", delay: "+24h si pas de réponse", emailType: "survey_rdv_agence_followup" },
     ],
@@ -491,11 +491,11 @@ export function isEmailSequenceSlug(slug: string): boolean {
 }
 
 export function emailSequenceHref(audience: Audience, slug: string): string {
-  return `/internal/funnels/bookings/${audience}?tab=sequences&sequence=${slug}`;
+  return `/internal/${audience}/rendez-vous?tab=sequences&sequence=${slug}`;
 }
 
 export function emailsHubHref(audience: Audience): string {
-  return `/internal/funnels/bookings/${audience}?tab=sequences`;
+  return `/internal/${audience}/rendez-vous?tab=sequences`;
 }
 
 /** Legacy nav paths → new slugs (audience-specific overrides first) */
@@ -599,6 +599,20 @@ export const BOOKING_SEQUENCE_SLUGS: Record<string, BookingEmailType[]> = {
     "deliverance_milestone",
     "deliverance_waitlist",
   ],
+  "deliverance:comptable": [
+    "deliverance_search_started",
+    "deliverance_d7_update",
+    "deliverance_milestone",
+    "deliverance_waitlist",
+  ],
+  "deliverance:cif": [
+    "deliverance_search_started",
+    "deliverance_d7_update",
+    "deliverance_milestone",
+    "deliverance_waitlist",
+  ],
+  "post-rdv-survey:comptable": ["survey_rdv_agence", "survey_rdv_agence_followup"],
+  "post-rdv-survey:cif": ["survey_rdv_agence", "survey_rdv_agence_followup"],
 };
 
 export function bookingSequenceTypesFor(

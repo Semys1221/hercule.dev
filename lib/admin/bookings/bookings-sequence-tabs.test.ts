@@ -14,6 +14,17 @@ import {
   meetingSequenceSlugForNiche,
 } from "@/lib/admin/email-sequences/registry";
 
+const ALL_NICHES = ["agence", "comptable", "entreprise", "cif"] as const;
+const EXPECTED_BOOKING_TAB_IDS = [
+  "subsequence",
+  "reply",
+  "confirm",
+  "reminders",
+  "no-show",
+  "absent",
+  "not-paid",
+] as const;
+
 assert.equal(meetingSequenceSlugForNiche("agence"), "meeting-agence");
 assert.equal(meetingSequenceSlugForNiche("comptable"), "meeting-comptable");
 assert.equal(meetingSequenceSlugForNiche("entreprise"), "meeting-entreprise");
@@ -27,27 +38,22 @@ assert.deepEqual(
   ["immediate", "h48_confirm", "h24_relance"],
 );
 
-const agenceLive = bookingsSequenceTabsForNiche("agence");
-assert.equal(agenceLive.length, 7);
-assert.ok(agenceLive.some((tab) => tab.id === "confirm"));
-assert.ok(agenceLive.some((tab) => tab.id === "reminders"));
+for (const niche of ALL_NICHES) {
+  const live = bookingsSequenceTabsForNiche(niche);
+  assert.equal(
+    live.length,
+    EXPECTED_BOOKING_TAB_IDS.length,
+    `${niche} should expose all booking sequence tabs`,
+  );
+  for (const tabId of EXPECTED_BOOKING_TAB_IDS) {
+    assert.ok(
+      live.some((tab) => tab.id === tabId),
+      `${niche} missing tab ${tabId}`,
+    );
+  }
+}
 
-const comptableLive = bookingsSequenceTabsForNiche("comptable");
-assert.equal(comptableLive.length, 4);
-assert.ok(comptableLive.some((tab) => tab.id === "confirm"));
-assert.ok(!comptableLive.some((tab) => tab.id === "reminders"));
-
-const entrepriseLive = bookingsSequenceTabsForNiche("entreprise");
-assert.equal(entrepriseLive.length, 4);
-assert.ok(entrepriseLive.some((tab) => tab.id === "confirm"));
-assert.ok(!entrepriseLive.some((tab) => tab.id === "not-paid"));
-
-const cifLive = bookingsSequenceTabsForNiche("cif");
-assert.equal(cifLive.length, 4);
-assert.ok(cifLive.some((tab) => tab.id === "confirm"));
-assert.ok(!cifLive.some((tab) => tab.id === "reminders"));
-
-for (const niche of ["agence", "comptable", "entreprise", "cif"] as const) {
+for (const niche of ALL_NICHES) {
   const confirmTab = BOOKINGS_SEQUENCE_TABS.find((tab) => tab.id === "confirm");
   assert.ok(confirmTab);
   assert.equal(isBookingsSequenceTabLive(confirmTab, niche), true);
@@ -58,9 +64,8 @@ for (const niche of ["agence", "comptable", "entreprise", "cif"] as const) {
 
 const reminders = BOOKINGS_SEQUENCE_TABS.find((tab) => tab.id === "reminders");
 assert.ok(reminders);
-assert.equal(isBookingsSequenceTabLive(reminders, "agence"), true);
-assert.equal(isBookingsSequenceTabLive(reminders, "comptable"), false);
-assert.equal(isBookingsSequenceTabLive(reminders, "entreprise"), false);
-assert.equal(isBookingsSequenceTabLive(reminders, "cif"), false);
+for (const niche of ALL_NICHES) {
+  assert.equal(isBookingsSequenceTabLive(reminders, niche), true);
+}
 
 console.log("bookings-sequence-tabs.test.ts: ok");

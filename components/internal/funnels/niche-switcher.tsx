@@ -38,7 +38,7 @@ function hrefForModule(module: string | null, niche: Niche, pathname: string): s
 /** Compact labels for the toggle group — full names stay in aria-label. */
 const NICHE_SWITCHER_LABELS: Record<Niche, string> = {
   agence: "Agence",
-  entreprise: "Entreprise",
+  entreprise: "Leads",
   comptable: "Comptable",
   cif: "CIF",
 };

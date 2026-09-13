@@ -25,7 +25,7 @@ export type NavNode = {
 
 export const NICHE_LABELS: Record<Niche, string> = {
   agence: "Agence",
-  entreprise: "Entreprise",
+  entreprise: "Leads",
   comptable: "Comptable",
   cif: "Conseiller financier",
 };
@@ -45,7 +45,7 @@ export const AUDIENCE_ICONS = NICHE_ICONS;
 
 export const NICHE_CAPTIONS: Record<Niche, string> = {
   agence: "Buyer — agences partenaires qui reçoivent des contrats.",
-  entreprise: "Seller — entreprises qui recherchent une agence.",
+  entreprise: "Seller — leads TPE qui recherchent une agence.",
   comptable: "Buyer — cabinets d'expertise comptable partenaires.",
   cif: "Buyer — cabinets CIF / CGP partenaires.",
 };

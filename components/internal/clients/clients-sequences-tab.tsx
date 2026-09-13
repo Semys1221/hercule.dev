@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { SequenceWorkspace } from "@/components/internal/funnels/sequence-editor/sequence-workspace";
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/empty";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  CLIENTS_SEQUENCE_TABS,
+  clientsSequenceTabsForNiche,
   isClientsSequenceTabLive,
   resolveClientsSequenceEntry,
   type ClientsSequenceTabDef,
@@ -82,24 +82,54 @@ function SequenceTabPanel({
 }
 
 export function ClientsSequencesTab({ niche }: ClientsSequencesTabProps) {
-  const defaultTab = useMemo(
-    () =>
-      CLIENTS_SEQUENCE_TABS.find((tab) => isClientsSequenceTabLive(tab, niche))?.id ??
-      "payment-welcome",
-    [niche],
-  );
+  const liveTabs = useMemo(() => clientsSequenceTabsForNiche(niche), [niche]);
+  const defaultTab = liveTabs[0]?.id ?? "payment-welcome";
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "66e41f",
+      },
+      body: JSON.stringify({
+        sessionId: "66e41f",
+        runId: "post-fix",
+        hypothesisId: "H2",
+        location: "clients-sequences-tab.tsx:liveTabs",
+        message: "clients sequence tabs for niche",
+        data: {
+          niche,
+          tabCount: liveTabs.length,
+          tabIds: liveTabs.map((tab) => tab.id),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [niche, liveTabs]);
+  // #endregion
+
+  if (liveTabs.length === 0) {
+    return (
+      <InternalStatusAlert
+        variant="info"
+        title="Aucune séquence client"
+        message="Aucune séquence post-onboarding n'est configurée pour cette niche."
+      />
+    );
+  }
 
   return (
     <Tabs defaultValue={defaultTab} className="flex flex-col gap-4">
       <TabsList className="flex h-auto flex-wrap">
-        {CLIENTS_SEQUENCE_TABS.map((tab) => (
+        {liveTabs.map((tab) => (
           <TabsTrigger key={tab.id} value={tab.id}>
             {tab.label}
           </TabsTrigger>
         ))}
       </TabsList>
 
-      {CLIENTS_SEQUENCE_TABS.map((tab) => (
+      {liveTabs.map((tab) => (
         <TabsContent key={tab.id} value={tab.id} className="mt-0">
           <SequenceTabPanel tab={tab} niche={niche} />
         </TabsContent>

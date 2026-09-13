@@ -7,6 +7,7 @@ import {
   bookingSequenceTypesFor,
   type EmailSequenceEntry,
 } from "@/lib/admin/email-sequences/registry";
+import { bookingCategoryForSlug } from "@/lib/admin/email-sequences/booking-category";
 import type { Niche } from "@/lib/admin/navigation";
 import { isLeadCategory } from "@/lib/link-tracking/types";
 import type { BypassTemplateKey } from "@/lib/instantly-bypass/types";
@@ -26,10 +27,7 @@ export function buildSequenceAdapter(
 
   if (sequence.editorKind === "booking") {
     const emailTypes = bookingSequenceTypesFor(sequence.slug, niche);
-    const rawCategory =
-      niche === "comptable" && sequence.audiences.includes("comptable")
-        ? "comptable"
-        : sequence.bookingCategory ?? niche;
+    const rawCategory = bookingCategoryForSlug(sequence.slug, niche);
     if (!isLeadCategory(rawCategory)) {
       return { adapter: null, needsCampaign: false };
     }

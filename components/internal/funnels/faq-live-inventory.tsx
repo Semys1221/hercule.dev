@@ -147,7 +147,7 @@ export function FaqLiveInventory({ audience }: FaqLiveInventoryProps) {
       >
         <ToggleGroupItem value="tous">Tous</ToggleGroupItem>
         <ToggleGroupItem value="agence">Agence</ToggleGroupItem>
-        <ToggleGroupItem value="entreprise">Entreprise</ToggleGroupItem>
+        <ToggleGroupItem value="entreprise">Leads</ToggleGroupItem>
       </ToggleGroup>
 
       <ArchitectureDataTable

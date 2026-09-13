@@ -9,15 +9,13 @@ function main() {
   const comptableSlugs = getEmailSequences("comptable").map((entry) => entry.slug);
 
   assert.ok(!allSlugs.includes("both" as never), "no literal both slug");
-  assert.equal(
+  assert.ok(
     comptableSlugs.includes("deliverance"),
-    false,
-    "comptable must not include deliverance (agence+entreprise only)",
+    "comptable includes deliverance",
   );
-  assert.equal(
+  assert.ok(
     comptableSlugs.includes("post-rdv-survey"),
-    false,
-    "comptable must not include post-rdv-survey",
+    "comptable includes post-rdv-survey",
   );
   assert.equal(
     comptableSlugs.includes("notification-payment"),
