@@ -15,7 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
-import { primaryReservationLink } from "@/lib/calendly/enrich-bookings";
+import {
+  resolveSalesSessionConfirmationLink,
+  resolveSalesSessionReservationLink,
+} from "@/lib/admin/funnels/sales-session-links";
 import { readBookingsClientCache } from "@/lib/calendly/bookings-client-cache";
 import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
@@ -35,7 +38,7 @@ import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualifi
 import { setDashboardDeveloperModeEnabled } from "@/lib/dashboard/developer-mode";
 import type { SalesClosingValues } from "@/components/internal/funnels/sales/sales-closing-sections";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
-import { postBookingLinkFor, reservationEntrepriseLinkFor, resolveSalesSessionDashboardLink } from "@/lib/link-tracking/urls";
+import { resolveSalesSessionDashboardLink } from "@/lib/link-tracking/urls";
 import { cn } from "@/lib/utils";
 
 import { SalesIntroChecklist } from "./sales-intro-checklist";
@@ -124,6 +127,7 @@ export function RendezVousPanel({
   const [testLoading, setTestLoading] = useState(false);
   const [testActive, setTestActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [calendlyConfigured, setCalendlyConfigured] = useState(true);
   const developerModeEnabled = useSyncExternalStore(
     subscribeDeveloperModeEnabled,
     () => getDeveloperModeEnabledSnapshot(audience),
@@ -155,6 +159,25 @@ export function RendezVousPanel({
     setScriptTab("intro");
   }, [sessionResetKey]);
 
+  useEffect(() => {
+    if (audience !== "comptable") {
+      setCalendlyConfigured(true);
+      return;
+    }
+
+    void (async () => {
+      const { calendlyConfigured: configured } = await fetchEnrichedBookings(audience, {
+        legacyCategory: true,
+        daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
+      });
+      if (configured === false) {
+        setCalendlyConfigured(false);
+      } else if (configured === true) {
+        setCalendlyConfigured(true);
+      }
+    })();
+  }, [audience]);
+
   const fetchBookings = useCallback(
     async (fresh = false) => {
       setLoading(true);
@@ -164,13 +187,23 @@ export function RendezVousPanel({
       await onBookingSelect(null);
 
       try {
-        const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
+        const {
+          bookings: rows,
+          error: fetchError,
+          calendlyConfigured: configured,
+        } = await fetchEnrichedBookings(audience, {
           legacyCategory: true,
           fresh,
           daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
         });
         if (fetchError) {
           throw new Error(fetchError);
+        }
+
+        if (configured === false) {
+          setCalendlyConfigured(false);
+        } else if (configured === true) {
+          setCalendlyConfigured(true);
         }
 
         setBookings(rows);
@@ -257,32 +290,25 @@ export function RendezVousPanel({
     selectedBooking?.lead_category ??
     selectedBooking?.booking_category ??
     salesAudienceToLeadCategory(audience);
-  const reservationLink = useMemo(() => {
-    if (selectedLead) {
-      if (leadCategory === "entreprise") {
-        return reservationEntrepriseLinkFor(selectedLead) || null;
-      }
-      return selectedLead.reservation_agence_link || null;
-    }
-    if (!selectedBooking?.links) {
-      return null;
-    }
-    return primaryReservationLink(selectedBooking.links, leadCategory);
-  }, [leadCategory, selectedBooking?.links, selectedLead]);
+  const reservationLink = useMemo(
+    () =>
+      resolveSalesSessionReservationLink(
+        leadCategory,
+        selectedLead,
+        selectedBooking?.links,
+      ),
+    [leadCategory, selectedBooking?.links, selectedLead],
+  );
 
-  const confirmationLink = useMemo(() => {
-    if (leadCategory === "entreprise") {
-      if (selectedLead) {
-        return postBookingLinkFor(selectedLead);
-      }
-      return selectedBooking?.links.confirmation_agence_link ?? null;
-    }
-    return (
-      selectedLead?.confirmation_agence_link ??
-      selectedBooking?.links.confirmation_agence_link ??
-      null
-    );
-  }, [leadCategory, selectedBooking?.links.confirmation_agence_link, selectedLead]);
+  const confirmationLink = useMemo(
+    () =>
+      resolveSalesSessionConfirmationLink(
+        leadCategory,
+        selectedLead,
+        selectedBooking?.links,
+      ),
+    [leadCategory, selectedBooking?.links, selectedLead],
+  );
 
   return (
     <div className="space-y-6 text-left">
@@ -335,6 +361,13 @@ export function RendezVousPanel({
       </div>
 
       {error ? <InternalStatusAlert variant="error" message={error} /> : null}
+
+      {audience === "comptable" && !calendlyConfigured ? (
+        <InternalStatusAlert
+          variant="error"
+          message="Event Calendly comptable non configuré — renseignez l'URI dans l'onglet DB ou CALENDLY_EVENT_TYPE_URI_COMPTABLE."
+        />
+      ) : null}
 
       {testActive ? (
         <InternalStatusAlert variant="success" message={SESSION_TEST_MEETING_ACTIVE} />

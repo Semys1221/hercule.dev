@@ -385,12 +385,6 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   }, [canEnterClosing, developerModeEnabled, enterClosingPhase, phase, pitchSidebarEnabled]);
 
   useEffect(() => {
-    if (audience === "comptable" && activeClosingId === "activation") {
-      setActiveClosingId("envoi-dashboard");
-    }
-  }, [activeClosingId, audience]);
-
-  useEffect(() => {
     return () => {
       clearTransitionTimeout();
     };

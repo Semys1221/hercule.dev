@@ -18,17 +18,24 @@ export const SALES_TEST_SESSION_SLUG = `${SEED_PREFIX}sales-session`;
 
 export const SALES_TEST_SESSION_COMPTABLE_SLUG = `${SEED_PREFIX}sales-session-comptable`;
 
+export const SALES_TEST_SESSION_ENTREPRISE_SLUG = `${SEED_PREFIX}sales-session-entreprise`;
+
 export const SALES_TEST_SESSION_INVITEE_URI =
   "https://api.calendly.com/scheduled_events/test-session/invitees/sales-funnel";
 
 export const SALES_TEST_SESSION_COMPTABLE_INVITEE_URI =
   "https://api.calendly.com/scheduled_events/test-session-comptable/invitees/sales-funnel";
 
+export const SALES_TEST_SESSION_ENTREPRISE_INVITEE_URI =
+  "https://api.calendly.com/scheduled_events/test-session-entreprise/invitees/sales-funnel";
+
 export const SALES_TEST_SESSION_FIRST_NAME = "Test";
 
 export const SALES_TEST_SESSION_COMPANY = "Agence Test Hercule";
 
 export const SALES_TEST_SESSION_COMPTABLE_COMPANY = "Cabinet Test Hercule EC";
+
+export const SALES_TEST_SESSION_ENTREPRISE_COMPANY = "Entreprise Test Hercule";
 
 export const SALES_TEST_SESSION_CALENDLY_QUESTIONS: Record<string, string> = {
   "Combien de personnes composent votre équipe ?": "4 collaborateurs",
@@ -40,6 +47,12 @@ export const SALES_TEST_SESSION_COMPTABLE_CALENDLY_QUESTIONS: Record<string, str
   "Combien d'associés ou collaborateurs compte votre cabinet ?": "5 collaborateurs",
   "Quelles missions proposez-vous ?": "Tenue comptable, fiscal et social",
   "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+};
+
+export const SALES_TEST_SESSION_ENTREPRISE_CALENDLY_QUESTIONS: Record<string, string> = {
+  "Quelle est la taille de votre entreprise ?": "10 à 49 salariés",
+  "Quel type de projet web recherchez-vous ?": "Refonte site et visibilité SEO",
+  "Disposez-vous d'un budget projet ?": "Oui, budget confirmé",
 };
 
 export const SALES_TEST_SESSION_QUALIFICATION: SalesQualificationValues = {
@@ -94,6 +107,16 @@ export const SALES_TEST_SESSION_COMPTABLE_QUALIFICATION: SalesQualificationValue
   q21: ["reactivite", "pilotage", "honoraires_lisibles"],
 };
 
+export const SALES_TEST_SESSION_ENTREPRISE_QUALIFICATION: SalesQualificationValues = {
+  ...SALES_TEST_SESSION_QUALIFICATION,
+  o1: ["not_enough_leads", "low_conversion"],
+  o2: "partial_skills",
+  o3: "bad_providers",
+  o4: ["underperforming_provider", "no_strategy"],
+  o5: ["agency_freelance", "site_redesign"],
+  o6: "significant_gap",
+};
+
 export const SALES_TEST_SESSION_CLOSING: SalesClosingValues = {
   reglesAccepted: true,
   calendrierAccepted: true,
@@ -132,6 +155,19 @@ export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionP
     };
   }
 
+  if (audience === "entreprise") {
+    return {
+      slug: SALES_TEST_SESSION_ENTREPRISE_SLUG,
+      inviteeUri: SALES_TEST_SESSION_ENTREPRISE_INVITEE_URI,
+      company: SALES_TEST_SESSION_ENTREPRISE_COMPANY,
+      calendlyQuestions: SALES_TEST_SESSION_ENTREPRISE_CALENDLY_QUESTIONS,
+      qualification: SALES_TEST_SESSION_ENTREPRISE_QUALIFICATION,
+      closing: SALES_TEST_SESSION_CLOSING,
+      profileForm: {},
+      leadCategory: "entreprise",
+    };
+  }
+
   return {
     slug: SALES_TEST_SESSION_SLUG,
     inviteeUri: SALES_TEST_SESSION_INVITEE_URI,
@@ -145,7 +181,11 @@ export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionP
 }
 
 export function isSalesTestSessionSlug(slug: string): boolean {
-  return slug === SALES_TEST_SESSION_SLUG || slug === SALES_TEST_SESSION_COMPTABLE_SLUG;
+  return (
+    slug === SALES_TEST_SESSION_SLUG ||
+    slug === SALES_TEST_SESSION_COMPTABLE_SLUG ||
+    slug === SALES_TEST_SESSION_ENTREPRISE_SLUG
+  );
 }
 
 export function salesTestSessionSlugForAudience(audience: Audience): string {

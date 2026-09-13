@@ -92,6 +92,13 @@ const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
       "Capacité et créneaux — confirmez votre disponibilité pour les RDV dirigeants {clientSegment}.",
   },
   {
+    id: "activation",
+    label: "Activation & paiement",
+    title: "Activation Hercule Comptable",
+    subtitle:
+      "Choisissez la formule cabinet et finalisez le paiement Stripe avant l'accès dashboard.",
+  },
+  {
     id: "envoi-dashboard",
     label: "Lien dashboard",
     title: "Accès dashboard",

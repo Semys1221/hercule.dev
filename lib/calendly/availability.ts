@@ -19,8 +19,7 @@ export const CALENDLY_SCHEDULING_URLS: Record<CalendlyBookingEvent, string | nul
   agence: "https://calendly.com/hercule-connect/30min",
   entreprise:
     "https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone",
-  comptable:
-    "https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone",
+  comptable: null,
 };
 
 const EVENT_TYPE_URI_ENV: Record<CalendlyBookingEvent, string> = {

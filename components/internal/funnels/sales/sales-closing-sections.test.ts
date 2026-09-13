@@ -3,9 +3,11 @@
 import assert from "node:assert/strict";
 
 import {
+  getSalesClosingSections,
   isSalesClosingSectionComplete,
   salesClosingDefaultValues,
 } from "./sales-closing-sections";
+import { resolveClientSegment } from "@/lib/admin/funnels/client-segment";
 
 const emptyVisited = new Set<
   "recap" | "regles-traitement" | "demandes-eligibles" | "calendrier" | "envoi-dashboard"
@@ -133,6 +135,16 @@ assert.equal(
   }),
   false,
   "envoi-dashboard should never auto-complete",
+);
+
+const comptableSections = getSalesClosingSections("comptable", resolveClientSegment(["tpe"]));
+assert.ok(
+  comptableSections.some((section) => section.id === "activation"),
+  "comptable closing should include activation step",
+);
+assert.ok(
+  !getSalesClosingSections("agence").some((section) => section.id === "activation"),
+  "agence closing should not include activation step",
 );
 
 console.log("sales-closing-sections.test.ts: ok");

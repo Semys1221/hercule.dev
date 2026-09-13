@@ -8,7 +8,7 @@ Before editing, read:
 2. [`.cursor/skills/hercule-nextjs/SKILL.md`](../../../../.cursor/skills/hercule-nextjs/SKILL.md) (router)
 3. [`.cursor/skills/hercule-nextjs-sales-funnel/SKILL.md`](../../../../.cursor/skills/hercule-nextjs-sales-funnel/SKILL.md) (this domain)
 
-Canon: [doc/README.md](../../../../doc/README.md).
+Canon: [doc/README.md](../../../../doc/README.md). Patch spec: [doc/patch/patch_sales.md](../../../../doc/patch/patch_sales.md).
 
 Ce dossier héberge la **session client** utilisée en production, pas l'éditeur de parcours admin.
 
@@ -23,8 +23,10 @@ Ce dossier héberge la **session client** utilisée en production, pas l'éditeu
 
 | Action | Chemin |
 |--------|--------|
-| Entrée | Hub Session (`/internal/funnels/{audience}/sales`) → bouton **Ouvrir la session** |
+| Entrée | Hub Session (`/internal/funnels/session/{niche}`) → bouton **Ouvrir la session** |
 | Sortie | Bouton **Quitter** en bas de la sidebar → retour au hub Session |
+
+Legacy : `/internal/funnels/{niche}/sales` redirige vers le hub Session.
 
 Le lien direct n'apparaît pas dans la navigation admin : la session s'ouvre uniquement depuis le hub.
 
@@ -45,8 +47,9 @@ Cette interface est destinée à être affichée **directement devant le client*
 
 Sur l'étape **Rendez-vous**, le bouton **Test** :
 
-- provisionne ou réinitialise le lead `seed-sales-session` (`nanguy29@gmail.com`) ;
-- pré-remplit qualification, closing et formulaire dashboard ;
+- provisionne ou réinitialise le lead test (`nanguy29@gmail.com`) dans la table CRM de la niche ;
+- slugs : `seed-sales-session` (agence), `seed-sales-session-comptable`, `seed-sales-session-entreprise` ;
+- pré-remplit qualification, closing et formulaire dashboard (agence) ;
 - active le mode développeur (navigation libre + raccourcis dashboard).
 
 Sur le dashboard client (`/dashboard/seed-sales-session`), en mode dev : **Simuler le paiement** puis **Compléter l'onboarding (test)** pour parcourir le pipeline sans Stripe ni saisie manuelle.

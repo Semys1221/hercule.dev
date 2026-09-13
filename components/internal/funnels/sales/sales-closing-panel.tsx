@@ -59,6 +59,7 @@ import {
 } from "./sales-closing-sections";
 import { SalesCalendrierPanel } from "./sales-calendrier-panel";
 import { SalesComptableNicheBenchmark } from "./sales-comptable-niche-benchmark";
+import { SalesComptablePricingPanel } from "./sales-comptable-pricing-panel";
 import { SalesEligiblePanel, SalesPresetSummary } from "./sales-eligible-panel";
 
 type SalesClosingPanelProps = {
@@ -456,6 +457,14 @@ export function SalesClosingPanel({
           saving={saving}
           persistTieDown={persistTieDown}
           clientSegment={clientSegment}
+        />
+      ) : null}
+
+      {sectionId === "activation" && audience === "comptable" ? (
+        <SalesComptablePricingPanel
+          slug={selectedLead?.slug ?? null}
+          developerMode={developerMode}
+          closingValues={closingValues}
         />
       ) : null}
 
