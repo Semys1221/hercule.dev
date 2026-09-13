@@ -61,8 +61,8 @@ const BUDGET_KEYS_COMPTABLE = [
   "honoraire",
   "1799",
   "1 799",
-  "2000",
-  "2 000",
+  "2199",
+  "2 199",
   "formule",
 ];
 
@@ -88,7 +88,7 @@ function budgetConfirmedFromAnswer(answer: string | null, audience: Audience): b
     return false;
   }
   if (isCabinetBuyerSalesAudience(audience)) {
-    return /1[\s.]?799|1799|2[\s.]?000|2000|plus de|compatible/i.test(answer);
+    return /1[\s.]?799|1799|2[\s.]?199|2199|plus de|compatible/i.test(answer);
   }
   return /1[\s.]?500|1500|plus de/i.test(answer);
 }

@@ -149,7 +149,7 @@ function main() {
   const cabinetFormulas = modalitesFormulas("comptable");
   assert.equal(cabinetFormulas[0]?.name, "Hercule Starter");
   assert.equal(cabinetFormulas[0]?.recommended, true);
-  assert.match(cabinetFormulas[0]?.detail ?? "", /2\s*000/);
+  assert.match(cabinetFormulas[0]?.detail ?? "", /2\s*199/);
   assert.equal(cabinetFormulas[1]?.name, "Hercule Lite");
   assert.equal(
     COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents,

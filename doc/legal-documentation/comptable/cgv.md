@@ -111,7 +111,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **2 000 € / mois** |
+| **Prix** | **2 199 € / mois** |
 | **Contenu** | Service actif de mise en relation ; **10 Attributions / mois** (PME/TPE/indépendants qualifiés) ; cycle **30 jours** |
 | **Premier RDV** | Sous **20 à 25 jours** après Activation |
 | **Commission Hercule** | **0 %** sur les honoraires signés |
@@ -123,7 +123,7 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **4 800 €** (payable en une fois) |
+| **Prix** | **5 277,60 €** (payable en une fois) |
 | **Contenu** | **3 mois** de service actif au rythme de l'article 5.2 (**10 Attributions / mois**) |
 | **Commission Hercule** | **0 %** |
 
@@ -254,7 +254,7 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
-| 2026-09-13 | 13 sept. 2026 | Hercule Lite **1 799 €/mois** · Hercule Starter **2 000 €/mois** · Pack 3 mois **4 800 €** |
+| 2026-09-13 | 13 sept. 2026 | Hercule Lite **1 799 €/mois** · Hercule Starter **2 199 €/mois** · Pack 3 mois **5 277,60 €** |
 | 2026-09-11 | 11 sept. 2026 | Harmonisation Attributions · éligibilité bande passante (> 3 = indicateur) · clause montée en charge +7 j · RCS · checkbox CGV Comptable |
 | 2026-09-10b | 10 sept. 2026 | Hercule Lite **998 €/mois** (5 missions/mois, abonnement) · Hercule Starter **1 499 €/mois** (abonnement Stripe) |
 | 2026-09-10 | 10 sept. 2026 | Hercule Lite **998 €** · premier RDV **20 à 25 jours** · retrait mentions TTC |

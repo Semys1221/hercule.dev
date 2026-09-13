@@ -73,14 +73,14 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
   });
 
   it("growthMonthlyPriceCents equals monthlyPriceCents alias", () => {
-    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(200_000);
+    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(219_900);
     expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(
       COMMERCIAL_COMPTABLE.growthMonthlyPriceCents,
     );
   });
 
-  it("pack3TotalCents is 480 000 (2000 × 3 − 20 %, rounded)", () => {
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(480_000);
+  it("pack3TotalCents is 527 760 (2199 × 3 − 20 %, rounded)", () => {
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(527_760);
   });
 
   it("firstRdvDaysMin/Max is 20–25", () => {
@@ -156,13 +156,13 @@ describe("OFFER_TYPES_COMPTABLE", () => {
   });
 
   it("monthly1499 amount matches COMMERCIAL_COMPTABLE.monthlyPriceCents", () => {
-    // 2 000 € = 200 000 cents
-    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(200_000);
+    // 2 199 € = 219 900 cents
+    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(219_900);
   });
 
   it("pack3x1499 amount matches COMMERCIAL_COMPTABLE.pack3TotalCents", () => {
-    // 4 800 € = 480 000 cents (2000 × 3 − 20 %, rounded)
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(480_000);
+    // 5 277,60 € = 527 760 cents (2199 × 3 − 20 %, rounded)
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(527_760);
   });
 
   it("starter999_5 amount matches COMMERCIAL_COMPTABLE.starterPriceCents", () => {

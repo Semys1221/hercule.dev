@@ -46,7 +46,7 @@ do_not:
 **CGV de référence :** [/cvg](/cvg) · **Knowledge reply agent :** [`ai-reply-knowledge-comptable.md`](./ai-reply-knowledge-comptable.md)
 
 1. `content/pricing/comptable.json` ↔ `cvg_comptable.md` ↔ `COMMERCIAL_COMPTABLE` dans `lib/commercial/constants.ts`.
-2. Nomenclature canonique : **Hercule Lite** (1 799 €/mois, 5 missions/mois, abonnement) · **Hercule Starter** (2 000 €/mois, 10 missions/mois, abonnement) · **Pack 3 mois Starter** (4 800 €, paiement unique).
+2. Nomenclature canonique : **Hercule Lite** (1 799 €/mois, 5 missions/mois, abonnement) · **Hercule Starter** (2 199 €/mois, 10 missions/mois, abonnement) · **Pack 3 mois Starter** (5 277,60 €, paiement unique).
 3. FAQ : `content/faq/comptable.json` — mêmes montants et garanties MRR : **5 remplacements / 3 000 €** (Starter, après 10 missions) · **15 remplacements / 9 000 €** (Pack, après 30 missions, 5 par tranche de 10 missions).
 4. Site marketing : `components/comptable/comptable-pricing-grid.tsx` (flip Lite ↔ Pack + Starter).
 5. Sales live : `SalesComptablePricingPanel` → `ComptablePricingCheckout` (même grille).

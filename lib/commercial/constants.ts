@@ -236,16 +236,16 @@ export const COMMERCIAL_COMPTABLE = {
   /** @deprecated Use liteMissionsPerMonth */
   starterMissions: 5,
 
-  /** Hercule Starter — mensuel sans engagement — 2 000 €/mois, 10 missions (offer type monthly_1499) */
-  growthMonthlyPriceCents: 200_000,
+  /** Hercule Starter — mensuel sans engagement — 2 199 €/mois, 10 missions (offer type monthly_1499) */
+  growthMonthlyPriceCents: 219_900,
   /** Alias — même offre que growthMonthlyPriceCents */
-  monthlyPriceCents: 200_000,
+  monthlyPriceCents: 219_900,
   growthMissionsPerMonth: 10,
   growthGuaranteeMrrCents: 300_000,
   growthGuaranteeMaxReplacements: 5,
 
-  /** Pack 3 mois Starter — 2 000 € × 3 − 20 %, arrondi (offer type pack_3x1499) */
-  pack3TotalCents: 480_000,
+  /** Pack 3 mois Starter — 2 199 € × 3 − 20 %, arrondi (offer type pack_3x1499) */
+  pack3TotalCents: 527_760,
   pack3MissionsTotal: 30,
   pack3GuaranteeMrrCents: 900_000,
   pack3GuaranteeMaxReplacements: 15,

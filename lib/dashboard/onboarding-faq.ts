@@ -87,7 +87,7 @@ const COMPTABLE_FAQ: OnboardingFaqConfig = {
     {
       id: "cp-paiement",
       q: "Comment se passe le paiement ?",
-      a: "Abonnement mensuel via Stripe pour Hercule Lite (1 799 €/mois) et Hercule Starter (2 000 €/mois), ou paiement unique pour le Pack 3 mois Starter (4 800 €). La commande est ferme dès acceptation des CGV et réception du paiement.",
+      a: "Abonnement mensuel via Stripe pour Hercule Lite (1 799 €/mois) et Hercule Starter (2 199 €/mois), ou paiement unique pour le Pack 3 mois Starter (5 277,60 €). La commande est ferme dès acceptation des CGV et réception du paiement.",
     },
     {
       id: "cp-delai-rdv",

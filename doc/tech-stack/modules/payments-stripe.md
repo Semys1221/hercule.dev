@@ -52,19 +52,19 @@ Legacy (clients antérieurs) :
 | Variable | Offre (nom affiché) | Montant | Mode Stripe | `offer_type` |
 |----------|---------------------|---------|-------------|--------------|
 | `STRIPE_PRICE_COMPTABLE_STARTER` | **Hercule Lite** | 1 799 €/mois | `subscription` (recurring) | `starter_999_5` |
-| `STRIPE_PRICE_COMPTABLE_MONTHLY` | **Hercule Starter** | 2 000 €/mois | `subscription` (recurring) | `monthly_1499` |
-| `STRIPE_PRICE_COMPTABLE_PACK3` | **Pack 3 mois Starter** | 4 800 € | `payment` (one-shot) | `pack_3x1499` |
+| `STRIPE_PRICE_COMPTABLE_MONTHLY` | **Hercule Starter** | 2 199 €/mois | `subscription` (recurring) | `monthly_1499` |
+| `STRIPE_PRICE_COMPTABLE_PACK3` | **Pack 3 mois Starter** | 5 277,60 € | `payment` (one-shot) | `pack_3x1499` |
 
 Lookup keys Stripe comptable (prod) — **recurring monthly** pour Lite et Starter :
 - `comptable_lite_998_monthly` → `STRIPE_PRICE_COMPTABLE_STARTER`
 - `comptable_starter_1499_monthly` → `STRIPE_PRICE_COMPTABLE_MONTHLY`
 - `comptable_pack3_3598` → `STRIPE_PRICE_COMPTABLE_PACK3` (one-shot)
 
-Montants attendus = `COMMERCIAL_COMPTABLE` (`179_900` / `200_000` / `480_000` centimes). Les noms de variables env et lookup keys Stripe sont conservés (legacy `998` / `1499` / `3598`) — mettre à jour les Prices dans le dashboard Stripe.
+Montants attendus = `COMMERCIAL_COMPTABLE` (`179_900` / `219_900` / `527_760` centimes). Les noms de variables env et lookup keys Stripe sont conservés (legacy `998` / `1499` / `3598`) — mettre à jour les Prices dans le dashboard Stripe.
 
 Checkout embarqué : session de vente live (`/internal/funnels/comptable/sales/funnel` → closing **Activation & paiement**) et dashboard client (`/dashboard/{slug}`).
 
-**Ops :** créer ou remplacer les Prices Stripe Lite et Starter par des **prices recurring monthly** (1 799 € et 2 000 €) et le pack one-shot (4 800 €). Configurer les lookup keys ci-dessus (noms legacy). Mettre à jour les env vars Vercel puis redéployer.
+**Ops :** créer ou remplacer les Prices Stripe Lite et Starter par des **prices recurring monthly** (1 799 € et 2 199 €) et le pack one-shot (5 277,60 €). Configurer les lookup keys ci-dessus (noms legacy). Mettre à jour les env vars Vercel puis redéployer.
 
 **Webhook :** configurer en plus de `checkout.session.completed` les événements `invoice.paid` (renouvellements) et `customer.subscription.deleted` (résiliation).
 

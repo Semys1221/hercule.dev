@@ -19,9 +19,9 @@ assert.equal(comptablePlans[0].id, "plan-comptable-lite");
 assert.match(comptablePlans[0].price, /1 799/);
 assert.equal(comptablePlans[0].priceSuffix, "/mois");
 assert.equal(comptablePlans[1].id, "plan-comptable-starter");
-assert.match(comptablePlans[1].price, /2 000/);
+assert.match(comptablePlans[1].price, /2 199/);
 assert.equal(comptablePlans[2].id, "plan-comptable-pack3");
-assert.match(comptablePlans[2].price, /4 800/);
+assert.match(comptablePlans[2].price, /5 277,60/);
 
 const document = getPricingDocument("agence");
 assert.ok(document);
