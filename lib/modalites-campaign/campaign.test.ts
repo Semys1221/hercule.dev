@@ -149,7 +149,7 @@ function main() {
   const cabinetFormulas = modalitesFormulas("comptable");
   assert.equal(cabinetFormulas[0]?.name, "Hercule Starter");
   assert.equal(cabinetFormulas[0]?.recommended, true);
-  assert.match(cabinetFormulas[0]?.detail ?? "", /1\s*499/);
+  assert.match(cabinetFormulas[0]?.detail ?? "", /2\s*199/);
   assert.equal(cabinetFormulas[1]?.name, "Hercule Lite");
   assert.equal(
     COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents,
@@ -159,7 +159,7 @@ function main() {
   assert.match(cabinetFormulas[0]?.detail ?? "", /3\s*000/);
 
   const cabinetBody = modalitesAskBody("entreprise");
-  assert.match(cabinetBody, /998/);
+  assert.match(cabinetBody, /1\s*799/);
   assert.doesNotMatch(cabinetBody, /1 498/);
 
   console.log("modalites-campaign.test.ts: ok");

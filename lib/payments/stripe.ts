@@ -73,17 +73,17 @@ export function getAgenceGrowthBalancePriceId(): string {
 
 /**
  * Canonical Stripe price IDs for comptable checkout.
- * Lookup keys (recurring monthly): comptable_lite_998_monthly, comptable_starter_1499_monthly.
- * Lookup key (one-shot): comptable_pack3_3598.
+ * Lookup keys (recurring monthly, legacy names): comptable_lite_998_monthly, comptable_starter_1499_monthly.
+ * Lookup key (one-shot, legacy name): comptable_pack3_3598 — Stripe dashboard prices must be updated to 1 799 / 2 199 / 5 277,60 €.
  * Env vars override these defaults (see doc/tech-stack/modules/payments-stripe.md).
  */
 const COMPTABLE_STRIPE_PRICE_IDS = {
-  liteMonthly: "price_1UE5gUBd01AMeiaQqyit0dNU",
-  starterMonthly: "price_1UE5gVBd01AMeiaQOrZNfbRk",
-  pack3: "price_1UE5gWBd01AMeiaQp4gkn1sq",
+  liteMonthly: "price_1UFE8oBd01AMeiaQV6PauMkI",
+  starterMonthly: "price_1UFE8rBd01AMeiaQcfNXx6kC",
+  pack3: "price_1UFE8sBd01AMeiaQjwDBB5Ry",
 } as const;
 
-/** Hercule Starter — 1 499 €/mois (recurring). */
+/** Hercule Starter — 2 199 €/mois (recurring). */
 export function getComptableMonthlyPriceId(): string {
   return (
     process.env.STRIPE_PRICE_COMPTABLE_MONTHLY?.trim() ||
@@ -97,7 +97,7 @@ export function getComptablePack3PriceId(): string {
   );
 }
 
-/** Hercule Lite — 998 €/mois (recurring). */
+/** Hercule Lite — 1 799 €/mois (recurring). */
 export function getComptableStarterPriceId(): string {
   return (
     process.env.STRIPE_PRICE_COMPTABLE_STARTER?.trim() ||

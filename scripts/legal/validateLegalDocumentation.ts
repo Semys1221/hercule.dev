@@ -31,11 +31,11 @@ const comptableCgv = readCgv("comptable");
 const litePlan = comptablePricing!.plans.find((plan) => plan.id === "plan-comptable-lite");
 assert.ok(litePlan, "comptable lite plan");
 assert.equal(
-  litePlan!.price.includes("998"),
-  COMMERCIAL_COMPTABLE.starterPriceCents === 99_800,
+  litePlan!.price.includes("1 799"),
+  COMMERCIAL_COMPTABLE.starterPriceCents === 179_900,
   "comptable lite price alignment",
 );
-assertContains(comptableCgv, "998", "comptable CGV lite price");
+assertContains(comptableCgv, "1 799", "comptable CGV lite price");
 
 // Sanity: agence starter cents in constants
 assert.equal(COMMERCIAL.starter998PriceCents, 99_800);

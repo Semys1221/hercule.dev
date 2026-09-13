@@ -94,6 +94,58 @@ function main() {
       "objectifs",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        o3FollowUp: "",
+      },
+      "comptable",
+    ),
+    false,
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        o3FollowUp: "   ",
+      },
+      "comptable",
+    ),
+    false,
+    "whitespace-only o3FollowUp should not satisfy validation",
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_CIF_QUALIFICATION,
+        o3FollowUp: "",
+      },
+      "cif",
+    ),
+    false,
+    "cif o3FollowUp required when o3 is insufficient_prospects",
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+        o3: "full_capacity",
+        o3FollowUp: "",
+      },
+      "comptable",
+    ),
+    true,
+    "o3FollowUp not required when o3 is not insufficient_prospects",
+  );
+
+  assert.equal(
+    isSalesSectionComplete(
+      "objectifs",
+      {
+        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
         o6: "",
       },
       "comptable",

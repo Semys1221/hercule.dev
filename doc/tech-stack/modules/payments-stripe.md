@@ -51,20 +51,20 @@ Legacy (clients antérieurs) :
 
 | Variable | Offre (nom affiché) | Montant | Mode Stripe | `offer_type` |
 |----------|---------------------|---------|-------------|--------------|
-| `STRIPE_PRICE_COMPTABLE_STARTER` | **Hercule Lite** | 998 €/mois | `subscription` (recurring) | `starter_999_5` |
-| `STRIPE_PRICE_COMPTABLE_MONTHLY` | **Hercule Starter** | 1 499 €/mois | `subscription` (recurring) | `monthly_1499` |
-| `STRIPE_PRICE_COMPTABLE_PACK3` | **Pack 3 mois Starter** | 3 598 € | `payment` (one-shot) | `pack_3x1499` |
+| `STRIPE_PRICE_COMPTABLE_STARTER` | **Hercule Lite** | 1 799 €/mois | `subscription` (recurring) | `starter_999_5` |
+| `STRIPE_PRICE_COMPTABLE_MONTHLY` | **Hercule Starter** | 2 199 €/mois | `subscription` (recurring) | `monthly_1499` |
+| `STRIPE_PRICE_COMPTABLE_PACK3` | **Pack 3 mois Starter** | 5 277,60 € | `payment` (one-shot) | `pack_3x1499` |
 
-Lookup keys Stripe comptable (prod) — **recurring monthly** pour Lite et Starter :
-- `comptable_lite_998_monthly` → `STRIPE_PRICE_COMPTABLE_STARTER`
-- `comptable_starter_1499_monthly` → `STRIPE_PRICE_COMPTABLE_MONTHLY`
-- `comptable_pack3_3598` → `STRIPE_PRICE_COMPTABLE_PACK3` (one-shot)
+Lookup keys Stripe comptable (prod, sept. 2026) — **recurring monthly** pour Lite et Starter :
+- `comptable_lite_1799_monthly` → `price_1UFE8oBd01AMeiaQV6PauMkI` (`STRIPE_PRICE_COMPTABLE_STARTER`, 1 799 €/mois)
+- `comptable_starter_2199_monthly` → `price_1UFE8rBd01AMeiaQcfNXx6kC` (`STRIPE_PRICE_COMPTABLE_MONTHLY`, 2 199 €/mois)
+- `comptable_pack3_5277` → `price_1UFE8sBd01AMeiaQjwDBB5Ry` (`STRIPE_PRICE_COMPTABLE_PACK3`, one-shot 5 277,60 €)
 
-Montants attendus = `COMMERCIAL_COMPTABLE` (`99_800` / `149_900` / `359_800` centimes). Les noms de variables env sont conservés pour compatibilité ; seuls les libellés UI/CGV ont été renommés (Lite / Starter / Pack).
+Montants attendus = `COMMERCIAL_COMPTABLE` (`179_900` / `219_900` / `527_760` centimes). Anciens price IDs (`price_1UE5g*`) désactivés.
 
 Checkout embarqué : session de vente live (`/internal/funnels/comptable/sales/funnel` → closing **Activation & paiement**) et dashboard client (`/dashboard/{slug}`).
 
-**Ops :** créer ou remplacer les Prices Stripe Lite et Starter par des **prices recurring monthly** (998 € et 1 499 €). Configurer les lookup keys ci-dessus. Mettre à jour les env vars Vercel puis redéployer.
+**Ops :** créer ou remplacer les Prices Stripe Lite et Starter par des **prices recurring monthly** (1 799 € et 2 199 €) et le pack one-shot (5 277,60 €). Configurer les lookup keys ci-dessus (noms legacy). Mettre à jour les env vars Vercel puis redéployer.
 
 **Webhook :** configurer en plus de `checkout.session.completed` les événements `invoice.paid` (renouvellements) et `customer.subscription.deleted` (résiliation).
 

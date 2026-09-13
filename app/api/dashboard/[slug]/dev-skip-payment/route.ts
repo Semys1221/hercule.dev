@@ -62,9 +62,10 @@ async function skipAgencePayment(
     .in("status", ["scheduled", "not_paid", "completed", "no_show"]);
 }
 
-async function skipComptablePayment(
+async function skipCabinetPayment(
   client: ReturnType<typeof createLinkTrackingClient>,
-  comptableId: string,
+  owner: "comptable" | "cif",
+  leadId: string,
   normalizedSlug: string,
   body: { offerType?: string },
 ): Promise<void> {
@@ -81,11 +82,14 @@ async function skipComptablePayment(
     amountCents = COMMERCIAL_COMPTABLE.pack3TotalCents;
   }
 
+  const paymentRow =
+    owner === "cif"
+      ? { cif_id: leadId, offer_type: offerType, amount_cents: amountCents }
+      : { comptable_id: leadId, offer_type: offerType, amount_cents: amountCents };
+
   const { error: paymentError } = await client.from("payments").upsert(
     {
-      comptable_id: comptableId,
-      offer_type: offerType,
-      amount_cents: amountCents,
+      ...paymentRow,
       status: "succeeded",
       stripe_checkout_session_id: stripeCheckoutSessionId,
       succeeded_at: succeededAt,
@@ -97,10 +101,11 @@ async function skipComptablePayment(
     throw new Error(paymentError.message);
   }
 
+  const salesCallOwnerColumn = owner === "cif" ? "cif_id" : "comptable_id";
   await client
     .from("sales_calls")
     .update({ status: "paid" })
-    .eq("comptable_id", comptableId)
+    .eq(salesCallOwnerColumn, leadId)
     .in("status", ["scheduled", "not_paid", "completed", "no_show"]);
 }
 
@@ -162,8 +167,14 @@ export async function POST(request: Request, { params }: RouteParams) {
       return NextResponse.json({ ok: true });
     }
 
-    if (lookup.category === "comptable") {
-      await skipComptablePayment(client, lookup.lead.id, normalizedSlug, body);
+    if (lookup.category === "comptable" || lookup.category === "cif") {
+      await skipCabinetPayment(
+        client,
+        lookup.category,
+        lookup.lead.id,
+        normalizedSlug,
+        body,
+      );
       return NextResponse.json({ ok: true });
     }
 

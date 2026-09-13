@@ -60,6 +60,7 @@ const sharedQualificationFields = {
   o4: multiChoiceSchema,
   o5: multiChoiceSchema,
   o6: z.string().min(1),
+  o3FollowUp: z.string().optional(),
   q1: multiChoiceSchema,
   q2: multiChoiceSchema,
   q2Other: z.string().optional(),
@@ -90,30 +91,47 @@ function buildAgenceQualificationSchema(monthlyMin: number) {
   });
 }
 
-function buildComptableQualificationSchema() {
-  return z.object({
-    ...sharedQualificationFields,
-    q13: z.number().min(COMPTABLE_ANNUAL_MIN),
-    q14: z.enum(COMPTABLE_FACTURATION_MODES),
-    q15: z.enum(COMPTABLE_SOCIAL_PAIE_MODES),
-    q16: z.number().min(COMPTABLE_PONCTUEL_MIN).nullable(),
-    q17: z.literal(SALES_SKIP_VALUE),
-    q18: z.literal(SALES_SKIP_VALUE),
-    q21: multiChoiceSchema,
+function withCabinetO3FollowUpRefinement<T extends z.ZodTypeAny>(schema: T) {
+  return schema.superRefine((values, ctx) => {
+    const record = values as SalesQualificationValues;
+    if (record.o3 === "insufficient_prospects" && !record.o3FollowUp?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Précisez depuis combien de temps ce manque de flux pèse sur le portefeuille.",
+        path: ["o3FollowUp"],
+      });
+    }
   });
 }
 
+function buildComptableQualificationSchema() {
+  return withCabinetO3FollowUpRefinement(
+    z.object({
+      ...sharedQualificationFields,
+      q13: z.number().min(COMPTABLE_ANNUAL_MIN),
+      q14: z.enum(COMPTABLE_FACTURATION_MODES),
+      q15: z.enum(COMPTABLE_SOCIAL_PAIE_MODES),
+      q16: z.number().min(COMPTABLE_PONCTUEL_MIN).nullable(),
+      q17: z.literal(SALES_SKIP_VALUE),
+      q18: z.literal(SALES_SKIP_VALUE),
+      q21: multiChoiceSchema,
+    }),
+  );
+}
+
 function buildCifQualificationSchema() {
-  return z.object({
-    ...sharedQualificationFields,
-    q13: z.number().min(CIF_ANNUAL_MIN),
-    q14: z.enum(CIF_FACTURATION_MODES),
-    q15: z.enum(CIF_REMUNERATION_MODES),
-    q16: z.number().min(CIF_PONCTUEL_MIN).nullable(),
-    q17: z.literal(SALES_SKIP_VALUE),
-    q18: z.literal(SALES_SKIP_VALUE),
-    q21: multiChoiceSchema,
-  });
+  return withCabinetO3FollowUpRefinement(
+    z.object({
+      ...sharedQualificationFields,
+      q13: z.number().min(CIF_ANNUAL_MIN),
+      q14: z.enum(CIF_FACTURATION_MODES),
+      q15: z.enum(CIF_REMUNERATION_MODES),
+      q16: z.number().min(CIF_PONCTUEL_MIN).nullable(),
+      q17: z.literal(SALES_SKIP_VALUE),
+      q18: z.literal(SALES_SKIP_VALUE),
+      q21: multiChoiceSchema,
+    }),
+  );
 }
 
 export function getSalesQualificationSchema(audience: Audience = "agence") {
@@ -143,6 +161,7 @@ export type SalesQualificationValues = {
   o4: string[];
   o5: string[];
   o6: string;
+  o3FollowUp?: string;
   q1: string[];
   q2: string[];
   q2Other?: string;
@@ -184,6 +203,7 @@ export function getSalesQualificationDefaultValues(
       o4: [],
       o5: [],
       o6: "",
+      o3FollowUp: "",
       q1: [],
       q2: [],
       q2Other: "",
@@ -219,6 +239,7 @@ export function getSalesQualificationDefaultValues(
       o4: [],
       o5: [],
       o6: "",
+      o3FollowUp: "",
       q1: [],
       q2: [],
       q2Other: "",
@@ -253,6 +274,7 @@ export function getSalesQualificationDefaultValues(
     o4: [],
     o5: [],
     o6: "",
+    o3FollowUp: "",
     q1: [],
     q2: [],
     q2Other: "",
@@ -290,7 +312,7 @@ const SECTION_QUESTION_KEYS: Record<
   Array<keyof SalesQualificationValues>
 > = {
   introduction: ["introConfirmed"],
-  objectifs: ["o1", "o2", "o3", "o4", "o5", "o6"],
+  objectifs: ["o1", "o2", "o3", "o4", "o5", "o6", "o3FollowUp"],
   "presentation-societe": ["presentationConfirmed"],
   capacite: ["q1", "q2", "q3", "q4", "q5"],
   historique: ["q6", "q7", "q8", "q9", "q10"],
@@ -324,7 +346,16 @@ function isFieldComplete(
     return value === true;
   }
 
-  if (key === "q2Other") {
+  if (key === "q2Other" || key === "o3FollowUp") {
+    if (key === "o3FollowUp") {
+      if (
+        isCabinetBuyerSalesAudience(audience) &&
+        values.o3 === "insufficient_prospects"
+      ) {
+        return Boolean(values.o3FollowUp?.trim());
+      }
+      return true;
+    }
     return true;
   }
 
@@ -407,6 +438,12 @@ export function isSalesSectionComplete(
 
   if (!baseComplete) {
     return false;
+  }
+
+  if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
+    if (values.o3 === "insufficient_prospects" && !values.o3FollowUp?.trim()) {
+      return false;
+    }
   }
 
   if (sectionId === "capacite" && values.q2.includes("other")) {

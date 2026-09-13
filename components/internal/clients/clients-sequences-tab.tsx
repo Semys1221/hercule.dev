@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { SequenceWorkspace } from "@/components/internal/funnels/sequence-editor/sequence-workspace";
@@ -84,30 +84,6 @@ function SequenceTabPanel({
 export function ClientsSequencesTab({ niche }: ClientsSequencesTabProps) {
   const liveTabs = useMemo(() => clientsSequenceTabsForNiche(niche), [niche]);
   const defaultTab = liveTabs[0]?.id ?? "payment-welcome";
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "66e41f",
-      },
-      body: JSON.stringify({
-        sessionId: "66e41f",
-        runId: "post-fix",
-        hypothesisId: "H2",
-        location: "clients-sequences-tab.tsx:liveTabs",
-        message: "clients sequence tabs for niche",
-        data: {
-          niche,
-          tabCount: liveTabs.length,
-          tabIds: liveTabs.map((tab) => tab.id),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, [niche, liveTabs]);
-  // #endregion
 
   if (liveTabs.length === 0) {
     return (

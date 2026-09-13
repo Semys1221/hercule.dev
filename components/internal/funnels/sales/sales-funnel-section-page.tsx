@@ -15,12 +15,14 @@ type SalesFunnelSectionPageProps = {
   audience: Audience;
   section: SalesFunnelSection;
   form: UseFormReturn<SalesQualificationValues>;
+  prospectFirstName?: string;
 };
 
 export function SalesFunnelSectionPage({
   audience,
   section,
   form,
+  prospectFirstName,
 }: SalesFunnelSectionPageProps) {
   if (section.id === "introduction") {
     return <SalesIntroSection audience={audience} section={section} form={form} />;
@@ -41,7 +43,12 @@ export function SalesFunnelSectionPage({
           <p className={RESERVATION_BODY_TEXT}>{section.subtitle}</p>
         ) : null}
       </div>
-      <SalesQualificationForm audience={audience} section={section} form={form} />
+      <SalesQualificationForm
+        audience={audience}
+        section={section}
+        form={form}
+        prospectFirstName={prospectFirstName}
+      />
     </div>
   );
 }

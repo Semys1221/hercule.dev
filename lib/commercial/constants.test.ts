@@ -64,8 +64,8 @@ describe("COMMERCIAL constants", () => {
 });
 
 describe("COMMERCIAL_COMPTABLE constants", () => {
-  it("starterPriceCents is 99 800", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_800);
+  it("starterPriceCents is 179 900", () => {
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(179_900);
   });
 
   it("starterMissions is 5", () => {
@@ -73,14 +73,14 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
   });
 
   it("growthMonthlyPriceCents equals monthlyPriceCents alias", () => {
-    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(149_900);
+    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(219_900);
     expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(
       COMMERCIAL_COMPTABLE.growthMonthlyPriceCents,
     );
   });
 
-  it("pack3TotalCents is 359 800 (1499 × 3 − 20 %, rounded)", () => {
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
+  it("pack3TotalCents is 527 760 (2199 × 3 − 20 %, rounded)", () => {
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(527_760);
   });
 
   it("firstRdvDaysMin/Max is 20–25", () => {
@@ -156,17 +156,17 @@ describe("OFFER_TYPES_COMPTABLE", () => {
   });
 
   it("monthly1499 amount matches COMMERCIAL_COMPTABLE.monthlyPriceCents", () => {
-    // 1 499 € = 149 900 cents
-    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(149_900);
+    // 2 199 € = 219 900 cents
+    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(219_900);
   });
 
   it("pack3x1499 amount matches COMMERCIAL_COMPTABLE.pack3TotalCents", () => {
-    // 3 598 € = 359 800 cents (1499 × 3 − 20 %, rounded)
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
+    // 5 277,60 € = 527 760 cents (2199 × 3 − 20 %, rounded)
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(527_760);
   });
 
   it("starter999_5 amount matches COMMERCIAL_COMPTABLE.starterPriceCents", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(99_800);
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(179_900);
   });
 });
 

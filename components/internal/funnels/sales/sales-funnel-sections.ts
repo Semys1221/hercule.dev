@@ -142,7 +142,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Social / paie, missions ponctuelles, formules Hercule (Lite 998 €/mois, Starter 1 499 €/mois, pack 3 598 €) et priorités de dossiers.",
+      "Social / paie, missions ponctuelles, formules Hercule (Lite 1 799 €/mois, Starter 2 199 €/mois, pack 5 277,60 €) et priorités de dossiers.",
   },
 ];
 
@@ -201,7 +201,7 @@ const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Conditions commerciales",
     title: "Conditions commerciales",
     subtitle:
-      "Rémunération, missions ponctuelles, formules Hercule (Lite 998 €/mois, Starter 1 499 €/mois, pack 3 598 €) et priorités de mandats.",
+      "Rémunération, missions ponctuelles, formules Hercule (Lite 1 799 €/mois, Starter 2 199 €/mois, pack 5 277,60 €) et priorités de mandats.",
   },
 ];
 

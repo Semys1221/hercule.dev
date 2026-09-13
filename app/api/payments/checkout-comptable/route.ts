@@ -61,6 +61,24 @@ export async function POST(request: Request) {
     const price = await stripe.prices.retrieve(priceId);
     const checkoutMode = stripeCheckoutModeForComptablePrice(price);
     const amountCents = amountCentsForComptableOffer(offerType);
+    const stripeAmountCents = price.unit_amount ?? 0;
+
+    if (stripeAmountCents !== amountCents) {
+      console.error(
+        "[payments/checkout-comptable] Unexpected Stripe price amount:",
+        priceId,
+        stripeAmountCents,
+        "expected",
+        amountCents,
+      );
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { error: "Invalid Stripe product configuration" },
+          { status: 500 },
+        );
+      }
+    }
+
     const baseUrl = getAppBaseUrl();
 
     // #region agent log

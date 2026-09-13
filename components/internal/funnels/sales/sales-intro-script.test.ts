@@ -34,7 +34,7 @@ function main() {
     questions: {
       "Combien d'associés ou collaborateurs compte votre cabinet ?": "5 collaborateurs",
       "Quelles missions proposez-vous ?": "Tenue comptable et fiscal",
-      "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+      "Votre formule démarre-t-elle à 2 199 € / mois ?": "Oui, compatible 2 199 €",
     },
   };
 
@@ -54,7 +54,7 @@ function main() {
     questions: {
       "Combien d'associés ou collaborateurs compte votre cabinet ?": "4 collaborateurs",
       "Quelles missions proposez-vous ?": "Patrimoine et trésorerie dirigeant",
-      "Votre formule démarre-t-elle à 1 499 € / mois ?": "Oui, compatible 1 499 €",
+      "Votre formule démarre-t-elle à 2 199 € / mois ?": "Oui, compatible 2 199 €",
     },
   };
 

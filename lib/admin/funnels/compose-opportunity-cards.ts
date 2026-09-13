@@ -15,6 +15,7 @@ import {
   STRETCH_RATIO,
   TIMING_CLASS_RANK,
   resolveBudgetFloorCents,
+  type BudgetKind,
 } from "@/lib/admin/funnels/opportunity-card-formulas";
 import type { PresetOpportunityCard } from "@/lib/admin/funnels/sales-preset-registry";
 import type { AgencyPresetId } from "@/lib/admin/funnels/sales-preset-scoring";

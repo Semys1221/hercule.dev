@@ -16,12 +16,12 @@ assert.match(plans[2].footer ?? "", /souscription/i);
 const comptablePlans = getPricingPlans("comptable");
 assert.equal(comptablePlans.length, 3);
 assert.equal(comptablePlans[0].id, "plan-comptable-lite");
-assert.match(comptablePlans[0].price, /998/);
+assert.match(comptablePlans[0].price, /1 799/);
 assert.equal(comptablePlans[0].priceSuffix, "/mois");
 assert.equal(comptablePlans[1].id, "plan-comptable-starter");
-assert.match(comptablePlans[1].price, /1 499/);
+assert.match(comptablePlans[1].price, /2 199/);
 assert.equal(comptablePlans[2].id, "plan-comptable-pack3");
-assert.match(comptablePlans[2].price, /3 598/);
+assert.match(comptablePlans[2].price, /5 277,60/);
 
 const document = getPricingDocument("agence");
 assert.ok(document);
