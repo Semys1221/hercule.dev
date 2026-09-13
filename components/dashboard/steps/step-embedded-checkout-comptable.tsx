@@ -14,6 +14,8 @@ import {
   type OfferTypeComptable,
 } from "@/lib/commercial/constants";
 import { COMPTABLE_OFFER_LABELS } from "@/lib/commercial/comptable-pricing";
+import type { DashboardFaqAudience } from "@/lib/dashboard/types";
+import { cabinetCheckoutApiPath } from "@/lib/payments/cabinet-checkout";
 import { useStripePromise } from "@/lib/payments/use-stripe-promise";
 import { getPricingDocument } from "@/lib/site/pricing-data";
 
@@ -25,6 +27,7 @@ const OFFER_ORDER: OfferTypeComptable[] = [
 
 type StepEmbeddedCheckoutComptableProps = {
   slug: string;
+  audience?: Extract<DashboardFaqAudience, "comptable" | "cif">;
   selectedOffer?: OfferTypeComptable | null;
   startImmediately?: boolean;
   clientSecret?: string | null;
@@ -33,6 +36,7 @@ type StepEmbeddedCheckoutComptableProps = {
 
 export function StepEmbeddedCheckoutComptable({
   slug,
+  audience = "comptable",
   selectedOffer: selectedOfferProp = null,
   startImmediately = false,
   clientSecret: preloadedClientSecret,
@@ -51,7 +55,7 @@ export function StepEmbeddedCheckoutComptable({
   const activeOffer = selectedOfferProp ?? selectedOffer;
 
   const offerOptions = useMemo(() => {
-    const document = getPricingDocument("comptable");
+    const document = getPricingDocument(audience);
     if (!document) {
       return [];
     }
@@ -85,7 +89,7 @@ export function StepEmbeddedCheckoutComptable({
     }
 
     return options;
-  }, []);
+  }, [audience]);
 
   useEffect(() => {
     setError(preloadError ?? null);
@@ -97,7 +101,7 @@ export function StepEmbeddedCheckoutComptable({
       throw new Error("Formule non sélectionnée");
     }
 
-    const response = await fetch("/api/payments/checkout-comptable", {
+    const response = await fetch(cabinetCheckoutApiPath(audience), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slug, offerType: activeOffer }),
@@ -109,7 +113,7 @@ export function StepEmbeddedCheckoutComptable({
       throw new Error(msg);
     }
     return data.clientSecret;
-  }, [slug, activeOffer]);
+  }, [audience, slug, activeOffer]);
 
   const providerOptions = preloadedClientSecret
     ? { clientSecret: preloadedClientSecret }
@@ -149,7 +153,8 @@ export function StepEmbeddedCheckoutComptable({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Sélectionnez votre formule pour finaliser votre accès Hercule Comptable.
+        Sélectionnez votre formule pour finaliser votre accès Hercule{" "}
+        {audience === "cif" ? "CIF" : "Comptable"}.
       </p>
       <div className="grid gap-3 sm:grid-cols-3">
         {offerOptions.map((offer) => (

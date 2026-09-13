@@ -196,6 +196,25 @@ export async function findLatestSalesCallByComptableId(
   return (data as SalesCall | null) ?? null;
 }
 
+export async function findLatestSalesCallByCifId(
+  client: SupabaseClient,
+  cifId: string,
+): Promise<SalesCall | null> {
+  const { data, error } = await client
+    .from("sales_calls")
+    .select("*")
+    .eq("cif_id", cifId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`sales_calls cif lookup failed: ${error.message}`);
+  }
+
+  return (data as SalesCall | null) ?? null;
+}
+
 export async function updateSalesCallNotes(
   client: SupabaseClient,
   salesCallId: string,

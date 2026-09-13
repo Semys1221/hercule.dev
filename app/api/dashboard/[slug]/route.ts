@@ -35,6 +35,7 @@ import { dashboardLinkFor } from "@/lib/link-tracking/urls";
 import {
   createSalesCallsClient,
   findLatestSalesCallByAgenceId,
+  findLatestSalesCallByCifId,
   findLatestSalesCallByComptableId,
 } from "@/lib/sales-calls/supabase";
 
@@ -120,10 +121,10 @@ export async function GET(_request: Request, { params }: RouteParams) {
       const isOnboarded = Boolean(lead.onboarding_completed_at);
       const productStatut = lead.product_statut ?? "NONE";
       const salesCallsClient = createSalesCallsClient();
-      const latestSalesCall = await findLatestSalesCallByComptableId(
-        salesCallsClient,
-        lead.id,
-      );
+      const latestSalesCall =
+        lookup.category === "cif"
+          ? await findLatestSalesCallByCifId(salesCallsClient, lead.id)
+          : await findLatestSalesCallByComptableId(salesCallsClient, lead.id);
       const isNotPaidPostCall = latestSalesCall?.status === "not_paid";
 
       // #region agent log

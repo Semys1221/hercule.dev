@@ -74,7 +74,10 @@ export function DashboardComptable({
               <CardTitle className="text-base">Finaliser votre souscription</CardTitle>
             </CardHeader>
             <CardContent>
-              <StepEmbeddedCheckoutComptable slug={data.slug} />
+              <StepEmbeddedCheckoutComptable
+                slug={data.slug}
+                audience={data.audience === "cif" ? "cif" : "comptable"}
+              />
             </CardContent>
           </Card>
         </main>

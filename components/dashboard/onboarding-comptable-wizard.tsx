@@ -11,6 +11,7 @@ import {
   DASHBOARD_DEV_SKIP_PAYMENT_LOADING,
 } from "@/lib/admin/funnels/ui-copy";
 import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
+import { cabinetCheckoutApiPath } from "@/lib/payments/cabinet-checkout";
 import {
   getDashboardDeveloperModeEnabledServerSnapshot,
   getDashboardDeveloperModeEnabledSnapshot,
@@ -78,7 +79,8 @@ export function OnboardingComptableWizard({
     checkoutPreloadStartedRef.current = true;
 
     try {
-      const response = await fetch("/api/payments/checkout-comptable", {
+      const checkoutAudience = data.audience === "cif" ? "cif" : "comptable";
+      const response = await fetch(cabinetCheckoutApiPath(checkoutAudience), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug: data.slug, offerType: selectedOffer }),
@@ -126,7 +128,7 @@ export function OnboardingComptableWizard({
       setCheckoutPreloadError("Paiement indisponible");
       setCheckoutClientSecret(null);
     }
-  }, [data.slug, selectedOffer, developerModeEnabled]);
+  }, [data.audience, data.slug, selectedOffer, developerModeEnabled]);
 
   useEffect(() => {
     checkoutPreloadStartedRef.current = false;
@@ -282,6 +284,7 @@ export function OnboardingComptableWizard({
                 {step === 5 && (
                   <StepEmbeddedCheckoutComptable
                     slug={data.slug}
+                    audience={data.audience === "cif" ? "cif" : "comptable"}
                     selectedOffer={selectedOffer}
                     startImmediately
                     clientSecret={checkoutClientSecret}
