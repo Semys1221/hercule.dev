@@ -9,16 +9,25 @@ import { getPitchP2MissingRoleOptions } from "@/lib/admin/funnels/sales-pitch-bl
 import { SalesSingleChoiceField } from "../sales-question-fields";
 import { PITCH_P2_PROMPT, PITCH_P2_OPTIONS } from "../sales-pitch-wizard-slides";
 import { ChoiceTiles } from "./pitch-primitives";
+import { PitchTriptych } from "./pitch-triptych";
 import { pitchSingleQuestion } from "./pitch-utils";
 import type { PitchSlideBaseProps } from "./pitch-slide-props";
 
 export const PitchSlideDecisionMakers = memo(function PitchSlideDecisionMakers({
+  slide,
   audience,
   form,
   values,
+  context,
 }: PitchSlideBaseProps) {
   return (
     <div className="flex flex-col gap-4">
+      <PitchTriptych
+        stepId={slide.id}
+        audience={audience}
+        values={values}
+        context={context}
+      />
       <FormField
         control={form.control}
         name="p2DecisionMakers"

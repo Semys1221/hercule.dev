@@ -455,13 +455,13 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         // #region agent log
         fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d7ea7b" },
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8ae7a5" },
           body: JSON.stringify({
-            sessionId: "d7ea7b",
-            runId: "post-fix",
-            hypothesisId: "A-B",
+            sessionId: "8ae7a5",
+            runId: "pre-fix",
+            hypothesisId: "D",
             location: "sales-funnel-module.tsx:onLiveTrackSectionChange",
-            message: "live track section sync",
+            message: "live track section sync to parent",
             data: { section, current, willChange },
             timestamp: Date.now(),
           }),

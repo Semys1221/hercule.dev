@@ -14,12 +14,11 @@ function main() {
   );
   const model = buildPitchRoiModel(values, "comptable");
 
-  assert.equal(model.investment90DaysEur, FOUNDATION_ROI_DISPLAY.investment90DaysEur);
-  assert.equal(model.guaranteeMrrEur, FOUNDATION_ROI_DISPLAY.guaranteeMrrEur);
+  assert.equal(model.guaranteeRdvCount, FOUNDATION_ROI_DISPLAY.guaranteeRdvCount);
+  assert.equal(model.guaranteeWindowMonths, FOUNDATION_ROI_DISPLAY.guaranteeWindowMonths);
   assert.equal(model.yearOneValueEur, FOUNDATION_ROI_DISPLAY.yearOneValueEur);
-  assert.equal(model.bars.length, 3);
-  assert.ok(model.roiMultiple > 8);
-  assert.match(model.roiMultipleLabel, /×/);
+  assert.equal(model.bars.length, 2);
+  assert.match(model.bars[0]?.formatted ?? "", /20 RDV B2B/);
   assert.ok(model.honorairesEur > 0);
 
   const fromW3 = buildPitchRoiModel(

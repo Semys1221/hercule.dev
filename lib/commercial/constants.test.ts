@@ -128,8 +128,9 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents).toBe(239_900);
   });
 
-  it("Horizon guarantee is 5 000 € over 90 days", () => {
-    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeMrrCents).toBe(500_000);
+  it("Horizon guarantee is 20 B2B RDV over 3 months", () => {
+    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount).toBe(20);
+    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeMonths).toBe(3);
     expect(COMMERCIAL_COMPTABLE.horizonGuaranteeDays).toBe(90);
   });
 

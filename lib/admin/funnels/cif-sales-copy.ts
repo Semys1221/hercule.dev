@@ -87,7 +87,7 @@ export const CIF_FOUNDATION_PRESENTATION_MIRROR_TEMPLATE =
 export const CIF_FOUNDATION_PRESENTATION_SCRIPT_PARAGRAPHS = [
   "[Prénom], voici pourquoi on déploie le Moteur Hercule Foundation sur 60 jours. Pendant que le cabinet dépend du bouche-à-oreille, les confrères les plus agressifs ont déjà acheté du SEO et de la pub — 6 à 12 mois, zéro garantie, et le jour où ils arrêtent de payer, la visibilité s'éteint. Ce n'est pas un actif. C'est une location.",
   "Foundation n'est pas une agence SEO. Le SEO indexe des pages. Nous interceptons des événements légaux sur la zone exclusive du cabinet : cession, transmission, trésorerie, retraite. Au moment du besoin, le dirigeant voit ce cabinet et prend RDV pour une étude.",
-  "Si on ne pose pas cette infrastructure maintenant, dans 6 mois le portefeuille est au même point — et la zone peut être verrouillée par un confrère. Le premier mois est du déploiement : verrou, cartographie, filtres, capture. C'est le prix d'un actif. Le contrat porte une garantie 5 000 € de récurrent cumulé sur 90 jours. Le risque est sur notre bilan, pas sur celui du cabinet. On lance la configuration ?",
+  "Si on ne pose pas cette infrastructure maintenant, dans 6 mois le portefeuille est au même point — et la zone peut être verrouillée par un confrère. Le premier mois est du déploiement : verrou, cartographie, filtres, capture. C'est le prix d'un actif. Le contrat porte une garantie 20 RDV B2B planifiés en 3 mois. Le risque est sur notre bilan, pas sur celui du cabinet. On lance la configuration ?",
 ] as const;
 
 export const CIF_FOUNDATION_SIGNALS_SUMMARY =

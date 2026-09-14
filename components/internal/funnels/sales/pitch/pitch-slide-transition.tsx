@@ -8,10 +8,13 @@ import { buildBleedTrack, interpolateBleed } from "@/lib/admin/funnels/sales-ble
 import { formatPitchWizardInterpolation } from "@/lib/admin/funnels/sales-pitch-wizard";
 import { getPitchMirrorTemplate } from "../sales-pitch-wizard-slides";
 
+import { GlowCard } from "./pitch-primitives";
 import { PitchSurfacePanel } from "./pitch-surface-panel";
+import { PitchTriptych } from "./pitch-triptych";
 import type { PitchSlideBaseProps } from "./pitch-slide-props";
 
 export const PitchSlideTransition = memo(function PitchSlideTransition({
+  slide,
   audience,
   values,
   context,
@@ -19,9 +22,16 @@ export const PitchSlideTransition = memo(function PitchSlideTransition({
 }: PitchSlideBaseProps) {
   const bleed = buildBleedTrack(values, audience);
   const mirror = interpolateBleed(getPitchMirrorTemplate(audience), bleed);
+  const goalLabel = formatPitchWizardInterpolation("{goal6m}", values, audience, context);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
+      <PitchTriptych
+        stepId={slide.id}
+        audience={audience}
+        values={values}
+        context={context}
+      />
       <div className="flex items-center gap-3">
         <div className="flex flex-1 flex-col gap-1.5">
           <p className="text-xs text-muted-foreground">Objectifs</p>
@@ -37,13 +47,13 @@ export const PitchSlideTransition = memo(function PitchSlideTransition({
 
       <PitchSurfacePanel
         immersive={immersive}
-        className="border-primary/30 bg-primary/5"
-        contentClassName="flex flex-col gap-2"
+        className="border-primary/30 bg-primary/5 shadow-[0_0_24px_-4px_hsl(var(--primary)/0.18)]"
+        contentClassName="flex flex-col gap-3"
       >
-        <p className="text-xl font-medium leading-snug text-foreground">{mirror}</p>
-        <p className="text-xs text-muted-foreground">
-          {formatPitchWizardInterpolation("{goal6m}", values, audience, context)}
-        </p>
+        <GlowCard variant="primary" className="border-0 bg-transparent p-0 shadow-none">
+          <p className="text-lg font-medium leading-snug text-foreground">{mirror}</p>
+        </GlowCard>
+        <p className="text-center text-2xl font-semibold tracking-tight text-primary">{goalLabel}</p>
       </PitchSurfacePanel>
     </div>
   );

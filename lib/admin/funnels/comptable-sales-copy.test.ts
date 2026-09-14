@@ -42,14 +42,15 @@ function main() {
   assert.equal(FOUNDATION_DEPLOYMENT_PHASES.length, 3);
   assert.equal(FOUNDATION_COMPARISON_ROWS.length, 6);
   assert.match(FOUNDATION_PRESENTATION_SCRIPT_PARAGRAPHS[0], /Foundation/);
-  assert.match(FOUNDATION_MODEL_HIGHLIGHTS[0].title, /5 000/);
+  assert.match(FOUNDATION_MODEL_HIGHLIGHTS[0].title, /20 RDV/);
   assert.doesNotMatch(FOUNDATION_MODEL_HIGHLIGHTS[0].description, /10 missions/i);
 
   const roiScript = formatFoundationRoiScript(3_600, "l'invisibilité de zone");
-  assert.match(roiScript, /7\s?197/);
-  assert.match(roiScript, /5\s?000/);
+  assert.match(roiScript, /20 RDV B2B/);
+  assert.match(roiScript, /3 mois/);
   assert.match(roiScript, /60\s?000/);
-  assert.doesNotMatch(roiScript, /10 RDV/i);
+  assert.doesNotMatch(roiScript, /7\s?197/);
+  assert.doesNotMatch(roiScript, /5\s?000/);
 
   assert.equal(COMPTABLE_DIFFERENTIATOR_OPTIONS.length, 7);
   const labels = COMPTABLE_DIFFERENTIATOR_OPTIONS.map((option) => option.label).join(" ");

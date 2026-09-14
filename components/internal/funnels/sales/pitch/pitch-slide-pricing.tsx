@@ -20,10 +20,12 @@ import { cn } from "@/lib/utils";
 
 import { SalesSingleChoiceField } from "../sales-question-fields";
 import { PitchRoiMetricStrip } from "./pitch-primitives";
+import { PitchTriptych } from "./pitch-triptych";
 import { pitchSingleQuestion } from "./pitch-utils";
 import type { PitchSlideBaseProps } from "./pitch-slide-props";
 
 export const PitchSlidePricing = memo(function PitchSlidePricing({
+  slide,
   audience,
   form,
   values,
@@ -41,7 +43,13 @@ export const PitchSlidePricing = memo(function PitchSlidePricing({
       : horizonPlan?.features ?? [];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
+      <PitchTriptych
+        stepId={slide.id}
+        audience={audience}
+        values={values}
+        context={context}
+      />
       <FormField
         control={form.control}
         name="p12Plan"
@@ -63,6 +71,7 @@ export const PitchSlidePricing = memo(function PitchSlidePricing({
               {FOUNDATION_PRICING_PLANS.map((plan) => {
                 const inputId = `p12-plan-${plan.id}`;
                 const isSelected = field.value === plan.id;
+                const isHorizon = plan.id === "horizon";
                 return (
                   <FieldLabel
                     key={plan.id}
@@ -70,6 +79,8 @@ export const PitchSlidePricing = memo(function PitchSlidePricing({
                     className={cn(
                       "block cursor-pointer rounded-lg border bg-card transition-colors hover:border-primary/50 hover:bg-primary/5",
                       isSelected ? "ring-2 ring-foreground" : "ring-1 ring-border",
+                      isHorizon &&
+                        "shadow-[0_0_28px_-4px_hsl(var(--primary)/0.25)] ring-primary/40",
                     )}
                   >
                     <Card className="border-0 bg-transparent shadow-none">
@@ -93,13 +104,13 @@ export const PitchSlidePricing = memo(function PitchSlidePricing({
                       </CardHeader>
                       <CardContent className="pb-3">
                         <ul className="flex flex-col gap-2">
-                          {plan.features.map((feature) => (
+                          {plan.features.slice(0, 3).map((feature) => (
                             <li
                               key={feature}
                               className="flex items-start gap-2 text-sm text-muted-foreground"
                             >
                               <Check className="mt-0.5 size-4 shrink-0 text-foreground" />
-                              <span>{feature}</span>
+                              <span>{feature.split("—")[0]?.trim() ?? feature}</span>
                             </li>
                           ))}
                         </ul>
@@ -116,7 +127,7 @@ export const PitchSlidePricing = memo(function PitchSlidePricing({
 
       {selectedPlan && highlightFeatures.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {highlightFeatures.slice(0, 4).map((feature) => (
+          {highlightFeatures.slice(0, 3).map((feature) => (
             <Badge key={feature} variant="outline" className="text-xs">
               {feature.split("—")[0]?.trim() ?? feature}
             </Badge>
@@ -126,7 +137,6 @@ export const PitchSlidePricing = memo(function PitchSlidePricing({
 
       <PitchRoiMetricStrip
         compact
-        investment={roiSummary.investment}
         guarantee={roiSummary.guarantee}
         yearOne={roiSummary.yearOne}
       />

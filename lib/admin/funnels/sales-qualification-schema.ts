@@ -155,7 +155,7 @@ const sharedQualificationFields = {
       "controlled_budget",
       "gradual_deploy",
       "capacity_match",
-      "guarantee_5000",
+      "guarantee_20_rdv",
       "max_capture",
       "gap_ambition",
     ])
@@ -355,7 +355,7 @@ export type SalesQualificationValues = {
     | "controlled_budget"
     | "gradual_deploy"
     | "capacity_match"
-    | "guarantee_5000"
+    | "guarantee_20_rdv"
     | "max_capture"
     | "gap_ambition";
   /** @deprecated Use p12WhyId */
@@ -983,9 +983,6 @@ export function isSalesSectionComplete(
       return false;
     }
     if (values.p11TempCheck === "yes" && !values.p11WhyId) {
-      return false;
-    }
-    if (!values.p12Plan || !values.p12WhyId) {
       return false;
     }
     return values.pitchWizardCompleted === true;

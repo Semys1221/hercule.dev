@@ -12,21 +12,17 @@ import type { Audience } from "@/lib/admin/navigation";
 
 export type PitchSlideType =
   | "transition"
-  | "company"
-  | "product_origin"
   | "decision_makers"
   | "acknowledgment"
+  | "guarantee_hero"
   | "cgv"
   | "pillars_overview"
-  | "pillar_content"
-  | "comparison_buyin"
-  | "foundation_buyin"
-  | "activation_buyin"
-  | "partner_future"
+  | "capture_buyin"
+  | "engine_buyin"
+  | "partner_buyin"
   | "roi_contract"
   | "faq_close"
-  | "dashboard_link"
-  | "pricing_close";
+  | "dashboard_link";
 
 export type PitchSlideDefinition = {
   id: PitchWizardStepId;
@@ -39,7 +35,7 @@ export type PitchSlideDefinition = {
 export { PITCH_P0_TRANSITION_TEMPLATE as PITCH_P0_TRANSITION_SCRIPT } from "@/lib/admin/funnels/sales-pitch-bleed-copy";
 
 export const PITCH_PART1_OPENING_SCRIPT =
-  "[Prénom], on va présenter Hercule au cabinet, le cadre du partenariat, puis le système en trois volets. À la fin, on répond aux questions et on choisit l'infrastructure adaptée à la zone. On y va ?";
+  "[Prénom], on structure le partenariat : garantie contractuelle, système en trois volets, puis lien dashboard pour finaliser en autonomie. On y va ?";
 
 export const PITCH_P2_PROMPT =
   "Y a-t-il quelqu'un d'autre qui devrait voir ça aujourd'hui ?";
@@ -71,7 +67,7 @@ export const PITCH_CGV_HIGHLIGHTS = [
   },
   {
     title: "Garantie",
-    description: "5 000 € de récurrent cumulé sur 90 jours (Horizon)",
+    description: "20 RDV B2B planifiés en 3 mois (Horizon)",
   },
   {
     title: "Commission",
@@ -109,7 +105,7 @@ export const PITCH_FAQ_ITEMS = [
     id: "partner",
     title: "Associé",
     body:
-      "Le cabinet a déclaré {honoraires} et un écart {gap}. Horizon est couvert par 5 000 € de récurrent cumulé sur 90 jours. L'associé valide un ROI contractuel sur un actif de zone, pas un achat de fiches.",
+      "Le cabinet a déclaré {honoraires} et un écart {gap}. Horizon est couvert par 20 RDV B2B planifiés en 3 mois. L'associé valide un bénéfice contractuel sur un actif de zone, pas un achat de fiches.",
   },
   {
     id: "think",
@@ -154,89 +150,65 @@ export function getPitchSlides(audience: Audience): PitchSlideDefinition[] {
     {
       id: "p0",
       type: "transition",
-      title: "Transition",
+      title: "{goal6m} — on y va",
       coachCue: "Transition vers la présentation structurée du partenariat Hercule.",
-    },
-    {
-      id: "p1",
-      type: "company",
-      title: "Logo & équipe",
-      coachCue:
-        "Présentation de l'entreprise Hercule — identité et équipe, hors détail technique du système.",
-    },
-    {
-      id: "p1b",
-      type: "product_origin",
-      title: "2018 → 2026 — le système Hercule",
-      coachCue:
-        "Évolution du système Hercule de 2018 à aujourd'hui : d'outil interne à infrastructure déployée.",
     },
     {
       id: "p2",
       type: "decision_makers",
-      title: "Support belief",
+      title: "Décideurs présents ?",
       coachCue:
         "Validation que les décideurs nécessaires sont présents avant la suite de la présentation.",
     },
     {
       id: "p3",
       type: "acknowledgment",
-      title: "Différenciation courte",
+      title: "Location → Actif",
       coachCue:
         "Positionnement différenciant du cabinet face aux alternatives du marché.",
     },
     {
+      id: "pGuarantee",
+      type: "guarantee_hero",
+      title: "20 RDV garantis",
+      coachCue:
+        "Moment hero garantie : 20 RDV B2B planifiés en 3 mois — bénéfice contractuel avant le détail système.",
+    },
+    {
       id: "pCgv",
       type: "cgv",
-      title: "Conditions CGV",
+      title: "Cadre contractuel",
     },
     {
       id: "p4",
       type: "pillars_overview",
-      title: "Le système Hercule",
+      title: "Le système — 3 piliers",
       coachCue:
         "Trois piliers : capture, exécution et relation partenaire — présentés séquentiellement.",
     },
     {
       id: "p5",
-      type: "pillar_content",
-      title: "Hercule Capture (1/2)",
-    },
-    {
-      id: "p6",
-      type: "comparison_buyin",
-      title: "Hercule Capture (2/2)",
+      type: "capture_buyin",
+      title: "Capture",
     },
     {
       id: "p7",
-      type: "foundation_buyin",
-      title: "Les 2 premiers mois — fondations du cabinet",
+      type: "engine_buyin",
+      title: "Engine — 60 jours",
       coachCue:
-        "Phase de déploiement sur 60 jours : fondations marketing du cabinet, sans engagement de volume.",
-    },
-    {
-      id: "p8",
-      type: "activation_buyin",
-      title: "Mois 3 — système live",
-      coachCue:
-        "Activation à J+60 ; fenêtre garantie de 90 jours à compter de l'activation — deux échéances distinctes.",
+        "Phase de déploiement sur 60 jours puis activation — fenêtre garantie 90 jours à compter de l'activation.",
     },
     {
       id: "p9",
-      type: "pillar_content",
-      title: "Hercule Partner (1/2)",
-    },
-    {
-      id: "p10",
-      type: "partner_future",
-      title: "Hercule Partner (2/2)",
+      type: "partner_buyin",
+      title: "Partner",
     },
     {
       id: "pRoi",
       type: "roi_contract",
-      title: "ROI contractuel",
+      title: "Votre ROI",
       coachCue:
-        "Investissement 90 jours : 7 197 € · garantie 5 000 € de récurrent · valeur année 1 : 60 000 €.",
+        "Bénéfice contractuel : 20 RDV B2B garantis en 3 mois · valeur année 1 : 60 000 €.",
     },
     {
       id: "p11",
@@ -244,14 +216,9 @@ export function getPitchSlides(audience: Audience): PitchSlideDefinition[] {
       title: "Questions ?",
     },
     {
-      id: "p12",
-      type: "pricing_close",
-      title: "Choix d'infrastructure",
-    },
-    {
       id: "pDashboard",
       type: "dashboard_link",
-      title: "Lien dashboard",
+      title: "Activer",
       coachCue:
         "Lien dashboard pour finaliser le choix de formule et le paiement en autonomie.",
     },

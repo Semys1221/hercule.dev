@@ -30,9 +30,8 @@ export type SalesCoachContext = {
 };
 
 export type HonorairesRoiAnchoring = {
-  horizonMonthlyEur: number;
-  investment90DaysEur: number;
-  guaranteeMrrEur: number;
+  guaranteeRdvCount: number;
+  guaranteeWindowMonths: number;
   yearOneValueEur: number;
   script: string;
 };
@@ -94,19 +93,17 @@ export function computeHonorairesRoiAnchoring(
   annualHonorairesEur: number,
   cause = "l'écart déclaré",
 ): HonorairesRoiAnchoring {
+  const { guaranteeRdvCount, guaranteeWindowMonths, yearOneValueEur } = FOUNDATION_ROI_DISPLAY;
   const script = [
-    `Ticket Horizon : **${formatEuros(FOUNDATION_ROI_DISPLAY.horizonMonthlyEur)}**/mois.`,
-    `Investissement 90 j : **${formatEuros(FOUNDATION_ROI_DISPLAY.investment90DaysEur)}**.`,
-    `Garantie : **${formatEuros(FOUNDATION_ROI_DISPLAY.guaranteeMrrEur)}** de récurrent cumulé.`,
-    `Valeur année 1 : **${formatEuros(FOUNDATION_ROI_DISPLAY.yearOneValueEur)}**.`,
+    `Garantie : **${guaranteeRdvCount} RDV B2B** planifiés en **${guaranteeWindowMonths} mois**.`,
+    `Valeur année 1 : **${formatEuros(yearOneValueEur)}**.`,
     formatFoundationRoiScript(annualHonorairesEur, cause),
   ].join(" ");
 
   return {
-    horizonMonthlyEur: FOUNDATION_ROI_DISPLAY.horizonMonthlyEur,
-    investment90DaysEur: FOUNDATION_ROI_DISPLAY.investment90DaysEur,
-    guaranteeMrrEur: FOUNDATION_ROI_DISPLAY.guaranteeMrrEur,
-    yearOneValueEur: FOUNDATION_ROI_DISPLAY.yearOneValueEur,
+    guaranteeRdvCount,
+    guaranteeWindowMonths,
+    yearOneValueEur,
     script,
   };
 }

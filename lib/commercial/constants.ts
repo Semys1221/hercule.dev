@@ -287,7 +287,8 @@ export const COMMERCIAL_COMPTABLE = {
   horizonDisplayName: "Hercule Horizon",
   coreDisplayPriceCents: 179_900,
   horizonDisplayPriceCents: 239_900,
-  horizonGuaranteeMrrCents: 500_000,
+  horizonGuaranteeRdvCount: 20,
+  horizonGuaranteeMonths: 3,
   horizonGuaranteeDays: 90,
   coreTagline: "Bases du système + zone standard",
   horizonTagline: "Capture max + exclusivité totale + profondeur de zone",
@@ -315,8 +316,8 @@ export function formatFoundationEuros(cents: number): string {
   return foundationEuroFormatter.format(cents / 100);
 }
 
-export function formatFoundationGuaranteeMrrLabel(): string {
-  return formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonGuaranteeMrrCents);
+export function formatFoundationGuaranteeRdvLabel(): string {
+  return `${COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount} RDV B2B en ${COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} mois`;
 }
 
 export const FOUNDATION_PRICING_PLANS: readonly FoundationPricingPlan[] = [
@@ -344,13 +345,13 @@ export const FOUNDATION_PRICING_PLANS: readonly FoundationPricingPlan[] = [
       "Exclusivité totale sur la zone économique du cabinet.",
       "Profondeur de zone maximale — cartographie et capture intensives.",
       "0 % de commission sur vos honoraires signés.",
-      `Garantie contractuelle : ${formatFoundationGuaranteeMrrLabel()} de récurrent cumulé sur ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours.`,
+      `Garantie contractuelle : ${formatFoundationGuaranteeRdvLabel()} planifiés.`,
     ],
   },
 ] as const;
 
 export const FOUNDATION_HORIZON_GUARANTEE_COPY =
-  `Garantie contractuelle Horizon ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours. Déploiement complet du Moteur Hercule Foundation. Si au bout des ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} premiers jours d'activation le cabinet n'a pas sécurisé ${formatFoundationGuaranteeMrrLabel()} de revenus récurrents cumulés (lettres / mandats signés), Hercule maintient l'infrastructure à ses frais jusqu'à l'atteinte de l'objectif. Le risque financier est sur notre bilan.`;
+  `Garantie contractuelle Horizon ${COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} mois. Déploiement complet du Moteur Hercule Foundation. Si, dans les ${COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} premiers mois suivant l'activation, le cabinet n'a pas reçu ${COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount} RDV B2B planifiés (dirigeants qualifiés) via Hercule, Hercule maintient l'infrastructure à ses frais jusqu'à l'atteinte de l'objectif. Le risque est sur notre bilan.`;
 
 export function foundationOfferLabel(
   offerType: OfferTypeComptable | string | null | undefined,

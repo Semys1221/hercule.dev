@@ -63,7 +63,7 @@ export const FOUNDATION_PRESENTATION_MIRROR_TEMPLATE =
 export const FOUNDATION_PRESENTATION_SCRIPT_PARAGRAPHS = [
   "[Prénom], voici pourquoi on déploie le Moteur Hercule Foundation sur 60 jours. Pendant que le cabinet dépend du bouche-à-oreille, les confrères les plus agressifs ont déjà acheté du SEO et de la pub — 6 à 12 mois, zéro garantie, et le jour où ils arrêtent de payer, la visibilité s'éteint. Ce n'est pas un actif. C'est une location.",
   "Foundation n'est pas une agence SEO. Le SEO indexe des pages. Nous interceptons des événements légaux sur la zone exclusive du cabinet : création, changement de régime, dirigeant, embauche. Au moment du besoin, la TPE voit ce cabinet et prend contact.",
-  "Si on ne pose pas cette infrastructure maintenant, dans 6 mois le portefeuille est au même point — et la zone peut être verrouillée par un confrère. Le premier mois est du déploiement : verrou, cartographie, filtres, capture. C'est le prix d'un actif. Le contrat porte une garantie 5 000 € de récurrent cumulé sur 90 jours. Le risque est sur notre bilan, pas sur celui du cabinet. On lance la configuration ?",
+  "Si on ne pose pas cette infrastructure maintenant, dans 6 mois le portefeuille est au même point — et la zone peut être verrouillée par un confrère. Le premier mois est du déploiement : verrou, cartographie, filtres, capture. C'est le prix d'un actif. Le contrat porte une garantie 20 RDV B2B planifiés en 3 mois. Le risque est sur notre bilan, pas sur celui du cabinet. On lance la configuration ?",
 ] as const;
 
 export const FOUNDATION_SIGNALS_SUMMARY =
@@ -121,15 +121,15 @@ export const FOUNDATION_COMPARISON_ROWS: FoundationComparisonRow[] = [
   {
     criterion: "Garantie",
     seo: "Trafic, parfois rien",
-    foundation: "5 000 € de récurrent signé (90 jours)",
+    foundation: "20 RDV B2B garantis (3 mois)",
   },
 ];
 
 export const FOUNDATION_MODEL_HIGHLIGHTS = [
   {
-    title: "5 000 €",
+    title: "20 RDV",
     description:
-      "de récurrent cumulé garanti sur 90 jours — lettres signées, pas un volume de sollicitations.",
+      "B2B planifiés garantis en 3 mois — dirigeants qualifiés, pas un volume de sollicitations.",
   },
   {
     title: COMPTABLE_ENTERPRISES_MONITORED_LABEL,
@@ -204,7 +204,7 @@ export const FOUNDATION_ACTIVATION_CLOCKS = [
     id: "guarantee",
     label: "Garantie",
     duration: "90 jours",
-    message: "Checkpoint MRR dès l'activation — 5 000 € de récurrent cumulé.",
+    message: "Checkpoint RDV dès l'activation — 20 RDV B2B planifiés en 3 mois.",
   },
 ] as const;
 
@@ -254,17 +254,16 @@ export const FOUNDATION_ACTIVATION_BODY =
   "À J+46 → J+60, la capture s'allume et les demandes routent vers l'inbox / l'agenda du cabinet. La fenêtre garantie 90 jours démarre à l'activation — le checkpoint MRR vient après le déploiement, pas avant.";
 
 export const FOUNDATION_ROI_ACK_LABEL =
-  "Le cabinet valide la calcul ROI contractuelle (investissement 90 jours, garantie 5 000 €, valeur année 1).";
+  "Le cabinet valide le bénéfice contractuel (20 RDV B2B garantis en 3 mois, valeur année 1).";
 
 export const FOUNDATION_ROI_DISPLAY = {
-  horizonMonthlyEur: 2_399,
-  investment90DaysEur: 7_197,
-  guaranteeMrrEur: 5_000,
+  guaranteeRdvCount: 20,
+  guaranteeWindowMonths: 3,
   yearOneValueEur: 60_000,
 } as const;
 
 export const FOUNDATION_ROI_SCRIPT_TEMPLATE =
-  "Honoraires déclarés : {honoraires} €/an. Sur 90 jours le cabinet investit 7 197 €. Le contrat garantit 5 000 € de récurrent — 60 000 € de valeur dès l'année 1. Ne pas signer, c'est laisser {cause} ouvert et la zone disponible.";
+  "Honoraires déclarés : {honoraires} €/an. Le contrat garantit 20 RDV B2B en 3 mois — 60 000 € de valeur dès l'année 1. Ne pas signer, c'est laisser {cause} ouvert et la zone disponible.";
 
 export function formatFoundationRoiScript(honorairesEur: number, cause: string): string {
   const honorairesLabel = euroFormatter.format(honorairesEur);

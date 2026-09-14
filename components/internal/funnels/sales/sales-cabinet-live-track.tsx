@@ -162,21 +162,27 @@ export function SalesCabinetLiveTrack({
   const suppressSectionReportRef = useRef(false);
 
   useEffect(() => {
+    const pitchStart = getLiveTrackSectionStartIndex(trackStepIds, "pitch");
+    const usesPitch = usesPitchWizard(values);
+
     // #region agent log
     fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4210ea" },
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8ae7a5" },
       body: JSON.stringify({
-        sessionId: "4210ea",
+        sessionId: "8ae7a5",
         runId: "pre-fix",
         hypothesisId: "A",
         location: "sales-cabinet-live-track.tsx:sidebar-sync-effect",
-        message: "sidebar sync effect deps snapshot",
+        message: "sidebar sync effect evaluated",
         data: {
           activeQualificationId,
           safeStepIndex,
+          pitchStart,
+          currentStepId,
+          usesPitch,
+          bleedDiagnosticAccepted: values.bleedDiagnosticAccepted,
           trackStepCount: trackStepIds.length,
-          trackStepKeyLength: trackStepKey.length,
         },
         timestamp: Date.now(),
       }),
@@ -184,8 +190,22 @@ export function SalesCabinetLiveTrack({
     // #endregion
 
     if (activeQualificationId === "pitch") {
-      const pitchStart = getLiveTrackSectionStartIndex(trackStepIds, "pitch");
       if (pitchStart >= 0 && safeStepIndex < pitchStart) {
+        // #region agent log
+        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8ae7a5" },
+          body: JSON.stringify({
+            sessionId: "8ae7a5",
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "sales-cabinet-live-track.tsx:sidebar-sync-effect",
+            message: "forcing step forward to pitch start",
+            data: { pitchStart, safeStepIndex },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         suppressSectionReportRef.current = true;
         setStepIndex(pitchStart);
       }
@@ -193,13 +213,27 @@ export function SalesCabinetLiveTrack({
     }
 
     if (activeQualificationId === "objectifs") {
-      const pitchStart = getLiveTrackSectionStartIndex(trackStepIds, "pitch");
       if (pitchStart >= 0 && safeStepIndex >= pitchStart) {
+        // #region agent log
+        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8ae7a5" },
+          body: JSON.stringify({
+            sessionId: "8ae7a5",
+            runId: "pre-fix",
+            hypothesisId: "A",
+            location: "sales-cabinet-live-track.tsx:sidebar-sync-effect",
+            message: "RESET step back from pitch to last objectifs",
+            data: { pitchStart, safeStepIndex, resetTo: pitchStart - 1 },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
         suppressSectionReportRef.current = true;
         setStepIndex(pitchStart - 1);
       }
     }
-  }, [activeQualificationId, safeStepIndex, trackStepKey]);
+  }, [activeQualificationId, currentStepId, safeStepIndex, trackStepKey, values]);
 
   useEffect(() => {
     if (suppressSectionReportRef.current) {
@@ -214,11 +248,11 @@ export function SalesCabinetLiveTrack({
     // #region agent log
     fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "4210ea" },
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8ae7a5" },
       body: JSON.stringify({
-        sessionId: "4210ea",
+        sessionId: "8ae7a5",
         runId: "pre-fix",
-        hypothesisId: "B",
+        hypothesisId: "D",
         location: "sales-cabinet-live-track.tsx:onActiveSectionChange-effect",
         message: "live track reporting section after step change",
         data: {
@@ -316,6 +350,33 @@ export function SalesCabinetLiveTrack({
   })();
 
   const handleNext = () => {
+    const pitchStart = getLiveTrackSectionStartIndex(trackStepIds, "pitch");
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8ae7a5" },
+      body: JSON.stringify({
+        sessionId: "8ae7a5",
+        runId: "pre-fix",
+        hypothesisId: "B-C-E",
+        location: "sales-cabinet-live-track.tsx:handleNext",
+        message: "handleNext invoked",
+        data: {
+          currentStepId,
+          canGoNext,
+          isLastStep,
+          safeStepIndex,
+          pitchStart,
+          nextStepId: trackStepIds[safeStepIndex + 1] ?? null,
+          usesPitch: usesPitchWizard(values),
+          bleedDiagnosticAccepted: values.bleedDiagnosticAccepted,
+          trackStepCount: trackStepIds.length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     if (!currentStepId || !canGoNext) {
       return;
     }
@@ -328,7 +389,15 @@ export function SalesCabinetLiveTrack({
       return;
     }
 
-    setStepIndex((index) => Math.min(index + 1, trackStepIds.length - 1));
+    const nextIndex = Math.min(safeStepIndex + 1, trackStepIds.length - 1);
+    const nextStepId = trackStepIds[nextIndex];
+    if (nextStepId) {
+      const nextSection = getLiveTrackSection(nextStepId);
+      if (nextSection !== currentSection) {
+        onActiveSectionChangeRef.current?.(nextSection);
+      }
+    }
+    setStepIndex(nextIndex);
   };
 
   const handlePrev = () => {

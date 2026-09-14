@@ -16,12 +16,54 @@ import { cn } from "@/lib/utils";
 
 import { PITCH_BUYIN_OPTIONS } from "../sales-pitch-wizard-slides";
 
+type GlowCardProps = {
+  children: ReactNode;
+  variant?: "default" | "primary" | "destructive";
+  className?: string;
+};
+
+export function GlowCard({ children, variant = "default", className }: GlowCardProps) {
+  const variantClass =
+    variant === "primary"
+      ? "border-primary/30 bg-primary/5 shadow-[0_0_24px_-4px_hsl(var(--primary)/0.22)]"
+      : variant === "destructive"
+        ? "border-destructive/30 bg-destructive/10 shadow-[0_0_20px_-4px_hsl(var(--destructive)/0.2)]"
+        : "border-border/60 bg-card";
+
+  return (
+    <div className={cn("flex flex-col gap-1.5 rounded-lg border p-3.5", variantClass, className)}>
+      {children}
+    </div>
+  );
+}
+
+type GlowHeroProps = {
+  value: string;
+  label: string;
+  className?: string;
+};
+
+export function GlowHero({ value, label, className }: GlowHeroProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center gap-1 rounded-xl border border-primary/30 bg-primary/5 px-6 py-5 text-center shadow-[0_0_32px_-4px_hsl(var(--primary)/0.28)]",
+        className,
+      )}
+    >
+      <p className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{value}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
 type MetricTileProps = {
   icon: LucideIcon;
   value: string;
   label: string;
   tone?: "default" | "primary" | "muted";
   compact?: boolean;
+  glow?: boolean;
   className?: string;
 };
 
@@ -31,6 +73,7 @@ export function MetricTile({
   label,
   tone = "default",
   compact = false,
+  glow = false,
   className,
 }: MetricTileProps) {
   const toneClass =
@@ -39,12 +82,19 @@ export function MetricTile({
       : tone === "muted"
         ? "border-border bg-muted/40"
         : "border-border bg-card";
+  const glowClass =
+    glow && tone === "primary"
+      ? "shadow-[0_0_24px_-4px_hsl(var(--primary)/0.22)]"
+      : glow
+        ? "shadow-[0_0_16px_-4px_hsl(var(--foreground)/0.08)]"
+        : "";
 
   return (
     <div
       className={cn(
         "flex flex-col gap-2 rounded-lg border p-4",
         toneClass,
+        glowClass,
         compact && "p-3",
         className,
       )}
@@ -331,24 +381,21 @@ export function RaciSplit({ rows }: RaciSplitProps) {
 }
 
 export function PitchRoiMetricStrip({
-  investment,
   guarantee,
   yearOne,
   compact = false,
 }: {
-  investment: string;
   guarantee: string;
   yearOne: string;
   compact?: boolean;
 }) {
   const tiles = [
-    { label: "Invest. 90 j", value: investment },
-    { label: "Garantie", value: guarantee },
+    { label: "RDV garantis", value: guarantee },
     { label: "Année 1", value: yearOne },
   ];
 
   return (
-    <div className={cn("grid gap-2", compact ? "grid-cols-3" : "sm:grid-cols-3")}>
+    <div className={cn("grid gap-2", compact ? "grid-cols-2" : "sm:grid-cols-2")}>
       {tiles.map((tile) => (
         <div
           key={tile.label}

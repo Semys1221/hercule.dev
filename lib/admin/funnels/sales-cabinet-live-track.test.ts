@@ -50,7 +50,7 @@ function main() {
   assert.ok(diagnosticIndex >= 0);
   assert.ok(pitchStart > diagnosticIndex);
   assert.equal(fullTrack.at(-1), "pDashboard");
-  assert.equal(fullTrack.at(-2), "p12");
+  assert.equal(fullTrack.at(-2), "p11");
 
   console.log("sales-cabinet-live-track.test.ts: all assertions passed");
 }

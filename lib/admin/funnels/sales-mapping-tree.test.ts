@@ -82,7 +82,7 @@ function main() {
   const pitchFlow = getMappingFlow("pitch", "comptable");
   assert.equal(pitchFlow.rootId, "pitch_gate");
   assert.ok(pitchFlow.nodes.pDashboard?.condition);
-  assert.ok(pitchFlow.nodes.p12?.condition);
+  assert.ok(pitchFlow.nodes.pGuarantee);
 
   const dashboardFlow = getMappingFlow("dashboard", "comptable");
   assert.equal(dashboardFlow.rootId, "dashboard_gate");
@@ -129,7 +129,7 @@ function main() {
 
   assert.equal(usesPitchWizard(pitchValues), true);
   assert.equal(isPitchStepVisible("pDashboard", pitchValues, "comptable"), true);
-  assert.equal(isPitchStepVisible("p12", pitchValues, "comptable"), true);
+  assert.ok(pitchFlow.nodes.pGuarantee?.title.includes("20 RDV"));
   assert.equal(
     isPitchStepVisible("pDashboard", {
       ...pitchValues,

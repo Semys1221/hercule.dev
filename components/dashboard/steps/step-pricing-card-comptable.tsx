@@ -106,7 +106,7 @@ export function StepPricingCardComptable({
       {showHorizonGuarantee ? (
         <Alert>
           <AlertTitle>
-            Garantie contractuelle Horizon {COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours
+            Garantie contractuelle Horizon {COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} mois
           </AlertTitle>
           <AlertDescription className="text-sm leading-relaxed">
             {FOUNDATION_HORIZON_GUARANTEE_COPY}

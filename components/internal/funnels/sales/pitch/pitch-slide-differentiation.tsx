@@ -7,7 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 
-import { IconChipGrid } from "./pitch-primitives";
+import { GlowCard, IconChipGrid } from "./pitch-primitives";
+import { PitchTriptych } from "./pitch-triptych";
 import type { PitchSlideBaseProps } from "./pitch-slide-props";
 
 const RENTAL_ITEMS = [
@@ -23,19 +24,29 @@ const ASSET_ITEMS = [
 ] as const;
 
 export const PitchSlideDifferentiation = memo(function PitchSlideDifferentiation({
+  slide,
+  audience,
   form,
+  values,
+  context,
 }: PitchSlideBaseProps) {
   return (
     <div className="flex flex-col gap-4">
+      <PitchTriptych
+        stepId={slide.id}
+        audience={audience}
+        values={values}
+        context={context}
+      />
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4">
+        <GlowCard variant="destructive">
           <p className="text-sm font-medium text-destructive">Location</p>
           <IconChipGrid items={RENTAL_ITEMS} tone="destructive" />
-        </div>
-        <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/10 p-4">
+        </GlowCard>
+        <GlowCard variant="primary">
           <p className="text-sm font-medium text-primary">Actif</p>
           <IconChipGrid items={ASSET_ITEMS} tone="primary" />
-        </div>
+        </GlowCard>
       </div>
 
       <FormField

@@ -23,19 +23,19 @@ const baseContext: SalesCoachContext = {
 
 function main() {
   const roi = computeHonorairesRoiAnchoring(3_600, "l'invisibilité de zone");
-  assert.equal(roi.horizonMonthlyEur, FOUNDATION_ROI_DISPLAY.horizonMonthlyEur);
-  assert.equal(roi.investment90DaysEur, FOUNDATION_ROI_DISPLAY.investment90DaysEur);
-  assert.equal(roi.guaranteeMrrEur, FOUNDATION_ROI_DISPLAY.guaranteeMrrEur);
+  assert.equal(roi.guaranteeRdvCount, FOUNDATION_ROI_DISPLAY.guaranteeRdvCount);
+  assert.equal(roi.guaranteeWindowMonths, FOUNDATION_ROI_DISPLAY.guaranteeWindowMonths);
   assert.equal(roi.yearOneValueEur, FOUNDATION_ROI_DISPLAY.yearOneValueEur);
   assert.match(roi.script, /3\s?600\s?€/);
-  assert.match(roi.script, /7\s?197/);
-  assert.match(roi.script, /5\s?000/);
+  assert.match(roi.script, /20 RDV B2B/);
+  assert.match(roi.script, /3 mois/);
   assert.match(roi.script, /60\s?000/);
-  assert.doesNotMatch(roi.script, /10 RDV/i);
+  assert.doesNotMatch(roi.script, /7\s?197/);
+  assert.doesNotMatch(roi.script, /5\s?000/);
   assert.doesNotMatch(roi.script, /20–30 %/);
 
   const cifRoi = computeHonorairesRoiAnchoring(3_600, "la trésorerie dirigeant");
-  assert.match(cifRoi.script, /7\s?197/);
+  assert.match(cifRoi.script, /20 RDV B2B/);
 
   const o3Script = getCoachScriptForQuestion({
     ...baseContext,
@@ -88,8 +88,8 @@ function main() {
     COMPTABLE_ANNUAL_MIN,
   );
   assert.ok(q13Script);
-  assert.match(q13Script!, /7\s?197/);
-  assert.doesNotMatch(q13Script!, /10 RDV/i);
+  assert.match(q13Script!, /20 RDV B2B/);
+  assert.doesNotMatch(q13Script!, /7\s?197/);
 
   const q13Hidden = getCoachScriptForQuestion(
     {

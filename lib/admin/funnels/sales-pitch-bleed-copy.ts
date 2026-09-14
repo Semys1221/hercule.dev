@@ -47,7 +47,7 @@ export const PITCH_P12_CORE_WHY_IDS = [
 ] as const;
 
 export const PITCH_P12_HORIZON_WHY_IDS = [
-  "guarantee_5000",
+  "guarantee_20_rdv",
   "max_capture",
   "gap_ambition",
 ] as const;
@@ -81,7 +81,7 @@ export const PITCH_P8_ACTIVATION_HOOK_TEMPLATE =
   "Sans activation, {inaction} continue de coûter {gap} — à J+60 le système doit tourner, pas rester en projet.";
 
 export const PITCH_CGV_GUARANTEE_HOOK_TEMPLATE =
-  "La garantie 5 000 € sur 90 jours couvre l'écart {gap} que le cabinet a chiffré — honoraires déclarés : {honoraires}.";
+  "La garantie 20 RDV B2B en 3 mois couvre l'écart {gap} que le cabinet a chiffré — honoraires déclarés : {honoraires}.";
 
 export const PITCH_P9_INBOUND_HOOK_TEMPLATE =
   "Chaque demande inbound liée à {cause} doit être traitée sous 24 h — sinon la capture se vide vers un confrère.";
@@ -102,7 +102,7 @@ const P11_WHY_LABEL_TEMPLATES: Record<PitchP11WhyId, string> = {
   zone_lock: "Verrouiller la zone avant un confrère",
   close_gap: "Combler l'écart {gap} vers {goal6m}",
   owned_asset: "Construire un actif propriétaire, pas louer l'attention",
-  guarantee_roi: "Sécuriser le ROI contractuel (5 000 € / 90 j)",
+  guarantee_roi: "Sécuriser le bénéfice contractuel (20 RDV B2B / 3 mois)",
   replace_method: "{method} ne tient pas — {brake}",
   urgency: "Urgence : {urgencyLabel}",
   criteria_fit: "Partenaire aligné sur : {criteria}",
@@ -115,7 +115,7 @@ const P12_CORE_WHY_LABELS: Record<(typeof PITCH_P12_CORE_WHY_IDS)[number], strin
 };
 
 const P12_HORIZON_WHY_LABELS: Record<(typeof PITCH_P12_HORIZON_WHY_IDS)[number], string> = {
-  guarantee_5000: "Garantie 5 000 € MRR cumulé sur 90 jours",
+  guarantee_20_rdv: "Garantie 20 RDV B2B planifiés en 3 mois",
   max_capture: "Capture maximale sur la zone — levier complet",
   gap_ambition: "Écart {gap} — il faut le levier complet pour {goal6m}",
 };

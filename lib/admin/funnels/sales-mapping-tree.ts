@@ -100,18 +100,14 @@ const DISCOVERY_LINEAR_TRUNK = [
 
 const PITCH_LINEAR_TRUNK = [
   "p0",
-  "p1",
-  "p1b",
   "p2",
   "p3",
+  "pGuarantee",
   "pCgv",
   "p4",
   "p5",
-  "p6",
   "p7",
-  "p8",
   "p9",
-  "p10",
   "pRoi",
   "p11",
 ] as const;
@@ -181,7 +177,7 @@ function buildPitchSegments(): MappingFlowSegment[] {
         },
         {
           label: "Oui + why ≥ 20 caractères",
-          segments: stepSegments(["p12", "pDashboard"]),
+          segments: stepSegments(["pDashboard"]),
         },
       ],
     },
@@ -258,7 +254,7 @@ const PITCH_NODE_CONDITIONS: Record<string, string> = {
   p7BuyIn: "p7BuyIn = clear (activation mois 3)",
   pRoiAcknowledged: "pRoiAcknowledged = true",
   pDashboard: "Visible si p11WhyId renseigné et p11TempCheck ≠ hesitant",
-  p12: "Visible si p11WhyId renseigné et p11TempCheck ≠ hesitant",
+  p12: "Retiré du live track — choix d'infrastructure sur le dashboard client",
 };
 
 const DASHBOARD_NODE_CONDITIONS: Record<string, string> = {

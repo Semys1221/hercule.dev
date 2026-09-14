@@ -2,32 +2,26 @@
 
 import { memo } from "react";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { formatPitchWizardInterpolation } from "@/lib/admin/funnels/sales-pitch-wizard";
 import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 
-import { MilestoneStrip, PitchBuyInSlide, RaciSplit, ZoneScarcityBadge } from "./pitch-primitives";
+import {
+  GlowCard,
+  MilestoneStrip,
+  PitchBuyInSlide,
+  ZoneScarcityBadge,
+} from "./pitch-primitives";
+import { PitchTriptych } from "./pitch-triptych";
 import type { PitchSlideBaseProps } from "./pitch-slide-props";
 
-const PARTNER_RACI_ROWS = [
+const PARTNER_SPLIT = [
   { role: "Capture live", hercule: "Infra + rapports", cabinet: "—" },
   { role: "Inbound", hercule: "—", cabinet: "Réponse < 24 h" },
-  { role: "Appels", hercule: "Points réguliers", cabinet: "Décideur présent" },
-  { role: "Escalade", hercule: "Ajustement ciblage", cabinet: "Feedback terrain" },
 ] as const;
 
-export const PitchSlidePartnerContent = memo(function PitchSlidePartnerContent(
-  _props: PitchSlideBaseProps,
-) {
-  return (
-    <div className="flex flex-col gap-4">
-      <RaciSplit rows={PARTNER_RACI_ROWS} />
-    </div>
-  );
-});
-
-export const PitchSlidePartnerFuture = memo(function PitchSlidePartnerFuture({
+export const PitchSlidePartner = memo(function PitchSlidePartner({
+  slide,
   audience,
   form,
   values,
@@ -46,6 +40,21 @@ export const PitchSlidePartnerFuture = memo(function PitchSlidePartnerFuture({
       buyInPrompt={buyInPrompt}
       content={
         <div className="flex flex-col gap-4">
+          <PitchTriptych
+            stepId={slide.id}
+            audience={audience}
+            values={values}
+            context={context}
+          />
+          <div className="flex flex-col gap-2">
+            {PARTNER_SPLIT.map((row) => (
+              <GlowCard key={row.role} className="grid grid-cols-3 gap-2 text-xs">
+                <span className="font-medium">{row.role}</span>
+                <span className="text-center text-primary">{row.hercule}</span>
+                <span className="text-center text-muted-foreground">{row.cabinet}</span>
+              </GlowCard>
+            ))}
+          </div>
           <MilestoneStrip
             milestones={[
               { label: "J0", detail: "Onboarding" },
@@ -53,15 +62,13 @@ export const PitchSlidePartnerFuture = memo(function PitchSlidePartnerFuture({
               { label: "12 mois", detail: interpolate("{goal6m}") },
             ]}
           />
-          <Alert>
-            <AlertTitle className="flex flex-wrap items-center gap-2">
-              Zone {interpolate("{department}")}
+          <GlowCard variant="primary">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium">Zone {interpolate("{department}")}</span>
               <Badge variant="outline">Verrou 12 mois</Badge>
-            </AlertTitle>
-            <AlertDescription>
-              <ZoneScarcityBadge department={interpolate("{department}")} />
-            </AlertDescription>
-          </Alert>
+            </div>
+            <ZoneScarcityBadge department={interpolate("{department}")} />
+          </GlowCard>
         </div>
       }
     />

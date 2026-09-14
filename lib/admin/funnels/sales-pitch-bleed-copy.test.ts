@@ -39,7 +39,7 @@ function main() {
 
   const coreOptions = getPitchP12WhyOptions("core", baseValues, "comptable");
   assert.equal(coreOptions.length, 3);
-  assert.ok(coreOptions.every((option) => option.id !== "guarantee_5000"));
+  assert.ok(coreOptions.every((option) => option.id !== "guarantee_20_rdv"));
 
   const horizonOptions = getPitchP12WhyOptions("horizon", baseValues, "comptable");
   assert.equal(horizonOptions.length, 3);

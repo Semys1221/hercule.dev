@@ -27,21 +27,20 @@ function main() {
     "comptable",
   );
 
-  assert.equal(isPitchFieldComplete("p6", { ...comptableValues, p5BuyIn: "questions" }, "comptable"), false);
-  assert.equal(isPitchFieldComplete("p6", comptableValues, "comptable"), true);
+  assert.equal(isPitchFieldComplete("p5", { ...comptableValues, p5BuyIn: "questions" }, "comptable"), false);
+  assert.equal(isPitchFieldComplete("p5", comptableValues, "comptable"), true);
   assert.equal(
     isPitchFieldComplete("p7", { ...comptableValues, p7FoundationBuyIn: "questions" }, "comptable"),
     false,
   );
+  assert.equal(
+    isPitchFieldComplete("p7", { ...comptableValues, p7BuyIn: "questions" }, "comptable"),
+    false,
+  );
   assert.equal(isPitchFieldComplete("p7", comptableValues, "comptable"), true);
-  assert.equal(isPitchFieldComplete("p8", { ...comptableValues, p7BuyIn: "questions" }, "comptable"), false);
   assert.equal(isPitchFieldComplete("pRoi", { ...comptableValues, pRoiAcknowledged: false }, "comptable"), false);
   assert.equal(
     isPitchFieldComplete("p11", { ...comptableValues, p11WhyId: undefined }, "comptable"),
-    false,
-  );
-  assert.equal(
-    isPitchFieldComplete("p12", { ...comptableValues, p12WhyId: undefined }, "comptable"),
     false,
   );
   assert.equal(
@@ -64,18 +63,19 @@ function main() {
     ),
     true,
   );
+  assert.equal(isPitchFieldComplete("pGuarantee", comptableValues, "comptable"), true);
 
   assert.equal(
-    isPitchStepVisible("p12", { ...comptableValues, p11TempCheck: "hesitant" }, "comptable"),
+    isPitchStepVisible("pDashboard", { ...comptableValues, p11TempCheck: "hesitant" }, "comptable"),
     false,
-    "p12 hidden when hesitant",
+    "pDashboard hidden when hesitant",
   );
   assert.equal(
-    isPitchStepVisible("p12", { ...comptableValues, p11WhyId: undefined }, "comptable"),
+    isPitchStepVisible("pDashboard", { ...comptableValues, p11WhyId: undefined }, "comptable"),
     false,
-    "p12 hidden when p11WhyId empty",
+    "pDashboard hidden when p11WhyId empty",
   );
-  assert.equal(isPitchStepVisible("p12", comptableValues, "comptable"), true);
+  assert.equal(isPitchStepVisible("pDashboard", comptableValues, "comptable"), true);
 
   const withoutDiagnostic = mergeSalesQualificationValues(
     { bleedDiagnosticAccepted: false },
@@ -88,14 +88,14 @@ function main() {
   );
 
   const visibleIds = getVisiblePitchStepIds(comptableValues, "comptable");
-  assert.ok(visibleIds.includes("p1b"));
+  assert.ok(visibleIds.includes("pGuarantee"));
   assert.ok(visibleIds.includes("pRoi"));
   assert.ok(visibleIds.includes("pDashboard"));
-  assert.ok(visibleIds.includes("p12"));
   assert.equal(visibleIds.at(-1), "pDashboard");
-  assert.equal(visibleIds.indexOf("p12"), visibleIds.indexOf("pDashboard") - 1);
+  assert.equal(visibleIds.indexOf("p11"), visibleIds.indexOf("pDashboard") - 1);
   assert.equal(visibleIds.indexOf("pRoi"), visibleIds.indexOf("p11") - 1);
-  assert.equal(PITCH_STEP_IDS.length, 17);
+  assert.equal(PITCH_STEP_IDS.length, 12);
+  assert.equal(visibleIds.indexOf("pGuarantee"), visibleIds.indexOf("pCgv") - 1);
 
   const honorairesFromQ13 = formatHonorairesLabel(
     { ...comptableValues, q13: 240_000 },

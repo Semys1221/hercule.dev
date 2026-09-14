@@ -5,7 +5,6 @@ import {
 } from "@/lib/admin/funnels/sales-bleed-track";
 import {
   isPitchP11WhyIdValid,
-  isPitchP12WhyIdValid,
   isPitchP2MissingRoleValid,
 } from "@/lib/admin/funnels/sales-pitch-bleed-copy";
 import { formatObjectifsWizardInterpolation } from "@/lib/admin/funnels/sales-objectifs-wizard";
@@ -14,25 +13,20 @@ import { isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 
 export const PITCH_WIZARD_SUBTITLE =
-  "Présentation Hercule, cadre contractuel, système en trois piliers, ROI contractuel et choix d'infrastructure.";
+  "Garantie contractuelle, système en trois piliers, ROI et choix d'infrastructure.";
 
 export const PITCH_STEP_IDS = [
   "p0",
-  "p1",
-  "p1b",
   "p2",
   "p3",
+  "pGuarantee",
   "pCgv",
   "p4",
   "p5",
-  "p6",
   "p7",
-  "p8",
   "p9",
-  "p10",
   "pRoi",
   "p11",
-  "p12",
   "pDashboard",
 ] as const;
 
@@ -41,8 +35,8 @@ export type PitchWizardStepId = (typeof PITCH_STEP_IDS)[number];
 export type PitchWizardPartId = "societe" | "cgv" | "systeme" | "offre";
 
 export const PITCH_PART_LABELS: Record<PitchWizardPartId, string> = {
-  societe: "Société",
-  cgv: "CGV",
+  societe: "Setup",
+  cgv: "Garantie",
   systeme: "Système",
   offre: "Offre",
 };
@@ -57,27 +51,13 @@ export type PitchInterpolationContext = {
 };
 
 export function getPitchStepPart(stepId: PitchWizardStepId): PitchWizardPartId {
-  if (
-    stepId === "p0" ||
-    stepId === "p1" ||
-    stepId === "p1b" ||
-    stepId === "p2" ||
-    stepId === "p3"
-  ) {
+  if (stepId === "p0" || stepId === "p2" || stepId === "p3") {
     return "societe";
   }
-  if (stepId === "pCgv") {
+  if (stepId === "pGuarantee" || stepId === "pCgv") {
     return "cgv";
   }
-  if (
-    stepId === "p4" ||
-    stepId === "p5" ||
-    stepId === "p6" ||
-    stepId === "p7" ||
-    stepId === "p8" ||
-    stepId === "p9" ||
-    stepId === "p10"
-  ) {
+  if (stepId === "p4" || stepId === "p5" || stepId === "p7" || stepId === "p9") {
     return "systeme";
   }
   return "offre";
@@ -119,8 +99,7 @@ export function formatPitchWizardInterpolation(
     honoraires: formatHonorairesLabel(values, audience),
     department: resolvePitchDepartment(context),
     yearOneValue: euroFormatter.format(FOUNDATION_ROI_DISPLAY.yearOneValueEur),
-    investment90: euroFormatter.format(FOUNDATION_ROI_DISPLAY.investment90DaysEur),
-    guaranteeMrr: euroFormatter.format(FOUNDATION_ROI_DISPLAY.guaranteeMrrEur),
+    guaranteeRdv: `${FOUNDATION_ROI_DISPLAY.guaranteeRdvCount} RDV B2B`,
   };
 
   const withTokens = withBleed.replace(/\{(\w+)\}/g, (match, token: string) => {
@@ -141,7 +120,7 @@ export function isPitchStepVisible(
     return false;
   }
 
-  if (stepId === "pDashboard" || stepId === "p12") {
+  if (stepId === "pDashboard") {
     if (!isPitchP11WhyIdValid(values.p11WhyId, values, audience, context)) {
       return false;
     }
@@ -173,20 +152,16 @@ export function getPitchFormFieldName(
       return "p3Acknowledged";
     case "pCgv":
       return "pCgvAccepted";
-    case "p6":
+    case "p5":
       return "p5BuyIn";
     case "p7":
-      return "p7FoundationBuyIn";
-    case "p8":
       return "p7BuyIn";
-    case "p10":
+    case "p9":
       return "p9BuyIn";
     case "pRoi":
       return "pRoiAcknowledged";
     case "p11":
       return "p11TempCheck";
-    case "p12":
-      return "p12Plan";
     default:
       return null;
   }
@@ -200,11 +175,8 @@ export function isPitchFieldComplete(
 ): boolean {
   switch (stepId) {
     case "p0":
-    case "p1":
-    case "p1b":
+    case "pGuarantee":
     case "p4":
-    case "p5":
-    case "p9":
       return true;
     case "p2":
       if (!values.p2DecisionMakers) {
@@ -218,13 +190,11 @@ export function isPitchFieldComplete(
       return values.p3Acknowledged === true;
     case "pCgv":
       return values.pCgvAccepted === true;
-    case "p6":
+    case "p5":
       return values.p5BuyIn === "clear";
     case "p7":
-      return values.p7FoundationBuyIn === "clear";
-    case "p8":
-      return values.p7BuyIn === "clear";
-    case "p10":
+      return values.p7FoundationBuyIn === "clear" && values.p7BuyIn === "clear";
+    case "p9":
       return values.p9BuyIn === "clear";
     case "pRoi":
       return values.pRoiAcknowledged === true;
@@ -238,11 +208,6 @@ export function isPitchFieldComplete(
       return isPitchP11WhyIdValid(values.p11WhyId, values, audience, context);
     case "pDashboard":
       return true;
-    case "p12":
-      return (
-        Boolean(values.p12Plan) &&
-        isPitchP12WhyIdValid(values.p12WhyId, values.p12Plan, values, audience, context)
-      );
     default:
       return false;
   }

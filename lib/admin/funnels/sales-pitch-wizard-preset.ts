@@ -32,7 +32,7 @@ export function buildCabinetPitchPresetValues(
     p11TempCheck: "yes",
     p11WhyId: "zone_lock",
     p12Plan: "horizon",
-    p12WhyId: "guarantee_5000",
+    p12WhyId: "guarantee_20_rdv",
     pitchWizardCompleted: true,
   };
 }

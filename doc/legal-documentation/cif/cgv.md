@@ -131,6 +131,30 @@ Le Client ne consomme une Attribution que lorsqu'un RDV est **planifié**. Un no
 
 Ne font pas l'objet des présentes : offres agence web (1 489 €, 2 500 € vitrine, etc.) décrites dans [cvg_master.md](./cvg_master.md).
 
+### 5.5 Hercule Core (Moteur Hercule Foundation)
+
+| Élément | Détail |
+|---------|--------|
+| **Prix** | **1 799 € / mois** |
+| **Contenu** | Déploiement du Moteur Hercule Foundation sur la zone du cabinet ; capture inbound standard — événements patrimoniaux, demandes qualifiées |
+| **Commission Hercule** | **0 %** sur les honoraires signés |
+| **Engagement** | Aucun. Résiliation : article 13 |
+| **Garantie RDV** | **Aucune** — uniquement garantie no-show (article 10.1) |
+| **Garantie signature** | **Aucune** (article 10.3) |
+
+### 5.6 Hercule Horizon (Moteur Hercule Foundation — recommandé)
+
+| Élément | Détail |
+|---------|--------|
+| **Prix** | **2 399 € / mois** |
+| **Contenu** | Exclusivité totale sur la zone économique du cabinet ; profondeur de zone maximale — cartographie et capture intensives |
+| **Commission Hercule** | **0 %** sur les honoraires signés |
+| **Engagement** | Aucun. Résiliation : article 13 |
+| **Garantie RDV** | **20 RDV B2B planifiés** en **3 mois** suivant l'Activation (article 10.5) |
+| **Garantie signature** | **Aucune** (article 10.3) |
+
+**Garantie RDV Horizon :** si, dans les **3 premiers mois** suivant l'Activation, le Client n'a pas reçu **20 RDV B2B planifiés** (dirigeants qualifiés) via Hercule, Hercule maintient l'infrastructure à ses frais jusqu'à l'atteinte de l'objectif, sous réserve des obligations du Client (article 11). Cette garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché.
+
 ---
 
 ## 6. Commande, paiement et facturation
@@ -172,6 +196,7 @@ Lors de l'onboarding, le Client peut **renoncer** à ce délai pour lancer la re
 | Rythme Hercule Starter | **10 missions PME / mois** (cycle 30 jours) |
 | Garantie MRR Starter | **3 000 €** cumulés après 10 missions, ou **5 remplacements** |
 | Garantie MRR pack | **9 000 €** cumulés après 30 missions, ou **15 remplacements** (5 par tranche de 10 missions) |
+| Garantie RDV Hercule Horizon | **20 RDV B2B planifiés** en **3 mois** suivant l'Activation |
 
 ---
 
@@ -202,6 +227,18 @@ Hercule **ne garantit pas** qu'un dirigeant rencontré signera un mandat avec le
 ### 10.4 Absence de commission
 
 0 % de commission sur les honoraires signés par le Client.
+
+### 10.5 Garantie RDV (Hercule Horizon)
+
+**Hercule Horizon :** si, dans les **3 premiers mois** suivant l'Activation, le Client n'a pas reçu **20 RDV B2B planifiés** (dirigeants qualifiés) via Hercule, Hercule maintient l'infrastructure du Moteur Hercule Foundation à ses frais jusqu'à l'atteinte de l'objectif.
+
+Conditions communes :
+
+- le Client a honoré les RDV et respecté ses obligations (article 11) ;
+- la garantie ne couvre pas l'absence de compétences commerciales du Client ni un positionnement tarifaire incompatible avec le marché ;
+- Hercule ne garantit pas la signature d'un mandat (article 10.3).
+
+**Hercule Core :** aucune garantie RDV.
 
 ---
 
@@ -250,6 +287,7 @@ Traitement conforme RGPD. Contact : contact@hercule.dev. Détail : [confidential
 
 | Version | Date | Changements |
 |---------|------|-------------|
+| 2026-09-14 | 14 sept. 2026 | Hercule Core **1 799 €/mois** · Hercule Horizon **2 399 €/mois** · garantie RDV Horizon **20 RDV B2B / 3 mois** |
 | 2026-09-13 | 13 sept. 2026 | Hercule Lite **1 799 €/mois** · Hercule Starter **2 199 €/mois** · Pack 3 mois **5 277,60 €** |
 | 2026-09-10b | 10 sept. 2026 | Hercule Lite **998 €/mois** (5 missions/mois, abonnement) · Hercule Starter **1 499 €/mois** (abonnement Stripe) |
 | 2026-09-10 | 10 sept. 2026 | Hercule Lite **998 €** · premier RDV **20 à 25 jours** · retrait mentions TTC |

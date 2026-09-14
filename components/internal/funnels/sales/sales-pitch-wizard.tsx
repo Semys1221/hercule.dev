@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RESERVATION_SURFACE } from "@/lib/admin/funnels/reservation-surface";
 import {
+  formatPitchWizardInterpolation,
   getPitchStepPart,
   getVisiblePitchStepIds,
   isPitchFieldComplete,
@@ -189,9 +190,18 @@ export function SalesPitchWizard({
     setStepIndex((index) => Math.min(index + 1, visibleSlides.length - 1));
   };
 
+  const slideTitle = currentSlide
+    ? formatPitchWizardInterpolation(
+        currentSlide.title,
+        values,
+        audience,
+        interpolationContext,
+      )
+    : "";
+
   const slideHeader = currentSlide ? (
     <div className="flex w-full max-w-4xl flex-col gap-2">
-      <h2 className="text-xl font-medium tracking-tight">{currentSlide.title}</h2>
+      <h2 className="text-xl font-medium tracking-tight">{slideTitle}</h2>
       {currentSlide.trainingNote ? (
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           {currentSlide.trainingNote}

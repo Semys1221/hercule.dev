@@ -1,33 +1,26 @@
 "use client";
 
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { memo } from "react";
+import { memo, useState } from "react";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import {
   getPitchP11WhyOptions,
 } from "@/lib/admin/funnels/sales-pitch-bleed-copy";
 import { formatPitchWizardInterpolation } from "@/lib/admin/funnels/sales-pitch-wizard";
+import { PITCH_FAQ_COMPACT_ITEMS } from "@/lib/admin/funnels/sales-pitch-triptych-copy";
 import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { cn } from "@/lib/utils";
 
 import { SalesSingleChoiceField } from "../sales-question-fields";
-import { PITCH_FAQ_ITEMS, PITCH_P11_TEMP_OPTIONS } from "../sales-pitch-wizard-slides";
-import { ChoiceTiles } from "./pitch-primitives";
+import { PITCH_P11_TEMP_OPTIONS } from "../sales-pitch-wizard-slides";
+import { ChoiceTiles, GlowCard } from "./pitch-primitives";
+import { PitchTriptych } from "./pitch-triptych";
 import { pitchSingleQuestion } from "./pitch-utils";
 import type { PitchSlideBaseProps } from "./pitch-slide-props";
 
-function truncateFaqBody(body: string, maxSentences = 2): string {
-  const sentences = body.split(/(?<=[.!?])\s+/).filter(Boolean);
-  return sentences.slice(0, maxSentences).join(" ");
-}
-
 export const PitchSlideFaqClose = memo(function PitchSlideFaqClose({
+  slide,
   audience,
   form,
   values,
@@ -38,19 +31,39 @@ export const PitchSlideFaqClose = memo(function PitchSlideFaqClose({
   const tempPrompt = isCabinetBuyerSalesAudience(audience)
     ? "Solution adaptée pour {goal6m} ?"
     : "Bonne solution pour {goal6m} ?";
+  const [activeFaqId, setActiveFaqId] = useState<string | null>(null);
 
   return (
-    <div className="flex flex-col gap-5">
-      <Accordion type="single" collapsible className="w-full">
-        {PITCH_FAQ_ITEMS.map((item) => (
-          <AccordionItem key={item.id} value={item.id}>
-            <AccordionTrigger className="text-sm">{item.title}</AccordionTrigger>
-            <AccordionContent className="text-sm text-muted-foreground">
-              {truncateFaqBody(interpolate(item.body))}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+    <div className="flex flex-col gap-4">
+      <PitchTriptych
+        stepId={slide.id}
+        audience={audience}
+        values={values}
+        context={context}
+      />
+      <div className="grid gap-2 sm:grid-cols-3">
+        {PITCH_FAQ_COMPACT_ITEMS.map((item) => {
+          const isActive = activeFaqId === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveFaqId(isActive ? null : item.id)}
+              className="text-left"
+            >
+              <GlowCard
+                variant={isActive ? "primary" : "default"}
+                className={cn("h-full transition-colors", isActive && "ring-1 ring-primary")}
+              >
+                <p className="text-sm font-medium">{item.title}</p>
+                {isActive ? (
+                  <p className="text-xs text-muted-foreground">{interpolate(item.body)}</p>
+                ) : null}
+              </GlowCard>
+            </button>
+          );
+        })}
+      </div>
 
       <FormField
         control={form.control}
