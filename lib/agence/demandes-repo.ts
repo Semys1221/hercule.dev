@@ -5,6 +5,7 @@ import type {
   DemandeStatus,
   DemandeTeaser,
 } from "@/lib/demandes-data";
+import { withMarketingFetchFallback } from "@/lib/marketing/resilient-fetch";
 
 interface AgenceDemandeRow {
   external_id: string;
@@ -69,9 +70,25 @@ function todayIsoDate(): string {
   return `${year}-${month}-${day}`;
 }
 
-export async function fetchDemandesForCarousel(): Promise<DemandeContrat[]> {
+async function loadDemandesForCarousel(): Promise<DemandeContrat[]> {
   const client = createLinkTrackingClient();
   const today = todayIsoDate();
+  // #region agent log
+  const fetchStartedAt = Date.now();
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "51039f" },
+    body: JSON.stringify({
+      sessionId: "51039f",
+      runId: "post-fix",
+      hypothesisId: "H2-H4",
+      location: "demandes-repo.ts:fetchDemandesForCarousel:start",
+      message: "Agence carousel fetch starting",
+      data: { today, table: "agence_demandes" },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const { data, error } = await client
     .from("agence_demandes")
     .select("*")
@@ -81,6 +98,28 @@ export async function fetchDemandesForCarousel(): Promise<DemandeContrat[]> {
     .gte("available_until", today)
     .order("sort_order", { ascending: true });
 
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "51039f" },
+    body: JSON.stringify({
+      sessionId: "51039f",
+      runId: "post-fix",
+      hypothesisId: "H1-H3-H5",
+      location: "demandes-repo.ts:fetchDemandesForCarousel:end",
+      message: "Agence carousel fetch finished",
+      data: {
+        today,
+        durationMs: Date.now() - fetchStartedAt,
+        rowCount: data?.length ?? 0,
+        error: error?.message ?? null,
+        errorCode: error?.code ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   if (error) {
     throw new Error(`Failed to fetch demandes: ${error.message}`);
   }
@@ -88,8 +127,32 @@ export async function fetchDemandesForCarousel(): Promise<DemandeContrat[]> {
   return (data as AgenceDemandeRow[]).map(mapDemandeRow);
 }
 
-export async function fetchDemandeTeaser(): Promise<DemandeTeaser | null> {
+export async function fetchDemandesForCarousel(): Promise<DemandeContrat[]> {
+  return withMarketingFetchFallback(
+    "agence carousel demandes",
+    loadDemandesForCarousel,
+    [],
+  );
+}
+
+async function loadDemandeTeaser(): Promise<DemandeTeaser | null> {
   const client = createLinkTrackingClient();
+  // #region agent log
+  const teaserStartedAt = Date.now();
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "51039f" },
+    body: JSON.stringify({
+      sessionId: "51039f",
+      runId: "post-fix",
+      hypothesisId: "H3",
+      location: "demandes-repo.ts:fetchDemandeTeaser:start",
+      message: "Agence teaser fetch starting",
+      data: { table: "agence_demandes" },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const { data, error } = await client
     .from("agence_demandes")
     .select("*")
@@ -98,10 +161,39 @@ export async function fetchDemandeTeaser(): Promise<DemandeTeaser | null> {
     .limit(1)
     .maybeSingle();
 
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "51039f" },
+    body: JSON.stringify({
+      sessionId: "51039f",
+      runId: "post-fix",
+      hypothesisId: "H1-H3-H5",
+      location: "demandes-repo.ts:fetchDemandeTeaser:end",
+      message: "Agence teaser fetch finished",
+      data: {
+        durationMs: Date.now() - teaserStartedAt,
+        hasData: Boolean(data),
+        error: error?.message ?? null,
+        errorCode: error?.code ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
   if (error) {
     throw new Error(`Failed to fetch demande teaser: ${error.message}`);
   }
 
   if (!data) return null;
   return mapTeaserRow(data as AgenceDemandeRow);
+}
+
+export async function fetchDemandeTeaser(): Promise<DemandeTeaser | null> {
+  return withMarketingFetchFallback(
+    "agence demande teaser",
+    loadDemandeTeaser,
+    null,
+  );
 }

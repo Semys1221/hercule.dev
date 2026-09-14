@@ -5,6 +5,7 @@ import type {
   DemandeStatus,
   DemandeTeaser,
 } from "@/lib/demandes-data";
+import { withMarketingFetchFallback } from "@/lib/marketing/resilient-fetch";
 
 interface ComptableDemandeRow {
   external_id: string;
@@ -69,7 +70,7 @@ function todayIsoDate(): string {
   return `${year}-${month}-${day}`;
 }
 
-export async function fetchComptableDemandesForCarousel(): Promise<DemandeContrat[]> {
+async function loadComptableDemandesForCarousel(): Promise<DemandeContrat[]> {
   const client = createLinkTrackingClient();
   const today = todayIsoDate();
   const { data, error } = await client
@@ -88,7 +89,15 @@ export async function fetchComptableDemandesForCarousel(): Promise<DemandeContra
   return (data as ComptableDemandeRow[]).map(mapComptableDemandeRow);
 }
 
-export async function fetchComptableDemandeTeaser(): Promise<DemandeTeaser | null> {
+export async function fetchComptableDemandesForCarousel(): Promise<DemandeContrat[]> {
+  return withMarketingFetchFallback(
+    "comptable carousel demandes",
+    loadComptableDemandesForCarousel,
+    [],
+  );
+}
+
+async function loadComptableDemandeTeaser(): Promise<DemandeTeaser | null> {
   const client = createLinkTrackingClient();
   const { data, error } = await client
     .from("comptable_demandes")
@@ -104,4 +113,12 @@ export async function fetchComptableDemandeTeaser(): Promise<DemandeTeaser | nul
 
   if (!data) return null;
   return mapTeaserRow(data as ComptableDemandeRow);
+}
+
+export async function fetchComptableDemandeTeaser(): Promise<DemandeTeaser | null> {
+  return withMarketingFetchFallback(
+    "comptable demande teaser",
+    loadComptableDemandeTeaser,
+    null,
+  );
 }

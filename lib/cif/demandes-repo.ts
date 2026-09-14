@@ -5,6 +5,7 @@ import type {
   DemandeStatus,
   DemandeTeaser,
 } from "@/lib/demandes-data";
+import { withMarketingFetchFallback } from "@/lib/marketing/resilient-fetch";
 
 interface CifDemandeRow {
   external_id: string;
@@ -69,7 +70,7 @@ function todayIsoDate(): string {
   return `${year}-${month}-${day}`;
 }
 
-export async function fetchCifDemandesForCarousel(): Promise<DemandeContrat[]> {
+async function loadCifDemandesForCarousel(): Promise<DemandeContrat[]> {
   const client = createLinkTrackingClient();
   const today = todayIsoDate();
   const { data, error } = await client
@@ -88,7 +89,15 @@ export async function fetchCifDemandesForCarousel(): Promise<DemandeContrat[]> {
   return (data as CifDemandeRow[]).map(mapCifDemandeRow);
 }
 
-export async function fetchCifDemandeTeaser(): Promise<DemandeTeaser | null> {
+export async function fetchCifDemandesForCarousel(): Promise<DemandeContrat[]> {
+  return withMarketingFetchFallback(
+    "cif carousel demandes",
+    loadCifDemandesForCarousel,
+    [],
+  );
+}
+
+async function loadCifDemandeTeaser(): Promise<DemandeTeaser | null> {
   const client = createLinkTrackingClient();
   const { data, error } = await client
     .from("cif_demandes")
@@ -104,4 +113,12 @@ export async function fetchCifDemandeTeaser(): Promise<DemandeTeaser | null> {
 
   if (!data) return null;
   return mapTeaserRow(data as CifDemandeRow);
+}
+
+export async function fetchCifDemandeTeaser(): Promise<DemandeTeaser | null> {
+  return withMarketingFetchFallback(
+    "cif demande teaser",
+    loadCifDemandeTeaser,
+    null,
+  );
 }
