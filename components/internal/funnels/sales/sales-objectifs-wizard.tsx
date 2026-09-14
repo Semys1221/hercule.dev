@@ -35,6 +35,7 @@ import type { Audience } from "@/lib/admin/navigation";
 import {
   SalesObjectifsWizardChart,
 } from "./sales-objectifs-wizard-chart";
+import { SalesFunnelProgress } from "./sales-funnel-progress";
 import {
   SalesAcknowledgmentField,
   SalesCoachCue,
@@ -172,8 +173,6 @@ export function SalesObjectifsWizard({
   if (immersive) {
     return (
       <div className="relative flex h-full min-h-0 flex-col bg-background">
-        <Progress value={progressValue} className="h-px shrink-0 rounded-none" />
-
         {onOpenSidebar ? (
           <Button
             type="button"
@@ -216,6 +215,7 @@ export function SalesObjectifsWizard({
             >
               Précédent
             </Button>
+            <SalesFunnelProgress value={progressValue} />
             <Button
               type="button"
               disabled={!canGoNext || safeStepIndex >= visibleQuestions.length - 1}
@@ -409,7 +409,7 @@ export function WizardQuestionField({
                 onChange={field.onChange}
                 variant={variant}
               />
-              {question.coachCue && singleValue ? (
+              {variant !== "immersive" && question.coachCue && singleValue ? (
                 <SalesCoachCue cue={interpolate(question.coachCue)} />
               ) : null}
               <FormMessage />
@@ -476,7 +476,7 @@ export function WizardQuestionField({
                 alertMessage={alertMessage}
                 variant={variant}
               />
-              {question.coachCue ? (
+              {variant !== "immersive" && question.coachCue ? (
                 <SalesCoachCue cue={interpolate(question.coachCue)} />
               ) : null}
               <FormMessage />

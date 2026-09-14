@@ -4,8 +4,9 @@ import { ChevronDown, ChevronUp, PanelLeft } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+
+import { SalesFunnelProgress } from "./sales-funnel-progress";
 
 type SalesImmersiveSessionShellProps = {
   progressValue: number;
@@ -30,11 +31,8 @@ type SalesImmersiveSessionShellProps = {
 
 export function SalesImmersiveSessionShell({
   progressValue,
-  stepNumber,
-  totalSteps,
   title,
   description,
-  coachCue,
   chart,
   children,
   footer,
@@ -88,8 +86,6 @@ export function SalesImmersiveSessionShell({
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background via-card/40 to-background"
       />
-      <Progress value={progressValue} className="relative z-10 h-px shrink-0 rounded-none" />
-
       {onOpenSidebar ? (
         <Button
           type="button"
@@ -124,9 +120,6 @@ export function SalesImmersiveSessionShell({
               <h2 className="text-2xl font-medium tracking-tight md:text-3xl">{title}</h2>
               {description ? (
                 <p className="text-sm text-muted-foreground md:text-base">{description}</p>
-              ) : null}
-              {coachCue ? (
-                <p className="text-xs text-muted-foreground italic">{coachCue}</p>
               ) : null}
             </div>
           ) : null}
@@ -166,9 +159,7 @@ export function SalesImmersiveSessionShell({
           <ChevronUp className="mr-2 size-4" />
           Précédent
         </Button>
-        <span className="hidden text-sm tabular-nums text-muted-foreground sm:inline">
-          {stepNumber} / {totalSteps}
-        </span>
+        <SalesFunnelProgress value={progressValue} className="mx-auto" />
         <Button
           type="button"
           disabled={!canGoNext}

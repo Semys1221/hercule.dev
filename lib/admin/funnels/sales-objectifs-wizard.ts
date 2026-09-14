@@ -104,7 +104,7 @@ const WIZARD_MAPPING_TITLES: Record<WizardObjectifsQuestionId, string> = {
   w18: "Statu quo acceptable ?",
   wExchangeWhy18: "Motivation de l'échange",
   w17: "Synthèse",
-  diagnostic_card: "Diagnostic signé",
+  diagnostic_card: "Diagnostic mentionné",
 };
 
 const CIF_WIZARD_MAPPING_TITLE_OVERRIDES: Partial<

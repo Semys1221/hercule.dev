@@ -116,7 +116,7 @@ export const ENTREPRISE_OBJECTIFS_QUESTIONS: SalesQuestion[] = [
     number: 7,
     sectionId: "objectifs",
     type: "diagnostic_card",
-    prompt: "Diagnostic signé",
+    prompt: "Diagnostic mentionné",
     mirrorTemplate: LINEAR_DIAGNOSTIC_MIRROR_TEMPLATE,
     checkboxLabel:
       "L'activité valide ce cadre pour la suite de l'audit de compatibilité.",

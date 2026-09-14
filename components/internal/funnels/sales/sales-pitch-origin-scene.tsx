@@ -1,10 +1,9 @@
 "use client";
 
-import { Edges, Html, RoundedBox } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
-import type { Group } from "three";
+import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
+import { HerculeMark } from "@/components/hercule-mark";
 import { TEAM_IMAGE_PRESET } from "@/lib/admin/funnels/team-image-preset";
 import type { Audience } from "@/lib/admin/navigation";
 import { cn } from "@/lib/utils";
@@ -16,76 +15,133 @@ type SalesPitchOriginSceneProps = {
   className?: string;
 };
 
-function LegacyStack2018() {
+function LegacyStack2018Illustration() {
+  const boxes = [
+    { y: 52, depth: 0 },
+    { y: 30, depth: 1 },
+    { y: 8, depth: 2 },
+  ] as const;
+
   return (
-    <group position={[-1.8, 0, 0]}>
-      {[0, 0.55, 1.1].map((y) => (
-        <mesh key={y} position={[0, y - 0.55, 0]}>
-          <boxGeometry args={[1.1, 0.45, 0.7]} />
-          <meshStandardMaterial color="#52525b" wireframe transparent opacity={0.55} />
-          <Edges color="#a1a1aa" threshold={15} />
-        </mesh>
-      ))}
-      <Html center position={[0, -1.35, 0]} distanceFactor={6}>
-        <div className="pointer-events-none whitespace-nowrap text-center">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            2018
-          </p>
-          <p className="text-xs text-foreground">Outil interne backend</p>
-        </div>
-      </Html>
-    </group>
+    <div className="flex flex-col items-center gap-4">
+      <svg
+        viewBox="0 0 120 88"
+        className="h-[5.5rem] w-[7.5rem] text-muted-foreground"
+        aria-hidden
+      >
+        {boxes.map((box) => {
+          const opacity = 0.35 + box.depth * 0.12;
+
+          return (
+            <g key={box.y} transform={`translate(18, ${box.y})`}>
+              <path
+                d="M72 0 L84 -10 L84 18 L72 28"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                opacity={opacity * 0.85}
+              />
+              <path
+                d="M0 0 L12 -10 L84 -10"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1"
+                opacity={opacity * 0.85}
+              />
+              <rect
+                x="0"
+                y="0"
+                width="72"
+                height="28"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.25"
+                opacity={opacity}
+                rx="1"
+              />
+            </g>
+          );
+        })}
+      </svg>
+      <div className="text-center">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          2018
+        </p>
+        <p className="text-xs text-foreground">Outil interne backend</p>
+      </div>
+    </div>
   );
 }
 
-function FoundationSystem2026({ reducedMotion }: { reducedMotion: boolean }) {
-  const groupRef = useRef<Group>(null);
-
-  useFrame((state) => {
-    if (reducedMotion || !groupRef.current) {
-      return;
-    }
-    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.35) * 0.12;
-  });
-
+function FoundationBookMockup({ reducedMotion }: { reducedMotion: boolean }) {
   return (
-    <group ref={groupRef} position={[1.8, 0, 0]}>
-      <RoundedBox args={[1.35, 0.95, 0.18]} radius={0.06} smoothness={4} position={[0, 0.35, 0]}>
-        <meshStandardMaterial color="#fafafa" emissive="#71717a" emissiveIntensity={0.18} />
-      </RoundedBox>
-      <RoundedBox args={[1.35, 0.55, 0.18]} radius={0.05} smoothness={4} position={[0, -0.35, 0]}>
-        <meshStandardMaterial color="#e4e4e7" emissive="#52525b" emissiveIntensity={0.12} />
-      </RoundedBox>
-      <mesh position={[0.55, 0.35, 0.12]}>
-        <boxGeometry args={[0.18, 0.18, 0.04]} />
-        <meshStandardMaterial color="#fafafa" emissive="#ffffff" emissiveIntensity={0.35} />
-      </mesh>
-      <Html center position={[0, -1.35, 0]} distanceFactor={6}>
-        <div className="pointer-events-none whitespace-nowrap text-center">
-          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            2026
-          </p>
-          <p className="text-xs text-foreground">Hercule Foundation</p>
+    <div className="flex flex-col items-center gap-4">
+      <div
+        className="relative h-[7.75rem] w-[6.75rem]"
+        style={{ perspective: "900px" }}
+      >
+        <div
+          className={cn(
+            "relative h-full w-full rounded-r-lg rounded-l-[3px] border border-border/70 bg-gradient-to-br from-card via-muted/40 to-muted shadow-[0_18px_40px_-22px_rgba(0,0,0,0.85)]",
+            !reducedMotion && "motion-safe:animate-[origin-book-float_5s_ease-in-out_infinite]",
+          )}
+          style={{ transform: "rotateY(-14deg)", transformStyle: "preserve-3d" }}
+        >
+          <div
+            className="absolute inset-y-0 left-0 w-2.5 rounded-l-[3px] bg-foreground/12"
+            aria-hidden
+          />
+          <div
+            className="absolute inset-y-2 right-0 w-1 rounded-r-sm bg-muted-foreground/25"
+            aria-hidden
+          />
+          <div
+            className="absolute inset-y-3 right-1 w-px bg-border/50"
+            aria-hidden
+          />
+          <div className="absolute left-2.5 right-2 top-[58%] h-px bg-border/70" aria-hidden />
+          <div className="flex h-full flex-col items-center justify-center gap-2.5 px-3 pl-5">
+            <HerculeMark variant="dual" className="size-9 text-foreground" />
+            <div className="space-y-0.5 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground">
+                Hercule
+              </p>
+              <p className="text-[9px] font-medium uppercase tracking-widest text-muted-foreground">
+                Foundation
+              </p>
+            </div>
+          </div>
         </div>
-      </Html>
-    </group>
+        <div
+          className="absolute -bottom-2 left-3 right-1 h-3 rounded-full bg-foreground/10 blur-md"
+          aria-hidden
+        />
+      </div>
+      <div className="text-center">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          2026
+        </p>
+        <p className="text-xs text-foreground">Hercule Foundation</p>
+      </div>
+    </div>
   );
 }
 
-function OriginSceneContent({ reducedMotion }: { reducedMotion: boolean }) {
+function OriginEvolutionVisual({ reducedMotion }: { reducedMotion: boolean }) {
   return (
-    <>
-      <ambientLight intensity={0.65} />
-      <directionalLight position={[4, 6, 5]} intensity={1.1} />
-      <directionalLight position={[-4, 2, -3]} intensity={0.35} />
-      <LegacyStack2018 />
-      <FoundationSystem2026 reducedMotion={reducedMotion} />
-    </>
+    <div className="flex w-full max-w-lg items-center justify-center gap-5 sm:max-w-xl sm:gap-8">
+      <LegacyStack2018Illustration />
+      <ArrowRight
+        className="size-5 shrink-0 text-muted-foreground/70"
+        strokeWidth={1.5}
+        aria-hidden
+      />
+      <FoundationBookMockup reducedMotion={reducedMotion} />
+    </div>
   );
 }
 
 export function SalesPitchOriginScene({ audience, className }: SalesPitchOriginSceneProps) {
-  const [webglSupported, setWebglSupported] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
@@ -94,32 +150,18 @@ export function SalesPitchOriginScene({ audience, className }: SalesPitchOriginS
     updateReducedMotion();
     media.addEventListener("change", updateReducedMotion);
 
-    try {
-      const canvas = document.createElement("canvas");
-      const gl =
-        canvas.getContext("webgl") ?? canvas.getContext("experimental-webgl");
-      setWebglSupported(Boolean(gl));
-    } catch {
-      setWebglSupported(false);
-    }
-
     return () => media.removeEventListener("change", updateReducedMotion);
   }, []);
 
-  if (!webglSupported) {
-    return <CompanyOriginTimeline audience={audience} />;
-  }
-
   return (
     <div className={cn("space-y-4", className)}>
-      <div className={cn(TEAM_IMAGE_PRESET.frameClass, "bg-card/40")}>
-        <Canvas
-          camera={{ position: [0, 0.4, 5.2], fov: 42 }}
-          dpr={[1, 1.5]}
-          gl={{ antialias: true, alpha: true }}
-        >
-          <OriginSceneContent reducedMotion={reducedMotion} />
-        </Canvas>
+      <div
+        className={cn(
+          TEAM_IMAGE_PRESET.frameClass,
+          "flex items-center justify-center bg-card/40 px-6 py-10 sm:px-10",
+        )}
+      >
+        <OriginEvolutionVisual reducedMotion={reducedMotion} />
       </div>
       <CompanyOriginTimeline audience={audience} />
     </div>

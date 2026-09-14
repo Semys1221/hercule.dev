@@ -357,7 +357,7 @@ function buildPitchNodes(audience: Audience): Record<string, MappingNode> {
     pitch_gate: {
       id: "pitch_gate",
       kind: "gate",
-      title: "Diagnostic signé requis",
+      title: "Diagnostic mentionné requis",
       condition: PITCH_NODE_CONDITIONS.pitch_gate,
       branches: [{ label: "bleedDiagnosticAccepted = true", targetId: "p0" }],
     },

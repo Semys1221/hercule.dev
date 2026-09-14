@@ -35,17 +35,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  FOUNDATION_ACTIVATION_BODY,
   FOUNDATION_ACTIVATION_CLOCKS,
-  FOUNDATION_ACTIVATION_HEADLINE,
   FOUNDATION_CALENDRIER_CLOSER_COPY,
   FOUNDATION_COMPARISON_ROWS,
+  FOUNDATION_DEPLOYMENT_PHASES,
   FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES,
   FOUNDATION_FOUNDATION_BLOCKS,
   FOUNDATION_FOUNDATION_CLOSER_COPY,
   FOUNDATION_INBOUND_SLA_RULE,
   FOUNDATION_MARKETING_DEPT_BODY,
-  FOUNDATION_MARKETING_DEPT_HEADLINE,
   FOUNDATION_MECHANISM_BLOCKS,
   FOUNDATION_ROI_ACK_LABEL,
   FOUNDATION_ROI_DISPLAY,
@@ -53,17 +51,15 @@ import {
   formatFoundationRoiScript,
 } from "@/lib/admin/funnels/comptable-sales-copy";
 import {
-  CIF_FOUNDATION_ACTIVATION_BODY,
   CIF_FOUNDATION_ACTIVATION_CLOCKS,
-  CIF_FOUNDATION_ACTIVATION_HEADLINE,
   CIF_FOUNDATION_CALENDRIER_CLOSER_COPY,
   CIF_FOUNDATION_COMPARISON_ROWS,
+  CIF_FOUNDATION_DEPLOYMENT_PHASES,
   CIF_FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES,
   CIF_FOUNDATION_FOUNDATION_BLOCKS,
   CIF_FOUNDATION_FOUNDATION_CLOSER_COPY,
   CIF_FOUNDATION_INBOUND_SLA_RULE,
   CIF_FOUNDATION_MARKETING_DEPT_BODY,
-  CIF_FOUNDATION_MARKETING_DEPT_HEADLINE,
   CIF_FOUNDATION_MECHANISM_BLOCKS,
   CIF_FOUNDATION_ROI_ACK_LABEL,
   CIF_FOUNDATION_SIGNALS_SUMMARY,
@@ -138,6 +134,11 @@ import {
   getPitchSlides,
   type PitchSlideDefinition,
 } from "./sales-pitch-wizard-slides";
+import {
+  buildActivationDeploymentTimelineSteps,
+  buildFoundationBlocksTimelineSteps,
+  SalesPitchHorizontalTimeline,
+} from "./sales-foundation-timeline";
 import { SalesCoachCue, SalesSingleChoiceField } from "./sales-question-fields";
 import type { SalesSingleQuestion } from "./sales-questions";
 import { TeamImageFrame } from "./team-image-frame";
@@ -533,6 +534,26 @@ export function PitchSlideContent({
   onRefreshLead,
   immersive = false,
 }: PitchSlideContentProps) {
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d3c805" },
+    body: JSON.stringify({
+      sessionId: "d3c805",
+      runId: "pre-fix",
+      hypothesisId: "A",
+      location: "sales-pitch-wizard.tsx:PitchSlideContent",
+      message: "PitchSlideContent render",
+      data: {
+        slideId: slide.id,
+        slideType: slide.type,
+        foundationPricingPlansType: typeof FOUNDATION_PRICING_PLANS,
+        formatFoundationEurosType: typeof formatFoundationEuros,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   const interpolate = (template: string) =>
     formatPitchWizardInterpolation(template, values, audience, context);
   const bleed = buildBleedTrack(values, audience);
@@ -1024,6 +1045,25 @@ export function PitchSlideContent({
       );
 
     case "pricing_close": {
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d3c805" },
+        body: JSON.stringify({
+          sessionId: "d3c805",
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "sales-pitch-wizard.tsx:pricing_close",
+          message: "pricing_close branch entered",
+          data: {
+            p12Plan: values.p12Plan ?? null,
+            foundationPricingPlansType: typeof FOUNDATION_PRICING_PLANS,
+            formatFoundationEurosType: typeof formatFoundationEuros,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       const p12WhyOptions = getPitchP12WhyOptions(values.p12Plan, values, audience, context);
       return (
         <div className="space-y-5">
@@ -1306,59 +1346,23 @@ function FoundationSlide({
   const interpolate = (template: string) =>
     formatPitchWizardInterpolation(template, values, audience, context);
   const isCif = isCifSalesAudience(audience);
-  const headline = isCif
-    ? CIF_FOUNDATION_MARKETING_DEPT_HEADLINE
-    : FOUNDATION_MARKETING_DEPT_HEADLINE;
   const body = isCif ? CIF_FOUNDATION_MARKETING_DEPT_BODY : FOUNDATION_MARKETING_DEPT_BODY;
   const blocks = isCif ? CIF_FOUNDATION_FOUNDATION_BLOCKS : FOUNDATION_FOUNDATION_BLOCKS;
   const closer = isCif
     ? CIF_FOUNDATION_FOUNDATION_CLOSER_COPY
     : FOUNDATION_FOUNDATION_CLOSER_COPY;
+  const steps = buildFoundationBlocksTimelineSteps(blocks);
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm font-medium text-foreground">{headline}</p>
-      <p className="text-sm text-muted-foreground">{body}</p>
-      <div className="grid gap-4 md:grid-cols-2">
-        {blocks.map((block) =>
-          immersive ? (
-            <div key={block.id} className={cn(IMMERSIVE_SURFACE_CLASS, "p-4")}>
-              <div className="flex flex-wrap items-baseline gap-2 pb-2">
-                <Badge variant="outline">{block.month}</Badge>
-                <p className="text-base font-medium">{block.title}</p>
-              </div>
-              <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                {block.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <Card key={block.id} className={cn(RESERVATION_SURFACE, "shadow-none")}>
-              <CardHeader className="pb-2">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <Badge variant="outline">{block.month}</Badge>
-                  <CardTitle className="text-base">{block.title}</CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                  {block.items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ),
-        )}
-      </div>
-      <p className="text-sm text-muted-foreground">{interpolate(closer)}</p>
-      <p className="text-sm text-muted-foreground">
-        {interpolate(
-          "Combler {gap} vers {goal6m} — fondations en priorité, puis montée en volume.",
-        )}
-      </p>
-    </div>
+    <SalesPitchHorizontalTimeline
+      immersive={immersive}
+      description={body}
+      steps={steps}
+      activeStatusLabel="Fondations en cours"
+      footnote={`${interpolate(closer)} ${interpolate(
+        "Combler {gap} vers {goal6m} — fondations en priorité, puis montée en volume.",
+      )}`}
+    />
   );
 }
 
@@ -1376,8 +1380,7 @@ function ActivationSlide({
   const interpolate = (template: string) =>
     formatPitchWizardInterpolation(template, values, audience, context);
   const isCif = isCifSalesAudience(audience);
-  const headline = isCif ? CIF_FOUNDATION_ACTIVATION_HEADLINE : FOUNDATION_ACTIVATION_HEADLINE;
-  const body = isCif ? CIF_FOUNDATION_ACTIVATION_BODY : FOUNDATION_ACTIVATION_BODY;
+  const phases = isCif ? CIF_FOUNDATION_DEPLOYMENT_PHASES : FOUNDATION_DEPLOYMENT_PHASES;
   const clocks = isCif ? CIF_FOUNDATION_ACTIVATION_CLOCKS : FOUNDATION_ACTIVATION_CLOCKS;
   const weeklyLines = isCif
     ? CIF_FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES
@@ -1385,31 +1388,16 @@ function ActivationSlide({
   const closerCopy = isCif
     ? CIF_FOUNDATION_CALENDRIER_CLOSER_COPY
     : FOUNDATION_CALENDRIER_CLOSER_COPY;
+  const steps = buildActivationDeploymentTimelineSteps(phases, weeklyLines, clocks);
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        {interpolate(PITCH_P8_ACTIVATION_HOOK_TEMPLATE)}
-      </p>
-      <p className="text-sm font-medium text-foreground">{headline}</p>
-      <p className="text-sm text-muted-foreground">{body}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {clocks.map((clock) => (
-          <PitchSurfacePanel key={clock.id} immersive={immersive} contentClassName="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {clock.label} · {clock.duration}
-            </p>
-            <p className="text-sm leading-relaxed text-muted-foreground">{clock.message}</p>
-          </PitchSurfacePanel>
-        ))}
-      </div>
-      <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-        <li>{weeklyLines[0]}</li>
-        <li>{weeklyLines[2]}</li>
-        <li>{weeklyLines[5]}</li>
-      </ul>
-      <p className="text-sm leading-relaxed text-muted-foreground">{closerCopy}</p>
-    </div>
+    <SalesPitchHorizontalTimeline
+      immersive={immersive}
+      description={interpolate(PITCH_P8_ACTIVATION_HOOK_TEMPLATE)}
+      steps={steps}
+      activeStatusLabel="Activation"
+      footnote={closerCopy}
+    />
   );
 }
 

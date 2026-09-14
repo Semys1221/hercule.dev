@@ -153,10 +153,10 @@ export function SalesFunnelSidebar({
   useEffect(() => {
     fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "1503e7" },
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d7ea7b" },
       body: JSON.stringify({
-        sessionId: "1503e7",
-        runId: "pre-fix",
+        sessionId: "d7ea7b",
+        runId: "post-fix",
         hypothesisId: "E",
         location: "sales-funnel-sidebar.tsx:render",
         message: "SalesFunnelSidebar render",
@@ -195,7 +195,7 @@ export function SalesFunnelSidebar({
             <SidebarMenuItem key={section.id}>
               <SidebarMenuButton
                 isActive={activeSectionId === section.id}
-                tooltip={section.label}
+                tooltip={collapsible === "offcanvas" ? undefined : section.label}
                 disabled={pitchLocked}
                 onClick={() => {
                   if (!pitchLocked) {

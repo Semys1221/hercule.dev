@@ -146,6 +146,25 @@ export function RendezVousPanel({
 
   useEffect(() => {
     const cached = readBookingsClientCache(audience, CALENDLY_BOOKINGS_DAYS_BEHIND);
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
+      body: JSON.stringify({
+        sessionId: "090380",
+        runId: "pre-fix",
+        hypothesisId: "H3",
+        location: "rendez-vous-panel.tsx:cache-hydrate",
+        message: "Client cache hydrate on mount",
+        data: {
+          audience,
+          cachedCount: cached?.bookings.length ?? 0,
+          hasCache: Boolean(cached),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     if (cached && cached.bookings.length > 0) {
       setBookings(cached.bookings);
     }
@@ -155,13 +174,54 @@ export function RendezVousPanel({
     setScriptTab("intro");
   }, [sessionResetKey]);
 
+  useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
+      body: JSON.stringify({
+        sessionId: "090380",
+        runId: "pre-fix",
+        hypothesisId: "H2",
+        location: "rendez-vous-panel.tsx:bookings-state",
+        message: "Bookings state updated",
+        data: {
+          audience,
+          bookingsCount: bookings.length,
+          loading,
+          error,
+          selectedUri,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [audience, bookings.length, error, loading, selectedUri]);
+
   const fetchBookings = useCallback(
     async (fresh = false) => {
+      const startedAt = Date.now();
       setLoading(true);
       setError(null);
       setSelectedUri("");
       setScriptTab("intro");
       await onBookingSelect(null);
+
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
+        body: JSON.stringify({
+          sessionId: "090380",
+          runId: "pre-fix",
+          hypothesisId: "H1-H2",
+          location: "rendez-vous-panel.tsx:fetchBookings:start",
+          message: "Fetch bookings started",
+          data: { audience, fresh, daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
 
       try {
         const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
@@ -173,11 +233,61 @@ export function RendezVousPanel({
           throw new Error(fetchError);
         }
 
+        const sample = rows.slice(0, 3).map((row) => ({
+          name: row.name,
+          start_time: row.start_time,
+          parsedMs: new Date(row.start_time).getTime(),
+          label: bookingLabel(row),
+        }));
+
+        // #region agent log
+        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
+          body: JSON.stringify({
+            sessionId: "090380",
+            runId: "pre-fix",
+            hypothesisId: "H1-H4",
+            location: "rendez-vous-panel.tsx:fetchBookings:success",
+            message: "Fetch bookings succeeded",
+            data: {
+              audience,
+              fresh,
+              rowCount: rows.length,
+              durationMs: Date.now() - startedAt,
+              sample,
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+
         setBookings(rows);
         if (rows.length === 0) {
           setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
         }
       } catch (fetchError) {
+        // #region agent log
+        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
+          body: JSON.stringify({
+            sessionId: "090380",
+            runId: "pre-fix",
+            hypothesisId: "H2-H5",
+            location: "rendez-vous-panel.tsx:fetchBookings:error",
+            message: "Fetch bookings failed",
+            data: {
+              audience,
+              fresh,
+              durationMs: Date.now() - startedAt,
+              error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            },
+            timestamp: Date.now(),
+          }),
+        }).catch(() => {});
+        // #endregion
+
         setBookings([]);
         setError(
           fetchError instanceof Error

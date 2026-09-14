@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
@@ -81,46 +81,6 @@ export function SalesObjectifsWizardChart({
         : "h-[220px]";
   const resolvedShowMetricTabs = showMetricTabs ?? (!isPeek && !isHero);
 
-  // #region agent log
-  useEffect(() => {
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "fc74f8" },
-      body: JSON.stringify({
-        sessionId: "fc74f8",
-        runId: "post-fix",
-        hypothesisId: "H1-H3",
-        location: "sales-objectifs-wizard-chart.tsx:render",
-        message: "chart model snapshot",
-        data: {
-          variant,
-          metricId,
-          chartDataLength: chartData.length,
-          showCurrent: model.showCurrent,
-          showGoal: model.showGoal,
-          w2: values.w2,
-          w7: values.w7,
-          w4: values.w4,
-          w6: values.w6,
-          firstPoint: model.data[0] ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, [
-    chartData.length,
-    metricId,
-    model.data,
-    model.showCurrent,
-    model.showGoal,
-    values.w2,
-    values.w4,
-    values.w6,
-    values.w7,
-    variant,
-  ]);
-  // #endregion
-
   return (
     <div
       className={cn(
@@ -144,15 +104,18 @@ export function SalesObjectifsWizardChart({
                 onMetricChange(value as WizardChartMetricId);
               }
             }}
-            className={cn("flex flex-wrap", isImmersive ? "justify-center" : "w-full")}
+            className={cn(
+              "grid w-full max-w-md grid-cols-3",
+              isImmersive && "mx-auto",
+            )}
           >
-            <ToggleGroupItem value="metric" className="flex-1 text-xs">
+            <ToggleGroupItem value="metric" className="min-w-0 truncate px-2 text-xs">
               {metricTabLabel}
             </ToggleGroupItem>
-            <ToggleGroupItem value="volume" className="flex-1 text-xs">
+            <ToggleGroupItem value="volume" className="min-w-0 truncate px-2 text-xs">
               Volume
             </ToggleGroupItem>
-            <ToggleGroupItem value="clients" className="flex-1 text-xs">
+            <ToggleGroupItem value="clients" className="min-w-0 truncate px-2 text-xs">
               Clients
             </ToggleGroupItem>
           </ToggleGroup>
@@ -220,20 +183,18 @@ export function SalesObjectifsWizardChart({
         </div>
       )}
 
-      <div
-        className={cn(
-          "flex flex-col gap-1 text-xs text-muted-foreground",
-          isImmersive && "items-center",
-        )}
-      >
-        {!isImmersive ? <p>{model.hint}</p> : null}
-        {model.showGoal ? <p className="text-foreground">Écart : {model.gapLabel}</p> : null}
-        {model.annotation ? <p>{model.annotation}</p> : null}
-        {model.inactionCaption ? (
-          <p className="text-destructive">Coût statu quo : {model.inactionCaption}</p>
-        ) : null}
-        {isImmersive && !model.showGoal ? <p>{model.hint}</p> : null}
-      </div>
+      {!isImmersive ? (
+        <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+          <p>{model.hint}</p>
+          {model.showGoal ? <p className="text-foreground">Écart : {model.gapLabel}</p> : null}
+          {model.annotation ? <p>{model.annotation}</p> : null}
+          {model.inactionCaption ? (
+            <p className="text-destructive">Coût statu quo : {model.inactionCaption}</p>
+          ) : null}
+        </div>
+      ) : model.showGoal ? (
+        <p className="text-xs text-foreground">Écart : {model.gapLabel}</p>
+      ) : null}
     </div>
   );
 }

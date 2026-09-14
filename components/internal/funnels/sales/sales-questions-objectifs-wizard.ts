@@ -270,7 +270,7 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 25,
       sectionId: "objectifs",
       type: "diagnostic_card",
-      prompt: "Diagnostic signé",
+      prompt: "Diagnostic mentionné",
       mirrorTemplate: WIZARD_DIAGNOSTIC_MIRROR_TEMPLATE,
       checkboxLabel:
         "Le cabinet valide ce cadre pour la suite de l'audit de compatibilité.",

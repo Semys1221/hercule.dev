@@ -138,14 +138,17 @@ export function SalesQualificationForm({
     }
   }, [form, showCoachScripts, watchedValues.b5, watchedValues.b5b]);
 
-  if (section.id === "rendez-vous" || section.id === "introduction") {
-    return null;
-  }
-
-  const questions = getSalesQuestionsForSection(section.id, audience)
-    .map((question) => applyQuestionSegmentCopy(question, clientSegment))
-    .map((question) => applyBleedQuestionCopy(question, bleedTrack))
-    .filter((question) => isQuestionVisible(question, watchedValues, showCoachScripts));
+  const questions = useMemo(
+    () =>
+      section.id === "rendez-vous" || section.id === "introduction"
+        ? []
+        : getSalesQuestionsForSection(section.id, audience)
+            .map((question) => applyQuestionSegmentCopy(question, clientSegment))
+            .map((question) => applyBleedQuestionCopy(question, bleedTrack))
+            .filter((question) => isQuestionVisible(question, watchedValues, showCoachScripts)),
+    [audience, bleedTrack, clientSegment, section.id, showCoachScripts, watchedValues],
+  );
+  const questionKey = questions.map((question) => question.id).join("|");
 
   useEffect(() => {
     if (section.id !== "objectifs" || !showCoachScripts) {
@@ -156,11 +159,11 @@ export function SalesQualificationForm({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Debug-Session-Id": "d6e0ce",
+        "X-Debug-Session-Id": "4210ea",
       },
       body: JSON.stringify({
-        sessionId: "d6e0ce",
-        runId: "wizard-routing",
+        sessionId: "4210ea",
+        runId: "pre-fix",
         hypothesisId: "C",
         location: "sales-qualification-form.tsx:useEffect",
         message: "flat SalesQualificationForm rendering objectifs",
@@ -173,7 +176,11 @@ export function SalesQualificationForm({
       }),
     }).catch(() => {});
     // #endregion
-  }, [audience, questions, section.id, showCoachScripts]);
+  }, [audience, questionKey, questions, section.id, showCoachScripts]);
+
+  if (section.id === "rendez-vous" || section.id === "introduction") {
+    return null;
+  }
 
   return (
     <div className="space-y-5">
