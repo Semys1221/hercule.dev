@@ -21,6 +21,8 @@ type DashboardShellProps = {
   slug: string;
   paidQuery?: string | null;
   checkoutSessionId?: string | null;
+  checkoutQuery?: string | null;
+  offerQuery?: string | null;
 };
 
 const POST_PAYMENT_MODES = new Set<DashboardData["dashboardMode"]>([
@@ -34,6 +36,8 @@ export function DashboardShell({
   slug,
   paidQuery,
   checkoutSessionId,
+  checkoutQuery,
+  offerQuery,
 }: DashboardShellProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -214,6 +218,8 @@ export function DashboardShell({
         data={data}
         onRefresh={loadDashboard}
         onOnboardingComplete={handleOnboardingComplete}
+        checkoutQuery={checkoutQuery}
+        offerQuery={offerQuery}
       />
     );
   }

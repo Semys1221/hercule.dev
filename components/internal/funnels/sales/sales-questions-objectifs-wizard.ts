@@ -179,7 +179,7 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       sectionId: "objectifs",
       type: "single",
       prompt:
-        "Le cabinet considère-t-il que {method} permettra d'atteindre cet objectif en 6 mois ?",
+        "Qu'est-ce qui vous dérange dans {method} pour atteindre votre objectif en 6 mois ?",
       options: [
         { id: "yes", label: "Oui" },
         { id: "no", label: "Non" },

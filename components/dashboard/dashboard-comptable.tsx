@@ -18,6 +18,10 @@ import { ComptableOnboardingForm } from "./comptable-onboarding-form";
 import { OnboardingComptableWizard } from "./onboarding-comptable-wizard";
 import { StepEmbeddedCheckoutComptable } from "./steps/step-embedded-checkout-comptable";
 import { comptableOfferLabel } from "@/lib/commercial/comptable-pricing";
+import {
+  parseSlidersOfferQuery,
+  slidersOfferToOfferType,
+} from "@/lib/payments/cabinet-checkout";
 
 import { RetractionWaiverCard } from "./retraction-waiver-card";
 
@@ -25,19 +29,33 @@ type DashboardComptableProps = {
   data: DashboardData;
   onRefresh?: () => void;
   onOnboardingComplete?: () => void;
+  checkoutQuery?: string | null;
+  offerQuery?: string | null;
 };
 
 export function DashboardComptable({
   data,
   onRefresh,
   onOnboardingComplete,
+  checkoutQuery,
+  offerQuery,
 }: DashboardComptableProps) {
+  const deepLinkOffer = parseSlidersOfferQuery(offerQuery);
+  const deepLinkCheckout = checkoutQuery === "1";
+  const preselectedOfferType = deepLinkOffer
+    ? slidersOfferToOfferType(deepLinkOffer)
+    : null;
   const displayName = data.firstName ?? data.company ?? "votre cabinet";
   const offerType = data.comptable?.offerType ?? data.offerType;
 
   if (data.dashboardMode === "comptable_pending") {
     return (
-      <OnboardingComptableWizard data={data} onRefresh={onRefresh} />
+      <OnboardingComptableWizard
+        data={data}
+        onRefresh={onRefresh}
+        deepLinkCheckout={deepLinkCheckout}
+        deepLinkOffer={preselectedOfferType}
+      />
     );
   }
 
@@ -77,6 +95,8 @@ export function DashboardComptable({
               <StepEmbeddedCheckoutComptable
                 slug={data.slug}
                 audience={data.audience === "cif" ? "cif" : "comptable"}
+                selectedOffer={preselectedOfferType}
+                startImmediately={deepLinkCheckout && Boolean(preselectedOfferType)}
               />
             </CardContent>
           </Card>

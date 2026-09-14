@@ -163,6 +163,15 @@ const sharedQualificationFields = {
   /** @deprecated Use p12WhyId */
   p12Why: z.string().optional(),
   pitchWizardCompleted: z.boolean().optional(),
+  sCaptureTied: z.boolean().optional(),
+  sEngineTied: z.boolean().optional(),
+  sPartnerTied: z.boolean().optional(),
+  sTempCheck: z.enum(["yes", "think"]).optional(),
+  sThinkBeat1: z.boolean().optional(),
+  sThinkBeat2: z.boolean().optional(),
+  sThinkBeat3: z.boolean().optional(),
+  sOffer: z.enum(["core", "horizon"]).optional(),
+  sOfferCopiedAt: z.string().optional(),
   q1: multiChoiceSchema,
   q2: multiChoiceSchema,
   q2Other: z.string().optional(),
@@ -361,6 +370,15 @@ export type SalesQualificationValues = {
   /** @deprecated Use p12WhyId */
   p12Why?: string;
   pitchWizardCompleted?: boolean;
+  sCaptureTied?: boolean;
+  sEngineTied?: boolean;
+  sPartnerTied?: boolean;
+  sTempCheck?: "yes" | "think";
+  sThinkBeat1?: boolean;
+  sThinkBeat2?: boolean;
+  sThinkBeat3?: boolean;
+  sOffer?: "core" | "horizon";
+  sOfferCopiedAt?: string;
   q1: string[];
   q2: string[];
   q2Other?: string;
@@ -463,6 +481,15 @@ export function getSalesQualificationDefaultValues(
       p12WhyId: undefined,
       p12Why: "",
       pitchWizardCompleted: false,
+      sCaptureTied: false,
+      sEngineTied: false,
+      sPartnerTied: false,
+      sTempCheck: undefined,
+      sThinkBeat1: false,
+      sThinkBeat2: false,
+      sThinkBeat3: false,
+      sOffer: undefined,
+      sOfferCopiedAt: undefined,
       q1: [],
       q2: [],
       q2Other: "",
@@ -559,6 +586,15 @@ export function getSalesQualificationDefaultValues(
       p12WhyId: undefined,
       p12Why: "",
       pitchWizardCompleted: false,
+      sCaptureTied: false,
+      sEngineTied: false,
+      sPartnerTied: false,
+      sTempCheck: undefined,
+      sThinkBeat1: false,
+      sThinkBeat2: false,
+      sThinkBeat3: false,
+      sOffer: undefined,
+      sOfferCopiedAt: undefined,
       q1: [],
       q2: [],
       q2Other: "",
@@ -644,6 +680,7 @@ const SECTION_QUESTION_KEYS: Record<
     "bleedDiagnosticAccepted",
   ],
   pitch: ["pitchWizardCompleted"],
+  sliders: [],
   mapping: [],
   "presentation-societe": ["presentationConfirmed"],
   capacite: ["q1", "q2", "q3"],
@@ -687,6 +724,18 @@ const CABINET_PITCH_KEYS: Array<keyof SalesQualificationValues> = [
   "pitchWizardCompleted",
 ];
 
+const CABINET_SLIDERS_KEYS: Array<keyof SalesQualificationValues> = [
+  "sCaptureTied",
+  "sEngineTied",
+  "sPartnerTied",
+  "sTempCheck",
+  "sThinkBeat1",
+  "sThinkBeat2",
+  "sThinkBeat3",
+  "sOffer",
+  "sOfferCopiedAt",
+];
+
 export function getSectionQuestionKeys(
   sectionId: Exclude<SalesFunnelSectionId, "rendez-vous">,
   audience: Audience = "agence",
@@ -696,6 +745,9 @@ export function getSectionQuestionKeys(
   }
   if (sectionId === "pitch" && isCabinetBuyerSalesAudience(audience)) {
     return CABINET_PITCH_KEYS;
+  }
+  if (sectionId === "sliders" && isCabinetBuyerSalesAudience(audience)) {
+    return CABINET_SLIDERS_KEYS;
   }
   return SECTION_QUESTION_KEYS[sectionId];
 }
@@ -742,7 +794,16 @@ function isFieldComplete(
     key === "p12Plan" ||
     key === "p12WhyId" ||
     key === "p12Why" ||
-    key === "p2DecisionMakers"
+    key === "p2DecisionMakers" ||
+    key === "sCaptureTied" ||
+    key === "sEngineTied" ||
+    key === "sPartnerTied" ||
+    key === "sTempCheck" ||
+    key === "sThinkBeat1" ||
+    key === "sThinkBeat2" ||
+    key === "sThinkBeat3" ||
+    key === "sOffer" ||
+    key === "sOfferCopiedAt"
   ) {
     return true;
   }
@@ -952,6 +1013,17 @@ export function isSalesSectionComplete(
 
   if (sectionId === "standards" && isCabinetBuyerSalesAudience(audience)) {
     return values.q21.length > 0 && values.q21.length <= 3;
+  }
+
+  if (sectionId === "sliders" && isCabinetBuyerSalesAudience(audience)) {
+    return (
+      values.sCaptureTied === true &&
+      values.sEngineTied === true &&
+      values.sPartnerTied === true &&
+      values.sTempCheck === "yes" &&
+      (values.sOffer === "core" || values.sOffer === "horizon") &&
+      Boolean(values.sOfferCopiedAt)
+    );
   }
 
   if (sectionId === "pitch" && isCabinetBuyerSalesAudience(audience)) {

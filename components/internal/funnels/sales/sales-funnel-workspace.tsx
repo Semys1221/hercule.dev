@@ -18,6 +18,7 @@ import { SalesCompanyPresentationPanel } from "./sales-company-presentation-pane
 import { SalesFunnelSectionPage } from "./sales-funnel-section-page";
 import type { SalesFunnelSection, SalesFunnelSectionId } from "./sales-funnel-sections";
 import { SalesMappingPanel } from "./sales-mapping-panel";
+import { SalesSlidersDeck } from "./sliders/sales-sliders-deck";
 
 type SalesFunnelWorkspaceProps = {
   audience: Audience;
@@ -148,6 +149,20 @@ export function SalesFunnelWorkspace({
             onOpenSidebar={onOpenSidebar}
             sidebarOpen={sidebarOpen}
             onActiveSectionChange={onLiveTrackSectionChange}
+          />
+        ) : activeQualificationId === "sliders" &&
+          isCabinetBuyerSalesAudience(audience) ? (
+          <SalesSlidersDeck
+            key="sliders-deck"
+            audience={audience}
+            form={form}
+            prospectFirstName={prospectFirstName}
+            developerModeEnabled={developerModeEnabled}
+            selectedLead={selectedLead}
+            selectedBooking={selectedBooking}
+            immersive={immersiveCabinetWizard}
+            onOpenSidebar={onOpenSidebar}
+            sidebarOpen={sidebarOpen}
           />
         ) : activeQualificationSection ? (
           <SalesFunnelSectionPage

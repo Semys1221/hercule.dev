@@ -3,6 +3,7 @@ import {
   interpolateClientSegment,
   type ClientSegment,
 } from "@/lib/admin/funnels/client-segment";
+import { SLIDERS_SECTION_SUBTITLE } from "@/lib/admin/funnels/sales-sliders";
 import { SESSION_SECTION_SYSTEM_LABEL } from "@/lib/admin/funnels/ui-copy";
 import {
   isCabinetBuyerSalesAudience,
@@ -15,6 +16,7 @@ export type SalesFunnelSectionId =
   | "introduction"
   | "objectifs"
   | "pitch"
+  | "sliders"
   | "mapping"
   | "presentation-societe"
   | "capacite"
@@ -114,6 +116,12 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     subtitle: PITCH_WIZARD_SECTION_SUBTITLE,
   },
   {
+    id: "sliders",
+    label: "Sliders",
+    title: "Sliders",
+    subtitle: SLIDERS_SECTION_SUBTITLE,
+  },
+  {
     id: "mapping",
     label: "Mapping",
     title: "Mapping",
@@ -148,6 +156,12 @@ const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: SESSION_SECTION_SYSTEM_LABEL,
     title: SESSION_SECTION_SYSTEM_LABEL,
     subtitle: PITCH_WIZARD_SECTION_SUBTITLE,
+  },
+  {
+    id: "sliders",
+    label: "Sliders",
+    title: "Sliders",
+    subtitle: SLIDERS_SECTION_SUBTITLE,
   },
   {
     id: "mapping",

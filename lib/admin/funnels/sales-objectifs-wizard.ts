@@ -90,7 +90,7 @@ const WIZARD_MAPPING_TITLES: Record<WizardObjectifsQuestionId, string> = {
   w8: "Méthode d'acquisition",
   w10: "Année d'exercice",
   w12: "Confirmation objectif 6 mois",
-  w13: "Méthode suffisante en 6 mois ?",
+  w13: "Freins méthode (6 mois)",
   wExchangeWhy13: "Motivation de l'échange",
   w13Why: "Pourquoi ?",
   w14: "Délai estimé ({method})",

@@ -201,7 +201,9 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   const immersiveCabinetWizard =
     phase === "qualification" &&
     isCabinetBuyerSalesAudience(audience) &&
-    (activeQualificationId === "objectifs" || activeQualificationId === "pitch");
+    (activeQualificationId === "objectifs" ||
+      activeQualificationId === "pitch" ||
+      activeQualificationId === "sliders");
 
   const meetingInfo: MeetingInfo | null = selectedBooking
     ? {

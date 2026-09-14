@@ -18,10 +18,15 @@ function main() {
 
   const comptableSections = getSalesFunnelSections("comptable");
   assert.ok(comptableSections.some((section) => section.id === "pitch"));
+  assert.ok(comptableSections.some((section) => section.id === "sliders"));
   assert.equal(
     comptableSections.find((section) => section.id === "pitch")?.label,
     SESSION_SECTION_SYSTEM_LABEL,
   );
+  assert.equal(comptableSections.find((section) => section.id === "sliders")?.label, "Sliders");
+  const slidersIndex = comptableSections.findIndex((section) => section.id === "sliders");
+  const mappingIndex = comptableSections.findIndex((section) => section.id === "mapping");
+  assert.ok(slidersIndex >= 0 && mappingIndex >= 0 && slidersIndex < mappingIndex);
   assert.ok(!comptableSections.some((section) => section.id === "conditions"));
   assert.equal(
     comptableSections.find((section) => section.id === "introduction")?.label,
@@ -30,6 +35,7 @@ function main() {
 
   const cifSections = getSalesFunnelSections("cif");
   assert.ok(cifSections.some((section) => section.id === "pitch"));
+  assert.ok(cifSections.some((section) => section.id === "sliders"));
   assert.ok(!cifSections.some((section) => section.id === "standards"));
   assert.ok(cifSections.some((section) => section.id === "mapping"));
   assert.equal(cifSections.at(-1)?.id, "mapping");
@@ -45,6 +51,7 @@ function main() {
 
   const entrepriseSections = getSalesFunnelSections("entreprise");
   assert.ok(!entrepriseSections.some((section) => section.id === "mapping"));
+  assert.ok(!getSalesFunnelSections("agence").some((section) => section.id === "sliders"));
 
   const comptableMapping = comptableSections.find((section) => section.id === "mapping");
   assert.ok(comptableMapping?.documentationOnly);

@@ -40,6 +40,8 @@ type CommitView = "initial" | "final";
 type OnboardingComptableWizardProps = {
   data: DashboardData;
   onRefresh?: () => void;
+  deepLinkCheckout?: boolean;
+  deepLinkOffer?: OfferTypeComptable | null;
 };
 
 function resolveCommitView(closing: DashboardClosingState): CommitView {
@@ -56,12 +58,14 @@ function resolveStripeRevealed(closing: DashboardClosingState): boolean {
 export function OnboardingComptableWizard({
   data,
   onRefresh,
+  deepLinkCheckout = false,
+  deepLinkOffer = null,
 }: OnboardingComptableWizardProps) {
   const initialClosing = parseDashboardClosing(data.closing);
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(deepLinkCheckout && deepLinkOffer ? 5 : 0);
   const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable>(
-    OFFER_TYPES_COMPTABLE.monthly1499,
+    deepLinkOffer ?? OFFER_TYPES_COMPTABLE.monthly1499,
   );
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
   const [closingFit, setClosingFit] = useState<ClosingFitLevel | null>(
@@ -73,7 +77,9 @@ export function OnboardingComptableWizard({
     initialClosing.commit,
   );
   const [commitView, setCommitView] = useState<CommitView>(resolveCommitView(initialClosing));
-  const [stripeRevealed, setStripeRevealed] = useState(resolveStripeRevealed(initialClosing));
+  const [stripeRevealed, setStripeRevealed] = useState(
+    deepLinkCheckout && deepLinkOffer ? true : resolveStripeRevealed(initialClosing),
+  );
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryAngle, setRecoveryAngle] = useState<RecoveryPitchAngle>(1);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);

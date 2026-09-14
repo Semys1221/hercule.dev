@@ -3,7 +3,7 @@ import { dashboardDocumentTitle } from "@/lib/dashboard/copy";
 
 type DashboardPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ paid?: string; session_id?: string }>;
+  searchParams: Promise<{ paid?: string; session_id?: string; checkout?: string; offer?: string }>;
 };
 
 export async function generateMetadata({ params }: Pick<DashboardPageProps, "params">) {
@@ -18,13 +18,15 @@ export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
   const { slug } = await params;
-  const { paid, session_id: checkoutSessionId } = await searchParams;
+  const { paid, session_id: checkoutSessionId, checkout, offer } = await searchParams;
 
   return (
     <DashboardShell
       slug={slug}
       paidQuery={paid ?? null}
       checkoutSessionId={checkoutSessionId ?? null}
+      checkoutQuery={checkout ?? null}
+      offerQuery={offer ?? null}
     />
   );
 }

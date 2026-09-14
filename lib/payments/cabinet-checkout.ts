@@ -2,6 +2,7 @@ import {
   OFFER_TYPES_COMPTABLE,
   type OfferTypeComptable,
 } from "@/lib/commercial/constants";
+import type { SlidersOfferId } from "@/lib/admin/funnels/sales-sliders";
 import { COMPTABLE_OFFER_LABELS } from "@/lib/commercial/comptable-pricing";
 import type { DashboardFaqAudience } from "@/lib/dashboard/types";
 import { getPricingDocument } from "@/lib/site/pricing-data";
@@ -78,6 +79,31 @@ async function parseCheckoutErrorMessage(response: Response): Promise<string> {
   } catch {
     return "Paiement indisponible";
   }
+}
+
+export function slidersOfferToOfferType(offer: SlidersOfferId): OfferTypeComptable {
+  return offer === "core"
+    ? OFFER_TYPES_COMPTABLE.starter999_5
+    : OFFER_TYPES_COMPTABLE.monthly1499;
+}
+
+export function parseSlidersOfferQuery(
+  offer: string | null | undefined,
+): SlidersOfferId | null {
+  if (offer === "core" || offer === "horizon") {
+    return offer;
+  }
+  return null;
+}
+
+export function buildCabinetCheckoutDashboardUrl(
+  dashboardUrl: string,
+  offer: SlidersOfferId,
+): string {
+  const url = new URL(dashboardUrl);
+  url.searchParams.set("checkout", "1");
+  url.searchParams.set("offer", offer);
+  return url.toString();
 }
 
 export async function requestCabinetCheckoutClientSecret(
