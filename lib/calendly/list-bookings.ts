@@ -460,13 +460,17 @@ export async function listUpcomingBookings(options: {
     return [];
   }
 
+  const eventsFetchStartedAt = Date.now();
   const events = await listScheduledEventsInWindow(eventListOptions);
+  const eventsFetchDurationMs = Date.now() - eventsFetchStartedAt;
 
+  const inviteesFetchStartedAt = Date.now();
   const parsedInvitees = (
     await mapWithConcurrency(events, INVITEE_FETCH_CONCURRENCY, (event) =>
       fetchEventInvitees(event, now, includePast),
     )
   ).flat();
+  const inviteesFetchDurationMs = Date.now() - inviteesFetchStartedAt;
 
   const candidates: InviteeCandidate[] = [];
   for (const { invitee } of parsedInvitees) {
@@ -486,18 +490,22 @@ export async function listUpcomingBookings(options: {
   // #region agent log
   fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2ea86d" },
     body: JSON.stringify({
-      sessionId: "d17331",
+      sessionId: "2ea86d",
       runId: "pre-fix",
-      hypothesisId: "H1",
+      hypothesisId: "H1-H2",
       location: "list-bookings.ts:listUpcomingBookings:pre-filter",
       message: "Calendly events fetched before row build",
       data: {
         niche: options.niche ?? null,
+        category: options.category ?? null,
         resolvedEventTypeUri,
         eventCount: events.length,
+        parsedInviteeCount: parsedInvitees.length,
         candidateCount: candidates.length,
+        eventsFetchDurationMs,
+        inviteesFetchDurationMs,
       },
       timestamp: Date.now(),
     }),

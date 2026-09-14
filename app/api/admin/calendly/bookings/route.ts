@@ -27,13 +27,43 @@ async function loadEnrichedBookings(
   daysBehind: number,
   useLegacyCategory: boolean,
 ) {
+  const pipelineStartedAt = Date.now();
+  const listStartedAt = Date.now();
   const bookings = await listUpcomingBookings({
     daysAhead,
     daysBehind,
     niche: useLegacyCategory ? undefined : (niche as LeadCategory),
     category: useLegacyCategory ? (niche as LeadCategory) : undefined,
   });
-  return enrichBookingsForAdmin(bookings);
+  const listDurationMs = Date.now() - listStartedAt;
+  const enrichStartedAt = Date.now();
+  const enriched = await enrichBookingsForAdmin(bookings);
+  const enrichDurationMs = Date.now() - enrichStartedAt;
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2ea86d" },
+    body: JSON.stringify({
+      sessionId: "2ea86d",
+      runId: "pre-fix",
+      hypothesisId: "H1-H3",
+      location: "bookings/route.ts:loadEnrichedBookings",
+      message: "Bookings pipeline timings",
+      data: {
+        niche,
+        daysBehind,
+        useLegacyCategory,
+        rawCount: bookings.length,
+        enrichedCount: enriched.length,
+        listDurationMs,
+        enrichDurationMs,
+        totalDurationMs: Date.now() - pipelineStartedAt,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  return enriched;
 }
 
 function eventTypeCacheSegment(uri: string | null | undefined): string {
@@ -160,6 +190,21 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Calendly fetch failed";
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2ea86d" },
+      body: JSON.stringify({
+        sessionId: "2ea86d",
+        runId: "pre-fix",
+        hypothesisId: "H2-H4",
+        location: "bookings/route.ts:GET:error",
+        message: "Admin bookings handler error",
+        data: { niche, daysBehind, useLegacyCategory, bypassCache, error: message },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     console.error("[admin/calendly/bookings]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
