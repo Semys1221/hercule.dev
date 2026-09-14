@@ -1,0 +1,50 @@
+"use client";
+
+import { ArrowRight, Target } from "lucide-react";
+import { memo } from "react";
+
+import { Progress } from "@/components/ui/progress";
+import { buildBleedTrack, interpolateBleed } from "@/lib/admin/funnels/sales-bleed-track";
+import { formatPitchWizardInterpolation } from "@/lib/admin/funnels/sales-pitch-wizard";
+import { getPitchMirrorTemplate } from "../sales-pitch-wizard-slides";
+
+import { PitchSurfacePanel } from "./pitch-surface-panel";
+import type { PitchSlideBaseProps } from "./pitch-slide-props";
+
+export const PitchSlideTransition = memo(function PitchSlideTransition({
+  audience,
+  values,
+  context,
+  immersive,
+}: PitchSlideBaseProps) {
+  const bleed = buildBleedTrack(values, audience);
+  const mirror = interpolateBleed(getPitchMirrorTemplate(audience), bleed);
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-3">
+        <div className="flex flex-1 flex-col gap-1.5">
+          <p className="text-xs text-muted-foreground">Objectifs</p>
+          <Progress value={100} className="h-1.5" />
+        </div>
+        <ArrowRight className="size-4 shrink-0 text-primary" aria-hidden />
+        <div className="flex flex-1 flex-col gap-1.5">
+          <p className="text-xs text-muted-foreground">Foundation</p>
+          <Progress value={8} className="h-1.5" />
+        </div>
+        <Target className="size-5 shrink-0 text-primary" aria-hidden />
+      </div>
+
+      <PitchSurfacePanel
+        immersive={immersive}
+        className="border-primary/30 bg-primary/5"
+        contentClassName="flex flex-col gap-2"
+      >
+        <p className="text-xl font-medium leading-snug text-foreground">{mirror}</p>
+        <p className="text-xs text-muted-foreground">
+          {formatPitchWizardInterpolation("{goal6m}", values, audience, context)}
+        </p>
+      </PitchSurfacePanel>
+    </div>
+  );
+});

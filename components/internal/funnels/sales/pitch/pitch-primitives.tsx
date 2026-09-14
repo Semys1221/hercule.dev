@@ -14,8 +14,6 @@ import type { UseFormReturn } from "react-hook-form";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import { cn } from "@/lib/utils";
 
-import { SalesSingleChoiceField } from "../sales-question-fields";
-import { pitchSingleQuestion } from "./pitch-utils";
 import { PITCH_BUYIN_OPTIONS } from "../sales-pitch-wizard-slides";
 
 type MetricTileProps = {
