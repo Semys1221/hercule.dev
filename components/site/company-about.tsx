@@ -12,7 +12,7 @@ const TEAM = [
   },
   {
     name: "Béatrice",
-    role: "Qualification des demandes et relation avec les cabinets partenaires.",
+    role: "Qualification des flux et relation avec les cabinets partenaires.",
   },
   {
     name: "Thomas",
@@ -55,9 +55,9 @@ export function CompanyAbout() {
               de la plateforme.
             </p>
             <p>
-              Aujourd&apos;hui, nous recevons et qualifions des demandes de dirigeants PME, puis sélectionnons les
-              cabinets d&apos;expertise comptable les plus compatibles pour leur attribuer des missions de tenue en
-              exclusivité.
+              Aujourd&apos;hui, nous déployons le système inbound Hercule pour les cabinets et agences partenaires :
+              capture brandée sur zone exclusive, qualification des flux et routage vers l&apos;infrastructure du
+              partenaire — pas une marketplace de leads.
             </p>
           </div>
 

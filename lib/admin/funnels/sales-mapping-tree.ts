@@ -4,10 +4,16 @@ import {
   type PitchSlideDefinition,
 } from "@/components/internal/funnels/sales/sales-pitch-wizard-slides";
 import type { SalesQuestion } from "@/components/internal/funnels/sales/sales-questions";
-import { B5_METHOD_OPTIONS } from "@/lib/admin/funnels/sales-bleed-tunnel";
 import {
-  getW8BrakeOptions,
+  DASHBOARD_STEP_IDS,
+  getDashboardRecoverySteps,
+  getDashboardWizardSteps,
+} from "@/lib/admin/funnels/sales-dashboard-wizard";
+import { getRecoveryStepIds } from "@/lib/dashboard/closing-recovery";
+import {
+  getWizardMappingTitle,
   WIZARD_QUESTION_IDS,
+  type WizardObjectifsQuestionId,
 } from "@/lib/admin/funnels/sales-objectifs-wizard";
 import {
   getPitchStepPart,
@@ -15,10 +21,22 @@ import {
   PITCH_STEP_IDS,
   type PitchWizardStepId,
 } from "@/lib/admin/funnels/sales-pitch-wizard";
-import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import {
+  CLOSING_FIT_MIN_WHY_LENGTH,
+  getClosingCommitOptions,
+  getClosingFitOptions,
+  getOnboardingFaq,
+} from "@/lib/dashboard/onboarding-faq";
+import {
+  SESSION_MAPPING_DASHBOARD_GATE_CONDITION,
+  SESSION_MAPPING_FLOW_OBJECTIFS_LABEL,
+  SESSION_MAPPING_FLOW_SYSTEM_LABEL,
+  SESSION_MAPPING_POST_SYSTEM_BRANCH,
+  SESSION_MAPPING_SYSTEM_GATE_DESCRIPTION,
+} from "@/lib/admin/funnels/ui-copy";
 import type { Audience } from "@/lib/admin/navigation";
 
-export type MappingFlowId = "discovery" | "pitch";
+export type MappingFlowId = "discovery" | "pitch" | "dashboard";
 
 export type MappingNodeKind = "question" | "gate";
 
@@ -75,7 +93,9 @@ const DISCOVERY_LINEAR_TRUNK = [
   "w6",
   "w7",
   "w8",
-  "w8Tried",
+  "w10",
+  "w12",
+  "w13",
 ] as const;
 
 const PITCH_LINEAR_TRUNK = [
@@ -96,6 +116,8 @@ const PITCH_LINEAR_TRUNK = [
   "p11",
 ] as const;
 
+const DASHBOARD_LINEAR_TRUNK = ["d0", "d1", "d2", "d3", "d4"] as const;
+
 function stepSegments(ids: readonly string[]): MappingFlowSegment[] {
   return ids.map((id) => ({ kind: "step", id }));
 }
@@ -103,30 +125,14 @@ function stepSegments(ids: readonly string[]): MappingFlowSegment[] {
 function buildDiscoverySegments(): MappingFlowSegment[] {
   return [
     ...stepSegments(DISCOVERY_LINEAR_TRUNK),
+    { kind: "step", id: "wExchangeWhy13" },
+    { kind: "step", id: "w13Why" },
+    ...stepSegments(["w14", "wExchangeWhy14", "w15", "wExchangeWhy15"]),
     {
       kind: "split",
       branches: [
         {
-          label: "w8Tried = none (pas exploré)",
-          segments: [],
-        },
-        {
-          label: "w8Tried ≠ none",
-          segments: stepSegments(["w8TriedWho"]),
-        },
-      ],
-    },
-    ...stepSegments(["w8Criteria", "w8Brake", "w9", "w10", "w11", "w12", "w13"]),
-    {
-      kind: "step",
-      id: "w13Why",
-    },
-    ...stepSegments(["w14", "w15"]),
-    {
-      kind: "split",
-      branches: [
-        {
-          label: "w15 = wait ET w14 = 12m (pas d'urgence)",
+          label: "w15 = wait ET w14 = 12m (pas d'urgence immédiate)",
           segments: [],
         },
         {
@@ -137,8 +143,12 @@ function buildDiscoverySegments(): MappingFlowSegment[] {
               kind: "split",
               branches: [
                 {
-                  label: "w16 ≠ other",
-                  segments: [],
+                  label: "w16 = strategic",
+                  segments: stepSegments(["w16StrategicSub"]),
+                },
+                {
+                  label: "w16 = resale",
+                  segments: stepSegments(["w16ResaleSub"]),
                 },
                 {
                   label: "w16 = other",
@@ -150,7 +160,7 @@ function buildDiscoverySegments(): MappingFlowSegment[] {
         },
       ],
     },
-    ...stepSegments(["w18", "w17"]),
+    ...stepSegments(["w18", "wExchangeWhy18", "w17"]),
     {
       kind: "step",
       id: "diagnostic_card",
@@ -178,13 +188,68 @@ function buildPitchSegments(): MappingFlowSegment[] {
   ];
 }
 
+function buildDashboardSegments(): MappingFlowSegment[] {
+  const recoverySegments = stepSegments(getRecoveryStepIds());
+
+  return [
+    { kind: "step", id: "dashboard_gate" },
+    ...stepSegments(DASHBOARD_LINEAR_TRUNK),
+    { kind: "step", id: "d5Commit" },
+    {
+      kind: "split",
+      branches: [
+        {
+          label: "commit = launch",
+          segments: stepSegments(["d5Stripe"]),
+        },
+        {
+          label: "commit = hesitate ET recoveryCycle = 0",
+          segments: [
+            ...recoverySegments,
+            { kind: "step", id: "d5Commit" },
+            {
+              kind: "split",
+              branches: [
+                {
+                  label: "2e hesitate (recoveryCycle = 1)",
+                  segments: [
+                    ...recoverySegments,
+                    { kind: "step", id: "d5FinalCommit" },
+                    { kind: "step", id: "d5Stripe" },
+                  ],
+                },
+                {
+                  label: "Je me lance après 1er recovery",
+                  segments: stepSegments(["d5Stripe"]),
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: "commit = hesitate ET recoveryCycle ≥ 2 (garde-fou)",
+          segments: [
+            { kind: "step", id: "d5FinalCommit" },
+            { kind: "step", id: "d5Stripe" },
+          ],
+        },
+      ],
+    },
+  ];
+}
+
 const DISCOVERY_NODE_CONDITIONS: Record<string, string> = {
-  w8TriedWho: "Visible si w8Tried est renseigné et ≠ none",
-  w13Why: "Visible si w13 est renseigné",
+  wExchangeWhy13: "Visible si w13 = yes",
+  w13Why: "Visible si w13 = no",
+  wExchangeWhy14: "Visible si w13 = yes et w14 ≠ 12m",
+  wExchangeWhy15:
+    "Visible si (w15 = wait et w14 = 12m) ou (w13 = yes et w15 = shortcut)",
   w16: "Visible si w15 = shortcut OU w14 ≠ 12m",
+  w16StrategicSub: "Visible si w16 = strategic",
+  w16ResaleSub: "Visible si w16 = resale",
   w16Detail: "Visible si w16 = other",
+  wExchangeWhy18: "Visible si w18 = acceptable",
   diagnostic_card: "Visible si w17Acknowledged = true",
-  w8Brake: "Options dynamiques selon la méthode w8",
 };
 
 const PITCH_NODE_CONDITIONS: Record<string, string> = {
@@ -194,6 +259,22 @@ const PITCH_NODE_CONDITIONS: Record<string, string> = {
   pRoiAcknowledged: "pRoiAcknowledged = true",
   pDashboard: "Visible si p11WhyId renseigné et p11TempCheck ≠ hesitant",
   p12: "Visible si p11WhyId renseigné et p11TempCheck ≠ hesitant",
+};
+
+const DASHBOARD_NODE_CONDITIONS: Record<string, string> = {
+  dashboard_gate: SESSION_MAPPING_DASHBOARD_GATE_CONDITION,
+  d3: `Suivant bloqué tant que fit + why ≥ ${CLOSING_FIT_MIN_WHY_LENGTH} car. + CGV acceptée`,
+  d5Commit:
+    "recoveryCycle < 2 — Je me lance / J'hésite encore (2 cycles recovery max)",
+  d5FinalCommit:
+    "recoveryCycle ≥ 2 — seul CTA « Prêt pour démarrer », pas d'option hésiter",
+  d5Stripe: "launch OU finalCommitAccepted → checkout Stripe",
+  "service-fit": "commit = hesitate ET recoveryCycle < 2",
+  "service-why": "commit = hesitate ET recoveryCycle < 2",
+  friction: "commit = hesitate ET recoveryCycle < 2",
+  you: "commit = hesitate ET recoveryCycle < 2",
+  company: "commit = hesitate ET recoveryCycle < 2",
+  system: "commit = hesitate ET recoveryCycle < 2",
 };
 
 function collectNodeIdsFromSegments(segments: MappingFlowSegment[]): string[] {
@@ -220,8 +301,48 @@ function buildDiscoveryNodes(audience: Audience): Record<string, MappingNode> {
     nodes[id] = {
       id,
       kind: "question",
-      title: question?.prompt ?? id,
+      title: getWizardMappingTitle(id as WizardObjectifsQuestionId, audience, question?.prompt),
       condition: DISCOVERY_NODE_CONDITIONS[id],
+      branches: [],
+    };
+  }
+
+  return nodes;
+}
+
+function toDashboardFaqAudience(audience: Audience): "comptable" | "cif" {
+  return audience === "cif" ? "cif" : "comptable";
+}
+
+function buildDashboardNodes(audience: Audience): Record<string, MappingNode> {
+  const wizardSteps = getDashboardWizardSteps();
+  const recoverySteps = getDashboardRecoverySteps();
+  const nodes: Record<string, MappingNode> = {
+    dashboard_gate: {
+      id: "dashboard_gate",
+      kind: "gate",
+      title: "Lien dashboard requis",
+      condition: DASHBOARD_NODE_CONDITIONS.dashboard_gate,
+      branches: [{ label: SESSION_MAPPING_POST_SYSTEM_BRANCH, targetId: "d0" }],
+    },
+  };
+
+  for (const step of wizardSteps) {
+    nodes[step.id] = {
+      id: step.id,
+      kind: "question",
+      title: step.title,
+      condition: DASHBOARD_NODE_CONDITIONS[step.id],
+      branches: [],
+    };
+  }
+
+  for (const step of recoverySteps) {
+    nodes[step.id] = {
+      id: step.id,
+      kind: "question",
+      title: step.title,
+      condition: DASHBOARD_NODE_CONDITIONS[step.id],
       branches: [],
     };
   }
@@ -257,19 +378,52 @@ function buildPitchNodes(audience: Audience): Record<string, MappingNode> {
 }
 
 export function getMappingFlowSegments(flowId: MappingFlowId): MappingFlowSegment[] {
-  return flowId === "discovery" ? buildDiscoverySegments() : buildPitchSegments();
+  if (flowId === "discovery") {
+    return buildDiscoverySegments();
+  }
+  if (flowId === "pitch") {
+    return buildPitchSegments();
+  }
+  return buildDashboardSegments();
+}
+
+function getMappingFlowLabel(flowId: MappingFlowId): string {
+  if (flowId === "discovery") {
+    return SESSION_MAPPING_FLOW_OBJECTIFS_LABEL;
+  }
+  if (flowId === "pitch") {
+    return SESSION_MAPPING_FLOW_SYSTEM_LABEL;
+  }
+  return "Dashboard";
+}
+
+function getMappingFlowRootId(flowId: MappingFlowId, nodeIds: string[]): string {
+  if (nodeIds[0]) {
+    return nodeIds[0];
+  }
+  if (flowId === "discovery") {
+    return "w1";
+  }
+  if (flowId === "pitch") {
+    return "pitch_gate";
+  }
+  return "dashboard_gate";
 }
 
 export function getMappingFlow(flowId: MappingFlowId, audience: Audience): MappingFlow {
   const segments = getMappingFlowSegments(flowId);
   const nodeIds = collectNodeIdsFromSegments(segments);
   const nodes =
-    flowId === "discovery" ? buildDiscoveryNodes(audience) : buildPitchNodes(audience);
+    flowId === "discovery"
+      ? buildDiscoveryNodes(audience)
+      : flowId === "pitch"
+        ? buildPitchNodes(audience)
+        : buildDashboardNodes(audience);
 
   return {
     id: flowId,
-    label: flowId === "discovery" ? "Discovery" : "Pitch",
-    rootId: nodeIds[0] ?? (flowId === "discovery" ? "w1" : "pitch_gate"),
+    label: getMappingFlowLabel(flowId),
+    rootId: getMappingFlowRootId(flowId, nodeIds),
     nodes,
   };
 }
@@ -280,7 +434,10 @@ export function collectMappingNodeIds(flowId: MappingFlowId): string[] {
   if (flowId === "discovery") {
     return [...new Set(fromSegments)];
   }
-  return [...new Set(["pitch_gate", ...fromSegments])];
+  if (flowId === "pitch") {
+    return [...new Set(["pitch_gate", ...fromSegments])];
+  }
+  return [...new Set(["dashboard_gate", ...fromSegments, ...DASHBOARD_STEP_IDS])];
 }
 
 function getQuestionOptions(
@@ -290,16 +447,6 @@ function getQuestionOptions(
     return question.options.map((option) => ({ id: option.id, label: option.label }));
   }
   return undefined;
-}
-
-function getW8BrakeDynamicOptions(): MappingNodeDetail["dynamicOptionsByMethod"] {
-  return B5_METHOD_OPTIONS.map((method) => ({
-    methodId: method.id,
-    methodLabel: method.label,
-    options: getW8BrakeOptions({ w8: method.id } as SalesQualificationValues).map(
-      (option) => ({ id: option.id, label: option.label }),
-    ),
-  }));
 }
 
 export function getMappingNodeDetail(
@@ -337,12 +484,6 @@ export function getMappingNodeDetail(
       condition: node.condition,
     };
 
-    if (nodeId === "w8Brake") {
-      detail.dynamicOptionsNote =
-        "Les freins affichés dépendent de la méthode d'acquisition sélectionnée (w8).";
-      detail.dynamicOptionsByMethod = getW8BrakeDynamicOptions();
-    }
-
     if (question?.type === "acknowledgment" && "trapTemplate" in question) {
       detail.description = question.trapTemplate;
     }
@@ -356,6 +497,83 @@ export function getMappingNodeDetail(
     return detail;
   }
 
+  if (flowId === "dashboard") {
+    if (nodeId === "dashboard_gate") {
+      return {
+        id: nodeId,
+        flowId,
+        title: node.title,
+        type: "gate",
+        condition: node.condition,
+        description:
+          "Le wizard de closing dashboard démarre quand le prospect ouvre le lien transmis à l'étape pDashboard.",
+      };
+    }
+
+    const wizardStep = getDashboardWizardSteps().find((item) => item.id === nodeId);
+    if (wizardStep) {
+      const faqAudience = toDashboardFaqAudience(audience);
+      const detail: MappingNodeDetail = {
+        id: nodeId,
+        flowId,
+        title: wizardStep.title,
+        type: wizardStep.type,
+        coachCue: wizardStep.coachCue,
+        trainingNote: wizardStep.trainingNote,
+        condition: node.condition,
+      };
+
+      if (nodeId === "d3") {
+        const faq = getOnboardingFaq(faqAudience);
+        detail.description = faq.subtitle;
+        detail.options = [
+          ...faq.items.map((item) => ({ id: item.id, label: item.q })),
+          ...getClosingFitOptions().map((option) => ({
+            id: option.level,
+            label: option.label,
+          })),
+        ];
+      }
+
+      if (nodeId === "d5Commit") {
+        detail.options = getClosingCommitOptions().map((option) => ({
+          id: option.level,
+          label: option.label,
+        }));
+      }
+
+      return detail;
+    }
+
+    const recoveryStep = getDashboardRecoverySteps().find((item) => item.id === nodeId);
+    if (recoveryStep) {
+      const detail: MappingNodeDetail = {
+        id: nodeId,
+        flowId,
+        title: recoveryStep.title,
+        type: recoveryStep.type,
+        trainingNote: recoveryStep.trainingNote,
+        condition: node.condition,
+      };
+
+      if (nodeId === "service-fit") {
+        detail.options = [
+          { id: "oui", label: "Oui, dans l'ensemble" },
+          { id: "pas_encore", label: "Pas encore tout à fait" },
+        ];
+      }
+
+      return detail;
+    }
+
+    return {
+      id: nodeId,
+      flowId,
+      title: node.title,
+      condition: node.condition,
+    };
+  }
+
   if (nodeId === "pitch_gate") {
     return {
       id: nodeId,
@@ -364,7 +582,7 @@ export function getMappingNodeDetail(
       type: "gate",
       condition: node.condition,
       description:
-        "Le wizard pitch ne démarre qu'après validation du diagnostic bleed (bleedDiagnosticAccepted).",
+        SESSION_MAPPING_SYSTEM_GATE_DESCRIPTION,
     };
   }
 

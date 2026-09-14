@@ -12,21 +12,21 @@ export function buildCabinetWizardPresetValues(
   | "w6"
   | "w7"
   | "w8"
-  | "w8Tried"
-  | "w8TriedWho"
-  | "w8Criteria"
-  | "w8Brake"
-  | "w9Acknowledged"
   | "w10"
   | "w10Year"
-  | "w11"
   | "w12Confirmed"
   | "w13"
   | "w13Why"
   | "w14"
   | "w15"
   | "w16"
+  | "w16StrategicSub"
+  | "w16ResaleSub"
   | "w16Detail"
+  | "wExchangeWhy13"
+  | "wExchangeWhy14"
+  | "wExchangeWhy15"
+  | "wExchangeWhy18"
   | "w18"
   | "w17Acknowledged"
   | "bleedDiagnosticAccepted"
@@ -42,26 +42,22 @@ export function buildCabinetWizardPresetValues(
     w6: 5,
     w7: isCif ? 110 : 130,
     w8: isCif ? "partnerships" : "word_of_mouth",
-    w8Tried: "looked",
-    w8TriedWho: isCif
-      ? "Réseau notaires local, annuaire apporteurs"
-      : "Agence SEO locale, fichier apporteurs",
-    w8Criteria: ["predictable_flow", "zone_typology", "honoraires_fit"],
-    w8Brake: isCif ? "part_zone" : "wom_scale",
-    w9Acknowledged: true,
     w10: isCif ? "y2017" : "y2020",
     w10Year: isCif ? 2017 : 2020,
-    w11: "1-3y",
     w12Confirmed: true,
     w13: "no",
-    w13Why: isCif
-      ? "Les partenariats ne génèrent pas assez de flux qualifié sur la zone."
-      : "Le bouche-à-oreille ne scale pas pour atteindre la cible volume.",
+    w13Why: isCif ? "part_inactive" : "wom_scale",
     w14: "24m",
     w15: "shortcut",
     w16: "strategic",
+    w16StrategicSub: "growth",
+    w16ResaleSub: undefined,
     w16Detail: "",
-    w18: "significant_gap",
+    wExchangeWhy13: undefined,
+    wExchangeWhy14: undefined,
+    wExchangeWhy15: undefined,
+    wExchangeWhy18: undefined,
+    w18: "not_acceptable",
     w17Acknowledged: true,
     bleedDiagnosticAccepted: true,
   };

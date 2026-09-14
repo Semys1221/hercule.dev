@@ -21,6 +21,8 @@ export const SALES_TEST_SESSION_SLUG = `${SEED_PREFIX}sales-session`;
 
 export const SALES_TEST_SESSION_COMPTABLE_SLUG = `${SEED_PREFIX}sales-session-comptable`;
 
+export const SALES_TEST_SESSION_COMPTABLE_COMPANY = "Cabinet Test Hercule Comptable";
+
 export const SALES_TEST_SESSION_INVITEE_URI =
   "https://api.calendly.com/scheduled_events/test-session/invitees/sales-funnel";
 
@@ -176,6 +178,9 @@ export function getSalesTestSessionPreset(audience: Audience): SalesTestSessionP
   }
 
   if (isComptableSalesAudience(audience)) {
+    // #region agent log
+    fetch('http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dd574e'},body:JSON.stringify({sessionId:'dd574e',location:'sales-test-session-preset.ts:getSalesTestSessionPreset',message:'comptable preset resolved',data:{company:SALES_TEST_SESSION_COMPTABLE_COMPANY,slug:SALES_TEST_SESSION_COMPTABLE_SLUG},timestamp:Date.now(),runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     return {
       slug: SALES_TEST_SESSION_COMPTABLE_SLUG,
       inviteeUri: SALES_TEST_SESSION_COMPTABLE_INVITEE_URI,

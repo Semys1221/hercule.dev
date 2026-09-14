@@ -6,19 +6,19 @@
     {
       "id": "faq-cp-001",
       "question": "D'où proviennent les demandes ?",
-      "answer": "Hercule détecte en continu, via Pappers et les sources ouvertes (INSEE Sirene, BODACC), des signaux de formalités sur plus de 4 M d'entreprises : créations, changements de dirigeant, sorties de micro / TVA, premières embauches et modifications statutaires. Ces dirigeants ont du papier à traiter — tenue, fiscal, social. Après Live Qualification, la mission est proposée au cabinet le plus compatible.",
+      "answer": "Hercule détecte en continu, via Pappers et les sources ouvertes (INSEE Sirene, BODACC), des signaux de formalités sur plus de 4 M d'entreprises : créations, changements de dirigeant, sorties de micro / TVA, premières embauches et modifications statutaires. Ces dirigeants ont du papier à traiter — tenue, fiscal, social. Après Live Qualification, le flux est routé vers le cabinet le plus compatible.",
       "cvgLink": true
     },
     {
       "id": "faq-cp-002",
-      "question": "Qui peut postuler ?",
-      "answer": "Les cabinets avec une bande passante suffisante pour absorber de nouveaux dossiers. Le seuil de plus de 3 associés ou collaborateurs est un indicateur de capacité, pas un refus automatique. L'éligibilité est confirmée lors de l'audit de compatibilité.",
+      "question": "Qui peut acquérir le système ?",
+      "answer": "Les cabinets avec une bande passante suffisante pour absorber de nouveaux dossiers. Le seuil de plus de 3 associés ou collaborateurs est un indicateur de capacité, pas un refus automatique. L'éligibilité est confirmée lors de l'audit système.",
       "cvgLink": true
     },
     {
       "id": "faq-cp-003",
       "question": "Combien coûte Hercule ?",
-      "answer": "Hercule Lite : 1 799 €/mois — 5 missions PME par mois, aucune garantie MRR. Hercule Starter : 2 199 €/mois — 10 missions PME/TPE/indépendants par mois, garantie 3 000 € de MRR cumulé ou 5 missions de remplacement. Pack 3 mois Starter : 5 277,60 € (−20 %, paiement unique) — 10 missions/mois sur 3 mois, garantie 9 000 € de MRR cumulé ou jusqu'à 15 remplacements (5 par tranche de 10 missions). 0 % de commission sur vos honoraires.",
+      "answer": "Hercule Lite : 1 799 €/mois — capacité 5 flux qualifiés/mois, aucune garantie MRR. Hercule Starter : 2 199 €/mois — capacité 10 flux/mois, garantie 3 000 € de MRR cumulé ou 5 flux de remplacement. Pack 3 mois Starter : 5 277,60 € (−20 %, paiement unique) — 10 flux/mois sur 3 mois, garantie 9 000 € de MRR cumulé ou jusqu'à 15 remplacements (5 par tranche de 10 attributions). 0 % de commission sur vos honoraires.",
       "cvgLink": true
     },
     {
@@ -30,7 +30,7 @@
     {
       "id": "faq-cp-005",
       "question": "Y a-t-il une garantie de signature ?",
-      "answer": "Hercule Starter et le Pack 3 mois incluent une garantie MRR : si le revenu récurrent mensuel cumulé issu des lettres de mission signées est inférieur au seuil contractuel (3 000 € ou 9 000 € selon la formule), Hercule attribue des missions de remplacement. Hercule Lite n'inclut pas de garantie MRR. Aucune formule ne garantit la conclusion d'un mandat.",
+      "answer": "Hercule Starter et le Pack 3 mois incluent une garantie MRR : si le revenu récurrent mensuel cumulé issu des lettres de mission signées est inférieur au seuil contractuel (3 000 € ou 9 000 € selon la formule), Hercule attribue des flux de remplacement. Hercule Lite n'inclut pas de garantie MRR. Aucune formule ne garantit la conclusion d'un mandat.",
       "cvgLink": true
     },
     {
@@ -64,13 +64,13 @@
     {
       "id": "faq-cp-011",
       "question": "Je n'ai pas 3 collaborateurs — suis-je éligible ?",
-      "answer": "L'enjeu n'est pas le décompte strict : c'est la bande passante pour intégrer des visioconférences qualifiantes (Zoom provisionné), pas des appels téléphoniques de 10 minutes, tout en assurant la production comptable. Si votre cabinet a la capacité — y compris via une sous-traitance stable à un partenaire de confiance — vous pouvez candidater via l'audit de compatibilité Calendly.",
+      "answer": "L'enjeu n'est pas le décompte strict : c'est la bande passante pour intégrer des visioconférences qualifiantes (Zoom provisionné), pas des appels téléphoniques de 10 minutes, tout en assurant la production comptable. Si votre cabinet a la capacité — y compris via une sous-traitance stable à un partenaire de confiance — vous pouvez acquérir le système via l'audit système Calendly.",
       "cvgLink": true
     },
     {
       "id": "faq-cp-012",
       "question": "Les mensualités sont trop élevées — pouvez-vous expliquer ?",
-      "answer": "Hercule Starter inclut 10 missions qualifiées par mois, une garantie MRR et 0 % de commission sur vos honoraires signés. Tant que vous avez la capacité d'absorber de nouveaux dossiers, Hercule Lite (1 799 €/mois, 5 missions/mois) peut servir d'offre d'entrée. Détail des formules : hercule.dev/cvg/comptable.",
+      "answer": "Hercule Starter inclut une capacité de 10 flux qualifiés par mois, une garantie MRR et 0 % de commission sur vos honoraires signés. Tant que vous avez la capacité d'absorber de nouveaux dossiers, Hercule Lite (1 799 €/mois, 5 flux/mois) peut servir d'offre d'entrée. Détail des formules : hercule.dev/cvg/comptable.",
       "cvgLink": true
     },
     {
@@ -82,7 +82,7 @@
     {
       "id": "faq-cp-014",
       "question": "Rémunérez-vous les apporteurs d'affaires ?",
-      "answer": "Hercule ne rémunère pas les apporteurs. Le cabinet souscrit à Hercule pour recevoir des missions qualifiées et exclusives. Hercule ne prélève aucune commission sur les honoraires que vous signez avec le dirigeant, et le dirigeant ne paie rien à Hercule.",
+      "answer": "Hercule ne rémunère pas les apporteurs. Le cabinet acquiert le système Hercule pour capter et router des flux qualifiés en exclusivité. Hercule ne prélève aucune commission sur les honoraires que vous signez avec le dirigeant, et le dirigeant ne paie rien à Hercule.",
       "cvgLink": true
     }
   ]

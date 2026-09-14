@@ -2,6 +2,10 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  SESSION_MAPPING_FLOW_OBJECTIFS_LABEL,
+  SESSION_MAPPING_FLOW_SYSTEM_LABEL,
+} from "@/lib/admin/funnels/ui-copy";
 import type { Audience } from "@/lib/admin/navigation";
 
 import { SalesMappingFlow } from "./sales-mapping-flow";
@@ -23,8 +27,9 @@ export function SalesMappingPanel({ audience }: SalesMappingPanelProps) {
 
       <Tabs defaultValue="discovery" className="w-full">
         <TabsList>
-          <TabsTrigger value="discovery">Discovery</TabsTrigger>
-          <TabsTrigger value="pitch">Pitch</TabsTrigger>
+          <TabsTrigger value="discovery">{SESSION_MAPPING_FLOW_OBJECTIFS_LABEL}</TabsTrigger>
+          <TabsTrigger value="pitch">{SESSION_MAPPING_FLOW_SYSTEM_LABEL}</TabsTrigger>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
         </TabsList>
 
         <TabsContent value="discovery" className="mt-4">
@@ -33,6 +38,10 @@ export function SalesMappingPanel({ audience }: SalesMappingPanelProps) {
 
         <TabsContent value="pitch" className="mt-4">
           <SalesMappingFlow flowId="pitch" audience={audience} />
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-4">
+          <SalesMappingFlow flowId="dashboard" audience={audience} />
         </TabsContent>
       </Tabs>
     </div>

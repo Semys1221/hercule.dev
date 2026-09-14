@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { TERMINAL_SIGNAL_LINES } from "@/lib/site/marketing-copy"
 
 type LogType = "scan" | "signal" | "route" | "stats" | "stack"
 
@@ -16,14 +17,11 @@ const LOG_SEQUENCE: Omit<LogLine, "id">[] = [
   { type: "signal", text: "[signal] création SASU détectée — btp-dupont.fr" },
   { type: "signal", text: "[signal] besoin d'optimisation fiscale — resto-martin.fr" },
   { type: "signal", text: "[signal] trésorerie à placer — ecom-boutique.com" },
-  { type: "route", text: "[route] intention qualifiée → soumission hercule.dev" },
+  ...TERMINAL_SIGNAL_LINES.map((line) => ({ type: line.type as LogType, text: line.text })),
   { type: "stack", text: "[match] fiscal · trésorerie · patrimoine · retraite" },
-  { type: "stats", text: "[stats] +12 nouvelles missions PME aujourd'hui" },
   { type: "scan", text: "[scan] analyse intentions en cours..." },
   { type: "signal", text: "[signal] dépassement seuil micro — artisan-leroy.fr" },
-  { type: "route", text: "[route] mission routée — honoraires 3 600 €/an validés" },
   { type: "signal", text: "[signal] transmission patrimoine — services-pro.com" },
-  { type: "route", text: "[route] soumission hercule.dev — queue +1" },
 ]
 
 const TYPE_COLORS: Record<LogType, string> = {

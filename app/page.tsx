@@ -7,9 +7,9 @@ import {
 } from "@/lib/comptable/demandes-repo"
 
 export const metadata: Metadata = {
-  title: "Proposer votre cabinet — Hercule",
+  title: "Acquérir le système Hercule — Expertise comptable",
   description:
-    "Hercule reçoit des demandes de dirigeants PME. Les missions de tenue, fiscales et administratives sont attribuées en exclusivité aux cabinets partenaires éligibles.",
+    "Déployez le système inbound Hercule sur votre zone : capture brandée, qualification et routage exclusif des flux PME vers votre cabinet.",
 }
 
 export const revalidate = 60

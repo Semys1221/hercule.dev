@@ -79,8 +79,9 @@ export function SalesDashboardLinkCopy({
   return (
     <div className="space-y-4">
       <p className="text-sm leading-relaxed text-muted-foreground">
-        Copiez ce lien et transmettez-le au prospect. Le checkout et le choix de formule se
-        font sur le dashboard — pas de paiement CB pendant l&apos;appel.
+        Lien dashboard à transmettre au{" "}
+        {isCabinetBuyerSalesAudience(audience) ? "cabinet" : "prospect"}. Le choix de formule et
+        le paiement s&apos;effectuent sur le tableau de bord, en dehors de la session.
       </p>
 
       {!developerMode && !selectedLead ? (

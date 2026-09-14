@@ -23,6 +23,7 @@ type SalesImmersiveSessionShellProps = {
   onPrev: () => void;
   onNext: () => void;
   onOpenSidebar?: () => void;
+  sidebarOpen?: boolean;
   contentClassName?: string;
   layout?: "stacked" | "split";
 };
@@ -43,6 +44,7 @@ export function SalesImmersiveSessionShell({
   onPrev,
   onNext,
   onOpenSidebar,
+  sidebarOpen = false,
   contentClassName,
   layout = "stacked",
 }: SalesImmersiveSessionShellProps) {
@@ -94,7 +96,10 @@ export function SalesImmersiveSessionShell({
           variant="ghost"
           size="icon"
           className="absolute left-3 top-3 z-20 size-9 text-muted-foreground hover:text-foreground"
-          aria-label="Ouvrir le menu des étapes"
+          aria-label={
+            sidebarOpen ? "Fermer le menu des étapes" : "Ouvrir le menu des étapes"
+          }
+          aria-pressed={sidebarOpen}
           onClick={onOpenSidebar}
         >
           <PanelLeft className="size-4" />
@@ -150,34 +155,29 @@ export function SalesImmersiveSessionShell({
 
       {footer ? <div className="relative z-10 shrink-0 px-6 pb-6 md:px-10">{footer}</div> : null}
 
-      <div className="relative z-20 flex shrink-0 items-center justify-end gap-2 px-4 pb-4 md:px-6 md:pb-6">
-        <span className="mr-2 hidden text-4xl font-light tabular-nums text-foreground/90 sm:inline">
-          {stepNumber}
+      <div className="relative z-20 flex shrink-0 items-center justify-between gap-3 border-t border-border/40 px-6 py-6 md:px-10 md:py-8">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!canGoPrev}
+          aria-label="Étape précédente"
+          onClick={onPrev}
+        >
+          <ChevronUp className="mr-2 size-4" />
+          Précédent
+        </Button>
+        <span className="hidden text-sm tabular-nums text-muted-foreground sm:inline">
+          {stepNumber} / {totalSteps}
         </span>
-        <div className="flex flex-col overflow-hidden rounded-md border border-border bg-card shadow-sm">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-9 rounded-none border-b border-border"
-            disabled={!canGoPrev}
-            aria-label="Étape précédente"
-            onClick={onPrev}
-          >
-            <ChevronUp className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-9 rounded-none"
-            disabled={!canGoNext}
-            aria-label={nextLabel ?? "Étape suivante"}
-            onClick={onNext}
-          >
-            <ChevronDown className="size-4" />
-          </Button>
-        </div>
+        <Button
+          type="button"
+          disabled={!canGoNext}
+          aria-label={nextLabel ?? "Étape suivante"}
+          onClick={onNext}
+        >
+          {nextLabel ?? "Suivant"}
+          <ChevronDown className="ml-2 size-4" />
+        </Button>
       </div>
     </div>
   );

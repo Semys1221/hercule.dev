@@ -8,14 +8,9 @@ import { CarteSignal } from "@/components/cif/carte-signal"
 import { CIF_SIGNALS } from "@/lib/admin/funnels/cif-sales-copy"
 import type { DemandeContrat } from "@/lib/demandes-data"
 
-const SECTION_COPY = {
-  eyebrow: "Pipeline",
-  title: "Demandes qualifiées et signaux capturés en continu",
-  intro:
-    "Hercule surveille les formalités Sirene et Pappers, capte les signaux d'intention en temps réel, puis qualifie chaque dirigeant PME avant d'attribuer la mission au cabinet compatible.",
-  demandesLabel: "Missions récemment attribuées",
-  signauxLabel: "Signaux capturés",
-}
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
+
+const SECTION_COPY = getMarketingCopy("cif").grillePipeline
 
 function selectFeaturedDemandes(demandes: DemandeContrat[]): DemandeContrat[] {
   const available = demandes.filter((demande) => demande.status === "available")

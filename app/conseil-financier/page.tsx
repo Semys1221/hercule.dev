@@ -7,9 +7,9 @@ import {
 } from "@/lib/cif/demandes-repo"
 
 export const metadata: Metadata = {
-  title: "Proposer votre cabinet CIF — Hercule",
+  title: "Acquérir le système Hercule — Conseil financier",
   description:
-    "Hercule reçoit des demandes de dirigeants PME en optimisation fiscale et trésorerie. Les missions sont attribuées en exclusivité aux cabinets CIF / CGP partenaires éligibles.",
+    "Déployez le système inbound Hercule sur votre zone : capture brandée, qualification et routage exclusif des flux patrimoniaux vers votre cabinet CIF.",
 }
 
 export const revalidate = 60

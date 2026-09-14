@@ -38,7 +38,7 @@ const CABINET_INTRO_CADRAGE_ITEMS = [
   {
     title: "Objectif de cette session",
     body:
-      "Déterminer ensemble si le système Hercule peut vous apporter une valeur concrète — et dans quelles conditions un partenariat aurait du sens.",
+      "Déterminer si le système Hercule peut apporter une valeur concrète au cabinet — et dans quelles conditions un partenariat aurait du sens.",
   },
 ] as const;
 

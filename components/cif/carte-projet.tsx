@@ -7,7 +7,6 @@ import { DemandeFlipCard } from "@/components/demandes/demande-flip-card"
 import { DemandeMetaRow } from "@/components/demandes/demande-meta-row"
 import { getSecteurConfig } from "@/lib/agence/secteur-config"
 import { cn } from "@/lib/utils"
-import { CALENDLY_CIF_URL } from "@/lib/constants"
 import { CIF_DEMANDE_VERSO_CRITERIA } from "@/lib/commercial/qualification-criteria"
 import type { DemandeContrat, DemandeStatus, DemandeTeaser } from "@/lib/demandes-data"
 import { Card } from "@/components/ui/card"
@@ -23,20 +22,6 @@ function DemandeStatusBadge({ status }: { status: DemandeStatus }) {
   }
 
   return null
-}
-
-function PostulerActionBar() {
-  return (
-    <a
-      href={CALENDLY_CIF_URL}
-      className="mt-3 flex items-center justify-between border-t border-zinc-800/80 pt-3 outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-sm"
-    >
-      <span className="text-sm font-medium text-zinc-400 transition-colors duration-150 group-hover/card:text-white">
-        Postuler
-      </span>
-      <ArrowRight className="size-4 text-zinc-500 transition-[transform,color] duration-150 group-hover/card:translate-x-0.5 group-hover/card:text-white" />
-    </a>
-  )
 }
 
 export function CarteProjet({ demande }: { demande: DemandeContrat }) {

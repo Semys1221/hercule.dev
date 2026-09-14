@@ -39,7 +39,7 @@ export type PitchSlideDefinition = {
 export { PITCH_P0_TRANSITION_TEMPLATE as PITCH_P0_TRANSITION_SCRIPT } from "@/lib/admin/funnels/sales-pitch-bleed-copy";
 
 export const PITCH_PART1_OPENING_SCRIPT =
-  "[Prénom], on va vous présenter Hercule, le cadre du partenariat, puis le système en trois volets. À la fin, on répond à vos questions et on choisit l'infrastructure adaptée à la zone. On y va ?";
+  "[Prénom], on va présenter Hercule au cabinet, le cadre du partenariat, puis le système en trois volets. À la fin, on répond aux questions et on choisit l'infrastructure adaptée à la zone. On y va ?";
 
 export const PITCH_P2_PROMPT =
   "Y a-t-il quelqu'un d'autre qui devrait voir ça aujourd'hui ?";
@@ -56,7 +56,7 @@ export const PITCH_BUYIN_OPTIONS = [
 
 export const PITCH_P11_TEMP_OPTIONS = [
   { id: "yes", label: "Oui — c'est la bonne solution" },
-  { id: "hesitant", label: "J'ai encore des doutes" },
+  { id: "hesitant", label: "Le cabinet a encore des doutes" },
 ] as const;
 
 export const PITCH_CGV_HIGHLIGHTS = [
@@ -155,33 +155,35 @@ export function getPitchSlides(audience: Audience): PitchSlideDefinition[] {
       id: "p0",
       type: "transition",
       title: "Transition",
-      coachCue: "Script closer obligatoire avant d'entrer dans le pitch.",
+      coachCue: "Transition vers la présentation structurée du partenariat Hercule.",
     },
     {
       id: "p1",
       type: "company",
       title: "Logo & équipe",
-      coachCue: "On pose le cadre : qui nous sommes, pas encore le détail du système.",
+      coachCue:
+        "Présentation de l'entreprise Hercule — identité et équipe, hors détail technique du système.",
     },
     {
       id: "p1b",
       type: "product_origin",
       title: "2018 → 2026 — le système Hercule",
       coachCue:
-        "Montrer l'évolution : outil interne rough en 2018, infrastructure tangible aujourd'hui.",
+        "Évolution du système Hercule de 2018 à aujourd'hui : d'outil interne à infrastructure déployée.",
     },
     {
       id: "p2",
       type: "decision_makers",
       title: "Support belief",
-      trainingNote: "Is there anyone else that needs to see this today?",
-      coachCue: "On coche la croyance support avant de pitcher.",
+      coachCue:
+        "Validation que les décideurs nécessaires sont présents avant la suite de la présentation.",
     },
     {
       id: "p3",
       type: "acknowledgment",
       title: "Différenciation courte",
-      coachCue: "Parler brièvement de ce qui diffère des concurrents.",
+      coachCue:
+        "Positionnement différenciant du cabinet face aux alternatives du marché.",
     },
     {
       id: "pCgv",
@@ -191,9 +193,9 @@ export function getPitchSlides(audience: Audience): PitchSlideDefinition[] {
     {
       id: "p4",
       type: "pillars_overview",
-      title: "The Hercule System",
+      title: "Le système Hercule",
       coachCue:
-        "Les trois piliers couvrent capture, exécution et relation. On détaille un par un.",
+        "Trois piliers : capture, exécution et relation partenaire — présentés séquentiellement.",
     },
     {
       id: "p5",
@@ -208,16 +210,16 @@ export function getPitchSlides(audience: Audience): PitchSlideDefinition[] {
     {
       id: "p7",
       type: "foundation_buyin",
-      title: "Les 2 premiers mois — vos fondations",
+      title: "Les 2 premiers mois — fondations du cabinet",
       coachCue:
-        "Les 60 premiers jours construisent le département marketing du cabinet — pas encore de volume promis.",
+        "Phase de déploiement sur 60 jours : fondations marketing du cabinet, sans engagement de volume.",
     },
     {
       id: "p8",
       type: "activation_buyin",
       title: "Mois 3 — système live",
       coachCue:
-        "J+60 = système live. Fenêtre garantie 90 jours à l'activation — deux horloges distinctes.",
+        "Activation à J+60 ; fenêtre garantie de 90 jours à compter de l'activation — deux échéances distinctes.",
     },
     {
       id: "p9",
@@ -234,27 +236,24 @@ export function getPitchSlides(audience: Audience): PitchSlideDefinition[] {
       type: "roi_contract",
       title: "ROI contractuel",
       coachCue:
-        "7 197 € investis sur 90 jours · 5 000 € garantis · 60 000 € année 1 — avant les questions.",
+        "Investissement 90 jours : 7 197 € · garantie 5 000 € de récurrent · valeur année 1 : 60 000 €.",
     },
     {
       id: "p11",
       type: "faq_close",
       title: "Questions ?",
-      trainingNote: "Questions, temp check, why if yes",
     },
     {
       id: "p12",
       type: "pricing_close",
       title: "Choix d'infrastructure",
-      trainingNote: "A/B close, pause, why after pick",
     },
     {
       id: "pDashboard",
       type: "dashboard_link",
       title: "Lien dashboard",
       coachCue:
-        "Copiez le lien et transmettez-le au prospect — checkout et signature sur le dashboard.",
-      trainingNote: "Checkout sur dashboard — pas de CB en session",
+        "Lien dashboard pour finaliser le choix de formule et le paiement en autonomie.",
     },
   ];
 }

@@ -2,27 +2,10 @@
 
 import { motion } from "framer-motion"
 import { Inbox, Shield, ClipboardCheck } from "lucide-react"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
-const matchingCards = [
-  {
-    title: "Missions PME qualifiées",
-    description:
-      "Des dirigeants PME attendent un cabinet compatible. Chaque mission est confiée en exclusivité au cabinet partenaire sélectionné.",
-    icon: Inbox,
-  },
-  {
-    title: "Attribution exclusive",
-    description:
-      "Chaque mission est confiée à un seul cabinet sélectionné, en fonction de son profil et de sa capacité d'absorption.",
-    icon: Shield,
-  },
-  {
-    title: "Audit de compatibilité",
-    description:
-      "Nous vérifions l'adéquation de votre cabinet — secteurs, honoraires, disponibilité — avant toute attribution.",
-    icon: ClipboardCheck,
-  },
-]
+const copy = getMarketingCopy("comptable")
+const icons = [Inbox, Shield, ClipboardCheck]
 
 export function PilierMatching() {
   return (
@@ -42,7 +25,7 @@ export function PilierMatching() {
                 lineHeight: 1.1,
               }}
             >
-              Nous recevons des demandes PME. Notre rôle : identifier le cabinet le plus adapté.
+              {copy.pilier.headline}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -51,14 +34,13 @@ export function PilierMatching() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-zinc-400 leading-relaxed"
             >
-              Hercule met en relation des missions de tenue comptable avec les cabinets éligibles. Chaque attribution
-              repose sur un audit préalable et une distribution en exclusivité.
+              {copy.pilier.intro}
             </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {matchingCards.map((card, index) => {
-              const Icon = card.icon
+            {copy.pilier.cards.map((card, index) => {
+              const Icon = icons[index] ?? Inbox
               return (
                 <motion.div
                   key={card.title}

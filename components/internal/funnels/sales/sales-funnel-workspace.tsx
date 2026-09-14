@@ -36,6 +36,7 @@ type SalesFunnelWorkspaceProps = {
   prospectFirstName: string;
   immersiveCabinetWizard?: boolean;
   onOpenSidebar?: () => void;
+  sidebarOpen?: boolean;
   onGoToObjectifs?: () => void;
   onLiveTrackSectionChange?: (section: LiveTrackSection) => void;
   onClosingChange: (patch: Partial<SalesClosingValues>) => void;
@@ -67,6 +68,7 @@ export function SalesFunnelWorkspace({
   prospectFirstName,
   immersiveCabinetWizard = false,
   onOpenSidebar,
+  sidebarOpen = false,
   onGoToObjectifs,
   onLiveTrackSectionChange,
   onClosingChange,
@@ -144,6 +146,7 @@ export function SalesFunnelWorkspace({
             selectedBooking={selectedBooking}
             onRefreshLead={onRefreshLead}
             onOpenSidebar={onOpenSidebar}
+            sidebarOpen={sidebarOpen}
             onActiveSectionChange={onLiveTrackSectionChange}
           />
         ) : activeQualificationSection ? (
@@ -158,6 +161,7 @@ export function SalesFunnelWorkspace({
             selectedBooking={selectedBooking}
             immersiveCabinetWizard={immersiveCabinetWizard}
             onOpenSidebar={onOpenSidebar}
+            sidebarOpen={sidebarOpen}
             onRefreshLead={onRefreshLead}
             onGoToObjectifs={onGoToObjectifs}
           />

@@ -29,11 +29,12 @@ import {
   isComptableSalesAudience,
 } from "@/lib/admin/funnels/sales-audience";
 import type { O3DurationId } from "@/lib/admin/funnels/sales-bleed-track";
+import {
+  isValidW13WhySelection,
+  isValidW16DetailSelection,
+  isWizardUrgencyStepVisible,
+} from "@/lib/admin/funnels/sales-objectifs-wizard";
 import type { Audience } from "@/lib/admin/navigation";
-
-function isWizardUrgencyStepVisible(values: SalesQualificationValues): boolean {
-  return values.w15 === "shortcut" || (values.w14 !== undefined && values.w14 !== "12m");
-}
 
 export const SALES_SKIP_VALUE = "__skip__";
 
@@ -112,16 +113,14 @@ const sharedQualificationFields = {
   w14: z.enum(["12m", "24m", "36m"]).optional(),
   w15: z.enum(["wait", "shortcut"]).optional(),
   w16: z.enum(["strategic", "resale", "other"]).optional(),
+  w16StrategicSub: z.enum(["growth", "recruitment", "associate"]).optional(),
+  w16ResaleSub: z.enum(["valuation", "succession", "exit"]).optional(),
   w16Detail: z.string().optional(),
-  w18: z
-    .enum([
-      "major_gap",
-      "significant_gap",
-      "moderate_gap",
-      "near_target",
-      "at_capacity",
-    ])
-    .optional(),
+  wExchangeWhy13: z.enum(["certainty", "not_real_goal"]).optional(),
+  wExchangeWhy14: z.enum(["certainty", "not_real_goal"]).optional(),
+  wExchangeWhy15: z.enum(["certainty", "not_real_goal"]).optional(),
+  wExchangeWhy18: z.enum(["certainty", "not_real_goal"]).optional(),
+  w18: z.enum(["acceptable", "not_acceptable", "mixed"]).optional(),
   w17Acknowledged: z.boolean().optional(),
   p2DecisionMakers: z.enum(["all_present", "missing"]).optional(),
   p2MissingRole: z
@@ -320,13 +319,14 @@ export type SalesQualificationValues = {
   w14?: "12m" | "24m" | "36m";
   w15?: "wait" | "shortcut";
   w16?: "strategic" | "resale" | "other";
+  w16StrategicSub?: "growth" | "recruitment" | "associate";
+  w16ResaleSub?: "valuation" | "succession" | "exit";
   w16Detail?: string;
-  w18?:
-    | "major_gap"
-    | "significant_gap"
-    | "moderate_gap"
-    | "near_target"
-    | "at_capacity";
+  wExchangeWhy13?: "certainty" | "not_real_goal";
+  wExchangeWhy14?: "certainty" | "not_real_goal";
+  wExchangeWhy15?: "certainty" | "not_real_goal";
+  wExchangeWhy18?: "certainty" | "not_real_goal";
+  w18?: "acceptable" | "not_acceptable" | "mixed";
   w17Acknowledged?: boolean;
   p2DecisionMakers?: "all_present" | "missing";
   p2MissingRole?: "associate" | "managing_partner" | "expert_referent" | "ops_director" | "reschedule";
@@ -437,7 +437,13 @@ export function getSalesQualificationDefaultValues(
       w14: undefined,
       w15: undefined,
       w16: undefined,
+      w16StrategicSub: undefined,
+      w16ResaleSub: undefined,
       w16Detail: "",
+      wExchangeWhy13: undefined,
+      wExchangeWhy14: undefined,
+      wExchangeWhy15: undefined,
+      wExchangeWhy18: undefined,
       w18: undefined,
       w17Acknowledged: false,
       p2DecisionMakers: undefined,
@@ -527,7 +533,13 @@ export function getSalesQualificationDefaultValues(
       w14: undefined,
       w15: undefined,
       w16: undefined,
+      w16StrategicSub: undefined,
+      w16ResaleSub: undefined,
       w16Detail: "",
+      wExchangeWhy13: undefined,
+      wExchangeWhy14: undefined,
+      wExchangeWhy15: undefined,
+      wExchangeWhy18: undefined,
       w18: undefined,
       w17Acknowledged: false,
       p2DecisionMakers: undefined,
@@ -648,11 +660,7 @@ const CABINET_OBJECTIFS_KEYS: Array<keyof SalesQualificationValues> = [
   "w6",
   "w7",
   "w8",
-  "w8Tried",
-  "w8Criteria",
-  "w8Brake",
   "w10",
-  "w11",
   "w12Confirmed",
   "w13",
   "w14",
@@ -763,17 +771,31 @@ function isFieldComplete(
     return true;
   }
 
-  if (key === "w9Acknowledged" || key === "w12Confirmed" || key === "w17Acknowledged") {
+  if (key === "w12Confirmed" || key === "w17Acknowledged") {
     return value === true;
   }
 
-  if (key === "w10Year" || key === "w13Why" || key === "w16Detail" || key === "w8TriedWho") {
+  if (
+    key === "w10Year" ||
+    key === "w13Why" ||
+    key === "w16Detail" ||
+    key === "w8TriedWho" ||
+    key === "wExchangeWhy13" ||
+    key === "wExchangeWhy14" ||
+    key === "wExchangeWhy15" ||
+    key === "wExchangeWhy18" ||
+    key === "w16StrategicSub" ||
+    key === "w16ResaleSub"
+  ) {
     return true;
   }
 
   if (key === "w8Criteria") {
-    const count = values.w8Criteria?.length ?? 0;
-    return count >= 1 && count <= 3;
+    return true;
+  }
+
+  if (key === "w9Acknowledged") {
+    return true;
   }
 
   if (key === "w16") {
@@ -874,25 +896,43 @@ export function isSalesSectionComplete(
   }
 
   if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
-    if (values.w9Acknowledged !== true) {
+    if (values.w13 === "no" && !isValidW13WhySelection(values)) {
       return false;
     }
-    if (values.w13 === "no" && (values.w13Why?.trim().length ?? 0) < 10) {
+    if (values.w13 === "yes" && !values.wExchangeWhy13) {
+      return false;
+    }
+    if (
+      values.w13 === "yes" &&
+      values.w14 !== undefined &&
+      values.w14 !== "12m" &&
+      !values.wExchangeWhy14
+    ) {
+      return false;
+    }
+    if (
+      ((values.w15 === "wait" && values.w14 === "12m") ||
+        (values.w13 === "yes" && values.w15 === "shortcut")) &&
+      !values.wExchangeWhy15
+    ) {
       return false;
     }
     if (isWizardUrgencyStepVisible(values) && !values.w16) {
       return false;
     }
-    if (values.w16 === "other" && !values.w16Detail?.trim()) {
+    if (values.w16 === "strategic" && !values.w16StrategicSub) {
+      return false;
+    }
+    if (values.w16 === "resale" && !values.w16ResaleSub) {
+      return false;
+    }
+    if (values.w16 === "other" && !isValidW16DetailSelection(values)) {
+      return false;
+    }
+    if (values.w18 === "acceptable" && !values.wExchangeWhy18) {
       return false;
     }
     if (values.w17Acknowledged !== true) {
-      return false;
-    }
-    if (values.w8Tried && values.w8Tried !== "none" && !values.w8TriedWho?.trim()) {
-      return false;
-    }
-    if ((values.w8Criteria?.length ?? 0) < 1) {
       return false;
     }
     if (!values.w18) {

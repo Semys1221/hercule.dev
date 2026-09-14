@@ -3,6 +3,9 @@
 import { motion } from "framer-motion"
 import { ChevronRight } from "lucide-react"
 import { TerminalSignaux } from "./terminal-signaux"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
+
+const copy = getMarketingCopy("agence")
 
 export function MethodeRadar() {
   return (
@@ -27,7 +30,7 @@ export function MethodeRadar() {
           className="text-3xl sm:text-4xl md:text-5xl text-white max-w-2xl mb-16"
           style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
         >
-          Acquisition continue des demandes de clients
+          {copy.methodeRadar.title}
         </motion.h2>
 
         <motion.div
@@ -38,10 +41,8 @@ export function MethodeRadar() {
           className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start"
         >
           <div>
-            <h3 className="text-white text-xl font-medium mb-4">Comment nous obtenons les demandes de clients</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-            Hercule détecte en continu les signaux d’intention sur plus de 1 000 sites : recrutements, développements, changements d’activité et autres indicateurs. Ces entreprises sont qualifiées puis accompagnées par Hercule pour identifier l’agence la plus adaptée à leur besoin.
-            </p>
+            <h3 className="text-white text-xl font-medium mb-4">{copy.methodeRadar.sectionTitle}</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed">{copy.methodeRadar.sectionBody}</p>
           </div>
           <TerminalSignaux />
         </motion.div>

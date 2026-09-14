@@ -14,6 +14,7 @@ import { BlocGaranties } from "./bloc-garanties"
 import { BandeAudit } from "./bande-audit"
 import { Footer } from "./footer"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
+import { getMarketingCopy, MARKETING_SECONDARY_CTA } from "@/lib/site/marketing-copy"
 
 interface AccueilSceneProps {
   demandes: DemandeContrat[]
@@ -29,6 +30,7 @@ const baseTransform = {
 }
 
 export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
+  const copy = getMarketingCopy("cif")
   const [yOffset, setYOffset] = useState(0)
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 transition={{ duration: 0.6 }}
                 className="text-4xl md:text-5xl lg:text-[56px] font-medium text-white leading-[1.1] text-balance"
               >
-                Nous trouvons le bon cabinet pour chaque mission PME.
+                {copy.hero.title}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -76,7 +78,7 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="mt-6 text-lg text-zinc-400"
               >
-                Hercule reçoit et qualifie des demandes de dirigeants PME, puis sélectionne les cabinets CIF adaptés pour leur attribuer des missions d'optimisation fiscale et de trésorerie.
+                {copy.hero.subtitle}
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -88,7 +90,7 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                   href="#demandes"
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 >
-                  Voir des exemples de missions
+                  {MARKETING_SECONDARY_CTA}
                 </a>
               </motion.div>
             </div>

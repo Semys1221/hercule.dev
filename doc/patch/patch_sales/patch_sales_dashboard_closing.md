@@ -22,7 +22,7 @@ Transformer le dashboard post-audit cabinets en **wizard de closing** (6 étapes
 2. FAQ 3 objections + diagnostic fit + why + CGV compacte
 3. Grille Core / Horizon
 4. Commit (Je me lance / J'ai encore une question) puis Stripe
-5. Recovery plein écran si hésitation (1 cycle max)
+5. Recovery plein écran si hésitation (2 cycles max) → commit final unique
 
 Référence session pitch : [`patch_sales_new_pitch.md`](./patch_sales_new_pitch.md) — le dashboard reste le canal paiement.
 
@@ -62,13 +62,17 @@ Why obligatoire (min 20 car.) + CGV compacte → gate Suivant.
 | Id | Label |
 |----|--------|
 | `launch` | Je me lance |
-| `hesitate` | J'ai encore une question |
+| `hesitate` | J'hésite encore |
 
 ---
 
-## Recovery
+## Recovery (2 cycles max)
 
-3 questions diagnostic → 3 écrans pitch (You / Company / System) avec structure What / How / Why different / Benefit par écran.
+Cycle 1 : 3 questions diagnostic → 3 écrans pitch angle consultatif (You / Company / System).
+
+Cycle 2 (si 2e hésitation) : même diagnostic → re-pitch angle bleed + urgence zone.
+
+Après cycle 2 : **Prêt pour démarrer** — seul CTA, pas d'option hésiter.
 
 Copy engine : [`lib/dashboard/closing-recovery.ts`](../../../lib/dashboard/closing-recovery.ts).
 

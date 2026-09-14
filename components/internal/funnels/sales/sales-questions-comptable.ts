@@ -139,7 +139,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     maxSelections: 3,
     hasOtherInput: true,
     otherInputFieldId: "q2Other",
-    prompt: "Quels sont vos principaux domaines d'expertise ?",
+    prompt: "Quels sont les principaux domaines d'expertise du cabinet ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
       { id: "paid_acquisition", label: "Fiscalité des entreprises" },
@@ -159,7 +159,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 3,
     sectionId: "capacite",
     type: "slider",
-    prompt: "Combien de nouveaux dossiers pouvez-vous actuellement accepter par mois ?",
+    prompt: "Combien de nouveaux dossiers le cabinet peut-il actuellement accepter par mois ?",
     description:
       "Combien de demandes inbound (audits / nouvelles tenues) le cabinet peut traiter par mois sans dégrader la qualité — une fois la zone live ?",
     slider: COMPTABLE_SLIDER_CONFIGS.projectCapacity,
@@ -180,7 +180,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "standards",
     type: "multi",
     maxSelections: 2,
-    prompt: "Quels types de dirigeants souhaitez-vous principalement accompagner ?",
+    prompt: "Quels types de dirigeants le cabinet souhaite-t-il principalement accompagner ?",
     description: "Sélectionnez jusqu'à 2 réponses.",
     options: [
       {
@@ -234,7 +234,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 13,
     sectionId: "standards",
     type: "single",
-    prompt: "Quel niveau de complexité de dossier souhaitez-vous principalement traiter ?",
+    prompt: "Quel niveau de complexité de dossier le cabinet souhaite-t-il principalement traiter ?",
     options: [
       {
         id: "simple",
@@ -278,7 +278,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "standards",
     type: "slider",
     prompt:
-      "Quel montant minimum d'honoraires annuels acceptez-vous pour une lettre de mission de tenue ({clientSegment}) ?",
+      "Quel montant minimum d'honoraires annuels le cabinet accepte-t-il pour une lettre de mission de tenue ({clientSegment}) ?",
     description: `Plancher marché : ${annualFloorLabel} / an.`,
     slider: COMPTABLE_SLIDER_CONFIGS.annualMin,
   },
@@ -287,7 +287,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 15,
     sectionId: "standards",
     type: "single",
-    prompt: "Comment facturez-vous habituellement vos lettres de mission de tenue ?",
+    prompt: "Comment le cabinet facture-t-il habituellement ses lettres de mission de tenue ?",
     description: "Modalité de facturation — pas la durée du contrat.",
     options: [
       { id: "monthly_12", label: "Mensualisé (12 acomptes)" },
@@ -301,7 +301,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 16,
     sectionId: "conditions",
     type: "single",
-    prompt: "Comment traitez-vous le social / paie pour vos dossiers {clientSegment} ?",
+    prompt: "Comment le cabinet traite-t-il le social / paie pour ses dossiers {clientSegment} ?",
     options: [
       { id: "included", label: "Inclus dans la lettre de mission de tenue" },
       { id: "separate", label: "Facturé à part (forfait annuel social / paie)" },
@@ -314,7 +314,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "conditions",
     type: "slider",
     prompt:
-      "Quel montant minimum d'honoraires facturez-vous pour une mission ponctuelle (création, reprise hors tenue, conseil) ?",
+      "Quel montant minimum d'honoraires le cabinet facture-t-il pour une mission ponctuelle (création, reprise hors tenue, conseil) ?",
     description: "Création, reprise, conseil — hors lettre de mission annuelle.",
     slider: COMPTABLE_SLIDER_CONFIGS.ponctuelMin,
     optOutLabel: "Toujours packagée dans la lettre annuelle",
@@ -325,7 +325,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     sectionId: "conditions",
     type: "multi",
     maxSelections: 3,
-    prompt: "Quels types de missions {clientSegment} souhaitez-vous recevoir en priorité ?",
+    prompt: "Quels types de missions {clientSegment} le cabinet souhaite-t-il recevoir en priorité ?",
     description: "Sélectionnez jusqu'à 3 réponses.",
     options: [
       { id: "one_off", label: "Missions ponctuelles (création, conseil)" },
@@ -344,7 +344,7 @@ export const COMPTABLE_SALES_QUESTIONS: SalesQuestion[] = [
     number: 19,
     sectionId: "conditions",
     type: "slider",
-    prompt: "Quelle capacité souhaitez-vous réserver aux missions {clientSegment} provenant d'Hercule ?",
+    prompt: "Quelle capacité le cabinet réserve-t-il aux missions {clientSegment} provenant d'Hercule ?",
     description:
       "Quelle capacité agenda le cabinet réserve aux demandes inbound Foundation pour traiter {cause} ? Ces créneaux sont ceux du cabinet, pas une file d'apporteur.",
     slider: COMPTABLE_SLIDER_CONFIGS.herculeCapacity,

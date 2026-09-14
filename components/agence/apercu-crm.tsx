@@ -81,7 +81,7 @@ const marieConversation = [
   },
   {
     sender: "Système",
-    text: "Demande en cours d'attribution — audit de compatibilité agence en cours",
+    text: "Flux en cours de routage — audit système en cours",
     variant: "system" as const,
   },
 ]

@@ -1,8 +1,8 @@
 import { buildBleedTrack, interpolateBleed } from "@/lib/admin/funnels/sales-bleed-track";
 import {
   formatObjectifsWizardInterpolation,
-  resolveW8BrakeLabel,
-  resolveW8CriteriaLabels,
+  resolveUrgencyLabel,
+  resolveW13WhyLabel,
   resolveW8MethodLabel,
 } from "@/lib/admin/funnels/sales-objectifs-wizard";
 import type { PitchInterpolationContext } from "@/lib/admin/funnels/sales-pitch-wizard";
@@ -63,7 +63,7 @@ export const PITCH_P1_METHOD_CONTEXT_TEMPLATE =
   "Le cabinet déclare {method} depuis {year} — la suite pose une infrastructure qui ne dépend pas de ce canal.";
 
 export const PITCH_P1B_BRAKE_CALLOUT_TEMPLATE =
-  "Ce que vous avez identifié — {brake} — c'est précisément le type de friction que Foundation est conçu pour contourner.";
+  "Ce que le cabinet a identifié — {brake} — c'est précisément le type de friction que Foundation est conçu pour contourner.";
 
 export const PITCH_P3_DIFFERENTIATION_LEAD_TEMPLATE =
   "La plupart des cabinets qui passent cette session ont déjà testé {method}. Hercule est branché sur les flux légaux (Pappers, INSEE) — pas sur la pub Facebook. L'enjeu ici : traiter {cause}, pas empiler une campagne de plus.";
@@ -81,7 +81,7 @@ export const PITCH_P8_ACTIVATION_HOOK_TEMPLATE =
   "Sans activation, {inaction} continue de coûter {gap} — à J+60 le système doit tourner, pas rester en projet.";
 
 export const PITCH_CGV_GUARANTEE_HOOK_TEMPLATE =
-  "La garantie 5 000 € sur 90 jours couvre l'écart {gap} que vous avez chiffré — honoraires déclarés : {honoraires}.";
+  "La garantie 5 000 € sur 90 jours couvre l'écart {gap} que le cabinet a chiffré — honoraires déclarés : {honoraires}.";
 
 export const PITCH_P9_INBOUND_HOOK_TEMPLATE =
   "Chaque demande inbound liée à {cause} doit être traitée sous 24 h — sinon la capture se vide vers un confrère.";
@@ -130,7 +130,7 @@ function interpolatePitchChoiceLabel(
   const bleed = buildBleedTrack(merged, audience);
   const withObjectifs = formatObjectifsWizardInterpolation(template, merged, audience);
   const withBleed = interpolateBleed(withObjectifs, bleed);
-  const firstName = context?.prospectFirstName?.trim() || "vous";
+  const firstName = context?.prospectFirstName?.trim() || "le cabinet";
   return withBleed.replace(/\[Prénom\]/g, firstName);
 }
 
@@ -170,15 +170,15 @@ export function getPitchP2MissingRoleOptions(audience: Audience): PitchChoiceOpt
 }
 
 function shouldShowP11ReplaceMethod(values: SalesQualificationValues): boolean {
-  return values.w13 === "no" || Boolean(values.w8Brake);
+  return values.w13 === "no";
 }
 
 function shouldShowP11Urgency(values: SalesQualificationValues): boolean {
   return Boolean(values.w16) || values.w15 === "shortcut";
 }
 
-function shouldShowP11CriteriaFit(values: SalesQualificationValues): boolean {
-  return (values.w8Criteria?.length ?? 0) > 0;
+function shouldShowP11CriteriaFit(_values: SalesQualificationValues): boolean {
+  return false;
 }
 
 export function getPitchP11WhyOptions(
@@ -257,9 +257,9 @@ export function resolvePitchMethodLabel(values: SalesQualificationValues): strin
 }
 
 export function resolvePitchBrakeLabel(values: SalesQualificationValues): string {
-  return resolveW8BrakeLabel(values) || values.w13Why?.trim() || "le frein déclaré";
+  return resolveW13WhyLabel(values) || resolveUrgencyLabel(values) || "le frein déclaré";
 }
 
-export function resolvePitchCriteriaSummary(values: SalesQualificationValues): string {
-  return resolveW8CriteriaLabels(values) || "vos critères partenaire";
+export function resolvePitchCriteriaSummary(_values: SalesQualificationValues): string {
+  return "vos critères de décision";
 }

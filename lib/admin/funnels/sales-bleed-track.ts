@@ -16,7 +16,11 @@ import {
   formatGoal6m,
   formatGoalGap,
   resolveUrgencyLabel,
-  resolveW8BrakeLabel,
+  resolveW13WhyLabel,
+  resolveW16Label,
+  resolveW16OtherLabel,
+  resolveW16ResaleSubLabel,
+  resolveW16StrategicSubLabel,
   resolveW8MethodLabel,
   resolveW10Year,
   resolveW18Label,
@@ -125,11 +129,15 @@ function buildCabinetBleedTrack(
 
   if (usesObjectifsWizard(values)) {
     const methodLabel = resolveW8MethodLabel(values);
-    const structuredBrake = resolveW8BrakeLabel(values);
     const methodBrake =
-      structuredBrake ||
-      values.w13Why?.trim() ||
-      values.w16Detail?.trim() ||
+      resolveW13WhyLabel(values) ||
+      (values.w16 === "strategic"
+        ? resolveW16StrategicSubLabel(values)
+        : values.w16 === "resale"
+          ? resolveW16ResaleSubLabel(values)
+          : values.w16 === "other"
+            ? resolveW16OtherLabel(values)
+            : resolveW16Label(values)) ||
       resolveUrgencyLabel(values);
     const inactionLabel = resolveW18Label(values);
     const numericGap = formatGoalGap(values, audience);
@@ -144,7 +152,12 @@ function buildCabinetBleedTrack(
       methodBrake,
       goalType: values.w1 ?? "",
       cause: methodBrake,
-      causeId: values.w8Brake ?? values.w16 ?? values.w13 ?? "",
+      causeId:
+        values.w16StrategicSub ??
+        values.w16ResaleSub ??
+        values.w16 ??
+        values.w13 ??
+        "",
       primaryBrake: methodBrake,
       gap: inactionLabel ? `${numericGap} · ${inactionLabel}` : numericGap,
       gapId: values.w18 ?? values.w14 ?? "",

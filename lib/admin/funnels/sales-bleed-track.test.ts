@@ -21,7 +21,7 @@ function main() {
   assert.match(bleed.primaryMethod ?? "", /Bouche-à-oreille/);
   assert.match(bleed.methodBrake ?? bleed.cause, /scalable|relations/i);
   assert.match(bleed.gap ?? "", /\+3 dossiers/);
-  assert.match(bleed.gap ?? "", /significatif|Écart significatif/i);
+  assert.match(bleed.gap ?? "", /ne pas stagner|philosophie/i);
   assert.equal(bleed.honorairesAnnual, SALES_TEST_SESSION_COMPTABLE_QUALIFICATION.q13);
   assert.equal(bleed.reservedCapacity, SALES_TEST_SESSION_COMPTABLE_QUALIFICATION.q20);
 

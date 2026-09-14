@@ -35,6 +35,12 @@ const OBJ_ASSOCIE_Q =
 const OBJ_REFLECHIR_Q =
   "Je souhaite y réfléchir — est-ce que je peux attendre ?";
 
+const OBJ_CABINET_ASSOCIE_Q =
+  "Le cabinet doit en parler à un associé avant de décider. Comment faire ?";
+
+const OBJ_CABINET_REFLECHIR_Q =
+  "Le cabinet souhaite y réfléchir — peut-il attendre ?";
+
 const HONORAIRES_FORMATTER = new Intl.NumberFormat("fr-FR");
 
 function formatHonoraires(bleed: BleedTrack): string {
@@ -110,17 +116,17 @@ function buildPreventiveObjections(
     },
     {
       id: "obj-associe",
-      q: OBJ_ASSOCIE_Q,
+      q: OBJ_CABINET_ASSOCIE_Q,
       a: interpolateDashboardCopy(
-        `C'est une démarche courante — et c'est précisément l'objet de cet audit.\n\nVous avez posé un cadre clair : **{honoraires} €/an** d'honoraires et un écart de **{gap}**. Hercule Horizon inclut une garantie contractuelle de **5 000 €** de récurrent cumulé sur **90 jours**.\n\nVotre associé ne valide pas une campagne marketing : il valide un **actif de zone** avec un ROI contractuel.\n\nNous activons l'onboarding ensemble ; le double du contrat part pour validation associé dans la foulée.`,
+        `C'est une démarche courante — et c'est précisément l'objet de cet audit.\n\nLe cabinet a posé un cadre clair : **{honoraires} €/an** d'honoraires et un écart de **{gap}**. Hercule Horizon inclut une garantie contractuelle de **5 000 €** de récurrent cumulé sur **90 jours**.\n\nL'associé ne valide pas une campagne marketing : il valide un **actif de zone** avec un ROI contractuel.\n\nL'onboarding démarre ensemble ; le double du contrat part pour validation associé dans la foulée.`,
         context,
       ),
     },
     {
       id: "obj-reflechir",
-      q: OBJ_REFLECHIR_Q,
+      q: OBJ_CABINET_REFLECHIR_Q,
       a: interpolateDashboardCopy(
-        `**Bien sûr.** Prendre du recul à ce stade est normal — surtout sur un investissement structurant.\n\nPour avancer sereinement, il peut être utile de préciser **sur quoi** porte la réflexion : le déploiement, le calendrier, l'associé, ou autre chose ?\n\nCe que nous avons cadré ensemble : le ${cabinetNoun} cherche à traiter **{cause}**, avec un écart estimé à **{gap}**. Foundation est conçu pour structurer cette dynamique sur la zone **{departement}**.\n\nCôté marché : **une licence par secteur**. D'autres cabinets passent un audit sur cette zone cette semaine. La première activation verrouille le secteur pour **12 mois** — ce n'est pas une pression commerciale, c'est le fonctionnement de l'exclusivité.\n\nCôté contrat : la garantie **5 000 € / 90 jours** limite l'exposition financière pendant la montée en charge.\n\nEn résumé : vous pouvez réfléchir — et nous pouvons aussi sécuriser la zone tant qu'elle est disponible, avec un cadre contractuel clair.`,
+        `**Bien sûr.** Prendre du recul à ce stade est normal — surtout sur un investissement structurant.\n\nPour avancer sereinement, il peut être utile de préciser **sur quoi** porte la réflexion : le déploiement, le calendrier, l'associé, ou autre chose ?\n\nCe que nous avons cadré ensemble : le ${cabinetNoun} cherche à traiter **{cause}**, avec un écart estimé à **{gap}**. Foundation est conçu pour structurer cette dynamique sur la zone **{departement}**.\n\nCôté marché : **une licence par secteur**. D'autres cabinets passent un audit sur cette zone cette semaine. La première activation verrouille le secteur pour **12 mois** — ce n'est pas une pression commerciale, c'est le fonctionnement de l'exclusivité.\n\nCôté contrat : la garantie **5 000 € / 90 jours** limite l'exposition financière pendant la montée en charge.\n\nEn résumé : le cabinet peut prendre le temps de réfléchir — et sécuriser la zone tant qu'elle est disponible, avec un cadre contractuel clair.`,
         context,
       ),
     },
@@ -178,18 +184,18 @@ const AGENCE_BASE_ITEMS: OnboardingFaqItem[] = [
 const COMPTABLE_BASE_ITEMS: OnboardingFaqItem[] = [
   {
     id: "cp-contrat-facture",
-    q: "Quel contrat signé-je et comment suis-je facturé ?",
-    a: "Votre souscription est régie par les [Conditions générales de vente Hercule Comptable](/cvg/comptable). Vous recevrez une facture au nom de votre cabinet (raison sociale, SIRET et adresse indiqués lors de l'onboarding). Montant selon la formule choisie.",
+    q: "Quel contrat signe le cabinet et comment est-il facturé ?",
+    a: "La souscription du cabinet est régie par les [Conditions générales de vente Hercule Comptable](/cvg/comptable). Une facture est émise au nom du cabinet (raison sociale, SIRET et adresse indiqués lors de l'onboarding). Montant selon la formule choisie.",
   },
   {
     id: "cp-accompagnement",
-    q: "Qui m'accompagne une fois le lancement effectué ?",
-    a: "Hercule Comptable est porté par le groupement Hercule, dirigé par Evan, développeur senior. Evan vous accompagne lors de l'activation (Calendly Pro, Zoom Pro, premières missions) et reste disponible pour les points techniques. L'équipe intervient sur la qualification des demandes TPE et le suivi opérationnel.",
+    q: "Qui accompagne le cabinet une fois le lancement effectué ?",
+    a: "Hercule Comptable est porté par le groupement Hercule, dirigé par Evan, développeur senior. Evan accompagne le cabinet lors de l'activation (Calendly Pro, Zoom Pro, premières missions) et reste disponible pour les points techniques. L'équipe intervient sur la qualification des demandes TPE et le suivi opérationnel.",
   },
   {
     id: "cp-mise-en-relation",
     q: "Comment fonctionne la mise en relation ?",
-    a: "Hercule vous attribue des missions TPE qualifiées (tenue, fiscal, obligations administratives). Attribution exclusive au cabinet. 0 % de commission sur vos honoraires signés.",
+    a: "Hercule attribue au cabinet des missions TPE qualifiées (tenue, fiscal, obligations administratives). Attribution exclusive. 0 % de commission sur les honoraires signés.",
   },
   {
     id: "cp-paiement",
@@ -198,27 +204,27 @@ const COMPTABLE_BASE_ITEMS: OnboardingFaqItem[] = [
   },
   {
     id: "cp-delai-rdv",
-    q: "Combien de temps avant mon premier RDV dirigeant TPE ?",
+    q: "Combien de temps avant le premier RDV dirigeant TPE ?",
     a: "Le déploiement Foundation prend 60 jours. Aucun premier RDV n'est promis pendant cette phase — le système est mis en place pour capter les flux inbound au nom du cabinet.",
   },
   {
     id: "cp-retard-livraison",
-    q: "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
-    a: "Selon nos [Conditions générales de vente Hercule Comptable](/cvg/comptable) (article 9), vous nous accordez un délai supplémentaire de **7 jours** en cas de retard de livraison. Au-delà, nous vous invitons à nous écrire à contact@hercule.dev et à ne pas initier de dispute sur Stripe sans nous avoir contactés au préalable. Un règlement à l'amiable pourra être envisagé au cas par cas.",
+    q: "Que se passe-t-il si le compte de rendez-vous n'est pas livré dans les délais ?",
+    a: "Selon nos [Conditions générales de vente Hercule Comptable](/cvg/comptable) (article 9), le cabinet accorde un délai supplémentaire de **7 jours** en cas de retard de livraison. Au-delà, écrire à contact@hercule.dev et ne pas initier de dispute sur Stripe sans contact préalable. Un règlement à l'amiable pourra être envisagé au cas par cas.",
   },
   {
     id: "cp-retractation",
-    q: "Ai-je un délai de rétractation ?",
-    a: "Oui. Après souscription, vous disposez de 4 jours calendaires pour vous rétracter par email à contact@hercule.dev, tant que votre service n'a pas encore démarré (Activation non effectuée). Vous pouvez renoncer à ce délai lors de l'onboarding ou à tout moment depuis votre dashboard pour lancer la recherche immédiatement. Passé ce délai ou après Activation, la commande est ferme. Détail : [CGV Comptable §8](/cvg/comptable).",
+    q: "Le cabinet dispose-t-il d'un délai de rétractation ?",
+    a: "Oui. Après souscription, le cabinet dispose de 4 jours calendaires pour se rétracter par email à contact@hercule.dev, tant que le service n'a pas encore démarré (Activation non effectuée). Le cabinet peut renoncer à ce délai lors de l'onboarding ou à tout moment depuis le dashboard pour lancer la recherche immédiatement. Passé ce délai ou après Activation, la commande est ferme. Détail : [CGV Comptable §8](/cvg/comptable).",
   },
   {
     id: "cp-garantie-mrr",
-    q: "Y a-t-il une garantie si je ne signe pas de lettres de mission ?",
+    q: "Y a-t-il une garantie si le cabinet ne signe pas de lettres de mission ?",
     a: "Hercule Horizon inclut une garantie contractuelle : 5 000 € de revenus récurrents cumulés sur 90 jours d'activation. Si le palier n'est pas atteint, Hercule maintient l'infrastructure à ses frais jusqu'à l'objectif.",
   },
   {
     id: "cp-noshow",
-    q: "Mon prospect ne s'est pas présenté (no-show) — que se passe-t-il ?",
+    q: "Le dirigeant ne s'est pas présenté (no-show) — que se passe-t-il ?",
     a: "L'attribution n'est pas consommée. Remplacement planifié sous 14 jours ouvrés après signalement sous 48 h.",
   },
 ];
@@ -227,32 +233,32 @@ const CIF_BASE_ITEMS: OnboardingFaqItem[] = COMPTABLE_BASE_ITEMS.map((item) => {
   if (item.id === "cp-contrat-facture") {
     return {
       ...item,
-      a: "Votre souscription est régie par les [Conditions générales de vente Hercule CIF](/cvg/conseil-financier). Vous recevrez une facture au nom de votre cabinet (raison sociale, SIRET et adresse indiqués lors de l'onboarding). Montant selon la formule choisie.",
+      a: "La souscription du cabinet est régie par les [Conditions générales de vente Hercule CIF](/cvg/conseil-financier). Une facture est émise au nom du cabinet (raison sociale, SIRET et adresse indiqués lors de l'onboarding). Montant selon la formule choisie.",
     };
   }
   if (item.id === "cp-accompagnement") {
     return {
       ...item,
-      a: "Hercule CIF est porté par le groupement Hercule, dirigé par Evan, développeur senior. Evan vous accompagne lors de l'activation (Calendly Pro, Zoom Pro, premiers mandats) et reste disponible pour les points techniques. L'équipe intervient sur la qualification des demandes patrimoniales et le suivi opérationnel.",
+      a: "Hercule CIF est porté par le groupement Hercule, dirigé par Evan, développeur senior. Evan accompagne le cabinet lors de l'activation (Calendly Pro, Zoom Pro, premiers mandats) et reste disponible pour les points techniques. L'équipe intervient sur la qualification des demandes patrimoniales et le suivi opérationnel.",
     };
   }
   if (item.id === "cp-mise-en-relation") {
     return {
       ...item,
-      a: "Hercule vous attribue des mandats patrimoniaux qualifiés (optimisation fiscale, trésorerie, ingénierie patrimoniale). Attribution exclusive au cabinet. 0 % de commission sur vos honoraires signés.",
+      a: "Hercule attribue au cabinet des mandats patrimoniaux qualifiés (optimisation fiscale, trésorerie, ingénierie patrimoniale). Attribution exclusive. 0 % de commission sur les honoraires signés.",
     };
   }
   if (item.id === "cp-delai-rdv") {
     return {
       ...item,
-      q: "Combien de temps avant mon premier RDV dirigeant ?",
+      q: "Combien de temps avant le premier RDV dirigeant ?",
       a: "Le déploiement Foundation prend 60 jours. Aucun premier RDV n'est promis pendant cette phase — le système est mis en place pour capter les flux inbound au nom du cabinet.",
     };
   }
   if (item.id === "cp-garantie-mrr") {
     return {
       ...item,
-      q: "Y a-t-il une garantie si je ne signe pas de mandats ?",
+      q: "Y a-t-il une garantie si le cabinet ne signe pas de mandats ?",
       a: "Hercule Horizon inclut une garantie contractuelle : 5 000 € de revenus récurrents cumulés sur 90 jours d'activation. Si le palier n'est pas atteint, Hercule maintient l'infrastructure à ses frais jusqu'à l'objectif.",
     };
   }
@@ -313,7 +319,7 @@ const TIE_DOWN_AGENCE =
   "J'ai pris connaissance des [Conditions générales de vente](/cvg), je comprends que l'activation et le paiement (carte bancaire ou SEPA) se font **pendant cette session d'audit**, et je souhaite lancer le service — pas « pour voir ».";
 
 const TIE_DOWN_CABINET =
-  "J'ai pris connaissance des [Conditions générales de vente](/cvg/comptable), je comprends que l'activation et le paiement se font **pendant cette session d'audit**, pour **déployer Hercule Foundation sur la zone du cabinet**.";
+  "Le cabinet confirme avoir pris connaissance des [Conditions générales de vente](/cvg/comptable), comprend que l'activation et le paiement se font **pendant cette session d'audit**, pour **déployer Hercule Foundation sur la zone du cabinet**.";
 
 const TIE_DOWN_CIF = TIE_DOWN_CABINET.replace("/cvg/comptable)", "/cvg/conseil-financier)");
 
@@ -423,10 +429,25 @@ export function getClosingCommitOptions(): ClosingCommitOption[] {
     },
     {
       level: "hesitate",
-      label: "J'ai encore une question",
-      description: "J'aimerais un dernier point d'éclaircissement avant de payer.",
+      label: "J'hésite encore",
+      description: "J'aimerais reprendre ce qui me convient et ce qui me retient avant de décider.",
     },
   ];
+}
+
+export type FinalCommitCta = {
+  label: string;
+  description: string;
+};
+
+export function getFinalCommitCta(context?: OnboardingFaqContext): FinalCommitCta {
+  return {
+    label: "Prêt pour démarrer",
+    description: interpolateDashboardCopy(
+      "L'écart **{gap}** et la zone **{departement}** ne restent pas en attente indéfiniment — l'infrastructure se déploie dès l'activation.",
+      context,
+    ),
+  };
 }
 
 export function isClosingFitWhyValid(why: string): boolean {
@@ -515,7 +536,7 @@ export function getHesitationSlides(
       id: "produit",
       title: "Le produit",
       body: interpolateDashboardCopy(
-        "Foundation structure la réponse à **{cause}** : événement légal, capture au nom du cabinet, le dirigeant initie. Ce n'est pas du SEO. Si le cadre vous convient, nous pouvons préciser ensemble ce qui reste à valider.",
+        "Foundation structure la réponse à **{cause}** : événement légal, capture au nom du cabinet, le dirigeant initie. Ce n'est pas du SEO. Si le cadre convient au cabinet, nous pouvons préciser ensemble ce qui reste à valider.",
         context,
       ),
     },
@@ -529,7 +550,7 @@ export function getHesitationSlides(
       id: "risque",
       title: "Le risque",
       body: interpolateDashboardCopy(
-        "Horizon 2 399 €/mois. Garantie **5 000 €** sur **90 jours** (7 197 € investis → 60 000 € année 1). Maths vs écart {gap} et honoraires {honoraires}. L'associé valide un ROI d'actif, pas une campagne.",
+        "Horizon 2 399 €/mois. Garantie **5 000 €** sur **90 jours** (7 197 € investis → 60 000 € année 1). Calcul vs écart {gap} et honoraires {honoraires}. L'associé valide un ROI d'actif, pas une campagne.",
         context,
       ),
     },

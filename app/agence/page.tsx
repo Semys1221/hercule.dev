@@ -7,9 +7,9 @@ import {
 } from "@/lib/agence/demandes-repo"
 
 export const metadata: Metadata = {
-  title: "Apports d'affaires agences web — Hercule",
+  title: "Acquérir le système Hercule — Agences web",
   description:
-    "Nous trouvons les bonnes agences pour nos demandes de clients — apports d'affaires qualifiés et audit de compatibilité.",
+    "Déployez le système inbound Hercule pour votre agence : capture brandée, qualification et routage exclusif des flux B2B.",
 }
 
 export const revalidate = 60

@@ -94,13 +94,11 @@ const COMPTABLE_COPY: MarketingAudienceCopy = {
         title: "Zone exclusive",
         description:
           "Verrou 1 cabinet / zone. Les signaux légaux de votre territoire alimentent votre pipeline — pas celui d'un confrère.",
-        },
       },
       {
         title: "Capture brandée",
         description:
           "Identité, landing et tracking au nom du cabinet. Le dirigeant initie le contact — vous ne chassez pas.",
-        },
       },
       {
         title: "Déploiement 60 jours",

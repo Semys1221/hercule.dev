@@ -31,6 +31,15 @@ const BANNED_PATTERNS: RegExp[] = [
   /["'`]Funnels["'`]/,
   /["'`]Pitch["'`]/,
   /\bPasser au closing\b/,
+  /\bPitch verrouillé\b/i,
+  /\bTerminer le pitch\b/i,
+  /\bpitch en preview\b/i,
+  /\bwizard Pitch\b/i,
+  /\bpost-pitch\b/i,
+  /\bfin de pitch\b/i,
+  /\bwizard pitch\b/i,
+  /\bLe pitch complet\b/i,
+  /["'`]Discovery["'`]/,
 ];
 
 const EXCLUDED_FILES = new Set([

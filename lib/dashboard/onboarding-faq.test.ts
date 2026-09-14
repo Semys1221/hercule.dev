@@ -5,6 +5,7 @@ import type { BleedTrack } from "@/lib/admin/funnels/sales-bleed-track";
 import {
   getClosingCommitOptions,
   getClosingFitOptions,
+  getFinalCommitCta,
   getHesitationSlides,
   getIntentionOptions,
   getOnboardingFaq,
@@ -61,7 +62,7 @@ assert.match(
 );
 assert.match(
   comptable.items.find((item) => item.id === "obj-reflechir")?.q ?? "",
-  /Je souhaite y réfléchir/,
+  /Le cabinet souhaite y réfléchir/,
 );
 assert.match(
   comptable.items.find((item) => item.id === "obj-reflechir")?.a ?? "",
@@ -109,7 +110,12 @@ assert.match(fitOptions[0].label, /me convient/);
 
 const commitOptions = getClosingCommitOptions();
 assert.equal(commitOptions.length, 2);
-assert.match(commitOptions[1].label, /encore une question/);
+assert.match(commitOptions[1].label, /J'hésite encore/);
+
+const finalCta = getFinalCommitCta(mockContext);
+assert.match(finalCta.label, /Prêt pour démarrer/);
+assert.match(finalCta.description, /12 mandats\/an/);
+assert.match(finalCta.description, /Rhône \(69\)/);
 
 assert.equal(isClosingFitWhyValid("x".repeat(19)), false);
 assert.equal(isClosingFitWhyValid("x".repeat(20)), true);

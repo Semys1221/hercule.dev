@@ -102,6 +102,7 @@ export type DashboardData = {
   retraction?: DashboardRetraction | null;
   milestones?: TimelineStep[];
   bleedContext?: DashboardBleedContext;
+  closing?: DashboardClosingState;
 };
 
 export type OnboardingIntentionLevel = "strong" | "moderate" | "hesitate";
@@ -117,5 +118,8 @@ export type DashboardClosingState = {
   serviceFits: boolean | null;
   serviceWhy: string;
   friction: string;
+  /** @deprecated Use recoveryCycle + finalCommitAccepted */
   recoveryCompleted: boolean;
+  recoveryCycle: number;
+  finalCommitAccepted: boolean;
 };

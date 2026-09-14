@@ -1,11 +1,12 @@
 import Link from "next/link"
 
 import { FooterLegalBar } from "@/components/site/footer-legal-bar"
+import { MARKETING_FOOTER_TAGLINE, MARKETING_NAV_PIPELINE } from "@/lib/site/marketing-copy"
 
 const footerLinks: Record<string, { label: string; href: string }[]> = {
   Offre: [
     { label: "Méthode", href: "#methode" },
-    { label: "Missions", href: "#missions" },
+    { label: MARKETING_NAV_PIPELINE, href: "#missions" },
     { label: "Garanties", href: "#garanties" },
     { label: "FAQ", href: "/faq" },
     { label: "Contact", href: "#contact" },
@@ -27,7 +28,7 @@ export function Footer() {
           <div>
             <p className="text-white font-semibold text-lg mb-2">Hercule</p>
             <p className="text-zinc-500 text-sm max-w-xs">
-              Mise en relation B2B entre PME et cabinets d&apos;expertise comptable.
+              {MARKETING_FOOTER_TAGLINE}
             </p>
           </div>
 

@@ -191,7 +191,7 @@ export const FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES = [
 ] as const;
 
 export const FOUNDATION_CALENDRIER_CLOSER_COPY =
-  "Le calendrier n'est pas une file de leads. C'est le déploiement Foundation sur la zone du cabinet. À J+60 le système est live. Si une demande arrive plus tôt, c'est du bonus — on ne le promet pas à l'écran.";
+  "Le calendrier correspond au déploiement Foundation sur la zone du cabinet, pas à une file de leads. À J+60 le système est opérationnel. Une demande antérieure reste possible, sans engagement affiché à l'écran.";
 
 export const FOUNDATION_ACTIVATION_CLOCKS = [
   {
@@ -209,7 +209,7 @@ export const FOUNDATION_ACTIVATION_CLOCKS = [
 ] as const;
 
 export const FOUNDATION_MARKETING_DEPT_HEADLINE =
-  "Les 2 premiers mois — on bâtit le département marketing du cabinet";
+  "Les deux premiers mois — construction du département marketing du cabinet";
 
 export const FOUNDATION_MARKETING_DEPT_BODY =
   "Pendant les 60 premiers jours, on ne promet pas encore de volume. On installe les fondations : verrou de zone, identité, landing, capture brandée et cartographie des flux légaux. C'est le département marketing que le cabinet n'a pas eu le temps de construire — pas une campagne opaque.";
@@ -246,7 +246,7 @@ export const FOUNDATION_FOUNDATION_BLOCKS: FoundationFoundationBlock[] = [
 ];
 
 export const FOUNDATION_FOUNDATION_CLOSER_COPY =
-  "Traite {cause} — sans ces fondations, toute acquisition reste de la location. SEO, pub, apporteurs : le cabinet paie sans construire d'actif.";
+  "Pour traiter {cause}, ces fondations sont nécessaires : sans elles, toute acquisition reste de la location. SEO, publicité, apporteurs — le cabinet paie sans construire d'actif.";
 
 export const FOUNDATION_ACTIVATION_HEADLINE = "Mois 3 — système live";
 
@@ -254,7 +254,7 @@ export const FOUNDATION_ACTIVATION_BODY =
   "À J+46 → J+60, la capture s'allume et les demandes routent vers l'inbox / l'agenda du cabinet. La fenêtre garantie 90 jours démarre à l'activation — le checkpoint MRR vient après le déploiement, pas avant.";
 
 export const FOUNDATION_ROI_ACK_LABEL =
-  "Le cabinet valide la maths ROI contractuelle (investissement 90 jours, garantie 5 000 €, valeur année 1).";
+  "Le cabinet valide la calcul ROI contractuelle (investissement 90 jours, garantie 5 000 €, valeur année 1).";
 
 export const FOUNDATION_ROI_DISPLAY = {
   horizonMonthlyEur: 2_399,
@@ -274,7 +274,7 @@ export function formatFoundationRoiScript(honorairesEur: number, cause: string):
 }
 
 export const FOUNDATION_INBOUND_SLA_RULE =
-  "Ces règles ne sont pas une affiliation. Toute demande inbound (audit / RDV conseil) qui arrive sur le cabinet est répondue sous 24 h. Sinon la capture de zone se vide vers un confrère, et la garantie se suspend. On fait équipe là-dessous.";
+  "Ces règles ne constituent pas une affiliation. Toute demande inbound (audit / RDV conseil) reçue par le cabinet doit être traitée sous 24 h. À défaut, la capture de zone est réorientée vers un confrère et la garantie est suspendue. Engagement mutuel sur ce cadre.";
 
 export const FOUNDATION_DASHBOARD_LIVE_STEP = "Système live — J+60 après activation";
 

@@ -3,6 +3,7 @@ import {
   interpolateClientSegment,
   type ClientSegment,
 } from "@/lib/admin/funnels/client-segment";
+import { SESSION_SECTION_SYSTEM_LABEL } from "@/lib/admin/funnels/ui-copy";
 import {
   isCabinetBuyerSalesAudience,
   isCifSalesAudience,
@@ -21,7 +22,7 @@ export type SalesFunnelSectionId =
   | "conditions";
 
 export const PITCH_WIZARD_SECTION_SUBTITLE =
-  "Présentation Hercule, cadre contractuel, le système en 3 piliers, ROI contractuel, puis validation de l'infrastructure — on conclut sur l'appel.";
+  "Présentation Hercule, cadre contractuel, système en trois piliers, ROI contractuel et choix d'infrastructure.";
 
 export type SalesFunnelSection = {
   id: SalesFunnelSectionId;
@@ -96,7 +97,7 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
     label: "Avant-propos",
     title: "Avant-propos",
     duration: "Durée : 20min",
-    subtitle: "Avant d'entrer dans le fond, posons le cadre de cet échange.",
+    subtitle: "Cadre de l'audit de compatibilité avant la qualification détaillée.",
     hasIntroCheckbox: true,
   },
   {
@@ -108,8 +109,8 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   },
   {
     id: "pitch",
-    label: "Pitch",
-    title: "Pitch",
+    label: SESSION_SECTION_SYSTEM_LABEL,
+    title: SESSION_SECTION_SYSTEM_LABEL,
     subtitle: PITCH_WIZARD_SECTION_SUBTITLE,
   },
   {
@@ -144,8 +145,8 @@ const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   },
   {
     id: "pitch",
-    label: "Pitch",
-    title: "Pitch",
+    label: SESSION_SECTION_SYSTEM_LABEL,
+    title: SESSION_SECTION_SYSTEM_LABEL,
     subtitle: PITCH_WIZARD_SECTION_SUBTITLE,
   },
   {
@@ -167,16 +168,16 @@ export const PRESENTATION_CONFIRMATION_TEXT =
   "J'ai pris connaissance de la présentation de la société Hercule et des conditions générales de vente.";
 
 const CIF_INTRO_CONFIRMATION_TEXT =
-  "Je confirme fournir des réponses honnêtes et précises afin que les mandats {clientSegment} qui me sont proposés correspondent au mieux à mon expertise, ma capacité et mes conditions de collaboration.";
+  "Le cabinet confirme fournir des réponses honnêtes et précises afin que les mandats {clientSegment} proposés correspondent au mieux à son périmètre, sa capacité et ses conditions de collaboration.";
 
 const COMPTABLE_INTRO_CONFIRMATION_TEXT =
-  "Je confirme fournir des réponses honnêtes et précises afin que les missions {clientSegment} qui me sont proposées correspondent au mieux à mon expertise, ma capacité et mes conditions de collaboration.";
+  "Le cabinet confirme fournir des réponses honnêtes et précises afin que les missions {clientSegment} proposées correspondent au mieux à son périmètre, sa capacité et ses conditions de collaboration.";
 
 const COMPTABLE_PRESENTATION_CONFIRMATION_TEXT =
-  "J'ai pris connaissance de la présentation de Hercule Comptable et des conditions générales de vente.";
+  "Le cabinet confirme avoir pris connaissance de la présentation de Hercule Comptable et des conditions générales de vente.";
 
 const CIF_PRESENTATION_CONFIRMATION_TEXT =
-  "J'ai pris connaissance de la présentation de Hercule CIF et des conditions générales de vente.";
+  "Le cabinet confirme avoir pris connaissance de la présentation de Hercule CIF et des conditions générales de vente.";
 
 export function getIntroConfirmationText(
   audience: Audience = "agence",

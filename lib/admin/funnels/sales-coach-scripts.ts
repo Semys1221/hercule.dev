@@ -156,7 +156,7 @@ function buildHistoriqueEmpathyIntro(context: SalesCoachContext): string {
   const noun = cabinetNoun(context.audience);
 
   return interpolateClientSegment(
-    `${context.firstName}, on arrive sur la fiabilité de production — ce n'est pas une compétition ni un audit blâmant. On veut comprendre comment le cabinet gère la charge sur les ${noun} {clientSegment}, pour calibrer les demandes inbound qu'on vous enverra. Soyez transparents : c'est ce qui protège la relation cabinet-dirigeant.`,
+    `${context.firstName}, on arrive sur la fiabilité de production — ce n'est pas une compétition ni un audit blâmant. On veut comprendre comment le cabinet gère la charge sur les ${noun} {clientSegment}, pour calibrer les demandes inbound qui lui seront transmises. La transparence sur le périmètre déclaré protège la relation cabinet-dirigeant.`,
     context.clientSegment,
   );
 }

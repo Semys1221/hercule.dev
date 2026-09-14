@@ -43,6 +43,10 @@ import {
   resolveWizardQuestionCopy,
   WizardQuestionField,
 } from "./sales-objectifs-wizard";
+import {
+  SESSION_DEV_SYSTEM_PREVIEW_BODY,
+  SESSION_DEV_SYSTEM_PREVIEW_TITLE,
+} from "@/lib/admin/funnels/ui-copy";
 import { getSalesQuestionsForSection } from "./sales-questions";
 import type { SalesFunnelSectionId } from "./sales-funnel-sections";
 
@@ -67,6 +71,7 @@ type SalesCabinetLiveTrackProps = {
   selectedBooking?: EnrichedCalendlyBooking | null;
   onRefreshLead?: () => Promise<void>;
   onOpenSidebar?: () => void;
+  sidebarOpen?: boolean;
   onActiveSectionChange?: (section: LiveTrackSection) => void;
 };
 
@@ -80,6 +85,7 @@ export function SalesCabinetLiveTrack({
   selectedBooking = null,
   onRefreshLead,
   onOpenSidebar,
+  sidebarOpen = false,
   onActiveSectionChange,
 }: SalesCabinetLiveTrackProps) {
   const watchedPartial = useWatch({ control: form.control });
@@ -149,8 +155,38 @@ export function SalesCabinetLiveTrack({
   }, [stepIndex, trackStepIds.length]);
 
   useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "fc74f8" },
+      body: JSON.stringify({
+        sessionId: "fc74f8",
+        runId: "post-fix",
+        hypothesisId: "H2-H4",
+        location: "sales-cabinet-live-track.tsx:step-effect",
+        message: "live track step + chart presence",
+        data: {
+          currentStepId,
+          chartPresence: currentStepId ? getImmersiveChartPresence(currentStepId) : "off",
+          w1: values.w1,
+          w2: values.w2,
+          w7: values.w7,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     onActiveSectionChange?.(currentSection);
-  }, [currentSection, onActiveSectionChange]);
+  }, [
+    activeQualificationId,
+    currentSection,
+    currentStepId,
+    onActiveSectionChange,
+    safeStepIndex,
+    values.w1,
+    values.w2,
+    values.w7,
+  ]);
 
   useEffect(() => {
     if (activeQualificationId === "pitch") {
@@ -375,10 +411,9 @@ export function SalesCabinetLiveTrack({
   const footer =
     developerModeEnabled && !usesPitchWizard(values) ? (
       <Alert>
-        <AlertTitle>Mode DEV — pitch en preview</AlertTitle>
+        <AlertTitle>{SESSION_DEV_SYSTEM_PREVIEW_TITLE}</AlertTitle>
         <AlertDescription className="text-sm leading-relaxed">
-          Accès complet au wizard sans carte diagnostic validée. Chargez le preset Test pour
-          l&apos;interpolation cause / écart / objectifs.
+          {SESSION_DEV_SYSTEM_PREVIEW_BODY}
         </AlertDescription>
       </Alert>
     ) : null;
@@ -403,6 +438,7 @@ export function SalesCabinetLiveTrack({
       onPrev={handlePrev}
       onNext={handleNext}
       onOpenSidebar={onOpenSidebar}
+      sidebarOpen={sidebarOpen}
       layout={chartPresence === "moment" ? "split" : "stacked"}
       contentClassName={pitchContentSlide ? "items-start" : undefined}
     >

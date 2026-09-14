@@ -1,24 +1,27 @@
 "use client";
 
 import { PanelLeft } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type UseFormReturn, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Progress } from "@/components/ui/progress";
-import { B3_YEAR_MAP } from "@/lib/admin/funnels/sales-bleed-tunnel";
+import { B3_YEAR_MAP, getB7Options } from "@/lib/admin/funnels/sales-bleed-tunnel";
 import {
   formatObjectifsWizardInterpolation,
   getDefaultWizardChartMetric,
+  getW3Prompt,
   getW4Prompt,
+  getW5Prompt,
   getW6Prompt,
   getW7Prompt,
-  getW8BrakeOptions,
   getWizardChartMetricForQuestion,
   getWizardFormFieldName,
+  getWizardRedirectStepId,
   getWizardSliderConfig,
   getVisibleWizardQuestionIds,
+  hasWizardExchangeWhyRedirect,
   isWizardFieldComplete,
   isWizardStepVisible,
   type WizardChartMetricId,
@@ -40,7 +43,6 @@ import {
   SalesMultiChoiceField,
   SalesSingleChoiceField,
   SalesSliderField,
-  SalesTextField,
 } from "./sales-question-fields";
 import { getSalesQuestionsForSection } from "./sales-questions";
 import type { SalesQuestion } from "./sales-questions";
@@ -79,6 +81,7 @@ export function SalesObjectifsWizard({
 
   const [stepIndex, setStepIndex] = useState(0);
   const [touchedSliders, setTouchedSliders] = useState<Set<string>>(() => new Set());
+  const previousW1 = useRef(values.w1);
   const [chartMetricId, setChartMetricId] = useState<WizardChartMetricId>(() =>
     getDefaultWizardChartMetric(values),
   );
@@ -126,20 +129,34 @@ export function SalesObjectifsWizard({
   }, [currentQuestion?.id]);
 
   useEffect(() => {
-    if (values.w8Tried === "none" && values.w8TriedWho) {
-      form.setValue("w8TriedWho", "", { shouldDirty: true, shouldValidate: true });
-    }
-  }, [form, values.w8Tried, values.w8TriedWho]);
-
-  useEffect(() => {
-    if (!values.w8 || !values.w8Brake) {
+    if (previousW1.current === values.w1) {
       return;
     }
-    const validIds = getW8BrakeOptions(values).map((option) => option.id);
-    if (!validIds.includes(values.w8Brake)) {
-      form.setValue("w8Brake", undefined, { shouldDirty: true, shouldValidate: true });
+    previousW1.current = values.w1;
+    form.setValue("wExchangeWhy13", undefined, { shouldDirty: true, shouldValidate: true });
+    form.setValue("wExchangeWhy14", undefined, { shouldDirty: true, shouldValidate: true });
+    form.setValue("wExchangeWhy15", undefined, { shouldDirty: true, shouldValidate: true });
+    form.setValue("wExchangeWhy18", undefined, { shouldDirty: true, shouldValidate: true });
+  }, [form, values.w1]);
+
+  const goToNextStep = () => {
+    if (!currentQuestion) {
+      return;
     }
-  }, [form, values.w8, values.w8Brake]);
+
+    const redirectStepId = getWizardRedirectStepId(values);
+    if (redirectStepId && hasWizardExchangeWhyRedirect(values)) {
+      const redirectIndex = visibleQuestions.findIndex(
+        (question) => question.id === redirectStepId,
+      );
+      if (redirectIndex >= 0) {
+        setStepIndex(redirectIndex);
+        return;
+      }
+    }
+
+    setStepIndex((index) => Math.min(index + 1, visibleQuestions.length - 1));
+  };
 
   const resolvedQuestion = currentQuestion
     ? resolveWizardQuestionCopy(currentQuestion, values, audience)
@@ -202,9 +219,7 @@ export function SalesObjectifsWizard({
             <Button
               type="button"
               disabled={!canGoNext || safeStepIndex >= visibleQuestions.length - 1}
-              onClick={() =>
-                setStepIndex((index) => Math.min(index + 1, visibleQuestions.length - 1))
-              }
+              onClick={goToNextStep}
             >
               Suivant
             </Button>
@@ -261,9 +276,7 @@ export function SalesObjectifsWizard({
         <Button
           type="button"
           disabled={!canGoNext || safeStepIndex >= visibleQuestions.length - 1}
-          onClick={() =>
-            setStepIndex((index) => Math.min(index + 1, visibleQuestions.length - 1))
-          }
+          onClick={goToNextStep}
         >
           Suivant
         </Button>
@@ -277,8 +290,16 @@ export function resolveWizardQuestionCopy(
   values: SalesQualificationValues,
   audience: Audience,
 ): SalesQuestion {
+  if (question.id === "w3") {
+    return { ...question, prompt: getW3Prompt(audience) };
+  }
+
   if (question.id === "w4") {
     return { ...question, prompt: getW4Prompt(values, audience) };
+  }
+
+  if (question.id === "w5") {
+    return { ...question, prompt: getW5Prompt(audience) };
   }
 
   if (question.id === "w6") {
@@ -289,13 +310,10 @@ export function resolveWizardQuestionCopy(
     return { ...question, prompt: getW7Prompt() };
   }
 
-  if (question.id === "w8Brake" && question.type === "single") {
-    const interpolate = (text: string) =>
-      formatObjectifsWizardInterpolation(text, values, audience);
+  if (question.id === "w13Why" && question.type === "single") {
     return {
       ...question,
-      prompt: interpolate(question.prompt),
-      options: getW8BrakeOptions(values).map((option) => ({ ...option })),
+      options: getB7Options(values.w8 ?? "").map((option) => ({ ...option })),
     };
   }
 
@@ -469,38 +487,11 @@ export function WizardQuestionField({
     );
   }
 
-  if (question.type === "text") {
-    const fieldName = getWizardFormFieldName(question.id);
-    if (!fieldName) {
-      return null;
-    }
-
-    return (
-      <FormField
-        control={form.control}
-        name={fieldName}
-        render={({ field }) => (
-          <FormItem>
-            <SalesTextField
-              question={question}
-              value={typeof field.value === "string" ? field.value : ""}
-              onChange={field.onChange}
-            />
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    );
-  }
-
   if (question.type === "acknowledgment") {
-    const fieldName =
-      question.id === "w9" ? "w9Acknowledged" : "w17Acknowledged";
-
     return (
       <FormField
         control={form.control}
-        name={fieldName}
+        name="w17Acknowledged"
         render={({ field }) => (
           <FormItem>
             <SalesAcknowledgmentField

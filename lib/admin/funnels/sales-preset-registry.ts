@@ -90,31 +90,31 @@ const COMPTABLE_AGENCY_PRESETS: Record<AgencyPresetId, AgencyPreset> = {
     ...AGENCY_PRESETS.serial,
     tagline: "Volume élevé, processus documentés, honoraires accessibles.",
     description:
-      "Votre cabinet dispose d'une forte capacité de production, avec des processus documentés et un volume de dossiers TPE élevé. Les missions les plus adaptées sont des reprises de tenue récurrentes, à honoraires cadrés et démarrage rapide.",
+      "Le cabinet dispose d'une forte capacité de production, avec des processus documentés et un volume de dossiers TPE élevé. Les missions les plus adaptées sont des reprises de tenue récurrentes, à honoraires cadrés et démarrage rapide.",
   },
   growth: {
     ...AGENCY_PRESETS.growth,
     tagline: "Fiscal et social récurrents, dossiers TPE stables.",
     description:
-      "Votre cabinet est orienté missions récurrentes — tenue, fiscal, social. Les demandes ciblées sont des dirigeants TPE avec un besoin de continuité et un horizon de mission clair.",
+      "Le cabinet est orienté missions récurrentes — tenue, fiscal, social. Les demandes ciblées sont des dirigeants TPE avec un besoin de continuité et un horizon de mission clair.",
   },
   architect: {
     ...AGENCY_PRESETS.architect,
     tagline: "Outils digitaux, intégrations et dossiers structurés.",
     description:
-      "Votre cabinet est outillé. Portails clients, automatisation ou intégrations : vous structurez la relation dirigeant-cabinet. Les missions ciblées demandent un interlocuteur capable de cadrer un périmètre technique.",
+      "Le cabinet est outillé. Portails clients, automatisation ou intégrations : il structure la relation dirigeant-cabinet. Les missions ciblées demandent un interlocuteur capable de cadrer un périmètre technique.",
   },
   specialist: {
     ...AGENCY_PRESETS.specialist,
     tagline: "Expertise étroite, dossiers complexes, honoraires premium.",
     description:
-      "Votre cabinet est spécialisé. Peu de verticales, un haut niveau d'exigence, des honoraires plus élevés. Les missions ciblées sont des dossiers à forte composante réglementaire ou sectorielle.",
+      "Le cabinet est spécialisé. Peu de verticales, un haut niveau d'exigence, des honoraires plus élevés. Les missions ciblées sont des dossiers à forte composante réglementaire ou sectorielle.",
   },
   premium: {
     ...AGENCY_PRESETS.premium,
     tagline: "Faible volume, haute valeur, structures exigeantes.",
     description:
-      "Votre cabinet est à faible volume et honoraires élevés. Vous sélectionnez vos mandats. Les missions ciblées sont des PME / ETI avec un besoin stratégique et un ticket à la hauteur.",
+      "Le cabinet est à faible volume et honoraires élevés. Il sélectionne ses mandats. Les missions ciblées sont des PME / ETI avec un besoin stratégique et un ticket à la hauteur.",
   },
 };
 
@@ -123,31 +123,31 @@ const CIF_AGENCY_PRESETS: Record<AgencyPresetId, AgencyPreset> = {
     ...AGENCY_PRESETS.serial,
     tagline: "Volume élevé, processus documentés, honoraires accessibles.",
     description:
-      "Votre cabinet dispose d'une forte capacité de conseil, avec des processus documentés et un volume de mandats élevé. Les missions les plus adaptées sont des mandats patrimoniaux récurrents, à honoraires cadrés et démarrage rapide.",
+      "Le cabinet dispose d'une forte capacité de conseil, avec des processus documentés et un volume de mandats élevé. Les missions les plus adaptées sont des mandats patrimoniaux récurrents, à honoraires cadrés et démarrage rapide.",
   },
   growth: {
     ...AGENCY_PRESETS.growth,
     tagline: "Patrimoine et trésorerie récurrents, mandats dirigeants stables.",
     description:
-      "Votre cabinet est orienté mandats récurrents — patrimoine, trésorerie, retraite. Les demandes ciblées sont des dirigeants PME avec un besoin de continuité et un horizon de mission clair.",
+      "Le cabinet est orienté mandats récurrents — patrimoine, trésorerie, retraite. Les demandes ciblées sont des dirigeants PME avec un besoin de continuité et un horizon de mission clair.",
   },
   architect: {
     ...AGENCY_PRESETS.architect,
     tagline: "Ingénierie patrimoniale, transmission et structuration.",
     description:
-      "Votre cabinet est orienté ingénierie. Transmission, crédit, fiscal patrimonial : vous structurez la relation dirigeant-cabinet. Les missions ciblées demandent un interlocuteur capable de cadrer un périmètre complexe.",
+      "Le cabinet est orienté ingénierie. Transmission, crédit, fiscal patrimonial : il structure la relation dirigeant-cabinet. Les missions ciblées demandent un interlocuteur capable de cadrer un périmètre complexe.",
   },
   specialist: {
     ...AGENCY_PRESETS.specialist,
     tagline: "Expertise étroite, mandats complexes, honoraires premium.",
     description:
-      "Votre cabinet est spécialisé. Peu de verticales, un haut niveau d'exigence, des honoraires plus élevés. Les missions ciblées sont des dossiers à forte composante d'ingénierie ou sectorielle.",
+      "Le cabinet est spécialisé. Peu de verticales, un haut niveau d'exigence, des honoraires plus élevés. Les missions ciblées sont des mandats à forte composante d'ingénierie ou sectorielle.",
   },
   premium: {
     ...AGENCY_PRESETS.premium,
     tagline: "Faible volume, haute valeur, encours élevés.",
     description:
-      "Votre cabinet est à faible volume et honoraires élevés. Vous sélectionnez vos mandats. Les missions ciblées sont des dirigeants PME structurés avec un besoin stratégique et un encours à la hauteur.",
+      "Le cabinet est à faible volume et honoraires élevés. Il sélectionne ses mandats. Les missions ciblées sont des dirigeants PME structurés avec un besoin stratégique et un encours à la hauteur.",
   },
 };
 

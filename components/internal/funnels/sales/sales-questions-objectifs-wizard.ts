@@ -1,15 +1,22 @@
-import { B3_YEAR_MAP, B5_METHOD_OPTIONS, B8_GAP_OPTIONS } from "@/lib/admin/funnels/sales-bleed-tunnel";
+import { B3_YEAR_MAP, B5_METHOD_OPTIONS } from "@/lib/admin/funnels/sales-bleed-tunnel";
 import {
-  W8_CRITERIA_OPTIONS,
-  W8_TRIED_OPTIONS,
-  W11_METHOD_DURATION_OPTIONS,
   W14_TIMELINE_OPTIONS,
   W15_WAIT_OPTIONS,
+  W16_OTHER_OPTIONS,
+  W16_RESALE_SUB_OPTIONS,
+  W16_STRATEGIC_SUB_OPTIONS,
   W16_URGENCY_OPTIONS,
   W17_SYNTHESIS_TEMPLATE,
-  W9_TRAP_TEMPLATE,
+  W18_ACCEPTANCE_OPTIONS,
+  W_EXCHANGE_WHY_OPTIONS,
+  W_EXCHANGE_WHY_PROMPT,
   WIZARD_DIAGNOSTIC_MIRROR_TEMPLATE,
   WIZARD_OBJECTIFS_SUBTITLE,
+  getW3Prompt,
+  getW4Prompt,
+  getW5Prompt,
+  getW6Prompt,
+  getW7Prompt,
 } from "@/lib/admin/funnels/sales-objectifs-wizard";
 import type { Audience } from "@/lib/admin/navigation";
 import { isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
@@ -31,7 +38,7 @@ const W1_OPTIONS = [
   },
 ] as const;
 
-function mapAudienceOptions<T extends { labelCif: string; labelComptable: string }>(
+function mapAudienceOptions<T extends { id: string; labelCif: string; labelComptable: string }>(
   options: readonly T[],
   audience: Audience,
 ): Array<{ id: string; label: string }> {
@@ -42,6 +49,22 @@ function mapAudienceOptions<T extends { labelCif: string; labelComptable: string
   }));
 }
 
+function buildExchangeWhyQuestion(
+  id: "wExchangeWhy13" | "wExchangeWhy14" | "wExchangeWhy15" | "wExchangeWhy18",
+  number: number,
+): SalesQuestion {
+  return {
+    id,
+    number,
+    sectionId: "objectifs",
+    type: "single",
+    prompt: W_EXCHANGE_WHY_PROMPT,
+    coachCue:
+      "Réponse déclarative — base pour quantifier l'écart entre objectif et situation actuelle.",
+    options: W_EXCHANGE_WHY_OPTIONS.map((option) => ({ ...option })),
+  };
+}
+
 export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[] {
   const isCif = isCifSalesAudience(audience);
   return [
@@ -50,8 +73,8 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 1,
       sectionId: "objectifs",
       type: "single",
-      prompt: "Quel est votre objectif ?",
-      coachCue: "Noté — on chiffre tout à l'écran sur cette base.",
+      prompt: "Quel est l'objectif du cabinet ?",
+      coachCue: "L'objectif sélectionné structure la projection affichée à l'écran.",
       options: mapAudienceOptions(W1_OPTIONS, audience),
     },
     {
@@ -67,7 +90,7 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 3,
       sectionId: "objectifs",
       type: "slider",
-      prompt: isCif ? "Quelle est l'encours ?" : "Quel est le chiffre d'affaires annuel ?",
+      prompt: getW3Prompt(audience),
       slider: isCif
         ? { min: 1_000_000, max: 500_000_000, step: 1_000_000, unit: "eur", defaultValue: 10_000_000 }
         : { min: 50_000, max: 5_000_000, step: 10_000, unit: "eur", defaultValue: 300_000 },
@@ -77,9 +100,7 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 4,
       sectionId: "objectifs",
       type: "slider",
-      prompt: isCif
-        ? "Quel est le nombre de transformations qui vous conviennent par mois ?"
-        : "Quel est le nombre de dossiers qui vous conviennent par mois ?",
+      prompt: getW4Prompt({ w1: "more_volume" }, audience),
       slider: { min: 0, max: 20, step: 1, unit: "count", defaultValue: 2 },
     },
     {
@@ -87,11 +108,9 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 5,
       sectionId: "objectifs",
       type: "slider",
-      prompt: isCif
-        ? "Vous souhaiteriez dans 6 mois être à quelle encours ?"
-        : "Vous souhaiteriez dans 6 mois être à quel chiffre d'affaires annuel ?",
+      prompt: getW5Prompt(audience),
       coachCue:
-        "Pensez marge et occupation du cabinet — pas seulement le chiffre affiché.",
+        "Honoraires cibles en tenant compte de la marge et de l'occupation du cabinet, pas du chiffre d'affaires seul.",
       slider: isCif
         ? { min: 1_000_000, max: 500_000_000, step: 1_000_000, unit: "eur", defaultValue: 15_000_000 }
         : { min: 50_000, max: 5_000_000, step: 10_000, unit: "eur", defaultValue: 500_000 },
@@ -101,10 +120,10 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 6,
       sectionId: "objectifs",
       type: "slider",
-      prompt: isCif
-        ? "Vous souhaiteriez effectuer combien de transformations qui vous conviennent par mois ?"
-        : "Vous souhaiteriez effectuer combien de dossiers qui vous conviennent par mois ?",
-      coachCue: "Chaque mandat / dossier en plus doit être rentable pour le cabinet.",
+      prompt: getW6Prompt(audience),
+      coachCue: isCif
+        ? "Chaque mandat en plus doit être rentable pour le cabinet."
+        : "Chaque dossier en plus doit être rentable pour le cabinet.",
       slider: { min: 0, max: 20, step: 1, unit: "count", defaultValue: 4 },
     },
     {
@@ -112,7 +131,7 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 7,
       sectionId: "objectifs",
       type: "slider",
-      prompt: "Vous souhaiteriez être à combien de clients dans 6 mois ?",
+      prompt: getW7Prompt(),
       slider: { min: 0, max: 500, step: 1, unit: "count", defaultValue: 80 },
     },
     {
@@ -120,58 +139,17 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       number: 8,
       sectionId: "objectifs",
       type: "single",
-      prompt: "Quelle est votre méthode actuelle d'acquisition ?",
+      prompt: "Quelle est la méthode d'acquisition du cabinet ?",
       options: B5_METHOD_OPTIONS.map((option) => ({ ...option })),
     },
     {
-      id: "w8Tried",
-      number: 9,
-      sectionId: "objectifs",
-      type: "single",
-      prompt: "Avez-vous déjà exploré d'autres solutions pour combler cet écart ?",
-      options: W8_TRIED_OPTIONS.map((option) => ({ ...option })),
-    },
-    {
-      id: "w8TriedWho",
-      number: 10,
-      sectionId: "objectifs",
-      type: "text",
-      prompt: "Qui ou quoi avez-vous regardé / testé ?",
-      placeholder: "Ex. agence SEO locale, plateforme d'apporteurs, réseau confrère…",
-    },
-    {
-      id: "w8Criteria",
-      number: 11,
-      sectionId: "objectifs",
-      type: "multi",
-      prompt: "Quelles sont les 3 qualités idéales d'un partenaire pour votre cabinet ?",
-      description: "Choisissez 1 à 3 critères.",
-      options: W8_CRITERIA_OPTIONS.map((option) => ({ ...option })),
-      maxSelections: 3,
-    },
-    {
-      id: "w8Brake",
-      number: 12,
-      sectionId: "objectifs",
-      type: "single",
-      prompt: "Qu'est-ce qui bride {method} pour le cabinet ?",
-      options: [],
-    },
-    {
-      id: "w9",
-      number: 9,
-      sectionId: "objectifs",
-      type: "acknowledgment",
-      prompt: "Constat",
-      trapTemplate: W9_TRAP_TEMPLATE,
-    },
-    {
       id: "w10",
-      number: 10,
+      number: 9,
       sectionId: "objectifs",
       type: "single",
-      prompt: "Votre cabinet est en exercice depuis quand ?",
-      coachCue: "Ça nous servira pour le diagnostic — pas un jugement.",
+      prompt: "Depuis quand le cabinet est-il en exercice ?",
+      coachCue:
+        "Ancienneté du cabinet — indicateur contextuel pour le diagnostic, sans valeur de jugement.",
       options: Object.keys(B3_YEAR_MAP).map((id) => ({
         id,
         label:
@@ -187,86 +165,100 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
       })),
     },
     {
-      id: "w11",
-      number: 11,
-      sectionId: "objectifs",
-      type: "single",
-      prompt: "Depuis quand utilisez-vous {method} ?",
-      options: W11_METHOD_DURATION_OPTIONS.map((option) => ({ ...option })),
-    },
-    {
       id: "w12",
-      number: 12,
+      number: 10,
       sectionId: "objectifs",
       type: "confirmation_mirror",
-      prompt: "Confirmez que votre objectif à 6 mois est :",
+      prompt: "L'objectif à 6 mois du cabinet est :",
       mirrorTemplate: "{goalSummary}",
       checkboxLabel: "Le cabinet confirme cet objectif à 6 mois.",
     },
     {
       id: "w13",
-      number: 13,
+      number: 11,
       sectionId: "objectifs",
       type: "single",
       prompt:
-        "Est-ce que vous considérez que {method} va vous permettre d'atteindre cet objectif en 6 mois ?",
+        "Le cabinet considère-t-il que {method} permettra d'atteindre cet objectif en 6 mois ?",
       options: [
         { id: "yes", label: "Oui" },
         { id: "no", label: "Non" },
       ],
     },
+    buildExchangeWhyQuestion("wExchangeWhy13", 12),
     {
       id: "w13Why",
-      number: 14,
+      number: 13,
       sectionId: "objectifs",
-      type: "text",
-      prompt: "Pourquoi ?",
-      description: "Minimum 10 caractères si la réponse précédente est « Non ».",
+      type: "single",
+      prompt: "Pourquoi {method} ne suffira pas en 6 mois ?",
+      options: [],
     },
     {
       id: "w14",
-      number: 15,
+      number: 14,
       sectionId: "objectifs",
       type: "single",
-      prompt: "En combien de temps pensez-vous que {method} y arriverait ?",
+      prompt: "En combien de temps le cabinet estime-t-il que {method} y parviendrait ?",
       options: W14_TIMELINE_OPTIONS.map((option) => ({ ...option })),
     },
+    buildExchangeWhyQuestion("wExchangeWhy14", 15),
     {
       id: "w15",
       number: 16,
       sectionId: "objectifs",
       type: "single",
-      prompt: "Souhaitez-vous attendre ?",
+      prompt: "Le cabinet peut-il attendre, ou souhaite-t-il accélérer ?",
       options: W15_WAIT_OPTIONS.map((option) => ({ ...option })),
     },
+    buildExchangeWhyQuestion("wExchangeWhy15", 17),
     {
       id: "w16",
-      number: 17,
+      number: 18,
       sectionId: "objectifs",
       type: "single",
-      prompt: "Pourquoi ne pouvez-vous pas attendre ?",
+      prompt: "Le cabinet a-t-il un impératif qui ne permet pas d'attendre ?",
       options: W16_URGENCY_OPTIONS.map((option) => ({ ...option })),
     },
     {
-      id: "w16Detail",
-      number: 18,
-      sectionId: "objectifs",
-      type: "text",
-      prompt: "Précisez l'urgence",
-    },
-    {
-      id: "w18",
+      id: "w16StrategicSub",
       number: 19,
       sectionId: "objectifs",
       type: "single",
-      prompt:
-        "Si dans 6 mois l'écart entre {goal6m} et {currentSnapshot} est le même, qu'est-ce que ça fait à la marge et à l'occupation du cabinet ?",
-      coachCue: "Pas de jugement — on cadrer le coût du statu quo.",
-      options: B8_GAP_OPTIONS.map((option) => ({ ...option })),
+      prompt: "Quel impératif stratégique pèse sur le cabinet ?",
+      options: W16_STRATEGIC_SUB_OPTIONS.map((option) => ({ ...option })),
     },
     {
-      id: "w17",
+      id: "w16ResaleSub",
       number: 20,
+      sectionId: "objectifs",
+      type: "single",
+      prompt: "Quel impératif lié à la revente du cabinet ?",
+      options: W16_RESALE_SUB_OPTIONS.map((option) => ({ ...option })),
+    },
+    {
+      id: "w16Detail",
+      number: 21,
+      sectionId: "objectifs",
+      type: "single",
+      prompt: "Quel autre impératif pèse sur le cabinet ?",
+      options: W16_OTHER_OPTIONS.map((option) => ({ ...option })),
+    },
+    {
+      id: "w18",
+      number: 22,
+      sectionId: "objectifs",
+      type: "single",
+      prompt:
+        "Si dans 6 mois l'écart entre l'objectif et la situation actuelle est le même, le cabinet le considère-t-il acceptable ?",
+      coachCue:
+        "Évalue le coût d'acceptation du statu quo si l'écart persiste à 6 mois.",
+      options: W18_ACCEPTANCE_OPTIONS.map((option) => ({ ...option })),
+    },
+    buildExchangeWhyQuestion("wExchangeWhy18", 23),
+    {
+      id: "w17",
+      number: 24,
       sectionId: "objectifs",
       type: "acknowledgment",
       prompt: "Synthèse",
@@ -275,7 +267,7 @@ export function getWizardObjectifsQuestions(audience: Audience): SalesQuestion[]
     },
     {
       id: "diagnostic_card",
-      number: 20,
+      number: 25,
       sectionId: "objectifs",
       type: "diagnostic_card",
       prompt: "Diagnostic signé",

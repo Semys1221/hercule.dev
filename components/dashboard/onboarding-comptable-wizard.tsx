@@ -6,9 +6,15 @@ import { Progress } from "@/components/ui/progress";
 import { DASHBOARD_DEV_SKIP_PAYMENT_ERROR } from "@/lib/admin/funnels/ui-copy";
 import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
 import {
+  RECOVERY_MAX_CYCLES,
   serviceFitsToBoolean,
   type RecoveryDiagnostic,
+  type RecoveryPitchAngle,
 } from "@/lib/dashboard/closing-recovery";
+import {
+  emptyDashboardClosingState,
+  parseDashboardClosing,
+} from "@/lib/dashboard/closing-state";
 import {
   getDashboardDeveloperModeEnabledServerSnapshot,
   getDashboardDeveloperModeEnabledSnapshot,
@@ -29,38 +35,47 @@ import { ComptableWizardStepView } from "./onboarding-comptable-wizard-step";
 
 const STEP_COUNT = 6;
 
+type CommitView = "initial" | "final";
+
 type OnboardingComptableWizardProps = {
   data: DashboardData;
   onRefresh?: () => void;
 };
 
-function emptyClosingState(): DashboardClosingState {
-  return {
-    fit: null,
-    fitWhy: "",
-    commit: null,
-    serviceFits: null,
-    serviceWhy: "",
-    friction: "",
-    recoveryCompleted: false,
-  };
+function resolveCommitView(closing: DashboardClosingState): CommitView {
+  if (closing.recoveryCycle >= RECOVERY_MAX_CYCLES && !closing.finalCommitAccepted) {
+    return "final";
+  }
+  return "initial";
+}
+
+function resolveStripeRevealed(closing: DashboardClosingState): boolean {
+  return closing.commit === "launch" || closing.finalCommitAccepted;
 }
 
 export function OnboardingComptableWizard({
   data,
   onRefresh,
 }: OnboardingComptableWizardProps) {
+  const initialClosing = parseDashboardClosing(data.closing);
+
   const [step, setStep] = useState(0);
   const [selectedOffer, setSelectedOffer] = useState<OfferTypeComptable>(
     OFFER_TYPES_COMPTABLE.monthly1499,
   );
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
-  const [closingFit, setClosingFit] = useState<ClosingFitLevel | null>(null);
-  const [fitWhy, setFitWhy] = useState("");
-  const [closingState, setClosingState] = useState<DashboardClosingState>(emptyClosingState);
-  const [commitLevel, setCommitLevel] = useState<ClosingCommitLevel | null>(null);
-  const [stripeRevealed, setStripeRevealed] = useState(false);
+  const [closingFit, setClosingFit] = useState<ClosingFitLevel | null>(
+    initialClosing.fit,
+  );
+  const [fitWhy, setFitWhy] = useState(initialClosing.fitWhy);
+  const [closingState, setClosingState] = useState<DashboardClosingState>(initialClosing);
+  const [commitLevel, setCommitLevel] = useState<ClosingCommitLevel | null>(
+    initialClosing.commit,
+  );
+  const [commitView, setCommitView] = useState<CommitView>(resolveCommitView(initialClosing));
+  const [stripeRevealed, setStripeRevealed] = useState(resolveStripeRevealed(initialClosing));
   const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryAngle, setRecoveryAngle] = useState<RecoveryPitchAngle>(1);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
   const [skipLoading, setSkipLoading] = useState(false);
@@ -96,7 +111,7 @@ export function OnboardingComptableWizard({
 
   const persistClosing = useCallback(
     async (partial: Partial<DashboardClosingState>, tieDown?: boolean) => {
-      let nextClosing = emptyClosingState();
+      let nextClosing = emptyDashboardClosingState();
       setClosingState((current) => {
         nextClosing = { ...current, ...partial };
         return nextClosing;
@@ -174,34 +189,46 @@ export function OnboardingComptableWizard({
         return;
       }
 
-      if (closingState.recoveryCompleted) {
-        setStripeRevealed(true);
+      if (closingState.recoveryCycle >= RECOVERY_MAX_CYCLES) {
+        setCommitView("final");
         return;
       }
 
+      setRecoveryAngle((closingState.recoveryCycle + 1) as RecoveryPitchAngle);
       setShowRecovery(true);
     },
-    [closingState.recoveryCompleted, persistClosing],
+    [closingState.recoveryCycle, persistClosing],
   );
 
   const handleRecoveryComplete = useCallback(
     (diagnostic: RecoveryDiagnostic) => {
+      const nextCycle = closingState.recoveryCycle + 1;
       setShowRecovery(false);
-      setStripeRevealed(true);
+      setCommitLevel(null);
+
       void persistClosing({
         serviceFits: serviceFitsToBoolean(diagnostic.serviceFits),
         serviceWhy: diagnostic.serviceWhy.trim(),
         friction: diagnostic.friction.trim(),
-        recoveryCompleted: true,
+        recoveryCycle: nextCycle,
       });
+
+      if (nextCycle >= RECOVERY_MAX_CYCLES) {
+        setCommitView("final");
+        return;
+      }
+
+      setCommitView("initial");
     },
-    [persistClosing],
+    [closingState.recoveryCycle, persistClosing],
   );
 
-  const handleSkipToPayment = useCallback(() => {
-    setShowRecovery(false);
+  const handleFinalCommit = useCallback(() => {
     setStripeRevealed(true);
-    void persistClosing({ recoveryCompleted: true });
+    void persistClosing({
+      finalCommitAccepted: true,
+      recoveryCompleted: true,
+    });
   }, [persistClosing]);
 
   const simulatePayment = useCallback(async () => {
@@ -268,7 +295,9 @@ export function OnboardingComptableWizard({
             closingFit={closingFit}
             fitWhy={fitWhy}
             commitLevel={commitLevel}
+            commitView={commitView}
             stripeRevealed={stripeRevealed}
+            recoveryAngle={recoveryAngle}
             checkoutClientSecret={checkoutClientSecret}
             checkoutPreloadError={checkoutPreloadError}
             showRecovery={showRecovery}
@@ -279,7 +308,7 @@ export function OnboardingComptableWizard({
             onProceedFromPricing={goNext}
             onCommitSelect={handleCommitSelect}
             onRecoveryComplete={handleRecoveryComplete}
-            onSkipToPayment={handleSkipToPayment}
+            onFinalCommit={handleFinalCommit}
           />
 
           <ComptableWizardControls

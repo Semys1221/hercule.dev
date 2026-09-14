@@ -3,8 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 
 import type { OfferTypeComptable } from "@/lib/commercial/constants";
+import type { RecoveryDiagnostic, RecoveryPitchAngle } from "@/lib/dashboard/closing-recovery";
 import type { ClosingCommitLevel, ClosingFitLevel } from "@/lib/dashboard/onboarding-faq";
-import type { RecoveryDiagnostic } from "@/lib/dashboard/closing-recovery";
 import type { DashboardData } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
@@ -13,9 +13,12 @@ import { StepClosingRecovery } from "./steps/step-closing-recovery";
 import { StepDashboardPreviewComptable } from "./steps/step-dashboard-preview-comptable";
 import { StepEmbeddedCheckoutComptable } from "./steps/step-embedded-checkout-comptable";
 import { StepFaqTieDown } from "./steps/step-faq-tie-down";
+import { StepFinalCommit } from "./steps/step-final-commit";
 import { StepPaymentCommit } from "./steps/step-payment-commit";
 import { StepPricingCardComptable } from "./steps/step-pricing-card-comptable";
 import { StepScreenShare } from "./steps/step-screen-share";
+
+type CommitView = "initial" | "final";
 
 type ComptableWizardStepViewProps = {
   step: number;
@@ -25,7 +28,9 @@ type ComptableWizardStepViewProps = {
   closingFit: ClosingFitLevel | null;
   fitWhy: string;
   commitLevel: ClosingCommitLevel | null;
+  commitView: CommitView;
   stripeRevealed: boolean;
+  recoveryAngle: RecoveryPitchAngle;
   checkoutClientSecret: string | null;
   checkoutPreloadError: string | null;
   showRecovery: boolean;
@@ -36,7 +41,7 @@ type ComptableWizardStepViewProps = {
   onProceedFromPricing: () => void;
   onCommitSelect: (level: ClosingCommitLevel) => void;
   onRecoveryComplete: (diagnostic: RecoveryDiagnostic) => void;
-  onSkipToPayment: () => void;
+  onFinalCommit: () => void;
 };
 
 export function ComptableWizardStepView({
@@ -47,7 +52,9 @@ export function ComptableWizardStepView({
   closingFit,
   fitWhy,
   commitLevel,
+  commitView,
   stripeRevealed,
+  recoveryAngle,
   checkoutClientSecret,
   checkoutPreloadError,
   showRecovery,
@@ -58,7 +65,7 @@ export function ComptableWizardStepView({
   onProceedFromPricing,
   onCommitSelect,
   onRecoveryComplete,
-  onSkipToPayment,
+  onFinalCommit,
 }: ComptableWizardStepViewProps) {
   const isCheckoutStep = step === 5;
   const audience = data.audience === "cif" ? "cif" : "comptable";
@@ -110,9 +117,16 @@ export function ComptableWizardStepView({
             ) : null}
             {step === 5 ? (
               <div className="flex flex-col gap-6">
-                {!stripeRevealed ? (
+                {!stripeRevealed && commitView === "initial" ? (
                   <StepPaymentCommit value={commitLevel} onChange={onCommitSelect} />
-                ) : (
+                ) : null}
+                {!stripeRevealed && commitView === "final" ? (
+                  <StepFinalCommit
+                    bleedContext={data.bleedContext}
+                    onConfirm={onFinalCommit}
+                  />
+                ) : null}
+                {stripeRevealed ? (
                   <StepEmbeddedCheckoutComptable
                     slug={data.slug}
                     audience={audience}
@@ -121,7 +135,7 @@ export function ComptableWizardStepView({
                     clientSecret={checkoutClientSecret}
                     preloadError={checkoutPreloadError}
                   />
-                )}
+                ) : null}
               </div>
             ) : null}
           </motion.div>
@@ -130,9 +144,9 @@ export function ComptableWizardStepView({
 
       <StepClosingRecovery
         open={showRecovery}
+        angle={recoveryAngle}
         bleedContext={data.bleedContext}
         onComplete={onRecoveryComplete}
-        onSkipToPayment={onSkipToPayment}
       />
     </>
   );

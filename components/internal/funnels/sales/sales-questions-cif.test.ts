@@ -28,8 +28,8 @@ function main() {
   assert.match(q21?.prompt ?? "", /banque privée ou un CGP/);
 
   const sections = getSalesFunnelSections("cif");
-  const standards = sections.find((section) => section.id === "standards");
-  assert.match(standards?.subtitle ?? "", /banque privée ou d'un CGP/);
+  assert.ok(sections.some((section) => section.id === "objectifs"));
+  assert.ok(sections.some((section) => section.id === "pitch"));
   assert.ok(!/expert-comptable|tenue|social \/ paie/i.test(JSON.stringify(sections)));
 
   console.log("OK components/internal/funnels/sales/sales-questions-cif.test.ts");

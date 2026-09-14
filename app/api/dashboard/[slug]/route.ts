@@ -22,10 +22,8 @@ import {
 } from "@/lib/dashboard/onboarding-complete";
 import { buildComptableNotPaidMilestones } from "@/lib/dashboard/comptable-not-paid-milestones";
 import { buildDashboardRetractionFields } from "@/lib/dashboard/retraction-fields";
+import { mergeDashboardClosing, parseDashboardClosing } from "@/lib/dashboard/closing-state";
 import type {
-  ClosingCommitLevel,
-  ClosingFitLevel,
-  DashboardClosingState,
   DashboardFaqAudience,
   DashboardFaqItem,
   DashboardFormData,
@@ -50,50 +48,6 @@ type RouteParams = {
 function tieDownAcceptedFromProfile(profile: Record<string, unknown> | null): boolean {
   const closing = (profile?.dashboard ?? {}) as Record<string, unknown>;
   return Boolean(closing.tie_down_accepted);
-}
-
-function parseClosingFitLevel(value: unknown): ClosingFitLevel | null {
-  if (value === "fits" || value === "partial" || value === "mismatch") {
-    return value;
-  }
-  return null;
-}
-
-function parseClosingCommitLevel(value: unknown): ClosingCommitLevel | null {
-  if (value === "launch" || value === "hesitate") {
-    return value;
-  }
-  return null;
-}
-
-function mergeDashboardClosing(
-  existing: unknown,
-  patch: Record<string, unknown>,
-): DashboardClosingState {
-  const prev = (existing ?? {}) as Partial<DashboardClosingState>;
-  const fit = parseClosingFitLevel(patch.fit);
-  const commit = parseClosingCommitLevel(patch.commit);
-
-  return {
-    fit: fit ?? prev.fit ?? null,
-    fitWhy:
-      typeof patch.fitWhy === "string" ? patch.fitWhy : (prev.fitWhy ?? ""),
-    commit: commit ?? prev.commit ?? null,
-    serviceFits:
-      typeof patch.serviceFits === "boolean"
-        ? patch.serviceFits
-        : (prev.serviceFits ?? null),
-    serviceWhy:
-      typeof patch.serviceWhy === "string"
-        ? patch.serviceWhy
-        : (prev.serviceWhy ?? ""),
-    friction:
-      typeof patch.friction === "string" ? patch.friction : (prev.friction ?? ""),
-    recoveryCompleted:
-      patch.recoveryCompleted === true
-        ? true
-        : (prev.recoveryCompleted ?? false),
-  };
 }
 
 function timelineFromProfile(profile: Record<string, unknown> | null) {
@@ -206,6 +160,8 @@ export async function GET(_request: Request, { params }: RouteParams) {
               zone: resolvedForm.zone,
             })
           : undefined;
+      const dashboardMeta = (profile.dashboard ?? {}) as Record<string, unknown>;
+      const closing = parseDashboardClosing(dashboardMeta.closing);
 
       return NextResponse.json({
         slug: lead.slug,
@@ -229,6 +185,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         enterpriseBrief: null,
         retraction,
         bleedContext,
+        closing,
         comptable: {
           offerType: paymentDetails?.offerType ?? null,
           succeededAt: paymentDetails?.succeededAt ?? null,

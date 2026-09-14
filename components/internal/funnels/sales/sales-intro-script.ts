@@ -8,13 +8,13 @@ Et soyons honnêtes deux minutes : **on n'est plus en 2010 aujourd'hui. Le clien
 
 Chez Hercule, on protège nos clients et on protège nos agences. On valide la compatibilité à 100 % pour que vous encaissiez vos projets sereinement. On joue cartes sur table. Ça vous va ?`;
 
-export const COMPTABLE_DECLARATIVE_SCRIPT = `Toutes les questions restent du déclaratif : aujourd'hui je vais vous poser des questions, ce n'est pas une compétition, ni le but est de s'inventer des missions. C'est du déclaratif certes, mais si je vous attribue un dirigeant TPE en reprise de tenue comptable et que vous lui proposez un périmètre social alors que vous ne le pratiquez pas, c'est vous qui allez avoir un très mauvais retour client et une relation difficile à tenir.
+export const COMPTABLE_DECLARATIVE_SCRIPT = `Toutes les questions restent du déclaratif : aujourd'hui on recueille les informations du cabinet, ce n'est pas une compétition, ni le but est de s'inventer des missions. C'est du déclaratif certes, mais si le cabinet reçoit un dirigeant TPE en reprise de tenue comptable et propose un périmètre social hors de son périmètre déclaré, la relation dirigeant-cabinet devient difficile à tenir.
 
-Chez Hercule Comptable, on protège les dirigeants TPE et on protège nos cabinets partenaires. On valide la compatibilité à 100 % pour que vous honoriez vos missions sereinement — tenue, fiscal, obligations administratives. On joue cartes sur table. Ça vous va ?`;
+Chez Hercule Comptable, on protège les dirigeants TPE et on protège nos cabinets partenaires. On valide la compatibilité à 100 % pour que le cabinet honore ses missions sereinement — tenue, fiscal, obligations administratives. On joue cartes sur table. Le cabinet confirme-t-il ce cadre ?`;
 
-export const CIF_DECLARATIVE_SCRIPT = `Toutes les questions restent du déclaratif : aujourd'hui je vais vous poser des questions, ce n'est pas une compétition, ni le but est de s'inventer des missions. C'est du déclaratif certes, mais si je vous attribue un dirigeant PME en optimisation fiscale et trésorerie et que vous lui proposez un périmètre hors de vos agréments CIF, c'est vous qui allez avoir un très mauvais retour client et une relation difficile à tenir.
+export const CIF_DECLARATIVE_SCRIPT = `Toutes les questions restent du déclaratif : aujourd'hui on recueille les informations du cabinet, ce n'est pas une compétition, ni le but est de s'inventer des missions. C'est du déclaratif certes, mais si le cabinet reçoit un dirigeant PME en optimisation fiscale et trésorerie et propose un périmètre hors de ses agréments CIF, la relation dirigeant-cabinet devient difficile à tenir.
 
-Chez Hercule CIF, on protège les dirigeants PME et on protège nos cabinets partenaires. On valide la compatibilité à 100 % pour que vous honoriez vos mandats sereinement — patrimoine, trésorerie, transmission. On joue cartes sur table. Ça vous va ?`;
+Chez Hercule CIF, on protège les dirigeants PME et on protège nos cabinets partenaires. On valide la compatibilité à 100 % pour que le cabinet honore ses mandats sereinement — patrimoine, trésorerie, transmission. On joue cartes sur table. Le cabinet confirme-t-il ce cadre ?`;
 
 export function getSalesDeclarativeScript(audience: Audience = "agence"): string {
   if (audience === "cif") {
@@ -133,12 +133,12 @@ export function buildSalesIntroScript(
 
   if (audience === "cif") {
     const eligibilityLine = fields.budgetConfirmed
-      ? "Tu as confirmé les informations de ton formulaire Calendly — bande passante compatible avec nos mandats PME et positionnement aligné."
-      : "Nous avons noté les informations de votre formulaire Calendly concernant votre cabinet et votre zone d'intervention.";
+      ? "Le cabinet a confirmé les informations du formulaire Calendly — bande passante compatible avec les mandats PME et positionnement aligné."
+      : "Les informations du formulaire Calendly concernant le cabinet et la zone d'intervention ont été notées.";
 
-    return `${fields.firstName}, ravi de t'avoir en ligne — Evan d'Hercule CIF.
+    return `${fields.firstName}, le cabinet est en ligne — Evan d'Hercule CIF.
 
-Écoute, j'ai ton dossier d'audit de compatibilité sous les yeux. J'ai bien noté que vous étiez actuellement ${teamSize} et que vous vous positionnez principalement sur ${activities}.
+Le dossier d'audit de compatibilité indique ${teamSize} et un positionnement principalement sur ${activities}.
 
 Le fonctionnement : Hercule reçoit et qualifie des demandes d'indépendants et de dirigeants PME/TPE en recherche d'accompagnement patrimonial, fiscal et de trésorerie.
 
@@ -148,26 +148,26 @@ Notre rôle,
 - qualifier le besoin et la compatibilité cabinet-dirigeant
 - établir la relation
 
-Je fais en sorte que vous ne perdiez pas votre temps : tout ce que nous pourrons vous proposer restera dans la limite de vos expertises déclarées.
+L'objectif : ne proposer au cabinet que des mandats dans la limite du périmètre déclaré.
 
-Le but : maintenir ce niveau de qualité sur les cabinets que nous recommandons et sur les mandats patrimoniaux / trésorerie qui vous sont proposés.
+Le but : maintenir ce niveau de qualité sur les cabinets que nous recommandons et sur les mandats patrimoniaux / trésorerie éligibles pour le cabinet.
 
 La première étape formulaire Calendly : ${eligibilityLine}
 
 L'objectif c'est de continuer :
 
-- profil cabinet : vos honoraires, votre capacité, vos attentes
-- les mandats PME qui vous sont éligibles`;
+- profil cabinet : honoraires, capacité et attentes du cabinet
+- les mandats PME éligibles pour le cabinet`;
   }
 
   if (isComptableSalesAudience(audience)) {
     const eligibilityLine = fields.budgetConfirmed
-      ? "Tu as confirmé les informations de ton formulaire Calendly — bande passante compatible avec nos missions TPE et positionnement aligné."
-      : "Nous avons noté les informations de votre formulaire Calendly concernant votre cabinet et votre zone d'intervention.";
+      ? "Le cabinet a confirmé les informations du formulaire Calendly — bande passante compatible avec les missions TPE et positionnement aligné."
+      : "Les informations du formulaire Calendly concernant le cabinet et la zone d'intervention ont été notées.";
 
-    return `${fields.firstName}, ravi de t'avoir en ligne — Evan d'Hercule Comptable.
+    return `${fields.firstName}, le cabinet est en ligne — Evan d'Hercule Comptable.
 
-Écoute, j'ai ton dossier d'audit de compatibilité sous les yeux. J'ai bien noté que vous étiez actuellement ${teamSize} et que vous vous positionnez principalement sur ${activities}.
+Le dossier d'audit de compatibilité indique ${teamSize} et un positionnement principalement sur ${activities}.
 
 Le fonctionnement : Hercule reçoit et qualifie des demandes de dirigeants TPE en reprise comptable, fiscale et administrative.
 
@@ -177,16 +177,16 @@ Notre rôle,
 - qualifier le besoin et la compatibilité cabinet-TPE
 - établir la relation
 
-Je fais en sorte que vous ne perdiez pas votre temps : tout ce que nous pourrons vous proposer restera dans la limite de vos expertises déclarées.
+L'objectif : ne proposer au cabinet que des missions dans la limite du périmètre déclaré.
 
-Le but : maintenir ce niveau de qualité sur les cabinets que nous recommandons et sur les missions TPE qui vous sont proposées.
+Le but : maintenir ce niveau de qualité sur les cabinets que nous recommandons et sur les missions TPE éligibles pour le cabinet.
 
 La première étape formulaire Calendly : ${eligibilityLine}
 
 L'objectif c'est de continuer :
 
-- profil cabinet : vos honoraires, votre capacité, vos attentes
-- les missions TPE qui vous sont éligibles`;
+- profil cabinet : honoraires, capacité et attentes du cabinet
+- les missions TPE éligibles pour le cabinet`;
   }
 
   const budgetLine = fields.budgetConfirmed

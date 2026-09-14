@@ -104,11 +104,14 @@ import {
   mergeSalesQualificationValues,
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
-import { isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import { isCabinetBuyerSalesAudience, isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import {
-  FOUNDATION_PRICING_PLANS,
-  formatFoundationEuros,
-} from "@/lib/commercial/constants";
+  SESSION_DEV_SYSTEM_PREVIEW_BODY,
+  SESSION_DEV_SYSTEM_PREVIEW_TITLE,
+  SESSION_SECTION_SYSTEM_FINISH_CTA,
+  SESSION_SECTION_SYSTEM_LOCKED_BODY,
+  SESSION_SECTION_SYSTEM_LOCKED_TITLE,
+} from "@/lib/admin/funnels/ui-copy";
 import type { Audience } from "@/lib/admin/navigation";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
@@ -256,7 +259,7 @@ type SalesPitchWizardProps = {
 export function SalesPitchWizard({
   audience,
   form,
-  prospectFirstName = "vous",
+  prospectFirstName: prospectFirstNameProp,
   department,
   developerModeEnabled = false,
   selectedLead = null,
@@ -266,6 +269,9 @@ export function SalesPitchWizard({
   immersive = false,
   onOpenSidebar,
 }: SalesPitchWizardProps) {
+  const prospectFirstName =
+    prospectFirstNameProp ??
+    (isCabinetBuyerSalesAudience(audience) ? "le cabinet" : "vous");
   const watchedPartial = useWatch({ control: form.control });
   const values = mergeSalesQualificationValues(
     watchedPartial as Partial<SalesQualificationValues>,
@@ -313,13 +319,9 @@ export function SalesPitchWizard({
   if (!pitchUnlocked) {
     const lockedContent = (
       <Alert>
-        <AlertTitle>Pitch verrouillé</AlertTitle>
+        <AlertTitle>{SESSION_SECTION_SYSTEM_LOCKED_TITLE}</AlertTitle>
         <AlertDescription className="space-y-3 text-sm leading-relaxed">
-          <p>
-            Le pitch complet se débloque après validation de la carte diagnostic dans la section
-            Objectifs. Sans cette étape, les scripts d&apos;écart et de transition ne peuvent pas
-            être générés.
-          </p>
+          <p>{SESSION_SECTION_SYSTEM_LOCKED_BODY}</p>
           <p className="text-muted-foreground">
             Terminez le wizard Objectifs jusqu&apos;à « Valider la carte diagnostic », ou chargez le
             preset Test depuis Réglages de la session.
@@ -425,7 +427,7 @@ export function SalesPitchWizard({
       </Button>
       <Button type="button" disabled={!canGoNext} onClick={handleNext}>
         {isLastStep && currentSlide?.id === "pDashboard"
-          ? "Terminer le pitch"
+          ? SESSION_SECTION_SYSTEM_FINISH_CTA
           : isLastStep
             ? "Terminer"
             : "Suivant"}
@@ -454,10 +456,9 @@ export function SalesPitchWizard({
         {developerModeEnabled && !usesPitchWizard(values) ? (
           <div className="px-6 pt-12 md:px-10">
             <Alert>
-              <AlertTitle>Mode DEV — pitch en preview</AlertTitle>
+              <AlertTitle>{SESSION_DEV_SYSTEM_PREVIEW_TITLE}</AlertTitle>
               <AlertDescription className="text-sm leading-relaxed">
-                Accès complet au wizard sans carte diagnostic validée. Chargez le preset Test pour
-                l&apos;interpolation cause / écart / objectifs.
+                {SESSION_DEV_SYSTEM_PREVIEW_BODY}
               </AlertDescription>
             </Alert>
           </div>
@@ -479,10 +480,9 @@ export function SalesPitchWizard({
     <div className="flex flex-col gap-4">
       {developerModeEnabled && !usesPitchWizard(values) ? (
         <Alert>
-          <AlertTitle>Mode DEV — pitch en preview</AlertTitle>
+          <AlertTitle>{SESSION_DEV_SYSTEM_PREVIEW_TITLE}</AlertTitle>
           <AlertDescription className="text-sm leading-relaxed">
-            Accès complet au wizard sans carte diagnostic validée. Chargez le preset Test pour
-            l&apos;interpolation cause / écart / objectifs.
+            {SESSION_DEV_SYSTEM_PREVIEW_BODY}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -537,6 +537,9 @@ export function PitchSlideContent({
     formatPitchWizardInterpolation(template, values, audience, context);
   const bleed = buildBleedTrack(values, audience);
   const isCif = isCifSalesAudience(audience);
+  const buyInPrompt = isCabinetBuyerSalesAudience(audience)
+    ? "Ça fait sens pour le cabinet ? Le cadre est clair ?"
+    : "Ça fait sens ? Vous me suivez là-dessus ?";
 
   switch (slide.type) {
     case "transition":
@@ -760,9 +763,10 @@ export function PitchSlideContent({
                     onCheckedChange={(checked) => field.onChange(checked === true)}
                   />
                   <FieldLabel htmlFor="pCgvAccepted" className="text-sm font-normal leading-relaxed">
-                    J&apos;ai pris connaissance des {getPitchCgvLabel(audience)}, je comprends que
-                    l&apos;activation et le paiement se font pendant cette session d&apos;audit, et je
-                    souhaite déployer le Moteur Hercule Foundation sur la zone du cabinet.
+                    Le cabinet confirme avoir pris connaissance des {getPitchCgvLabel(audience)},
+                    comprend que l&apos;activation et le paiement se font pendant cette session
+                    d&apos;audit, et souhaite déployer le Moteur Hercule Foundation sur la zone du
+                    cabinet.
                   </FieldLabel>
                 </Field>
                 <FormMessage />
@@ -814,6 +818,7 @@ export function PitchSlideContent({
         <PitchBuyInSlide
           form={form}
           fieldName="p5BuyIn"
+          buyInPrompt={buyInPrompt}
           content={
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
@@ -833,6 +838,7 @@ export function PitchSlideContent({
         <PitchBuyInSlide
           form={form}
           fieldName="p7FoundationBuyIn"
+          buyInPrompt={buyInPrompt}
           content={
             <FoundationSlide
               audience={audience}
@@ -849,6 +855,7 @@ export function PitchSlideContent({
         <PitchBuyInSlide
           form={form}
           fieldName="p7BuyIn"
+          buyInPrompt={buyInPrompt}
           content={
             <ActivationSlide
               audience={audience}
@@ -879,7 +886,7 @@ export function PitchSlideContent({
               </p>
             </AlertDescription>
           </Alert>
-          <PitchBuyInSlide form={form} fieldName="p9BuyIn" content={null} />
+          <PitchBuyInSlide form={form} fieldName="p9BuyIn" buyInPrompt={buyInPrompt} content={null} />
         </div>
       );
 
@@ -964,7 +971,9 @@ export function PitchSlideContent({
                   question={pitchSingleQuestion(
                     "p11TempCheck",
                     interpolate(
-                      "D'après ce qu'on a couvert, est-ce que vous sentez que c'est la bonne solution pour atteindre {goal6m} et traiter {gap} ?",
+                      isCabinetBuyerSalesAudience(audience)
+                        ? "D'après ce qu'on a couvert, le cabinet considère-t-il que c'est la bonne solution pour atteindre {goal6m} et traiter {gap} ?"
+                        : "D'après ce qu'on a couvert, est-ce que vous sentez que c'est la bonne solution pour atteindre {goal6m} et traiter {gap} ?",
                     ),
                     [...PITCH_P11_TEMP_OPTIONS],
                   )}
@@ -1187,7 +1196,9 @@ function PillarContentSlide({
           ))}
         </div>
         <p className="text-sm text-muted-foreground">
-          {interpolate("Traite {cause} — le cabinet est visible quand la TPE entre dans le besoin, pas quand il chase.")}
+          {interpolate(
+            "Pour traiter {cause} — le cabinet est visible lorsque la TPE entre dans le besoin, et non par prospection active.",
+          )}
         </p>
       </div>
     );
@@ -1343,7 +1354,9 @@ function FoundationSlide({
       </div>
       <p className="text-sm text-muted-foreground">{interpolate(closer)}</p>
       <p className="text-sm text-muted-foreground">
-        {interpolate("Combler {gap} vers {goal6m} — d'abord les fondations, ensuite le volume.")}
+        {interpolate(
+          "Combler {gap} vers {goal6m} — fondations en priorité, puis montée en volume.",
+        )}
       </p>
     </div>
   );
@@ -1404,10 +1417,12 @@ function PitchBuyInSlide({
   form,
   fieldName,
   content,
+  buyInPrompt = "Ça fait sens ? Vous me suivez là-dessus ?",
 }: {
   form: UseFormReturn<SalesQualificationValues>;
   fieldName: "p5BuyIn" | "p7FoundationBuyIn" | "p7BuyIn" | "p9BuyIn";
   content: ReactNode;
+  buyInPrompt?: string;
 }) {
   return (
     <div className="space-y-4">
@@ -1418,11 +1433,7 @@ function PitchBuyInSlide({
         render={({ field }) => (
           <FormItem>
             <SalesSingleChoiceField
-              question={pitchSingleQuestion(
-                fieldName,
-                "Ça fait sens ? Vous me suivez là-dessus ?",
-                [...PITCH_BUYIN_OPTIONS],
-              )}
+              question={pitchSingleQuestion(fieldName, buyInPrompt, [...PITCH_BUYIN_OPTIONS])}
               value={field.value ?? ""}
               onChange={field.onChange}
             />

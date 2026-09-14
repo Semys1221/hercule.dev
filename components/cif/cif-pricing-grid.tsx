@@ -11,6 +11,7 @@ import {
   offerTypeForPlan,
 } from "@/lib/commercial/cif-pricing";
 import type { PricingPlan } from "@/lib/site/pricing-types";
+import { MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy";
 import { cn } from "@/lib/utils";
 
 export type CifPricingGridProps = {
@@ -71,7 +72,7 @@ export function CifPricingGrid({
   selectedOffer,
   ctaLabel = CIF_PRICING_CTA,
   ctaHref,
-  ctaLinkLabel = "Proposer mon cabinet",
+  ctaLinkLabel = MARKETING_PRIMARY_CTA,
   onSelectOffer,
   className,
 }: CifPricingGridProps) {

@@ -1,16 +1,12 @@
 "use client"
 
-import {
-  ArrowRight,
-  Check,
-} from "lucide-react"
+import { Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { CardContent, CardHeader } from "@/components/ui/card"
 import { DemandeFlipCard } from "@/components/demandes/demande-flip-card"
 import { DemandeMetaRow } from "@/components/demandes/demande-meta-row"
 import { getSecteurConfig } from "@/lib/agence/secteur-config"
 import { cn } from "@/lib/utils"
-import { CALENDLY_AGENCE_URL } from "@/lib/constants"
 import type { DemandeContrat, DemandeStatus, DemandeTeaser } from "@/lib/demandes-data"
 import { Card } from "@/components/ui/card"
 
@@ -25,20 +21,6 @@ function DemandeStatusBadge({ status }: { status: DemandeStatus }) {
   }
 
   return null
-}
-
-function PostulerActionBar() {
-  return (
-    <a
-      href={CALENDLY_AGENCE_URL}
-      className="mt-3 flex items-center justify-between border-t border-zinc-800/80 pt-3 outline-none focus-visible:ring-2 focus-visible:ring-white/20 rounded-sm"
-    >
-      <span className="text-sm font-medium text-zinc-400 transition-colors duration-150 group-hover/card:text-white">
-        Postuler
-      </span>
-      <ArrowRight className="size-4 text-zinc-500 transition-all duration-150 group-hover/card:translate-x-0.5 group-hover/card:text-white" />
-    </a>
-  )
 }
 
 export function CarteProjet({ demande }: { demande: DemandeContrat }) {
@@ -102,7 +84,6 @@ export function CarteProjet({ demande }: { demande: DemandeContrat }) {
                 <DemandeMetaRow label="Budget" value={demande.budget} variant="marketing" />
                 <DemandeMetaRow label="Taille" value={demande.taille} variant="marketing" />
               </div>
-              {!isAssigned && <PostulerActionBar />}
             </CardContent>
           </>
         }

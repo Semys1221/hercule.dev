@@ -14,7 +14,7 @@ import { isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { Audience } from "@/lib/admin/navigation";
 
 export const PITCH_WIZARD_SUBTITLE =
-  "Présentation Hercule, cadre contractuel, le système en 3 piliers, ROI contractuel, puis validation de l'infrastructure — on conclut sur l'appel.";
+  "Présentation Hercule, cadre contractuel, système en trois piliers, ROI contractuel et choix d'infrastructure.";
 
 export const PITCH_STEP_IDS = [
   "p0",
@@ -127,7 +127,7 @@ export function formatPitchWizardInterpolation(
     return replacements[token] ?? match;
   });
 
-  const firstName = context?.prospectFirstName?.trim() || "vous";
+  const firstName = context?.prospectFirstName?.trim() || "le cabinet";
   return withTokens.replace(/\[Prénom\]/g, firstName);
 }
 

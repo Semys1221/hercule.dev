@@ -4,7 +4,8 @@
  * Vocabulary:
  * - Parcours — product root (formerly "Funnels" / "Funnel Builder")
  * - Session — live client session module (formerly "Sales")
- * - Audit institutionnel — post-qualification phase (formerly "Pitch")
+ * - Système — qualification section for cabinet parcours (formerly "Pitch")
+ * - Audit institutionnel — post-qualification phase (closing sidebar)
  *
  * URLs and code identifiers may still use sales/funnel — only UI strings here.
  */
@@ -34,6 +35,25 @@ export const SESSION_SIDEBAR_INSTITUTIONAL = "Institutionnel";
 export const SESSION_SIDEBAR_QUALIFICATION = "Qualification";
 export const SESSION_SIDEBAR_STEPS = "Étapes";
 
+/** Cabinet session section (sidebar + headers) — never « Pitch ». */
+export const SESSION_SECTION_SYSTEM_LABEL = "Système";
+export const SESSION_SECTION_SYSTEM_LOCKED_TITLE = "Système verrouillé";
+export const SESSION_SECTION_SYSTEM_LOCKED_BODY =
+  "Le parcours Système se débloque après validation de la carte diagnostic dans la section Objectifs. Sans cette étape, les scripts d'écart et de transition ne peuvent pas être générés.";
+export const SESSION_SECTION_SYSTEM_FINISH_CTA = "Terminer le système";
+export const SESSION_DEV_SYSTEM_PREVIEW_TITLE = "Mode DEV — système en preview";
+export const SESSION_DEV_SYSTEM_PREVIEW_BODY =
+  "Accès complet au wizard sans carte diagnostic validée. Chargez le preset Test pour l'interpolation cause / écart / objectifs.";
+export const SESSION_CLOSING_FINISH_SYSTEM_FIRST =
+  "Terminez le parcours Système (plan, pourquoi, lien dashboard) avant d'envoyer le lien.";
+export const SESSION_MAPPING_FLOW_OBJECTIFS_LABEL = "Objectifs";
+export const SESSION_MAPPING_FLOW_SYSTEM_LABEL = SESSION_SECTION_SYSTEM_LABEL;
+export const SESSION_MAPPING_DASHBOARD_GATE_CONDITION =
+  "Accès via lien dashboard transmis en fin de parcours Système (pDashboard)";
+export const SESSION_MAPPING_POST_SYSTEM_BRANCH = "Lien transmis après le parcours Système";
+export const SESSION_MAPPING_SYSTEM_GATE_DESCRIPTION =
+  "Le parcours Système ne démarre qu'après validation du diagnostic (bleedDiagnosticAccepted).";
+
 export const SESSION_SETTINGS_LABEL = "Réglages de la session";
 export const SESSION_SETTINGS_BACK_ARIA = "Retour à la session";
 export const SESSION_SETTINGS_DESCRIPTION = "Préférences de la session client.";
@@ -58,7 +78,7 @@ export const SESSION_DEVELOPER_MODE_DESCRIPTION =
   "Navigation libre entre toutes les étapes et contournement des restrictions de completion pour tester le parcours.";
 export const SESSION_DEVELOPER_MODE_TOGGLE = "Activer le mode développeur";
 export const SESSION_DEVELOPER_MODE_ON =
-  "Toutes les étapes (qualification et pitch) sont accessibles sans remplir le questionnaire.";
+  "Toutes les étapes (qualification et système) sont accessibles sans remplir le questionnaire.";
 export const SESSION_DEVELOPER_MODE_OFF = "Parcours live standard — les gates de completion s'appliquent.";
 export const SESSION_DEVELOPER_MODE_BADGE = "DEV";
 export const SESSION_DEVELOPER_MODE_FAKE_LINK =

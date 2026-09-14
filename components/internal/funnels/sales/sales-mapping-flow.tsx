@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { getWizardObjectifsQuestions } from "@/components/internal/funnels/sales/sales-questions-objectifs-wizard";
 import { getPitchSlides } from "@/components/internal/funnels/sales/sales-pitch-wizard-slides";
 import {
+  getDashboardRecoverySteps,
+  getDashboardWizardSteps,
+} from "@/lib/admin/funnels/sales-dashboard-wizard";
+import {
   getMappingFlow,
   getMappingFlowSegments,
   getMappingNodeDetail,
@@ -105,11 +109,19 @@ export function SalesMappingFlow({ flowId, audience }: SalesMappingFlowProps) {
       for (const question of getWizardObjectifsQuestions(audience)) {
         labels[question.id] = question.type;
       }
-    } else {
+    } else if (flowId === "pitch") {
       for (const slide of getPitchSlides(audience)) {
         labels[slide.id] = slide.type.replace(/_/g, " ");
       }
       labels.pitch_gate = "gate";
+    } else {
+      for (const step of getDashboardWizardSteps()) {
+        labels[step.id] = step.type.replace(/_/g, " ");
+      }
+      for (const step of getDashboardRecoverySteps()) {
+        labels[step.id] = step.type.replace(/_/g, " ");
+      }
+      labels.dashboard_gate = "gate";
     }
     return labels;
   }, [audience, flowId]);

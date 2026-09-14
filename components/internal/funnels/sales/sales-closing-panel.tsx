@@ -52,7 +52,10 @@ import {
 } from "@/lib/admin/funnels/cif-sales-copy";
 import { buildBleedTrack, interpolateBleed } from "@/lib/admin/funnels/sales-bleed-track";
 import { formatComptableOnboardingAccessLabel } from "@/lib/commercial/constants";
-import { SESSION_DEVELOPER_MODE_FAKE_LINK } from "@/lib/admin/funnels/ui-copy";
+import {
+  SESSION_CLOSING_FINISH_SYSTEM_FIRST,
+  SESSION_DEVELOPER_MODE_FAKE_LINK,
+} from "@/lib/admin/funnels/ui-copy";
 import { SALES_SKIP_VALUE, type Q14Matrix, type SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { resolveSalesSessionDashboardLink } from "@/lib/link-tracking/urls";
@@ -558,7 +561,7 @@ export function SalesClosingPanel({
         <Card>
           <CardContent className="space-y-4 pt-6">
             <div className="space-y-3 text-sm">
-              <p className="font-medium">Votre dashboard vous donne accès à :</p>
+              <p className="font-medium">Le dashboard du cabinet donne accès à :</p>
               <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
                 {dashboardFeatures.map((item) => (
                   <li key={item}>{item}</li>
@@ -577,7 +580,7 @@ export function SalesClosingPanel({
                 variant="error"
                 message={
                   isCabinetBuyerSalesAudience(audience)
-                    ? "Terminez le wizard Pitch (plan, pourquoi, lien dashboard) avant d'envoyer le lien."
+                    ? SESSION_CLOSING_FINISH_SYSTEM_FIRST
                     : "Validez les tie-downs « règles de traitement » et « calendrier » avant d'envoyer le lien."
                 }
               />

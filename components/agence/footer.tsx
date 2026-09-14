@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { FooterLegalBar } from "@/components/site/footer-legal-bar"
+import { MARKETING_FOOTER_TAGLINE } from "@/lib/site/marketing-copy"
 
 export function Footer() {
   const footerLinks: Record<string, { label: string; href: string }[]> = {
@@ -26,7 +27,7 @@ export function Footer() {
           <div>
             <p className="text-white font-semibold text-lg mb-2">Hercule</p>
             <p className="text-zinc-500 text-sm max-w-xs">
-              Nous trouvons les bonnes agences pour nos demandes clients.
+              {MARKETING_FOOTER_TAGLINE}
             </p>
           </div>
 

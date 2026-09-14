@@ -2,27 +2,10 @@
 
 import { motion } from "framer-motion"
 import { Inbox, Shield, ClipboardCheck } from "lucide-react"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
-const matchingCards = [
-  {
-    title: "Demandes actives",
-    description:
-      "Des clients qualifiés attendent une agence compatible. Les demandes sont disponibles dès aujourd'hui.",
-    icon: Inbox,
-  },
-  {
-    title: "Attribution exclusive",
-    description:
-      "Chaque demande est confiée à une seule agence sélectionnée, en fonction de son profil et de sa capacité.",
-    icon: Shield,
-  },
-  {
-    title: "Audit de compatibilité",
-    description:
-      "Nous vérifions l'adéquation de votre agence — stack, budget, disponibilité — avant toute distribution.",
-    icon: ClipboardCheck,
-  },
-]
+const copy = getMarketingCopy("agence")
+const icons = [Inbox, Shield, ClipboardCheck]
 
 export function PilierMatching() {
   return (
@@ -42,7 +25,7 @@ export function PilierMatching() {
                 lineHeight: 1.1,
               }}
             >
-              Nous recevons des demandes clients. Notre rôle : identifier l&apos;agence la plus adaptée.
+              {copy.pilier.headline}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -51,14 +34,13 @@ export function PilierMatching() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-zinc-400 leading-relaxed"
             >
-              Hercule met en relation des contrats avec les agences web compatibles. Chaque attribution
-              repose sur un audit préalable et une distribution en exclusivité.
+              {copy.pilier.intro}
             </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {matchingCards.map((card, index) => {
-              const Icon = card.icon
+            {copy.pilier.cards.map((card, index) => {
+              const Icon = icons[index] ?? Inbox
               return (
                 <motion.div
                   key={card.title}

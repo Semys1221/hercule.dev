@@ -3,6 +3,11 @@
 import assert from "node:assert/strict";
 
 import {
+  DASHBOARD_STEP_IDS,
+  isDashboardStepVisible,
+} from "@/lib/admin/funnels/sales-dashboard-wizard";
+import { getRecoveryStepIds } from "@/lib/dashboard/closing-recovery";
+import {
   collectMappingNodeIds,
   getMappingFlow,
   getMappingNodeDetail,
@@ -36,12 +41,37 @@ function main() {
       assert.ok(pitchIds.includes(id), `pitch mapping should include ${id} for ${audience}`);
     }
 
-    const w8BrakeDetail = getMappingNodeDetail("discovery", "w8Brake", audience);
-    assert.ok(w8BrakeDetail?.dynamicOptionsByMethod?.length);
-    assert.ok(w8BrakeDetail?.condition?.includes("w8"));
-
     const pitchGateDetail = getMappingNodeDetail("pitch", "pitch_gate", audience);
     assert.ok(pitchGateDetail?.condition?.includes("bleedDiagnosticAccepted"));
+
+    const dashboardIds = collectMappingNodeIds("dashboard");
+    assert.ok(dashboardIds.includes("dashboard_gate"), `dashboard_gate required for ${audience}`);
+    for (const id of DASHBOARD_STEP_IDS) {
+      assert.ok(dashboardIds.includes(id), `dashboard mapping should include ${id} for ${audience}`);
+    }
+    for (const id of getRecoveryStepIds()) {
+      assert.ok(
+        dashboardIds.includes(id),
+        `dashboard recovery mapping should include ${id} for ${audience}`,
+      );
+    }
+
+    const d3Detail = getMappingNodeDetail("dashboard", "d3", audience);
+    assert.ok(d3Detail?.options?.length);
+    assert.ok(d3Detail?.condition?.includes("fit"));
+
+    const discoveryFlow = getMappingFlow("discovery", audience);
+    for (const id of WIZARD_QUESTION_IDS) {
+      const title = discoveryFlow.nodes[id]?.title ?? "";
+      assert.ok(
+        !title.toLowerCase().includes("le cabinet"),
+        `discovery node ${id} title should not repeat "le cabinet" (${audience}): ${title}`,
+      );
+    }
+
+    const w2Detail = getMappingNodeDetail("discovery", "w2", audience);
+    assert.equal(w2Detail?.title, "Clients actuels");
+    assert.match(w2Detail?.prompt ?? "", /le cabinet/i);
   }
 
   const discoveryFlow = getMappingFlow("discovery", "cif");
@@ -54,17 +84,31 @@ function main() {
   assert.ok(pitchFlow.nodes.pDashboard?.condition);
   assert.ok(pitchFlow.nodes.p12?.condition);
 
+  const dashboardFlow = getMappingFlow("dashboard", "comptable");
+  assert.equal(dashboardFlow.rootId, "dashboard_gate");
+  assert.ok(dashboardFlow.nodes.d5Commit?.condition);
+  assert.ok(dashboardFlow.nodes.d5FinalCommit?.condition);
+  assert.ok(dashboardFlow.nodes["service-fit"]?.condition);
+  assert.ok(dashboardFlow.nodes.d5Stripe?.condition);
+
   const visibilityCases: Array<{
     questionId: string;
     values: Partial<SalesQualificationValues>;
     expected: boolean;
   }> = [
-    { questionId: "w8TriedWho", values: { w8Tried: "none" }, expected: false },
-    { questionId: "w8TriedWho", values: { w8Tried: "tried" }, expected: true },
+    { questionId: "wExchangeWhy13", values: { w13: "yes" }, expected: true },
+    {
+      questionId: "wExchangeWhy13",
+      values: { w13: "yes", wExchangeWhy13: "certainty" },
+      expected: false,
+    },
+    { questionId: "w13Why", values: { w13: "yes" }, expected: false },
+    { questionId: "w13Why", values: { w13: "no" }, expected: true },
     { questionId: "w16", values: { w15: "wait", w14: "12m" }, expected: false },
     { questionId: "w16", values: { w15: "shortcut", w14: "12m" }, expected: true },
-    { questionId: "w16Detail", values: { w16: "strategic" }, expected: false },
+    { questionId: "w16StrategicSub", values: { w16: "strategic" }, expected: true },
     { questionId: "w16Detail", values: { w16: "other" }, expected: true },
+    { questionId: "wExchangeWhy15", values: { w15: "wait", w14: "12m" }, expected: true },
     { questionId: "diagnostic_card", values: { w17Acknowledged: false }, expected: false },
     { questionId: "diagnostic_card", values: { w17Acknowledged: true }, expected: true },
   ];
@@ -91,6 +135,45 @@ function main() {
       ...pitchValues,
       p11TempCheck: "hesitant",
     } as SalesQualificationValues, "comptable"),
+    false,
+  );
+
+  assert.equal(
+    isDashboardStepVisible("d5Commit", { stripeRevealed: false }),
+    true,
+  );
+  assert.equal(
+    isDashboardStepVisible("d5Stripe", { stripeRevealed: true }),
+    true,
+  );
+  assert.equal(
+    isDashboardStepVisible("service-fit", {
+      closing: { commit: "hesitate", recoveryCycle: 0 },
+    }),
+    true,
+  );
+  assert.equal(
+    isDashboardStepVisible("service-fit", {
+      closing: { commit: "launch", recoveryCycle: 0 },
+    }),
+    false,
+  );
+  assert.equal(
+    isDashboardStepVisible("service-fit", {
+      closing: { commit: "hesitate", recoveryCycle: 2 },
+    }),
+    false,
+  );
+  assert.equal(
+    isDashboardStepVisible("d5FinalCommit", {
+      closing: { recoveryCycle: 2, finalCommitAccepted: false },
+    }),
+    true,
+  );
+  assert.equal(
+    isDashboardStepVisible("d5Commit", {
+      closing: { recoveryCycle: 2 },
+    }),
     false,
   );
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
@@ -26,11 +26,11 @@ import { cn } from "@/lib/utils";
 const chartConfig = {
   statuQuo: {
     label: "Statu quo",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
   goal: {
     label: "Trajectoire cible",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
 } satisfies ChartConfig;
 
@@ -80,6 +80,46 @@ export function SalesObjectifsWizardChart({
         ? "h-[min(52vh,520px)]"
         : "h-[220px]";
   const resolvedShowMetricTabs = showMetricTabs ?? (!isPeek && !isHero);
+
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "fc74f8" },
+      body: JSON.stringify({
+        sessionId: "fc74f8",
+        runId: "post-fix",
+        hypothesisId: "H1-H3",
+        location: "sales-objectifs-wizard-chart.tsx:render",
+        message: "chart model snapshot",
+        data: {
+          variant,
+          metricId,
+          chartDataLength: chartData.length,
+          showCurrent: model.showCurrent,
+          showGoal: model.showGoal,
+          w2: values.w2,
+          w7: values.w7,
+          w4: values.w4,
+          w6: values.w6,
+          firstPoint: model.data[0] ?? null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [
+    chartData.length,
+    metricId,
+    model.data,
+    model.showCurrent,
+    model.showGoal,
+    values.w2,
+    values.w4,
+    values.w6,
+    values.w7,
+    variant,
+  ]);
+  // #endregion
 
   return (
     <div

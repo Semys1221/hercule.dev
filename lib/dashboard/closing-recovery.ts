@@ -10,7 +10,11 @@ export type RecoveryPitchStepId = "you" | "company" | "system";
 
 export type RecoveryStepId = RecoveryDiagnosticStepId | RecoveryPitchStepId;
 
+export type RecoveryPitchAngle = 1 | 2;
+
 export type ServiceFitAnswer = "oui" | "pas_encore";
+
+export const RECOVERY_MAX_CYCLES = 2;
 
 export type RecoveryDiagnostic = {
   serviceFits: ServiceFitAnswer | null;
@@ -48,6 +52,10 @@ export function getRecoveryStepIds(): RecoveryStepId[] {
   return [...RECOVERY_DIAGNOSTIC_STEP_IDS, ...RECOVERY_PITCH_STEP_IDS];
 }
 
+export function getRecoveryAngle(recoveryCycle: number): RecoveryPitchAngle {
+  return recoveryCycle >= 1 ? 2 : 1;
+}
+
 function interpolate(
   template: string,
   context?: DashboardBleedContext,
@@ -55,7 +63,7 @@ function interpolate(
   return interpolateDashboardCopy(template, context);
 }
 
-function benefitForYou(
+function benefitForYouAngle1(
   diagnostic: RecoveryDiagnostic,
   context?: DashboardBleedContext,
 ): string {
@@ -77,7 +85,24 @@ function benefitForYou(
   );
 }
 
-export function buildRecoveryPitchScreens(
+function benefitForYouAngle2(
+  diagnostic: RecoveryDiagnostic,
+  context?: DashboardBleedContext,
+): string {
+  const friction = diagnostic.friction.trim();
+  if (friction) {
+    return interpolate(
+      `Chaque semaine sans infrastructure, **{cause}** continue de peser sur **{gap}**. Votre frein (« ${friction} ») est traité contractuellement — pas laissé au hasard.`,
+      context,
+    );
+  }
+  return interpolate(
+    "Sans verrou zone, l'écart **{gap}** reste un constat. L'activation transforme le diagnostic en plan opérationnel — avec garantie **5 000 € / 90 jours**.",
+    context,
+  );
+}
+
+function buildAngle1Screens(
   diagnostic: RecoveryDiagnostic,
   context?: DashboardBleedContext,
 ): RecoveryPitchScreen[] {
@@ -101,7 +126,7 @@ export function buildRecoveryPitchScreens(
           "La plupart des cabinets avancent au feeling ou via des prestataires sans garantie. Vous avez quantifié l'écart — c'est une base solide pour déployer une infrastructure.",
           context,
         ),
-        benefit: benefitForYou(diagnostic, context),
+        benefit: benefitForYouAngle1(diagnostic, context),
       },
     },
     {
@@ -126,7 +151,7 @@ export function buildRecoveryPitchScreens(
     },
     {
       id: "system",
-      title: "The Hercule System",
+      title: "Le système Hercule",
       alert: interpolate(
         "Zone **{departement}** — statut : **en cours d'attribution** (1 licence disponible).",
         context,
@@ -149,6 +174,96 @@ export function buildRecoveryPitchScreens(
       },
     },
   ];
+}
+
+function buildAngle2Screens(
+  diagnostic: RecoveryDiagnostic,
+  context?: DashboardBleedContext,
+): RecoveryPitchScreen[] {
+  const serviceWhy = diagnostic.serviceWhy.trim();
+  const friction = diagnostic.friction.trim();
+  const whyEcho = serviceWhy
+    ? `Vous avez indiqué : « ${serviceWhy} ».`
+    : "Votre retour guide le dernier angle avant activation.";
+
+  return [
+    {
+      id: "you",
+      title: "Le coût de l'attente",
+      beats: {
+        what: interpolate(
+          "**{cause}** n'attend pas : chaque trimestre sans infrastructure, l'écart **{gap}** se creuse.",
+          context,
+        ),
+        how: interpolate(
+          `Honoraires déclarés **{honoraires} €/an** — l'écart est quantifié. ${whyEcho}`,
+          context,
+        ),
+        whyDifferent: interpolate(
+          "Un cabinet qui reporte sans cadre contractuel reporte aussi la garantie **5 000 € / 90 jours** et le verrou zone.",
+          context,
+        ),
+        benefit: benefitForYouAngle2(diagnostic, context),
+      },
+    },
+    {
+      id: "company",
+      title: "Pourquoi maintenant",
+      beats: {
+        what: interpolate(
+          "Foundation n'est pas une campagne test — c'est un déploiement sur **{departement}** avec livrables à 60 jours.",
+          context,
+        ),
+        how: interpolate(
+          friction
+            ? `Le point que vous avez soulevé (« ${friction} ») est prévu dans le cadre : SLA 24 h, 0 % commission, garantie contractuelle.`
+            : "SLA 24 h, 0 % commission, garantie **5 000 € / 90 jours** — le cadre encadre le déploiement des deux côtés.",
+          context,
+        ),
+        whyDifferent:
+          "Le SEO et la pub louent de la visibilité partagée. Foundation installe un actif exclusif au nom du cabinet.",
+        benefit: interpolate(
+          "L'objectif n'est pas de « tester » — c'est de traiter **{cause}** avec un système live et mesurable sur la zone.",
+          context,
+        ),
+      },
+    },
+    {
+      id: "system",
+      title: "Urgence zone",
+      alert: interpolate(
+        "Statut zone **{departement}** : **en cours d'attribution** — **1 seule licence** disponible.",
+        context,
+      ),
+      beats: {
+        what: interpolate(
+          "**Un cabinet par zone** — bande passante limitée sur les flux légaux (Pappers, INSEE, BODACC).",
+          context,
+        ),
+        how: interpolate(
+          "D'autres cabinets sont en audit sur ce secteur cette semaine. Une activation pose le verrou **12 mois** — la file se ferme pour les concurrents.",
+          context,
+        ),
+        whyDifferent:
+          "Sans verrou, la zone peut être attribuée à un autre cabinet — ou à une agence SEO sans garantie.",
+        benefit: interpolate(
+          "{prenom}, l'infrastructure répond à **{cause}** au moment du besoin et structure **{gap}** — tant que la zone est encore disponible.",
+          context,
+        ),
+      },
+    },
+  ];
+}
+
+export function buildRecoveryPitchScreens(
+  diagnostic: RecoveryDiagnostic,
+  context?: DashboardBleedContext,
+  angle: RecoveryPitchAngle = 1,
+): RecoveryPitchScreen[] {
+  if (angle === 2) {
+    return buildAngle2Screens(diagnostic, context);
+  }
+  return buildAngle1Screens(diagnostic, context);
 }
 
 export function isRecoveryDiagnosticComplete(

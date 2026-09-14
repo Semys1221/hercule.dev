@@ -11,7 +11,7 @@
     {
       "id": "faq-ag-002",
       "question": "D'où viennent les demandes clients ?",
-      "answer": "Hercule détecte en continu des signaux d'intention sur plus de 1 000 sites : recrutements, développements, changements d'activité, etc. Les entreprises sont qualifiées par Hercule (besoin, budget, attentes). Une fois confirmées, les demandes rejoignent notre réseau et sont proposées à l'agence la plus compatible."
+      "answer": "Hercule détecte en continu des signaux d'intention sur plus de 1 000 sites : recrutements, développements, changements d'activité, etc. Les entreprises sont qualifiées par Hercule (besoin, budget, attentes). Une fois confirmées, les flux sont routés en exclusivité vers l'agence la plus compatible."
     },
     {
       "id": "faq-ag-003",

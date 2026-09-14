@@ -11,6 +11,7 @@ import {
   offerTypeForPlan,
 } from "@/lib/commercial/comptable-pricing";
 import type { PricingPlan } from "@/lib/site/pricing-types";
+import { MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy";
 import { cn } from "@/lib/utils";
 
 export type ComptablePricingGridProps = {

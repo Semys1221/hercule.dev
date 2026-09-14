@@ -2,13 +2,16 @@
 
 import { motion } from "framer-motion"
 import { Calendar, Shield, Users, Video, ClipboardCheck } from "lucide-react"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
+
+const copy = getMarketingCopy("cif")
 
 const cabinetStack = [
   { name: "Live Qualification", icon: ClipboardCheck },
-  { name: "Attribution exclusive", icon: Shield },
+  { name: "Zone exclusive", icon: Shield },
   { name: "Calendly Pro", icon: Calendar },
   { name: "Zoom Pro", icon: Video },
-  { name: "Missions PME", icon: Users },
+  { name: "Capture brandée", icon: Users },
 ]
 
 export function BandeStack() {
@@ -23,7 +26,7 @@ export function BandeStack() {
             transition={{ duration: 0.6 }}
             className="text-lg text-zinc-300 mb-2"
           >
-            Des cabinets partenaires reçoivent des missions PME qualifiées.
+            {copy.bandeStack.text}
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -32,7 +35,7 @@ export function BandeStack() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-zinc-500 mb-16"
           >
-            Optimisation fiscale, trésorerie, patrimoine : honoraires annuels de 2 400 € à 6 000 €.
+            Infrastructure live en 60 jours — fiscal, trésorerie, patrimoine.
           </motion.p>
 
           <motion.div

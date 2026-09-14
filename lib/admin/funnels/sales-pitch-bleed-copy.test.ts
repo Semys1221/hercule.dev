@@ -23,7 +23,7 @@ function main() {
   assert.ok(defaultOptions.some((option) => option.id === "close_gap"));
 
   const withBrake = getPitchP11WhyOptions(
-    { ...baseValues, w13: "no", w8Brake: "budget" },
+    { ...baseValues, w13: "no" },
     "comptable",
   );
   assert.ok(withBrake.some((option) => option.id === "replace_method"));
@@ -34,11 +34,8 @@ function main() {
   );
   assert.ok(withUrgency.some((option) => option.id === "urgency"));
 
-  const withCriteria = getPitchP11WhyOptions(
-    { ...baseValues, w8Criteria: ["predictable_flow"] },
-    "comptable",
-  );
-  assert.ok(withCriteria.some((option) => option.id === "criteria_fit"));
+  const withCriteria = getPitchP11WhyOptions(baseValues, "comptable");
+  assert.ok(!withCriteria.some((option) => option.id === "criteria_fit"));
 
   const coreOptions = getPitchP12WhyOptions("core", baseValues, "comptable");
   assert.equal(coreOptions.length, 3);

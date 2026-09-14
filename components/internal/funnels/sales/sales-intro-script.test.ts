@@ -43,7 +43,7 @@ function main() {
 
   const comptableScript = buildSalesIntroScript(comptableBooking, "comptable");
   assert.match(comptableScript, /Hercule Comptable/);
-  assert.match(comptableScript, /missions TPE qui vous sont éligibles/);
+  assert.match(comptableScript, /missions TPE éligibles pour le cabinet/);
 
   const comptableChecklist = buildSalesIntroChecklist(comptableBooking, "comptable");
   assert.match(comptableChecklist[0], /Hercule Comptable/);
@@ -60,7 +60,7 @@ function main() {
 
   const cifScript = buildSalesIntroScript(cifBooking, "cif");
   assert.match(cifScript, /Hercule CIF/);
-  assert.match(cifScript, /mandats PME qui vous sont éligibles/);
+  assert.match(cifScript, /mandats PME éligibles pour le cabinet/);
   assert.ok(!/Hercule Comptable/.test(cifScript));
   assert.ok(!/reprise comptable/.test(cifScript));
 

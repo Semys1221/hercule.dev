@@ -97,7 +97,8 @@ const COMPTABLE_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
     id: "envoi-dashboard",
     label: "Lien dashboard",
     title: "Accès dashboard",
-    subtitle: "Copiez et envoyez le lien de suivi dashboard au cabinet.",
+    subtitle:
+      "Lien de suivi dashboard à transmettre au cabinet pour finaliser l'activation.",
   },
 ];
 
@@ -132,7 +133,8 @@ const CIF_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
     id: "envoi-dashboard",
     label: "Lien dashboard",
     title: "Accès dashboard",
-    subtitle: "Copiez et envoyez le lien de suivi dashboard au cabinet.",
+    subtitle:
+      "Lien de suivi dashboard à transmettre au cabinet pour finaliser l'activation.",
   },
 ];
 
@@ -141,7 +143,8 @@ const CABINET_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
     id: "envoi-dashboard",
     label: "Lien dashboard",
     title: "Accès dashboard",
-    subtitle: "Copiez et envoyez le lien de suivi dashboard au cabinet.",
+    subtitle:
+      "Lien de suivi dashboard à transmettre au cabinet pour finaliser l'activation.",
   },
 ];
 

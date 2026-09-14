@@ -60,7 +60,7 @@ const timelineSteps = [
   { label: "Prise de contact", icon: MessageSquare, done: true },
   { label: "Qualification", icon: Phone, done: true },
   { label: "Rendez-vous confirmé", icon: Calendar, done: true },
-  { label: "Mission attribuée", icon: Send, done: false, current: true },
+  { label: "Flux routé", icon: Send, done: false, current: true },
 ]
 
 const marieConversation = [
@@ -81,7 +81,7 @@ const marieConversation = [
   },
   {
     sender: "Système",
-    text: "Mission attribuée à un cabinet partenaire",
+    text: "Flux routé vers un cabinet partenaire",
     variant: "system" as const,
   },
 ]
@@ -128,11 +128,11 @@ export function ApercuCrm() {
         <div className="p-3">
           <div className="flex items-center gap-2 px-2.5 py-1.5 bg-zinc-800/50 rounded-md text-zinc-500 text-xs">
             <Search className="size-3.5" />
-            <span>Rechercher une mission…</span>
+            <span>Rechercher un flux…</span>
           </div>
         </div>
         <div className="px-3 space-y-0.5">
-          <NavItem icon={Users} label="Missions attribuées" badge={12} active />
+          <NavItem icon={Users} label="Flux routés" badge={12} active />
           <NavItem icon={Phone} label="En qualification" badge={3} />
           <NavItem icon={Calendar} label="Rendez-vous planifiés" badge={5} />
         </div>

@@ -2,6 +2,9 @@
 
 import { motion } from "framer-motion"
 import { Globe, ShoppingBag, Layout, Palette, Search } from "lucide-react"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
+
+const copy = getMarketingCopy("agence")
 
 const agencyStack = [
   { name: "Webflow", icon: Layout },
@@ -23,7 +26,7 @@ export function BandeStack() {
             transition={{ duration: 0.6 }}
             className="text-lg text-zinc-300 mb-2"
           >
-            Des agences partenaires reçoivent des apports d&apos;affaires qualifiés.
+            {copy.bandeStack.text}
           </motion.p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Briefcase,
@@ -145,6 +146,32 @@ export function SalesFunnelSidebar({
   const showBackArrow = contentPhase === "pitch";
   const isPlaceholder = name === PLACEHOLDER_NAME;
   const phaseLabel = phase === "closing" ? SESSION_PHASE_INSTITUTIONAL : "Hercule";
+  const renderCountRef = useRef(0);
+  renderCountRef.current += 1;
+
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "1503e7" },
+      body: JSON.stringify({
+        sessionId: "1503e7",
+        runId: "pre-fix",
+        hypothesisId: "E",
+        location: "sales-funnel-sidebar.tsx:render",
+        message: "SalesFunnelSidebar render",
+        data: {
+          renderCount: renderCountRef.current,
+          contentPhase,
+          activeSectionId,
+          sectionCount: sections.length,
+          collapsible,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  });
+  // #endregion
 
   function renderSectionMenu(
     menuSections: SalesFunnelSection[] | SalesClosingSection[],

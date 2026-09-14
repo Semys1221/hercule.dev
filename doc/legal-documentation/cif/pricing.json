@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "audience": "cif",
-  "updatedAt": "2026-09-10T18:45:00.000Z",
+  "updatedAt": "2026-09-14T12:00:00.000Z",
   "hero": {
     "eyebrow": "Tarification",
-    "title": "Accès aux missions PME. Lite en entrée. Hercule Starter recommandé.",
-    "intro": "Chaque formule ouvre l'accès à des missions de conseil qualifiées, attribuées après audit de compatibilité. Une mission annuelle d'accompagnement fiscal et trésorerie à 3 600 € d'honoraires, pour 2 199 € d'investissement mensuel en Hercule Starter."
+    "title": "Le système Hercule. Lite en entrée. Hercule Starter recommandé.",
+    "intro": "Chaque formule déploie le système inbound Hercule sur votre zone — capture brandée, qualification et routage exclusif. Un mandat annuel à 3 600 € d'honoraires, pour 2 199 € d'investissement mensuel en Hercule Starter."
   },
   "plans": [
     {
@@ -14,7 +14,7 @@
       "label": "Offre d'entrée",
       "price": "1 799 €",
       "priceSuffix": "/mois",
-      "tagline": "5 missions PME par mois",
+      "tagline": "Capacité : 5 flux qualifiés / mois",
       "summary": null,
       "footer": "Premier rendez-vous sous 20 à 25 jours.",
       "featured": false,
@@ -22,10 +22,10 @@
       "highlight": null,
       "offerType": "starter_999_5",
       "features": [
-        "5 missions PME qualifiées par mois (fiscal, trésorerie, obligations administratives).",
+        "Capacité système : 5 flux PME qualifiés par mois (fiscal, trésorerie, patrimoine).",
         "Premier rendez-vous planifié sous 20 à 25 jours après activation.",
-        "Attribution exclusive à votre cabinet.",
-        "Remplacement de toute mission lorsque le dirigeant est absent au rendez-vous, sous 14 jours ouvrés.",
+        "Routage exclusif vers votre cabinet.",
+        "Remplacement de tout flux lorsque le dirigeant est absent au rendez-vous, sous 14 jours ouvrés.",
         "0 % de commission sur vos honoraires signés.",
         "Aucune garantie de signature — uniquement garantie no-show."
       ]
@@ -36,7 +36,7 @@
       "label": "Recommandé pour les cabinets CIF",
       "price": "2 199 €",
       "priceSuffix": "/mois",
-      "tagline": "10 contrats PME/TPE/indépendants par mois",
+      "tagline": "Capacité : 10 flux qualifiés / mois",
       "summary": null,
       "footer": "Premier rendez-vous sous 20 à 25 jours.",
       "featured": true,
@@ -44,12 +44,12 @@
       "highlight": null,
       "offerType": "monthly_1499",
       "features": [
-        "10 missions PME/TPE/indépendants qualifiées par mois (fiscal, trésorerie, obligations administratives).",
+        "Capacité système : 10 flux PME/TPE/indépendants qualifiés par mois (fiscal, trésorerie, patrimoine).",
         "Premier rendez-vous planifié sous 20 à 25 jours après activation.",
-        "Attribution exclusive à votre cabinet.",
+        "Routage exclusif vers votre cabinet.",
         "0 % de commission sur vos honoraires signés.",
         "Calendly Pro et Zoom Pro provisionnés par Hercule.",
-        "Garantie de revenus récurrents : 3 000 € cumulés après vos 10 missions, ou 5 missions de remplacement offertes."
+        "Garantie de revenus récurrents : 3 000 € cumulés après vos 10 attributions, ou 5 flux de remplacement offerts."
       ]
     },
     {
@@ -66,16 +66,16 @@
       "highlight": "− 20 %",
       "offerType": "pack_3x1499",
       "features": [
-        "3 mois de service actif au rythme de Hercule Starter (10 missions / mois).",
-        "30 missions PME qualifiées sur la durée du pack.",
+        "3 mois de service actif au rythme de Hercule Starter (10 flux / mois).",
+        "30 flux PME qualifiés sur la durée du pack.",
         "0 % de commission sur vos honoraires.",
-        "Garantie pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 15 missions de remplacement (5 par tranche de 10 missions).",
+        "Garantie pack : 9 000 € de revenus récurrents cumulés, ou jusqu'à 15 flux de remplacement (5 par tranche de 10 attributions).",
         "Calendly Pro et Zoom Pro provisionnés par Hercule."
       ]
     }
   ],
   "gatedTeaserFeatures": [
-    "10 missions PME qualifiées par mois en Hercule Starter.",
+    "Capacité : 10 flux qualifiés par mois en Hercule Starter.",
     "0 % de commission — honoraires conservés.",
     "Premier RDV sous 20 à 25 jours."
   ],
@@ -87,9 +87,9 @@
   "guaranteeSection": {
     "title": "Garantie Hercule Starter",
     "items": [
-      "10 missions qualifiées, 0 % de commission sur vos honoraires",
+      "10 flux qualifiés, 0 % de commission sur vos honoraires",
       "Prospect absent en visio (malgré relance H-24) : attribution recréditée, remplacement sous 14 jours ouvrés",
-      "Revenus récurrents insuffisants après vos 10 missions ? 5 missions de remplacement offertes",
+      "Revenus récurrents insuffisants après vos 10 attributions ? 5 flux de remplacement offerts",
       "Hercule Lite : aucune garantie de revenus récurrents — uniquement la garantie no-show"
     ]
   }

@@ -2,6 +2,9 @@
 
 import { motion } from "framer-motion"
 import { ChevronRight, Users, CheckCircle2, Inbox } from "lucide-react"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
+
+const copy = getMarketingCopy("cif")
 
 export function AuditLive() {
   return (
@@ -22,7 +25,7 @@ export function AuditLive() {
             className="flex items-center gap-2 mb-6"
           >
             <div className="size-2 rounded-full bg-emerald-500" />
-            <span className="text-zinc-400 text-sm">Missions en direct</span>
+            <span className="text-zinc-400 text-sm">{copy.auditLive.eyebrow}</span>
             <ChevronRight className="size-4 text-zinc-500" />
           </motion.div>
 
@@ -34,7 +37,7 @@ export function AuditLive() {
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-8"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            Les missions PME sont visibles lors de l&apos;audit de compatibilité.
+            {copy.auditLive.title}
           </motion.h2>
 
           <motion.p
@@ -44,8 +47,7 @@ export function AuditLive() {
             transition={{ delay: 0.2 }}
             className="text-zinc-400 max-w-xl mb-12"
           >
-            Lors de l&apos;échange, nous présentons des exemples de missions déjà attribuées à d&apos;autres cabinets
-            et vérifions la compatibilité de votre profil pour les prochaines attributions.
+            {copy.auditLive.intro}
           </motion.p>
 
           <motion.div
@@ -57,15 +59,17 @@ export function AuditLive() {
           >
             <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3">
               <Inbox className="size-5 text-emerald-400" />
-              <span className="text-white font-medium text-sm">Portefeuille de missions · Audit en cours</span>
-              <span className="ml-auto text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">3 attribuées</span>
+              <span className="text-white font-medium text-sm">{copy.auditLive.panelTitle}</span>
+              <span className="ml-auto text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">3 routés</span>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3 p-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
                 <Users className="size-4 text-amber-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-white text-sm font-medium">Marc Lefèvre · BTP Dupont · Optimisation fiscale + trésorerie</p>
-                  <p className="text-zinc-500 text-xs mt-1">Honoraires 3 600 €/an · Attribuée à un autre cabinet</p>
+                  <p className="text-white text-sm font-medium">Sophie Martin · Resto Martin · Optimisation fiscale</p>
+                  <p className="text-zinc-500 text-xs mt-1">
+                    Honoraires 4 200 €/an · {copy.auditLive.panelSubtitle}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-center text-zinc-600">
@@ -74,7 +78,7 @@ export function AuditLive() {
               <div className="flex items-start gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-white text-sm font-medium">Compatibilité confirmée — mission attribuée</p>
+                  <p className="text-white text-sm font-medium">{copy.auditLive.successLabel}</p>
                   <p className="text-zinc-400 text-xs mt-1">Rendez-vous planifié demain · 10:00</p>
                 </div>
               </div>

@@ -20,21 +20,21 @@ function main() {
       "w6",
       "w7",
       "w8",
-      "w8Tried",
-      "w8TriedWho",
-      "w8Criteria",
-      "w8Brake",
-      "w9",
       "w10",
-      "w11",
       "w12",
       "w13",
+      "wExchangeWhy13",
       "w13Why",
       "w14",
+      "wExchangeWhy14",
       "w15",
+      "wExchangeWhy15",
       "w16",
+      "w16StrategicSub",
+      "w16ResaleSub",
       "w16Detail",
       "w18",
+      "wExchangeWhy18",
       "w17",
       "diagnostic_card",
     ],
@@ -52,6 +52,8 @@ function main() {
     .join(" ");
   assert.ok(!/lead/i.test(promptCopy));
   assert.ok(!/audit/i.test(promptCopy));
+
+  assert.match(questions[2]?.prompt ?? "", /encours/i);
 
   assert.equal(section?.title, "Objectifs");
 

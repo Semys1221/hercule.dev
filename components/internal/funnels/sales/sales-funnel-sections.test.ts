@@ -1,8 +1,9 @@
-/** Unit tests for sales funnel section configuration. */
+/** Unit tests for session section configuration. */
 
 import assert from "node:assert/strict";
 
 import { getSalesFunnelSections } from "@/components/internal/funnels/sales/sales-funnel-sections";
+import { SESSION_SECTION_SYSTEM_LABEL } from "@/lib/admin/funnels/ui-copy";
 
 const AUDIENCES = ["agence", "comptable", "cif", "entreprise"] as const;
 
@@ -17,6 +18,10 @@ function main() {
 
   const comptableSections = getSalesFunnelSections("comptable");
   assert.ok(comptableSections.some((section) => section.id === "pitch"));
+  assert.equal(
+    comptableSections.find((section) => section.id === "pitch")?.label,
+    SESSION_SECTION_SYSTEM_LABEL,
+  );
   assert.ok(!comptableSections.some((section) => section.id === "conditions"));
   assert.equal(
     comptableSections.find((section) => section.id === "introduction")?.label,
