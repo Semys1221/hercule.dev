@@ -10,6 +10,7 @@ import {
 
 import type { Audience } from "@/lib/admin/navigation";
 import { isCabinetBuyerSalesAudience, isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import {
   interpolateClientSegment,
   type ClientSegment,
@@ -135,15 +136,22 @@ const CIF_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
   },
 ];
 
+const CABINET_SALES_CLOSING_SECTIONS: SalesClosingSection[] = [
+  {
+    id: "envoi-dashboard",
+    label: "Lien dashboard",
+    title: "Accès dashboard",
+    subtitle: "Copiez et envoyez le lien de suivi dashboard au cabinet.",
+  },
+];
+
 export function getSalesClosingSections(
   audience: Audience = "agence",
   clientSegment?: ClientSegment,
 ): SalesClosingSection[] {
-  const sections = isCifSalesAudience(audience)
-    ? CIF_SALES_CLOSING_SECTIONS
-    : isCabinetBuyerSalesAudience(audience)
-      ? COMPTABLE_SALES_CLOSING_SECTIONS
-      : SALES_CLOSING_SECTIONS;
+  const sections = isCabinetBuyerSalesAudience(audience)
+    ? CABINET_SALES_CLOSING_SECTIONS
+    : SALES_CLOSING_SECTIONS;
 
   if (!isCabinetBuyerSalesAudience(audience) || !clientSegment) {
     return sections;
@@ -254,6 +262,19 @@ export function isSalesClosingSectionComplete(
   return isSalesClosingSectionValidated(sectionId, context);
 }
 
-export function isSalesClosingReadyForDashboardLink(values: SalesClosingValues): boolean {
+export function isSalesClosingReadyForDashboardLink(
+  values: SalesClosingValues,
+  options?: {
+    audience?: Audience;
+    qualificationValues?: SalesQualificationValues;
+  },
+): boolean {
+  if (
+    options?.audience &&
+    isCabinetBuyerSalesAudience(options.audience) &&
+    options.qualificationValues
+  ) {
+    return options.qualificationValues.pitchWizardCompleted === true;
+  }
   return values.reglesAccepted && values.calendrierAccepted;
 }

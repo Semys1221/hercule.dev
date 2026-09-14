@@ -33,7 +33,7 @@ const OBJ_ASSOCIE_Q =
   "Je dois en parler à mon associé avant de décider. Comment faire ?";
 
 const OBJ_REFLECHIR_Q =
-  "Est-ce que je peux prendre quelques jours pour réfléchir ?";
+  "Je souhaite y réfléchir — est-ce que je peux attendre ?";
 
 const HONORAIRES_FORMATTER = new Intl.NumberFormat("fr-FR");
 
@@ -44,7 +44,7 @@ function formatHonoraires(bleed: BleedTrack): string {
   return HONORAIRES_FORMATTER.format(bleed.honorairesAnnual);
 }
 
-function interpolateDashboardCopy(
+export function interpolateDashboardCopy(
   template: string,
   context?: OnboardingFaqContext,
 ): string {
@@ -104,7 +104,7 @@ function buildPreventiveObjections(
       id: "obj-payment",
       q: OBJ_PAYMENT_Q,
       a: interpolateDashboardCopy(
-        "Foundation consomme une bande passante réelle sur les flux légaux de l'État. Pour préserver l'exclusivité, **un seul cabinet** est connecté par zone. La zone est ouverte maintenant. À la validation, le verrou est posé. Sans activation pendant la session, la zone redevient disponible. D'autres cabinets ont un audit sur ce secteur cette semaine. Si l'un d'eux active avant, la file se ferme pour les **12 mois** suivants. Chez Hercule, pas de relance commerciale par email.",
+        "Foundation s'appuie sur une bande passante réelle sur les flux légaux de l'État. Pour garantir l'exclusivité, **un seul cabinet** est connecté par zone économique.\n\nLa zone **{departement}** est ouverte à l'issue de cet audit. À la validation, le verrou est posé et le déploiement démarre.\n\nSans activation pendant la session, la zone redevient disponible pour d'autres cabinets en cours d'audit sur ce secteur. L'attribution est alors réouverte pour **12 mois**.\n\nChez Hercule, nous ne relançons pas par email : c'est pour cela que la décision se prend ensemble, maintenant.",
         context,
       ),
     },
@@ -112,7 +112,7 @@ function buildPreventiveObjections(
       id: "obj-associe",
       q: OBJ_ASSOCIE_Q,
       a: interpolateDashboardCopy(
-        `Le ${cabinetNoun} a déclaré {honoraires} €/an et un écart {gap}. Horizon est couvert par **5 000 €** de récurrent cumulé sur **90 jours**. L'associé valide un ROI contractuel sur un actif de zone, pas un achat de fiches. On active l'onboarding ; le double du contrat part pour validation associé.`,
+        `C'est une démarche courante — et c'est précisément l'objet de cet audit.\n\nVous avez posé un cadre clair : **{honoraires} €/an** d'honoraires et un écart de **{gap}**. Hercule Horizon inclut une garantie contractuelle de **5 000 €** de récurrent cumulé sur **90 jours**.\n\nVotre associé ne valide pas une campagne marketing : il valide un **actif de zone** avec un ROI contractuel.\n\nNous activons l'onboarding ensemble ; le double du contrat part pour validation associé dans la foulée.`,
         context,
       ),
     },
@@ -120,7 +120,7 @@ function buildPreventiveObjections(
       id: "obj-reflechir",
       q: OBJ_REFLECHIR_Q,
       a: interpolateDashboardCopy(
-        `La réflexion est légitime. Mais sur quoi ? Si le ${cabinetNoun} doit traiter {cause} et que l'écart {gap} est réel, chaque jour sans verrou laisse la zone à un confrère — ou à une agence SEO qui facturera 12 mois sans garantie. Le contrat garantit 5 000 € de MRR sur **90 jours**. Le coût de l'attente, c'est {cause} inchangé **et** une zone qui peut se fermer.`,
+        `**Bien sûr.** Prendre du recul à ce stade est normal — surtout sur un investissement structurant.\n\nPour avancer sereinement, il peut être utile de préciser **sur quoi** porte la réflexion : le déploiement, le calendrier, l'associé, ou autre chose ?\n\nCe que nous avons cadré ensemble : le ${cabinetNoun} cherche à traiter **{cause}**, avec un écart estimé à **{gap}**. Foundation est conçu pour structurer cette dynamique sur la zone **{departement}**.\n\nCôté marché : **une licence par secteur**. D'autres cabinets passent un audit sur cette zone cette semaine. La première activation verrouille le secteur pour **12 mois** — ce n'est pas une pression commerciale, c'est le fonctionnement de l'exclusivité.\n\nCôté contrat : la garantie **5 000 € / 90 jours** limite l'exposition financière pendant la montée en charge.\n\nEn résumé : vous pouvez réfléchir — et nous pouvons aussi sécuriser la zone tant qu'elle est disponible, avec un cadre contractuel clair.`,
         context,
       ),
     },
@@ -313,7 +313,7 @@ const TIE_DOWN_AGENCE =
   "J'ai pris connaissance des [Conditions générales de vente](/cvg), je comprends que l'activation et le paiement (carte bancaire ou SEPA) se font **pendant cette session d'audit**, et je souhaite lancer le service — pas « pour voir ».";
 
 const TIE_DOWN_CABINET =
-  "J'ai pris connaissance des [Conditions générales de vente](/cvg/comptable), je comprends que l'activation et le paiement se font **pendant cette session d'audit**, et je souhaite **déployer Hercule Foundation sur la zone du cabinet** — pas « pour voir ».";
+  "J'ai pris connaissance des [Conditions générales de vente](/cvg/comptable), je comprends que l'activation et le paiement se font **pendant cette session d'audit**, pour **déployer Hercule Foundation sur la zone du cabinet**.";
 
 const TIE_DOWN_CIF = TIE_DOWN_CABINET.replace("/cvg/comptable)", "/cvg/conseil-financier)");
 
@@ -374,6 +374,63 @@ export function onboardingFaqToDashboardItems(
   config: OnboardingFaqConfig,
 ): { q: string; a: string }[] {
   return config.items.map((item) => ({ q: item.q, a: item.a }));
+}
+
+export type ClosingFitLevel = "fits" | "partial" | "mismatch";
+
+export type ClosingFitOption = {
+  level: ClosingFitLevel;
+  label: string;
+  hint: string;
+};
+
+export type ClosingCommitLevel = "launch" | "hesitate";
+
+export type ClosingCommitOption = {
+  level: ClosingCommitLevel;
+  label: string;
+  description: string;
+};
+
+export const CLOSING_FIT_MIN_WHY_LENGTH = 20;
+
+export function getClosingFitOptions(): ClosingFitOption[] {
+  return [
+    {
+      level: "fits",
+      label: "Ce fonctionnement me convient",
+      hint: "Je comprends comment Foundation s'installe sur ma zone.",
+    },
+    {
+      level: "partial",
+      label: "Je vois le principe, un point reste à clarifier",
+      hint: "Le cadre est clair ; un détail mérite d'être échangé.",
+    },
+    {
+      level: "mismatch",
+      label: "Ce n'est pas encore aligné pour moi",
+      hint: "J'ai besoin d'exprimer ce qui ne colle pas encore.",
+    },
+  ];
+}
+
+export function getClosingCommitOptions(): ClosingCommitOption[] {
+  return [
+    {
+      level: "launch",
+      label: "Je me lance",
+      description: "Je valide la formule et j'active le déploiement sur ma zone.",
+    },
+    {
+      level: "hesitate",
+      label: "J'ai encore une question",
+      description: "J'aimerais un dernier point d'éclaircissement avant de payer.",
+    },
+  ];
+}
+
+export function isClosingFitWhyValid(why: string): boolean {
+  return why.trim().length >= CLOSING_FIT_MIN_WHY_LENGTH;
 }
 
 export type IntentionOption = {
@@ -458,7 +515,7 @@ export function getHesitationSlides(
       id: "produit",
       title: "Le produit",
       body: interpolateDashboardCopy(
-        "Foundation s'attaque à **{cause}** : événement légal, capture au nom du cabinet, le dirigeant initie. Ce n'est pas du SEO. Si le produit est le bon, qu'est-ce qui retient le cabinet ?",
+        "Foundation structure la réponse à **{cause}** : événement légal, capture au nom du cabinet, le dirigeant initie. Ce n'est pas du SEO. Si le cadre vous convient, nous pouvons préciser ensemble ce qui reste à valider.",
         context,
       ),
     },
@@ -484,7 +541,7 @@ export function getHesitationSlides(
         context,
       ),
       body: interpolateDashboardCopy(
-        "{prenom}, vous avez le droit de réfléchir — c'est même sain à ce ticket. Voici comment l'allocation Foundation fonctionne.\n\nLe moteur consomme une bande passante réelle sur les flux légaux de l'État. Pour ne pas saturer le marché, **un seul cabinet par zone économique**.\n\nLà, la zone est ouverte. Onboarding aujourd'hui = verrou. Si on attend, la zone redevient disponible. D'autres cabinets ont un audit sur ce secteur cette semaine. Le premier qui active ferme la file **12 mois**.\n\nRéfléchir est une option. Laisser un confrère verrouiller le marché TPE du cabinet en est une autre. On sécurise l'infrastructure pendant qu'elle est disponible ?",
+        "{prenom}, prendre du recul est tout à fait légitime. Voici simplement comment fonctionne l'allocation : **un cabinet par zone**, bande passante limitée sur les flux légaux.\n\nLa zone est ouverte aujourd'hui. Une activation pose le verrou pour **12 mois**. D'autres cabinets sont en audit sur ce secteur cette semaine.\n\nNotre proposition : sécuriser l'infrastructure tant que la zone est disponible — avec un contrat qui encadre le déploiement et la garantie **5 000 € / 90 jours**. On avance ensemble ?",
         context,
       ),
     },

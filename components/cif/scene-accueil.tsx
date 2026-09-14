@@ -88,7 +88,7 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                   href="#demandes"
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 >
-                  Voir les missions disponibles
+                  Voir des exemples de missions
                 </a>
               </motion.div>
             </div>

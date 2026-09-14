@@ -1,4 +1,4 @@
-/** Unit tests for CIF bleed tunnel objectifs questions. */
+/** Unit tests for CIF objectifs wizard questions. */
 
 import assert from "node:assert/strict";
 
@@ -11,13 +11,39 @@ function main() {
 
   assert.deepEqual(
     questions.map((question) => question.id),
-    ["b1", "b2", "b3", "b4", "b5", "b5b", "b6", "b7", "b8", "diagnostic_card"],
+    [
+      "w1",
+      "w2",
+      "w3",
+      "w4",
+      "w5",
+      "w6",
+      "w7",
+      "w8",
+      "w8Tried",
+      "w8TriedWho",
+      "w8Criteria",
+      "w8Brake",
+      "w9",
+      "w10",
+      "w11",
+      "w12",
+      "w13",
+      "w13Why",
+      "w14",
+      "w15",
+      "w16",
+      "w16Detail",
+      "w18",
+      "w17",
+      "diagnostic_card",
+    ],
   );
 
-  assert.match(questions[0]?.prompt ?? "", /priorité du cabinet/);
+  assert.match(questions[0]?.prompt ?? "", /objectif/i);
   assert.ok(
     (questions[0]?.type === "single" ? questions[0].options : []).some((option) =>
-      /mandats \/ études/i.test(option.label),
+      /mandats/i.test(option.label),
     ),
   );
   const promptCopy = questions

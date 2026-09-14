@@ -77,6 +77,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     Set<SalesClosingSectionId>
   >(() => new Set());
   const [sessionResetKey, setSessionResetKey] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const hasAutoTransitionedRef = useRef(false);
   const transitionTimeoutRef = useRef<number | null>(null);
@@ -147,9 +148,12 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   );
 
   const completedSectionIds = useMemo(() => {
-    const qualificationCompleted = funnelSections.filter((section) =>
-      isSalesSectionComplete(section.id, watchedValues, audience),
-    ).map((section) => section.id);
+    const qualificationCompleted = funnelSections
+      .filter((section) => !section.documentationOnly)
+      .filter((section) =>
+        isSalesSectionComplete(section.id, watchedValues, audience),
+      )
+      .map((section) => section.id);
 
     const closingCompleted = closingSections.filter((section) =>
       isSalesClosingSectionComplete(section.id, closingCompletionContext, audience),
@@ -187,11 +191,16 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   }, [audience, closingCompletionContext, phase, watchedValues]);
 
   const canEnterClosing = isSalesQualificationComplete(watchedValues, audience);
+  const objectifsComplete = isSalesSectionComplete("objectifs", watchedValues, audience);
   const activeQualificationSection = getSalesFunnelSection(
     activeQualificationId,
     audience,
     clientSegment,
   );
+  const immersiveCabinetWizard =
+    phase === "qualification" &&
+    isCabinetBuyerSalesAudience(audience) &&
+    (activeQualificationId === "objectifs" || activeQualificationId === "pitch");
 
   const meetingInfo: MeetingInfo | null = selectedBooking
     ? {
@@ -222,6 +231,9 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         setPhase("closing");
         setContentPhase("pitch");
         setContentAnimation("idle");
+        if (isCabinetBuyerSalesAudience(audience)) {
+          setActiveClosingId("envoi-dashboard");
+        }
         return;
       }
 
@@ -231,6 +243,9 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         setPhase("closing");
         setContentPhase("pitch");
         setContentAnimation("enter");
+        if (isCabinetBuyerSalesAudience(audience)) {
+          setActiveClosingId("envoi-dashboard");
+        }
 
         transitionTimeoutRef.current = window.setTimeout(() => {
           setContentAnimation("idle");
@@ -238,7 +253,7 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         }, SIDEBAR_TRANSITION_MS);
       }, SIDEBAR_TRANSITION_MS);
     },
-    [clearTransitionTimeout],
+    [audience, clearTransitionTimeout],
   );
 
   const backToQualification = useCallback(() => {
@@ -391,14 +406,15 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
       !pitchSidebarEnabled ||
       developerModeEnabled ||
       phase !== "qualification" ||
-      hasAutoTransitionedRef.current
+      hasAutoTransitionedRef.current ||
+      isCabinetBuyerSalesAudience(audience)
     ) {
       return;
     }
 
     hasAutoTransitionedRef.current = true;
     enterClosingPhase({ animated: true });
-  }, [canEnterClosing, developerModeEnabled, enterClosingPhase, phase, pitchSidebarEnabled]);
+  }, [audience, canEnterClosing, developerModeEnabled, enterClosingPhase, phase, pitchSidebarEnabled]);
 
   useEffect(() => {
     if (isCabinetBuyerSalesAudience(audience) && activeClosingId === "activation") {
@@ -412,38 +428,65 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     };
   }, [clearTransitionTimeout]);
 
+  const sidebarProps = {
+    audience,
+    name: meetingName,
+    progress,
+    progressLabel,
+    phase,
+    contentPhase,
+    contentAnimation,
+    activeSectionId,
+    completedSectionIds,
+    exitHref,
+    settingsHref,
+    canEnterClosing,
+    pitchSidebarEnabled,
+    developerModeEnabled,
+    clientSegment,
+    meetingInfo,
+    bleedChips,
+    objectifsComplete,
+    onEnterClosing: () => enterClosingPhase({ animated: true }),
+    onBackToQualification: backToQualification,
+    onSectionChange: (sectionId: SalesFunnelSectionId | SalesClosingSectionId) => {
+      if (
+        isCabinetBuyerSalesAudience(audience) &&
+        (sectionId === "objectifs" || sectionId === "pitch")
+      ) {
+        setSidebarOpen(false);
+      } else if (isCabinetBuyerSalesAudience(audience)) {
+        setSidebarOpen(true);
+      }
+      if (isSalesClosingSectionId(sectionId)) {
+        setPhase("closing");
+        setActiveClosingId(sectionId);
+        return;
+      }
+      if (
+        sectionId === "pitch" &&
+        isCabinetBuyerSalesAudience(audience) &&
+        !objectifsComplete &&
+        !developerModeEnabled
+      ) {
+        return;
+      }
+      setPhase("qualification");
+      setActiveQualificationId(sectionId as SalesFunnelSectionId);
+    },
+  };
+
   return (
     <Form {...form}>
-      <SidebarProvider className="flex h-svh min-h-0 w-full overflow-hidden">
+      <SidebarProvider
+        className="flex h-svh min-h-0 w-full overflow-hidden"
+        open={immersiveCabinetWizard ? sidebarOpen : undefined}
+        onOpenChange={immersiveCabinetWizard ? setSidebarOpen : undefined}
+      >
         <SalesFunnelSidebar
-          audience={audience}
-          name={meetingName}
-          progress={progress}
-          progressLabel={progressLabel}
-          phase={phase}
-          contentPhase={contentPhase}
-          contentAnimation={contentAnimation}
-          activeSectionId={activeSectionId}
-          completedSectionIds={completedSectionIds}
-          exitHref={exitHref}
-          settingsHref={settingsHref}
-          canEnterClosing={canEnterClosing}
-          pitchSidebarEnabled={pitchSidebarEnabled}
-          developerModeEnabled={developerModeEnabled}
-          clientSegment={clientSegment}
-          meetingInfo={meetingInfo}
-          bleedChips={bleedChips}
-          onEnterClosing={() => enterClosingPhase({ animated: true })}
-          onBackToQualification={backToQualification}
-          onSectionChange={(sectionId) => {
-            if (isSalesClosingSectionId(sectionId)) {
-              setPhase("closing");
-              setActiveClosingId(sectionId);
-              return;
-            }
-            setPhase("qualification");
-            setActiveQualificationId(sectionId as SalesFunnelSectionId);
-          }}
+          {...sidebarProps}
+          collapsible={immersiveCabinetWizard ? "offcanvas" : "none"}
+          className={immersiveCabinetWizard ? "z-50" : undefined}
         />
         <SalesFunnelWorkspace
           audience={audience}
@@ -460,6 +503,16 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
           sessionResetKey={sessionResetKey}
           developerModeEnabled={developerModeEnabled}
           prospectFirstName={prospectFirstName}
+          immersiveCabinetWizard={immersiveCabinetWizard}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onGoToObjectifs={() => {
+            setPhase("qualification");
+            setActiveQualificationId("objectifs");
+            setSidebarOpen(false);
+          }}
+          onLiveTrackSectionChange={(section) => {
+            setActiveQualificationId(section);
+          }}
           onClosingChange={(patch) =>
             setClosingValues((current) => ({ ...current, ...patch }))
           }

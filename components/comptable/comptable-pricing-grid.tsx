@@ -71,7 +71,7 @@ export function ComptablePricingGrid({
   selectedOffer,
   ctaLabel = COMPTABLE_PRICING_CTA,
   ctaHref,
-  ctaLinkLabel = "Proposer mon cabinet",
+  ctaLinkLabel = MARKETING_PRIMARY_CTA,
   onSelectOffer,
   className,
 }: ComptablePricingGridProps) {

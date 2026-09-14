@@ -13,10 +13,15 @@ export type SalesFunnelSectionId =
   | "rendez-vous"
   | "introduction"
   | "objectifs"
+  | "pitch"
+  | "mapping"
   | "presentation-societe"
   | "capacite"
   | "standards"
   | "conditions";
+
+export const PITCH_WIZARD_SECTION_SUBTITLE =
+  "Présentation Hercule, cadre contractuel, le système en 3 piliers, ROI contractuel, puis validation de l'infrastructure — on conclut sur l'appel.";
 
 export type SalesFunnelSection = {
   id: SalesFunnelSectionId;
@@ -25,6 +30,7 @@ export type SalesFunnelSection = {
   subtitle?: string;
   duration?: string;
   hasIntroCheckbox?: boolean;
+  documentationOnly?: boolean;
 };
 
 const AGENCE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
@@ -87,11 +93,10 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   },
   {
     id: "introduction",
-    label: "Audit de compatibilité",
+    label: "Avant-propos",
     title: "Avant-propos",
     duration: "Durée : 20min",
-    subtitle:
-      "Avant de commencer, quelques informations nous permettront d'évaluer votre cabinet et de vous orienter vers les missions {clientSegment} les plus adaptées.",
+    subtitle: "Avant d'entrer dans le fond, posons le cadre de cet échange.",
     hasIntroCheckbox: true,
   },
   {
@@ -102,32 +107,17 @@ const COMPTABLE_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
       "Comprendre la situation actuelle, la capacité disponible et l'écart avec l'objectif avant de présenter Hercule Comptable.",
   },
   {
-    id: "presentation-societe",
-    label: "Présentation de la société",
-    title: "Présentation de la société",
-    subtitle:
-      "Découvrez Hercule Comptable, notre modèle et la provision Calendly / Zoom avant de poursuivre la qualification.",
+    id: "pitch",
+    label: "Pitch",
+    title: "Pitch",
+    subtitle: PITCH_WIZARD_SECTION_SUBTITLE,
   },
   {
-    id: "capacite",
-    label: "Capacité opérationnelle",
-    title: "Capacité opérationnelle",
-    subtitle:
-      "Évaluez votre capacité actuelle à prendre en charge de nouveaux dossiers {clientSegment} — tenue, fiscal et obligations administratives.",
-  },
-  {
-    id: "standards",
-    label: "Modèle différenciant",
-    title: "Modèle différenciant",
-    subtitle:
-      "Ce qui distingue votre cabinet d'un expert-comptable déjà en place, puis vos honoraires.",
-  },
-  {
-    id: "conditions",
-    label: "Conditions commerciales",
-    title: "Conditions commerciales",
-    subtitle:
-      "Social / paie, missions ponctuelles et priorités de dossiers {clientSegment}.",
+    id: "mapping",
+    label: "Mapping",
+    title: "Mapping",
+    subtitle: "Arbre de logique conditionnelle — documentation uniquement.",
+    documentationOnly: true,
   },
 ];
 
@@ -139,11 +129,10 @@ const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
   },
   {
     id: "introduction",
-    label: "Audit de compatibilité",
+    label: "Avant-propos",
     title: "Avant-propos",
     duration: "Durée : 20min",
-    subtitle:
-      "Avant de commencer, quelques informations nous permettront d'évaluer votre cabinet et de vous orienter vers les mandats {clientSegment} les plus adaptés.",
+    subtitle: "Avant d'entrer dans le fond, posons le cadre de cet échange.",
     hasIntroCheckbox: true,
   },
   {
@@ -154,32 +143,17 @@ const CIF_SALES_FUNNEL_SECTIONS: SalesFunnelSection[] = [
       "Comprendre la situation actuelle, la capacité disponible et l'écart avec l'objectif avant de présenter Hercule CIF.",
   },
   {
-    id: "presentation-societe",
-    label: "Présentation de la société",
-    title: "Présentation de la société",
-    subtitle:
-      "Découvrez Hercule CIF, notre modèle et la provision Calendly / Zoom avant de poursuivre la qualification.",
+    id: "pitch",
+    label: "Pitch",
+    title: "Pitch",
+    subtitle: PITCH_WIZARD_SECTION_SUBTITLE,
   },
   {
-    id: "capacite",
-    label: "Capacité opérationnelle",
-    title: "Capacité opérationnelle",
-    subtitle:
-      "Évaluez votre capacité actuelle à prendre en charge de nouveaux mandats {clientSegment} — patrimoine, trésorerie et transmission.",
-  },
-  {
-    id: "standards",
-    label: "Modèle différenciant",
-    title: "Modèle différenciant",
-    subtitle:
-      "Ce qui distingue votre cabinet d'une banque privée ou d'un CGP déjà en place, puis vos honoraires.",
-  },
-  {
-    id: "conditions",
-    label: "Conditions commerciales",
-    title: "Conditions commerciales",
-    subtitle:
-      "Rémunération, missions ponctuelles et priorités de mandats {clientSegment}.",
+    id: "mapping",
+    label: "Mapping",
+    title: "Mapping",
+    subtitle: "Arbre de logique conditionnelle — documentation uniquement.",
+    documentationOnly: true,
   },
 ];
 

@@ -10,8 +10,10 @@ import {
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
+  GitBranch,
   Handshake,
   LogOut,
+  Megaphone,
   Settings,
   Target,
   User,
@@ -34,7 +36,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import type { ClientSegment } from "@/lib/admin/funnels/client-segment";
+import {
+  interpolateClientSegment,
+  type ClientSegment,
+} from "@/lib/admin/funnels/client-segment";
+import {
+  isCabinetBuyerSalesAudience,
+} from "@/lib/admin/funnels/sales-audience";
 import { cn } from "@/lib/utils";
 import { SESSION_DEVELOPER_MODE_BADGE, SESSION_ENTER_INSTITUTIONAL_CTA, SESSION_PHASE_INSTITUTIONAL, SESSION_SETTINGS_LABEL, SESSION_SIDEBAR_QUALIFICATION, SESSION_SIDEBAR_STEPS } from "@/lib/admin/funnels/ui-copy";
 
@@ -56,6 +64,8 @@ const SECTION_ICONS: Record<SalesFunnelSectionId, LucideIcon> = {
   "rendez-vous": Calendar,
   introduction: ClipboardCheck,
   objectifs: Target,
+  pitch: Megaphone,
+  mapping: GitBranch,
   "presentation-societe": Building2,
   capacite: Briefcase,
   standards: ClipboardList,
@@ -91,9 +101,12 @@ type SalesFunnelSidebarProps = {
   clientSegment?: ClientSegment;
   meetingInfo?: MeetingInfo | null;
   bleedChips?: string[];
+  objectifsComplete?: boolean;
   onEnterClosing: () => void;
   onBackToQualification: () => void;
   onSectionChange: (sectionId: SalesFunnelSectionId | SalesClosingSectionId) => void;
+  collapsible?: "none" | "offcanvas";
+  className?: string;
 };
 
 export function SalesFunnelSidebar({
@@ -114,9 +127,12 @@ export function SalesFunnelSidebar({
   clientSegment,
   meetingInfo,
   bleedChips = [],
+  objectifsComplete = true,
   onEnterClosing,
   onBackToQualification,
   onSectionChange,
+  collapsible = "none",
+  className,
 }: SalesFunnelSidebarProps) {
   const qualificationSections = getSalesFunnelSections(audience, clientSegment);
   const closingSections = getSalesClosingSections(audience, clientSegment);
@@ -143,12 +159,22 @@ export function SalesFunnelSidebar({
               : SECTION_ICONS[section.id as SalesFunnelSectionId];
           const isComplete =
             section.id !== "rendez-vous" && completedSectionIds.includes(section.id);
+          const pitchLocked =
+            section.id === "pitch" &&
+            isCabinetBuyerSalesAudience(audience) &&
+            !objectifsComplete &&
+            !developerModeEnabled;
           return (
             <SidebarMenuItem key={section.id}>
               <SidebarMenuButton
                 isActive={activeSectionId === section.id}
                 tooltip={section.label}
-                onClick={() => onSectionChange(section.id)}
+                disabled={pitchLocked}
+                onClick={() => {
+                  if (!pitchLocked) {
+                    onSectionChange(section.id);
+                  }
+                }}
               >
                 <Icon />
                 <span className="flex-1 truncate">{section.label}</span>
@@ -164,7 +190,11 @@ export function SalesFunnelSidebar({
   }
 
   return (
-    <Sidebar variant="sidebar" collapsible="none" className="h-svh shrink-0 border-r border-border">
+    <Sidebar
+      variant="sidebar"
+      collapsible={collapsible}
+      className={cn("h-svh shrink-0 border-r border-border", className)}
+    >
 
       {/* ── Header ── */}
       <SidebarHeader className="gap-0 pb-3 pt-3">

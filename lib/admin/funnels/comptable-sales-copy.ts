@@ -193,6 +193,69 @@ export const FOUNDATION_DEPLOYMENT_WEEKLY_REPORT_LINES = [
 export const FOUNDATION_CALENDRIER_CLOSER_COPY =
   "Le calendrier n'est pas une file de leads. C'est le déploiement Foundation sur la zone du cabinet. À J+60 le système est live. Si une demande arrive plus tôt, c'est du bonus — on ne le promet pas à l'écran.";
 
+export const FOUNDATION_ACTIVATION_CLOCKS = [
+  {
+    id: "deploy",
+    label: "Déploiement",
+    duration: "60 jours",
+    message: "Système live à J+60 — aucun premier RDV promis à l'écran.",
+  },
+  {
+    id: "guarantee",
+    label: "Garantie",
+    duration: "90 jours",
+    message: "Checkpoint MRR dès l'activation — 5 000 € de récurrent cumulé.",
+  },
+] as const;
+
+export const FOUNDATION_MARKETING_DEPT_HEADLINE =
+  "Les 2 premiers mois — on bâtit le département marketing du cabinet";
+
+export const FOUNDATION_MARKETING_DEPT_BODY =
+  "Pendant les 60 premiers jours, on ne promet pas encore de volume. On installe les fondations : verrou de zone, identité, landing, capture brandée et cartographie des flux légaux. C'est le département marketing que le cabinet n'a pas eu le temps de construire — pas une campagne opaque.";
+
+export type FoundationFoundationBlock = {
+  id: string;
+  month: string;
+  title: string;
+  items: string[];
+};
+
+export const FOUNDATION_FOUNDATION_BLOCKS: FoundationFoundationBlock[] = [
+  {
+    id: "month-1",
+    month: "Mois 1",
+    title: "Verrouillage & cartographie",
+    items: [
+      "Verrou 1 cabinet / zone",
+      "Cartographie des flux légaux",
+      "Filtres cabinet",
+      "Capture brandée (identité / landing / tracking)",
+    ],
+  },
+  {
+    id: "month-2",
+    month: "Mois 2",
+    title: "Capture & calibrage",
+    items: [
+      "Tests de friction sur le parcours dirigeant",
+      "Montée en charge du ciblage",
+      "Rapport hebdo « ce qui a été raccordé »",
+    ],
+  },
+];
+
+export const FOUNDATION_FOUNDATION_CLOSER_COPY =
+  "Traite {cause} — sans ces fondations, toute acquisition reste de la location. SEO, pub, apporteurs : le cabinet paie sans construire d'actif.";
+
+export const FOUNDATION_ACTIVATION_HEADLINE = "Mois 3 — système live";
+
+export const FOUNDATION_ACTIVATION_BODY =
+  "À J+46 → J+60, la capture s'allume et les demandes routent vers l'inbox / l'agenda du cabinet. La fenêtre garantie 90 jours démarre à l'activation — le checkpoint MRR vient après le déploiement, pas avant.";
+
+export const FOUNDATION_ROI_ACK_LABEL =
+  "Le cabinet valide la maths ROI contractuelle (investissement 90 jours, garantie 5 000 €, valeur année 1).";
+
 export const FOUNDATION_ROI_DISPLAY = {
   horizonMonthlyEur: 2_399,
   investment90DaysEur: 7_197,

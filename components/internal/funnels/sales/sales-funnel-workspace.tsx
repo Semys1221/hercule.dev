@@ -4,16 +4,20 @@ import type { UseFormReturn } from "react-hook-form";
 
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
+import type { LiveTrackSection } from "@/lib/admin/funnels/sales-cabinet-live-track";
+import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import { SESSION_PHASE_QUALIFICATION } from "@/lib/admin/funnels/ui-copy";
 import type { Audience } from "@/lib/admin/navigation";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 
+import { SalesCabinetLiveTrack } from "./sales-cabinet-live-track";
 import { RendezVousPanel } from "./rendez-vous-panel";
 import { SalesClosingPanel } from "./sales-closing-panel";
 import type { SalesClosingSectionId, SalesClosingValues } from "./sales-closing-sections";
 import { SalesCompanyPresentationPanel } from "./sales-company-presentation-panel";
 import { SalesFunnelSectionPage } from "./sales-funnel-section-page";
 import type { SalesFunnelSection, SalesFunnelSectionId } from "./sales-funnel-sections";
+import { SalesMappingPanel } from "./sales-mapping-panel";
 
 type SalesFunnelWorkspaceProps = {
   audience: Audience;
@@ -30,6 +34,10 @@ type SalesFunnelWorkspaceProps = {
   sessionResetKey: number;
   developerModeEnabled: boolean;
   prospectFirstName: string;
+  immersiveCabinetWizard?: boolean;
+  onOpenSidebar?: () => void;
+  onGoToObjectifs?: () => void;
+  onLiveTrackSectionChange?: (section: LiveTrackSection) => void;
   onClosingChange: (patch: Partial<SalesClosingValues>) => void;
   onMeetingNameChange: (name: string) => void;
   onBookingSelect: (booking: EnrichedCalendlyBooking | null) => Promise<void>;
@@ -57,6 +65,10 @@ export function SalesFunnelWorkspace({
   sessionResetKey,
   developerModeEnabled,
   prospectFirstName,
+  immersiveCabinetWizard = false,
+  onOpenSidebar,
+  onGoToObjectifs,
+  onLiveTrackSectionChange,
   onClosingChange,
   onMeetingNameChange,
   onBookingSelect,
@@ -72,10 +84,18 @@ export function SalesFunnelWorkspace({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <header className="flex h-12 shrink-0 items-center border-b border-border px-4 md:px-6">
-        <p className="truncate text-sm text-muted-foreground">{headerLabel}</p>
-      </header>
-      <div className="flex-1 overflow-auto p-3 md:p-4">
+      {!immersiveCabinetWizard ? (
+        <header className="flex h-12 shrink-0 items-center border-b border-border px-4 md:px-6">
+          <p className="truncate text-sm text-muted-foreground">{headerLabel}</p>
+        </header>
+      ) : null}
+      <div
+        className={
+          immersiveCabinetWizard
+            ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+            : "flex-1 overflow-auto p-3 md:p-4"
+        }
+      >
         {phase === "closing" ? (
           <SalesClosingPanel
             audience={audience}
@@ -108,6 +128,24 @@ export function SalesFunnelWorkspace({
             form={form}
             prospectFirstName={prospectFirstName}
           />
+        ) : activeQualificationId === "mapping" ? (
+          <SalesMappingPanel audience={audience} />
+        ) : immersiveCabinetWizard &&
+          isCabinetBuyerSalesAudience(audience) &&
+          (activeQualificationId === "objectifs" || activeQualificationId === "pitch") ? (
+          <SalesCabinetLiveTrack
+            key="cabinet-live-track"
+            audience={audience}
+            form={form}
+            activeQualificationId={activeQualificationId}
+            prospectFirstName={prospectFirstName}
+            developerModeEnabled={developerModeEnabled}
+            selectedLead={selectedLead}
+            selectedBooking={selectedBooking}
+            onRefreshLead={onRefreshLead}
+            onOpenSidebar={onOpenSidebar}
+            onActiveSectionChange={onLiveTrackSectionChange}
+          />
         ) : activeQualificationSection ? (
           <SalesFunnelSectionPage
             key={activeQualificationId}
@@ -115,6 +153,13 @@ export function SalesFunnelWorkspace({
             section={activeQualificationSection}
             form={form}
             prospectFirstName={prospectFirstName}
+            developerModeEnabled={developerModeEnabled}
+            selectedLead={selectedLead}
+            selectedBooking={selectedBooking}
+            immersiveCabinetWizard={immersiveCabinetWizard}
+            onOpenSidebar={onOpenSidebar}
+            onRefreshLead={onRefreshLead}
+            onGoToObjectifs={onGoToObjectifs}
           />
         ) : null}
       </div>

@@ -13,7 +13,7 @@ const SECTION_COPY = {
   title: "Demandes qualifiées et signaux capturés en continu",
   intro:
     "Hercule surveille les formalités Sirene et Pappers, capte les signaux d'intention en temps réel, puis qualifie chaque dirigeant PME avant d'attribuer la mission au cabinet compatible.",
-  demandesLabel: "Missions en attribution",
+  demandesLabel: "Missions récemment attribuées",
   signauxLabel: "Signaux capturés",
 }
 

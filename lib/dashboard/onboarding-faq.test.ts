@@ -3,9 +3,12 @@ import assert from "node:assert/strict";
 
 import type { BleedTrack } from "@/lib/admin/funnels/sales-bleed-track";
 import {
+  getClosingCommitOptions,
+  getClosingFitOptions,
   getHesitationSlides,
   getIntentionOptions,
   getOnboardingFaq,
+  isClosingFitWhyValid,
 } from "./onboarding-faq";
 
 const mockBleed: BleedTrack = {
@@ -47,6 +50,7 @@ const comptable = getOnboardingFaq("comptable", mockContext);
 assert.equal(comptable.items.length, 12);
 assert.equal(comptable.items[0].id, "obj-payment");
 assert.match(comptable.items[0].a, /un seul cabinet/);
+assert.match(comptable.items[0].a, /Rhône \(69\)/);
 assert.match(
   comptable.items.find((item) => item.id === "obj-associe")?.a ?? "",
   /180.?000/,
@@ -56,14 +60,23 @@ assert.match(
   /12 mandats\/an/,
 );
 assert.match(
+  comptable.items.find((item) => item.id === "obj-reflechir")?.q ?? "",
+  /Je souhaite y réfléchir/,
+);
+assert.match(
   comptable.items.find((item) => item.id === "obj-reflechir")?.a ?? "",
   /l'invisibilité locale/,
 );
+assert.match(
+  comptable.items.find((item) => item.id === "obj-reflechir")?.a ?? "",
+  /Bien sûr/,
+);
 assert.doesNotMatch(
   comptable.items.slice(0, 3).map((item) => item.a).join(" "),
-  /10.*RDV|20.?25 jours|998|1.?499/,
+  /10.*RDV|20.?25 jours|998|1.?499|confrère|pour voir|caprice/i,
 );
 assert.match(comptable.tieDown, /Foundation sur la zone du cabinet/);
+assert.doesNotMatch(comptable.tieDown, /pour voir/i);
 
 const cif = getOnboardingFaq("cif");
 assert.equal(cif.items.length, 12);
@@ -90,6 +103,17 @@ assert.doesNotMatch(
   /pour voir|tester|recevoir des demandes/i,
 );
 
+const fitOptions = getClosingFitOptions();
+assert.equal(fitOptions.length, 3);
+assert.match(fitOptions[0].label, /me convient/);
+
+const commitOptions = getClosingCommitOptions();
+assert.equal(commitOptions.length, 2);
+assert.match(commitOptions[1].label, /encore une question/);
+
+assert.equal(isClosingFitWhyValid("x".repeat(19)), false);
+assert.equal(isClosingFitWhyValid("x".repeat(20)), true);
+
 const agenceSlides = getHesitationSlides("agence", mockContext);
 assert.equal(agenceSlides.length, 3);
 
@@ -97,5 +121,6 @@ const cabinetSlides = getHesitationSlides("cif", mockContext);
 assert.equal(cabinetSlides.length, 4);
 assert.match(cabinetSlides[3].alert ?? "", /Rhône \(69\)/);
 assert.match(cabinetSlides[3].body, /Jean/);
+assert.doesNotMatch(cabinetSlides[3].body, /confrère/i);
 
 console.log("onboarding-faq.test.ts: ok");

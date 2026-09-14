@@ -3,15 +3,15 @@
 import assert from "node:assert/strict";
 
 import {
-  COMPTABLE_ANNUAL_MIN,
   COMPTABLE_ANNUAL_TYPICAL,
 } from "@/components/internal/funnels/sales/sales-questions-comptable";
 import {
-  CIF_ANNUAL_MIN,
   CIF_ANNUAL_TYPICAL,
 } from "@/components/internal/funnels/sales/sales-questions-cif";
 import {
   getSalesQualificationDefaultValues,
+  getSalesQualificationProgress,
+  isSalesQualificationComplete,
   isSalesSectionComplete,
 } from "@/lib/admin/funnels/sales-qualification-schema";
 import {
@@ -28,28 +28,22 @@ function main() {
   assert.equal(comptableDefaults.q16, null);
   assert.equal(comptableDefaults.bleedDiagnosticAccepted, false);
   assert.equal(comptableDefaults.o3Duration, undefined);
+  assert.equal(comptableDefaults.pitchWizardCompleted, false);
 
   assert.deepEqual(comptableDefaults.q21, []);
 
   assert.equal(
-    isSalesSectionComplete(
-      "standards",
-      {
-        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        q13: COMPTABLE_ANNUAL_MIN,
-        q14: "annual",
-      },
-      "comptable",
-    ),
+    isSalesSectionComplete("pitch", SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, "comptable"),
     true,
+    "comptable test preset completes pitch section",
   );
 
   assert.equal(
     isSalesSectionComplete(
-      "standards",
+      "pitch",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        q21: [],
+        pitchWizardCompleted: false,
       },
       "comptable",
     ),
@@ -76,18 +70,6 @@ function main() {
       "agence",
     ),
     true,
-  );
-
-  assert.equal(
-    isSalesSectionComplete(
-      "standards",
-      {
-        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        q13: COMPTABLE_ANNUAL_MIN - 1,
-      },
-      "comptable",
-    ),
-    false,
   );
 
   assert.equal(
@@ -131,13 +113,12 @@ function main() {
       "objectifs",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        b5b: undefined,
-        b5: ["word_of_mouth", "seo"],
+        w17Acknowledged: false,
       },
       "comptable",
     ),
     false,
-    "b5b required when two methods selected",
+    "wizard requires w17Acknowledged",
   );
 
   assert.equal(
@@ -145,11 +126,13 @@ function main() {
       "objectifs",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        b8: "",
+        w13: "no",
+        w13Why: "",
       },
       "comptable",
     ),
     false,
+    "w13Why required when w13 is no",
   );
 
   const cifDefaults = getSalesQualificationDefaultValues("cif");
@@ -158,26 +141,18 @@ function main() {
   assert.equal(cifDefaults.q15, "mixte");
 
   assert.equal(
-    isSalesSectionComplete(
-      "standards",
-      {
-        ...SALES_TEST_SESSION_CIF_QUALIFICATION,
-        q21: [],
-      },
-      "cif",
-    ),
-    false,
+    isSalesSectionComplete("pitch", SALES_TEST_SESSION_CIF_QUALIFICATION, "cif"),
+    true,
   );
 
+  const comptableProgress = getSalesQualificationProgress(
+    SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
+    "comptable",
+  );
+  assert.equal(comptableProgress.totalSections, 3);
+  assert.equal(comptableProgress.completedSections, 3);
   assert.equal(
-    isSalesSectionComplete(
-      "standards",
-      {
-        ...SALES_TEST_SESSION_CIF_QUALIFICATION,
-        q13: CIF_ANNUAL_MIN,
-      },
-      "cif",
-    ),
+    isSalesQualificationComplete(SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, "comptable"),
     true,
   );
 

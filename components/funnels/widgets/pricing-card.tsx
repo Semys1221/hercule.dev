@@ -7,6 +7,7 @@ import { ArrowRight, Check, ChevronDown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CALENDLY_AGENCE_URL } from "@/lib/constants";
+import { MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy";
 import type { PricingPlan } from "@/lib/site/pricing-types";
 import { cn } from "@/lib/utils";
 
@@ -146,7 +147,7 @@ export function PricingCard({
   ctaLabel,
   onCtaClick,
   ctaHref = CALENDLY_AGENCE_URL,
-  ctaLinkLabel = "Soumettre ma candidature",
+  ctaLinkLabel = MARKETING_PRIMARY_CTA,
   forceCta = false,
   showRecommendedBadge = true,
   className,

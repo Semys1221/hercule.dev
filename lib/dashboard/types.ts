@@ -105,3 +105,17 @@ export type DashboardData = {
 };
 
 export type OnboardingIntentionLevel = "strong" | "moderate" | "hesitate";
+
+export type ClosingFitLevel = "fits" | "partial" | "mismatch";
+
+export type ClosingCommitLevel = "launch" | "hesitate";
+
+export type DashboardClosingState = {
+  fit: ClosingFitLevel | null;
+  fitWhy: string;
+  commit: ClosingCommitLevel | null;
+  serviceFits: boolean | null;
+  serviceWhy: string;
+  friction: string;
+  recoveryCompleted: boolean;
+};

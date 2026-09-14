@@ -23,6 +23,9 @@ import {
 import { buildComptableNotPaidMilestones } from "@/lib/dashboard/comptable-not-paid-milestones";
 import { buildDashboardRetractionFields } from "@/lib/dashboard/retraction-fields";
 import type {
+  ClosingCommitLevel,
+  ClosingFitLevel,
+  DashboardClosingState,
   DashboardFaqAudience,
   DashboardFaqItem,
   DashboardFormData,
@@ -47,6 +50,50 @@ type RouteParams = {
 function tieDownAcceptedFromProfile(profile: Record<string, unknown> | null): boolean {
   const closing = (profile?.dashboard ?? {}) as Record<string, unknown>;
   return Boolean(closing.tie_down_accepted);
+}
+
+function parseClosingFitLevel(value: unknown): ClosingFitLevel | null {
+  if (value === "fits" || value === "partial" || value === "mismatch") {
+    return value;
+  }
+  return null;
+}
+
+function parseClosingCommitLevel(value: unknown): ClosingCommitLevel | null {
+  if (value === "launch" || value === "hesitate") {
+    return value;
+  }
+  return null;
+}
+
+function mergeDashboardClosing(
+  existing: unknown,
+  patch: Record<string, unknown>,
+): DashboardClosingState {
+  const prev = (existing ?? {}) as Partial<DashboardClosingState>;
+  const fit = parseClosingFitLevel(patch.fit);
+  const commit = parseClosingCommitLevel(patch.commit);
+
+  return {
+    fit: fit ?? prev.fit ?? null,
+    fitWhy:
+      typeof patch.fitWhy === "string" ? patch.fitWhy : (prev.fitWhy ?? ""),
+    commit: commit ?? prev.commit ?? null,
+    serviceFits:
+      typeof patch.serviceFits === "boolean"
+        ? patch.serviceFits
+        : (prev.serviceFits ?? null),
+    serviceWhy:
+      typeof patch.serviceWhy === "string"
+        ? patch.serviceWhy
+        : (prev.serviceWhy ?? ""),
+    friction:
+      typeof patch.friction === "string" ? patch.friction : (prev.friction ?? ""),
+    recoveryCompleted:
+      patch.recoveryCompleted === true
+        ? true
+        : (prev.recoveryCompleted ?? false),
+  };
 }
 
 function timelineFromProfile(profile: Record<string, unknown> | null) {
@@ -473,11 +520,25 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         return NextResponse.json({ ok: true });
       }
 
-      if (body.tieDownAccepted === true) {
+      if (
+        body.tieDownAccepted === true ||
+        (body.closing && typeof body.closing === "object")
+      ) {
         const profile = { ...(lead.profile ?? {}) } as Record<string, unknown>;
         const dashboardMeta = { ...((profile.dashboard ?? {}) as Record<string, unknown>) };
-        dashboardMeta.tie_down_accepted = true;
-        dashboardMeta.tie_down_accepted_at = new Date().toISOString();
+
+        if (body.closing && typeof body.closing === "object") {
+          dashboardMeta.closing = mergeDashboardClosing(
+            dashboardMeta.closing,
+            body.closing as Record<string, unknown>,
+          );
+        }
+
+        if (body.tieDownAccepted === true) {
+          dashboardMeta.tie_down_accepted = true;
+          dashboardMeta.tie_down_accepted_at = new Date().toISOString();
+        }
+
         profile.dashboard = dashboardMeta;
 
         const { error } = await client.from(table).update({ profile }).eq("id", lead.id);

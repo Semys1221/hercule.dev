@@ -373,9 +373,12 @@ export function SalesClosingPanel({
   );
   const dashboardLink = dashboardResolution.link;
   const usingFakeDashboardLink = dashboardResolution.isFake;
+  const dashboardReady = isSalesClosingReadyForDashboardLink(closingValues, {
+    audience,
+    qualificationValues,
+  });
   const showDashboardLinkBlock =
-    Boolean(dashboardLink) &&
-    (developerMode || isSalesClosingReadyForDashboardLink(closingValues));
+    Boolean(dashboardLink) && (developerMode || dashboardReady);
 
   const presetResult = useMemo(
     () => scoreAgencyPresets(qualificationValues, audience),
@@ -569,10 +572,14 @@ export function SalesClosingPanel({
               </ol>
             </div>
 
-            {!developerMode && !isSalesClosingReadyForDashboardLink(closingValues) ? (
+            {!developerMode && !dashboardReady ? (
               <InternalStatusAlert
                 variant="error"
-                message="Validez les tie-downs « règles de traitement » et « calendrier » avant d'envoyer le lien."
+                message={
+                  isCabinetBuyerSalesAudience(audience)
+                    ? "Terminez le wizard Pitch (plan, pourquoi, lien dashboard) avant d'envoyer le lien."
+                    : "Validez les tie-downs « règles de traitement » et « calendrier » avant d'envoyer le lien."
+                }
               />
             ) : null}
 

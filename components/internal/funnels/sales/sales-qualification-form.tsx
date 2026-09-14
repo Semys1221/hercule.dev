@@ -147,6 +147,34 @@ export function SalesQualificationForm({
     .map((question) => applyBleedQuestionCopy(question, bleedTrack))
     .filter((question) => isQuestionVisible(question, watchedValues, showCoachScripts));
 
+  useEffect(() => {
+    if (section.id !== "objectifs" || !showCoachScripts) {
+      return;
+    }
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "d6e0ce",
+      },
+      body: JSON.stringify({
+        sessionId: "d6e0ce",
+        runId: "wizard-routing",
+        hypothesisId: "C",
+        location: "sales-qualification-form.tsx:useEffect",
+        message: "flat SalesQualificationForm rendering objectifs",
+        data: {
+          audience,
+          questionIds: questions.map((question) => question.id),
+          questionCount: questions.length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [audience, questions, section.id, showCoachScripts]);
+
   return (
     <div className="space-y-5">
       <Card className={COMPACT_CARD_CLASS}>

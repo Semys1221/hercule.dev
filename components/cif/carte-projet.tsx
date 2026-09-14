@@ -1,9 +1,6 @@
 "use client"
 
-import {
-  ArrowRight,
-  Check,
-} from "lucide-react"
+import { Check } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { CardContent, CardHeader } from "@/components/ui/card"
 import { DemandeFlipCard } from "@/components/demandes/demande-flip-card"
@@ -104,7 +101,6 @@ export function CarteProjet({ demande }: { demande: DemandeContrat }) {
                 <DemandeMetaRow label="Honoraires" value={demande.budget} variant="marketing" />
                 <DemandeMetaRow label="Profil PME" value={demande.taille} variant="marketing" />
               </div>
-              {!isAssigned && <PostulerActionBar />}
             </CardContent>
           </>
         }

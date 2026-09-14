@@ -7,8 +7,10 @@ import { Marquee } from "@/components/ui/marquee"
 import { cn } from "@/lib/utils"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
+import { getMarketingCopy, MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy"
 
 const CARD_WIDTH = "w-[300px] sm:w-[320px]"
+const copy = getMarketingCopy("agence")
 
 interface BandeProjetsProps {
   demandes: DemandeContrat[]
@@ -34,7 +36,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             className="flex items-center gap-2 mb-6"
           >
             <div className="w-2 h-2 rounded-full bg-indigo-500" />
-            <span className="text-zinc-400 text-sm">Demandes</span>
+            <span className="text-zinc-400 text-sm">{copy.bandeProjets.eyebrow}</span>
             <ChevronRight className="w-4 h-4 text-zinc-500" />
           </motion.div>
 
@@ -46,7 +48,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             className="text-3xl sm:text-4xl md:text-5xl text-white max-w-3xl mb-6"
             style={{ letterSpacing: "-0.0325em", fontWeight: 538, lineHeight: 1.1 }}
           >
-            +25 projets actuellement disponibles
+            {copy.bandeProjets.title}
           </motion.h2>
 
           <motion.p
@@ -56,7 +58,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             transition={{ delay: 0.12 }}
             className="text-zinc-500 text-sm mb-6"
           >
-            Aperçus de nos demandes actuellement disponibles et validées.
+            {copy.bandeProjets.subtitle}
           </motion.p>
 
           <motion.p
@@ -66,8 +68,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             transition={{ delay: 0.15 }}
             className="text-zinc-400 max-w-2xl leading-relaxed"
           >
-            Hercule qualifie les besoins des entreprises et identifie les agences présentant la meilleure
-            compatibilité avec chaque projet.
+            {copy.bandeProjets.intro}
           </motion.p>
         </div>
       </div>
@@ -104,9 +105,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             transition={{ delay: 0.3 }}
             className="text-zinc-500 text-xs max-w-2xl leading-relaxed"
           >
-            Les demandes affichées correspondent à des projets validés avec le dirigeant et planifiés
-            à l&apos;avance (mandat de délégation signé). Les détails complets sont présentés lors de
-            l&apos;audit de compatibilité.
+            {copy.bandeProjets.disclaimer}
           </motion.p>
 
           <motion.div
@@ -120,7 +119,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
               href={CALENDLY_AGENCE_URL}
               className="inline-flex px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
             >
-              Vérifier la compatibilité de mon agence
+              {MARKETING_PRIMARY_CTA}
             </a>
           </motion.div>
         </div>

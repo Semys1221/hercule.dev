@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { HerculeMark } from "@/components/hercule-mark"
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
+import { MARKETING_NAV_PIPELINE, MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy"
 
 export function Navbar() {
   return (
@@ -18,7 +19,7 @@ export function Navbar() {
               Méthode
             </a>
             <a href="#missions" className="text-sm text-zinc-400 hover:text-white transition-colors">
-              Missions
+              {MARKETING_NAV_PIPELINE}
             </a>
             <a href="#garanties" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Garanties
@@ -41,7 +42,7 @@ export function Navbar() {
               href={CALENDLY_ENTREPRISE_URL}
               className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors"
             >
-              Proposer mon cabinet
+              {MARKETING_PRIMARY_CTA}
             </a>
           </div>
         </div>

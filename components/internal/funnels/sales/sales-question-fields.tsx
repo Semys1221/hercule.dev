@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Field,
   FieldGroup,
@@ -29,7 +30,9 @@ import {
   formatSliderRange,
   type SalesAcknowledgmentQuestion,
   type SalesConditionalSliderQuestion,
+  type SalesConfirmationMirrorQuestion,
   type SalesDiagnosticCardQuestion,
+  type SalesTextQuestion,
   type SalesMultiQuestion,
   type SalesQuestionOption,
   type SalesSingleQuestion,
@@ -51,13 +54,20 @@ const QUESTION_FIELD_SET =
 const SLIDER_VALUE_GAP = "space-y-3";
 const CHOICE_GROUP_CLASS =
   "grid grid-cols-[repeat(auto-fill,minmax(min(100%,9.5rem),1fr))] gap-2";
+const IMMERSIVE_CHOICE_GROUP_CLASS =
+  "grid grid-cols-1 gap-3 sm:grid-cols-2";
 /** FieldLabel adds border/background when wrapping a Field — layout only on the inner Field. */
 const CHOICE_LABEL_CLASS =
   "w-full font-normal transition-colors hover:border-primary/50 hover:bg-primary/5";
+const IMMERSIVE_CHOICE_LABEL_CLASS =
+  "w-full font-normal transition-colors hover:border-primary/50 hover:bg-primary/5 rounded-lg border border-border bg-card/40";
 const CHOICE_LABEL_DISABLED_CLASS =
   "cursor-not-allowed opacity-50 hover:border-border hover:bg-transparent";
 const CHOICE_FIELD_CLASS = "min-h-10 flex-1 items-center gap-2 !p-3";
+const IMMERSIVE_CHOICE_FIELD_CLASS = "min-h-14 flex-1 items-center gap-3 !p-4";
 const CHOICE_CHIP_WRAPPER_CLASS = "relative flex w-full items-stretch";
+
+export type SalesQuestionFieldVariant = "default" | "immersive";
 
 function OptionHelpPopover({ option }: { option: SalesQuestionOption }) {
   if (!option.helpText) {
@@ -154,28 +164,39 @@ type SalesSingleChoiceFieldProps = {
   question: SalesSingleQuestion;
   value: string;
   onChange: (value: string) => void;
+  variant?: SalesQuestionFieldVariant;
 };
 
 export function SalesSingleChoiceField({
   question,
   value,
   onChange,
+  variant = "default",
 }: SalesSingleChoiceFieldProps) {
+  const immersive = variant === "immersive";
+
   return (
     <FieldSet className={QUESTION_FIELD_SET}>
-      <SalesQuestionHeader
-        number={question.number}
-        prompt={question.prompt}
-        description={question.description}
-        bleedBenefit={question.bleedBenefit}
-      />
+      {!immersive ? (
+        <SalesQuestionHeader
+          number={question.number}
+          prompt={question.prompt}
+          description={question.description}
+          bleedBenefit={question.bleedBenefit}
+        />
+      ) : null}
       <RadioGroup
         value={value}
         onValueChange={onChange}
-        className={CHOICE_GROUP_CLASS}
+        className={immersive ? IMMERSIVE_CHOICE_GROUP_CLASS : CHOICE_GROUP_CLASS}
       >
         {question.options.map((option) => (
-          <ChoiceChip key={option.id} option={option} groupId={question.id} />
+          <ChoiceChip
+            key={option.id}
+            option={option}
+            groupId={question.id}
+            variant={variant}
+          />
         ))}
       </RadioGroup>
     </FieldSet>
@@ -192,6 +213,7 @@ type SalesMultiChoiceFieldProps = {
   onChange: (value: string[]) => void;
   otherValue?: string;
   onOtherChange?: (value: string) => void;
+  variant?: SalesQuestionFieldVariant;
 };
 
 export function SalesMultiChoiceField({
@@ -200,7 +222,9 @@ export function SalesMultiChoiceField({
   onChange,
   otherValue = "",
   onOtherChange,
+  variant = "default",
 }: SalesMultiChoiceFieldProps) {
+  const immersive = variant === "immersive";
   const maxSelections = question.maxSelections;
   const exclusiveId = question.exclusiveOptionId;
   const disabledOptionIds = new Set(
@@ -244,16 +268,18 @@ export function SalesMultiChoiceField({
 
   return (
     <FieldSet className={QUESTION_FIELD_SET}>
-      <SalesQuestionHeader
-        number={question.number}
-        prompt={question.prompt}
-        description={question.description}
-        bleedBenefit={question.bleedBenefit}
-        trailing={counterBadge}
-      />
+      {!immersive ? (
+        <SalesQuestionHeader
+          number={question.number}
+          prompt={question.prompt}
+          description={question.description}
+          bleedBenefit={question.bleedBenefit}
+          trailing={counterBadge}
+        />
+      ) : null}
       <FieldGroup
         data-slot="checkbox-group"
-        className={CHOICE_GROUP_CLASS}
+        className={immersive ? IMMERSIVE_CHOICE_GROUP_CLASS : CHOICE_GROUP_CLASS}
       >
         {question.options.map((option) => {
           const isChecked = selectableValue.includes(option.id);
@@ -315,6 +341,7 @@ type SalesSliderFieldProps = {
   onChange: (value: number | null) => void;
   sliderConfig?: SalesSliderConfig;
   alertMessage?: string;
+  variant?: SalesQuestionFieldVariant;
 };
 
 export function SalesSliderField({
@@ -323,7 +350,9 @@ export function SalesSliderField({
   onChange,
   sliderConfig,
   alertMessage,
+  variant = "default",
 }: SalesSliderFieldProps) {
+  const immersive = variant === "immersive";
   const { slider, optOutLabel } = question;
   const config = sliderConfig ?? slider;
   const optedOut = value === null;
@@ -331,12 +360,14 @@ export function SalesSliderField({
 
   return (
     <FieldSet className={QUESTION_FIELD_SET}>
-      <SalesQuestionHeader
-        number={question.number}
-        prompt={question.prompt}
-        description={question.description}
-        bleedBenefit={question.bleedBenefit}
-      />
+      {!immersive ? (
+        <SalesQuestionHeader
+          number={question.number}
+          prompt={question.prompt}
+          description={question.description}
+          bleedBenefit={question.bleedBenefit}
+        />
+      ) : null}
       <SliderControl
         config={config}
         value={displayValue}
@@ -495,7 +526,10 @@ export function SalesAcknowledgmentField({
       <SalesQuestionHeader number={question.number} prompt={question.prompt} />
       <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm leading-relaxed">
         {paragraphs.map((paragraph, index) => (
-          <p key={index} className={index > 0 ? "mt-3 font-medium" : undefined}>
+          <p
+            key={`${question.id}-paragraph-${index}-${paragraph.slice(0, 24)}`}
+            className={index > 0 ? "mt-3 font-medium" : undefined}
+          >
             {paragraph.replace(/\*\*(.*?)\*\*/g, "$1")}
           </p>
         ))}
@@ -507,7 +541,72 @@ export function SalesAcknowledgmentField({
           onCheckedChange={(checked) => onAcknowledgedChange(checked === true)}
         />
         <FieldLabel htmlFor={`${question.id}-ack`} className="text-sm font-normal">
-          Le cabinet reconnaît ce constat
+          {question.checkboxLabel ?? "Le cabinet reconnaît ce constat"}
+        </FieldLabel>
+      </Field>
+    </FieldSet>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Text (wizard follow-ups)
+// ---------------------------------------------------------------------------
+
+type SalesTextFieldProps = {
+  question: SalesTextQuestion;
+  value: string;
+  onChange: (value: string) => void;
+};
+
+export function SalesTextField({ question, value, onChange }: SalesTextFieldProps) {
+  return (
+    <FieldSet className={QUESTION_FIELD_SET}>
+      <SalesQuestionHeader
+        number={question.number}
+        prompt={question.prompt}
+        description={question.description}
+      />
+      <Textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={question.placeholder ?? "Réponse du cabinet…"}
+        rows={3}
+      />
+    </FieldSet>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Confirmation mirror (wizard w12)
+// ---------------------------------------------------------------------------
+
+type SalesConfirmationMirrorFieldProps = {
+  question: SalesConfirmationMirrorQuestion;
+  mirrorText: string;
+  confirmed: boolean;
+  onConfirmedChange: (value: boolean) => void;
+};
+
+export function SalesConfirmationMirrorField({
+  question,
+  mirrorText,
+  confirmed,
+  onConfirmedChange,
+}: SalesConfirmationMirrorFieldProps) {
+  return (
+    <FieldSet className={QUESTION_FIELD_SET}>
+      <SalesQuestionHeader number={question.number} prompt={question.prompt} />
+      <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm font-medium leading-relaxed">
+        {mirrorText.replace(/\*\*(.*?)\*\*/g, "$1")}
+      </div>
+      <Field orientation="horizontal">
+        <Checkbox
+          id={`${question.id}-confirm`}
+          checked={confirmed}
+          onCheckedChange={(checked) => onConfirmedChange(checked === true)}
+        />
+        <FieldLabel htmlFor={`${question.id}-confirm`} className="text-sm font-normal">
+          {question.checkboxLabel}
         </FieldLabel>
       </Field>
     </FieldSet>
@@ -632,9 +731,11 @@ function SliderControl({ config, value, disabled = false, onChange }: SliderCont
 type ChoiceChipProps = {
   option: SalesQuestionOption;
   groupId: string;
+  variant?: SalesQuestionFieldVariant;
 };
 
-function ChoiceChip({ option, groupId }: ChoiceChipProps) {
+function ChoiceChip({ option, groupId, variant = "default" }: ChoiceChipProps) {
+  const immersive = variant === "immersive";
   const inputId = `${groupId}-${option.id}`;
   const optionDisabled = Boolean(option.disabled);
 
@@ -643,13 +744,18 @@ function ChoiceChip({ option, groupId }: ChoiceChipProps) {
       <FieldLabel
         htmlFor={inputId}
         className={cn(
-          CHOICE_LABEL_CLASS,
+          immersive ? IMMERSIVE_CHOICE_LABEL_CLASS : CHOICE_LABEL_CLASS,
           optionDisabled && CHOICE_LABEL_DISABLED_CLASS,
         )}
       >
-        <Field orientation="horizontal" className={CHOICE_FIELD_CLASS}>
+        <Field
+          orientation="horizontal"
+          className={immersive ? IMMERSIVE_CHOICE_FIELD_CLASS : CHOICE_FIELD_CLASS}
+        >
           <RadioGroupItem value={option.id} id={inputId} disabled={optionDisabled} />
-          <FieldTitle className="pr-6 text-sm font-normal">{option.label}</FieldTitle>
+          <FieldTitle className={cn("pr-6 font-normal", immersive ? "text-base" : "text-sm")}>
+            {option.label}
+          </FieldTitle>
         </Field>
       </FieldLabel>
       <OptionHelpPopover option={option} />

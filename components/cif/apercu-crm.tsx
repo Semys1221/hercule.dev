@@ -76,12 +76,12 @@ const marieConversation = [
   },
   {
     sender: "Hercule",
-    text: "Parfait. Nous recherchons un cabinet compatible pour vous accompagner.",
+    text: "Nous avons identifié un cabinet partenaire compatible.",
     variant: "hercule" as const,
   },
   {
     sender: "Système",
-    text: "Mission en cours d'attribution — audit de compatibilité cabinet en cours",
+    text: "Mission attribuée à un cabinet partenaire",
     variant: "system" as const,
   },
 ]
@@ -132,7 +132,7 @@ export function ApercuCrm() {
           </div>
         </div>
         <div className="px-3 space-y-0.5">
-          <NavItem icon={Users} label="Missions disponibles" badge={12} active />
+          <NavItem icon={Users} label="Missions attribuées" badge={12} active />
           <NavItem icon={Phone} label="En qualification" badge={3} />
           <NavItem icon={Calendar} label="Rendez-vous planifiés" badge={5} />
         </div>

@@ -77,6 +77,18 @@ export type SalesConditionalSliderQuestion = SalesQuestionBase & {
 export type SalesAcknowledgmentQuestion = SalesQuestionBase & {
   type: "acknowledgment";
   trapTemplate: string;
+  checkboxLabel?: string;
+};
+
+export type SalesTextQuestion = SalesQuestionBase & {
+  type: "text";
+  placeholder?: string;
+};
+
+export type SalesConfirmationMirrorQuestion = SalesQuestionBase & {
+  type: "confirmation_mirror";
+  mirrorTemplate: string;
+  checkboxLabel: string;
 };
 
 export type SalesDiagnosticCardQuestion = SalesQuestionBase & {
@@ -92,6 +104,8 @@ export type SalesQuestion =
   | SalesSliderMatrixQuestion
   | SalesConditionalSliderQuestion
   | SalesAcknowledgmentQuestion
+  | SalesTextQuestion
+  | SalesConfirmationMirrorQuestion
   | SalesDiagnosticCardQuestion;
 
 export const SLIDER_CONFIGS = {
@@ -388,7 +402,10 @@ export const SALES_QUESTIONS: SalesQuestion[] = [
 ];
 
 import type { Audience } from "@/lib/admin/navigation";
-import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import {
+  isCabinetBuyerSalesAudience,
+  isComptableSalesAudience,
+} from "@/lib/admin/funnels/sales-audience";
 import {
   COMPTABLE_MONTHLY_MIN,
   COMPTABLE_SALES_QUESTIONS,
@@ -400,9 +417,8 @@ import {
   CIF_SLIDER_CONFIGS,
 } from "./sales-questions-cif";
 import { AGENCE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-agence";
-import { COMPTABLE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-comptable";
-import { CIF_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-cif";
 import { ENTREPRISE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-entreprise";
+import { getWizardObjectifsQuestions } from "./sales-questions-objectifs-wizard";
 
 export function getHerculeMonthlyMin(audience: Audience = "agence"): number {
   if (audience === "cif") return CIF_MONTHLY_MIN;
@@ -415,11 +431,8 @@ export function getSliderConfigs(audience: Audience = "agence") {
 }
 
 function getObjectifsQuestions(audience: Audience): SalesQuestion[] {
-  if (audience === "cif") {
-    return CIF_OBJECTIFS_QUESTIONS;
-  }
-  if (isComptableSalesAudience(audience)) {
-    return COMPTABLE_OBJECTIFS_QUESTIONS;
+  if (isCabinetBuyerSalesAudience(audience)) {
+    return getWizardObjectifsQuestions(audience);
   }
   if (audience === "entreprise") {
     return ENTREPRISE_OBJECTIFS_QUESTIONS;

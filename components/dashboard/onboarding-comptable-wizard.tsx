@@ -5,25 +5,46 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { Progress } from "@/components/ui/progress";
 import { DASHBOARD_DEV_SKIP_PAYMENT_ERROR } from "@/lib/admin/funnels/ui-copy";
 import { OFFER_TYPES_COMPTABLE, type OfferTypeComptable } from "@/lib/commercial/constants";
-import { requestCabinetCheckoutClientSecret } from "@/lib/payments/cabinet-checkout";
+import {
+  serviceFitsToBoolean,
+  type RecoveryDiagnostic,
+} from "@/lib/dashboard/closing-recovery";
 import {
   getDashboardDeveloperModeEnabledServerSnapshot,
   getDashboardDeveloperModeEnabledSnapshot,
   subscribeDashboardDeveloperModeEnabled,
 } from "@/lib/dashboard/developer-mode";
-import type { DashboardData, OnboardingIntentionLevel } from "@/lib/dashboard/types";
+import {
+  isClosingFitWhyValid,
+  type ClosingCommitLevel,
+  type ClosingFitLevel,
+} from "@/lib/dashboard/onboarding-faq";
+import { requestCabinetCheckoutClientSecret } from "@/lib/payments/cabinet-checkout";
+import type { DashboardClosingState, DashboardData } from "@/lib/dashboard/types";
 import { cn } from "@/lib/utils";
 
 import { DashboardBrandHeader, DashboardPageHeader } from "./brand-header";
 import { ComptableWizardControls } from "./onboarding-comptable-wizard-controls";
 import { ComptableWizardStepView } from "./onboarding-comptable-wizard-step";
 
-const STEP_COUNT = 7;
+const STEP_COUNT = 6;
 
 type OnboardingComptableWizardProps = {
   data: DashboardData;
   onRefresh?: () => void;
 };
+
+function emptyClosingState(): DashboardClosingState {
+  return {
+    fit: null,
+    fitWhy: "",
+    commit: null,
+    serviceFits: null,
+    serviceWhy: "",
+    friction: "",
+    recoveryCompleted: false,
+  };
+}
 
 export function OnboardingComptableWizard({
   data,
@@ -34,8 +55,12 @@ export function OnboardingComptableWizard({
     OFFER_TYPES_COMPTABLE.monthly1499,
   );
   const [tieDownAccepted, setTieDownAccepted] = useState(false);
-  const [intentionLevel, setIntentionLevel] = useState<OnboardingIntentionLevel | null>(null);
-  const [showHesitationSlides, setShowHesitationSlides] = useState(false);
+  const [closingFit, setClosingFit] = useState<ClosingFitLevel | null>(null);
+  const [fitWhy, setFitWhy] = useState("");
+  const [closingState, setClosingState] = useState<DashboardClosingState>(emptyClosingState);
+  const [commitLevel, setCommitLevel] = useState<ClosingCommitLevel | null>(null);
+  const [stripeRevealed, setStripeRevealed] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
   const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
   const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
   const [skipLoading, setSkipLoading] = useState(false);
@@ -52,18 +77,37 @@ export function OnboardingComptableWizard({
   const prospectLine = data.company ? `${greeting} · ${data.company}` : greeting;
 
   const isFaqStep = step === 3;
-  const isIntentionStep = step === 4;
-  const isPricingStep = step === 5;
-  const isCheckoutStep = step === 6;
-  const canGoNext = !isFaqStep || tieDownAccepted;
+  const isPricingStep = step === 4;
+  const isCheckoutStep = step === 5;
+  const faqStepComplete =
+    Boolean(closingFit) && isClosingFitWhyValid(fitWhy) && tieDownAccepted;
+  const canGoNext = !isFaqStep || faqStepComplete;
 
-  const persistTieDown = useCallback(async () => {
-    await fetch(`/api/dashboard/${encodeURIComponent(data.slug)}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tieDownAccepted: true }),
-    });
-  }, [data.slug]);
+  const persistDashboard = useCallback(
+    async (payload: Record<string, unknown>) => {
+      await fetch(`/api/dashboard/${encodeURIComponent(data.slug)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    },
+    [data.slug],
+  );
+
+  const persistClosing = useCallback(
+    async (partial: Partial<DashboardClosingState>, tieDown?: boolean) => {
+      let nextClosing = emptyClosingState();
+      setClosingState((current) => {
+        nextClosing = { ...current, ...partial };
+        return nextClosing;
+      });
+      await persistDashboard({
+        ...(tieDown ? { tieDownAccepted: true } : {}),
+        closing: nextClosing,
+      });
+    },
+    [persistDashboard],
+  );
 
   const preloadCheckout = useCallback(async () => {
     if (checkoutPreloadStartedRef.current) {
@@ -96,37 +140,69 @@ export function OnboardingComptableWizard({
   }, [data.slug, selectedOffer]);
 
   useEffect(() => {
-    if (step < 5) {
+    if (step < 4) {
       return;
     }
 
     void preloadCheckout();
   }, [step, preloadCheckout]);
 
-  useEffect(() => {
-    if (isPricingStep && intentionLevel === "hesitate") {
-      setShowHesitationSlides(true);
-    }
-  }, [intentionLevel, isPricingStep]);
-
   const goNext = useCallback(() => {
-    if (isFaqStep && tieDownAccepted) {
-      void persistTieDown();
+    if (isFaqStep && faqStepComplete && closingFit) {
+      void persistClosing(
+        {
+          fit: closingFit,
+          fitWhy: fitWhy.trim(),
+        },
+        true,
+      );
     }
     setStep((current) => Math.min(current + 1, STEP_COUNT - 1));
-  }, [isFaqStep, persistTieDown, tieDownAccepted]);
+  }, [closingFit, faqStepComplete, fitWhy, isFaqStep, persistClosing]);
 
   const goPrev = useCallback(() => {
     setStep((current) => Math.max(current - 1, 0));
   }, []);
 
-  const handleIntentionSelect = useCallback((level: OnboardingIntentionLevel) => {
-    setIntentionLevel(level);
-    if (level === "strong") {
-      setSelectedOffer(OFFER_TYPES_COMPTABLE.monthly1499);
-    }
-    setStep(5);
-  }, []);
+  const handleCommitSelect = useCallback(
+    (level: ClosingCommitLevel) => {
+      setCommitLevel(level);
+      void persistClosing({ commit: level });
+
+      if (level === "launch") {
+        setStripeRevealed(true);
+        return;
+      }
+
+      if (closingState.recoveryCompleted) {
+        setStripeRevealed(true);
+        return;
+      }
+
+      setShowRecovery(true);
+    },
+    [closingState.recoveryCompleted, persistClosing],
+  );
+
+  const handleRecoveryComplete = useCallback(
+    (diagnostic: RecoveryDiagnostic) => {
+      setShowRecovery(false);
+      setStripeRevealed(true);
+      void persistClosing({
+        serviceFits: serviceFitsToBoolean(diagnostic.serviceFits),
+        serviceWhy: diagnostic.serviceWhy.trim(),
+        friction: diagnostic.friction.trim(),
+        recoveryCompleted: true,
+      });
+    },
+    [persistClosing],
+  );
+
+  const handleSkipToPayment = useCallback(() => {
+    setShowRecovery(false);
+    setStripeRevealed(true);
+    void persistClosing({ recoveryCompleted: true });
+  }, [persistClosing]);
 
   const simulatePayment = useCallback(async () => {
     setSkipLoading(true);
@@ -174,8 +250,8 @@ export function OnboardingComptableWizard({
           subtitle={prospectLine}
         />
 
-        <div className="mt-8 space-y-6">
-          <div className="space-y-2">
+        <div className="mt-8 flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
             <div className="text-xs text-muted-foreground">
               <span>
                 Étape {step + 1} sur {STEP_COUNT}
@@ -189,14 +265,21 @@ export function OnboardingComptableWizard({
             data={data}
             selectedOffer={selectedOffer}
             tieDownAccepted={tieDownAccepted}
+            closingFit={closingFit}
+            fitWhy={fitWhy}
+            commitLevel={commitLevel}
+            stripeRevealed={stripeRevealed}
             checkoutClientSecret={checkoutClientSecret}
             checkoutPreloadError={checkoutPreloadError}
-            showHesitationSlides={showHesitationSlides}
+            showRecovery={showRecovery}
             onTieDownChange={setTieDownAccepted}
+            onClosingFitChange={setClosingFit}
+            onFitWhyChange={setFitWhy}
             onSelectOffer={setSelectedOffer}
-            onIntentionSelect={handleIntentionSelect}
             onProceedFromPricing={goNext}
-            onHesitationOpenChange={setShowHesitationSlides}
+            onCommitSelect={handleCommitSelect}
+            onRecoveryComplete={handleRecoveryComplete}
+            onSkipToPayment={handleSkipToPayment}
           />
 
           <ComptableWizardControls

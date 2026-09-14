@@ -44,8 +44,8 @@ export function AuditLive() {
             transition={{ delay: 0.2 }}
             className="text-zinc-400 max-w-xl mb-12"
           >
-            Lors de l&apos;échange, nous présentons les missions en attente d&apos;attribution et identifions celles
-            compatibles avec le profil de votre cabinet, en temps réel.
+            Lors de l&apos;échange, nous présentons des exemples de missions déjà attribuées à d&apos;autres cabinets
+            et vérifions la compatibilité de votre profil pour les prochaines attributions.
           </motion.p>
 
           <motion.div
@@ -58,14 +58,14 @@ export function AuditLive() {
             <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3">
               <Inbox className="size-5 text-emerald-400" />
               <span className="text-white font-medium text-sm">Portefeuille de missions · Audit en cours</span>
-              <span className="ml-auto text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">3 en attente</span>
+              <span className="ml-auto text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">3 attribuées</span>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3 p-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
                 <Users className="size-4 text-amber-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-white text-sm font-medium">Marc Lefèvre · BTP Dupont · Reprise tenue + liasse</p>
-                  <p className="text-zinc-500 text-xs mt-1">Honoraires 3 600 €/an · En attente d&apos;attribution</p>
+                  <p className="text-zinc-500 text-xs mt-1">Honoraires 3 600 €/an · Attribuée à un autre cabinet</p>
                 </div>
               </div>
               <div className="flex items-center justify-center text-zinc-600">

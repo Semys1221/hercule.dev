@@ -11,8 +11,13 @@ import {
   mergeSalesQualificationValues,
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
+import { PITCH_WIZARD_SUBTITLE } from "@/lib/admin/funnels/sales-pitch-wizard";
+import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
+import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { AGENCE_OBJECTIFS_SUBTITLE } from "@/components/internal/funnels/sales/sales-questions-objectifs-agence";
-import { CABINET_OBJECTIFS_SUBTITLE } from "@/components/internal/funnels/sales/sales-questions-objectifs-comptable";
+import { SalesObjectifsWizard } from "@/components/internal/funnels/sales/sales-objectifs-wizard";
+import { SalesPitchWizard } from "@/components/internal/funnels/sales/sales-pitch-wizard";
+import { WIZARD_OBJECTIFS_SUBTITLE } from "@/components/internal/funnels/sales/sales-questions-objectifs-wizard";
 import { ENTREPRISE_OBJECTIFS_SUBTITLE } from "@/components/internal/funnels/sales/sales-questions-objectifs-entreprise";
 
 import { SalesIntroSection } from "./sales-intro-section";
@@ -24,6 +29,13 @@ type SalesFunnelSectionPageProps = {
   section: SalesFunnelSection;
   form: UseFormReturn<SalesQualificationValues>;
   prospectFirstName?: string;
+  developerModeEnabled?: boolean;
+  selectedLead?: LinkTrackingLead | null;
+  selectedBooking?: EnrichedCalendlyBooking | null;
+  onRefreshLead?: () => Promise<void>;
+  immersiveCabinetWizard?: boolean;
+  onOpenSidebar?: () => void;
+  onGoToObjectifs?: () => void;
 };
 
 export function SalesFunnelSectionPage({
@@ -31,11 +43,23 @@ export function SalesFunnelSectionPage({
   section,
   form,
   prospectFirstName,
+  developerModeEnabled = false,
+  selectedLead = null,
+  selectedBooking = null,
+  onRefreshLead,
+  immersiveCabinetWizard = false,
+  onOpenSidebar,
+  onGoToObjectifs,
 }: SalesFunnelSectionPageProps) {
   const watchedValues = mergeSalesQualificationValues(
     useWatch({ control: form.control }) as Partial<SalesQualificationValues>,
     audience,
   );
+
+  const useObjectifsWizard =
+    section.id === "objectifs" && isCabinetBuyerSalesAudience(audience);
+  const usePitchWizard = section.id === "pitch" && isCabinetBuyerSalesAudience(audience);
+  const useWizardShell = useObjectifsWizard || usePitchWizard;
 
   if (section.id === "introduction") {
     return <SalesIntroSection audience={audience} section={section} form={form} />;
@@ -46,16 +70,50 @@ export function SalesFunnelSectionPage({
     bleedSubtitle ??
     (section.id === "objectifs"
       ? isCabinetBuyerSalesAudience(audience)
-        ? CABINET_OBJECTIFS_SUBTITLE
+        ? WIZARD_OBJECTIFS_SUBTITLE
         : audience === "agence"
           ? AGENCE_OBJECTIFS_SUBTITLE
           : audience === "entreprise"
             ? ENTREPRISE_OBJECTIFS_SUBTITLE
             : section.subtitle
-      : section.subtitle);
+      : section.id === "pitch"
+        ? PITCH_WIZARD_SUBTITLE
+        : section.subtitle);
+
+  if (useObjectifsWizard && immersiveCabinetWizard) {
+    return (
+      <SalesObjectifsWizard
+        audience={audience}
+        form={form}
+        immersive
+        onOpenSidebar={onOpenSidebar}
+      />
+    );
+  }
+
+  if (usePitchWizard && immersiveCabinetWizard) {
+    return (
+      <SalesPitchWizard
+        audience={audience}
+        form={form}
+        immersive
+        onOpenSidebar={onOpenSidebar}
+        prospectFirstName={prospectFirstName}
+        developerModeEnabled={developerModeEnabled}
+        selectedLead={selectedLead}
+        selectedBooking={selectedBooking}
+        onRefreshLead={onRefreshLead}
+        onGoToObjectifs={onGoToObjectifs}
+      />
+    );
+  }
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5 text-left">
+    <div
+      className={`mx-auto w-full space-y-5 text-left ${
+        useWizardShell ? "max-w-6xl" : "max-w-3xl"
+      }`}
+    >
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-medium tracking-tight">{section.title}</h1>
@@ -69,12 +127,27 @@ export function SalesFunnelSectionPage({
           <p className={RESERVATION_BODY_TEXT}>{subtitle}</p>
         ) : null}
       </div>
-      <SalesQualificationForm
-        audience={audience}
-        section={section}
-        form={form}
-        prospectFirstName={prospectFirstName}
-      />
+      {useObjectifsWizard ? (
+        <SalesObjectifsWizard audience={audience} form={form} />
+      ) : usePitchWizard ? (
+        <SalesPitchWizard
+          audience={audience}
+          form={form}
+          prospectFirstName={prospectFirstName}
+          developerModeEnabled={developerModeEnabled}
+          selectedLead={selectedLead}
+          selectedBooking={selectedBooking}
+          onRefreshLead={onRefreshLead}
+          onGoToObjectifs={onGoToObjectifs}
+        />
+      ) : (
+        <SalesQualificationForm
+          audience={audience}
+          section={section}
+          form={form}
+          prospectFirstName={prospectFirstName}
+        />
+      )}
     </div>
   );
 }

@@ -42,20 +42,15 @@ function formatEuros(value: number): string {
 }
 
 function getObjectifsQuestions(audience: Audience): SalesQuestion[] {
-  if (isCifSalesAudience(audience)) {
-    // Lazy import avoids circular dependency with sales-bleed-tunnel at module init.
-    const { CIF_OBJECTIFS_QUESTIONS } =
-      require("@/components/internal/funnels/sales/sales-questions-objectifs-cif") as {
-        CIF_OBJECTIFS_QUESTIONS: SalesQuestion[];
-      };
-    return CIF_OBJECTIFS_QUESTIONS;
+  if (!isCabinetBuyerSalesAudience(audience)) {
+    return [];
   }
 
-  const { COMPTABLE_OBJECTIFS_QUESTIONS } =
-    require("@/components/internal/funnels/sales/sales-questions-objectifs-comptable") as {
-      COMPTABLE_OBJECTIFS_QUESTIONS: SalesQuestion[];
+  const { getWizardObjectifsQuestions } =
+    require("@/components/internal/funnels/sales/sales-questions-objectifs-wizard") as {
+      getWizardObjectifsQuestions: (audience: Audience) => SalesQuestion[];
     };
-  return COMPTABLE_OBJECTIFS_QUESTIONS;
+  return getWizardObjectifsQuestions(audience);
 }
 
 function getOptionLabel(

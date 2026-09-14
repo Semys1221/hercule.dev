@@ -1,7 +1,7 @@
 # Patch Sales — handoff agents
 
 ```
-status: phase-9-done
+status: phase-12-todo
 audience: coding-agent
 date: 2026-09-13
 depends_on:
@@ -29,8 +29,10 @@ do_not:
 2. Ouvrir [`PLAN.md`](./PLAN.md) — repérer la **première phase** en statut `todo`.
 3. Lire l’**annexe copy** indiquée dans la phase :
    - mécanique bleed, agence, entreprise → [`patch_sales_discovery.md`](./patch_sales_discovery.md)
-   - **tunnel Objectifs comptable/cif** → [`patch_sales_bleed.md`](./patch_sales_bleed.md)
+   - **wizard Objectifs comptable/cif** → [`patch_sales_objectifs_wizard.md`](./patch_sales_objectifs_wizard.md)
+   - tunnel bleed `b1`–`b8` (historique) → [`patch_sales_bleed.md`](./patch_sales_bleed.md)
    - copy / offre Foundation comptable + cif → [`patch_sales_pitch.md`](./patch_sales_pitch.md)
+   - **wizard Pitch post-Objectifs** comptable/cif → [`patch_sales_new_pitch.md`](./patch_sales_new_pitch.md)
 4. Lire les skills (ci-dessous) avant tout code UI.
 5. Marquer la phase `in_progress` dans PLAN.md, implémenter **uniquement** cette phase, puis handoff.
 
@@ -43,10 +45,13 @@ do_not:
 | Fichier | Rôle |
 |---------|------|
 | [`README.md`](./README.md) | Protocole multi-agents (ce fichier) |
-| [`PLAN.md`](./PLAN.md) | Plan de build unique — 9 phases, statuts, DoD |
+| [`PLAN.md`](./PLAN.md) | Plan de build unique — 12 phases, statuts, DoD |
 | [`patch_sales_discovery.md`](./patch_sales_discovery.md) | Annexe — bleed track linéaire, agence + entreprise |
-| [`patch_sales_bleed.md`](./patch_sales_bleed.md) | Annexe — **tunnel bleed** Objectifs (comptable + cif) |
-| [`patch_sales_pitch.md`](./patch_sales_pitch.md) | Annexe — framing Moteur Hercule Foundation (comptable + cif) |
+| [`patch_sales_bleed.md`](./patch_sales_bleed.md) | Annexe — tunnel bleed `b1`–`b8` (historique) |
+| [`patch_sales_objectifs_wizard.md`](./patch_sales_objectifs_wizard.md) | Annexe — **wizard Objectifs** (comptable + cif) |
+| [`patch_sales_pitch.md`](./patch_sales_pitch.md) | Annexe — lexique / offre Foundation (comptable + cif) |
+| [`patch_sales_new_pitch.md`](./patch_sales_new_pitch.md) | Annexe — **wizard Pitch** post-Objectifs (comptable + cif) |
+| [`patch_sales_dashboard_closing.md`](./patch_sales_dashboard_closing.md) | Annexe — **wizard closing dashboard** (comptable + cif) |
 
 ```mermaid
 flowchart TB
@@ -54,11 +59,14 @@ flowchart TB
   plan[PLAN.md]
   disc[discovery]
   bleed[bleed tunnel]
-  pitch[pitch]
+  pitch[pitch lexique]
+  newpitch[new pitch wizard]
   readme --> plan
   plan -->|"objectifs agence/entreprise"| disc
-  plan -->|"objectifs comptable/cif"| bleed
-  plan -->|"presentation + dashboard cabinets"| pitch
+  plan -->|"objectifs comptable/cif"| wizard[objectifs wizard]
+  wizard --> newpitch
+  pitch -.->|copy mine| newpitch
+  plan -->|"agence/entreprise post-Objectifs"| disc
 ```
 
 ---
@@ -67,16 +75,18 @@ flowchart TB
 
 | Sujet | Canon |
 |-------|--------|
-| **Section Objectifs comptable/cif** (tunnel b1–b8, piège méthode × H × année) | **bleed** — [`patch_sales_bleed.md`](./patch_sales_bleed.md) |
+| **Section Objectifs comptable/cif** (wizard w1–w17, 1 écran / question) | **objectifs_wizard** — [`patch_sales_objectifs_wizard.md`](./patch_sales_objectifs_wizard.md) |
 | **Section Objectifs agence/entreprise** (o1–o6, `o3Duration`) | **discovery** §6.2 |
-| Mécanique post-Objectifs (chips sticky, interpolation, coupe Historique, dashboard FAQ → intention → grille) | **discovery** + **pitch** selon audience |
-| Offre à l’écran **comptable / cif** (Foundation, 60 j, Core/Horizon, 5 000 € / 90 j, inbound, calendrier 3 phases) | **pitch** — **gagne** sur discovery |
+| **Session post-Objectifs comptable/cif** (présentation, CGV, 3 piliers, FAQ, A/B Core/Horizon) | **new_pitch** — [`patch_sales_new_pitch.md`](./patch_sales_new_pitch.md) |
+| Mécanique post-Objectifs agence/entreprise | **discovery** |
+| Lexique / offre Foundation (Core/Horizon, 5 000 € / 90 j, inbound, pas de `lead`) | **pitch** — [`patch_sales_pitch.md`](./patch_sales_pitch.md) |
+| Dashboard fallback (si lien ouvert sans session pitch complète) | **pitch** §7 |
 | **Agence / entreprise** | **discovery** seulement — pas de Foundation ni tunnel b* |
 | Outreach Instantly | **hors plan** |
 
 Si discovery mentionne leads, 998 €, 1 499 €, 10 RDV, 20–25 jours **pour comptable/cif**, suivre **pitch** (dashboard/présentation), pas discovery.
 
-**Comptable/cif :** ids **`b1`–`b8`** (pas `o1`–`o6`). Les relabels pitch §6.2 sont **remplacés** par le tunnel bleed.
+**Comptable/cif :** ids **`w1`–`w17`** (pas `o1`–`o6`). Le tunnel bleed `b1`–`b8` est **superseded** par le wizard objectifs.
 
 ---
 
@@ -166,7 +176,7 @@ Remplacer `[N]` et `[titre]` par la phase à exécuter.
 
 ---
 
-## Vue d’ensemble des 9 phases
+## Vue d’ensemble des 12 phases
 
 | # | Titre | Audiences |
 |---|--------|-----------|
@@ -179,7 +189,10 @@ Remplacer `[N]` et `[titre]` par la phase à exécuter.
 | 7 | Dashboard objections ✅ | split |
 | 8 | Offre écran cabinets ✅ | comptable + cif |
 | 9 | QA finale ✅ | toutes |
+| 10 | Wizard Objectifs cabinets ✅ | comptable + cif |
+| 11 | Wizard branches bleed + graphique live ✅ | comptable + cif |
+| 12 | **Wizard Pitch post-Objectifs** | comptable + cif |
 
 Détail : [`PLAN.md`](./PLAN.md).
 
-**Note :** patch Sales terminé (phases 1–9). Prochaine étape : PR / déploiement. Reporté hors patch : migration Stripe (Horizon 2 399 € facturé), CGV garantie 5 000 €, labels checkout legacy Lite/Starter.
+**Note :** phases 1–11 done. Phase 12 = wizard pitch in-session (annexe [`patch_sales_new_pitch.md`](./patch_sales_new_pitch.md)). Reporté hors patch : migration Stripe (Horizon 2 399 € facturé), CGV garantie 5 000 € juridiques, labels checkout legacy Lite/Starter.

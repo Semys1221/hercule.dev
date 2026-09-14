@@ -1,6 +1,6 @@
 # Patch Sales — Bleed tunnel (comptable + cif)
 
-> **Statut :** annexe copy — phase la plus importante du parcours cabinets  
+> **Statut :** annexe historique — **superseded** par [`patch_sales_objectifs_wizard.md`](./patch_sales_objectifs_wizard.md) (wizard `w1`–`w17`)  
 > **Build :** [`PLAN.md`](./PLAN.md) phase **3** · [`README.md`](./README.md)  
 > **Périmètre :** section `objectifs` — **comptable + cif uniquement**  
 > **Remplace :** les questions linéaires `o1`–`o6` et les relabels pitch §6.2 pour ces audiences  

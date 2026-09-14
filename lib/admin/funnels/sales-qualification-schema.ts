@@ -31,6 +31,10 @@ import {
 import type { O3DurationId } from "@/lib/admin/funnels/sales-bleed-track";
 import type { Audience } from "@/lib/admin/navigation";
 
+function isWizardUrgencyStepVisible(values: SalesQualificationValues): boolean {
+  return values.w15 === "shortcut" || (values.w14 !== undefined && values.w14 !== "12m");
+}
+
 export const SALES_SKIP_VALUE = "__skip__";
 
 const O3_DURATION_IDS = ["<3m", "6m", "12m", "24m+"] as const satisfies readonly O3DurationId[];
@@ -76,6 +80,90 @@ const sharedQualificationFields = {
   b6Acknowledged: z.boolean().optional(),
   b7: z.string().optional(),
   b8: z.string().optional(),
+  w1: z.enum(["more_volume", "better_quality"]).optional(),
+  w2: z.number().optional(),
+  w3: z.number().optional(),
+  w4: z.number().optional(),
+  w5: z.number().optional(),
+  w6: z.number().optional(),
+  w7: z.number().optional(),
+  w8: z
+    .enum([
+      "word_of_mouth",
+      "seo",
+      "ads",
+      "referrers",
+      "direct",
+      "partnerships",
+      "nothing",
+    ])
+    .optional(),
+  w8Tried: z.enum(["none", "looked", "tried"]).optional(),
+  w8TriedWho: z.string().optional(),
+  w8Criteria: z.array(z.string()).max(3).optional(),
+  w8Brake: z.string().optional(),
+  w9Acknowledged: z.boolean().optional(),
+  w10: z.enum(["y2015", "y2017", "y2020", "y2022", "y2024"]).optional(),
+  w10Year: z.number().int().optional(),
+  w11: z.enum(["<1y", "1-3y", "3-5y", "5y+"]).optional(),
+  w12Confirmed: z.boolean().optional(),
+  w13: z.enum(["yes", "no"]).optional(),
+  w13Why: z.string().optional(),
+  w14: z.enum(["12m", "24m", "36m"]).optional(),
+  w15: z.enum(["wait", "shortcut"]).optional(),
+  w16: z.enum(["strategic", "resale", "other"]).optional(),
+  w16Detail: z.string().optional(),
+  w18: z
+    .enum([
+      "major_gap",
+      "significant_gap",
+      "moderate_gap",
+      "near_target",
+      "at_capacity",
+    ])
+    .optional(),
+  w17Acknowledged: z.boolean().optional(),
+  p2DecisionMakers: z.enum(["all_present", "missing"]).optional(),
+  p2MissingRole: z
+    .enum(["associate", "managing_partner", "expert_referent", "ops_director", "reschedule"])
+    .optional(),
+  /** @deprecated Use p2MissingRole */
+  p2MissingNames: z.string().optional(),
+  p3Acknowledged: z.boolean().optional(),
+  pCgvAccepted: z.boolean().optional(),
+  p5BuyIn: z.enum(["clear", "questions"]).optional(),
+  p7FoundationBuyIn: z.enum(["clear", "questions"]).optional(),
+  p7BuyIn: z.enum(["clear", "questions"]).optional(),
+  p9BuyIn: z.enum(["clear", "questions"]).optional(),
+  pRoiAcknowledged: z.boolean().optional(),
+  p11TempCheck: z.enum(["yes", "hesitant"]).optional(),
+  p11WhyId: z
+    .enum([
+      "zone_lock",
+      "close_gap",
+      "owned_asset",
+      "guarantee_roi",
+      "replace_method",
+      "urgency",
+      "criteria_fit",
+    ])
+    .optional(),
+  /** @deprecated Use p11WhyId */
+  p11Why: z.string().optional(),
+  p12Plan: z.enum(["core", "horizon"]).optional(),
+  p12WhyId: z
+    .enum([
+      "controlled_budget",
+      "gradual_deploy",
+      "capacity_match",
+      "guarantee_5000",
+      "max_capture",
+      "gap_ambition",
+    ])
+    .optional(),
+  /** @deprecated Use p12WhyId */
+  p12Why: z.string().optional(),
+  pitchWizardCompleted: z.boolean().optional(),
   q1: multiChoiceSchema,
   q2: multiChoiceSchema,
   q2Other: z.string().optional(),
@@ -110,23 +198,35 @@ function withCabinetO3FollowUpRefinement<T extends z.ZodTypeAny>(schema: T) {
   return schema;
 }
 
+const cabinetOptionalQualificationFields = {
+  presentationConfirmed: z.boolean().optional(),
+  q1: z.array(z.string()).default([]),
+  q2: z.array(z.string()).default([]),
+  q3: z.number().optional(),
+  q11: z.array(z.string()).default([]),
+  q12: z.string().optional(),
+  q13: z.number().optional(),
+  q19: z.array(z.string()).default([]),
+  q20: z.number().optional(),
+  q21: z.array(z.string()).default([]),
+};
+
 function buildComptableQualificationSchema() {
   return withCabinetO3FollowUpRefinement(
     z.object({
       ...sharedQualificationFields,
+      ...cabinetOptionalQualificationFields,
       o1: z.array(z.string()).default([]),
       o2: z.string().optional(),
       o3: z.string().optional(),
       o4: z.array(z.string()).default([]),
       o5: z.array(z.string()).default([]),
       o6: z.string().optional(),
-      q13: z.number().min(COMPTABLE_ANNUAL_MIN),
-      q14: z.enum(COMPTABLE_FACTURATION_MODES),
-      q15: z.enum(COMPTABLE_SOCIAL_PAIE_MODES),
-      q16: z.number().min(COMPTABLE_PONCTUEL_MIN).nullable(),
-      q17: z.literal(SALES_SKIP_VALUE),
-      q18: z.literal(SALES_SKIP_VALUE),
-      q21: multiChoiceSchema,
+      q14: z.enum(COMPTABLE_FACTURATION_MODES).optional(),
+      q15: z.enum(COMPTABLE_SOCIAL_PAIE_MODES).optional(),
+      q16: z.number().min(COMPTABLE_PONCTUEL_MIN).nullable().optional(),
+      q17: z.literal(SALES_SKIP_VALUE).optional(),
+      q18: z.literal(SALES_SKIP_VALUE).optional(),
     }),
   );
 }
@@ -135,19 +235,18 @@ function buildCifQualificationSchema() {
   return withCabinetO3FollowUpRefinement(
     z.object({
       ...sharedQualificationFields,
+      ...cabinetOptionalQualificationFields,
       o1: z.array(z.string()).default([]),
       o2: z.string().optional(),
       o3: z.string().optional(),
       o4: z.array(z.string()).default([]),
       o5: z.array(z.string()).default([]),
       o6: z.string().optional(),
-      q13: z.number().min(CIF_ANNUAL_MIN),
-      q14: z.enum(CIF_FACTURATION_MODES),
-      q15: z.enum(CIF_REMUNERATION_MODES),
-      q16: z.number().min(CIF_PONCTUEL_MIN).nullable(),
-      q17: z.literal(SALES_SKIP_VALUE),
-      q18: z.literal(SALES_SKIP_VALUE),
-      q21: multiChoiceSchema,
+      q14: z.enum(CIF_FACTURATION_MODES).optional(),
+      q15: z.enum(CIF_REMUNERATION_MODES).optional(),
+      q16: z.number().min(CIF_PONCTUEL_MIN).nullable().optional(),
+      q17: z.literal(SALES_SKIP_VALUE).optional(),
+      q18: z.literal(SALES_SKIP_VALUE).optional(),
     }),
   );
 }
@@ -192,6 +291,76 @@ export type SalesQualificationValues = {
   b6Acknowledged?: boolean;
   b7?: string;
   b8?: string;
+  w1?: "more_volume" | "better_quality";
+  w2?: number;
+  w3?: number;
+  w4?: number;
+  w5?: number;
+  w6?: number;
+  w7?: number;
+  w8?:
+    | "word_of_mouth"
+    | "seo"
+    | "ads"
+    | "referrers"
+    | "direct"
+    | "partnerships"
+    | "nothing";
+  w8Tried?: "none" | "looked" | "tried";
+  w8TriedWho?: string;
+  w8Criteria?: string[];
+  w8Brake?: string;
+  w9Acknowledged?: boolean;
+  w10?: "y2015" | "y2017" | "y2020" | "y2022" | "y2024";
+  w10Year?: number;
+  w11?: "<1y" | "1-3y" | "3-5y" | "5y+";
+  w12Confirmed?: boolean;
+  w13?: "yes" | "no";
+  w13Why?: string;
+  w14?: "12m" | "24m" | "36m";
+  w15?: "wait" | "shortcut";
+  w16?: "strategic" | "resale" | "other";
+  w16Detail?: string;
+  w18?:
+    | "major_gap"
+    | "significant_gap"
+    | "moderate_gap"
+    | "near_target"
+    | "at_capacity";
+  w17Acknowledged?: boolean;
+  p2DecisionMakers?: "all_present" | "missing";
+  p2MissingRole?: "associate" | "managing_partner" | "expert_referent" | "ops_director" | "reschedule";
+  /** @deprecated Use p2MissingRole */
+  p2MissingNames?: string;
+  p3Acknowledged?: boolean;
+  pCgvAccepted?: boolean;
+  p5BuyIn?: "clear" | "questions";
+  p7FoundationBuyIn?: "clear" | "questions";
+  p7BuyIn?: "clear" | "questions";
+  p9BuyIn?: "clear" | "questions";
+  pRoiAcknowledged?: boolean;
+  p11TempCheck?: "yes" | "hesitant";
+  p11WhyId?:
+    | "zone_lock"
+    | "close_gap"
+    | "owned_asset"
+    | "guarantee_roi"
+    | "replace_method"
+    | "urgency"
+    | "criteria_fit";
+  /** @deprecated Use p11WhyId */
+  p11Why?: string;
+  p12Plan?: "core" | "horizon";
+  p12WhyId?:
+    | "controlled_budget"
+    | "gradual_deploy"
+    | "capacity_match"
+    | "guarantee_5000"
+    | "max_capture"
+    | "gap_ambition";
+  /** @deprecated Use p12WhyId */
+  p12Why?: string;
+  pitchWizardCompleted?: boolean;
   q1: string[];
   q2: string[];
   q2Other?: string;
@@ -246,6 +415,48 @@ export function getSalesQualificationDefaultValues(
       b6Acknowledged: false,
       b7: undefined,
       b8: undefined,
+      w1: undefined,
+      w2: undefined,
+      w3: undefined,
+      w4: undefined,
+      w5: undefined,
+      w6: undefined,
+      w7: undefined,
+      w8: undefined,
+      w8Tried: undefined,
+      w8TriedWho: "",
+      w8Criteria: [],
+      w8Brake: undefined,
+      w9Acknowledged: false,
+      w10: undefined,
+      w10Year: undefined,
+      w11: undefined,
+      w12Confirmed: false,
+      w13: undefined,
+      w13Why: "",
+      w14: undefined,
+      w15: undefined,
+      w16: undefined,
+      w16Detail: "",
+      w18: undefined,
+      w17Acknowledged: false,
+      p2DecisionMakers: undefined,
+      p2MissingRole: undefined,
+      p2MissingNames: "",
+      p3Acknowledged: false,
+      pCgvAccepted: false,
+      p5BuyIn: undefined,
+      p7FoundationBuyIn: undefined,
+      p7BuyIn: undefined,
+      p9BuyIn: undefined,
+      pRoiAcknowledged: false,
+      p11TempCheck: undefined,
+      p11WhyId: undefined,
+      p11Why: "",
+      p12Plan: undefined,
+      p12WhyId: undefined,
+      p12Why: "",
+      pitchWizardCompleted: false,
       q1: [],
       q2: [],
       q2Other: "",
@@ -294,6 +505,48 @@ export function getSalesQualificationDefaultValues(
       b6Acknowledged: false,
       b7: undefined,
       b8: undefined,
+      w1: undefined,
+      w2: undefined,
+      w3: undefined,
+      w4: undefined,
+      w5: undefined,
+      w6: undefined,
+      w7: undefined,
+      w8: undefined,
+      w8Tried: undefined,
+      w8TriedWho: "",
+      w8Criteria: [],
+      w8Brake: undefined,
+      w9Acknowledged: false,
+      w10: undefined,
+      w10Year: undefined,
+      w11: undefined,
+      w12Confirmed: false,
+      w13: undefined,
+      w13Why: "",
+      w14: undefined,
+      w15: undefined,
+      w16: undefined,
+      w16Detail: "",
+      w18: undefined,
+      w17Acknowledged: false,
+      p2DecisionMakers: undefined,
+      p2MissingRole: undefined,
+      p2MissingNames: "",
+      p3Acknowledged: false,
+      pCgvAccepted: false,
+      p5BuyIn: undefined,
+      p7FoundationBuyIn: undefined,
+      p7BuyIn: undefined,
+      p9BuyIn: undefined,
+      pRoiAcknowledged: false,
+      p11TempCheck: undefined,
+      p11WhyId: undefined,
+      p11Why: "",
+      p12Plan: undefined,
+      p12WhyId: undefined,
+      p12Why: "",
+      pitchWizardCompleted: false,
       q1: [],
       q2: [],
       q2Other: "",
@@ -378,6 +631,8 @@ const SECTION_QUESTION_KEYS: Record<
     "o3FollowUp",
     "bleedDiagnosticAccepted",
   ],
+  pitch: ["pitchWizardCompleted"],
+  mapping: [],
   "presentation-societe": ["presentationConfirmed"],
   capacite: ["q1", "q2", "q3"],
   standards: ["q11", "q12", "q13", "q14"],
@@ -385,14 +640,43 @@ const SECTION_QUESTION_KEYS: Record<
 };
 
 const CABINET_OBJECTIFS_KEYS: Array<keyof SalesQualificationValues> = [
-  "b1",
-  "b2",
-  "b3",
-  "b4",
-  "b5",
-  "b7",
-  "b8",
+  "w1",
+  "w2",
+  "w3",
+  "w4",
+  "w5",
+  "w6",
+  "w7",
+  "w8",
+  "w8Tried",
+  "w8Criteria",
+  "w8Brake",
+  "w10",
+  "w11",
+  "w12Confirmed",
+  "w13",
+  "w14",
+  "w15",
+  "w18",
+  "w17Acknowledged",
   "bleedDiagnosticAccepted",
+];
+
+const CABINET_PITCH_KEYS: Array<keyof SalesQualificationValues> = [
+  "p2DecisionMakers",
+  "p2MissingRole",
+  "p3Acknowledged",
+  "pCgvAccepted",
+  "p5BuyIn",
+  "p7FoundationBuyIn",
+  "p7BuyIn",
+  "p9BuyIn",
+  "pRoiAcknowledged",
+  "p11TempCheck",
+  "p11WhyId",
+  "p12Plan",
+  "p12WhyId",
+  "pitchWizardCompleted",
 ];
 
 export function getSectionQuestionKeys(
@@ -401,6 +685,9 @@ export function getSectionQuestionKeys(
 ): Array<keyof SalesQualificationValues> {
   if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
     return CABINET_OBJECTIFS_KEYS;
+  }
+  if (sectionId === "pitch" && isCabinetBuyerSalesAudience(audience)) {
+    return CABINET_PITCH_KEYS;
   }
   return SECTION_QUESTION_KEYS[sectionId];
 }
@@ -427,6 +714,31 @@ function isFieldComplete(
   const value = values[key];
   const monthlyMin = getHerculeMonthlyMin(audience);
 
+  if (key === "pitchWizardCompleted") {
+    return value === true;
+  }
+
+  if (
+    key === "p2MissingRole" ||
+    key === "p2MissingNames" ||
+    key === "p3Acknowledged" ||
+    key === "pCgvAccepted" ||
+    key === "p5BuyIn" ||
+    key === "p7FoundationBuyIn" ||
+    key === "p7BuyIn" ||
+    key === "p9BuyIn" ||
+    key === "pRoiAcknowledged" ||
+    key === "p11TempCheck" ||
+    key === "p11WhyId" ||
+    key === "p11Why" ||
+    key === "p12Plan" ||
+    key === "p12WhyId" ||
+    key === "p12Why" ||
+    key === "p2DecisionMakers"
+  ) {
+    return true;
+  }
+
   if (key === "introConfirmed" || key === "presentationConfirmed") {
     return value === true;
   }
@@ -449,6 +761,26 @@ function isFieldComplete(
 
   if (key === "b6Acknowledged") {
     return true;
+  }
+
+  if (key === "w9Acknowledged" || key === "w12Confirmed" || key === "w17Acknowledged") {
+    return value === true;
+  }
+
+  if (key === "w10Year" || key === "w13Why" || key === "w16Detail" || key === "w8TriedWho") {
+    return true;
+  }
+
+  if (key === "w8Criteria") {
+    const count = values.w8Criteria?.length ?? 0;
+    return count >= 1 && count <= 3;
+  }
+
+  if (key === "w16") {
+    if (!isWizardUrgencyStepVisible(values)) {
+      return true;
+    }
+    return typeof value === "string" && value.length > 0;
   }
 
   if (key === "q2Other" || key === "o3FollowUp") {
@@ -530,7 +862,7 @@ export function isSalesSectionComplete(
   values: SalesQualificationValues,
   audience: Audience = "agence",
 ): boolean {
-  if (sectionId === "rendez-vous") {
+  if (sectionId === "rendez-vous" || sectionId === "mapping") {
     return false;
   }
 
@@ -542,8 +874,28 @@ export function isSalesSectionComplete(
   }
 
   if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
-    const b5Count = values.b5?.length ?? 0;
-    if (b5Count > 1 && !values.b5b) {
+    if (values.w9Acknowledged !== true) {
+      return false;
+    }
+    if (values.w13 === "no" && (values.w13Why?.trim().length ?? 0) < 10) {
+      return false;
+    }
+    if (isWizardUrgencyStepVisible(values) && !values.w16) {
+      return false;
+    }
+    if (values.w16 === "other" && !values.w16Detail?.trim()) {
+      return false;
+    }
+    if (values.w17Acknowledged !== true) {
+      return false;
+    }
+    if (values.w8Tried && values.w8Tried !== "none" && !values.w8TriedWho?.trim()) {
+      return false;
+    }
+    if ((values.w8Criteria?.length ?? 0) < 1) {
+      return false;
+    }
+    if (!values.w18) {
       return false;
     }
   }
@@ -562,19 +914,61 @@ export function isSalesSectionComplete(
     return values.q21.length > 0 && values.q21.length <= 3;
   }
 
+  if (sectionId === "pitch" && isCabinetBuyerSalesAudience(audience)) {
+    if (values.bleedDiagnosticAccepted !== true) {
+      return false;
+    }
+    if (!values.p2DecisionMakers) {
+      return false;
+    }
+    if (
+      values.p2DecisionMakers === "missing" &&
+      !values.p2MissingRole
+    ) {
+      return false;
+    }
+    if (values.p3Acknowledged !== true) {
+      return false;
+    }
+    if (values.pCgvAccepted !== true) {
+      return false;
+    }
+    if (values.p5BuyIn !== "clear" || values.p7FoundationBuyIn !== "clear" || values.p7BuyIn !== "clear" || values.p9BuyIn !== "clear") {
+      return false;
+    }
+    if (values.pRoiAcknowledged !== true) {
+      return false;
+    }
+    if (!values.p11TempCheck) {
+      return false;
+    }
+    if (values.p11TempCheck === "yes" && !values.p11WhyId) {
+      return false;
+    }
+    if (!values.p12Plan || !values.p12WhyId) {
+      return false;
+    }
+    return values.pitchWizardCompleted === true;
+  }
+
   return true;
 }
 
-const QUALIFICATION_SECTION_IDS: Array<
-  Exclude<SalesFunnelSectionId, "rendez-vous">
-> = [
-  "introduction",
-  "objectifs",
-  "presentation-societe",
-  "capacite",
-  "standards",
-  "conditions",
-];
+function getQualificationSectionIds(
+  audience: Audience = "agence",
+): Array<Exclude<SalesFunnelSectionId, "rendez-vous">> {
+  if (isCabinetBuyerSalesAudience(audience)) {
+    return ["introduction", "objectifs", "pitch"];
+  }
+  return [
+    "introduction",
+    "objectifs",
+    "presentation-societe",
+    "capacite",
+    "standards",
+    "conditions",
+  ];
+}
 
 export function getSalesQualificationProgress(
   values: SalesQualificationValues,
@@ -584,11 +978,12 @@ export function getSalesQualificationProgress(
   totalSections: number;
   percent: number;
 } {
-  const completedSections = QUALIFICATION_SECTION_IDS.filter((sectionId) =>
+  const sectionIds = getQualificationSectionIds(audience);
+  const completedSections = sectionIds.filter((sectionId) =>
     isSalesSectionComplete(sectionId, values, audience),
   ).length;
 
-  const totalSections = QUALIFICATION_SECTION_IDS.length;
+  const totalSections = sectionIds.length;
   const percent = Math.round((completedSections / totalSections) * 100);
 
   return { completedSections, totalSections, percent };

@@ -9,7 +9,7 @@ import {
 export const metadata: Metadata = {
   title: "Proposer votre cabinet CIF — Hercule",
   description:
-    "Hercule reçoit des demandes de dirigeants PME en optimisation fiscale et trésorerie. Les cabinets CIF / CGP partenaires éligibles reçoivent ces missions.",
+    "Hercule reçoit des demandes de dirigeants PME en optimisation fiscale et trésorerie. Les missions sont attribuées en exclusivité aux cabinets CIF / CGP partenaires éligibles.",
 }
 
 export const revalidate = 60

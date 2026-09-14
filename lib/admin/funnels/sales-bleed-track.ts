@@ -12,6 +12,17 @@ import {
   resolvePrimaryMethodId,
 } from "@/lib/admin/funnels/sales-bleed-tunnel";
 import {
+  formatCurrentSnapshot,
+  formatGoal6m,
+  formatGoalGap,
+  resolveUrgencyLabel,
+  resolveW8BrakeLabel,
+  resolveW8MethodLabel,
+  resolveW10Year,
+  resolveW18Label,
+  usesObjectifsWizard,
+} from "@/lib/admin/funnels/sales-objectifs-wizard";
+import {
   isCabinetBuyerSalesAudience,
   isCifSalesAudience,
   isComptableSalesAudience,
@@ -111,6 +122,46 @@ function buildCabinetBleedTrack(
   audience: Audience,
 ): BleedTrack {
   const cabinetAudience = isCifSalesAudience(audience) ? "cif" : "comptable";
+
+  if (usesObjectifsWizard(values)) {
+    const methodLabel = resolveW8MethodLabel(values);
+    const structuredBrake = resolveW8BrakeLabel(values);
+    const methodBrake =
+      structuredBrake ||
+      values.w13Why?.trim() ||
+      values.w16Detail?.trim() ||
+      resolveUrgencyLabel(values);
+    const inactionLabel = resolveW18Label(values);
+    const numericGap = formatGoalGap(values, audience);
+    const openingYear = resolveW10Year(values);
+
+    const bleed: BleedTrack = {
+      businessNoun: "cabinet",
+      goal: formatGoal6m(values, audience),
+      current: formatCurrentSnapshot(values, audience),
+      openingYear: openingYear ? String(openingYear) : "",
+      primaryMethod: methodLabel,
+      methodBrake,
+      goalType: values.w1 ?? "",
+      cause: methodBrake,
+      causeId: values.w8Brake ?? values.w16 ?? values.w13 ?? "",
+      primaryBrake: methodBrake,
+      gap: inactionLabel ? `${numericGap} · ${inactionLabel}` : numericGap,
+      gapId: values.w18 ?? values.w14 ?? "",
+      duration: openingYear ? String(openingYear) : "",
+      synthesis: methodLabel ? [methodLabel] : [],
+    };
+
+    if (typeof values.q13 === "number") {
+      bleed.honorairesAnnual = values.q13;
+    }
+    if (typeof values.q20 === "number") {
+      bleed.reservedCapacity = values.q20;
+    }
+
+    return bleed;
+  }
+
   const methodBrake = resolveB7Label(values);
   const methodId = resolvePrimaryMethodId(values);
   const openingYear = resolveB3Year(values);
@@ -143,7 +194,7 @@ function buildCabinetBleedTrack(
 }
 
 function usesCabinetBleedTunnel(values: SalesQualificationValues): boolean {
-  return Boolean(values.b1 && typeof values.b2 === "number");
+  return usesObjectifsWizard(values) || Boolean(values.b1 && typeof values.b2 === "number");
 }
 
 export function buildBleedTrack(

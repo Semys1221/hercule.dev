@@ -9,6 +9,8 @@ annexes:
   - ./patch_sales_discovery.md
   - ./patch_sales_bleed.md
   - ./patch_sales_pitch.md
+  - ./patch_sales_objectifs_wizard.md
+  - ./patch_sales_new_pitch.md
 ```
 
 **Handoff agents :** voir [`README.md`](./README.md). Mettre à jour le statut et la section **Handoff** en bas de chaque phase.
@@ -28,6 +30,10 @@ annexes:
 | 7 | Dashboard objections | `done` |
 | 8 | Offre écran cabinets | `done` |
 | 9 | QA finale | `done` |
+| 10 | Wizard Objectifs cabinets | `done` |
+| 11 | Wizard branches bleed + graphique live | `done` |
+| 12 | **Wizard Pitch post-Objectifs** | `todo` |
+| 13 | **Dashboard closing wizard cabinets** | `done` |
 
 ---
 
@@ -561,11 +567,207 @@ Suivant : patch terminé — PR / déploiement
 
 ---
 
+## Phase 10 — Wizard Objectifs cabinets
+
+**Statut :** `done`  
+**Dépend de :** phases 1–9  
+**Audiences :** **comptable + cif**  
+**Annexe :** [`patch_sales_objectifs_wizard.md`](./patch_sales_objectifs_wizard.md)
+
+### Objectif
+
+Remplacer le tunnel `b1`–`b8` par un wizard **1 question / écran** (`w1`–`w17` + carte diagnostic).
+
+### Fichiers
+
+| Fichier | Action |
+|---------|--------|
+| `doc/patch/patch_sales/patch_sales_objectifs_wizard.md` | **Créer** — schéma canon |
+| `lib/admin/funnels/sales-objectifs-wizard.ts` | **Créer** — branches, interpolation, visibilité |
+| `components/internal/funnels/sales/sales-objectifs-wizard.tsx` | **Créer** — shell wizard |
+| `components/internal/funnels/sales/sales-questions-objectifs-wizard.ts` | **Créer** — définitions questions |
+| `lib/admin/funnels/sales-qualification-schema.ts` | Champs `w*` + complétion |
+| `lib/admin/funnels/sales-bleed-track.ts` | `buildCabinetBleedTrack` lit `w*` |
+| `sales-questions.ts`, `sales-question-fields.tsx` | Types `text`, `confirmation_mirror` |
+| `sales-funnel-section-page.tsx` | Branche wizard cabinets |
+| `sales-test-session-preset.ts` | Preset `w*` |
+
+### DoD
+
+- [x] Wizard CIF + comptable : ids `w1`–`diagnostic_card`.
+- [x] 1 écran / question avec Précédent / Suivant + Progress.
+- [x] Piège `w9` et synthèse `w17` interpolés.
+- [x] Carte diagnostic bloque la section.
+- [x] Tests objectifs + schema + bleed verts.
+
+### Handoff
+
+```text
+Phase 10 — 2026-09-13 — agent
+Fait : wizard w1–w17 comptable/cif ; schema w* ; bleed track wizard ; preset test ; annexe patch_sales_objectifs_wizard.md.
+Pas fait : migration sessions persistées b* → w* (b* restent optionnels en Zod).
+Piège : w16 visible si shortcut ou w14 !== 12m — vérifier parcours manuel urgence.
+Suivant : PR / déploiement
+```
+
+---
+
+## Phase 11 — Wizard branches bleed + graphique live
+
+**Statut :** `done`  
+**Dépend de :** phase 10  
+**Audiences :** **comptable + cif**  
+**Annexe :** [`patch_sales_objectifs_wizard.md`](./patch_sales_objectifs_wizard.md) §11
+
+### Objectif
+
+Enrichir le wizard : critères d'achat, frein méthode (`b7`), coût statu quo (`b8`), graphique aire actuel vs cible 6 mois en live.
+
+### Fichiers
+
+| Fichier | Action |
+|---------|--------|
+| `lib/admin/funnels/sales-objectifs-wizard.ts` | Branches w8*, w18, `buildWizardChartModel`, tokens |
+| `components/internal/funnels/sales/sales-questions-objectifs-wizard.ts` | Nouvelles questions |
+| `components/internal/funnels/sales/sales-objectifs-wizard-chart.tsx` | **Créer** — AreaChart live |
+| `components/internal/funnels/sales/sales-objectifs-wizard.tsx` | Split layout + multi |
+| `lib/admin/funnels/sales-qualification-schema.ts` | Champs + complétion |
+| `lib/admin/funnels/sales-bleed-track.ts` | brake + inaction |
+| `doc/patch/patch_sales/patch_sales_objectifs_wizard.md` | §11 graphique |
+
+### DoD
+
+- [x] Branches w8Tried → w8Criteria → w8Brake → w9 → … → w18 → w17 → carte
+- [x] Graphique écart live (toggle Encours/Volume/Clients)
+- [x] BleedTrack : `{brake}` + `{inaction}` dans gap / chips
+- [x] Tests + preset Test mis à jour
+
+### Handoff
+
+```text
+Phase 11 — 2026-09-13 — agent
+Fait : w8Tried/Criteria/Brake + w18 ; chart live recharts ; bleed enrichi ; docs §11.
+Pas fait : migration sessions sans w8Brake/w18.
+Piège : w8Brake options vides si w8 non renseigné — step bloqué jusqu'à w8.
+Suivant : PR / déploiement
+```
+
+---
+
+## Phase 12 — Wizard Pitch post-Objectifs
+
+**Statut :** `todo`  
+**Dépend de :** phase 11  
+**Audiences :** **comptable + cif**  
+**Annexe :** [`patch_sales_new_pitch.md`](./patch_sales_new_pitch.md)
+
+### Objectif
+
+Remplacer tout le parcours session **après Objectifs** (Présentation, Capacité, Standards, Conditions, closing) par un wizard pitch **4 parties** : société (`p1`–`p3`) → CGV (`pCgv`) → The Hercule System / 3 piliers (`p4`–`p10`) → FAQ + opt-in why + A/B Core/Horizon (`p11`–`p12`).
+
+### Fichiers
+
+| Fichier | Action |
+|---------|--------|
+| `doc/patch/patch_sales/patch_sales_new_pitch.md` | **Créer** — schéma canon (fait en spec pass) |
+| `lib/admin/funnels/sales-pitch-wizard.ts` | **Créer** — steps, interpolation, gates |
+| `lib/admin/funnels/sales-pitch-wizard-preset.ts` | **Créer** |
+| `lib/admin/funnels/sales-pitch-wizard.test.ts` | **Créer** |
+| `components/internal/funnels/sales/sales-pitch-wizard.tsx` | **Créer** — shell wizard |
+| `components/internal/funnels/sales/sales-pitch-wizard-slides.ts` | **Créer** — définitions écrans `p*` |
+| `lib/admin/funnels/sales-qualification-schema.ts` | Champs `p*` + section `pitch` ; retirer gates cabinets sur `presentation-societe` / `capacite` / `standards` / `conditions` |
+| `components/internal/funnels/sales/sales-funnel-sections.ts` | Sidebar cabinets : Pitch seul post-Objectifs |
+| `components/internal/funnels/sales/sales-funnel-section-page.tsx` | Branche wizard pitch cabinets |
+| `lib/admin/funnels/comptable-sales-copy.ts` | Réutiliser exports Foundation (grille, phases, ROI) |
+| `lib/admin/funnels/cif-sales-copy.ts` | Transposition CIF |
+| `lib/admin/funnels/sales-test-session-preset.ts` | Preset `p*` |
+
+**Ne pas toucher :** agence/entreprise sections ; Stripe ; CGV juridiques ; `public/reservation*.html`.
+
+### Tâches
+
+1. Wizard 1 écran / slide, Progress, Précédent / Suivant (mirror objectifs wizard).
+2. Partie 1 : équipe + support belief + teaser SEO (`p1`–`p3`).
+3. Gate CGV `pCgv` avec highlights + lien `/cvg`.
+4. Partie 3 : overview + 3 piliers **Hercule Capture / Engine / Partner** avec buy-in (`p5BuyIn`, `p7BuyIn`, `p9BuyIn`).
+5. Partie 4 : FAQ 3 objections + `p11Why` + grille A/B Core 1 799 / Horizon 2 399 + `p12Why`.
+6. Retirer étapes session cabinets : capacité, standards, conditions, closing panels (champs `q*` optionnels Zod).
+7. Session immersive comptable/cif : track unique Objectifs → Pitch ; lien dashboard en **dernier** écran (`pDashboard`).
+
+### DoD
+
+- [ ] Wizard comptable + cif : `p1`–`p12` + `pCgv` sans dead-end.
+- [ ] Buy-in obligatoire après chaque pilier.
+- [ ] `p11Why` et `p12Why` requis avant fin pitch.
+- [ ] Agence/entreprise **non** affectés.
+- [ ] Pas de `lead(s)`, Lite 998, 10 missions sur surfaces pitch.
+- [ ] Tests pitch + schema verts.
+- [ ] Browser : Objectifs → carte → pitch complet (session Test).
+
+### Tests
+
+```bash
+pnpm test -- sales-pitch-wizard sales-qualification-schema
+```
+
+### Handoff
+
+```text
+(à compléter par l'agent phase 12)
+```
+
+---
+
+## Phase 13 — Dashboard closing wizard cabinets
+
+**Statut :** `done`  
+**Dépend de :** phases 7–8 (dashboard objections + offre écran)  
+**Audiences :** **comptable + cif**  
+**Annexe :** [`patch_sales_dashboard_closing.md`](./patch_sales_dashboard_closing.md)
+
+### Objectif
+
+Wizard closing dashboard : FAQ consultative, fit + why, commit avant Stripe, recovery plein écran avec pitch réduit (bleed + 4 beats).
+
+### Fichiers
+
+| Fichier | Action |
+|---------|--------|
+| `doc/patch/patch_sales/patch_sales_dashboard_closing.md` | **Créer** — canon copy |
+| `lib/dashboard/onboarding-faq.ts` | Copy FAQ cabinets + fit/commit |
+| `lib/dashboard/closing-recovery.ts` | **Créer** — recovery + pitch réduit |
+| `components/dashboard/steps/step-faq-tie-down.tsx` | Fit + why + CGV cabinets |
+| `components/dashboard/steps/step-payment-commit.tsx` | **Créer** |
+| `components/dashboard/steps/step-closing-recovery.tsx` | **Créer** |
+| `components/dashboard/onboarding-comptable-wizard*.tsx` | 6 steps, recovery state |
+| `lib/dashboard/types.ts` | `DashboardClosingState` |
+| `app/api/dashboard/[slug]/route.ts` | PATCH `closing` |
+
+### DoD
+
+- [x] 6 steps cabinets, plus d'étape intention
+- [x] Copy consultatif cabinets (grep : pas confrère / pour voir / caprice sur surfaces comptable/cif)
+- [x] Recovery 1 cycle ; commit avant Stripe
+- [x] Tests onboarding-faq + closing-recovery verts
+
+### Handoff
+
+```text
+Phase 13 — 2026-09-14 — agent
+Fait : wizard 6 steps comptable/cif ; FAQ consultative ; fit+why+CGV ; commit launch/hesitate ; recovery plein écran 3Q+3 pitch ; PATCH profile.dashboard.closing ; tests verts.
+Pas fait : copy agence objections inchangée ; browser manuel non exécuté.
+Piège : persistClosing via setState updater — PATCH envoie closing mergé.
+Suivant : phase 12 pitch session si pas encore faite
+```
+
+---
+
 ## Handoff global (dernier agent)
 
 ```text
-Patch Sales — 2026-09-13
-Phases done : 1–9
+Patch Sales — 2026-09-14
+Phases done : 1–11, 13
+Phase 12 todo : wizard Pitch post-Objectifs — annexe patch_sales_new_pitch.md
 Blocages restants : E2E Playwright dry (test-meeting nécessite DB seedée en local)
 Décisions reportées (Stripe/CGV/ops cabinet_brand) :
   - Stripe charge monthly_1499 = 2 199 € (écran Horizon 2 399 €)
@@ -586,6 +788,8 @@ Tous sous `components/internal/funnels/sales/` sauf mention.
 | Config | `sales-funnel-sections.ts`, `sales-funnel-sidebar.tsx` |
 | Questions | `sales-questions*.ts`, `sales-questions-objectifs-*.ts` |
 | Bleed | `lib/admin/funnels/sales-bleed-track.ts` |
+| Objectifs wizard | `sales-objectifs-wizard.tsx`, `lib/admin/funnels/sales-objectifs-wizard.ts` |
+| Pitch wizard (phase 12) | `sales-pitch-wizard.tsx`, `lib/admin/funnels/sales-pitch-wizard.ts` |
 | Closing | `sales-closing-sections.ts`, `sales-closing-panel.tsx`, `sales-calendrier-panel.tsx` |
 | Dashboard | `components/dashboard/onboarding-*-wizard.tsx`, `lib/dashboard/onboarding-faq.ts` |
 | Commercial | `lib/commercial/constants.ts` |

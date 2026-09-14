@@ -7,7 +7,7 @@ const matchingCards = [
   {
     title: "Missions PME qualifiées",
     description:
-      "Des dirigeants PME attendent un cabinet compatible. Les missions sont disponibles dès activation.",
+      "Des dirigeants PME attendent un cabinet compatible. Chaque mission est confiée en exclusivité au cabinet partenaire sélectionné.",
     icon: Inbox,
   },
   {
