@@ -71,9 +71,9 @@ export const SLIDERS_DIFF = {
 } as const;
 
 export const SLIDERS_PILLARS = [
-  { id: "capture", name: "Capture", tagline: "Intention au bon moment" },
-  { id: "engine", name: "Engine", tagline: "Système live en 60 jours" },
-  { id: "partner", name: "Partner", tagline: "Pilotage et croissance" },
+  { id: "capture", name: "Détection", tagline: "Leads légaux à forte intention" },
+  { id: "engine", name: "Activation", tagline: "Système live en 60 jours" },
+  { id: "partner", name: "Pilotage", tagline: "Accompagnement & croissance 12 mois" },
 ] as const;
 
 export const SLIDERS_TEMP_QUESTIONS = [
@@ -125,7 +125,7 @@ export const SLIDERS_HUD_BY_STEP: Record<SlidersStepId, readonly string[]> = {
     "La plupart testent {method} — nous branchons les flux légaux",
     "Traiter {cause}, pas empiler une campagne",
   ],
-  s5_pillars: ["Objectif : {goal6m} — 3 piliers capture / exécution / relation"],
+  s5_pillars: ["Objectif : {goal6m} — 3 piliers détection / activation / pilotage"],
   s6_capture: [
     "Levier actuel : {method}",
     "Capture intercepte l'intention légale",
@@ -195,9 +195,9 @@ export function getSlidersSlides(): SlidersSlideDefinition[] {
       canvasTitle: "Le système",
       canvasSubtitle: "Trois piliers",
     },
-    { id: "s6_capture", type: "capture", canvasTitle: "Capture" },
-    { id: "s7_engine", type: "engine", canvasTitle: "Engine" },
-    { id: "s8_partner", type: "partner", canvasTitle: "Partner" },
+    { id: "s6_capture", type: "capture", canvasTitle: "Détection" },
+    { id: "s7_engine", type: "engine", canvasTitle: "Activation" },
+    { id: "s8_partner", type: "partner", canvasTitle: "Pilotage" },
     {
       id: "s9_temp",
       type: "temp",
