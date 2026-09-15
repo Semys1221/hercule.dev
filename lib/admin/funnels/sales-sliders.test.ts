@@ -15,10 +15,7 @@ function main() {
 
   const defaults = getSalesQualificationDefaultValues("comptable");
   assert.equal(canAdvanceFromSlidersStep("s1_recap", defaults), true);
-  assert.equal(canAdvanceFromSlidersStep("s6_capture", defaults), false);
-
-  const captureReady = { ...defaults, sCaptureTied: true };
-  assert.equal(canAdvanceFromSlidersStep("s6_capture", captureReady), true);
+  assert.equal(canAdvanceFromSlidersStep("s6_capture", defaults), true);
 
   const thinkMode = {
     ...defaults,
@@ -27,25 +24,24 @@ function main() {
     sThinkBeat2: true,
     sThinkBeat3: false,
   };
-  assert.equal(canAdvanceFromSlidersStep("s9_temp", thinkMode), false);
+  assert.equal(canAdvanceFromSlidersStep("s8_instantly", defaults), true);
+
+  assert.equal(canAdvanceFromSlidersStep("s10_temp", thinkMode), false);
 
   const thinkComplete = {
     ...thinkMode,
     sThinkBeat3: true,
   };
-  assert.equal(canAdvanceFromSlidersStep("s9_temp", thinkComplete), false);
+  assert.equal(canAdvanceFromSlidersStep("s10_temp", thinkComplete), false);
 
   const tempYes = {
     ...defaults,
     sTempCheck: "yes" as const,
   };
-  assert.equal(canAdvanceFromSlidersStep("s9_temp", tempYes), true);
+  assert.equal(canAdvanceFromSlidersStep("s10_temp", tempYes), true);
 
   const incomplete = {
     ...defaults,
-    sCaptureTied: true,
-    sEngineTied: true,
-    sPartnerTied: true,
     sTempCheck: "yes" as const,
   };
   assert.equal(isSlidersSectionComplete(incomplete), false);
@@ -57,7 +53,7 @@ function main() {
   };
   assert.equal(isSlidersSectionComplete(complete), true);
 
-  assert.equal(SLIDERS_STEP_IDS.length, 10);
+  assert.equal(SLIDERS_STEP_IDS.length, 11);
 
   console.log("OK lib/admin/funnels/sales-sliders.test.ts");
 }

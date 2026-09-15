@@ -14,7 +14,6 @@ import {
   mergeSalesQualificationValues,
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
-import type { PitchInterpolationContext } from "@/lib/admin/funnels/sales-pitch-wizard";
 import { isCabinetBuyerSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import { buildCabinetCheckoutDashboardUrl } from "@/lib/payments/cabinet-checkout";
 import type { Audience } from "@/lib/admin/navigation";
@@ -23,7 +22,6 @@ import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 
 import { useSalesSessionDashboardLink } from "../sales-dashboard-link-copy";
 import { SalesSlidersCanvas } from "./sales-sliders-canvas";
-import { SalesSlidersRail } from "./sales-sliders-rail";
 import { SalesSlidersShell } from "./sales-sliders-shell";
 
 type SalesSlidersDeckProps = {
@@ -43,8 +41,6 @@ type SalesSlidersDeckProps = {
 export function SalesSlidersDeck({
   audience,
   form,
-  prospectFirstName: prospectFirstNameProp,
-  department,
   developerModeEnabled = false,
   selectedLead = null,
   selectedBooking = null,
@@ -52,23 +48,15 @@ export function SalesSlidersDeck({
   onOpenSidebar,
   sidebarOpen = false,
 }: SalesSlidersDeckProps) {
-  const prospectFirstName =
-    prospectFirstNameProp ??
-    (isCabinetBuyerSalesAudience(audience) ? "le cabinet" : "vous");
   const watchedPartial = useWatch({ control: form.control });
   const values = mergeSalesQualificationValues(
     watchedPartial as Partial<SalesQualificationValues>,
     audience,
   );
-  const interpolationContext: PitchInterpolationContext = {
-    prospectFirstName,
-    department,
-  };
 
   const slides = useMemo(() => getSlidersSlides(), []);
   const [stepIndex, setStepIndex] = useState(0);
   const [presenterMode, setPresenterMode] = useState(false);
-  const [railOpen, setRailOpen] = useState(true);
 
   const safeStepIndex = Math.min(Math.max(stepIndex, 0), slides.length - 1);
   const currentSlide = slides[safeStepIndex];
@@ -91,7 +79,10 @@ export function SalesSlidersDeck({
   }, []);
 
   const handleNext = useCallback(() => {
-    if (!currentSlide || !canAdvanceFromSlidersStep(currentSlide.id, values)) {
+    const allowed = currentSlide
+      ? canAdvanceFromSlidersStep(currentSlide.id, values)
+      : false;
+    if (!currentSlide || !allowed) {
       return;
     }
     setStepIndex((index) => Math.min(index + 1, slides.length - 1));
@@ -161,14 +152,12 @@ export function SalesSlidersDeck({
       totalSteps={slides.length}
       title={canvasTitle}
       presenterMode={presenterMode}
-      railOpen={railOpen}
       canGoPrev={canGoPrev}
       canGoNext={canGoNext && safeStepIndex < slides.length - 1}
       nextLabel={safeStepIndex === slides.length - 1 ? "Fin" : undefined}
       onPrev={handlePrev}
       onNext={handleNext}
       onTogglePresenter={() => setPresenterMode((open) => !open)}
-      onToggleRail={() => setRailOpen((open) => !open)}
       onOpenSidebar={immersive ? onOpenSidebar : undefined}
       sidebarOpen={sidebarOpen}
       canvas={
@@ -176,20 +165,10 @@ export function SalesSlidersDeck({
           <SalesSlidersCanvas
             slide={currentSlide}
             audience={audience}
+            form={form}
             values={values}
             selectedOffer={values.sOffer ?? null}
             onSelectOffer={(offer) => void handleSelectOffer(offer)}
-          />
-        ) : null
-      }
-      rail={
-        currentSlide ? (
-          <SalesSlidersRail
-            slide={currentSlide}
-            audience={audience}
-            form={form}
-            values={values}
-            context={interpolationContext}
             onResetThinkFlow={handleResetThinkFlow}
           />
         ) : null

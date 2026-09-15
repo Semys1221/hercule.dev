@@ -1,13 +1,9 @@
 import { formatSliderLabel } from "@/components/internal/funnels/sales/sales-questions";
-import {
-  formatPitchWizardInterpolation,
-  type PitchInterpolationContext,
-} from "@/lib/admin/funnels/sales-pitch-wizard";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
 
 export const SLIDERS_SECTION_SUBTITLE =
-  "Présentation share-screen — props ouvertes, tie-downs et lien de paiement dans le rail closer.";
+  "Présentation share-screen — props ouvertes plein écran.";
 
 export const SLIDERS_STEP_IDS = [
   "s1_recap",
@@ -17,9 +13,10 @@ export const SLIDERS_STEP_IDS = [
   "s5_pillars",
   "s6_capture",
   "s7_engine",
-  "s8_partner",
-  "s9_temp",
-  "s10_offer",
+  "s8_instantly",
+  "s9_partner",
+  "s10_temp",
+  "s11_offer",
 ] as const;
 
 export type SlidersStepId = (typeof SLIDERS_STEP_IDS)[number];
@@ -32,6 +29,7 @@ export type SlidersSlideType =
   | "pillars"
   | "capture"
   | "engine"
+  | "instantly"
   | "partner"
   | "temp"
   | "offer";
@@ -95,7 +93,7 @@ export const SLIDERS_THINK_BEATS = [
   {
     id: "guarantee",
     title: "Garantie",
-    caption: "20 RDV B2B — le risque est sur notre bilan",
+    caption: "10 RDV B2B — le risque est sur notre bilan",
   },
 ] as const;
 
@@ -104,52 +102,42 @@ export type SlidersOfferId = "core" | "horizon";
 export const SLIDERS_OFFER_CORE_BULLETS = [
   "Déploiement standard",
   "Sans exclusivité zone",
-  "Sans garantie 20 RDV",
+  "10 RDV sur 90 j",
 ] as const;
 
 export const SLIDERS_OFFER_HORIZON_BULLETS = [
   "Exclusivité totale zone",
   "Capture maximale",
-  "20 RDV B2B garantis",
+  "10 RDV garantis sur 90 j",
 ] as const;
 
-export const SLIDERS_HUD_BY_STEP: Record<SlidersStepId, readonly string[]> = {
-  s1_recap: [
-    "Situation : {method}",
-    "Frein : {cause}",
-    "Enjeu : {inaction}",
-  ],
-  s2_goal: ["Objectif 6 mois : {goal6m}", "Écart : {gap}"],
-  s3_deciders: ["Y a-t-il quelqu'un d'autre qui devrait voir ça ?"],
-  s4_diff: [
-    "La plupart testent {method} — nous branchons les flux légaux",
-    "Traiter {cause}, pas empiler une campagne",
-  ],
-  s5_pillars: ["Objectif : {goal6m} — 3 piliers détection / activation / pilotage"],
-  s6_capture: [
-    "Levier actuel : {method}",
-    "Capture intercepte l'intention légale",
-    "Tie-down : « Pourquoi c'est important pour vous ? »",
-  ],
-  s7_engine: [
-    "J+60 système live — garantie 90 j",
-    "Sans activation : {inaction}",
-    "Tie-down : « Pourquoi c'est important pour vous ? »",
-  ],
-  s8_partner: [
-    "Inbound < 24 h côté cabinet",
-    "Future-pace : {goal6m} à 12 mois",
-    "Tie-down : « Pourquoi c'est important pour vous ? »",
-  ],
-  s9_temp: [
-    "Temp check — puis « pourquoi ? » à l'oral",
-    "Si réflexion : 3 beats puis retour temp check",
-  ],
-  s10_offer: [
-    "A/B close — silence après le prix",
-    "« Pourquoi cette option ? » puis copier le lien",
-  ],
-};
+/** Liens Stripe Payment Link — référence closer (non attribués client). */
+export const SLIDERS_STRIPE_PAYMENT_LINKS = [
+  {
+    id: "lite",
+    name: "Hercule Lite",
+    offerType: "starter_999_5",
+    amountLabel: "1 700 €/mois",
+    mode: "Abonnement",
+    url: "https://buy.stripe.com/eVqfZg74x1mR4Ddacg3Je0i",
+  },
+  {
+    id: "starter",
+    name: "Hercule Starter",
+    offerType: "monthly_1499",
+    amountLabel: "2 000 €/mois",
+    mode: "Abonnement",
+    url: "https://buy.stripe.com/7sYeVcbkN3uZ6Ll2JO3Je0j",
+  },
+  {
+    id: "pack3",
+    name: "Pack 3 mois Starter",
+    offerType: "pack_3x1499",
+    amountLabel: "5 277,60 €",
+    mode: "One-shot",
+    url: "https://buy.stripe.com/28E5kCagJghL3z9acg3Je0k",
+  },
+] as const;
 
 const SLIDERS_CANVAS_COPY: string[] = [
   SLIDERS_GOAL_CAPTION,
@@ -161,6 +149,8 @@ const SLIDERS_CANVAS_COPY: string[] = [
   SLIDERS_DIFF.right.label,
   SLIDERS_DIFF.right.detail,
   ...SLIDERS_PILLARS.flatMap((pillar) => [pillar.name, pillar.tagline]),
+  "Moteur Hercule Instantly",
+  "Démo live",
   ...SLIDERS_TEMP_QUESTIONS,
   ...SLIDERS_THINK_BEATS.flatMap((beat) => [beat.title, beat.caption]),
   ...SLIDERS_OFFER_CORE_BULLETS,
@@ -197,14 +187,20 @@ export function getSlidersSlides(): SlidersSlideDefinition[] {
     },
     { id: "s6_capture", type: "capture", canvasTitle: "Détection" },
     { id: "s7_engine", type: "engine", canvasTitle: "Activation" },
-    { id: "s8_partner", type: "partner", canvasTitle: "Pilotage" },
     {
-      id: "s9_temp",
+      id: "s8_instantly",
+      type: "instantly",
+      canvasTitle: "Moteur Hercule Instantly",
+      canvasSubtitle: "Démo live",
+    },
+    { id: "s9_partner", type: "partner", canvasTitle: "Pilotage" },
+    {
+      id: "s10_temp",
       type: "temp",
       canvasTitle: SLIDERS_TEMP_QUESTIONS[0],
       canvasSubtitle: SLIDERS_TEMP_QUESTIONS[1],
     },
-    { id: "s10_offer", type: "offer", canvasTitle: "Choisissez votre infrastructure" },
+    { id: "s11_offer", type: "offer", canvasTitle: "Choisissez votre infrastructure" },
   ];
 }
 
@@ -238,13 +234,7 @@ export function canAdvanceFromSlidersStep(
   values: SalesQualificationValues,
 ): boolean {
   switch (stepId) {
-    case "s6_capture":
-      return values.sCaptureTied === true;
-    case "s7_engine":
-      return values.sEngineTied === true;
-    case "s8_partner":
-      return values.sPartnerTied === true;
-    case "s9_temp":
+    case "s10_temp":
       if (values.sTempCheck === "think") {
         return false;
       }
@@ -256,31 +246,9 @@ export function canAdvanceFromSlidersStep(
 
 export function isSlidersSectionComplete(values: SalesQualificationValues): boolean {
   return (
-    values.sCaptureTied === true &&
-    values.sEngineTied === true &&
-    values.sPartnerTied === true &&
     values.sTempCheck === "yes" &&
     (values.sOffer === "core" || values.sOffer === "horizon") &&
     Boolean(values.sOfferCopiedAt)
   );
 }
 
-export function formatSlidersHudLine(
-  template: string,
-  values: SalesQualificationValues,
-  audience: Audience,
-  context?: PitchInterpolationContext,
-): string {
-  return formatPitchWizardInterpolation(template, values, audience, context);
-}
-
-export function getSlidersHudLines(
-  stepId: SlidersStepId,
-  values: SalesQualificationValues,
-  audience: Audience,
-  context?: PitchInterpolationContext,
-): string[] {
-  return SLIDERS_HUD_BY_STEP[stepId].map((line) =>
-    formatSlidersHudLine(line, values, audience, context),
-  );
-}

@@ -29,7 +29,7 @@ export function SalesComptablePricingPanel({
         {!developerMode && !tieDownsReady ? (
           <InternalStatusAlert
             variant="error"
-            message="Validez les tie-downs « règles de traitement » et « calendrier » avant d'ouvrir le checkout."
+            message="Validation & explication requise — « règles de traitement » et « calendrier » — avant d'ouvrir le checkout."
           />
         ) : null}
 

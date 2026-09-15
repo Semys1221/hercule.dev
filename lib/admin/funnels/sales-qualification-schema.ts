@@ -1017,9 +1017,6 @@ export function isSalesSectionComplete(
 
   if (sectionId === "sliders" && isCabinetBuyerSalesAudience(audience)) {
     return (
-      values.sCaptureTied === true &&
-      values.sEngineTied === true &&
-      values.sPartnerTied === true &&
       values.sTempCheck === "yes" &&
       (values.sOffer === "core" || values.sOffer === "horizon") &&
       Boolean(values.sOfferCopiedAt)

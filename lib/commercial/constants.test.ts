@@ -123,13 +123,13 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.honorairesPonctuelMinCents).toBe(80_000);
   });
 
-  it("Foundation display prices are Core 1 799 € and Horizon 2 399 €", () => {
-    expect(COMMERCIAL_COMPTABLE.coreDisplayPriceCents).toBe(179_900);
-    expect(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents).toBe(239_900);
+  it("Foundation display prices are Core 1 700 € and Horizon 2 000 €", () => {
+    expect(COMMERCIAL_COMPTABLE.coreDisplayPriceCents).toBe(170_000);
+    expect(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents).toBe(200_000);
   });
 
-  it("Horizon guarantee is 20 B2B RDV over 3 months", () => {
-    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount).toBe(20);
+  it("Horizon guarantee is 10 B2B RDV over 90 days", () => {
+    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount).toBe(10);
     expect(COMMERCIAL_COMPTABLE.horizonGuaranteeMonths).toBe(3);
     expect(COMMERCIAL_COMPTABLE.horizonGuaranteeDays).toBe(90);
   });

@@ -285,9 +285,9 @@ export const COMMERCIAL_COMPTABLE = {
   /** Display-only Foundation pricing — Stripe charge amounts unchanged until payment patch. */
   coreDisplayName: "Hercule Core",
   horizonDisplayName: "Hercule Horizon",
-  coreDisplayPriceCents: 179_900,
-  horizonDisplayPriceCents: 239_900,
-  horizonGuaranteeRdvCount: 20,
+  coreDisplayPriceCents: 170_000,
+  horizonDisplayPriceCents: 200_000,
+  horizonGuaranteeRdvCount: 10,
   horizonGuaranteeMonths: 3,
   horizonGuaranteeDays: 90,
   coreTagline: "Bases du système + zone standard",
@@ -317,7 +317,7 @@ export function formatFoundationEuros(cents: number): string {
 }
 
 export function formatFoundationGuaranteeRdvLabel(): string {
-  return `${COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount} RDV B2B en ${COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} mois`;
+  return `${COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount} RDV B2B sur ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours`;
 }
 
 export const FOUNDATION_PRICING_PLANS: readonly FoundationPricingPlan[] = [

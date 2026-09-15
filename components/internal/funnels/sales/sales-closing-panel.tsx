@@ -581,7 +581,7 @@ export function SalesClosingPanel({
                 message={
                   isCabinetBuyerSalesAudience(audience)
                     ? SESSION_CLOSING_FINISH_SYSTEM_FIRST
-                    : "Validez les tie-downs « règles de traitement » et « calendrier » avant d'envoyer le lien."
+                    : "Validation & explication requise — « règles de traitement » et « calendrier » — avant d'envoyer le lien."
                 }
               />
             ) : null}

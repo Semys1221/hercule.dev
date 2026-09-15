@@ -4,7 +4,9 @@ import {
   ArrowRight,
   Building2,
   CheckCircle2,
+  ClipboardCopy,
   Compass,
+  ExternalLink,
   Handshake,
   Lock,
   MapPin,
@@ -13,22 +15,46 @@ import {
   Sparkles,
   Target,
   TrendingUp,
-  Users,
   Zap,
 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
+import type { UseFormReturn } from "react-hook-form";
+
+import {
+  CalendlyFlowMark,
+  DataGouvFlowMark,
+  FlowNodeShell,
+  InstantlyBoltMark,
+  InstantlyHeroMark,
+} from "@/components/internal/funnels/sales/sliders/instantly-flow-icons";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FieldLabel } from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { toast } from "@/hooks/use-toast";
+import {
+  COMMERCIAL_COMPTABLE,
   FOUNDATION_PRICING_PLANS,
   formatFoundationEuros,
 } from "@/lib/commercial/constants";
 import {
+  areSlidersThinkBeatsComplete,
   SLIDERS_DIFF,
   SLIDERS_OFFER_CORE_BULLETS,
   SLIDERS_OFFER_HORIZON_BULLETS,
+  SLIDERS_STRIPE_PAYMENT_LINKS,
   SLIDERS_PILLARS,
   SLIDERS_RECAP_TILES,
   SLIDERS_TEMP_QUESTIONS,
@@ -37,9 +63,14 @@ import {
   type SlidersSlideDefinition,
   resolveSlidersGoalHero,
 } from "@/lib/admin/funnels/sales-sliders";
+import { getPitchP2MissingRoleOptions } from "@/lib/admin/funnels/sales-pitch-bleed-copy";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
 import { cn } from "@/lib/utils";
+
+import { PITCH_P2_OPTIONS } from "../sales-pitch-wizard-slides";
+import { SalesSingleChoiceField } from "../sales-question-fields";
+import { pitchSingleQuestion } from "../pitch/pitch-utils";
 
 // ─── Keyframes (injected once) ────────────────────────────────────────────────
 const CANVAS_KEYFRAMES = `
@@ -284,7 +315,8 @@ function GoalSparkline() {
 /** ROI slider */
 function ROICalc() {
   const [hon, setHon] = useState(3600);
-  const revenue = hon * 15;
+  const rdvCount = COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount;
+  const revenue = hon * rdvCount;
   return (
     <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5">
       <p className="mb-4 text-[10px] font-semibold uppercase tracking-widest text-primary">
@@ -305,7 +337,9 @@ function ROICalc() {
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
               Revenus potentiels an 1
             </p>
-            <p className="text-xs text-muted-foreground">~15 missions signées (Garantie Horizon)</p>
+            <p className="text-xs text-muted-foreground">
+              ~{rdvCount} missions signées (Garantie Horizon)
+            </p>
           </div>
           <span className="text-2xl font-black tabular-nums text-primary">{euroFmt.format(revenue)}</span>
         </div>
@@ -405,9 +439,19 @@ function SlideGoal({ rawGoal, goalHero }: { rawGoal: number | null; goalHero: { 
   );
 }
 
-function SlideDeciders({ title }: { title: string }) {
+function SlideDeciders({
+  title,
+  audience,
+  form,
+  values,
+}: {
+  title: string;
+  audience: Audience;
+  form: UseFormReturn<SalesQualificationValues>;
+  values: SalesQualificationValues;
+}) {
   return (
-    <div className="flex min-h-[18rem] flex-col items-center justify-center gap-6 py-8 text-center">
+    <div className="flex min-h-[18rem] flex-col items-center justify-center gap-8 py-8 text-center">
       <KF />
       <div className="animate-in fade-in zoom-in-95 fill-mode-both" style={{ animationDuration: "700ms" }}>
         <p className="font-black leading-none tracking-tight" style={{ fontSize: "clamp(3rem,7vw,5.5rem)" }}>
@@ -415,11 +459,49 @@ function SlideDeciders({ title }: { title: string }) {
         </p>
       </div>
       <div
-        className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both flex items-center gap-2 rounded-full border border-border/50 bg-card px-5 py-2.5"
+        className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both w-full max-w-md text-left"
         style={{ animationDelay: "450ms", animationDuration: "600ms" }}
       >
-        <Users className="size-4 text-muted-foreground" aria-hidden />
-        <span className="text-sm text-muted-foreground">Vérification avant de démarrer</span>
+        <RadioGroup
+          value={values.p2DecisionMakers ?? ""}
+          onValueChange={(next) =>
+            form.setValue("p2DecisionMakers", next as "all_present" | "missing", {
+              shouldDirty: true,
+            })
+          }
+          className="grid gap-2"
+        >
+          {PITCH_P2_OPTIONS.map((option) => {
+            const inputId = `canvas-p2-${option.id}`;
+            return (
+              <FieldLabel
+                key={option.id}
+                htmlFor={inputId}
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-card/80 p-4"
+              >
+                <RadioGroupItem value={option.id} id={inputId} />
+                <span className="text-sm">{option.label}</span>
+              </FieldLabel>
+            );
+          })}
+        </RadioGroup>
+        {values.p2DecisionMakers === "missing" ? (
+          <div className="mt-4">
+            <SalesSingleChoiceField
+              question={pitchSingleQuestion(
+                "p2MissingRole",
+                "Qui manque ?",
+                getPitchP2MissingRoleOptions(audience),
+              )}
+              value={values.p2MissingRole ?? ""}
+              onChange={(next) =>
+                form.setValue("p2MissingRole", next as SalesQualificationValues["p2MissingRole"], {
+                  shouldDirty: true,
+                })
+              }
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -566,7 +648,7 @@ function SlideCapture() {
         </GCard>
         <GCard delay={150} className="flex flex-col justify-center gap-3 py-6">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Cabinets actifs
+            Agences & cabinets
           </p>
           <p className="text-5xl font-black tabular-nums">{cabinetCount}</p>
           <p className="text-sm text-muted-foreground">accompagnés sur le réseau Hercule</p>
@@ -619,7 +701,7 @@ function SlideCapture() {
 }
 
 function SlideEngine() {
-  const rdvCount = useCountUp(20);
+  const rdvCount = useCountUp(COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount);
 
   return (
     <div className="flex flex-col gap-5">
@@ -664,6 +746,51 @@ function SlideEngine() {
           <Badge variant="secondary" className="text-[10px]">Garantie contractuelle</Badge>
         </GCard>
       </div>
+    </div>
+  );
+}
+
+const INSTANTLY_FLOW_NODES = [
+  { id: "datagouv", node: <DataGouvFlowMark />, featured: false },
+  { id: "instantly", node: <InstantlyBoltMark size="sm" />, featured: true },
+  { id: "calendly", node: <CalendlyFlowMark />, featured: false },
+] as const;
+
+function SlideInstantlyDemo() {
+  return (
+    <div className="flex flex-col items-center gap-8 py-4">
+      <KF />
+      <div
+        className="animate-in fade-in zoom-in-95 fill-mode-both flex flex-col items-center gap-4 text-center"
+        style={{ animationDuration: "600ms" }}
+      >
+        <InstantlyHeroMark />
+        <div>
+          <p className="text-lg font-bold">Moteur propriétaire Hercule Instantly</p>
+          <p className="mt-1 text-sm text-muted-foreground">Démo live</p>
+        </div>
+      </div>
+
+      <GCard delay={200} className="w-full max-w-2xl">
+        <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Flux du moteur
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {INSTANTLY_FLOW_NODES.map(({ id, node, featured }, index) => (
+            <div key={id} className="flex items-center gap-2">
+              <div
+                className="animate-in fade-in slide-in-from-bottom-2 fill-mode-both"
+                style={{ animationDelay: `${250 + index * 120}ms` }}
+              >
+                <FlowNodeShell featured={featured}>{node}</FlowNodeShell>
+              </div>
+              {index < INSTANTLY_FLOW_NODES.length - 1 ? (
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </GCard>
     </div>
   );
 }
@@ -725,8 +852,19 @@ function SlidePartner({ rawGoal, goalHero }: { rawGoal: number | null; goalHero:
   );
 }
 
-function SlideTemp({ values, goalHero }: { values: SalesQualificationValues; goalHero: { value: string | null } }) {
+function SlideTemp({
+  values,
+  goalHero,
+  form,
+  onResetThinkFlow,
+}: {
+  values: SalesQualificationValues;
+  goalHero: { value: string | null };
+  form: UseFormReturn<SalesQualificationValues>;
+  onResetThinkFlow: () => void;
+}) {
   const isThink = values.sTempCheck === "think";
+  const thinkComplete = areSlidersThinkBeatsComplete(values);
 
   return (
     <div className="flex flex-col items-center gap-8 py-4 text-center">
@@ -754,20 +892,162 @@ function SlideTemp({ values, goalHero }: { values: SalesQualificationValues; goa
         {" ?"}
       </p>
 
-      {isThink && (
+      <div className="w-full max-w-md text-left">
+        <RadioGroup
+          value={values.sTempCheck ?? ""}
+          onValueChange={(next) => {
+            if (next === "think") {
+              form.setValue("sThinkBeat1", false, { shouldDirty: true });
+              form.setValue("sThinkBeat2", false, { shouldDirty: true });
+              form.setValue("sThinkBeat3", false, { shouldDirty: true });
+            }
+            form.setValue("sTempCheck", next as "yes" | "think", { shouldDirty: true });
+          }}
+          className="grid gap-2"
+        >
+          <FieldLabel
+            htmlFor="canvas-temp-yes"
+            className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-card/80 p-4"
+          >
+            <RadioGroupItem value="yes" id="canvas-temp-yes" />
+            <span className="text-sm">Oui — bonne solution</span>
+          </FieldLabel>
+          <FieldLabel
+            htmlFor="canvas-temp-think"
+            className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-card/80 p-4"
+          >
+            <RadioGroupItem value="think" id="canvas-temp-think" />
+            <span className="text-sm">Je dois réfléchir</span>
+          </FieldLabel>
+        </RadioGroup>
+      </div>
+
+      {isThink ? (
         <div className="grid w-full max-w-2xl gap-4 md:grid-cols-3">
-          {SLIDERS_THINK_BEATS.map((beat, i) => (
-            <div
-              key={beat.id}
-              className="animate-in slide-in-from-bottom-4 fade-in fill-mode-both flex flex-col gap-2 rounded-2xl border border-border/60 bg-card/80 p-5 text-left backdrop-blur-sm"
-              style={{ animationDelay: `${i * 150}ms`, animationDuration: "500ms" }}
-            >
-              <p className="text-xs font-semibold text-primary">{beat.title}</p>
-              <p className="text-sm text-muted-foreground">{beat.caption}</p>
-            </div>
-          ))}
+          {SLIDERS_THINK_BEATS.map((beat, index) => {
+            const fieldName =
+              index === 0 ? "sThinkBeat1" : index === 1 ? "sThinkBeat2" : "sThinkBeat3";
+            const checked = values[fieldName] === true;
+            const inputId = `canvas-think-${beat.id}`;
+
+            return (
+              <div
+                key={beat.id}
+                className={cn(
+                  "animate-in slide-in-from-bottom-4 fade-in fill-mode-both flex flex-col gap-3 rounded-2xl border bg-card/80 p-5 text-left backdrop-blur-sm",
+                  checked ? "border-primary/40" : "border-border/60",
+                )}
+                style={{ animationDelay: `${index * 150}ms`, animationDuration: "500ms" }}
+              >
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id={inputId}
+                    checked={checked}
+                    onCheckedChange={(next) =>
+                      form.setValue(fieldName, next === true, { shouldDirty: true })
+                    }
+                  />
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor={inputId} className="text-sm font-medium">
+                      {beat.title}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">{beat.caption}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      ) : null}
+
+      {thinkComplete ? (
+        <Button type="button" variant="outline" size="sm" onClick={onResetThinkFlow}>
+          Retour au temp check
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function StripePaymentLinksTable() {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  async function handleCopy(id: string, url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      toast({ title: "Lien copié", description: url });
+      setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 2000);
+    } catch {
+      toast({ title: "Copie impossible", description: url, variant: "destructive" });
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/80 p-5 backdrop-blur-sm">
+      <p className="mb-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+        Liens de paiement Stripe
+      </p>
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="text-xs">Offre</TableHead>
+            <TableHead className="hidden text-xs sm:table-cell">offer_type</TableHead>
+            <TableHead className="text-xs">Montant</TableHead>
+            <TableHead className="hidden text-xs md:table-cell">Mode</TableHead>
+            <TableHead className="text-right text-xs">Payment Link</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {SLIDERS_STRIPE_PAYMENT_LINKS.map((link) => (
+            <TableRow key={link.id}>
+              <TableCell className="font-medium">{link.name}</TableCell>
+              <TableCell className="hidden font-mono text-[11px] text-muted-foreground sm:table-cell">
+                {link.offerType}
+              </TableCell>
+              <TableCell className="tabular-nums">{link.amountLabel}</TableCell>
+              <TableCell className="hidden md:table-cell">
+                <Badge variant="outline" className="text-[10px]">{link.mode}</Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    aria-label={`Ouvrir le lien ${link.name}`}
+                    asChild
+                  >
+                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 max-w-[10rem] truncate px-2 text-[11px] font-mono"
+                    onClick={() => void handleCopy(link.id, link.url)}
+                  >
+                    {copiedId === link.id ? (
+                      <>
+                        <CheckCircle2 className="mr-1 size-3 shrink-0" aria-hidden />
+                        Copié
+                      </>
+                    ) : (
+                      <>
+                        <ClipboardCopy className="mr-1 size-3 shrink-0" aria-hidden />
+                        Copier
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -888,6 +1168,14 @@ function SlideOffer({
       >
         <ROICalc />
       </div>
+
+      {/* Stripe payment links — référence closer */}
+      <div
+        className="animate-in fade-in slide-in-from-bottom-3 fill-mode-both"
+        style={{ animationDelay: "550ms", animationDuration: "600ms" }}
+      >
+        <StripePaymentLinksTable />
+      </div>
     </div>
   );
 }
@@ -896,17 +1184,21 @@ function SlideOffer({
 type SalesSlidersCanvasProps = {
   slide: SlidersSlideDefinition;
   audience: Audience;
+  form: UseFormReturn<SalesQualificationValues>;
   values: SalesQualificationValues;
   selectedOffer: SlidersOfferId | null;
   onSelectOffer: (offer: SlidersOfferId) => void;
+  onResetThinkFlow: () => void;
 };
 
 export const SalesSlidersCanvas = memo(function SalesSlidersCanvas({
   slide,
   audience,
+  form,
   values,
   selectedOffer,
   onSelectOffer,
+  onResetThinkFlow,
 }: SalesSlidersCanvasProps) {
   const goalHero = resolveSlidersGoalHero(values, audience);
   const rawGoal =
@@ -917,13 +1209,14 @@ export const SalesSlidersCanvas = memo(function SalesSlidersCanvas({
   switch (slide.type) {
     case "recap":    return <SlideRecap />;
     case "goal":     return <SlideGoal rawGoal={rawGoal} goalHero={goalHero} />;
-    case "deciders": return <SlideDeciders title={slide.canvasTitle} />;
+    case "deciders": return <SlideDeciders title={slide.canvasTitle} audience={audience} form={form} values={values} />;
     case "diff":     return <SlideDiff />;
     case "pillars":  return <SlidePillars />;
     case "capture":  return <SlideCapture />;
-    case "engine":   return <SlideEngine />;
-    case "partner":  return <SlidePartner rawGoal={rawGoal} goalHero={goalHero} />;
-    case "temp":     return <SlideTemp values={values} goalHero={goalHero} />;
+    case "engine":    return <SlideEngine />;
+    case "instantly": return <SlideInstantlyDemo />;
+    case "partner":   return <SlidePartner rawGoal={rawGoal} goalHero={goalHero} />;
+    case "temp":     return <SlideTemp values={values} goalHero={goalHero} form={form} onResetThinkFlow={onResetThinkFlow} />;
     case "offer":    return <SlideOffer selectedOffer={selectedOffer} onSelectOffer={onSelectOffer} />;
     default:         return null;
   }

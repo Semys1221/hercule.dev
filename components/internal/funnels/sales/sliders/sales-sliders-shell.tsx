@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Eye, EyeOff, PanelLeft, PanelRight } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, EyeOff, PanelLeft } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,16 +14,13 @@ type SalesSlidersShellProps = {
   totalSteps: number;
   title?: ReactNode;
   canvas: ReactNode;
-  rail: ReactNode | null;
   presenterMode: boolean;
-  railOpen: boolean;
   canGoPrev: boolean;
   canGoNext: boolean;
   nextLabel?: string;
   onPrev: () => void;
   onNext: () => void;
   onTogglePresenter: () => void;
-  onToggleRail: () => void;
   onOpenSidebar?: () => void;
   sidebarOpen?: boolean;
 };
@@ -32,16 +29,13 @@ export function SalesSlidersShell({
   progressValue,
   title,
   canvas,
-  rail,
   presenterMode,
-  railOpen,
   canGoPrev,
   canGoNext,
   nextLabel,
   onPrev,
   onNext,
   onTogglePresenter,
-  onToggleRail,
   onOpenSidebar,
   sidebarOpen = false,
 }: SalesSlidersShellProps) {
@@ -60,12 +54,6 @@ export function SalesSlidersShell({
       if (event.key === "f" || event.key === "F") {
         event.preventDefault();
         onTogglePresenter();
-        return;
-      }
-
-      if (event.key === "h" || event.key === "H") {
-        event.preventDefault();
-        onToggleRail();
         return;
       }
 
@@ -89,9 +77,7 @@ export function SalesSlidersShell({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [canGoNext, canGoPrev, onNext, onPrev, onTogglePresenter, onToggleRail]);
-
-  const showRail = !presenterMode && railOpen && rail;
+  }, [canGoNext, canGoPrev, onNext, onPrev, onTogglePresenter]);
 
   return (
     <div
@@ -126,16 +112,6 @@ export function SalesSlidersShell({
             variant="ghost"
             size="icon"
             className="size-9"
-            aria-label={railOpen ? "Masquer le rail closer" : "Afficher le rail closer"}
-            onClick={onToggleRail}
-          >
-            <PanelRight className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-9"
             aria-label={presenterMode ? "Quitter le mode présentateur" : "Mode présentateur"}
             onClick={onTogglePresenter}
           >
@@ -164,15 +140,6 @@ export function SalesSlidersShell({
           ) : null}
           <div className="mx-auto w-full max-w-5xl">{canvas}</div>
         </div>
-
-        {showRail ? (
-          <aside
-            className="hidden w-80 shrink-0 overflow-y-auto border-l border-border bg-card/80 p-4 backdrop-blur-sm lg:block"
-            aria-label="Rail closer"
-          >
-            {rail}
-          </aside>
-        ) : null}
       </div>
 
       {!presenterMode ? (
