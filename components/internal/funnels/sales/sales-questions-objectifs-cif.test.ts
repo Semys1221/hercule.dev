@@ -19,8 +19,15 @@ function main() {
       "w5",
       "w6",
       "w7",
+      "w19",
       "w8",
+      "w8Tried",
+      "w8TriedWho",
+      "w8Brake",
+      "w9",
+      "w8Criteria",
       "w10",
+      "w11",
       "w12",
       "w13",
       "wExchangeWhy13",
@@ -52,6 +59,9 @@ function main() {
     .join(" ");
   assert.ok(!/lead/i.test(promptCopy));
   assert.ok(!/audit/i.test(promptCopy));
+
+  const w19 = questions.find((question) => question.id === "w19");
+  assert.match(w19?.prompt ?? "", /rémunération annuelle moyenne/i);
 
   assert.match(questions[2]?.prompt ?? "", /encours/i);
 

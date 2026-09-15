@@ -92,8 +92,14 @@ const DISCOVERY_LINEAR_TRUNK = [
   "w5",
   "w6",
   "w7",
+  "w19",
   "w8",
+  "w8Tried",
+  "w8Brake",
+  "w9",
+  "w8Criteria",
   "w10",
+  "w11",
   "w12",
   "w13",
 ] as const;
@@ -121,6 +127,19 @@ function stepSegments(ids: readonly string[]): MappingFlowSegment[] {
 function buildDiscoverySegments(): MappingFlowSegment[] {
   return [
     ...stepSegments(DISCOVERY_LINEAR_TRUNK),
+    {
+      kind: "split",
+      branches: [
+        {
+          label: "w8Tried = looked ou tried",
+          segments: [{ kind: "step", id: "w8TriedWho" }],
+        },
+        {
+          label: "w8Tried = none",
+          segments: [],
+        },
+      ],
+    },
     { kind: "step", id: "wExchangeWhy13" },
     { kind: "step", id: "w13Why" },
     ...stepSegments(["w14", "wExchangeWhy14", "w15", "wExchangeWhy15"]),
@@ -235,6 +254,8 @@ function buildDashboardSegments(): MappingFlowSegment[] {
 }
 
 const DISCOVERY_NODE_CONDITIONS: Record<string, string> = {
+  w8TriedWho: "Visible si w8Tried = looked ou tried",
+  w9: "Visible si w8Brake renseigné",
   wExchangeWhy13: "Visible si w13 = yes",
   w13Why: "Visible si w13 = no",
   wExchangeWhy14: "Visible si w13 = yes et w14 ≠ 12m",
@@ -244,7 +265,7 @@ const DISCOVERY_NODE_CONDITIONS: Record<string, string> = {
   w16StrategicSub: "Visible si w16 = strategic",
   w16ResaleSub: "Visible si w16 = resale",
   w16Detail: "Visible si w16 = other",
-  wExchangeWhy18: "Visible si w18 = acceptable",
+  wExchangeWhy18: "Visible si w18 = near_target ou at_capacity",
   diagnostic_card: "Visible si w17Acknowledged = true",
 };
 

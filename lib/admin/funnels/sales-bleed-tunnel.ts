@@ -1,5 +1,7 @@
 import type { SalesSliderConfig } from "@/components/internal/funnels/sales/sales-questions";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { isCifSalesAudience } from "@/lib/admin/funnels/sales-audience";
+import type { Audience } from "@/lib/admin/navigation";
 
 const countFormatter = new Intl.NumberFormat("fr-FR");
 
@@ -85,11 +87,62 @@ const B7_OPTIONS_BY_METHOD: Record<B5MethodId, ReadonlyArray<{ id: string; label
   ],
 };
 
-export function getB7Options(methodId: string): ReadonlyArray<{ id: string; label: string }> {
-  if (methodId in B7_OPTIONS_BY_METHOD) {
-    return B7_OPTIONS_BY_METHOD[methodId as B5MethodId];
+const B7_LABEL_OVERRIDES: Record<
+  "cif" | "comptable",
+  Partial<Record<B5MethodId, Partial<Record<string, string>>>>
+> = {
+  cif: {
+    seo: {
+      seo_keywords: "Confrères CIF sur les mêmes requêtes patrimoine de zone",
+    },
+    ads: {
+      ads_cac: "Coût par mandat trop élevé vs ticket patrimonial visé",
+    },
+    referrers: {
+      ref_quality: "Fichiers patrimoine non qualifiés ou déjà sollicités",
+    },
+    word_of_mouth: {
+      wom_aging: "Mandats existants sans cross-sell structuré",
+    },
+    nothing: {
+      nothing_visibility: "Invisibilité au moment du besoin patrimonial sur la zone",
+    },
+  },
+  comptable: {
+    seo: {
+      seo_keywords: "Confrères compta sur les mêmes mots-clés de zone",
+    },
+    ads: {
+      ads_cac: "Coût par demande trop élevé vs honoraires lettre moyenne",
+    },
+    word_of_mouth: {
+      wom_aging: "Portefeuille TPE qui vieillit sans renouvellement prévisible",
+    },
+    nothing: {
+      nothing_visibility: "Invisibilité au moment du choix comptable (obligation légale)",
+    },
+  },
+};
+
+export function getB7Options(
+  methodId: string,
+  audience: Audience = "comptable",
+): ReadonlyArray<{ id: string; label: string }> {
+  if (!(methodId in B7_OPTIONS_BY_METHOD)) {
+    return [];
   }
-  return [];
+
+  const baseOptions = B7_OPTIONS_BY_METHOD[methodId as B5MethodId];
+  const cabinetAudience = isCifSalesAudience(audience) ? "cif" : "comptable";
+  const overrides = B7_LABEL_OVERRIDES[cabinetAudience][methodId as B5MethodId];
+  if (!overrides) {
+    return baseOptions;
+  }
+
+  return baseOptions.map((option) => ({
+    id: option.id,
+    label: overrides[option.id] ?? option.label,
+  }));
 }
 
 export function resolvePrimaryMethodId(values: SalesQualificationValues): string {

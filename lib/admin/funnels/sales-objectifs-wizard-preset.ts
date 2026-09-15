@@ -11,9 +11,16 @@ export function buildCabinetWizardPresetValues(
   | "w5"
   | "w6"
   | "w7"
+  | "w19"
   | "w8"
+  | "w8Tried"
+  | "w8TriedWho"
+  | "w8Brake"
+  | "w8Criteria"
+  | "w9Acknowledged"
   | "w10"
   | "w10Year"
+  | "w11"
   | "w12Confirmed"
   | "w13"
   | "w13Why"
@@ -41,9 +48,16 @@ export function buildCabinetWizardPresetValues(
     w5: isCif ? 25_000_000 : 600_000,
     w6: 5,
     w7: isCif ? 110 : 130,
+    w19: 3_600,
     w8: isCif ? "partnerships" : "word_of_mouth",
+    w8Tried: isCif ? "looked" : "tried",
+    w8TriedWho: isCif ? "Apporteur patrimoine 2024" : "Agence locale SEO 2023",
+    w8Brake: isCif ? "part_inactive" : "wom_scale",
+    w8Criteria: ["exclusivity", "quality", "guarantee"],
+    w9Acknowledged: true,
     w10: isCif ? "y2017" : "y2020",
     w10Year: isCif ? 2017 : 2020,
+    w11: "3-5y",
     w12Confirmed: true,
     w13: "no",
     w13Why: isCif ? "part_inactive" : "wom_scale",
@@ -57,7 +71,7 @@ export function buildCabinetWizardPresetValues(
     wExchangeWhy14: undefined,
     wExchangeWhy15: undefined,
     wExchangeWhy18: undefined,
-    w18: "not_acceptable",
+    w18: "major_gap",
     w17Acknowledged: true,
     bleedDiagnosticAccepted: true,
   };

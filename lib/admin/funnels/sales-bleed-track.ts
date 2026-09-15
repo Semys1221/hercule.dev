@@ -16,6 +16,7 @@ import {
   formatGoal6m,
   formatGoalGap,
   resolveUrgencyLabel,
+  resolveW8BrakeLabel,
   resolveW13WhyLabel,
   resolveW16Label,
   resolveW16OtherLabel,
@@ -130,6 +131,7 @@ function buildCabinetBleedTrack(
   if (usesObjectifsWizard(values)) {
     const methodLabel = resolveW8MethodLabel(values);
     const methodBrake =
+      resolveW8BrakeLabel(values, audience) ||
       resolveW13WhyLabel(values) ||
       (values.w16 === "strategic"
         ? resolveW16StrategicSubLabel(values)
@@ -165,7 +167,9 @@ function buildCabinetBleedTrack(
       synthesis: methodLabel ? [methodLabel] : [],
     };
 
-    if (typeof values.q13 === "number") {
+    if (typeof values.w19 === "number") {
+      bleed.honorairesAnnual = values.w19;
+    } else if (typeof values.q13 === "number") {
       bleed.honorairesAnnual = values.q13;
     }
     if (typeof values.q20 === "number") {

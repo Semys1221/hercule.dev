@@ -17,8 +17,15 @@ function main() {
       "w5",
       "w6",
       "w7",
+      "w19",
       "w8",
+      "w8Tried",
+      "w8TriedWho",
+      "w8Brake",
+      "w9",
+      "w8Criteria",
       "w10",
+      "w11",
       "w12",
       "w13",
       "wExchangeWhy13",
@@ -46,8 +53,15 @@ function main() {
   );
   assert.ok(!(questions[0]?.prompt ?? "").match(/lead/i));
 
+  const w19 = questions.find((question) => question.id === "w19");
+  assert.equal(w19?.type, "slider");
+  assert.match(w19?.prompt ?? "", /LTV/i);
+
   const w13Why = questions.find((question) => question.id === "w13Why");
   assert.equal(w13Why?.type, "single");
+
+  const w9 = questions.find((question) => question.id === "w9");
+  assert.equal(w9?.type, "acknowledgment");
 
   const w16Detail = questions.find((question) => question.id === "w16Detail");
   assert.equal(w16Detail?.type, "single");

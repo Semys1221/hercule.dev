@@ -1,8 +1,14 @@
+import { CIF_ANNUAL_MIN, CIF_ANNUAL_TYPICAL } from "@/components/internal/funnels/sales/sales-questions-cif";
+import {
+  COMPTABLE_ANNUAL_MIN,
+  COMPTABLE_ANNUAL_TYPICAL,
+} from "@/components/internal/funnels/sales/sales-questions-comptable";
 import type { SalesSliderConfig } from "@/components/internal/funnels/sales/sales-questions";
 import { formatSliderLabel } from "@/components/internal/funnels/sales/sales-questions";
 import {
   B3_YEAR_MAP,
   B5_METHOD_OPTIONS,
+  B8_GAP_OPTIONS,
   getB7Options,
   type B3YearId,
   type B5MethodId,
@@ -24,7 +30,14 @@ export type W16OtherId =
   | "regulatory"
   | "commercial_window"
   | "reputation";
-export type W18AcceptanceId = "acceptable" | "not_acceptable" | "mixed";
+export type W8TriedId = "none" | "looked" | "tried";
+export type W11MethodAgeId = "<1y" | "1-3y" | "3-5y" | "5y+";
+export type W18GapId =
+  | "major_gap"
+  | "significant_gap"
+  | "moderate_gap"
+  | "near_target"
+  | "at_capacity";
 export type WExchangeWhyId = "certainty" | "not_real_goal";
 export type WizardChartMetricId = "metric" | "volume" | "clients";
 
@@ -47,7 +60,7 @@ export type WizardChartModel = {
 };
 
 export const WIZARD_OBJECTIFS_SUBTITLE =
-  "Qualification : situation actuelle du cabinet, objectif à 6 mois et limites de la méthode d'acquisition en place.";
+  "Qualification : situation actuelle du cabinet, objectif à 6 mois, freins de la méthode d'acquisition et coût du statu quo.";
 
 export const WIZARD_QUESTION_IDS = [
   "w1",
@@ -57,8 +70,15 @@ export const WIZARD_QUESTION_IDS = [
   "w5",
   "w6",
   "w7",
+  "w19",
   "w8",
+  "w8Tried",
+  "w8TriedWho",
+  "w8Brake",
+  "w9",
+  "w8Criteria",
   "w10",
+  "w11",
   "w12",
   "w13",
   "wExchangeWhy13",
@@ -87,10 +107,17 @@ const WIZARD_MAPPING_TITLES: Record<WizardObjectifsQuestionId, string> = {
   w5: "Objectif à 6 mois (€)",
   w6: "Volume mensuel visé",
   w7: "Clients visés (6 mois)",
+  w19: "LTV client (€/an)",
   w8: "Méthode d'acquisition",
+  w8Tried: "Tentatives passées",
+  w8TriedWho: "Prestataires testés",
+  w8Brake: "Frein sur {method}",
+  w9: "Piège verbal",
+  w8Criteria: "Critères partenaire",
   w10: "Année d'exercice",
+  w11: "Ancienneté {method}",
   w12: "Confirmation objectif 6 mois",
-  w13: "Freins méthode (6 mois)",
+  w13: "Méthode suffisante (6 mois)",
   wExchangeWhy13: "Motivation de l'échange",
   w13Why: "Pourquoi ?",
   w14: "Délai estimé ({method})",
@@ -101,7 +128,7 @@ const WIZARD_MAPPING_TITLES: Record<WizardObjectifsQuestionId, string> = {
   w16StrategicSub: "Impératif stratégique",
   w16ResaleSub: "Impératif revente",
   w16Detail: "Détail impératif",
-  w18: "Statu quo acceptable ?",
+  w18: "Coût statu quo (6 mois)",
   wExchangeWhy18: "Motivation de l'échange",
   w17: "Synthèse",
   diagnostic_card: "Diagnostic mentionné",
@@ -114,6 +141,7 @@ const CIF_WIZARD_MAPPING_TITLE_OVERRIDES: Partial<
   w4: "Mandats par mois (actuel)",
   w5: "Encours visé (6 mois)",
   w6: "Mandats visés par mois",
+  w19: "LTV client (rémunération / an)",
 };
 
 export function getWizardMappingTitle(
@@ -187,14 +215,64 @@ export const W16_OTHER_OPTIONS: ReadonlyArray<{ id: W16OtherId; label: string }>
   { id: "reputation", label: "Enjeu image / réputation du cabinet" },
 ];
 
-export const W18_ACCEPTANCE_OPTIONS: ReadonlyArray<{ id: W18AcceptanceId; label: string }> = [
-  { id: "acceptable", label: "C'est acceptable tel quel" },
-  {
-    id: "not_acceptable",
-    label: "Non — toute la philosophie du cabinet, c'est de ne pas stagner",
-  },
-  { id: "mixed", label: "Difficile à trancher / dépend d'autres leviers" },
+export const W18_GAP_OPTIONS = B8_GAP_OPTIONS;
+
+export const W8_TRIED_OPTIONS: ReadonlyArray<{ id: W8TriedId; label: string }> = [
+  { id: "none", label: "Non — première démarche structurée" },
+  { id: "looked", label: "Oui, étudié sans s'engager" },
+  { id: "tried", label: "Oui, testé un prestataire / fichier / campagne" },
 ];
+
+export const W11_METHOD_AGE_OPTIONS: ReadonlyArray<{ id: W11MethodAgeId; label: string }> = [
+  { id: "<1y", label: "Moins d'un an" },
+  { id: "1-3y", label: "1 à 3 ans" },
+  { id: "3-5y", label: "3 à 5 ans" },
+  { id: "5y+", label: "Plus de 5 ans" },
+];
+
+const W8_CRITERIA_BASE = [
+  {
+    id: "exclusivity",
+    labelCif: "Exclusivité sur la zone",
+    labelComptable: "Exclusivité sur la zone",
+  },
+  {
+    id: "quality",
+    labelCif: "Profil patrimoine / ticket AMF aligné",
+    labelComptable: "Typologie TPE / honoraires cibles",
+  },
+  {
+    id: "speed",
+    labelCif: "RDV sous 48 h",
+    labelComptable: "RDV sous 48 h",
+  },
+  {
+    id: "data",
+    labelCif: "Data légale + conformité",
+    labelComptable: "Data légale (Pappers, INSEE)",
+  },
+  {
+    id: "guarantee",
+    labelCif: "Garantie résultat contractuelle",
+    labelComptable: "Garantie résultat contractuelle",
+  },
+  {
+    id: "no_commission",
+    labelCif: "Pas de commission sur l'encours",
+    labelComptable: "Pas de commission sur la marge",
+  },
+] as const;
+
+export function getW8CriteriaOptions(audience: Audience): Array<{ id: string; label: string }> {
+  const isCif = isCifSalesAudience(audience);
+  return W8_CRITERIA_BASE.map((option) => ({
+    id: option.id,
+    label: isCif ? option.labelCif : option.labelComptable,
+  }));
+}
+
+export const W9_TRAP_TEMPLATE =
+  "Depuis **{year}**, le cabinet vise **{goal6m}** (actuellement **{currentSnapshot}**). Levier principal : **{method}**, bridé par **{brake}**.\n\n**Pourquoi {method} n'a pas permis d'atteindre {goal6m} ?**";
 
 export const W_EXCHANGE_WHY_OPTIONS: ReadonlyArray<{ id: WExchangeWhyId; label: string }> = [
   { id: "certainty", label: "Le cabinet souhaite atteindre l'objectif avec certitude" },
@@ -208,7 +286,7 @@ export const W17_SYNTHESIS_TEMPLATE =
   "Donc le cabinet recherche une solution qui, en **6 mois**, permet d'atteindre **{goal6m}** car :\n- **{reason1}**\n- **{reason2}**\n- **{reason3}**\n\n**{method}** ne suffit pas seule dans ce délai. Si rien change : **{inaction}**.\n\nLe cabinet confirme-t-il ?";
 
 export const WIZARD_DIAGNOSTIC_MIRROR_TEMPLATE =
-  "Aujourd'hui : objectif **{goal6m}** · **{method}** insuffisante seule · **{inaction}**. Passez à l'étape suivante pour construire le système Hercule sur mesure du cabinet.";
+  "Aujourd'hui : objectif **{goal6m}** · LTV **{ltv}** · **{method}** depuis **{methodAge}** · bridé par **{brake}** · enjeu récurrent : **{ltvAtStake}** · coût 6 mois : **{inaction}**. Passez à l'étape suivante pour construire le système Hercule sur mesure du cabinet.";
 
 export function usesObjectifsWizard(values: SalesQualificationValues): boolean {
   return Boolean(values.w1);
@@ -283,7 +361,49 @@ export function resolveW14Label(values: SalesQualificationValues): string {
 }
 
 export function resolveW18Label(values: SalesQualificationValues): string {
-  return W18_ACCEPTANCE_OPTIONS.find((option) => option.id === values.w18)?.label ?? "";
+  return W18_GAP_OPTIONS.find((option) => option.id === values.w18)?.label ?? "";
+}
+
+export function resolveW8BrakeLabel(
+  values: SalesQualificationValues,
+  audience: Audience,
+): string {
+  if (!values.w8Brake || !values.w8) {
+    return "";
+  }
+  return getB7Options(values.w8, audience).find((option) => option.id === values.w8Brake)?.label ?? "";
+}
+
+export function resolveW11Label(values: SalesQualificationValues): string {
+  return W11_METHOD_AGE_OPTIONS.find((option) => option.id === values.w11)?.label ?? "";
+}
+
+export function resolveW8CriteriaLabels(
+  values: SalesQualificationValues,
+  audience: Audience,
+): string {
+  if (!values.w8Criteria?.length) {
+    return "";
+  }
+  const options = getW8CriteriaOptions(audience);
+  return values.w8Criteria
+    .map((id) => options.find((option) => option.id === id)?.label ?? "")
+    .filter((label) => label.length > 0)
+    .join(" · ");
+}
+
+export function isValidW8BrakeSelection(
+  values: SalesQualificationValues,
+  audience: Audience,
+): boolean {
+  if (!values.w8Brake || !values.w8) {
+    return false;
+  }
+  return getB7Options(values.w8, audience).some((option) => option.id === values.w8Brake);
+}
+
+export function needsW8TriedWho(values: SalesQualificationValues): boolean {
+  return values.w8Tried === "looked" || values.w8Tried === "tried";
 }
 
 export function resolveWExchangeWhyLabel(values: SalesQualificationValues): string {
@@ -345,7 +465,9 @@ export function needsExchangeWhyAfter15(values: SalesQualificationValues): boole
 }
 
 export function needsExchangeWhyAfter18(values: SalesQualificationValues): boolean {
-  return values.w18 === "acceptable" && !values.wExchangeWhy18;
+  return (
+    (values.w18 === "near_target" || values.w18 === "at_capacity") && !values.wExchangeWhy18
+  );
 }
 
 export function isWizardUrgencyStepVisible(values: SalesQualificationValues): boolean {
@@ -387,6 +509,7 @@ export function getImmersiveChartPresence(stepId: string): ImmersiveChartPresenc
     case "w5":
     case "w6":
     case "w7":
+    case "w19":
       return "moment";
     case "w17":
     case "w18":
@@ -399,7 +522,7 @@ export function getImmersiveChartPresence(stepId: string): ImmersiveChartPresenc
   }
 }
 
-const WIZARD_SLIDER_QUESTION_IDS = new Set(["w2", "w3", "w4", "w5", "w6", "w7"]);
+const WIZARD_SLIDER_QUESTION_IDS = new Set(["w2", "w3", "w4", "w5", "w6", "w7", "w19"]);
 
 export function getWizardSliderConfig(
   questionId: string,
@@ -431,6 +554,23 @@ export function getWizardSliderConfig(
         step: 10_000,
         unit: "eur",
         defaultValue: 300_000,
+      };
+    case "w19":
+      if (isCif) {
+        return {
+          min: CIF_ANNUAL_MIN,
+          max: 12_000,
+          step: 100,
+          unit: "eur_year",
+          defaultValue: CIF_ANNUAL_TYPICAL,
+        };
+      }
+      return {
+        min: COMPTABLE_ANNUAL_MIN,
+        max: 12_000,
+        step: 100,
+        unit: "eur_year",
+        defaultValue: COMPTABLE_ANNUAL_TYPICAL,
       };
     default:
       return { min: 0, max: 20, step: 1, unit: "count", defaultValue: 0 };
@@ -530,19 +670,25 @@ function buildReason1(values: SalesQualificationValues, audience: Audience): str
   return `La cible volume (${formatVolumePerMonth(values.w6, audience)}) n'est pas couverte par le flux actuel`;
 }
 
-function buildReason2(values: SalesQualificationValues): string {
-  const clientGap =
-    typeof values.w7 === "number" && typeof values.w2 === "number"
-      ? values.w7 - values.w2
-      : 0;
+function buildReason2(values: SalesQualificationValues, audience: Audience): string {
+  const clientGap = computeLtvClientGap(values);
+  const ltvLabel = formatClientLtv(values, audience);
+  if (clientGap > 0 && ltvLabel !== "—") {
+    const atStake = formatLtvAtStake(values, audience);
+    return `Il manque ${clientGap} clients × ${ltvLabel} = ${atStake} non captés`;
+  }
   if (clientGap > 0) {
     return `Il manque ${clientGap} clients pour la cible à 6 mois`;
   }
   return `Le portefeuille clients doit passer de ${values.w2 ?? "—"} à ${values.w7 ?? "—"}`;
 }
 
-function buildReason3(values: SalesQualificationValues): string {
+function buildReason3(values: SalesQualificationValues, audience: Audience): string {
   const method = resolveW8MethodLabel(values);
+  const brakeLabel = resolveW8BrakeLabel(values, audience);
+  if (brakeLabel) {
+    return `${method} est bridé par : ${brakeLabel}`;
+  }
   if (values.w16 === "strategic" && values.w16StrategicSub) {
     return `${method} ne couvre pas l'urgence : ${resolveW16StrategicSubLabel(values)}`;
   }
@@ -604,9 +750,19 @@ export function formatObjectifsWizardInterpolation(
     metricLabel: getWizardMetricLabel(audience),
     urgencyLabel: resolveUrgencyLabel(values),
     reason1: buildReason1(values, audience),
-    reason2: buildReason2(values),
-    reason3: buildReason3(values),
+    reason2: buildReason2(values, audience),
+    reason3: buildReason3(values, audience),
     gap: formatGoalGap(values, audience),
+    brake: resolveW8BrakeLabel(values, audience),
+    methodAge: resolveW11Label(values),
+    criteria: resolveW8CriteriaLabels(values, audience),
+    triedContext:
+      values.w8Tried === "tried" || values.w8Tried === "looked"
+        ? values.w8TriedWho?.trim() ?? ""
+        : "",
+    ltv: formatClientLtv(values, audience),
+    ltvAtStake: formatLtvAtStake(values, audience),
+    clientGap: String(computeLtvClientGap(values)),
     inaction: resolveW18Label(values),
     exchangeWhy: resolveWExchangeWhyLabel(values),
   };
@@ -618,6 +774,10 @@ export function isWizardStepVisible(
   questionId: string,
   values: SalesQualificationValues,
 ): boolean {
+  if (questionId === "w8TriedWho") {
+    return needsW8TriedWho(values);
+  }
+
   if (questionId === "w13Why") {
     return values.w13 === "no";
   }
@@ -680,6 +840,8 @@ export function getWizardFormFieldName(
   questionId: string,
 ): keyof SalesQualificationValues | null {
   switch (questionId) {
+    case "w9":
+      return "w9Acknowledged";
     case "w12":
       return "w12Confirmed";
     case "w17":
@@ -699,7 +861,13 @@ export function getWizardFormFieldName(
         questionId === "w5" ||
         questionId === "w6" ||
         questionId === "w7" ||
+        questionId === "w19" ||
         questionId === "w8" ||
+        questionId === "w8Tried" ||
+        questionId === "w8TriedWho" ||
+        questionId === "w8Brake" ||
+        questionId === "w8Criteria" ||
+        questionId === "w11" ||
         questionId === "w18" ||
         questionId === "w10" ||
         questionId === "w13" ||
@@ -733,6 +901,48 @@ export function getW7Prompt(): string {
   return "Combien de clients le cabinet vise-t-il dans 6 mois ?";
 }
 
+export function getW19Prompt(audience: Audience): string {
+  return isCifSalesAudience(audience)
+    ? "Quelle rémunération annuelle moyenne le cabinet génère par client (LTV) ?"
+    : "Quels honoraires annuels moyens le cabinet génère par client (LTV) ?";
+}
+
+export function formatClientLtv(
+  values: SalesQualificationValues,
+  audience: Audience,
+): string {
+  if (typeof values.w19 !== "number") {
+    return "—";
+  }
+  return formatSliderLabel(values.w19, "eur_year");
+}
+
+export function computeLtvClientGap(values: SalesQualificationValues): number {
+  if (typeof values.w7 !== "number" || typeof values.w2 !== "number") {
+    return 0;
+  }
+  return Math.max(values.w7 - values.w2, 0);
+}
+
+export function computeLtvAtStakeAnnual(values: SalesQualificationValues): number | null {
+  const clientGap = computeLtvClientGap(values);
+  if (clientGap <= 0 || typeof values.w19 !== "number") {
+    return null;
+  }
+  return clientGap * values.w19;
+}
+
+export function formatLtvAtStake(
+  values: SalesQualificationValues,
+  audience: Audience,
+): string {
+  const amount = computeLtvAtStakeAnnual(values);
+  if (amount === null) {
+    return "—";
+  }
+  return `${formatSliderLabel(amount, "eur_year")} de récurrent annuel`;
+}
+
 export function getW3Prompt(audience: Audience): string {
   return isCifSalesAudience(audience)
     ? "Quel est l'encours du cabinet ?"
@@ -747,6 +957,7 @@ export function getW5Prompt(audience: Audience): string {
 
 export type WizardFieldCompleteOptions = {
   touchedSliderFields?: ReadonlySet<string>;
+  audience?: Audience;
 };
 
 export function isWizardFieldComplete(
@@ -754,13 +965,23 @@ export function isWizardFieldComplete(
   values: SalesQualificationValues,
   options?: WizardFieldCompleteOptions,
 ): boolean {
+  const audience = options?.audience ?? "comptable";
+
   switch (questionId) {
+    case "w9":
+      return values.w9Acknowledged === true;
     case "w12":
       return values.w12Confirmed === true;
     case "w17":
       return values.w17Acknowledged === true;
     case "diagnostic_card":
       return values.bleedDiagnosticAccepted === true;
+    case "w8TriedWho":
+      return Boolean(values.w8TriedWho?.trim());
+    case "w8Brake":
+      return isValidW8BrakeSelection(values, audience);
+    case "w8Criteria":
+      return (values.w8Criteria?.length ?? 0) >= 1 && (values.w8Criteria?.length ?? 0) <= 3;
     case "w13Why":
       return isValidW13WhySelection(values);
     case "w16":
@@ -879,8 +1100,11 @@ export function buildWizardChartModel(
   }
 
   let annotation: string | undefined;
+  const brakeLabel = resolveW8BrakeLabel(values, audience);
   const w13WhyLabel = resolveW13WhyLabel(values);
-  if (values.w8 && values.w13 === "no" && w13WhyLabel) {
+  if (values.w8 && brakeLabel) {
+    annotation = `${resolveW8MethodLabel(values)} : ${brakeLabel}`;
+  } else if (values.w8 && values.w13 === "no" && w13WhyLabel) {
     annotation = `${resolveW8MethodLabel(values)} : ${w13WhyLabel}`;
   } else if (values.w8 && values.w16) {
     annotation = `${resolveW8MethodLabel(values)} · ${resolveUrgencyLabel(values)}`;

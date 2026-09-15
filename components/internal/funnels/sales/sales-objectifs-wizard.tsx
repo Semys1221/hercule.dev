@@ -16,6 +16,7 @@ import {
   getW5Prompt,
   getW6Prompt,
   getW7Prompt,
+  getW19Prompt,
   getWizardChartMetricForQuestion,
   getWizardFormFieldName,
   getWizardRedirectStepId,
@@ -44,6 +45,7 @@ import {
   SalesMultiChoiceField,
   SalesSingleChoiceField,
   SalesSliderField,
+  SalesTextField,
 } from "./sales-question-fields";
 import { getSalesQuestionsForSection } from "./sales-questions";
 import type { SalesQuestion } from "./sales-questions";
@@ -166,6 +168,7 @@ export function SalesObjectifsWizard({
   const canGoNext = currentQuestion
     ? isWizardFieldComplete(currentQuestion.id, values, {
         touchedSliderFields: touchedSliders,
+        audience,
       })
     : false;
   const canGoPrev = safeStepIndex > 0;
@@ -310,10 +313,17 @@ export function resolveWizardQuestionCopy(
     return { ...question, prompt: getW7Prompt() };
   }
 
-  if (question.id === "w13Why" && question.type === "single") {
+  if (question.id === "w19") {
+    return { ...question, prompt: getW19Prompt(audience) };
+  }
+
+  if (
+    (question.id === "w8Brake" || question.id === "w13Why") &&
+    question.type === "single"
+  ) {
     return {
       ...question,
-      options: getB7Options(values.w8 ?? "").map((option) => ({ ...option })),
+      options: getB7Options(values.w8 ?? "", audience).map((option) => ({ ...option })),
     };
   }
 
@@ -333,12 +343,23 @@ export function resolveWizardQuestionCopy(
     };
   }
 
-  if (
-    question.type === "acknowledgment" ||
-    question.type === "confirmation_mirror" ||
-    question.type === "diagnostic_card"
-  ) {
-    return question;
+  if (question.type === "acknowledgment") {
+    return {
+      ...question,
+      trapTemplate: question.trapTemplate
+        ? interpolate(question.trapTemplate)
+        : question.trapTemplate,
+      coachCue: question.coachCue ? interpolate(question.coachCue) : question.coachCue,
+    };
+  }
+
+  if (question.type === "confirmation_mirror" || question.type === "diagnostic_card") {
+    return {
+      ...question,
+      mirrorTemplate: question.mirrorTemplate
+        ? interpolate(question.mirrorTemplate)
+        : question.mirrorTemplate,
+    };
   }
 
   return question;
@@ -487,19 +508,51 @@ export function WizardQuestionField({
     );
   }
 
-  if (question.type === "acknowledgment") {
+  if (question.type === "text") {
+    const fieldName = getWizardFormFieldName(question.id);
+    if (!fieldName) {
+      return null;
+    }
+
     return (
       <FormField
         control={form.control}
-        name="w17Acknowledged"
+        name={fieldName}
+        render={({ field }) => (
+          <FormItem>
+            <SalesTextField
+              question={question}
+              value={typeof field.value === "string" ? field.value : ""}
+              onChange={field.onChange}
+            />
+            {variant !== "immersive" && question.coachCue ? (
+              <SalesCoachCue cue={interpolate(question.coachCue)} />
+            ) : null}
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    );
+  }
+
+  if (question.type === "acknowledgment") {
+    const fieldName = question.id === "w9" ? "w9Acknowledged" : "w17Acknowledged";
+
+    return (
+      <FormField
+        control={form.control}
+        name={fieldName}
         render={({ field }) => (
           <FormItem>
             <SalesAcknowledgmentField
               question={question}
-              trapText={interpolate(question.trapTemplate)}
+              trapText={question.trapTemplate ?? ""}
               acknowledged={field.value ?? false}
               onAcknowledgedChange={field.onChange}
             />
+            {variant !== "immersive" && question.coachCue ? (
+              <SalesCoachCue cue={interpolate(question.coachCue)} />
+            ) : null}
             <FormMessage />
           </FormItem>
         )}
@@ -516,7 +569,7 @@ export function WizardQuestionField({
           <FormItem>
             <SalesConfirmationMirrorField
               question={question}
-              mirrorText={interpolate(question.mirrorTemplate)}
+              mirrorText={question.mirrorTemplate ?? ""}
               confirmed={field.value ?? false}
               onConfirmedChange={field.onChange}
             />
@@ -536,7 +589,7 @@ export function WizardQuestionField({
           <FormItem>
             <SalesDiagnosticCardField
               question={question}
-              mirrorText={interpolate(question.mirrorTemplate)}
+              mirrorText={question.mirrorTemplate ?? ""}
               accepted={field.value ?? false}
               onAcceptedChange={field.onChange}
             />

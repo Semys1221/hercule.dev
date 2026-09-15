@@ -33,6 +33,7 @@ import {
   isValidW13WhySelection,
   isValidW16DetailSelection,
   isWizardUrgencyStepVisible,
+  needsW8TriedWho,
 } from "@/lib/admin/funnels/sales-objectifs-wizard";
 import type { Audience } from "@/lib/admin/navigation";
 
@@ -120,7 +121,10 @@ const sharedQualificationFields = {
   wExchangeWhy14: z.enum(["certainty", "not_real_goal"]).optional(),
   wExchangeWhy15: z.enum(["certainty", "not_real_goal"]).optional(),
   wExchangeWhy18: z.enum(["certainty", "not_real_goal"]).optional(),
-  w18: z.enum(["acceptable", "not_acceptable", "mixed"]).optional(),
+  w18: z
+    .enum(["major_gap", "significant_gap", "moderate_gap", "near_target", "at_capacity"])
+    .optional(),
+  w19: z.number().optional(),
   w17Acknowledged: z.boolean().optional(),
   p2DecisionMakers: z.enum(["all_present", "missing"]).optional(),
   p2MissingRole: z
@@ -335,7 +339,8 @@ export type SalesQualificationValues = {
   wExchangeWhy14?: "certainty" | "not_real_goal";
   wExchangeWhy15?: "certainty" | "not_real_goal";
   wExchangeWhy18?: "certainty" | "not_real_goal";
-  w18?: "acceptable" | "not_acceptable" | "mixed";
+  w18?: "major_gap" | "significant_gap" | "moderate_gap" | "near_target" | "at_capacity";
+  w19?: number;
   w17Acknowledged?: boolean;
   p2DecisionMakers?: "all_present" | "missing";
   p2MissingRole?: "associate" | "managing_partner" | "expert_referent" | "ops_director" | "reschedule";
@@ -440,6 +445,7 @@ export function getSalesQualificationDefaultValues(
       w5: undefined,
       w6: undefined,
       w7: undefined,
+      w19: undefined,
       w8: undefined,
       w8Tried: undefined,
       w8TriedWho: "",
@@ -545,6 +551,7 @@ export function getSalesQualificationDefaultValues(
       w5: undefined,
       w6: undefined,
       w7: undefined,
+      w19: undefined,
       w8: undefined,
       w8Tried: undefined,
       w8TriedWho: "",
@@ -696,8 +703,14 @@ const CABINET_OBJECTIFS_KEYS: Array<keyof SalesQualificationValues> = [
   "w5",
   "w6",
   "w7",
+  "w19",
   "w8",
+  "w8Tried",
+  "w8Brake",
+  "w9Acknowledged",
+  "w8Criteria",
   "w10",
+  "w11",
   "w12Confirmed",
   "w13",
   "w14",
@@ -852,11 +865,12 @@ function isFieldComplete(
   }
 
   if (key === "w8Criteria") {
-    return true;
+    const criteria = values.w8Criteria ?? [];
+    return criteria.length >= 1 && criteria.length <= 3;
   }
 
   if (key === "w9Acknowledged") {
-    return true;
+    return value === true;
   }
 
   if (key === "w16") {
@@ -990,7 +1004,22 @@ export function isSalesSectionComplete(
     if (values.w16 === "other" && !isValidW16DetailSelection(values)) {
       return false;
     }
-    if (values.w18 === "acceptable" && !values.wExchangeWhy18) {
+    if (
+      (values.w18 === "near_target" || values.w18 === "at_capacity") &&
+      !values.wExchangeWhy18
+    ) {
+      return false;
+    }
+    if (needsW8TriedWho(values) && !values.w8TriedWho?.trim()) {
+      return false;
+    }
+    if (values.w9Acknowledged !== true) {
+      return false;
+    }
+    if ((values.w8Criteria?.length ?? 0) < 1) {
+      return false;
+    }
+    if (!values.w11) {
       return false;
     }
     if (values.w17Acknowledged !== true) {

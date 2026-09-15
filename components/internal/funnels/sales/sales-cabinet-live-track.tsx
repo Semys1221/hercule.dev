@@ -333,6 +333,7 @@ export function SalesCabinetLiveTrack({
     if (getLiveTrackSection(currentStepId) === "objectifs") {
       return isWizardFieldComplete(currentStepId, values, {
         touchedSliderFields: touchedSliders,
+        audience,
       });
     }
     if (currentStepId === "pDashboard") {

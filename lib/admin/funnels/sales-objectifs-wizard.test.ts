@@ -7,7 +7,9 @@ import { getSalesQualificationDefaultValues } from "@/lib/admin/funnels/sales-qu
 
 import {
   buildWizardChartModel,
+  formatClientLtv,
   formatGoal6m,
+  formatLtvAtStake,
   formatObjectifsWizardInterpolation,
   getImmersiveChartPresence,
   getVisibleWizardQuestionIds,
@@ -16,6 +18,9 @@ import {
   getW5Prompt,
   getW6Prompt,
   getW7Prompt,
+  getW19Prompt,
+  isValidW8BrakeSelection,
+  needsW8TriedWho,
   getWizardChartMetricForQuestion,
   isWizardFieldComplete,
   isWizardStepVisible,
@@ -36,9 +41,16 @@ function baseWizardValues(audience: "cif" | "comptable"): SalesQualificationValu
     w5: audience === "cif" ? 25_000_000 : 600_000,
     w6: 5,
     w7: 120,
+    w19: 3_600,
     w8: "word_of_mouth",
+    w8Tried: "tried",
+    w8TriedWho: "Agence SEO locale",
+    w8Brake: "wom_scale",
+    w8Criteria: ["exclusivity", "quality"],
+    w9Acknowledged: true,
     w10: "y2020",
     w10Year: 2020,
+    w11: "3-5y",
     w12Confirmed: true,
     w13: "no",
     w13Why: "wom_scale",
@@ -46,7 +58,7 @@ function baseWizardValues(audience: "cif" | "comptable"): SalesQualificationValu
     w15: "shortcut",
     w16: "strategic",
     w16StrategicSub: "growth",
-    w18: "not_acceptable",
+    w18: "major_gap",
     w17Acknowledged: true,
     bleedDiagnosticAccepted: true,
   };
@@ -68,6 +80,15 @@ function main() {
   assert.match(getW5Prompt("cif"), /encours le cabinet vise/);
   assert.match(getW6Prompt("cif"), /transformations le cabinet souhaite/);
   assert.match(getW7Prompt(), /clients le cabinet vise/);
+  assert.match(getW19Prompt("cif"), /rémunération annuelle moyenne/i);
+  assert.match(getW19Prompt("comptable"), /honoraires annuels moyens/i);
+
+  assert.equal(needsW8TriedWho({ ...cifValues, w8Tried: "tried" }), true);
+  assert.equal(needsW8TriedWho({ ...cifValues, w8Tried: "none" }), false);
+  assert.equal(isValidW8BrakeSelection(cifValues, "cif"), true);
+
+  assert.match(formatClientLtv(cifValues, "cif"), /3\s*600/);
+  assert.match(formatLtvAtStake(cifValues, "cif"), /récurrent annuel/);
 
   assert.equal(getWizardChartMetricForQuestion("w2"), "clients");
   assert.equal(getWizardChartMetricForQuestion("w3"), "metric");
@@ -94,8 +115,11 @@ function main() {
   assert.match(goal, /mandats/);
 
   const visible = getVisibleWizardQuestionIds(cifValues);
+  assert.ok(visible.includes("w19"));
+  assert.ok(visible.includes("w9"));
   assert.ok(visible.includes("w18"));
   assert.ok(visible.includes("w16"));
+  assert.equal(isWizardStepVisible("w8TriedWho", { ...cifValues, w8Tried: "none" }), false);
   assert.ok(visible.includes("diagnostic_card"));
   assert.equal(visible[0], "w1");
   assert.ok(visible.indexOf("w18") < visible.indexOf("w17"));

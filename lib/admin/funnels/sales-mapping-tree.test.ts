@@ -77,6 +77,8 @@ function main() {
   const discoveryFlow = getMappingFlow("discovery", "cif");
   assert.equal(discoveryFlow.rootId, "w1");
   assert.ok(discoveryFlow.nodes.w16?.condition);
+  assert.ok(discoveryFlow.nodes.w19?.title.includes("LTV"));
+  assert.ok(discoveryFlow.nodes.w9?.title);
   assert.ok(discoveryFlow.nodes.diagnostic_card?.condition);
 
   const pitchFlow = getMappingFlow("pitch", "comptable");
