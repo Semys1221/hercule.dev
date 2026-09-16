@@ -12,6 +12,21 @@ COMPTABLE_TEMPLATE_BODIES: dict[str, str] = {
     "interested_email3": DEFAULT_E3_BODY_HTML,
 }
 
+AGENCE_WEB_2_PIPELINE_BASE_URL = "https://www.hercule.dev/email/agence/pipeline"
+
+AGENCE_WEB_2_PIPELINE_IMAGES_HTML = "".join(
+    f'<img src="{AGENCE_WEB_2_PIPELINE_BASE_URL}/pipeline-{index}.png" '
+    f'alt="Aperçu pipeline {index}" '
+    f'style="max-width:100%;display:block;margin:12px 0;" />'
+    for index in range(1, 6)
+)
+
+AGENCE_WEB_2_TEMPLATE_BODIES: dict[str, str] = {
+    "interested_email1": f"""<p>Bonjour,<br/><br/>Les rendez-vous actuellement planifiés sont visibles ci-dessous.<br/><br/>Il s'agit de PME, de cabinets comptables et de conseillers financiers.<br/><br/>Nous générons actuellement 5 rendez-vous par jour, et 29 rendez-vous sont déjà planifiés.<br/><br/>L'accès illimité au pipeline est proposé à 1 200 € forfaitaires pour le premier mois.<br/><br/>Nous n'acceptons qu'une seule agence.<br/><br/>Pour postuler, répondez mercredi ou jeudi afin que nous puissions vous présenter le Calendly et le fonctionnement du pipeline lors d'un appel en visioconférence.<br/><br/>{AGENCE_WEB_2_PIPELINE_IMAGES_HTML}<br/><br/>Cordialement,<br/>{{{{accountSignature}}}}</p>""",
+    "interested_email2": """<p>Bonjour,<br/><br/>Je reviens vers vous sur l'accès au pipeline de rendez-vous visio (PME, cabinets comptables, conseillers financiers).<br/><br/>Nous générons environ 5 rendez-vous par jour — 29 sont déjà planifiés.<br/><br/>L'accès illimité reste à 1 200 € forfaitaires le premier mois. Une seule agence sera retenue.<br/><br/>Êtes-vous disponible mercredi ou jeudi pour un appel visio (présentation Calendly + fonctionnement du pipeline) ?<br/><br/>Répondez simplement avec le jour qui vous convient.<br/><br/>Cordialement,<br/>{{accountSignature}}</p>""",
+    "interested_email3": """<p>Bonjour {{first_name}},<br/><br/>N'ayant pas reçu de retour de votre part, je clôture ici la candidature pour l'accès au pipeline.<br/><br/>Si le sujet redevient pertinent pour votre agence, vous pourrez simplement répondre à cet email.<br/><br/>Bonne continuation,<br/><br/>{{accountSignature}}</p>""",
+}
+
 CIF_TEMPLATE_BODIES: dict[str, str] = {
     "interested_email1": """<p>Pour faire simple,<br/><br/>Nous avons des demandes de cabinets de dentistes et vétérinaires (2+ salariés), confrontés à des enjeux de croissance, trésorerie et pression fiscale.<br/><br/>L'expertise recherchée porte sur le placement des avoirs professionnels et privés et la réduction de la pression fiscale.<br/><br/>Les échanges démarrent entre le 19 sept. et le 02 oct.<br/><br/>Si vous souhaitez que nous vous mettions en relation avec ces cabinets : <a href="{{reservation_cif_link}}">Mon cabinet est compatible</a><br/><br/><i>L'appel se réalisera avec un membre de l'équipe</i><br/><br/>{{accountSignature}}</p>""",
     "interested_email2": """<p>Bonjour,<br/><br/>Je reviens vers vous sur les demandes en attente — cabinets dentistes/vétérinaires (2+ salariés), enjeux trésorerie et fiscalité.<br/><br/>Les échanges démarrent entre le 19 sept. et le 02 oct.<br/><br/>Disponible le {{slot_1}} ou le {{slot_2}} ?<br/><br/><a href="{{reservation_cif_link}}">Mon cabinet est compatible</a><br/><br/>{{accountSignature}}</p>""",

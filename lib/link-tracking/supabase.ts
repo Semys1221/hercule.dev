@@ -146,16 +146,31 @@ async function findLeadsInTableByColumn(
 
   // #region agent log
   const bulkLookupStartedAt = Date.now();
+  const valuesCharLength = values.reduce((sum, value) => sum + value.length, 0);
+  let supabaseHost = "unknown";
+  try {
+    supabaseHost = new URL(getSupabaseUrl()).host;
+  } catch {
+    supabaseHost = "invalid-url";
+  }
   fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96fa0c" },
     body: JSON.stringify({
-      sessionId: "081f8d",
+      sessionId: "96fa0c",
       runId: "pre-fix",
-      hypothesisId: "H1-H2",
+      hypothesisId: "H1-H3",
       location: "supabase.ts:findLeadsInTableByColumn:start",
       message: "Bulk lookup starting",
-      data: { category, column, valueCount: values.length },
+      data: {
+        category,
+        column,
+        valueCount: values.length,
+        valuesCharLength,
+        avgValueLength: values.length > 0 ? Math.round(valuesCharLength / values.length) : 0,
+        estimatedQueryChars: valuesCharLength + column.length + category.length + 64,
+        supabaseHost,
+      },
       timestamp: Date.now(),
     }),
   }).catch(() => {});
@@ -164,22 +179,35 @@ async function findLeadsInTableByColumn(
   const { data, error } = await client.from(category).select("*").in(column, values);
 
   // #region agent log
+  const errRecord = error as { message?: string; cause?: unknown; code?: string; details?: string } | null;
+  const cause =
+    errRecord?.cause && typeof errRecord.cause === "object"
+      ? {
+          message: (errRecord.cause as { message?: string }).message ?? null,
+          code: (errRecord.cause as { code?: string }).code ?? null,
+          errno: (errRecord.cause as { errno?: number }).errno ?? null,
+        }
+      : null;
   fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96fa0c" },
     body: JSON.stringify({
-      sessionId: "081f8d",
+      sessionId: "96fa0c",
       runId: "pre-fix",
-      hypothesisId: "H1-H2",
+      hypothesisId: "H1-H5",
       location: "supabase.ts:findLeadsInTableByColumn:end",
       message: "Bulk lookup finished",
       data: {
         category,
         column,
         valueCount: values.length,
+        valuesCharLength,
         durationMs: Date.now() - bulkLookupStartedAt,
         rowCount: data?.length ?? 0,
         error: error?.message ?? null,
+        errorCode: errRecord?.code ?? null,
+        errorDetails: errRecord?.details ?? null,
+        cause,
       },
       timestamp: Date.now(),
     }),
@@ -197,6 +225,8 @@ async function findLeadsInTableByColumn(
 }
 
 const BULK_EMAIL_LOOKUP_BATCH = 100;
+/** Calendly invitee URIs are long (~120 chars); keep batches small to avoid undici header overflow. */
+const BULK_INVITEE_URI_LOOKUP_BATCH = 20;
 
 export async function findLeadsByEmails(
   client: SupabaseClient,
@@ -211,15 +241,16 @@ export async function findLeadsByEmails(
   // #region agent log
   fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96fa0c" },
     body: JSON.stringify({
-      sessionId: "081f8d",
+      sessionId: "96fa0c",
       runId: "pre-fix",
-      hypothesisId: "H3",
+      hypothesisId: "H4",
       location: "supabase.ts:findLeadsByEmails",
-      message: "Email bulk lookup tables resolved",
+      message: "Email bulk lookup starting",
       data: {
         emailCount: normalized.length,
+        batchSize: BULK_EMAIL_LOOKUP_BATCH,
         tablesQueried: TABLES,
       },
       timestamp: Date.now(),
@@ -276,17 +307,44 @@ export async function findLeadsByCalendlyInviteeUris(
     return map;
   }
 
-  for (const category of TABLES) {
-    const rows = await findLeadsInTableByColumn(
-      client,
-      category,
-      "calendly_invitee_uri",
-      normalized,
-    );
-    for (const lead of rows) {
-      const key = lead.calendly_invitee_uri?.trim();
-      if (key && !map.has(key)) {
-        map.set(key, { category, lead });
+  // #region agent log
+  const uriCharLength = normalized.reduce((sum, uri) => sum + uri.length, 0);
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96fa0c" },
+    body: JSON.stringify({
+      sessionId: "96fa0c",
+      runId: "pre-fix",
+      hypothesisId: "H1-H2",
+      location: "supabase.ts:findLeadsByCalendlyInviteeUris",
+      message: "Invitee URI bulk lookup starting (unbatched)",
+      data: {
+        uriCount: normalized.length,
+        uriCharLength,
+        avgUriLength: Math.round(uriCharLength / normalized.length),
+        tablesQueried: TABLES,
+        batchSize: BULK_INVITEE_URI_LOOKUP_BATCH,
+        inviteeLookupBatched: true,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  for (let offset = 0; offset < normalized.length; offset += BULK_INVITEE_URI_LOOKUP_BATCH) {
+    const batch = normalized.slice(offset, offset + BULK_INVITEE_URI_LOOKUP_BATCH);
+    for (const category of TABLES) {
+      const rows = await findLeadsInTableByColumn(
+        client,
+        category,
+        "calendly_invitee_uri",
+        batch,
+      );
+      for (const lead of rows) {
+        const key = lead.calendly_invitee_uri?.trim();
+        if (key && !map.has(key)) {
+          map.set(key, { category, lead });
+        }
       }
     }
   }

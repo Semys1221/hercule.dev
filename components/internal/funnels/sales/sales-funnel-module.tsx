@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Form } from "@/components/ui/form";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getDeveloperModeEnabledServerSnapshot,
   getDeveloperModeEnabledSnapshot,
@@ -46,6 +48,7 @@ import {
   type SalesFunnelSectionId,
 } from "./sales-funnel-sections";
 import { extractSalesIntroFields } from "./sales-intro-script";
+import { AgenceReventePanel } from "./agence-revente/agence-revente-panel";
 import { SalesFunnelSidebar, type MeetingInfo } from "./sales-funnel-sidebar";
 
 const DEFAULT_MEETING_NAME = "No meetings";
@@ -58,7 +61,13 @@ type SalesFunnelShellProps = {
   audience: Audience;
 };
 
+type AgenceFunnelView = "session" | "revente";
+
 export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [agenceView, setAgenceView] = useState<AgenceFunnelView>("session");
   const [meetingName, setMeetingName] = useState(DEFAULT_MEETING_NAME);
   const [phase, setPhase] = useState<"qualification" | "closing">("qualification");
   const [contentPhase, setContentPhase] = useState<SidebarContentPhase>("qualification");
@@ -92,6 +101,31 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     subscribeDeveloperModeEnabled,
     () => getDeveloperModeEnabledSnapshot(audience),
     getDeveloperModeEnabledServerSnapshot,
+  );
+
+  useEffect(() => {
+    if (audience !== "agence") {
+      return;
+    }
+    setAgenceView(searchParams.get("view") === "revente" ? "revente" : "session");
+  }, [audience, searchParams]);
+
+  const handleAgenceViewChange = useCallback(
+    (value: AgenceFunnelView) => {
+      setAgenceView(value);
+      if (audience !== "agence") {
+        return;
+      }
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === "revente") {
+        params.set("view", "revente");
+      } else {
+        params.delete("view");
+      }
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [audience, pathname, router, searchParams],
   );
 
   const defaultQualificationValues = useMemo(
@@ -572,55 +606,85 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     },
   };
 
+  const sessionContent = (
+    <SidebarProvider
+      className="flex min-h-0 flex-1 overflow-hidden"
+      open={immersiveCabinetWizard ? sidebarOpen : undefined}
+      onOpenChange={immersiveCabinetWizard ? handleSidebarOpenChange : undefined}
+    >
+      <SalesFunnelSidebar
+        {...sidebarProps}
+        collapsible={immersiveCabinetWizard ? "offcanvas" : "none"}
+        className={immersiveCabinetWizard ? "z-50" : undefined}
+      />
+      <SalesFunnelWorkspace
+        audience={audience}
+        phase={phase}
+        activeQualificationId={activeQualificationId}
+        activeClosingId={activeClosingId}
+        activeQualificationSection={activeQualificationSection}
+        closingSections={closingSections}
+        form={form}
+        closingValues={closingValues}
+        selectedLead={selectedLead}
+        selectedBooking={selectedBooking}
+        salesCallId={salesCallId}
+        sessionResetKey={sessionResetKey}
+        developerModeEnabled={developerModeEnabled}
+        prospectFirstName={prospectFirstName}
+        immersiveCabinetWizard={immersiveCabinetWizard}
+        sidebarOpen={sidebarOpen}
+        onOpenSidebar={() => {
+          setSidebarOpen((open) => !open);
+        }}
+        onGoToObjectifs={() => {
+          setPhase("qualification");
+          setActiveQualificationId("objectifs");
+          setSidebarOpen(false);
+        }}
+        onLiveTrackSectionChange={handleLiveTrackSectionChange}
+        onClosingChange={(patch) =>
+          setClosingValues((current) => ({ ...current, ...patch }))
+        }
+        onMeetingNameChange={setMeetingName}
+        onBookingSelect={loadLeadForBooking}
+        onApplyTestPreset={applyTestPreset}
+        onResetSession={resetSessionUiState}
+        onRefreshLead={refreshLead}
+        onPersistClosing={persistClosingNotes}
+      />
+    </SidebarProvider>
+  );
+
   return (
     <Form {...form}>
-      <SidebarProvider
-        className="flex h-svh min-h-0 w-full overflow-hidden"
-        open={immersiveCabinetWizard ? sidebarOpen : undefined}
-        onOpenChange={immersiveCabinetWizard ? handleSidebarOpenChange : undefined}
-      >
-        <SalesFunnelSidebar
-          {...sidebarProps}
-          collapsible={immersiveCabinetWizard ? "offcanvas" : "none"}
-          className={immersiveCabinetWizard ? "z-50" : undefined}
-        />
-        <SalesFunnelWorkspace
-          audience={audience}
-          phase={phase}
-          activeQualificationId={activeQualificationId}
-          activeClosingId={activeClosingId}
-          activeQualificationSection={activeQualificationSection}
-          closingSections={closingSections}
-          form={form}
-          closingValues={closingValues}
-          selectedLead={selectedLead}
-          selectedBooking={selectedBooking}
-          salesCallId={salesCallId}
-          sessionResetKey={sessionResetKey}
-          developerModeEnabled={developerModeEnabled}
-          prospectFirstName={prospectFirstName}
-          immersiveCabinetWizard={immersiveCabinetWizard}
-          sidebarOpen={sidebarOpen}
-          onOpenSidebar={() => {
-            setSidebarOpen((open) => !open);
-          }}
-          onGoToObjectifs={() => {
-            setPhase("qualification");
-            setActiveQualificationId("objectifs");
-            setSidebarOpen(false);
-          }}
-          onLiveTrackSectionChange={handleLiveTrackSectionChange}
-          onClosingChange={(patch) =>
-            setClosingValues((current) => ({ ...current, ...patch }))
-          }
-          onMeetingNameChange={setMeetingName}
-          onBookingSelect={loadLeadForBooking}
-          onApplyTestPreset={applyTestPreset}
-          onResetSession={resetSessionUiState}
-          onRefreshLead={refreshLead}
-          onPersistClosing={persistClosingNotes}
-        />
-      </SidebarProvider>
+      {audience === "agence" ? (
+        <Tabs
+          value={agenceView}
+          onValueChange={(value) => handleAgenceViewChange(value as AgenceFunnelView)}
+          className="flex h-svh min-h-0 w-full flex-col overflow-hidden"
+        >
+          <div className="shrink-0 border-b border-border px-4 py-2">
+            <TabsList>
+              <TabsTrigger value="session">Session</TabsTrigger>
+              <TabsTrigger value="revente">Acheteur</TabsTrigger>
+            </TabsList>
+          </div>
+          <TabsContent value="session" className="mt-0 min-h-0 flex-1 overflow-hidden">
+            {sessionContent}
+          </TabsContent>
+          <TabsContent value="revente" className="mt-0 min-h-0 flex-1 overflow-auto">
+            <AgenceReventePanel
+              selectedLead={selectedLead}
+              selectedBooking={selectedBooking}
+              qualificationValues={watchedValues}
+              developerModeEnabled={developerModeEnabled}
+            />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="flex h-svh min-h-0 w-full overflow-hidden">{sessionContent}</div>
+      )}
     </Form>
   );
 }

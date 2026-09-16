@@ -2,6 +2,10 @@ import {
   loadBookingsPage,
   readCachedBookingsPage,
 } from "@/lib/admin/bookings/load-bookings-page";
+import {
+  readBookingsClientCache,
+  writeBookingsClientCache,
+} from "@/lib/calendly/bookings-client-cache";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
 import type { Niche } from "@/lib/admin/navigation";
 
@@ -9,9 +13,28 @@ export type FetchEnrichedBookingsResult = {
   bookings: EnrichedCalendlyBooking[];
   error: string | null;
   fromCache?: boolean;
+  fetchedAt?: number;
   calendlyConfigured?: boolean;
   campaignLinked?: boolean;
 };
+
+function resultFromClientCache(
+  niche: Niche,
+  daysBehind: number,
+): FetchEnrichedBookingsResult | null {
+  const cached = readBookingsClientCache(niche, daysBehind);
+  if (!cached) {
+    return null;
+  }
+  return {
+    bookings: cached.bookings,
+    error: null,
+    fromCache: true,
+    fetchedAt: cached.fetchedAt,
+    calendlyConfigured: cached.outreach?.calendly_configured,
+    campaignLinked: cached.outreach?.campaign_linked,
+  };
+}
 
 export async function fetchEnrichedBookings(
   niche: Niche,
@@ -20,16 +43,22 @@ export async function fetchEnrichedBookings(
   const daysBehind = options?.daysBehind ?? 0;
 
   if (options?.legacyCategory) {
-    const params = new URLSearchParams({ category: niche });
-    if (options?.fresh) {
-      params.set("fresh", "1");
+    if (!options.fresh) {
+      return (
+        resultFromClientCache(niche, daysBehind) ?? {
+          bookings: [],
+          error: null,
+          fromCache: true,
+        }
+      );
     }
+
+    const params = new URLSearchParams({ category: niche, fresh: "1" });
     if (daysBehind > 0) {
       params.set("daysBehind", String(daysBehind));
     }
-    const startedAt = Date.now();
+
     const response = await fetch(`/api/admin/calendly/bookings?${params.toString()}`);
-    const contentType = response.headers.get("content-type") ?? "";
     let body: {
       bookings?: EnrichedCalendlyBooking[];
       error?: string;
@@ -42,67 +71,45 @@ export async function fetchEnrichedBookings(
       body = (await response.json()) as typeof body;
     } catch {
       const rawText = await response.text().catch(() => "");
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2ea86d" },
-        body: JSON.stringify({
-          sessionId: "2ea86d",
-          runId: "pre-fix",
-          hypothesisId: "H4",
-          location: "fetch-enriched-bookings.ts:json-parse-failed",
-          message: "Bookings API response is not JSON",
-          data: {
-            niche,
-            status: response.status,
-            statusText: response.statusText,
-            contentType,
-            durationMs: Date.now() - startedAt,
-            rawSnippet: rawText.slice(0, 200),
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       return {
         bookings: [],
         error: rawText.trim() || response.statusText || "Impossible de récupérer les rendez-vous",
       };
     }
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2ea86d" },
-      body: JSON.stringify({
-        sessionId: "2ea86d",
-        runId: "pre-fix",
-        hypothesisId: "H1-H5",
-        location: "fetch-enriched-bookings.ts:response",
-        message: "Bookings API response received",
-        data: {
-          niche,
-          fresh: options?.fresh ?? false,
-          daysBehind,
-          ok: response.ok,
-          status: response.status,
-          durationMs: Date.now() - startedAt,
-          bookingsCount: body.bookings?.length ?? 0,
-          error: body.error ?? null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
+
     if (!response.ok) {
+      const stale = resultFromClientCache(niche, daysBehind);
+      if (stale) {
+        return {
+          ...stale,
+          error: body.error ?? "Impossible de récupérer les rendez-vous",
+        };
+      }
       return {
         bookings: [],
         error: body.error ?? "Impossible de récupérer les rendez-vous",
       };
     }
+
+    const bookings = body.bookings ?? [];
+    const fetchedAt = Date.now();
+    writeBookingsClientCache(
+      niche,
+      bookings,
+      daysBehind,
+      fetchedAt,
+      undefined,
+      {
+        calendly_configured: body.outreach?.calendly_configured,
+        campaign_linked: body.outreach?.campaign_linked,
+      },
+    );
+
     return {
-      bookings: body.bookings ?? [],
+      bookings,
       error: null,
       fromCache: false,
+      fetchedAt,
       calendlyConfigured: body.outreach?.calendly_configured,
       campaignLinked: body.outreach?.campaign_linked,
     };
@@ -117,6 +124,7 @@ export async function fetchEnrichedBookings(
     bookings: page.bookings,
     error: page.error,
     fromCache: page.fromCache,
+    fetchedAt: page.fetchedAt,
     calendlyConfigured: page.calendlyConfigured,
     campaignLinked: page.campaignLinked,
   };

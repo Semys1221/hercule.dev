@@ -64,6 +64,26 @@ Slug tracking via `utm_content`. Separate from delivery/match Calendly event typ
 | Pricing | `/api/admin/pricing/[audience]` |
 | Legal | `/api/admin/legal/[audience]/[docType]` |
 
+## Agence Revente tab (pipeline Hercule Libéral)
+
+**Agence audience only** — second tab in the live sales session shell.
+
+| Item | Value |
+|------|-------|
+| Tab | **Revente** (next to **Session**) in `sales-funnel-module.tsx` |
+| URL | `?view=revente` deep-links to the Revente tab |
+| Components | `components/internal/funnels/sales/agence-revente/*` |
+| Metrics API | `GET /api/admin/agence/pipeline-metrics` |
+| Qualification API | `POST /api/admin/agence/pipeline-qualification` (body + `slug` from selected lead) |
+| Checkout | `/api/payments/checkout-hercule-liberal` |
+| Lib | `lib/calendly/load-pipeline-metrics.ts`, `pipeline-calculator.ts`, `pipeline-qualification-schema.ts` |
+
+Flow: select lead on **Session** (Rendez-vous) → **Revente** → wizard → product page (live metrics + calculator) → Stripe checkout.
+
+Developer mode: **Passer au pipeline** skips the wizard with mock qualification.
+
+Public `public/email/agence/pipeline/dashboard.html` is deprecated (static message only). Email assets `pipeline-*.png` unchanged. Offline metrics snapshot: `pnpm generate-pipeline-dashboard-offline`.
+
 ## Test session (developer mode)
 
 On **Rendez-vous** step: **Test** button provisions `seed-sales-session` lead — see sales README.

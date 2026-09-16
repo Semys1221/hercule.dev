@@ -274,33 +274,87 @@ export async function batchResolveLeadLookups(
 ): Promise<Map<string, LeadLookup | null>> {
   const client = createLinkTrackingClient();
 
+  const inviteeUris = candidates.map((candidate) => candidate.inviteeUri);
+  const inviteeUriCharLength = inviteeUris.reduce(
+    (sum, uri) => sum + (uri?.trim().length ?? 0),
+    0,
+  );
+
   // #region agent log
   fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "081f8d" },
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96fa0c" },
     body: JSON.stringify({
-      sessionId: "081f8d",
+      sessionId: "96fa0c",
       runId: "pre-fix",
-      hypothesisId: "H3-H5",
+      hypothesisId: "H1-H3",
       location: "list-bookings.ts:batchResolveLeadLookups",
       message: "Batch lead lookup scope",
       data: {
         candidateCount: candidates.length,
-        scopeCategory: null,
+        uniqueInviteeUriCount: new Set(inviteeUris.map((uri) => uri.trim()).filter(Boolean)).size,
+        inviteeUriCharLength,
       },
       timestamp: Date.now(),
     }),
   }).catch(() => {});
   // #endregion
 
-  const [byEmail, bySlug, byInviteeUri] = await Promise.all([
-    findLeadsByEmails(client, candidates.map((candidate) => candidate.email)),
-    findLeadsBySlugs(client, candidates.map((candidate) => candidate.utmContent)),
-    findLeadsByCalendlyInviteeUris(
-      client,
-      candidates.map((candidate) => candidate.inviteeUri),
-    ),
-  ]);
+  const batchStartedAt = Date.now();
+  let byEmail: Awaited<ReturnType<typeof findLeadsByEmails>>;
+  let bySlug: Awaited<ReturnType<typeof findLeadsBySlugs>>;
+  let byInviteeUri: Awaited<ReturnType<typeof findLeadsByCalendlyInviteeUris>>;
+  try {
+    [byEmail, bySlug, byInviteeUri] = await Promise.all([
+      findLeadsByEmails(client, candidates.map((candidate) => candidate.email)),
+      findLeadsBySlugs(client, candidates.map((candidate) => candidate.utmContent)),
+      findLeadsByCalendlyInviteeUris(client, inviteeUris),
+    ]);
+  } catch (lookupError) {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96fa0c" },
+      body: JSON.stringify({
+        sessionId: "96fa0c",
+        runId: "pre-fix",
+        hypothesisId: "H1-H5",
+        location: "list-bookings.ts:batchResolveLeadLookups:error",
+        message: "Batch lead lookup failed",
+        data: {
+          candidateCount: candidates.length,
+          inviteeUriCharLength,
+          durationMs: Date.now() - batchStartedAt,
+          error:
+            lookupError instanceof Error ? lookupError.message : String(lookupError),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    throw lookupError;
+  }
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96fa0c" },
+    body: JSON.stringify({
+      sessionId: "96fa0c",
+      runId: "pre-fix",
+      hypothesisId: "H4",
+      location: "list-bookings.ts:batchResolveLeadLookups:success",
+      message: "Batch lead lookup succeeded",
+      data: {
+        durationMs: Date.now() - batchStartedAt,
+        emailHits: byEmail.size,
+        slugHits: bySlug.size,
+        inviteeHits: byInviteeUri.size,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   const resolved = new Map<string, LeadLookup | null>();
   for (const candidate of candidates) {

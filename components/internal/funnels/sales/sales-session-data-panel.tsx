@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -30,7 +29,6 @@ import {
 import {
   SESSION_DATA_ANSWERS_DESCRIPTION,
   SESSION_DATA_ANSWERS_TITLE,
-  SESSION_DATA_BOOKINGS_LOAD_ERROR,
   SESSION_DATA_EMPTY,
   SESSION_DATA_LOAD_ERROR,
   SESSION_DATA_PROSPECT_LABEL,
@@ -41,31 +39,19 @@ import {
 import { readBookingsClientCache } from "@/lib/calendly/bookings-client-cache";
 import { CALENDLY_BOOKINGS_DAYS_BEHIND } from "@/lib/calendly/bookings-window";
 import type { EnrichedCalendlyBooking } from "@/lib/calendly/enrich-bookings";
-import { fetchEnrichedBookings } from "@/lib/calendly/fetch-enriched-bookings";
 import type { Audience } from "@/lib/admin/navigation";
 import type { SalesCall } from "@/lib/sales-calls/types";
+
+import {
+  salesBookingLabel,
+  SalesBookingSelectOptions,
+  salesBookingValueClassName,
+} from "./sales-booking-select-options";
 
 type SalesSessionDataPanelProps = {
   audience: Audience;
   initialInviteeUri?: string | null;
 };
-
-function formatParisDateTime(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-  return new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
-function bookingLabel(booking: EnrichedCalendlyBooking): string {
-  const name = booking.first_name || booking.name || booking.email;
-  return `${name} — ${booking.email} — RDV ${formatParisDateTime(booking.start_time)}`;
-}
 
 function DataSkeleton() {
   return (
@@ -84,7 +70,7 @@ export function SalesSessionDataPanel({
   const [bookings, setBookings] = useState<EnrichedCalendlyBooking[]>([]);
   const [selectedUri, setSelectedUri] = useState(initialInviteeUri ?? "");
   const [salesCall, setSalesCall] = useState<SalesCall | null>(null);
-  const [loadingBookings, setLoadingBookings] = useState(true);
+  const [loadingBookings, setLoadingBookings] = useState(false);
   const [loadingSalesCall, setLoadingSalesCall] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,29 +83,6 @@ export function SalesSessionDataPanel({
     selectedBooking?.lead_category ??
     selectedBooking?.booking_category ??
     salesAudienceToLeadCategory(audience);
-
-  const loadBookings = useCallback(async () => {
-    setLoadingBookings(true);
-    setError(null);
-    try {
-      const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
-        legacyCategory: true,
-        fresh: false,
-        daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
-      });
-      if (fetchError) {
-        throw new Error(fetchError);
-      }
-      setBookings(rows);
-    } catch (loadError) {
-      setBookings([]);
-      setError(
-        loadError instanceof Error ? loadError.message : SESSION_DATA_BOOKINGS_LOAD_ERROR,
-      );
-    } finally {
-      setLoadingBookings(false);
-    }
-  }, [audience]);
 
   const loadSalesCall = useCallback(async (inviteeUri: string) => {
     if (!inviteeUri) {
@@ -152,13 +115,9 @@ export function SalesSessionDataPanel({
 
   useEffect(() => {
     const cached = readBookingsClientCache(audience, CALENDLY_BOOKINGS_DAYS_BEHIND);
-    if (cached && cached.bookings.length > 0) {
-      setBookings(cached.bookings);
-      setLoadingBookings(false);
-      return;
-    }
-    void loadBookings();
-  }, [audience, loadBookings]);
+    setBookings(cached?.bookings ?? []);
+    setLoadingBookings(false);
+  }, [audience]);
 
   useEffect(() => {
     if (initialInviteeUri) {
@@ -221,14 +180,16 @@ export function SalesSessionDataPanel({
           disabled={bookings.length === 0}
         >
           <SelectTrigger id="session-data-prospect" className="w-full max-w-xl">
-            <SelectValue placeholder={SESSION_DATA_PROSPECT_PLACEHOLDER} />
+            <SelectValue placeholder={SESSION_DATA_PROSPECT_PLACEHOLDER}>
+              {selectedBooking ? (
+                <span className={salesBookingValueClassName(selectedBooking.start_time)}>
+                  {salesBookingLabel(selectedBooking)}
+                </span>
+              ) : null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {bookings.map((booking) => (
-              <SelectItem key={booking.invitee_uri} value={booking.invitee_uri}>
-                {bookingLabel(booking)}
-              </SelectItem>
-            ))}
+            <SalesBookingSelectOptions bookings={bookings} />
           </SelectContent>
         </Select>
       </div>

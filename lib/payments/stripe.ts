@@ -83,6 +83,20 @@ const COMPTABLE_STRIPE_PRICE_IDS = {
   pack3: "price_1UFE8sBd01AMeiaQjwDBB5Ry",
 } as const;
 
+/** Hercule Libéral — 1 200 €/mois (pipeline agence). Override via STRIPE_PRICE_HERCULE_LIBERAL_MONTHLY. */
+const HERCULE_LIBERAL_STRIPE_PRICE_ID = "price_1UFzzcBd01AMeiaQfIcIAPHG";
+
+export function getHerculeLiberalPriceId(): string {
+  const fromEnv = process.env.STRIPE_PRICE_HERCULE_LIBERAL_MONTHLY?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  if (HERCULE_LIBERAL_STRIPE_PRICE_ID) {
+    return HERCULE_LIBERAL_STRIPE_PRICE_ID;
+  }
+  throw new Error("STRIPE_PRICE_HERCULE_LIBERAL_MONTHLY is not set");
+}
+
 /** Hercule Starter — 2 199 €/mois (recurring). */
 export function getComptableMonthlyPriceId(): string {
   return (

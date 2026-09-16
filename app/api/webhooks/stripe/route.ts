@@ -11,6 +11,10 @@ import {
   handleComptableSubscriptionDeleted,
 } from "@/lib/payments/stripe-webhook-comptable";
 import {
+  handleHerculeLiberalCheckoutCompleted,
+  isHerculeLiberalCheckoutSession,
+} from "@/lib/payments/stripe-webhook-hercule-liberal";
+import {
   insertJob,
   markJobFailed,
   markJobSent,
@@ -258,6 +262,11 @@ export async function POST(request: Request) {
       if (agenceId) {
         await handleAgenceCheckoutCompleted(client, session, event.id);
         return NextResponse.json({ ok: true });
+      }
+
+      if (isHerculeLiberalCheckoutSession(session)) {
+        await handleHerculeLiberalCheckoutCompleted(session);
+        return NextResponse.json({ ok: true, product: "hercule_liberal" });
       }
 
       return NextResponse.json({ ok: true, ignored: "missing_metadata" });

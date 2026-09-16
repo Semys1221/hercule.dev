@@ -74,45 +74,57 @@ function resolveSidebarNiche(pathname: string): Niche {
 
 export function InternalAppSidebar() {
   const pathname = usePathname();
-  const [niche, setNiche] = useState<Niche>(() => resolveSidebarNiche(pathname));
-  const brandMarkRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setNiche(resolveSidebarNiche(pathname));
-  }, [pathname]);
-
-  useEffect(() => {
-    const root = brandMarkRef.current;
-    const svg = root?.querySelector("svg");
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    const paths = [...svg.querySelectorAll("path")].map((path, index) => ({
-      index,
-      fill: getComputedStyle(path).fill,
-      className: path.getAttribute("class"),
-    }));
+  const [niche, setNiche] = useState<Niche>(() => {
+    const fromPath = nicheFromPathname(pathname);
+    const storedNiche = readStoredNiche();
+    const resolved = resolveSidebarNiche(pathname);
     // #region agent log
     fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "bfa321" },
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "68fd40" },
       body: JSON.stringify({
-        sessionId: "bfa321",
-        runId: "post-fix",
+        sessionId: "68fd40",
+        runId: "pre-fix",
         hypothesisId: "H1-H3",
-        location: "sidebar-nav.tsx:brandMark",
-        message: "sidebar brand mark metrics",
+        location: "sidebar-nav.tsx:useState-init",
+        message: "sidebar niche init",
         data: {
-          svgWidth: rect.width,
-          svgHeight: rect.height,
-          svgClasses: svg.className,
-          containerWidth: root?.getBoundingClientRect().width,
-          paths,
+          pathname,
+          fromPath,
+          storedNiche,
+          resolved,
+          isServer: typeof window === "undefined",
+          pathIncludesAgence: pathname.includes("/agence"),
         },
         timestamp: Date.now(),
       }),
     }).catch(() => {});
     // #endregion
-  }, []);
+    return resolved;
+  });
+  const brandMarkRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fromPath = nicheFromPathname(pathname);
+    const storedNiche = readStoredNiche();
+    const resolved = resolveSidebarNiche(pathname);
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "68fd40" },
+      body: JSON.stringify({
+        sessionId: "68fd40",
+        runId: "pre-fix",
+        hypothesisId: "H4",
+        location: "sidebar-nav.tsx:useEffect-pathname",
+        message: "sidebar niche effect",
+        data: { pathname, fromPath, storedNiche, resolved, currentNiche: niche },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    setNiche(resolved);
+  }, [pathname]);
 
   return (
     <Sidebar collapsible="icon">
@@ -141,6 +153,23 @@ export function InternalAppSidebar() {
             <SidebarMenu>
               {PARCOURS_MODULES.map((module) => {
                 const href = module.href(niche);
+                // #region agent log
+                if (module.id === "session") {
+                  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "68fd40" },
+                    body: JSON.stringify({
+                      sessionId: "68fd40",
+                      runId: "pre-fix",
+                      hypothesisId: "H1",
+                      location: "sidebar-nav.tsx:render",
+                      message: "sidebar href render",
+                      data: { pathname, niche, href, isServer: typeof window === "undefined" },
+                      timestamp: Date.now(),
+                    }),
+                  }).catch(() => {});
+                }
+                // #endregion
                 const Icon = module.icon;
                 return (
                   <SidebarMenuItem key={module.id}>

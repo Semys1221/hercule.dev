@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { RotateCcw } from "lucide-react";
+import { RefreshCw, RotateCcw } from "lucide-react";
 
 import { InternalStatusAlert } from "@/components/internal/funnels/ui/internal-status-alert";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -38,6 +37,11 @@ import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { postBookingLinkFor, reservationEntrepriseLinkFor, resolveSalesSessionDashboardLink } from "@/lib/link-tracking/urls";
 import { cn } from "@/lib/utils";
 
+import {
+  salesBookingLabel,
+  SalesBookingSelectOptions,
+  salesBookingValueClassName,
+} from "./sales-booking-select-options";
 import { SalesIntroChecklist } from "./sales-intro-checklist";
 import { SalesScriptContent } from "./sales-script-content";
 import {
@@ -78,9 +82,11 @@ function formatParisDateTime(iso: string): string {
   }).format(date);
 }
 
-function bookingLabel(booking: EnrichedCalendlyBooking): string {
-  const name = booking.first_name || booking.name || booking.email;
-  return `${name} — ${booking.email} — RDV ${formatParisDateTime(booking.start_time)}`;
+function formatCacheLabel(fetchedAt: number | null): string | null {
+  if (!fetchedAt) {
+    return null;
+  }
+  return `Cache local — ${formatParisDateTime(new Date(fetchedAt).toISOString())}`;
 }
 
 function meetingDisplayName(booking: EnrichedCalendlyBooking): string {
@@ -106,6 +112,14 @@ function LinkRow({ label, href }: { label: string; href: string | null | undefin
   );
 }
 
+function hydrateBookingsFromCache(audience: Audience) {
+  const cached = readBookingsClientCache(audience, CALENDLY_BOOKINGS_DAYS_BEHIND);
+  return {
+    bookings: cached?.bookings ?? [],
+    fetchedAt: cached?.fetchedAt ?? null,
+  };
+}
+
 export function RendezVousPanel({
   audience,
   selectedLead,
@@ -117,10 +131,15 @@ export function RendezVousPanel({
   onApplyTestPreset,
   onResetSession,
 }: RendezVousPanelProps) {
-  const [bookings, setBookings] = useState<EnrichedCalendlyBooking[]>([]);
+  const [bookings, setBookings] = useState<EnrichedCalendlyBooking[]>(
+    () => hydrateBookingsFromCache(audience).bookings,
+  );
+  const [cacheFetchedAt, setCacheFetchedAt] = useState<number | null>(
+    () => hydrateBookingsFromCache(audience).fetchedAt,
+  );
   const [selectedUri, setSelectedUri] = useState<string>("");
   const [scriptTab, setScriptTab] = useState<ScriptTab>("intro");
-  const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [testLoading, setTestLoading] = useState(false);
   const [testActive, setTestActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,6 +155,8 @@ export function RendezVousPanel({
     [audience, selectedBooking],
   );
 
+  const cacheLabel = useMemo(() => formatCacheLabel(cacheFetchedAt), [cacheFetchedAt]);
+
   useEffect(() => {
     if (selectedBooking) {
       onMeetingNameChange(meetingDisplayName(selectedBooking));
@@ -145,161 +166,53 @@ export function RendezVousPanel({
   }, [selectedBooking, onMeetingNameChange]);
 
   useEffect(() => {
-    const cached = readBookingsClientCache(audience, CALENDLY_BOOKINGS_DAYS_BEHIND);
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
-      body: JSON.stringify({
-        sessionId: "090380",
-        runId: "pre-fix",
-        hypothesisId: "H3",
-        location: "rendez-vous-panel.tsx:cache-hydrate",
-        message: "Client cache hydrate on mount",
-        data: {
-          audience,
-          cachedCount: cached?.bookings.length ?? 0,
-          hasCache: Boolean(cached),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-    if (cached && cached.bookings.length > 0) {
-      setBookings(cached.bookings);
-    }
+    const hydrated = hydrateBookingsFromCache(audience);
+    setBookings(hydrated.bookings);
+    setCacheFetchedAt(hydrated.fetchedAt);
+    setSelectedUri("");
+    setScriptTab("intro");
+    setError(null);
   }, [audience]);
 
   useEffect(() => {
     setScriptTab("intro");
   }, [sessionResetKey]);
 
-  useEffect(() => {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
-      body: JSON.stringify({
-        sessionId: "090380",
-        runId: "pre-fix",
-        hypothesisId: "H2",
-        location: "rendez-vous-panel.tsx:bookings-state",
-        message: "Bookings state updated",
-        data: {
-          audience,
-          bookingsCount: bookings.length,
-          loading,
-          error,
-          selectedUri,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [audience, bookings.length, error, loading, selectedUri]);
+  const syncFromCalendly = useCallback(async () => {
+    setSyncing(true);
+    setError(null);
+    setSelectedUri("");
+    setScriptTab("intro");
+    await onBookingSelect(null);
 
-  const fetchBookings = useCallback(
-    async (fresh = false) => {
-      const startedAt = Date.now();
-      setLoading(true);
-      setError(null);
-      setSelectedUri("");
-      setScriptTab("intro");
-      await onBookingSelect(null);
-
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
-        body: JSON.stringify({
-          sessionId: "090380",
-          runId: "pre-fix",
-          hypothesisId: "H1-H2",
-          location: "rendez-vous-panel.tsx:fetchBookings:start",
-          message: "Fetch bookings started",
-          data: { audience, fresh, daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-
-      try {
-        const { bookings: rows, error: fetchError } = await fetchEnrichedBookings(audience, {
+    try {
+      const { bookings: rows, error: fetchError, fetchedAt } = await fetchEnrichedBookings(
+        audience,
+        {
           legacyCategory: true,
-          fresh,
+          fresh: true,
           daysBehind: CALENDLY_BOOKINGS_DAYS_BEHIND,
-        });
-        if (fetchError) {
-          throw new Error(fetchError);
-        }
-
-        const sample = rows.slice(0, 3).map((row) => ({
-          name: row.name,
-          start_time: row.start_time,
-          parsedMs: new Date(row.start_time).getTime(),
-          label: bookingLabel(row),
-        }));
-
-        // #region agent log
-        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
-          body: JSON.stringify({
-            sessionId: "090380",
-            runId: "pre-fix",
-            hypothesisId: "H1-H4",
-            location: "rendez-vous-panel.tsx:fetchBookings:success",
-            message: "Fetch bookings succeeded",
-            data: {
-              audience,
-              fresh,
-              rowCount: rows.length,
-              durationMs: Date.now() - startedAt,
-              sample,
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
-
-        setBookings(rows);
-        if (rows.length === 0) {
-          setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
-        }
-      } catch (fetchError) {
-        // #region agent log
-        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "090380" },
-          body: JSON.stringify({
-            sessionId: "090380",
-            runId: "pre-fix",
-            hypothesisId: "H2-H5",
-            location: "rendez-vous-panel.tsx:fetchBookings:error",
-            message: "Fetch bookings failed",
-            data: {
-              audience,
-              fresh,
-              durationMs: Date.now() - startedAt,
-              error: fetchError instanceof Error ? fetchError.message : String(fetchError),
-            },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
-
-        setBookings([]);
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Impossible de récupérer les rendez-vous",
-        );
-      } finally {
-        setLoading(false);
+        },
+      );
+      if (fetchError) {
+        throw new Error(fetchError);
       }
-    },
-    [audience, onBookingSelect],
-  );
+
+      setBookings(rows);
+      setCacheFetchedAt(fetchedAt ?? Date.now());
+      if (rows.length === 0) {
+        setError("Aucun rendez-vous Calendly sur les 30 derniers jours.");
+      }
+    } catch (syncError) {
+      setError(
+        syncError instanceof Error
+          ? syncError.message
+          : "Impossible de récupérer les rendez-vous",
+      );
+    } finally {
+      setSyncing(false);
+    }
+  }, [audience, onBookingSelect]);
 
   const handleBookingChange = useCallback(
     async (inviteeUri: string) => {
@@ -336,6 +249,7 @@ export function RendezVousPanel({
       setDeveloperModeEnabled(audience, true);
       setDashboardDeveloperModeEnabled(true);
       setBookings([body.booking]);
+      setCacheFetchedAt(Date.now());
       setSelectedUri(body.booking.invitee_uri);
       setScriptTab("intro");
       await onBookingSelect(body.booking);
@@ -402,25 +316,32 @@ export function RendezVousPanel({
 
   return (
     <div className="space-y-6 text-left">
-      <h1 className="text-2xl font-semibold tracking-tight">Rendez-vous</h1>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Rendez-vous</h1>
+        {cacheLabel ? (
+          <p className="text-xs text-muted-foreground">{cacheLabel}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Aucun cache local — synchronisez Calendly une fois pour charger la liste.
+          </p>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" onClick={() => void fetchBookings(false)} disabled={loading || testLoading}>
-          {loading ? "Chargement…" : "Récupérer les rendez-vous"}
-        </Button>
         <Button
           type="button"
           variant="secondary"
-          onClick={() => void fetchBookings(true)}
-          disabled={loading || testLoading}
+          onClick={() => void syncFromCalendly()}
+          disabled={syncing || testLoading}
         >
-          {loading ? "Chargement…" : "Rafraîchir"}
+          <RefreshCw className={cn("size-4", syncing && "animate-spin")} />
+          {syncing ? "Synchronisation…" : "Mettre à jour depuis Calendly"}
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={onResetSession}
-          disabled={!hasSelectedBooking || loading || testLoading}
+          disabled={!hasSelectedBooking || syncing || testLoading}
           aria-label={SESSION_RESET_ARIA}
         >
           <RotateCcw className="size-4" />
@@ -430,21 +351,23 @@ export function RendezVousPanel({
           type="button"
           variant="secondary"
           onClick={() => void startTestMeeting()}
-          disabled={loading || testLoading}
+          disabled={syncing || testLoading}
         >
           {testLoading ? SESSION_TEST_MEETING_LOADING : SESSION_TEST_MEETING_CTA}
         </Button>
         {bookings.length > 0 ? (
           <Select value={selectedUri} onValueChange={(value) => void handleBookingChange(value)}>
             <SelectTrigger className="w-full max-w-xl">
-              <SelectValue placeholder="Sélectionner un rendez-vous" />
+              <SelectValue placeholder="Sélectionner un rendez-vous">
+                {selectedBooking ? (
+                  <span className={salesBookingValueClassName(selectedBooking.start_time)}>
+                    {salesBookingLabel(selectedBooking)}
+                  </span>
+                ) : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {bookings.map((booking) => (
-                <SelectItem key={booking.invitee_uri} value={booking.invitee_uri}>
-                  {bookingLabel(booking)}
-                </SelectItem>
-              ))}
+              <SalesBookingSelectOptions bookings={bookings} />
             </SelectContent>
           </Select>
         ) : null}

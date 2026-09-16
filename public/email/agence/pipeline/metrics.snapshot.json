@@ -1,0 +1,33 @@
+{
+  "activeCount": 45,
+  "pastCount": 20,
+  "upcomingCount": 25,
+  "pipelineLifetimeDays": 14,
+  "firstStartTime": "2026-09-01T08:00:00.000Z",
+  "lastStartTime": "2026-09-15T17:00:00.000Z",
+  "rdvPerCalendarDay": 3.21,
+  "rdvPerActiveDay": 3.214285714285714,
+  "activeDays": 14,
+  "calendarDays": 14,
+  "prediction30Days": 96.42857142857143,
+  "prediction22BusinessDays": 70.71428571428571,
+  "closingHours": 22.5,
+  "caPotentielEur": 13500,
+  "revenuePerHourEur": 600,
+  "segmentAggregates": [],
+  "highlighted": {
+    "budgetUndefined": 37,
+    "budget1000PlusIndependent": 7,
+    "notIndependentComptable": 15,
+    "notComptable": 38
+  },
+  "dailyHistory": [
+    { "date": "2026-09-08", "count": 3 },
+    { "date": "2026-09-09", "count": 4 },
+    { "date": "2026-09-10", "count": 5 },
+    { "date": "2026-09-11", "count": 4 },
+    { "date": "2026-09-12", "count": 3 },
+    { "date": "2026-09-15", "count": 4 }
+  ],
+  "generatedAt": "2026-09-16T07:00:00.000Z"
+}

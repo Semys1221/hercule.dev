@@ -82,6 +82,16 @@ export const COMMERCIAL = {
 
   /** Rétractation commerciale (CGV §8) */
   retractationDays: 4,
+
+  /** Hercule Libéral — accès pipeline agence (abonnement mensuel). */
+  herculeLiberalMonthlyPriceCents: 120_000,
+} as const;
+
+/** Pipeline agence — produit SaaS « Hercule Libéral » (checkout public). */
+export const HERCULE_LIBERAL = {
+  productName: "Hercule Libéral",
+  monthlyPriceCents: COMMERCIAL.herculeLiberalMonthlyPriceCents,
+  offerType: "hercule_liberal_1200_monthly",
 } as const;
 
 /**
