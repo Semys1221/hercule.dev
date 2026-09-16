@@ -55,6 +55,9 @@ export async function sendProductEmailNow(params: {
     entrepriseInfo?: string;
     calendlyLink?: string;
     estimatedFirstBookingDate?: string;
+    estimatedFirstRdvDate?: string;
+    trackingNumber?: string;
+    rdvRangeLabel?: string;
     dashboardLink?: string;
     scheduledAt?: string | null;
     reservationAgenceLink?: string;
@@ -103,6 +106,10 @@ export async function sendProductEmailNow(params: {
     calendlyLink: params.extra?.calendlyLink ?? jobVars.calendlyLink,
     estimatedFirstBookingDate:
       params.extra?.estimatedFirstBookingDate ?? jobVars.estimatedFirstBookingDate,
+    estimatedFirstRdvDate:
+      params.extra?.estimatedFirstRdvDate ?? jobVars.estimatedFirstRdvDate,
+    trackingNumber: params.extra?.trackingNumber ?? jobVars.trackingNumber,
+    rdvRangeLabel: params.extra?.rdvRangeLabel ?? jobVars.rdvRangeLabel,
   });
 
   const now = new Date();

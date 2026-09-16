@@ -332,6 +332,47 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     bookingCategory: "agence",
   },
   {
+    id: "comptable-acquisition-post-payment",
+    slug: "comptable-acquisition-post-payment",
+    name: "Acquisition comptable 1 489 € — post-paiement",
+    phase: "close",
+    category: "Onboarding",
+    stepCount: 4,
+    status: "built",
+    provider: "resend",
+    audiences: ["comptable"],
+    description:
+      "Déclenchée par Payment Link Stripe (metadata product=comptable_acquisition_1489). E1 immédiat, E2 +24h, E3 +48h, E4 +5j. Numéro suivi DHL HRC-{slug}, premier RDV estimé J+25.",
+    steps: [
+      {
+        id: "comptable_acquisition_welcome",
+        label: "Bienvenue + récap paiement",
+        delay: "Immédiat (stripe_payment)",
+        emailType: "comptable_acquisition_welcome",
+      },
+      {
+        id: "comptable_acquisition_config_ready",
+        label: "Configuration terminée",
+        delay: "+24h",
+        emailType: "comptable_acquisition_config_ready",
+      },
+      {
+        id: "comptable_acquisition_rdv_reminder",
+        label: "Rappel premier RDV",
+        delay: "+48h",
+        emailType: "comptable_acquisition_rdv_reminder",
+      },
+      {
+        id: "comptable_acquisition_rdv_final",
+        label: "Dernier rappel auto",
+        delay: "+5j",
+        emailType: "comptable_acquisition_rdv_final",
+      },
+    ],
+    editorKind: "booking",
+    bookingCategory: "comptable",
+  },
+  {
     id: "onboarding-sequence",
     slug: "onboarding-sequence",
     name: "Séquence onboarding post-formulaire",
@@ -561,6 +602,12 @@ export const BOOKING_SEQUENCE_SLUGS: Record<string, BookingEmailType[]> = {
     "product_calendly_reminder",
   ],
   "payment-welcome": ["product_payment_welcome"],
+  "comptable-acquisition-post-payment": [
+    "comptable_acquisition_welcome",
+    "comptable_acquisition_config_ready",
+    "comptable_acquisition_rdv_reminder",
+    "comptable_acquisition_rdv_final",
+  ],
   upsell: ["upsell_email_1", "upsell_email_2", "upsell_email_3"],
   "close-indecis": ["close_indecis_1", "close_indecis_2", "close_indecis_3"],
   "sales-call-no-show": [

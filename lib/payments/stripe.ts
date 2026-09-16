@@ -97,6 +97,22 @@ export function getHerculeLiberalPriceId(): string {
   throw new Error("STRIPE_PRICE_HERCULE_LIBERAL_MONTHLY is not set");
 }
 
+const COMPTABLE_ACQUISITION_STRIPE_PRICE_ID = "price_1UGFljBd01AMeiaQ1L4qF4IM";
+
+/** Comptable Acquisition — 1 489 €/mois (Payment Link closer). */
+export function getComptableAcquisition1489PriceId(): string {
+  const fromEnv = process.env.STRIPE_PRICE_COMPTABLE_ACQUISITION_1489?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  if (COMPTABLE_ACQUISITION_STRIPE_PRICE_ID) {
+    return COMPTABLE_ACQUISITION_STRIPE_PRICE_ID;
+  }
+  throw new Error(
+    "STRIPE_PRICE_COMPTABLE_ACQUISITION_1489 is not set — run provisionComptableAcquisition1489Stripe.ts",
+  );
+}
+
 /** Hercule Starter — 2 199 €/mois (recurring). */
 export function getComptableMonthlyPriceId(): string {
   return (

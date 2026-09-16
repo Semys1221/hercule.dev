@@ -457,6 +457,9 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     entrepriseInfo: extra.entrepriseInfo,
     calendlyLink: extra.calendlyLink,
     estimatedFirstBookingDate: extra.estimatedFirstBookingDate,
+    estimatedFirstRdvDate: extra.estimatedFirstRdvDate,
+    trackingNumber: extra.trackingNumber,
+    rdvRangeLabel: extra.rdvRangeLabel,
   });
 }
 

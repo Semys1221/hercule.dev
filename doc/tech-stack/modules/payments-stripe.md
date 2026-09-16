@@ -68,6 +68,18 @@ Checkout embarqué : session de vente live (`/internal/funnels/comptable/sales/f
 
 **Webhook :** configurer en plus de `checkout.session.completed` les événements `invoice.paid` (renouvellements) et `customer.subscription.deleted` (résiliation).
 
+### Comptable — Acquisition 1 mois (Payment Link closer)
+
+| Variable | Offre | Montant | Mode Stripe | `offer_type` |
+|----------|-------|---------|-------------|--------------|
+| `STRIPE_PRICE_COMPTABLE_ACQUISITION_1489` | **Acquisition 1 mois** | 1 489 €/mois | `subscription` (recurring) | `comptable_acquisition_1489_1m` |
+| `STRIPE_PAYMENT_LINK_COMPTABLE_ACQUISITION_1489` | Payment Link `buy.stripe.com` | — | — | metadata `product=comptable_acquisition_1489` |
+| `NEXT_PUBLIC_STRIPE_PAYMENT_LINK_COMPTABLE_ACQUISITION_1489` | Copie UI sales sliders | — | — | même URL que ci-dessus |
+
+Provision : `pnpm provision-comptable-acquisition-1489-stripe` → lookup key `comptable_acquisition_1489_monthly`.
+
+Webhook `checkout.session.completed` sans `comptable_id` : provision auto du lead `comptable` depuis l’email Stripe + séquence email post-paiement (4 emails).
+
 Configurer sur **Vercel** (Production + Preview) et redéployer après ajout.
 
 ## Troubleshooting

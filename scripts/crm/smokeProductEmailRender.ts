@@ -41,6 +41,10 @@ const PRODUCT_TYPES: BookingEmailType[] = [
   "sold_check_j7",
   "payment_notification_client",
   "product_payment_welcome",
+  "comptable_acquisition_welcome",
+  "comptable_acquisition_config_ready",
+  "comptable_acquisition_rdv_reminder",
+  "comptable_acquisition_rdv_final",
 ];
 
 const SAMPLE_VARS: Record<string, string> = {
@@ -49,6 +53,9 @@ const SAMPLE_VARS: Record<string, string> = {
   reservation_agence_link: "https://www.hercule.dev/reservation/example",
   email: "marie@example.com",
   estimatedFirstBookingDate: "lundi 15 septembre 2026",
+  estimatedFirstRdvDate: "lundi 11 octobre 2026",
+  trackingNumber: "HRC-example",
+  rdvRangeLabel: "10 à 15",
   agenceInfo: "Cabinet Example — marie@agence.example",
   entrepriseInfo: "Entreprise Example — contact@entreprise.example",
   calendlyLink: "https://calendly.com/example/meeting",
@@ -70,11 +77,13 @@ function assertNoForbiddenCopy(label: string, text: string) {
 function main() {
   for (const emailType of PRODUCT_TYPES) {
     const category =
-      emailType.startsWith("match_") && emailType !== "match_booking_agence"
-        ? "entreprise"
-        : emailType === "sold_check_j7"
+      emailType.startsWith("comptable_acquisition_")
+        ? "comptable"
+        : emailType.startsWith("match_") && emailType !== "match_booking_agence"
           ? "entreprise"
-          : "agence";
+          : emailType === "sold_check_j7"
+            ? "entreprise"
+            : "agence";
 
     const template = defaultBookingEmailTemplate(category, emailType);
     const threadedNoShowFollowUp =

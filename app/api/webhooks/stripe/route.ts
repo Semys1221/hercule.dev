@@ -10,6 +10,7 @@ import {
   handleComptableInvoicePaid,
   handleComptableSubscriptionDeleted,
 } from "@/lib/payments/stripe-webhook-comptable";
+import { handleComptableAcquisitionCheckoutCompleted } from "@/lib/payments/stripe-webhook-comptable-acquisition";
 import {
   handleHerculeLiberalCheckoutCompleted,
   isHerculeLiberalCheckoutSession,
@@ -267,6 +268,15 @@ export async function POST(request: Request) {
       if (isHerculeLiberalCheckoutSession(session)) {
         await handleHerculeLiberalCheckoutCompleted(session);
         return NextResponse.json({ ok: true, product: "hercule_liberal" });
+      }
+
+      const acquisitionHandled = await handleComptableAcquisitionCheckoutCompleted(
+        client,
+        session,
+        event.id,
+      );
+      if (acquisitionHandled) {
+        return NextResponse.json({ ok: true, product: "comptable_acquisition_1489" });
       }
 
       return NextResponse.json({ ok: true, ignored: "missing_metadata" });

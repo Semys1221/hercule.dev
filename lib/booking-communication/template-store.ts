@@ -63,6 +63,10 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "payment_notification_client",
   "modalites_ask",
   "modalites_cancel",
+  "comptable_acquisition_welcome",
+  "comptable_acquisition_config_ready",
+  "comptable_acquisition_rdv_reminder",
+  "comptable_acquisition_rdv_final",
 ];
 
 const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
@@ -112,7 +116,8 @@ export function isProductBookingEmailType(emailType: BookingEmailType): boolean 
     emailType.startsWith("match_") ||
     emailType.startsWith("survey_") ||
     emailType === "sold_check_j7" ||
-    emailType === "payment_notification_client"
+    emailType === "payment_notification_client" ||
+    emailType.startsWith("comptable_acquisition_")
   );
 }
 
@@ -265,6 +270,9 @@ export function buildBookingEmailVars(params: {
   entrepriseInfo?: string;
   calendlyLink?: string;
   estimatedFirstBookingDate?: string;
+  estimatedFirstRdvDate?: string;
+  trackingNumber?: string;
+  rdvRangeLabel?: string;
 }): Record<string, string> {
   const { date, heure } = formatMeetingDateTime(params.scheduledAt);
   const confirmUrl = params.confirmUrl.trim();
@@ -286,6 +294,12 @@ export function buildBookingEmailVars(params: {
     entrepriseInfo: params.entrepriseInfo?.trim() ?? "",
     calendlyLink: params.calendlyLink?.trim() ?? "",
     estimatedFirstBookingDate: params.estimatedFirstBookingDate?.trim() ?? "",
+    estimatedFirstRdvDate:
+      params.estimatedFirstRdvDate?.trim() ||
+      params.estimatedFirstBookingDate?.trim() ||
+      "",
+    trackingNumber: params.trackingNumber?.trim() ?? "",
+    rdvRangeLabel: params.rdvRangeLabel?.trim() ?? "",
   };
   if (params.emailType === "immediate") {
     delete vars.confirmUrl;
@@ -329,6 +343,9 @@ export function sampleBookingEmailVars(
     entrepriseInfo: "Entreprise Exemple — Paris",
     calendlyLink: "https://calendly.com/exemple?utm_content=match:demo",
     estimatedFirstBookingDate: "lundi 21 septembre 2026",
+    estimatedFirstRdvDate: "lundi 21 septembre 2026",
+    trackingNumber: "HRC-exemple",
+    rdvRangeLabel: "10 à 15",
   });
   return vars;
 }
@@ -421,6 +438,9 @@ export async function renderEmailFromStore(params: {
   entrepriseInfo?: string;
   calendlyLink?: string;
   estimatedFirstBookingDate?: string;
+  estimatedFirstRdvDate?: string;
+  trackingNumber?: string;
+  rdvRangeLabel?: string;
 }): Promise<RenderedBookingEmail> {
   const template = await resolveBookingEmailTemplate({
     category: params.category,
@@ -446,6 +466,9 @@ export async function renderEmailFromStore(params: {
     entrepriseInfo: params.entrepriseInfo,
     calendlyLink: params.calendlyLink,
     estimatedFirstBookingDate: params.estimatedFirstBookingDate,
+    estimatedFirstRdvDate: params.estimatedFirstRdvDate,
+    trackingNumber: params.trackingNumber,
+    rdvRangeLabel: params.rdvRangeLabel,
   });
 }
 
@@ -468,6 +491,9 @@ export async function renderCustomBookingEmail(params: {
   entrepriseInfo?: string;
   calendlyLink?: string;
   estimatedFirstBookingDate?: string;
+  estimatedFirstRdvDate?: string;
+  trackingNumber?: string;
+  rdvRangeLabel?: string;
 }): Promise<RenderedBookingEmail> {
   const vars = buildBookingEmailVars({
     firstName: params.firstName,
@@ -484,6 +510,9 @@ export async function renderCustomBookingEmail(params: {
     entrepriseInfo: params.entrepriseInfo,
     calendlyLink: params.calendlyLink,
     estimatedFirstBookingDate: params.estimatedFirstBookingDate,
+    estimatedFirstRdvDate: params.estimatedFirstRdvDate,
+    trackingNumber: params.trackingNumber,
+    rdvRangeLabel: params.rdvRangeLabel,
   });
 
   return finalizeRenderedEmail({

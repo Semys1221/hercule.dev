@@ -3,6 +3,10 @@ import {
   OFFER_TYPES_COMPTABLE,
   type OfferTypeComptable,
 } from "@/lib/commercial/constants";
+import {
+  COMPTABLE_ACQUISITION_OFFER_TYPE,
+  priceIdForComptableAcquisition1489,
+} from "@/lib/payments/comptable-acquisition-offers";
 import type Stripe from "stripe";
 
 import {
@@ -16,7 +20,8 @@ export function isComptableSubscriptionOffer(
 ): boolean {
   return (
     offerType === OFFER_TYPES_COMPTABLE.starter999_5 ||
-    offerType === OFFER_TYPES_COMPTABLE.monthly1499
+    offerType === OFFER_TYPES_COMPTABLE.monthly1499 ||
+    offerType === COMPTABLE_ACQUISITION_OFFER_TYPE
   );
 }
 
@@ -40,6 +45,9 @@ export function priceIdForComptableOffer(offerType: OfferTypeComptable): string 
   if (offerType === OFFER_TYPES_COMPTABLE.starter999_5) {
     return getComptableStarterPriceId();
   }
+  if (offerType === COMPTABLE_ACQUISITION_OFFER_TYPE) {
+    return priceIdForComptableAcquisition1489();
+  }
   return getComptableMonthlyPriceId();
 }
 
@@ -49,6 +57,9 @@ export function amountCentsForComptableOffer(offerType: OfferTypeComptable): num
   }
   if (offerType === OFFER_TYPES_COMPTABLE.starter999_5) {
     return COMMERCIAL_COMPTABLE.starterPriceCents;
+  }
+  if (offerType === COMPTABLE_ACQUISITION_OFFER_TYPE) {
+    return COMMERCIAL_COMPTABLE.acquisition1489PriceCents;
   }
   return COMMERCIAL_COMPTABLE.growthMonthlyPriceCents;
 }

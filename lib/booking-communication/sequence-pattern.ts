@@ -31,6 +31,12 @@ export const SEQUENCE_THREAD_FAMILIES: readonly BookingEmailType[][] = [
   ["payment_notification_client"],
   ["modalites_ask", "modalites_cancel"],
   ["modalites_enforce_cancel"],
+  [
+    "comptable_acquisition_welcome",
+    "comptable_acquisition_config_ready",
+    "comptable_acquisition_rdv_reminder",
+    "comptable_acquisition_rdv_final",
+  ],
 ];
 
 const familyByType = new Map<BookingEmailType, BookingEmailType[]>();

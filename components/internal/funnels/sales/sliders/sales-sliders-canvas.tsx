@@ -1017,17 +1017,23 @@ function StripePaymentLinksTable() {
                     size="icon"
                     className="size-8 shrink-0"
                     aria-label={`Ouvrir le lien ${link.name}`}
-                    asChild
+                    disabled={!link.url}
+                    asChild={Boolean(link.url)}
                   >
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    {link.url ? (
+                      <a href={link.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="size-3.5" />
+                      </a>
+                    ) : (
                       <ExternalLink className="size-3.5" />
-                    </a>
+                    )}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="h-8 max-w-[10rem] truncate px-2 text-[11px] font-mono"
+                    disabled={!link.url}
                     onClick={() => void handleCopy(link.id, link.url)}
                   >
                     {copiedId === link.id ? (

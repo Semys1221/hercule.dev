@@ -212,6 +212,8 @@ export const OFFER_TYPES_COMPTABLE = {
   starter999_5: "starter_999_5",
   monthly1499: "monthly_1499",
   pack3x1499: "pack_3x1499",
+  /** Acquisition comptable — 1 489 €/mois, 10–15 RDV (Payment Link closer). */
+  acquisition1489_1m: "comptable_acquisition_1489_1m",
 } as const;
 
 export type OfferTypeComptable = (typeof OFFER_TYPES_COMPTABLE)[keyof typeof OFFER_TYPES_COMPTABLE];
@@ -266,6 +268,12 @@ export const COMMERCIAL_COMPTABLE = {
   firstRdvDaysMin: 20,
   firstRdvDaysMax: 25,
 
+  /** Acquisition 1 mois — Payment Link 1 489 €, livrable 10–15 RDV */
+  acquisition1489PriceCents: 148_900,
+  acquisition1489RdvMin: 10,
+  acquisition1489RdvMax: 15,
+  acquisition1489FirstRdvCalendarDays: 25,
+
   /** MRR par lettre de mission signée (3 600 € honoraires annuels / 12) */
   mrrPerSignedMissionCents: 30_000,
 
@@ -302,6 +310,13 @@ export const COMMERCIAL_COMPTABLE = {
   horizonGuaranteeDays: 90,
   coreTagline: "Bases du système + zone standard",
   horizonTagline: "Capture max + exclusivité totale + profondeur de zone",
+} as const;
+
+/** Comptable — acquisition 1 mois via Payment Link (1 489 €/mois). */
+export const COMPTABLE_ACQUISITION_1489 = {
+  productName: "Hercule Comptable — Acquisition 1 mois",
+  monthlyPriceCents: COMMERCIAL_COMPTABLE.acquisition1489PriceCents,
+  offerType: OFFER_TYPES_COMPTABLE.acquisition1489_1m,
 } as const;
 
 export type FoundationPricingPlanId = "core" | "horizon";

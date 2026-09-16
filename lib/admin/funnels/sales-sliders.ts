@@ -1,6 +1,7 @@
 import { formatSliderLabel } from "@/components/internal/funnels/sales/sales-questions";
 import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/admin/navigation";
+import { COMPTABLE_ACQUISITION_STRIPE_PAYMENT_LINK_URL } from "@/lib/payments/comptable-acquisition-offers";
 
 export const SLIDERS_SECTION_SUBTITLE =
   "Présentation share-screen — props ouvertes plein écran.";
@@ -136,6 +137,16 @@ export const SLIDERS_STRIPE_PAYMENT_LINKS = [
     amountLabel: "5 277,60 €",
     mode: "One-shot",
     url: "https://buy.stripe.com/28E5kCagJghL3z9acg3Je0k",
+  },
+  {
+    id: "acquisition1489",
+    name: "Acquisition 1 mois",
+    offerType: "comptable_acquisition_1489_1m",
+    amountLabel: "1 489 €/mois",
+    mode: "Abonnement",
+    url:
+      process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_COMPTABLE_ACQUISITION_1489?.trim() ??
+      COMPTABLE_ACQUISITION_STRIPE_PAYMENT_LINK_URL,
   },
 ] as const;
 

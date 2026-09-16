@@ -4,6 +4,11 @@ import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
 
 import { findMatchForLeadEmailType } from "@/lib/matching/store";
+import {
+  acquisitionRdvRangeLabel,
+  trackingNumberForSlug,
+} from "@/lib/comptable-acquisition-sequence/dates";
+
 import { formatMeetingDateTime } from "./templates";
 import type { BookingEmailJob, BookingEmailType } from "./types";
 
@@ -51,6 +56,9 @@ export async function extraVarsForJob(
   entrepriseInfo?: string;
   calendlyLink?: string;
   estimatedFirstBookingDate?: string;
+  estimatedFirstRdvDate?: string;
+  trackingNumber?: string;
+  rdvRangeLabel?: string;
   activationDate?: string;
   retractionEndsAt?: string;
   scheduledAt?: string | null;
@@ -64,12 +72,26 @@ export async function extraVarsForJob(
       : "";
   const activationDate = retractionEndsAt || estimatedFirstBookingDateFromLead(lead);
 
+  const estimatedFromLead = estimatedFirstBookingDateFromLead(lead);
+  const slug = lead.slug?.trim() ?? "";
+  const acquisitionExtras =
+    (job.email_type as BookingEmailType).startsWith("comptable_acquisition_")
+      ? {
+          trackingNumber: trackingNumberForSlug(slug),
+          estimatedFirstRdvDate: estimatedFromLead,
+          rdvRangeLabel: acquisitionRdvRangeLabel(),
+        }
+      : {};
+
   const base = {
     dashboardLink,
     reservationAgenceLink,
     company: lead.company,
     email: lead.email,
-    estimatedFirstBookingDate: estimatedFirstBookingDateFromLead(lead),
+    estimatedFirstBookingDate: estimatedFromLead,
+    estimatedFirstRdvDate: estimatedFromLead,
+    trackingNumber: acquisitionExtras.trackingNumber ?? "",
+    rdvRangeLabel: acquisitionExtras.rdvRangeLabel ?? "",
     activationDate,
     retractionEndsAt,
   };

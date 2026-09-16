@@ -474,6 +474,61 @@ Un aperçu du déroulé de votre entretien est disponible ici : {{confirmLink}}`
     subject: "",
     body: modalitesCancelBody(),
   },
+  comptable_acquisition_welcome: {
+    subject: "Bienvenue — votre acquisition Hercule est lancée",
+    body: `{{firstNameLine}}
+
+Votre paiement de 1 489 € pour 1 mois d'acquisition a bien été reçu. Nous lançons votre acquisition dès aujourd'hui.
+
+DHL — votre numéro de suivi : {{trackingNumber}}
+Suivez l'avancement sur votre tableau de bord :
+{{dashboardLink}}
+
+Livrable : environ {{rdvRangeLabel}} rendez-vous planifiés sur octobre et novembre.
+
+Vous recevrez un lien Calendly pour connecter votre agenda sous 24 h.
+
+Vos premiers rendez-vous devraient arriver vers le {{estimatedFirstRdvDate}}.
+
+Béatrice Meyer`,
+  },
+  comptable_acquisition_config_ready: {
+    subject: "Configuration terminée — connectez votre agenda",
+    body: `{{firstNameLine}}
+
+La configuration de votre espace Hercule Comptable est terminée de notre côté.
+
+Vous allez recevoir une invitation Calendly pour connecter votre agenda.
+
+Numéro de suivi DHL : {{trackingNumber}}
+Tableau de bord : {{dashboardLink}}
+
+Béatrice Meyer`,
+  },
+  comptable_acquisition_rdv_reminder: {
+    subject: "Rappel — vos premiers rendez-vous arrivent",
+    body: `{{firstNameLine}}
+
+Petit rappel : vos premiers rendez-vous devraient commencer vers le {{estimatedFirstRdvDate}}.
+
+Numéro de suivi DHL : {{trackingNumber}}
+Tableau de bord : {{dashboardLink}}
+
+Béatrice Meyer`,
+  },
+  comptable_acquisition_rdv_final: {
+    subject: "Dernier rappel automatique — premiers rendez-vous",
+    body: `{{firstNameLine}}
+
+Dernier rappel automatique : vos premiers rendez-vous sont attendus vers le {{estimatedFirstRdvDate}}.
+
+Numéro de suivi DHL : {{trackingNumber}}
+Tableau de bord : {{dashboardLink}}
+
+Il s'agit du dernier email automatique de cette séquence. Pour toute question : contact@hercule.dev
+
+Béatrice Meyer`,
+  },
 };
 
 export const COMPTABLE_BOOKING_EMAIL_TEMPLATE_OVERRIDES: Partial<
@@ -619,7 +674,8 @@ export function buildFirstNameLine(
     emailType === "sold_check_j7" ||
     emailType === "payment_notification_client" ||
     emailType === "modalites_ask" ||
-    emailType === "modalites_cancel"
+    emailType === "modalites_cancel" ||
+    emailType.startsWith("comptable_acquisition_")
   ) {
     return trimmed ? `Bonjour ${trimmed},` : "Bonjour,";
   }
