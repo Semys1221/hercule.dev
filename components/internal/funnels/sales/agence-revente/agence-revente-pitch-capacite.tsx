@@ -101,13 +101,58 @@ function RoiRecapBlock({
 
 function BuyHerculeLiberalButton({ paymentLinkUrl }: { paymentLinkUrl: string }) {
   const handleCopyPaymentLink = useCallback(async () => {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "544df7" },
+      body: JSON.stringify({
+        sessionId: "544df7",
+        runId: "pre-fix",
+        hypothesisId: "D",
+        location: "agence-revente-pitch-capacite.tsx:handleCopyPaymentLink:entry",
+        message: "Buy button clicked",
+        data: { hasPaymentLinkUrl: Boolean(paymentLinkUrl) },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     try {
       await navigator.clipboard.writeText(paymentLinkUrl);
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "544df7" },
+        body: JSON.stringify({
+          sessionId: "544df7",
+          runId: "pre-fix",
+          hypothesisId: "A",
+          location: "agence-revente-pitch-capacite.tsx:handleCopyPaymentLink:success",
+          message: "Clipboard write succeeded",
+          data: { feedbackType: "toast-only" },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       toast({
         title: "Copié — envoie-le maintenant",
         description: paymentLinkUrl,
       });
     } catch {
+      // #region agent log
+      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "544df7" },
+        body: JSON.stringify({
+          sessionId: "544df7",
+          runId: "pre-fix",
+          hypothesisId: "B",
+          location: "agence-revente-pitch-capacite.tsx:handleCopyPaymentLink:error",
+          message: "Clipboard write failed",
+          data: {},
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       toast({
         title: "Copie impossible",
         description: paymentLinkUrl,
