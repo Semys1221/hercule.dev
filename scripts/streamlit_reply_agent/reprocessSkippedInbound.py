@@ -15,9 +15,7 @@ from dotenv import load_dotenv
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _REPLY_DIR = _REPO_ROOT / "app" / "streamlit_reply_agent"
 _SCRAPER_DIR = _REPO_ROOT / "app" / "streamlit_scraper"
-_SUBSEQ_DIR = _REPO_ROOT / "app" / "streamlit_subsequence"
-
-for path in (str(_REPO_ROOT), str(_REPLY_DIR), str(_SCRAPER_DIR), str(_SUBSEQ_DIR)):
+for path in (str(_REPO_ROOT), str(_SCRAPER_DIR), str(_REPLY_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
@@ -92,7 +90,8 @@ def reprocess_rows(
     from lead_relances import detect_opt_out, stop_all_lead_relances
     from lead_tags import build_interest_index, interest_label, lookup_lead_interest
     from pipeline_sync import sync_pipeline_step_from_sent_flows
-    from reply_gate import apply_reply_gate
+    from lead_tags import INTERESTED_STATUS
+    from reply_gate import apply_reply_gate, is_recovery_interest_tag
     from shared.instantly_client import InstantlyClient
     from supabase_repo import update_message_status
 
@@ -176,6 +175,17 @@ def reprocess_rows(
                     reply_text=str(preview["reply_text"]),
                     target_type=str(config.get("target_type") or "buyer"),
                 )
+                if is_recovery_interest_tag(interest):
+                    try:
+                        inst.update_interest_status(
+                            lead_email=lead_email,
+                            interest_value=INTERESTED_STATUS,
+                            campaign_id=campaign_id,
+                        )
+                        item["retagged_interested"] = True
+                    except Exception as exc:  # noqa: BLE001
+                        item["retagged_interested"] = False
+                        item["retag_error"] = str(exc)
                 sync_pipeline_step_from_sent_flows(campaign_id, lead_email)
                 item["action"] = "sent"
         else:

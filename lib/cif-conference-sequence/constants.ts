@@ -10,6 +10,17 @@ export const CIF_CONFERENCE_KEEPER_EMAILS = [
 export const CIF_CONFERENCE_CALENDLY_URL =
   "https://calendly.com/hercule-connect/hercule-briefing-dec-cif";
 
+/** Single cohort session — keep in sync with reservation-conference.html copy. */
+export const CONFERENCE_COHORT_SESSION = {
+  date: "2026-09-23",
+  labelFr: "mercredi 23 septembre",
+  labelFrShort: "ce mercredi 23 septembre",
+  hourParis: "10h",
+  intervalFrom: "10:00",
+  intervalTo: "10:30",
+  timezone: "Europe/Paris",
+} as const;
+
 export const CIF_CONFERENCE_TEST_EMAIL =
   process.env.CIF_CONFERENCE_TEST_EMAIL?.trim().toLowerCase() ||
   "conference-cutover-test@hercule.dev";

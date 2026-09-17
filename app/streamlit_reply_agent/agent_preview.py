@@ -305,13 +305,28 @@ def _generate_with_models(
 ) -> tuple[dict[str, Any], str, int | None]:
     primary = _resolve_model("GROK_PRIMARY_MODEL", PRIMARY_MODEL)
     fallback = _resolve_model("GROK_FALLBACK_MODEL", FALLBACK_MODEL)
+
+    def _call_with_json_retries(model: str) -> tuple[dict[str, Any], str, int | None]:
+        last_json_err: json.JSONDecodeError | None = None
+        for _ in range(3):
+            try:
+                return _call_grok_model(model, system_prompt, user_prompt)
+            except json.JSONDecodeError as err:
+                last_json_err = err
+        if last_json_err is not None:
+            raise last_json_err
+        raise RuntimeError(f"Grok {model} failed without a JSON error")
+
     try:
-        return _call_grok_model(primary, system_prompt, user_prompt)
+        return _call_with_json_retries(primary)
     except Exception as primary_err:
-        if not fallback or not _is_rate_limit_error(primary_err):
+        if not fallback or (
+            not _is_rate_limit_error(primary_err)
+            and not isinstance(primary_err, json.JSONDecodeError)
+        ):
             raise
         try:
-            return _call_grok_model(fallback, system_prompt, user_prompt)
+            return _call_with_json_retries(fallback)
         except Exception as fallback_err:
             raise RuntimeError(
                 f"Primary ({primary}) failed: {primary_err}. "

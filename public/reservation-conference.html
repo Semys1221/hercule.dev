@@ -41,7 +41,7 @@
             min-height: 620px;
             display: flex;
             flex-direction: row;
-            box-shadow: 0 0 60px rgba(16, 185, 129, 0.06);
+            box-shadow: 0 0 80px rgba(99, 102, 241, 0.12);
             overflow: hidden;
         }
 
@@ -114,14 +114,14 @@
         }
 
         .brand {
-            margin-bottom: 48px;
+            margin-bottom: 32px;
             display: flex;
             justify-content: center;
             width: 100%;
         }
 
         .is-booking .brand {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .brand a {
@@ -150,6 +150,54 @@
             color: var(--foreground);
         }
 
+        .event-banner {
+            width: 100%;
+            margin-bottom: 28px;
+            padding: 24px 28px;
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.14) 0%, rgba(24, 24, 27, 0.5) 100%);
+            text-align: center;
+        }
+
+        .event-badge {
+            display: inline-block;
+            margin-bottom: 16px;
+            padding: 6px 12px;
+            border: 1px solid rgba(99, 102, 241, 0.45);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #c7d2fe;
+        }
+
+        .event-date {
+            margin: 0 0 12px;
+            font-size: 22px;
+            font-weight: 500;
+            line-height: 1.35;
+            letter-spacing: -0.02em;
+            color: var(--foreground);
+        }
+
+        .event-date-meta {
+            display: block;
+            margin-top: 6px;
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--muted-foreground);
+            letter-spacing: 0;
+        }
+
+        .event-capacity {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--muted-foreground);
+        }
+
         .view {
             width: 100%;
         }
@@ -166,7 +214,7 @@
         h2 {
             font-size: 28px;
             font-weight: 500;
-            margin: 0 0 32px;
+            margin: 0 0 20px;
             line-height: 1.35;
             letter-spacing: -0.02em;
         }
@@ -335,19 +383,28 @@
 
             .brand {
                 justify-content: center;
-                margin-bottom: 40px;
+                margin-bottom: 24px;
             }
 
             .is-booking .brand {
-                margin-bottom: 20px;
+                margin-bottom: 16px;
             }
 
             .brand a {
                 justify-content: center;
             }
 
+            .event-banner {
+                padding: 20px 18px;
+                margin-bottom: 24px;
+            }
+
+            .event-date {
+                font-size: 19px;
+            }
+
             h2 {
-                margin-bottom: 28px;
+                margin-bottom: 16px;
             }
 
             .info-card {
@@ -385,9 +442,18 @@
                 </a>
             </div>
 
+            <div class="event-banner" id="event-banner">
+                <span class="event-badge">Session collective limitée</span>
+                <p class="event-date" id="event-date">
+                    Ce mercredi 23 septembre · 10h
+                    <span class="event-date-meta">heure de Paris</span>
+                </p>
+                <p class="event-capacity">Inscription ouverte selon nos capacités d'accueil — places limitées pour garantir la qualité des échanges.</p>
+            </div>
+
             <div id="view-booking" class="view">
-                <h2>Rejoindre la conférence Hercule</h2>
-                <p class="booking-intro" id="booking-intro" aria-live="polite">Inscrivez-vous à la conférence hebdomadaire Hercule — présentation de la méthode et échanges sur le déploiement du système inbound pour cabinets CIF.</p>
+                <h2 id="booking-heading">Rejoindre la cohorte Hercule</h2>
+                <p class="booking-intro" id="booking-intro" aria-live="polite">Inscrivez-vous à la conférence Hercule — présentation de la méthode et échanges sur le déploiement du système inbound pour cabinets CIF.</p>
                 <div class="calendly-wrapper">
                     <div class="calendly-loader" id="calendly-loader" aria-live="polite">
                         <div class="loader-spinner" aria-hidden="true"></div>
@@ -401,13 +467,13 @@
                 <h2>Votre inscription est confirmée</h2>
 
                 <div class="info-card">
-                    <h3>Conférence Hercule — méthode &amp; déploiement CIF</h3>
-                    <ul class="prep-list">
-                        <li>Session collective en visio — chaque <span class="booking-intro-date">mercredi à 10h</span> (heure de Paris).</li>
+                    <h3 id="confirmation-heading">Conférence Hercule — méthode &amp; déploiement CIF</h3>
+                    <ul class="prep-list" id="confirmation-list">
+                        <li>Session collective en visio — <span class="booking-intro-date">mercredi 23 septembre à 10h</span> (heure de Paris).</li>
                         <li>Présentation de la méthode Hercule : capture brandée, qualification et routage exclusif des flux patrimoniaux.</li>
                         <li>Temps d'échanges sur votre zone, votre capacité et la compatibilité avec nos demandes d'optimisation fiscale et de trésorerie.</li>
                     </ul>
-                    <p class="context-text">
+                    <p class="context-text" id="confirmation-context">
                         Vous recevrez le lien de connexion par email via Calendly. Merci de vous connecter quelques minutes avant l'heure — la conférence démarre à 10h pile, heure de Paris.
                     </p>
                 </div>
@@ -420,7 +486,37 @@
     <script src="https://assets.calendly.com/assets/external/widget.js" type="text/javascript" async></script>
     <script>
         var CALENDLY_EVENT_URL = 'https://calendly.com/hercule-connect/hercule-briefing-dec-cif';
+        var CONFERENCE_DATE_SHORT = 'Ce mercredi 23 septembre · 10h';
+        var CONFERENCE_DATE_FULL = 'mercredi 23 septembre à 10h';
         var loaderHidden = false;
+        var currentNiche = 'cif';
+
+        var NICHE_COPY = {
+            cif: {
+                pageTitle: 'Conférence Hercule · Conseil en gestion de patrimoine',
+                confirmedTitle: 'Inscription confirmée · Conférence Hercule',
+                bookingHeading: 'Rejoindre la cohorte Hercule',
+                intro: 'Inscrivez-vous à la conférence Hercule — présentation de la méthode et échanges sur le déploiement du système inbound pour cabinets CIF.',
+                confirmationHeading: 'Conférence Hercule — méthode & déploiement CIF',
+                bullets: [
+                    'Présentation de la méthode Hercule : capture brandée, qualification et routage exclusif des flux patrimoniaux.',
+                    'Temps d\'échanges sur votre zone, votre capacité et la compatibilité avec nos demandes d\'optimisation fiscale et de trésorerie.'
+                ],
+                contextText: 'Vous recevrez le lien de connexion par email via Calendly. Merci de vous connecter quelques minutes avant l\'heure — la conférence démarre à 10h pile, heure de Paris.'
+            },
+            comptable: {
+                pageTitle: 'Conférence Hercule · Expertise comptable',
+                confirmedTitle: 'Inscription confirmée · Conférence Hercule',
+                bookingHeading: 'Rejoindre la cohorte Hercule',
+                intro: 'Inscrivez-vous à la conférence Hercule — présentation de la méthode et échanges sur le déploiement du système inbound pour cabinets d\'expertise comptable.',
+                confirmationHeading: 'Conférence Hercule — méthode & déploiement comptable',
+                bullets: [
+                    'Présentation de la méthode Hercule : capture brandée, qualification et routage exclusif des flux TPE (BNC, BIC, TNS).',
+                    'Temps d\'échanges sur votre zone, votre capacité et la compatibilité avec nos demandes de tenue, fiscal et social.'
+                ],
+                contextText: 'Vous recevrez le lien de connexion par email via Calendly. Merci de vous connecter quelques minutes avant l\'heure — la conférence démarre à 10h pile, heure de Paris.'
+            }
+        };
 
         var params = new URLSearchParams(window.location.search);
         var pathMatch = window.location.pathname.match(/\/reservation-conference\.html\/([^/]+)\/?$/);
@@ -451,63 +547,56 @@
             return url.toString();
         }
 
+        function resolveNicheFromQuery() {
+            var nicheParam = params.get('niche');
+            if (nicheParam === 'comptable' || nicheParam === 'cif') {
+                currentNiche = nicheParam;
+            }
+        }
+
+        function applyNicheCopy() {
+            var copy = NICHE_COPY[currentNiche] || NICHE_COPY.cif;
+            document.title = copy.pageTitle;
+            document.getElementById('booking-heading').textContent = copy.bookingHeading;
+            document.getElementById('booking-intro').textContent = copy.intro;
+            document.getElementById('confirmation-heading').textContent = copy.confirmationHeading;
+            document.getElementById('confirmation-context').textContent = copy.contextText;
+
+            var list = document.getElementById('confirmation-list');
+            list.innerHTML = '';
+
+            var dateItem = document.createElement('li');
+            dateItem.innerHTML = 'Session collective en visio — <span class="booking-intro-date">' + CONFERENCE_DATE_FULL + '</span> (heure de Paris).';
+            list.appendChild(dateItem);
+
+            copy.bullets.forEach(function(bullet) {
+                var item = document.createElement('li');
+                item.textContent = bullet;
+                list.appendChild(item);
+            });
+        }
+
         async function trackClick() {
+            resolveNicheFromQuery();
+            if (params.get('niche') === 'comptable' || params.get('niche') === 'cif') {
+                return;
+            }
             if (!shortCode) return;
             try {
-                await fetch('/api/link-tracking/click', {
+                var response = await fetch('/api/link-tracking/click', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ slug: shortCode })
                 });
+                if (!response.ok) return;
+                var data = await response.json();
+                if (data.category === 'comptable') {
+                    currentNiche = 'comptable';
+                } else if (data.category === 'cif') {
+                    currentNiche = 'cif';
+                }
             } catch (err) {
                 // non-blocking
-            }
-        }
-
-        function renderAvailabilityMessage(container, data) {
-            if (!container || !data || !data.ok || !data.isFullyBooked || !data.message) return;
-
-            var msg = data.message;
-            container.textContent = '';
-
-            function appendText(text) {
-                if (!text) return;
-                container.appendChild(document.createTextNode(text));
-            }
-
-            function appendDate(text) {
-                if (!text) return;
-                var span = document.createElement('span');
-                span.className = 'booking-intro-date';
-                span.textContent = text;
-                container.appendChild(span);
-            }
-
-            appendText(msg.prefix);
-            if (msg.fullFrom) {
-                appendDate(msg.fullFrom);
-                appendText(msg.middle);
-                appendDate(msg.fullUntil);
-                appendText(msg.suffix);
-                appendDate(msg.nextAvailable);
-                appendText(msg.end);
-            }
-        }
-
-        async function fetchAvailabilityMessage(event) {
-            var container = document.getElementById('booking-intro');
-            if (!container) return;
-
-            try {
-                var response = await fetch('/api/calendly/availability?event=' + encodeURIComponent(event));
-                var data = await response.json();
-                if (!response.ok || !data.ok) {
-                    console.warn('[availability]', data.reason || response.status);
-                    return;
-                }
-                renderAvailabilityMessage(container, data);
-            } catch (err) {
-                console.warn('[availability]', err);
             }
         }
 
@@ -517,8 +606,12 @@
             document.getElementById('right-col').classList.remove('is-booking');
             document.getElementById('left-col').classList.remove('is-hidden');
             document.getElementById('container').classList.remove('is-booking');
-            document.title = 'Inscription confirmée · Conférence Hercule';
+            var copy = NICHE_COPY[currentNiche] || NICHE_COPY.cif;
+            document.title = copy.confirmedTitle;
             var query = shortCode ? '?confirmed=1&code=' + encodeURIComponent(shortCode) : '?confirmed=1';
+            if (currentNiche !== 'cif') {
+                query += '&niche=' + encodeURIComponent(currentNiche);
+            }
             history.replaceState(null, '', query);
         }
 
@@ -528,7 +621,8 @@
             document.getElementById('right-col').classList.add('is-booking');
             document.getElementById('left-col').classList.add('is-hidden');
             document.getElementById('container').classList.add('is-booking');
-            document.title = 'Conférence Hercule · Conseil financier';
+            var copy = NICHE_COPY[currentNiche] || NICHE_COPY.cif;
+            document.title = copy.pageTitle;
         }
 
         function initCalendlyWidget() {
@@ -537,6 +631,14 @@
                 parentElement: document.getElementById('calendly-embed'),
                 resize: true
             });
+        }
+
+        function bootCalendly() {
+            if (window.Calendly) {
+                initCalendlyWidget();
+            } else {
+                window.setTimeout(bootCalendly, 50);
+            }
         }
 
         window.addEventListener('message', function(event) {
@@ -552,23 +654,20 @@
             }
         });
 
-        if (new URLSearchParams(window.location.search).get('confirmed') === '1') {
-            showConfirmation();
-        } else {
-            void trackClick();
-            void fetchAvailabilityMessage('cif');
+        async function bootPage() {
+            await trackClick();
+            applyNicheCopy();
 
-            function bootCalendly() {
-                if (window.Calendly) {
-                    initCalendlyWidget();
-                } else {
-                    window.setTimeout(bootCalendly, 50);
-                }
+            if (params.get('confirmed') === '1') {
+                showConfirmation();
+                return;
             }
 
             bootCalendly();
             window.setTimeout(hideLoader, 8000);
         }
+
+        void bootPage();
     </script>
 </body>
 </html>

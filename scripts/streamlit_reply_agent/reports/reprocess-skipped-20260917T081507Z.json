@@ -1,0 +1,17 @@
+[
+  {
+    "message_id": "f97ed379-bcaa-4feb-a9b3-36f2e8fcb33d",
+    "lead_email": "alexandredabin@gmail.com",
+    "old_status": "skipped_not_interested",
+    "old_reason": "Lead not tagged Interested",
+    "interest_status": -1,
+    "should_reply": true,
+    "recovery_confidence": 80,
+    "allow_reply": true,
+    "new_status": "auto_replied",
+    "new_reason": "Objection format conférence couverte par le pack ; réponse AER avec pricing 2500 € autorisé et recovery applicable.",
+    "model": "grok-4-1-fast",
+    "draft_preview": "Je comprends que le format conférence ne soit pas votre habitude. Un accompagnement Hercule sur-mesure démarre à 2 500 € ; pour proposer une tarification accessible aux cabinets qui souhaitent dévelop",
+    "action": "dry_run"
+  }
+]
