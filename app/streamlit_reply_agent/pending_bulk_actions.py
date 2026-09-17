@@ -12,7 +12,7 @@ from agent_preview import generate_reply_preview
 from config import bulk_try_agent_concurrency
 from inbox import dispatch_unibox_reply
 from lead_links import TargetType
-from lead_tags import INTERESTED_STATUS
+from lead_tags import INTERESTED_STATUS, NOT_INTERESTED_STATUS
 from reply_gate import apply_reply_gate
 from pending_fetch import PendingReplyRow, resolve_inbound_body
 from pending_table_state import clear_checkbox
@@ -50,6 +50,13 @@ def _process_one_lead(
     normalized = row.lead_email.strip().lower()
     if interested_only and row.interest_status != INTERESTED_STATUS:
         return _LeadTryOutcome(normalized, "skipped", "Lead non tagué Interested")
+
+    if row.interest_status == NOT_INTERESTED_STATUS:
+        return _LeadTryOutcome(
+            normalized,
+            "skipped",
+            "Lead marqué Not interested dans Instantly",
+        )
 
     if not regenerate_existing:
         existing = get_lead_reply(campaign_id, normalized).strip()

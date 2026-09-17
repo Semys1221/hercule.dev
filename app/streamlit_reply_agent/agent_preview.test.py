@@ -187,30 +187,10 @@ class TruncateInboundTests(unittest.TestCase):
 
 
 class GenerateReplyPreviewTests(unittest.TestCase):
-    def test_not_interested_calls_grok(self) -> None:
-        config = {
-            "prompt_snapshot": "Campaign prompt",
-            "target_type": "buyer",
-            "niche_preset_id": "comptables",
-        }
-        decision = {
-            "should_reply": False,
-            "reply_text": None,
-            "reason": "Refus définitif",
-            "recovery_confidence": 15,
-        }
-        with patch(
-            "agent_preview._generate_with_models",
-            return_value=(decision, "grok-test", None),
-        ):
-            preview = generate_reply_preview(
-                config,
-                "Non merci",
-                "lead@example.com",
-                interest_label="Not interested",
-            )
-        self.assertFalse(preview["should_reply"])
-        self.assertEqual(preview.get("recovery_confidence"), 15)
+    def test_recovery_rules_apply_to_lead_tag_only(self) -> None:
+        rules = build_global_rules(max_sentences=3, niche_preset_id="comptables")
+        self.assertIn("Recovery (tag Lead)", rules)
+        self.assertNotIn("Not interested", rules.split("Recovery")[1].split("Signature")[0])
 
     def test_jomega_collaborator_objection_reply_preview(self) -> None:
         config = {

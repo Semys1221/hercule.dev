@@ -9,37 +9,6 @@ import random
 import time
 from typing import Callable, Optional
 
-# #region agent log
-_DEBUG_LOG_PATH = "/Users/evqn/dev/hercule.dev/.cursor/debug-794b3b.log"
-_DEBUG_SESSION_ID = "794b3b"
-
-
-def _debug_log(
-    location: str,
-    message: str,
-    data: dict,
-    *,
-    hypothesis_id: str,
-    run_id: str = "pre-fix",
-) -> None:
-    payload = {
-        "sessionId": _DEBUG_SESSION_ID,
-        "runId": run_id,
-        "hypothesisId": hypothesis_id,
-        "location": location,
-        "message": message,
-        "data": data,
-        "timestamp": int(time.time() * 1000),
-    }
-    try:
-        with open(_DEBUG_LOG_PATH, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(payload) + "\n")
-    except OSError:
-        pass
-
-
-# #endregion
-
 import pandas as pd
 import requests
 
@@ -183,20 +152,6 @@ class BulkEmailVerifierClient:
                     time.sleep(_BACKOFF_BASE ** attempt)
                     continue
 
-                if response.status_code == 404 and "downloadreport" in url:
-                    # #region agent log
-                    _debug_log(
-                        "bulk_verifier.py:_request_with_retry",
-                        "Download URL returned 404 without retry",
-                        {
-                            "url": url,
-                            "attempt": attempt,
-                            "max_retries": _MAX_RETRIES,
-                        },
-                        hypothesis_id="H2",
-                    )
-                    # #endregion
-
                 return response
 
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
@@ -294,42 +249,9 @@ class BulkEmailVerifierClient:
             if status_label == "completed":
                 download_probe_ok = self._probe_download_url(file_info)
                 if _is_bulk_job_ready(file_info) and download_probe_ok:
-                    # #region agent log
-                    _debug_log(
-                        "bulk_verifier.py:poll_until_complete",
-                        "MEV bulk job ready for download",
-                        {
-                            "file_id": file_id,
-                            "status_label": status_label,
-                            "ready_for_download": file_info.get("ready_for_download"),
-                            "credit_used": credit_used,
-                            "processed_res": processed,
-                            "total_emails": total,
-                        },
-                        hypothesis_id="H1,H3,H5",
-                    )
-                    # #endregion
                     return file_info
 
                 phantom_complete_polls += 1
-                # #region agent log
-                _debug_log(
-                    "bulk_verifier.py:poll_until_complete",
-                    "MEV reported completed but job not ready yet",
-                    {
-                        "file_id": file_id,
-                        "status_label": status_label,
-                        "ready_for_download": file_info.get("ready_for_download"),
-                        "downloadable": file_info.get("downloadable"),
-                        "credit_used": credit_used,
-                        "processed_res": processed,
-                        "total_emails": total,
-                        "phantom_poll": phantom_complete_polls,
-                        "download_probe_ok": download_probe_ok,
-                    },
-                    hypothesis_id="H1,H3,H5",
-                )
-                # #endregion
 
                 if phantom_complete_polls >= _PHANTOM_COMPLETE_MAX_POLLS:
                     raise RuntimeError(
@@ -367,51 +289,12 @@ class BulkEmailVerifierClient:
 
         for candidate_url in self._download_url_candidates(download_url, file_info):
             for attempt in range(1, _DOWNLOAD_RETRY_ATTEMPTS + 1):
-                # #region agent log
-                _debug_log(
-                    "bulk_verifier.py:download_results",
-                    "Attempting MEV bulk CSV download",
-                    {
-                        "download_url": candidate_url,
-                        "attempt": attempt,
-                        "max_attempts": _DOWNLOAD_RETRY_ATTEMPTS,
-                    },
-                    hypothesis_id="H2,H3,H4",
-                )
-                # #endregion
                 response = self._request_with_retry("GET", candidate_url)
-                # #region agent log
-                _debug_log(
-                    "bulk_verifier.py:download_results",
-                    "MEV bulk CSV download response",
-                    {
-                        "download_url": candidate_url,
-                        "attempt": attempt,
-                        "status_code": response.status_code,
-                        "content_type": response.headers.get("Content-Type"),
-                        "content_length": len(response.content),
-                        "body_preview": response.text[:200] if response.text else "",
-                    },
-                    hypothesis_id="H2,H4",
-                )
-                # #endregion
 
                 if response.status_code == 200:
                     return pd.read_csv(io.StringIO(response.text))
 
                 if response.status_code == 404 and attempt < _DOWNLOAD_RETRY_ATTEMPTS:
-                    # #region agent log
-                    _debug_log(
-                        "bulk_verifier.py:download_results",
-                        "MEV download not ready yet; retrying after backoff",
-                        {
-                            "download_url": candidate_url,
-                            "attempt": attempt,
-                            "retry_in_seconds": _DOWNLOAD_RETRY_INTERVAL,
-                        },
-                        hypothesis_id="H2",
-                    )
-                    # #endregion
                     time.sleep(_DOWNLOAD_RETRY_INTERVAL)
                     continue
 
@@ -596,21 +479,6 @@ def verify_emails_bulk(
     try:
         for chunk_index, chunk in enumerate(chunks):
             chunk_label = f"chunk {chunk_index + 1}/{len(chunks)}" if len(chunks) > 1 else "list"
-            # #region agent log
-            _debug_log(
-                "bulk_verifier.py:verify_emails_bulk",
-                "Starting MEV chunk",
-                {
-                    "chunk_index": chunk_index,
-                    "chunk_count": len(chunks),
-                    "chunk_size": len(chunk),
-                    "already_verified": len(merged),
-                    "pending_total": len(pending_emails),
-                    "artifact_prefix": prefix,
-                },
-                hypothesis_id="H1",
-            )
-            # #endregion
             if on_progress:
                 on_progress(f"Uploading {len(chunk)} email(s) ({chunk_label})...", 0.05)
 
@@ -633,24 +501,6 @@ def verify_emails_bulk(
             download_url = file_info.get("download_all_csv") or file_info.get("file_path")
             if not download_url:
                 raise RuntimeError("Bulk job completed but no download URL was returned")
-            # #region agent log
-            _debug_log(
-                "bulk_verifier.py:verify_emails_bulk",
-                "Selected MEV download URL",
-                {
-                    "file_id": file_id,
-                    "selected_field": (
-                        "download_all_csv"
-                        if file_info.get("download_all_csv")
-                        else "file_path"
-                    ),
-                    "download_url": download_url,
-                    "alternate_file_path": file_info.get("file_path"),
-                    "alternate_download_all_csv": file_info.get("download_all_csv"),
-                },
-                hypothesis_id="H3,H5",
-            )
-            # #endregion
 
             if on_progress:
                 on_progress("Downloading bulk verification results...", 0.92)

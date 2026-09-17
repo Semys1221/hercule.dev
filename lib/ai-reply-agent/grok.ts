@@ -38,7 +38,7 @@ export function buildConferenceObjectionRules(
 - Acknowledge : valider la réaction sans s'excuser (ex. « Je comprends que le format conférence ne soit pas votre habitude. »).
 - Explain : un accompagnement Hercule sur-mesure démarre à 2 500 € ; pour proposer une tarification accessible aux cabinets qui souhaitent une solution clé en main pour développer rapidement leur clientèle BNC/BIC/TNS, nous présentons cette offre en appel conférence. Exception pricing : 2 500 € autorisé uniquement pour cette objection.
 - Redirect : lien CTA briefing collectif fourni + « Si vous souhaitez réserver un appel en 1:1 avec le dirigeant pour discuter d'une solution sur-mesure, répondez à ce mail. »
-- should_reply true — ce n'est PAS une raison d'abstenir ; recovery_confidence ≥ 75 si tag Lead / Not interested.
+- should_reply true — ce n'est PAS une raison d'abstenir ; recovery_confidence ≥ 75 si tag Lead.
 - Pas de lien Calendly 1:1 ni d'appel téléphonique ad hoc en alternative.`;
   }
   if (isCifNichePreset(nichePresetId ?? "")) {
@@ -48,7 +48,7 @@ export function buildConferenceObjectionRules(
 - Acknowledge : valider la réaction sans s'excuser (ex. « Je comprends que le format conférence ne soit pas votre habitude. »).
 - Explain : un accompagnement Hercule sur-mesure démarre à 2 500 € ; pour proposer une tarification accessible aux cabinets qui souhaitent une solution clé en main pour développer rapidement leur clientèle professionnelle (cabinets dentistes et vétérinaires), nous présentons cette offre en appel conférence. Exception pricing : 2 500 € autorisé uniquement pour cette objection.
 - Redirect : lien CTA briefing collectif fourni + « Si vous souhaitez réserver un appel en 1:1 avec le dirigeant pour discuter d'une solution sur-mesure, répondez à ce mail. »
-- should_reply true — ce n'est PAS une raison d'abstenir ; recovery_confidence ≥ 75 si tag Lead / Not interested.
+- should_reply true — ce n'est PAS une raison d'abstenir ; recovery_confidence ≥ 75 si tag Lead.
 - Pas de lien Calendly 1:1 ni d'appel téléphonique ad hoc en alternative.`;
   }
   return null;
@@ -77,7 +77,7 @@ export function buildGlobalRules(
     : "- N'invente jamais de prix, délais, garanties ou fonctionnalités.";
   return `Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
-Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string), recovery_confidence (number 0–100, obligatoire si tag Lead ou Not interested).
+Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string), recovery_confidence (number 0–100, obligatoire si tag Lead).
 
 Règles quand should_reply est true :
 - Texte brut uniquement dans reply_text (pas de HTML, pas de markdown).
@@ -97,7 +97,7 @@ Ton — évite ces formulations :
 - « réserver cette semaine » ou « réserver un créneau maintenant » (urgence forcée)
 - listes à puces ou numérotées dans reply_text
 
-Recovery (tags Lead ou Not interested) :
+Recovery (tag Lead) :
 - Toujours renseigner recovery_confidence (0–100) : probabilité que la relance soit rattrapable.
 - « Non merci, pas notre cible » / refus définitif → should_reply false, recovery_confidence 10–25.
 - « Non mais… » / objection format ou téléphone → should_reply true si rattrapable, recovery_confidence ≥ 75.

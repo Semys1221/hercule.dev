@@ -29,7 +29,7 @@ Niche presets are imported from `app/streamlit_scraper/config_loader.PRESET_LABE
 - **Bulk actions** — `pending_bulk_actions.py`
 - **Health audit** — `pnpm audit-reply-agent` (Supabase failures + Instantly slow pending)
 - **Problem tab** — failures, stale pending (>24h), recovery gate (<70%), abstentions, OOO
-- **Recovery mode** — Lead + Not interested tags call Grok; reply only if `recovery_confidence ≥ 70` (`reply_gate.py` / `lib/ai-reply-agent/reply-gate.ts`)
+- **Recovery mode** — Lead tag only calls Grok; reply only if `recovery_confidence ≥ 70`. Not interested (-1) and No show (-4) are skipped without reading inbound (`reply_gate.py` / `lib/ai-reply-agent/reply-gate.ts`)
 - **Reprocess skipped** — `pnpm reprocess-skipped-replies -- --campaign-id <id> --execute [--send]`
 - **Opt-out global** — `pnpm stop-lead-relances -- --email=... --campaign-id=... --execute` (stop Resend, E1/E2/E3, reply agent)
 
@@ -41,7 +41,7 @@ Niche presets are imported from `app/streamlit_scraper/config_loader.PRESET_LABE
 
 Knowledge pack : `doc/tech-stack/ai-reply-knowledge-cif.md` + `doc/legal-documentation/cif/faq.json`.
 
-**Recovery + AER :** toutes les réponses `should_reply=true` suivent Acknowledge → Explain → Redirect. Tags Lead / Not interested : gate 70 % ; envoi réussi → retag Instantly **Interested**.
+**Recovery + AER :** toutes les réponses `should_reply=true` suivent Acknowledge → Explain → Redirect. Tag Lead uniquement : gate 70 % ; envoi réussi → retag Instantly **Interested**. Tag Not interested : pas de lecture Grok.
 
 **Conference cutover :** `{reservation_cif_link}` → `hercule.dev/reservation-conference.html`. Objection conférence : script 2 500 € sur-mesure + clé en main en conférence + option 1:1 en répondant au mail.
 

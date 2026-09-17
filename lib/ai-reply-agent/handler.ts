@@ -32,6 +32,7 @@ import { syncPipelineStepFromSentFlows } from "@/lib/instantly-bypass/sync-pipel
 import {
   applyReplyGate,
   isRecoveryInterestTag,
+  NOT_INTERESTED_STATUS,
   NO_SHOW_STATUS,
 } from "./reply-gate";
 
@@ -230,6 +231,31 @@ export async function handleInstantlyReply(
   const apiKey = getInstantlyApiKey();
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "9923ed",
+    },
+    body: JSON.stringify({
+      sessionId: "9923ed",
+      runId: "pre-fix",
+      hypothesisId: "A,E",
+      location: "handler.ts:interest-status",
+      message: "Resolved Instantly interest status before Grok gate",
+      data: {
+        leadEmail,
+        campaignId,
+        interestStatus,
+        isNoShow: interestStatus === NO_SHOW_STATUS,
+        isNotInterested: interestStatus === -1,
+        isRecoveryTag: isRecoveryInterestTag(interestStatus),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (interestStatus === NO_SHOW_STATUS) {
     const latencyMs = await finalizeInbound(
       inbound.id,
@@ -240,6 +266,39 @@ export async function handleInstantlyReply(
     return {
       ok: true,
       skipped: "no_show",
+      aiStatus: "skipped_not_interested",
+      latencyMs,
+    };
+  }
+
+  if (interestStatus === NOT_INTERESTED_STATUS) {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "9923ed",
+      },
+      body: JSON.stringify({
+        sessionId: "9923ed",
+        runId: "post-fix",
+        hypothesisId: "A",
+        location: "handler.ts:skip-not-interested",
+        message: "Skipped Grok for Not interested tag",
+        data: { leadEmail, campaignId, interestStatus },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_not_interested",
+      started,
+      "Lead marked Not interested in Instantly",
+    );
+    return {
+      ok: true,
+      skipped: "not_interested",
       aiStatus: "skipped_not_interested",
       latencyMs,
     };
@@ -295,6 +354,32 @@ export async function handleInstantlyReply(
     leadName: resolveLeadDisplayName(lead, leadEmail),
   });
   try {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "9923ed",
+      },
+      body: JSON.stringify({
+        sessionId: "9923ed",
+        runId: "pre-fix",
+        hypothesisId: "A,B",
+        location: "handler.ts:before-grok",
+        message: "Calling generateReplyDecision (Grok reads inbound)",
+        data: {
+          leadEmail,
+          interestStatus,
+          interestLabel: interestLabelFromStatus(interestStatus),
+          inboundPreview: truncateInboundText(inboundText || "(empty body)").slice(
+            0,
+            80,
+          ),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     const groq = await generateReplyDecision({
       knowledgePack,
       promptSnapshot: config.prompt_snapshot,

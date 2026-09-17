@@ -8,9 +8,9 @@ import {
 } from "./reply-gate";
 
 describe("isRecoveryInterestTag", () => {
-  it("treats Lead and Not interested as recovery tags", () => {
+  it("treats only Lead (null/other) as recovery tags", () => {
     expect(isRecoveryInterestTag(null)).toBe(true);
-    expect(isRecoveryInterestTag(NOT_INTERESTED_STATUS)).toBe(true);
+    expect(isRecoveryInterestTag(NOT_INTERESTED_STATUS)).toBe(false);
     expect(isRecoveryInterestTag(1)).toBe(false);
     expect(isRecoveryInterestTag(-4)).toBe(false);
   });
@@ -27,19 +27,8 @@ describe("applyReplyGate", () => {
     expect(result.aiStatus).toBe("auto_replied");
   });
 
-  it("blocks recovery when confidence below threshold", () => {
-    const result = applyReplyGate(NOT_INTERESTED_STATUS, {
-      should_reply: true,
-      reply_text: "Bonjour",
-      reason: "recoverable",
-      recovery_confidence: RECOVERY_CONFIDENCE_THRESHOLD - 1,
-    });
-    expect(result.allowReply).toBe(false);
-    expect(result.aiStatus).toBe("skipped_recovery");
-  });
-
-  it("allows recovery at threshold", () => {
-    const result = applyReplyGate(NOT_INTERESTED_STATUS, {
+  it("allows Lead recovery at threshold", () => {
+    const result = applyReplyGate(null, {
       should_reply: true,
       reply_text: "Bonjour",
       reason: "recoverable",

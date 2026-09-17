@@ -25,6 +25,7 @@ cd app/streamlit_clean && pip install -r requirements.txt && streamlit run app.p
 export PYTHONPATH=/path/to/repo
 cd app/streamlit_clean
 python cli.py credits
+python cli.py status
 python cli.py run --list-id <uuid> --campaign-id <uuid> --mode test_50
 python cli.py checkpoints
 ```
@@ -48,10 +49,29 @@ Requires in repo root `.env`:
 1. Select source Instantly list
 2. Select target campaign
 3. Choose run mode (dry / test-50 / full / custom)
-4. Execute: quick pre-filter → MyEmailVerifier → provision tracking URLs → optional list purge → push valid leads
+4. Execute: launches a **detached subprocess** (`cli.py`) — safe to refresh or close the browser; progress is saved on disk
 5. Review results; workspace duplicate check always on during push
 
 Niche for link provisioning is auto-resolved from the destination campaign ID.
+
+## Background jobs (crash-resilient)
+
+Long runs execute outside the Streamlit process via `job_runner.py` → `cli.py`.
+
+| Artifact | Purpose |
+|----------|---------|
+| `{prefix}_job.json` | Job manifest (list, campaign, mode, status, pid) |
+| `active_job.json` | Pointer to the current job |
+| `job_heartbeat.json` | Liveness + phase for the UI monitor |
+| `{prefix}_run.log` | CLI stdout log |
+| `{prefix}_checkpoint.json` | MEV verification progress (resume) |
+
+```bash
+python cli.py status          # active job + recent checkpoints
+python cli.py checkpoints     # all resumable MEV jobs
+```
+
+The Streamlit UI shows a job monitor on step 4 with refresh/cancel. On completion, results load from disk artifacts.
 
 ## Checkpoint recovery
 

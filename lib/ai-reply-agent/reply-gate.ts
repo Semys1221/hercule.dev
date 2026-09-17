@@ -9,7 +9,11 @@ export const NO_SHOW_STATUS = -4;
 export function isRecoveryInterestTag(
   status: number | null | undefined,
 ): boolean {
-  if (status === INTERESTED_STATUS || status === NO_SHOW_STATUS) {
+  if (
+    status === INTERESTED_STATUS ||
+    status === NOT_INTERESTED_STATUS ||
+    status === NO_SHOW_STATUS
+  ) {
     return false;
   }
   return true;
@@ -48,7 +52,7 @@ export function applyReplyGate(
     return {
       allowReply: false,
       aiStatus: "skipped_recovery",
-      reason: "recovery_confidence manquant pour tag Lead / Not interested",
+      reason: "recovery_confidence manquant pour tag Lead",
     };
   }
 

@@ -18,7 +18,7 @@ class ReplyGateResult(TypedDict):
 
 
 def is_recovery_interest_tag(status: int | None) -> bool:
-    if status in (INTERESTED_STATUS, NO_SHOW_STATUS):
+    if status in (INTERESTED_STATUS, NOT_INTERESTED_STATUS, NO_SHOW_STATUS):
         return False
     return True
 
@@ -48,7 +48,7 @@ def apply_reply_gate(
         return {
             "allow_reply": False,
             "ai_status": "skipped_recovery",
-            "reason": "recovery_confidence manquant pour tag Lead / Not interested",
+            "reason": "recovery_confidence manquant pour tag Lead",
         }
 
     confidence_value = float(confidence)

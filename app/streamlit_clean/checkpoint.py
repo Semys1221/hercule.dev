@@ -19,6 +19,14 @@ LEGACY_LOG_PATTERN = re.compile(
 )
 
 
+def _atomic_write_json(path: str, payload: dict) -> None:
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, sort_keys=True)
+    os.replace(tmp, path)
+
+
 def checkpoint_path(prefix: str) -> str:
     return os.path.join(data_dir(), f"{prefix}{CHECKPOINT_SUFFIX}")
 
@@ -33,8 +41,11 @@ def save_checkpoint(
     *,
     total_target: int | None = None,
     source_artifact: str | None = None,
+    list_id: str | None = None,
+    campaign_id: str | None = None,
+    run_mode: str | None = None,
+    allowed_statuses: list[str] | None = None,
 ) -> str:
-    os.makedirs(data_dir(), exist_ok=True)
     path = checkpoint_path(prefix)
     payload = {
         "artifact_prefix": prefix,
@@ -44,8 +55,15 @@ def save_checkpoint(
         "verified_count": len(status_map),
         "status_map": status_map,
     }
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2, sort_keys=True)
+    if list_id is not None:
+        payload["list_id"] = list_id
+    if campaign_id is not None:
+        payload["campaign_id"] = campaign_id
+    if run_mode is not None:
+        payload["run_mode"] = run_mode
+    if allowed_statuses is not None:
+        payload["allowed_statuses"] = allowed_statuses
+    _atomic_write_json(path, payload)
     return path
 
 
@@ -87,6 +105,10 @@ def list_checkpoints() -> list[dict[str, Any]]:
                 "total_target": payload.get("total_target"),
                 "updated_at": payload.get("updated_at"),
                 "source_artifact": payload.get("source_artifact"),
+                "list_id": payload.get("list_id"),
+                "campaign_id": payload.get("campaign_id"),
+                "run_mode": payload.get("run_mode"),
+                "allowed_statuses": payload.get("allowed_statuses"),
             }
         )
 

@@ -72,7 +72,7 @@ Déclencheurs : « conférence », « appel à plusieurs », « appelez-moi », 
 - **Acknowledge** : valider la réaction sans s'excuser.
 - **Explain** : un accompagnement Hercule sur-mesure démarre à **2 500 €** ; pour proposer une tarification accessible aux cabinets qui souhaitent une **solution clé en main** pour développer rapidement leur clientèle **professionnelle (cabinets dentistes et vétérinaires)**, Hercule présente cette offre en **appel conférence**. **Exception pricing** : le 2 500 € est le seul montant autorisé dans l'email pour cette objection.
 - **Redirect** : lien `{reservation_cif_link}` + « Si vous souhaitez réserver un appel en 1:1 avec le dirigeant pour discuter d'une solution sur-mesure, répondez à ce mail. »
-- `should_reply = true` — ce n'est **pas** une raison d'abstenir ; `recovery_confidence ≥ 75` si tag Lead / Not interested.
+- `should_reply = true` — ce n'est **pas** une raison d'abstenir ; `recovery_confidence ≥ 75` si tag Lead.
 
 ### Exemples recovery
 

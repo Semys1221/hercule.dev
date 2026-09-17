@@ -79,12 +79,13 @@ pnpm patch-e2e3-opt-out-disclaimer   # patch E2/E3 templates in prod
 pnpm configure-ai-reply-agent-reprocess-cron  # alert when skipped volume > threshold
 ```
 
-## Recovery mode (Lead + Not interested)
+## Recovery mode (Lead tag only)
 
 | Tag | Grok | Reply | On send |
 |-----|------|-------|---------|
 | Interested (1) | Yes | `should_reply` (no 70% gate) | unchanged |
-| Lead / Not interested | Yes | `should_reply` + `recovery_confidence ≥ 70` | auto-tag Interested |
+| Lead | Yes | `should_reply` + `recovery_confidence ≥ 70` | auto-tag Interested |
+| Not interested (-1) | No | skip (`skipped_not_interested`) | — |
 | No show (-4) | No | skip | — |
 
 - Gate : `reply_gate.py` (Streamlit) · `lib/ai-reply-agent/reply-gate.ts` (webhook)

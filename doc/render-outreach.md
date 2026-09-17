@@ -306,11 +306,16 @@ Resume is **blocked** if keywords, locations, enrich keywords, or filters change
 
 Artifacts under `$HERCULE_DATA_ROOT/streamlit_clean/data/`:
 
+- `{prefix}_job.json` — job manifest (list, campaign, mode, status)
+- `active_job.json` — pointer to current job
+- `job_heartbeat.json` — liveness for UI / ops
+- `{prefix}_run.log` — CLI stdout
 - `{prefix}_checkpoint.json`
 - `{prefix}_quick_clean.csv`
 - `{prefix}_verified_partial.csv`
 
 ```bash
+python cli.py status
 python cli.py checkpoints
 python cli.py run --list-id <uuid> --resume-prefix <prefix> --skip-push
 ```

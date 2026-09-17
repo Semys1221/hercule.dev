@@ -15,25 +15,13 @@ class ReplyGateTests(unittest.TestCase):
     def test_recovery_tags(self) -> None:
         self.assertTrue(is_recovery_interest_tag(None))
         self.assertTrue(is_recovery_interest_tag(0))
-        self.assertTrue(is_recovery_interest_tag(-1))
+        self.assertFalse(is_recovery_interest_tag(-1))
         self.assertFalse(is_recovery_interest_tag(1))
         self.assertFalse(is_recovery_interest_tag(-4))
 
-    def test_interested_bypasses_threshold(self) -> None:
+    def test_lead_recovery_below_threshold(self) -> None:
         result = apply_reply_gate(
-            1,
-            {
-                "should_reply": True,
-                "reply_text": "Bonjour",
-                "reason": "ok",
-                "recovery_confidence": 10,
-            },
-        )
-        self.assertTrue(result["allow_reply"])
-
-    def test_recovery_below_threshold(self) -> None:
-        result = apply_reply_gate(
-            -1,
+            None,
             {
                 "should_reply": True,
                 "reply_text": "Bonjour",
@@ -44,14 +32,26 @@ class ReplyGateTests(unittest.TestCase):
         self.assertFalse(result["allow_reply"])
         self.assertEqual(result["ai_status"], "skipped_recovery")
 
-    def test_recovery_at_threshold(self) -> None:
+    def test_lead_recovery_at_threshold(self) -> None:
         result = apply_reply_gate(
-            -1,
+            None,
             {
                 "should_reply": True,
                 "reply_text": "Bonjour",
                 "reason": "ok",
                 "recovery_confidence": RECOVERY_CONFIDENCE_THRESHOLD,
+            },
+        )
+        self.assertTrue(result["allow_reply"])
+
+    def test_interested_bypasses_threshold(self) -> None:
+        result = apply_reply_gate(
+            1,
+            {
+                "should_reply": True,
+                "reply_text": "Bonjour",
+                "reason": "ok",
+                "recovery_confidence": 10,
             },
         )
         self.assertTrue(result["allow_reply"])

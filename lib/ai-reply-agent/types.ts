@@ -58,7 +58,7 @@ export type GroqReplyDecision = {
   should_reply: boolean;
   reply_text: string | null;
   reason: string;
-  /** 0–100. Required for Lead / Not interested recovery gate. */
+  /** 0–100. Required for Lead recovery gate. */
   recovery_confidence?: number | null;
 };
 

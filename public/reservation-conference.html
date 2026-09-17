@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conférence Hercule · Conseil financier</title>
+    <link rel="icon" href="/icon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-icon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css">
     <link href="https://assets.calendly.com/assets/external/widget.css" rel="stylesheet">
     <style>
@@ -217,13 +219,6 @@
             margin: 0 0 20px;
             line-height: 1.35;
             letter-spacing: -0.02em;
-        }
-
-        .booking-intro {
-            font-size: 15px;
-            color: var(--muted-foreground);
-            margin: 0 0 24px;
-            line-height: 1.6;
         }
 
         .booking-intro-date {
@@ -452,8 +447,6 @@
             </div>
 
             <div id="view-booking" class="view">
-                <h2 id="booking-heading">Rejoindre la cohorte Hercule</h2>
-                <p class="booking-intro" id="booking-intro" aria-live="polite">Inscrivez-vous à la conférence Hercule — présentation de la méthode et échanges sur le déploiement du système inbound pour cabinets CIF.</p>
                 <div class="calendly-wrapper">
                     <div class="calendly-loader" id="calendly-loader" aria-live="polite">
                         <div class="loader-spinner" aria-hidden="true"></div>
@@ -495,8 +488,6 @@
             cif: {
                 pageTitle: 'Conférence Hercule · Conseil en gestion de patrimoine',
                 confirmedTitle: 'Inscription confirmée · Conférence Hercule',
-                bookingHeading: 'Rejoindre la cohorte Hercule',
-                intro: 'Inscrivez-vous à la conférence Hercule — présentation de la méthode et échanges sur le déploiement du système inbound pour cabinets CIF.',
                 confirmationHeading: 'Conférence Hercule — méthode & déploiement CIF',
                 bullets: [
                     'Présentation de la méthode Hercule : capture brandée, qualification et routage exclusif des flux patrimoniaux.',
@@ -507,8 +498,6 @@
             comptable: {
                 pageTitle: 'Conférence Hercule · Expertise comptable',
                 confirmedTitle: 'Inscription confirmée · Conférence Hercule',
-                bookingHeading: 'Rejoindre la cohorte Hercule',
-                intro: 'Inscrivez-vous à la conférence Hercule — présentation de la méthode et échanges sur le déploiement du système inbound pour cabinets d\'expertise comptable.',
                 confirmationHeading: 'Conférence Hercule — méthode & déploiement comptable',
                 bullets: [
                     'Présentation de la méthode Hercule : capture brandée, qualification et routage exclusif des flux TPE (BNC, BIC, TNS).',
@@ -557,8 +546,6 @@
         function applyNicheCopy() {
             var copy = NICHE_COPY[currentNiche] || NICHE_COPY.cif;
             document.title = copy.pageTitle;
-            document.getElementById('booking-heading').textContent = copy.bookingHeading;
-            document.getElementById('booking-intro').textContent = copy.intro;
             document.getElementById('confirmation-heading').textContent = copy.confirmationHeading;
             document.getElementById('confirmation-context').textContent = copy.contextText;
 

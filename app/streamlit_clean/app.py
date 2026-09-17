@@ -5,17 +5,18 @@ import pandas as pd
 import streamlit as st
 
 from checkpoint import list_checkpoints, partial_verified_path
+from job_runner import JobConfig, cancel_job, load_job_status, resolve_job_prefix, start_job
+from job_state import STATUS_COMPLETED, STATUS_FAILED, load_active_job
 from paths import data_dir
+from result_loader import load_pipeline_result_from_disk
 from core_logic import get_api_key
 from instantly_client import (
     count_leads_in_campaign,
     count_leads_in_list,
-    fetch_leads_from_list,
     format_resource_label,
     get_api_key as get_instantly_api_key,
     list_all_campaigns,
     list_all_lead_lists,
-    leads_to_dataframe,
 )
 from pipeline import (
     RUN_MODE_CUSTOM,
@@ -45,6 +46,10 @@ if "campaign_validated" not in st.session_state:
     st.session_state.campaign_validated = False
 if "pipeline_result" not in st.session_state:
     st.session_state.pipeline_result = None
+if "active_job_prefix" not in st.session_state:
+    st.session_state.active_job_prefix = None
+if "job_monitoring" not in st.session_state:
+    st.session_state.job_monitoring = False
 
 
 def _step_indicator(current: int) -> None:
@@ -229,6 +234,95 @@ def _source_summary() -> str:
     )
 
 
+def _provision_links_enabled() -> bool:
+    return os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower() not in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
+def _job_progress_fraction(job: dict) -> float:
+    verified = job.get("verified_count")
+    total = job.get("total_target")
+    if verified is None or not total:
+        return 0.0
+    return min(max(int(verified) / int(total), 0.0), 1.0)
+
+
+def _render_job_monitor(prefix: str, *, show_push: bool) -> None:
+    status = load_job_status(prefix)
+    if not status:
+        st.warning(f"Job `{prefix}` not found on disk.")
+        return
+
+    st.subheader(f"Job monitor — `{prefix}`")
+    st.caption(
+        "Runs in a detached subprocess. Safe to refresh this page — progress is saved on disk."
+    )
+
+    job_status = str(status.get("status") or "unknown")
+    st.write(f"**Status:** {job_status}")
+    if status.get("phase"):
+        st.write(f"**Phase:** {status['phase']}")
+    if status.get("error"):
+        st.error(str(status["error"]))
+
+    fraction = _job_progress_fraction(status)
+    if fraction > 0:
+        st.progress(fraction, text=f"{status.get('verified_count', 0)}/{status.get('total_target', '?')} verified")
+
+    col_refresh, col_cancel = st.columns(2)
+    with col_refresh:
+        if st.button("Refresh status", key=f"refresh_job_{prefix}"):
+            st.rerun()
+    with col_cancel:
+        if status.get("running") and st.button("Cancel job", key=f"cancel_job_{prefix}"):
+            ok, message = cancel_job(prefix)
+            if ok:
+                st.warning(message)
+            else:
+                st.error(message)
+
+    log_tail = status.get("log_tail") or ""
+    if log_tail:
+        with st.expander("Job log", expanded=status.get("running", False)):
+            st.text(log_tail)
+
+    if job_status == STATUS_COMPLETED:
+        result = load_pipeline_result_from_disk(prefix)
+        if result is not None:
+            st.session_state.pipeline_result = result
+            st.session_state.active_job_prefix = None
+            st.session_state.job_monitoring = False
+            if show_push:
+                st.session_state.funnel_step = 5
+            st.rerun()
+    elif job_status == STATUS_FAILED:
+        st.error("Job failed. Check the log above or resume from the checkpoint panel.")
+
+
+def _build_job_config_from_session() -> JobConfig:
+    run_mode = st.session_state.get("run_mode", RUN_MODE_DRY)
+    source_type = st.session_state.get("source_type", "instantly")
+    return JobConfig(
+        run_mode=run_mode,
+        allowed_statuses=st.session_state.get("allowed_statuses", ["Valid", "Catch All"]),
+        list_id=st.session_state.get("list_id"),
+        campaign_id=st.session_state.get("campaign_id"),
+        source_type=source_type,
+        local_csv_path=st.session_state.get("local_csv_path"),
+        email_column=st.session_state.get("email_column"),
+        skip_quick_verify=bool(st.session_state.get("skip_quick_verify")),
+        custom_limit=st.session_state.get("custom_limit"),
+        purge_source=(
+            run_mode == RUN_MODE_FULL and source_type == "instantly"
+        ),
+        provision_links=_provision_links_enabled(),
+        skip_push=False,
+    )
+
+
 def _reset_funnel() -> None:
     for key in (
         "funnel_step",
@@ -249,6 +343,8 @@ def _reset_funnel() -> None:
         "custom_limit",
         "pipeline_result",
         "csv_pipeline_result",
+        "active_job_prefix",
+        "job_monitoring",
     ):
         st.session_state.pop(key, None)
     st.session_state.funnel_step = 1
@@ -290,6 +386,16 @@ def _render_resume_panel(*, show_push: bool) -> None:
         options[label] = item
     selected_label = st.selectbox("Interrupted job", list(options.keys()))
     selected = options[selected_label]
+
+    meta_bits = []
+    if selected.get("run_mode"):
+        meta_bits.append(f"mode={selected['run_mode']}")
+    if selected.get("list_id"):
+        meta_bits.append(f"list `{selected['list_id']}`")
+    if selected.get("campaign_id"):
+        meta_bits.append(f"campaign `{selected['campaign_id']}`")
+    if meta_bits:
+        st.caption("Saved run config: " + ", ".join(meta_bits))
 
     quick_clean_path = os.path.join(data_dir(), f"{selected['prefix']}_quick_clean.csv")
     source_artifact = selected.get("source_artifact") or quick_clean_path
@@ -562,6 +668,21 @@ with tab_instantly:
     _step_indicator(st.session_state.funnel_step)
     _render_resume_panel(show_push=True)
 
+    active_job = load_active_job()
+    if active_job and st.session_state.get("active_job_prefix") is None:
+        prefix = str(active_job.get("prefix") or "")
+        if prefix and str(active_job.get("status") or "") not in {
+            STATUS_COMPLETED,
+            STATUS_FAILED,
+        }:
+            st.session_state.active_job_prefix = prefix
+            st.session_state.job_monitoring = True
+            if st.session_state.funnel_step < 4:
+                st.session_state.funnel_step = 4
+
+    if st.session_state.get("job_monitoring") and st.session_state.get("active_job_prefix"):
+        _render_job_monitor(st.session_state.active_job_prefix, show_push=True)
+
     if not get_instantly_api_key():
         st.error(
             "Set INSTANTLY_API_KEY in the repo root `.env` or "
@@ -813,6 +934,10 @@ with tab_instantly:
     elif step == 5:
         st.subheader("Step 5 — Results")
         result = st.session_state.get("pipeline_result")
+        if result is None and st.session_state.get("active_job_prefix"):
+            result = load_pipeline_result_from_disk(st.session_state.active_job_prefix)
+            if result is not None:
+                st.session_state.pipeline_result = result
         if result is None:
             st.warning("No results found. Start a new cleaning run.")
             if st.button("Go to source list"):
@@ -820,6 +945,9 @@ with tab_instantly:
                 st.rerun()
         else:
             _render_validation_screen(result, show_push=True)
+
+    elif step == 4 and st.session_state.get("job_monitoring"):
+        pass
 
     elif step == 4:
         st.subheader("Step 4 — Execute pipeline")
@@ -862,68 +990,19 @@ with tab_instantly:
             if run_mode != RUN_MODE_DRY and not get_api_key():
                 st.error("Cannot start: MYEMAILVERIFIER_API_KEY is missing.")
             else:
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                log_expander = st.expander("Live log", expanded=True)
-                log_lines: list[str] = []
-
-                def on_progress(message: str, fraction: float) -> None:
-                    progress_bar.progress(min(max(fraction, 0.0), 1.0))
-                    status_text.text(message)
-                    log_lines.append(message)
-                    with log_expander:
-                        st.text("\n".join(log_lines[-30:]))
-
                 try:
-                    if st.session_state.get("source_type") == "local_csv":
-                        csv_path = st.session_state.get("local_csv_path")
-                        if not csv_path or not os.path.isfile(csv_path):
-                            raise FileNotFoundError(
-                                f"Local CSV backup not found: {csv_path}"
-                            )
-                        on_progress(f"Loading local CSV backup ({csv_path})...", 0.02)
-                        source_df = pd.read_csv(csv_path)
-                        on_progress(f"Loaded {len(source_df)} leads from local CSV.", 0.05)
-                        email_column = st.session_state.get("email_column")
-                        skip_quick = bool(st.session_state.get("skip_quick_verify"))
-                        source_list_id = None
-                        purge_source = False
+                    config = _build_job_config_from_session()
+                    prefix = resolve_job_prefix(config)
+                    ok, message = start_job(config)
+                    if ok:
+                        st.session_state.active_job_prefix = prefix
+                        st.session_state.job_monitoring = True
+                        st.success(message)
+                        st.rerun()
                     else:
-                        on_progress("Downloading leads from Instantly list...", 0.02)
-                        leads = fetch_leads_from_list(
-                            st.session_state.list_id,
-                            on_progress=lambda n: on_progress(
-                                f"Downloaded {n} leads...",
-                                0.02
-                                + min(n / max(st.session_state.list_count, 1), 1) * 0.03,
-                            ),
-                        )
-                        source_df = leads_to_dataframe(leads)
-                        on_progress(f"Downloaded {len(source_df)} leads.", 0.05)
-                        email_column = None
-                        skip_quick = False
-                        source_list_id = st.session_state.list_id
-                        purge_source = run_mode == RUN_MODE_FULL
-
-                    result = run_cleaning_pipeline(
-                        source_df=source_df,
-                        run_mode=run_mode,
-                        custom_limit=custom_limit,
-                        allowed_statuses=allowed_statuses,
-                        destination_campaign_id=st.session_state.campaign_id,
-                        source_list_id=source_list_id,
-                        purge_source=purge_source,
-                        email_column=email_column,
-                        skip_quick_verify=skip_quick,
-                        provision_links=os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower()
-                        not in {"1", "true", "yes"},
-                        on_progress=on_progress,
-                    )
-                    st.session_state.pipeline_result = result
-                    st.session_state.funnel_step = 5
-                    st.rerun()
+                        st.error(message)
                 except Exception as exc:
-                    st.error(f"Pipeline failed: {exc}")
+                    st.error(f"Could not start job: {exc}")
 
 with tab_csv:
     st.subheader("CSV Upload")

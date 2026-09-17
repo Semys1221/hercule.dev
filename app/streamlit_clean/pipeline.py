@@ -23,6 +23,7 @@ from checkpoint import (
     save_checkpoint,
     save_partial_verified_csv,
 )
+from job_state import STATUS_RUNNING, update_job_progress
 from paths import data_dir
 from quick_verifier import detect_email_column, quick_verify_dataframe
 
@@ -319,9 +320,16 @@ def run_cleaning_pipeline(
     resume_prefix: str | None = None,
     skip_quick_verify: bool = False,
     provision_links: bool = True,
+    job_prefix: str | None = None,
 ) -> PipelineResult:
-    prefix = resume_prefix or artifact_prefix or _timestamp_prefix()
+    prefix = resume_prefix or artifact_prefix or job_prefix or _timestamp_prefix()
+    track_job = job_prefix or prefix
     raw_count = len(source_df)
+
+    def _report_progress(message: str, fraction: float) -> None:
+        update_job_progress(track_job, phase=message, status=STATUS_RUNNING)
+        if on_progress:
+            on_progress(message, fraction)
 
     if skip_quick_verify:
         if not email_column or email_column not in source_df.columns:
@@ -335,21 +343,17 @@ def run_cleaning_pipeline(
             "total_processed": len(source_df),
         }
         quick_rejected_count = 0
-        if on_progress:
-            on_progress("Skipping quick verify (resuming saved list)...", 0.05)
+        _report_progress("Skipping quick verify (resuming saved list)...", 0.05)
     else:
-        if on_progress:
-            on_progress("Running quick local verification (free)...", 0.05)
+        _report_progress("Running quick local verification (free)...", 0.05)
 
         quick_result = quick_verify_dataframe(
             source_df,
             email_column=email_column,
-            on_progress=lambda current, total: on_progress(
+            on_progress=lambda current, total: _report_progress(
                 f"Quick verify: {current}/{total}",
                 0.05 + (current / total) * 0.25,
-            )
-            if on_progress
-            else None,
+            ),
         )
         quick_clean_df = quick_result.clean_df
         quick_result_email_col = quick_result.email_column
@@ -368,16 +372,13 @@ def run_cleaning_pipeline(
 
     purged_count = 0
     if purge_source and source_list_id and not is_dry:
-        if on_progress:
-            on_progress("Purging source list on Instantly...", 0.28)
+        _report_progress("Purging source list on Instantly...", 0.28)
 
         def purge_log(message: str) -> None:
-            if on_progress:
-                on_progress(message, 0.28)
+            _report_progress(message, 0.28)
 
         purged_count = purge_leads_from_list(source_list_id, log_cb=purge_log)
-        if on_progress:
-            on_progress(f"Purged {purged_count} lead(s) from source list.", 0.29)
+        _report_progress(f"Purged {purged_count} lead(s) from source list.", 0.29)
 
     total_emails = len(limited_df)
     email_col = quick_result_email_col
@@ -389,11 +390,10 @@ def run_cleaning_pipeline(
     checkpoint_loaded = load_checkpoint(prefix)
     if checkpoint_loaded:
         existing_status_map, checkpoint_meta = checkpoint_loaded
-        if on_progress:
-            on_progress(
-                f"Loaded checkpoint — {len(existing_status_map)} email(s) already verified.",
-                0.29,
-            )
+        _report_progress(
+            f"Loaded checkpoint — {len(existing_status_map)} email(s) already verified.",
+            0.29,
+        )
 
     def persist_checkpoint(status_map: dict[str, str]) -> None:
         save_checkpoint(
@@ -401,12 +401,22 @@ def run_cleaning_pipeline(
             status_map,
             total_target=total_emails,
             source_artifact=os.path.join(data_dir(), f"{prefix}_quick_clean.csv"),
+            list_id=source_list_id,
+            campaign_id=destination_campaign_id,
+            run_mode=run_mode,
+            allowed_statuses=allowed_statuses,
         )
         save_partial_verified_csv(prefix, limited_df, email_col, status_map)
+        update_job_progress(
+            track_job,
+            phase="mev_verify",
+            verified_count=len(status_map),
+            total_target=total_emails,
+            status=STATUS_RUNNING,
+        )
 
     def bulk_progress(message: str, fraction: float) -> None:
-        if on_progress:
-            on_progress(message, 0.3 + fraction * 0.5)
+        _report_progress(message, 0.3 + fraction * 0.5)
 
     emails = limited_df[email_col].astype(str).str.strip().tolist()
     status_map = verify_emails_bulk(
@@ -440,38 +450,6 @@ def run_cleaning_pipeline(
         "skipped_duplicate": 0,
         "failed": 0,
     }
-    # #region agent log
-    import json
-    import time
-
-    _push_log_path = "/Users/evqn/dev/hercule.dev/.cursor/debug-794b3b.log"
-    _push_gate = {
-        "destination_campaign_id": destination_campaign_id,
-        "is_dry": is_dry,
-        "final_clean_count": len(final_clean_df),
-        "allowed_statuses": allowed_statuses,
-        "prefix": prefix,
-        "run_mode": run_mode,
-    }
-    try:
-        with open(_push_log_path, "a", encoding="utf-8") as _fh:
-            _fh.write(
-                json.dumps(
-                    {
-                        "sessionId": "794b3b",
-                        "runId": "pre-fix",
-                        "hypothesisId": "H2,H3,H4",
-                        "location": "pipeline.py:run_cleaning_pipeline",
-                        "message": "Push gate evaluation",
-                        "data": _push_gate,
-                        "timestamp": int(time.time() * 1000),
-                    }
-                )
-                + "\n"
-            )
-    except OSError:
-        pass
-    # #endregion
     provision_stats = _empty_provision_stats()
     if destination_campaign_id and not is_dry and not final_clean_df.empty:
         final_clean_df, provision_stats = _provision_and_merge_urls(
@@ -480,44 +458,19 @@ def run_cleaning_pipeline(
             list_id=source_list_id,
             campaign_id=destination_campaign_id,
             provision_links=provision_links,
-            on_progress=on_progress,
+            on_progress=lambda message, fraction: _report_progress(message, 0.8 + fraction * 0.1),
         )
 
-        if on_progress:
-            on_progress("Pushing cleaned leads to Instantly campaign...", 0.9)
+        _report_progress("Pushing cleaned leads to Instantly campaign...", 0.9)
 
         push_stats = push_leads_to_campaign(
             destination_campaign_id,
             final_clean_df,
             dry_run=False,
-            on_progress=on_progress,
+            on_progress=lambda message, fraction: _report_progress(message, 0.9 + fraction * 0.1),
         )
-        # #region agent log
-        try:
-            with open(_push_log_path, "a", encoding="utf-8") as _fh:
-                _fh.write(
-                    json.dumps(
-                        {
-                            "sessionId": "794b3b",
-                            "runId": "pre-fix",
-                            "hypothesisId": "H3,H4",
-                            "location": "pipeline.py:run_cleaning_pipeline",
-                            "message": "Push completed",
-                            "data": {
-                                "destination_campaign_id": destination_campaign_id,
-                                **push_stats,
-                            },
-                            "timestamp": int(time.time() * 1000),
-                        }
-                    )
-                    + "\n"
-                )
-        except OSError:
-            pass
-        # #endregion
 
-    if on_progress:
-        on_progress("Pipeline complete.", 1.0)
+    _report_progress("Pipeline complete.", 1.0)
 
     credits_used = 0 if is_dry else total_emails
     credits_remaining: int | None = None
