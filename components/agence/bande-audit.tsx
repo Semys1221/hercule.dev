@@ -1,8 +1,6 @@
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
-import {
-  getMarketingCopy,
-  MARKETING_PRIMARY_CTA,
-} from "@/lib/site/marketing-copy"
+import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
 const copy = getMarketingCopy("agence")
 
@@ -25,12 +23,10 @@ export function BandeAudit() {
             >
               Consulter la tarification
             </a>
-            <a
+            <MarketingBookingCta
               href={CALENDLY_AGENCE_URL}
               className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
-            >
-              {MARKETING_PRIMARY_CTA}
-            </a>
+            />
           </div>
         </div>
       </div>

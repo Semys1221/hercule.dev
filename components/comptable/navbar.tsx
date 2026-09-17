@@ -3,7 +3,8 @@
 import Link from "next/link"
 import { HerculeMark } from "@/components/hercule-mark"
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
-import { MARKETING_NAV_PIPELINE, MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy"
+import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
+import { MARKETING_NAV_PIPELINE } from "@/lib/site/marketing-copy"
 
 export function Navbar() {
   return (
@@ -38,12 +39,10 @@ export function Navbar() {
             >
               Je suis un conseiller financier
             </Link>
-            <a
+            <MarketingBookingCta
               href={CALENDLY_ENTREPRISE_URL}
               className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors"
-            >
-              {MARKETING_PRIMARY_CTA}
-            </a>
+            />
           </div>
         </div>
       </div>

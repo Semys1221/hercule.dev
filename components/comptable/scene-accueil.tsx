@@ -15,6 +15,7 @@ import { BandeAudit } from "./bande-audit"
 import { Footer } from "./footer"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
+import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
 import { getMarketingCopy, MARKETING_CLIENT_CTA } from "@/lib/site/marketing-copy"
 
 interface AccueilSceneProps {
@@ -87,12 +88,11 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="mt-8 flex flex-wrap items-center gap-6"
               >
-                <a
+                <MarketingBookingCta
                   href={CALENDLY_ENTREPRISE_URL}
+                  label={MARKETING_CLIENT_CTA}
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
-                >
-                  {MARKETING_CLIENT_CTA}
-                </a>
+                />
               </motion.div>
             </div>
           </div>

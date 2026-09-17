@@ -1,9 +1,6 @@
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
-import {
-  getMarketingCopy,
-  MARKETING_PRIMARY_CTA,
-  MARKETING_SECONDARY_CTA,
-} from "@/lib/site/marketing-copy"
+import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
+import { getMarketingCopy, MARKETING_SECONDARY_CTA } from "@/lib/site/marketing-copy"
 
 const copy = getMarketingCopy("comptable")
 
@@ -26,12 +23,10 @@ export function BandeAudit() {
             >
               {MARKETING_SECONDARY_CTA}
             </a>
-            <a
+            <MarketingBookingCta
               href={CALENDLY_ENTREPRISE_URL}
               className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
-            >
-              {MARKETING_PRIMARY_CTA}
-            </a>
+            />
           </div>
         </div>
       </div>

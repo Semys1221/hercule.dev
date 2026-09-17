@@ -11,7 +11,11 @@ import {
   offerTypeForPlan,
 } from "@/lib/commercial/comptable-pricing";
 import type { PricingPlan } from "@/lib/site/pricing-types";
-import { MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy";
+import { PUBLIC_SITE_BOOKING_CLOSED } from "@/lib/constants";
+import {
+  MARKETING_INVITATION_ONLY_CTA,
+  MARKETING_PRIMARY_CTA,
+} from "@/lib/site/marketing-copy";
 import { cn } from "@/lib/utils";
 
 export type ComptablePricingGridProps = {
@@ -72,7 +76,9 @@ export function ComptablePricingGrid({
   selectedOffer,
   ctaLabel = COMPTABLE_PRICING_CTA,
   ctaHref,
-  ctaLinkLabel = MARKETING_PRIMARY_CTA,
+  ctaLinkLabel = PUBLIC_SITE_BOOKING_CLOSED
+    ? MARKETING_INVITATION_ONLY_CTA
+    : MARKETING_PRIMARY_CTA,
   onSelectOffer,
   className,
 }: ComptablePricingGridProps) {

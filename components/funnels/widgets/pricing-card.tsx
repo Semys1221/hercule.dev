@@ -6,8 +6,11 @@ import { ArrowRight, Check, ChevronDown, Lock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { CALENDLY_AGENCE_URL } from "@/lib/constants";
-import { MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy";
+import { CALENDLY_AGENCE_URL, PUBLIC_SITE_BOOKING_CLOSED } from "@/lib/constants";
+import {
+  MARKETING_INVITATION_ONLY_CTA,
+  MARKETING_PRIMARY_CTA,
+} from "@/lib/site/marketing-copy";
 import type { PricingPlan } from "@/lib/site/pricing-types";
 import { cn } from "@/lib/utils";
 
@@ -313,15 +316,25 @@ export function PricingCard({
                     <ArrowRight className="size-4" />
                   </Button>
                 ) : plan.featured && !compact ? (
-                  <Button
-                    asChild
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
-                  >
-                    <a href={ctaHref}>
-                      {ctaLinkLabel}
+                  PUBLIC_SITE_BOOKING_CLOSED ? (
+                    <span
+                      className="flex w-full cursor-default select-none items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900"
+                      aria-disabled="true"
+                    >
+                      {MARKETING_INVITATION_ONLY_CTA}
                       <ArrowRight className="size-4" />
-                    </a>
-                  </Button>
+                    </span>
+                  ) : (
+                    <Button
+                      asChild
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-white/20"
+                    >
+                      <a href={ctaHref}>
+                        {ctaLinkLabel}
+                        <ArrowRight className="size-4" />
+                      </a>
+                    </Button>
+                  )
                 ) : null}
 
                 {showCollapsible && !compact ? (

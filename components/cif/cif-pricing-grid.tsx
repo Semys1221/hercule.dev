@@ -11,7 +11,7 @@ import {
   offerTypeForPlan,
 } from "@/lib/commercial/cif-pricing";
 import type { PricingPlan } from "@/lib/site/pricing-types";
-import { CIF_PUBLIC_BOOKING_CLOSED } from "@/lib/constants";
+import { PUBLIC_SITE_BOOKING_CLOSED } from "@/lib/constants";
 import {
   MARKETING_INVITATION_ONLY_CTA,
   MARKETING_PRIMARY_CTA,
@@ -76,7 +76,7 @@ export function CifPricingGrid({
   selectedOffer,
   ctaLabel = CIF_PRICING_CTA,
   ctaHref,
-  ctaLinkLabel = CIF_PUBLIC_BOOKING_CLOSED
+  ctaLinkLabel = PUBLIC_SITE_BOOKING_CLOSED
     ? MARKETING_INVITATION_ONLY_CTA
     : MARKETING_PRIMARY_CTA,
   onSelectOffer,

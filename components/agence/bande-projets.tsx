@@ -7,7 +7,8 @@ import { Marquee } from "@/components/ui/marquee"
 import { cn } from "@/lib/utils"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
-import { getMarketingCopy, MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy"
+import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
 const CARD_WIDTH = "w-[300px] sm:w-[320px]"
 const copy = getMarketingCopy("agence")
@@ -115,12 +116,10 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             transition={{ delay: 0.35 }}
             className="mt-8"
           >
-            <a
+            <MarketingBookingCta
               href={CALENDLY_AGENCE_URL}
               className="inline-flex px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
-            >
-              {MARKETING_PRIMARY_CTA}
-            </a>
+            />
           </motion.div>
         </div>
       </div>
