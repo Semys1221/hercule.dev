@@ -6,6 +6,7 @@ import {
   flowFromJob,
   leadIdFromJob,
   leadSnapshotFromJob,
+  getBypassJobByIdempotencyKey,
   listDueBypassJobs,
   listFailedBypassJobs,
   markBypassJobFailed,
@@ -129,9 +130,15 @@ async function handleBypassJobFailure(
   return "failed";
 }
 
-async function executeBypassJob(
-  job: BypassJob,
-): Promise<"sent" | "failed" | "skipped" | "rescheduled"> {
+export type BypassJobDispatchResult = {
+  outcome: "sent" | "failed" | "skipped" | "rescheduled" | "not_found";
+  latencyMs?: number;
+  replyToUuid?: string;
+  skipped?: string;
+  error?: string;
+};
+
+async function executeBypassJob(job: BypassJob): Promise<BypassJobDispatchResult> {
   const flow = flowFromJob(job);
   if (!SENDABLE_FLOWS.has(flow)) {
     throw new Error(`Unsupported scheduled flow: ${flow}`);
@@ -139,12 +146,12 @@ async function executeBypassJob(
 
   if (await hasBypassEvent(job.idempotency_key)) {
     await markBypassJobSent(job.id);
-    return "skipped";
+    return { outcome: "skipped", skipped: "already_sent" };
   }
 
   if (!shouldBypassSendWindow(job.payload) && !isWithinSendWindow()) {
     await rescheduleBypassJob(job.id, nextSendSlot());
-    return "rescheduled";
+    return { outcome: "rescheduled" };
   }
 
   const leadEmail = job.lead_email.trim().toLowerCase();
@@ -196,16 +203,62 @@ async function executeBypassJob(
   });
 
   if (!result.ok) {
-    return handleBypassJobFailure(job, result.error);
+    const failureOutcome = await handleBypassJobFailure(job, result.error);
+    if (failureOutcome === "rescheduled") {
+      return { outcome: "rescheduled" };
+    }
+    return { outcome: "failed", error: result.error };
   }
 
   if (result.skipped) {
     await markBypassJobSent(job.id);
-    return "skipped";
+    return { outcome: "skipped", skipped: result.skipped };
   }
 
   await markBypassJobSent(job.id);
-  return "sent";
+  return {
+    outcome: "sent",
+    latencyMs: result.latencyMs,
+    replyToUuid: result.replyToUuid,
+  };
+}
+
+export async function dispatchBypassJobByIdempotencyKey(
+  idempotencyKey: string,
+): Promise<BypassJobDispatchResult> {
+  const job = await getBypassJobByIdempotencyKey(idempotencyKey);
+  if (!job || job.status !== "pending") {
+    return { outcome: "not_found" };
+  }
+
+  const result = await executeBypassJob(job);
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "b88b1a",
+    },
+    body: JSON.stringify({
+      sessionId: "b88b1a",
+      location: "lib/instantly-bypass/dispatch-scheduled.ts:immediate",
+      message: "E1 immediate dispatch completed",
+      data: {
+        idempotencyKey,
+        outcome: result.outcome,
+        latencyMs: result.latencyMs ?? null,
+        skipped: result.skipped ?? null,
+        error: result.error ?? null,
+      },
+      timestamp: Date.now(),
+      runId: "post-fix",
+      hypothesisId: "E1-instant",
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  return result;
 }
 
 async function recoverTransientFailedBypassJobs(limit = 20): Promise<number> {
@@ -255,9 +308,9 @@ export async function dispatchDueBypassJobs(limit = 50): Promise<{
       }
 
       const outcome = await executeBypassJob(job);
-      if (outcome === "sent") sent += 1;
-      else if (outcome === "failed") failed += 1;
-      else if (outcome === "rescheduled") rescheduled += 1;
+      if (outcome.outcome === "sent") sent += 1;
+      else if (outcome.outcome === "failed") failed += 1;
+      else if (outcome.outcome === "rescheduled") rescheduled += 1;
       else skipped += 1;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

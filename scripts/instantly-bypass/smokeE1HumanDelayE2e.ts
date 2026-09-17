@@ -373,9 +373,26 @@ async function runDryRunPhase(
   const first = await postWebhook(campaignId, leadEmail);
 
   if (first.latencyMs != null || first.replyToUuid) {
-    throw new Error(
-      `Webhook sent E1 immediately (old code or no delay). Use WEBHOOK_BASE_URL=http://localhost:3000 with pnpm dev, or deploy the delay change to production.`,
+    const job = await fetchJob(idempotencyKey);
+    assert.equal(
+      job?.status,
+      "sent",
+      "immediate webhook dispatch should mark bypass job sent",
     );
+    console.log(
+      `OK webhook sent E1 immediately (latencyMs=${first.latencyMs ?? "n/a"})`,
+    );
+    const second = await postWebhook(campaignId, leadEmail);
+    assert.equal(
+      second.skipped,
+      "already_sent",
+      `retry should be already_sent, got ${second.skipped ?? JSON.stringify(second)}`,
+    );
+    console.log("OK webhook retry → already_sent");
+    if (!job) {
+      throw new Error(`Missing job after immediate send for ${idempotencyKey}`);
+    }
+    return job;
   }
 
   if (first.skipped === "already_sent") {
@@ -441,6 +458,11 @@ async function runExecutePhase(
   idempotencyKey: string,
 ): Promise<void> {
   const job = await fetchJob(idempotencyKey);
+  if (job?.status === "sent") {
+    await verifySentState(idempotencyKey, campaignId, leadEmail);
+    console.log("OK E1 already sent via immediate webhook dispatch");
+    return;
+  }
   if (!job || job.status !== "pending") {
     throw new Error(
       `No pending job for execute phase (${idempotencyKey}). Run --dry-run first.`,

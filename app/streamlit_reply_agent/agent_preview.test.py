@@ -67,6 +67,30 @@ class BuildGlobalRulesTests(unittest.TestCase):
         self.assertIn("briefing collectif", rules)
         self.assertNotIn("ne jamais relancer", rules)
 
+    def test_comptable_includes_conference_objection_script(self) -> None:
+        rules = build_global_rules(
+            max_sentences=3,
+            niche_preset_id="cabinets_expertise_comptable",
+        )
+        lower = rules.lower()
+        self.assertIn("objection conférence (comptable", lower)
+        self.assertIn("2 500 €", rules)
+        self.assertIn("bnc/bic/tns", lower)
+        self.assertIn("répondez à ce mail", lower)
+        self.assertNotIn("pas d'audit 1:1", lower)
+
+    def test_cif_includes_conference_objection_script(self) -> None:
+        rules = build_global_rules(
+            max_sentences=3,
+            niche_preset_id="conseillers_gestion_patrimoine",
+        )
+        lower = rules.lower()
+        self.assertIn("objection conférence (cif", lower)
+        self.assertIn("2 500 €", rules)
+        self.assertIn("dentistes et vétérinaires", lower)
+        self.assertIn("répondez à ce mail", lower)
+        self.assertNotIn("pas d'audit 1:1", lower)
+
 
 class GrokTemperatureTests(unittest.TestCase):
     def test_defaults_to_half(self) -> None:
@@ -146,7 +170,8 @@ class AssembleSystemPromptTests(unittest.TestCase):
         prompt = assemble_system_prompt(config, buyer_prompt, max_sentences=3)
         lower = prompt.lower()
         self.assertIn("bande passante", lower)
-        self.assertIn("visioconférence", lower)
+        self.assertIn("objection conférence", lower)
+        self.assertIn("2 500 €", prompt)
         self.assertIn("je n'ai pas 3 collaborateurs", lower)
 
 

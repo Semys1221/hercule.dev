@@ -525,7 +525,9 @@ async function main(): Promise<void> {
     const interestedOk =
       interested.ok === true &&
       interested.error !== "missing_reservation_link" &&
-      (interested.skipped === "scheduled" ||
+      (interested.latencyMs != null ||
+        Boolean(interested.replyToUuid) ||
+        interested.skipped === "scheduled" ||
         interested.skipped === "already_scheduled" ||
         interested.skipped === "already_sent" ||
         interested.skipped === "e1_already_in_thread");

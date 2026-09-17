@@ -34,6 +34,23 @@ export async function hasPendingBypassJob(idempotencyKey: string): Promise<boole
   return Boolean(data);
 }
 
+export async function getBypassJobByIdempotencyKey(
+  idempotencyKey: string,
+): Promise<BypassJob | null> {
+  const client = createBypassClient();
+  const { data, error } = await client
+    .from("instantly_bypass_jobs")
+    .select("*")
+    .eq("idempotency_key", idempotencyKey)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load bypass job: ${error.message}`);
+  }
+
+  return (data as BypassJob | null) ?? null;
+}
+
 export async function listDueBypassJobs(limit = 50): Promise<BypassJob[]> {
   const client = createBypassClient();
   const now = new Date().toISOString();
@@ -171,6 +188,30 @@ export function leadIdFromJob(job: BypassJob): string | null {
     return fromLead.trim();
   }
   return null;
+}
+
+export async function cancelPendingBypassJobsForLead(
+  leadEmail: string,
+  campaignId: string,
+): Promise<number> {
+  const client = createBypassClient();
+  const now = new Date().toISOString();
+  const { data, error } = await client
+    .from("instantly_bypass_jobs")
+    .update({
+      status: "cancelled",
+      cancelled_at: now,
+    })
+    .eq("campaign_id", campaignId)
+    .eq("lead_email", leadEmail.trim().toLowerCase())
+    .eq("status", "pending")
+    .select("id");
+
+  if (error) {
+    throw new Error(`Failed to cancel bypass jobs: ${error.message}`);
+  }
+
+  return data?.length ?? 0;
 }
 
 export async function insertBypassJob(params: {

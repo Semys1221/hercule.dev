@@ -156,10 +156,21 @@ def run_audit(
                     }
                 )
 
+    reprocess_candidates = [
+        r
+        for r in inbound
+        if r.get("ai_status") in ("skipped_unsafe", "skipped_recovery", "skipped_not_interested")
+        and str(r.get("ai_reason") or "") not in (
+            "Opt-out détecté",
+            "Lead marked No show in Instantly",
+        )
+    ]
+
     report: dict[str, Any] = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "campaigns": len(configs),
         "inbound_total": len(inbound),
+        "reprocess_candidates_count": len(reprocess_candidates),
         "status_by_campaign": _status_rollup(inbound),
         "failed_recent": failed[-20:],
         "skipped_recovery_count": len(skipped_recovery),
@@ -184,6 +195,7 @@ def _print_summary(report: dict[str, Any]) -> None:
     print(f"Generated: {report.get('generated_at')}")
     print(f"Campaigns: {report.get('campaigns')} | Inbound messages: {report.get('inbound_total')}")
     print(f"Recovery gate (skipped_recovery): {report.get('skipped_recovery_count', 0)}")
+    print(f"Reprocess candidates: {report.get('reprocess_candidates_count', 0)}")
     print(f"Stale pending (>24h): {len(report.get('stale_pending') or [])}")
     print(f"Failed jobs: {len(report.get('failed_jobs') or [])}")
     print(f"Instantly slow pending: {len(report.get('instantly_slow_pending') or [])}")

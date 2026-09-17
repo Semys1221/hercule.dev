@@ -28,6 +28,32 @@ export function resolveGrokTemperature(): number {
   return Math.max(0, Math.min(1, value));
 }
 
+export function buildConferenceObjectionRules(
+  nichePresetId?: string,
+): string | null {
+  if (isComptableNichePreset(nichePresetId ?? "")) {
+    return `Objection conférence (comptable — reservation-conference.html) :
+- Déclencheurs : « conférence », « appel à plusieurs », « appelez-moi », « pas de visio collective », « je ne fais pas les appels en conférence », etc.
+- Maximum 4 phrases courtes dans reply_text pour cette objection (hors signature et lien CTA).
+- Acknowledge : valider la réaction sans s'excuser (ex. « Je comprends que le format conférence ne soit pas votre habitude. »).
+- Explain : un accompagnement Hercule sur-mesure démarre à 2 500 € ; pour proposer une tarification accessible aux cabinets qui souhaitent une solution clé en main pour développer rapidement leur clientèle BNC/BIC/TNS, nous présentons cette offre en appel conférence. Exception pricing : 2 500 € autorisé uniquement pour cette objection.
+- Redirect : lien CTA briefing collectif fourni + « Si vous souhaitez réserver un appel en 1:1 avec le dirigeant pour discuter d'une solution sur-mesure, répondez à ce mail. »
+- should_reply true — ce n'est PAS une raison d'abstenir ; recovery_confidence ≥ 75 si tag Lead / Not interested.
+- Pas de lien Calendly 1:1 ni d'appel téléphonique ad hoc en alternative.`;
+  }
+  if (isCifNichePreset(nichePresetId ?? "")) {
+    return `Objection conférence (CIF — reservation-conference.html) :
+- Déclencheurs : « conférence », « appel à plusieurs », « appelez-moi », « pas de visio collective », « je ne fais pas les appels en conférence », etc.
+- Maximum 4 phrases courtes dans reply_text pour cette objection (hors signature et lien CTA).
+- Acknowledge : valider la réaction sans s'excuser (ex. « Je comprends que le format conférence ne soit pas votre habitude. »).
+- Explain : un accompagnement Hercule sur-mesure démarre à 2 500 € ; pour proposer une tarification accessible aux cabinets qui souhaitent une solution clé en main pour développer rapidement leur clientèle professionnelle (cabinets dentistes et vétérinaires), nous présentons cette offre en appel conférence. Exception pricing : 2 500 € autorisé uniquement pour cette objection.
+- Redirect : lien CTA briefing collectif fourni + « Si vous souhaitez réserver un appel en 1:1 avec le dirigeant pour discuter d'une solution sur-mesure, répondez à ce mail. »
+- should_reply true — ce n'est PAS une raison d'abstenir ; recovery_confidence ≥ 75 si tag Lead / Not interested.
+- Pas de lien Calendly 1:1 ni d'appel téléphonique ad hoc en alternative.`;
+  }
+  return null;
+}
+
 export function buildGlobalRules(
   maxSentences = 3,
   nichePresetId?: string,
@@ -42,6 +68,13 @@ export function buildGlobalRules(
     : isComptableNichePreset(nichePresetId ?? "")
       ? "https://hercule.dev/cvg/comptable"
       : "https://hercule.dev/cvg";
+  const conferenceRules = buildConferenceObjectionRules(nichePresetId);
+  const conferenceSection = conferenceRules
+    ? `\n${conferenceRules}\n`
+    : "";
+  const pricingSecurityRule = conferenceRules
+    ? "- N'invente jamais de prix, délais, garanties ou fonctionnalités — sauf 2 500 € sur-mesure pour objection conférence (autorisé)."
+    : "- N'invente jamais de prix, délais, garanties ou fonctionnalités.";
   return `Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
 Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string), recovery_confidence (number 0–100, obligatoire si tag Lead ou Not interested).
@@ -50,16 +83,12 @@ Règles quand should_reply est true :
 - Texte brut uniquement dans reply_text (pas de HTML, pas de markdown).
 - Rédige reply_text en français, vouvoiement, ton professionnel et direct — comme un email humain, pas une FAQ.
 - ${lengthRule}
-- Structure AER obligatoire dans reply_text : (1) Acknowledge — valider l'objection sans céder ; (2) Explain — agiter la douleur / coût de l'inaction (ex. sans action structurée, difficile de développer une clientèle professionnelle dès le mois suivant) ; (3) Redirect — lien CTA briefing collectif fourni.
+- Structure AER obligatoire dans reply_text : (1) Acknowledge — valider l'objection sans céder ; (2) Explain — agiter la douleur / coût de l'inaction ou expliquer le positionnement conférence ; (3) Redirect — lien CTA briefing collectif fourni.
 - Ne recopie pas mot à mot le pack de connaissances ; reformule avec tes mots.
 - Sépare le corps, le lien CTA et la signature par une ligne vide (\\n\\n).
 - Mets le lien CTA seul sur sa propre ligne, en URL brute (sera affiché « Réserver » à l'envoi).
 - Termine par « Béatrice Meyer », puis « hercule.dev Courtage contrat BNC/BIC », puis l'URL du site (https://hercule.dev ou ${pricingUrl} si question tarifs), chaque élément sur sa propre ligne.
-
-Position format (non négociable pour CIF) :
-- Uniquement briefing collectif via le lien CTA — pas d'audit 1:1, pas d'appel téléphonique ad hoc en alternative.
-- Objections « appelez-moi », « je ne fais pas les appels à plusieurs » → répondre en AER et rediriger vers le briefing collectif ; ce n'est PAS une raison d'abstenir.
-
+${conferenceSection}
 Ton — évite ces formulations :
 - « Merci pour votre message » (sauf si le lead partage une info personnelle ou émotionnelle)
 - « Je comprends votre préoccupation »
@@ -72,11 +101,15 @@ Recovery (tags Lead ou Not interested) :
 - Toujours renseigner recovery_confidence (0–100) : probabilité que la relance soit rattrapable.
 - « Non merci, pas notre cible » / refus définitif → should_reply false, recovery_confidence 10–25.
 - « Non mais… » / objection format ou téléphone → should_reply true si rattrapable, recovery_confidence ≥ 75.
+- Opt-out explicite (« non merci », « c'est mort », « stop », « ne plus me contacter ») → should_reply false, recovery_confidence 0 — ne pas confondre avec « non mais ».
 - Tag Interested : recovery_confidence optionnel (ignoré).
+
+Signature :
+- Avant la signature Béatrice Meyer, inclure sur sa propre ligne : _Répondez non si vous ne souhaitez plus de messages._
 
 Sécurité :
 - Si la réponse n'est PAS clairement couverte par le pack de connaissances, mets should_reply à false et explique dans reason (en français).
-- N'invente jamais de prix, délais, garanties ou fonctionnalités.
+${pricingSecurityRule}
 - Utilise uniquement le lien CTA fourni — n'invente jamais d'URL.`;
 }
 

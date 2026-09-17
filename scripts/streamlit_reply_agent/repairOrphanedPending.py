@@ -219,6 +219,8 @@ def repair_orphans(
             print("  (dry-run — not sending)")
             continue
 
+        from pipeline_sync import sync_pipeline_step_from_sent_flows
+
         result = dispatch_manual_reply(
             inst,
             campaign_id=campaign_id,
@@ -226,6 +228,7 @@ def repair_orphans(
             reply_text=reply_text,
             target_type=str(config.get("target_type") or "buyer"),
         )
+        sync_pipeline_step_from_sent_flows(campaign_id, email)
         print(f"  send: {result}")
 
 

@@ -1,4 +1,9 @@
 import {
+  OPT_OUT_DISCLAIMER_HTML,
+  OPT_OUT_DISCLAIMER_MARKER,
+  OPT_OUT_DISCLAIMER_PLAIN,
+} from "@/lib/lead-relances/disclaimer";
+import {
   BEATRICE_SIGNATURE,
   ensureOutreachSignature,
 } from "@/lib/outreach-email/signature";
@@ -179,8 +184,24 @@ export function formatReplyHtml(
   }
 
   body = ensureOutreachSignature(body);
+  if (!body.includes(OPT_OUT_DISCLAIMER_MARKER)) {
+    const sigIdx = signatureIndex(body);
+    if (sigIdx >= 0) {
+      body = `${body.slice(0, sigIdx).trimEnd()}\n\n${OPT_OUT_DISCLAIMER_PLAIN}\n\n${body.slice(sigIdx)}`;
+    } else {
+      body = `${body}\n\n${OPT_OUT_DISCLAIMER_PLAIN}`;
+    }
+  }
   body = structureReplyPlaintext(body);
-  const linked = plainToLinkedHtml(body);
+  let linked = plainToLinkedHtml(body);
+  if (!linked.includes(OPT_OUT_DISCLAIMER_MARKER)) {
+    const sigIdx = linked.indexOf(BEATRICE_SIGNATURE);
+    if (sigIdx >= 0) {
+      linked = `${linked.slice(0, sigIdx)}${OPT_OUT_DISCLAIMER_HTML}${linked.slice(sigIdx)}`;
+    } else {
+      linked = `${linked}${OPT_OUT_DISCLAIMER_HTML}`;
+    }
+  }
   const htmlOut = paragraphsFromLinkedText(linked);
   // #region agent log
   fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {

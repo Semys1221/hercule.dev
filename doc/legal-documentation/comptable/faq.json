@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-10T18:30:00.000Z",
+  "updatedAt": "2026-09-17T14:00:00.000Z",
   "entries": [
     {
       "id": "faq-cp-001",
@@ -76,7 +76,7 @@
     {
       "id": "faq-cp-013",
       "question": "Puis-je vous joindre par téléphone plutôt que via le formulaire ?",
-      "answer": "Les échanges se font en visioconférence planifiée (Calendly + Zoom provisionnés par Hercule), pas en appel téléphonique ad hoc. Indiquez vos disponibilités (« à quelle heure cette semaine ? ») : si le cabinet propose un créneau précis (ex. « mardi 14h »), Hercule peut confirmer automatiquement la visio ; sinon proposez deux créneaux Calendly via le lien de réservation.",
+      "answer": "Pour la cohorte en cours, Hercule organise un briefing collectif (visio Zoom) via le lien de réservation — pas d'appel téléphonique ad hoc. Le briefing permet de voir le système et les flux qualifiés en cours. Pour une solution sur-mesure, répondez à l'email pour un échange en 1:1 avec le dirigeant.",
       "cvgLink": true
     },
     {
@@ -102,6 +102,12 @@
       "question": "Opérez-vous en Belgique ?",
       "answer": "Non. Hercule met en relation des cabinets et dirigeants basés en France uniquement.",
       "cvgLink": false
+    },
+    {
+      "id": "faq-cp-018",
+      "question": "Je ne fais pas les appels en conférence — pourquoi ce format ?",
+      "answer": "Un accompagnement Hercule sur-mesure démarre à 2 500 €. Pour proposer une tarification accessible aux cabinets qui souhaitent une solution clé en main pour développer rapidement leur clientèle BNC/BIC/TNS, Hercule présente cette offre en appel conférence (visio Zoom collective). Si vous souhaitez un échange en 1:1 avec le dirigeant pour une solution sur-mesure, répondez à l'email.",
+      "cvgLink": true
     }
   ]
 }

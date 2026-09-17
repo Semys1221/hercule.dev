@@ -140,6 +140,26 @@ export async function updateInboundStatus(
   }
 }
 
+export async function cancelPendingAiReplyJobsForLead(
+  campaignId: string,
+  leadEmail: string,
+): Promise<number> {
+  const client = createAiReplyAgentClient();
+  const { data, error } = await client
+    .from("ai_reply_agent_jobs")
+    .update({ status: "cancelled" })
+    .eq("campaign_id", campaignId)
+    .eq("lead_email", leadEmail.trim().toLowerCase())
+    .eq("status", "pending")
+    .select("id");
+
+  if (error) {
+    throw new Error(`Failed to cancel reply agent jobs: ${error.message}`);
+  }
+
+  return data?.length ?? 0;
+}
+
 export async function queueManualReplyJob(params: {
   campaignId: string;
   leadEmail: string;

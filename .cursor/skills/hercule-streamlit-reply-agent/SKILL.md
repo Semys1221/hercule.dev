@@ -73,6 +73,10 @@ pnpm activate-reply-agents           # bootstrap campaigns + webhooks
 pnpm audit-reply-agent               # failures, abstentions, slow pending report
 pnpm resync-reply-agent-prompts      # push prompts/*.md → prompt_snapshot (prod)
 pnpm configure-ai-reply-agent-health-cron  # cron-job.org health alerts
+pnpm reprocess-skipped-replies       # Grok re-run on skipped inbound (dry-run default)
+pnpm stop-lead-relances              # unified opt-out stop (all relance channels)
+pnpm patch-e2e3-opt-out-disclaimer   # patch E2/E3 templates in prod
+pnpm configure-ai-reply-agent-reprocess-cron  # alert when skipped volume > threshold
 ```
 
 ## Recovery mode (Lead + Not interested)
@@ -85,14 +89,18 @@ pnpm configure-ai-reply-agent-health-cron  # cron-job.org health alerts
 
 - Gate : `reply_gate.py` (Streamlit) · `lib/ai-reply-agent/reply-gate.ts` (webhook)
 - Copy : **AER** (Acknowledge → Explain → Redirect) on all `should_reply=true` replies
-- CIF format : briefing collectif only — no 1:1 audit, no phone alternative
+- Objection conférence (comptable + CIF) : script 2 500 € sur-mesure → clé en main en conférence → option 1:1 en répondant au mail
 - Migration : `pnpm apply-ai-reply-agent-recovery-migration` (`skipped_recovery` + `recovery_confidence` column)
+- Opt-out : `lib/lead-relances/opt-out.ts` + `stop-lead-relances` — stops Resend, bypass E1/E2/E3, reply agent blocklist
+- Reprocess : `reprocessSkippedInbound.py` (read-only default) ; cron `/api/cron/ai-reply-agent-reprocess` alerts ops
+- Disclaimer : `_Répondez non si vous ne souhaitez plus de messages._` in reply agent + E2/E3 templates
 
-## Niche CIF + conference cutover
+## Niche CIF + comptable — conference cutover
 
-- Knowledge : `doc/tech-stack/ai-reply-knowledge-cif.md` (AER + briefing collectif)
-- FAQ : `doc/legal-documentation/cif/faq.json`
-- CTA `{reservation_cif_link}` → `reservation-conference.html` (cohort briefing only)
+- Knowledge : `doc/tech-stack/ai-reply-knowledge-cif.md` · `doc/tech-stack/ai-reply-knowledge-comptable.md`
+- FAQ : `doc/legal-documentation/cif/faq.json` · `doc/legal-documentation/comptable/faq.json`
+- CTA `{reservation_cif_link}` / `{reservation_comptable_link}` → `reservation-conference.html`
+- Objection conférence : AER avec 2 500 € sur-mesure (seul prix autorisé dans l'email pour cette objection) + redirect conférence + « répondez à ce mail » pour 1:1 sur-mesure
 - Health cron : `/api/cron/ai-reply-agent-health` (failed + slow pending → `NOTIFICATION_OPS_EMAIL`)
 
 ## Cross-links

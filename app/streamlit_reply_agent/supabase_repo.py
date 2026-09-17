@@ -164,13 +164,22 @@ def update_message_status(
     message_id: str,
     ai_status: str,
     ai_reason: str | None = None,
+    *,
+    groq_model: str | None = None,
+    recovery_confidence: int | None = None,
+    groq_cost_usd_ticks: int | None = None,
 ) -> None:
-    get_client().table("ai_reply_agent_messages").update(
-        {
-            "ai_status": ai_status,
-            "ai_reason": ai_reason,
-        }
-    ).eq("id", message_id).execute()
+    patch: dict[str, Any] = {
+        "ai_status": ai_status,
+        "ai_reason": ai_reason,
+    }
+    if groq_model is not None:
+        patch["groq_model"] = groq_model
+    if recovery_confidence is not None:
+        patch["recovery_confidence"] = max(0, min(100, int(recovery_confidence)))
+    if groq_cost_usd_ticks is not None:
+        patch["groq_cost_usd_ticks"] = groq_cost_usd_ticks
+    get_client().table("ai_reply_agent_messages").update(patch).eq("id", message_id).execute()
 
 
 def insert_outbound_message(row: dict[str, Any]) -> None:

@@ -1,10 +1,33 @@
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
+  buildConferenceObjectionRules,
   buildGlobalRules,
   DEFAULT_GROK_TEMPERATURE,
   resolveGrokTemperature,
 } from "./grok";
+
+describe("buildConferenceObjectionRules", () => {
+  it("includes 2500 script for comptable preset", () => {
+    const rules = buildConferenceObjectionRules("cabinets_expertise_comptable");
+    expect(rules).toContain("2 500 €");
+    expect(rules).toContain("BNC/BIC/TNS");
+    expect(rules).toContain("répondez à ce mail");
+    expect(rules).not.toContain("pas d'audit 1:1");
+  });
+
+  it("includes 2500 script for CIF preset", () => {
+    const rules = buildConferenceObjectionRules("conseillers_gestion_patrimoine");
+    expect(rules).toContain("2 500 €");
+    expect(rules).toContain("dentistes et vétérinaires");
+    expect(rules).toContain("répondez à ce mail");
+    expect(rules).not.toContain("pas d'audit 1:1");
+  });
+
+  it("returns null for agence preset", () => {
+    expect(buildConferenceObjectionRules("agences_web")).toBeNull();
+  });
+});
 
 describe("buildGlobalRules", () => {
   it("uses maximum sentence count instead of exact count", () => {
@@ -17,10 +40,19 @@ describe("buildGlobalRules", () => {
 
   it("includes tone anti-patterns and drops forced urgency", () => {
     const rules = buildGlobalRules(2);
-    expect(rules).toContain("pas d'urgence artificielle");
+    expect(rules).toContain("urgence forcée");
     expect(rules).toContain("Merci pour votre message");
     expect(rules).not.toContain("CTA urgent");
     expect(rules).not.toContain("accuser réception →");
+  });
+
+  it("embeds conference objection rules for comptable and CIF", () => {
+    const comptable = buildGlobalRules(3, "cabinets_expertise_comptable");
+    const cif = buildGlobalRules(3, "conseillers_gestion_patrimoine");
+    expect(comptable).toContain("Objection conférence (comptable");
+    expect(cif).toContain("Objection conférence (CIF");
+    expect(comptable).toContain("2 500 € sur-mesure pour objection conférence");
+    expect(comptable).not.toContain("pas d'audit 1:1");
   });
 });
 

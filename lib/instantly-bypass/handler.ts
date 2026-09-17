@@ -7,6 +7,7 @@ import {
   recordBypassEvent,
 } from "./jobs";
 import { upsertPipelineStep } from "./pipeline";
+import { dispatchBypassJobByIdempotencyKey } from "./dispatch-scheduled";
 import { insertBypassJob } from "./scheduled-jobs";
 import { ensureCampaignLeadLinks } from "@/lib/link-tracking/provision-campaign-lead";
 import { readReservationLink, templateRequiresReservationLink } from "./reservation-links";
@@ -217,7 +218,7 @@ export async function handleLeadInterested(
 
     debugLog(
       "lib/instantly-bypass/handler.ts:schedule",
-      "E1 job scheduled with cached template",
+      "E1 job queued — dispatching immediately",
       {
         campaignId,
         leadEmail,
@@ -227,7 +228,51 @@ export async function handleLeadInterested(
       "A,C",
     );
 
-    return { ok: true, skipped: "scheduled" };
+    const dispatch = await dispatchBypassJobByIdempotencyKey(idempotencyKey);
+
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "b88b1a",
+      },
+      body: JSON.stringify({
+        sessionId: "b88b1a",
+        location: "lib/instantly-bypass/handler.ts:dispatch",
+        message: "E1 webhook immediate dispatch result",
+        data: {
+          campaignId,
+          leadEmail,
+          outcome: dispatch.outcome,
+          latencyMs: dispatch.latencyMs ?? null,
+          skipped: dispatch.skipped ?? null,
+          error: dispatch.error ?? null,
+        },
+        timestamp: Date.now(),
+        runId: "post-fix",
+        hypothesisId: "E1-instant",
+      }),
+    }).catch(() => {});
+    // #endregion
+
+    if (dispatch.outcome === "sent") {
+      return {
+        ok: true,
+        latencyMs: dispatch.latencyMs,
+        replyToUuid: dispatch.replyToUuid,
+      };
+    }
+    if (dispatch.outcome === "skipped") {
+      return { ok: true, skipped: dispatch.skipped ?? "skipped" };
+    }
+    if (dispatch.outcome === "rescheduled") {
+      return { ok: true, skipped: "scheduled" };
+    }
+    if (dispatch.outcome === "not_found") {
+      return { ok: false, error: "job_not_found" };
+    }
+    return { ok: false, error: dispatch.error ?? "dispatch_failed" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     debugLog(

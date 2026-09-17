@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "cif",
-  "updatedAt": "2026-09-10T18:30:00.000Z",
+  "updatedAt": "2026-09-17T14:00:00.000Z",
   "entries": [
     {
       "id": "faq-cif-001",
@@ -76,7 +76,7 @@
     {
       "id": "faq-cif-013",
       "question": "Puis-je vous joindre par téléphone plutôt que via le formulaire ?",
-      "answer": "Pour la cohorte en cours, Hercule organise un briefing collectif (visio Zoom) via le lien de réservation — pas d'appel téléphonique ad hoc ni de visio individuelle en alternative. Le briefing permet de voir le système et les flux qualifiés en cours.",
+      "answer": "Pour la cohorte en cours, Hercule organise un briefing collectif (visio Zoom) via le lien de réservation — pas d'appel téléphonique ad hoc. Le briefing permet de voir le système et les flux qualifiés en cours. Pour une solution sur-mesure, répondez à l'email pour un échange en 1:1 avec le dirigeant.",
       "cvgLink": true
     },
     {
@@ -94,7 +94,7 @@
     {
       "id": "faq-cif-016",
       "question": "Quelle est la différence entre le briefing collectif et l'audit 1:1 ?",
-      "answer": "Pour la cohorte CIF en cours, le parcours est le briefing collectif uniquement (visio Zoom, plusieurs cabinets) : présentation du système Hercule et des flux qualifiés. Le lien de réservation dans l'email pointe vers ce briefing — pas d'audit 1:1 individuel pour cette cohorte.",
+      "answer": "Pour la cohorte CIF en cours, le parcours standard est le briefing collectif (visio Zoom, plusieurs cabinets) : présentation du système Hercule et des flux qualifiés via le lien de réservation. Un accompagnement sur-mesure démarre à 2 500 € ; pour en discuter en 1:1 avec le dirigeant, répondez à l'email.",
       "cvgLink": true
     },
     {

@@ -26,6 +26,9 @@ import {
   getInstantlyApiKey,
   updateLeadInterestStatusBypass,
 } from "@/lib/instantly-bypass/client";
+import { detectOptOut } from "@/lib/lead-relances/opt-out";
+import { stopAllLeadRelances } from "@/lib/lead-relances/stop-all";
+import { syncPipelineStepFromSentFlows } from "@/lib/instantly-bypass/sync-pipeline-from-events";
 import {
   applyReplyGate,
   isRecoveryInterestTag,
@@ -242,6 +245,26 @@ export async function handleInstantlyReply(
     };
   }
 
+  if (detectOptOut(inboundText)) {
+    await stopAllLeadRelances({
+      leadEmail,
+      campaignId,
+      reason: "opt-out inbound",
+    });
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_not_interested",
+      started,
+      "Opt-out détecté",
+    );
+    return {
+      ok: true,
+      skipped: "opt_out",
+      aiStatus: "skipped_not_interested",
+      latencyMs,
+    };
+  }
+
   if (!config.prompt_snapshot?.trim()) {
     const latencyMs = await finalizeInbound(
       inbound.id,
@@ -376,6 +399,7 @@ export async function handleInstantlyReply(
 
     if (isRecoveryInterestTag(interestStatus)) {
       await retagLeadInterested(apiKey, campaignId, leadEmail);
+      await syncPipelineStepFromSentFlows(campaignId, leadEmail);
     }
 
     return {

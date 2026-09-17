@@ -30,6 +30,8 @@ Niche presets are imported from `app/streamlit_scraper/config_loader.PRESET_LABE
 - **Health audit** — `pnpm audit-reply-agent` (Supabase failures + Instantly slow pending)
 - **Problem tab** — failures, stale pending (>24h), recovery gate (<70%), abstentions, OOO
 - **Recovery mode** — Lead + Not interested tags call Grok; reply only if `recovery_confidence ≥ 70` (`reply_gate.py` / `lib/ai-reply-agent/reply-gate.ts`)
+- **Reprocess skipped** — `pnpm reprocess-skipped-replies -- --campaign-id <id> --execute [--send]`
+- **Opt-out global** — `pnpm stop-lead-relances -- --email=... --campaign-id=... --execute` (stop Resend, E1/E2/E3, reply agent)
 
 ## Niche CIF (`conseillers_gestion_patrimoine`)
 
@@ -41,7 +43,7 @@ Knowledge pack : `doc/tech-stack/ai-reply-knowledge-cif.md` + `doc/legal-documen
 
 **Recovery + AER :** toutes les réponses `should_reply=true` suivent Acknowledge → Explain → Redirect. Tags Lead / Not interested : gate 70 % ; envoi réussi → retag Instantly **Interested**.
 
-**Conference cutover :** `{reservation_cif_link}` → `hercule.dev/reservation-conference.html` (briefing collectif, pas d'audit 1:1 pour la cohorte en cours).
+**Conference cutover :** `{reservation_cif_link}` → `hercule.dev/reservation-conference.html`. Objection conférence : script 2 500 € sur-mesure + clé en main en conférence + option 1:1 en répondant au mail.
 
 Après modification des prompts :
 
@@ -70,7 +72,9 @@ Assemblé à la volée pour Grok :
 
 Code : `legal_content.py` (Streamlit preview) · `lib/ai-reply-agent/knowledge.ts` (webhook prod).
 
-**Règle tarifs comptable :** renvoyer vers `https://hercule.dev/cvg/comptable` **sans chiffrer** dans l'email. Abstention (`should_reply=false`) si la question n'est pas couverte par le pack.
+**Règle tarifs comptable :** renvoyer vers `https://hercule.dev/cvg/comptable` **sans chiffrer** dans l'email (exception : objection conférence → 2 500 € sur-mesure autorisé). Abstention (`should_reply=false`) si la question n'est pas couverte par le pack.
+
+**Conference cutover :** `{reservation_comptable_link}` → `hercule.dev/reservation-conference.html`. Même script AER conférence que CIF (wording BNC/BIC/TNS).
 
 ### Flux reply (comptable)
 

@@ -16,6 +16,12 @@ OUTREACH_SIGNATURE_PLAIN = "\n".join(
     (BEATRICE_SIGNATURE, HERCULE_SIGNATURE_TAGLINE, HERCULE_WEBSITE_URL)
 )
 
+OPT_OUT_DISCLAIMER_PLAIN = "_Répondez non si vous ne souhaitez plus de messages._"
+OPT_OUT_DISCLAIMER_HTML = (
+    "<p><i>Répondez non si vous ne souhaitez plus de messages.</i></p>"
+)
+OPT_OUT_DISCLAIMER_MARKER = "Répondez non si vous ne souhaitez plus de messages"
+
 _RESERVATION_PATH_RE = re.compile(
     r"reservation(?:-entreprise)?\.html|/r/comptable/",
     re.I,
@@ -209,8 +215,23 @@ def format_reply_html(
         body = ensure_cta_present(body, resolved_cta)
 
     body = ensure_outreach_signature(body)
+    if OPT_OUT_DISCLAIMER_MARKER not in body:
+        sig_idx = body.rfind(BEATRICE_SIGNATURE)
+        if sig_idx >= 0:
+            body = (
+                f"{body[:sig_idx].rstrip()}\n\n{OPT_OUT_DISCLAIMER_PLAIN}\n\n"
+                f"{body[sig_idx:]}"
+            )
+        else:
+            body = f"{body}\n\n{OPT_OUT_DISCLAIMER_PLAIN}"
     body = _structure_reply_plaintext(body)
     linked = _plain_to_linked_html(body)
+    if OPT_OUT_DISCLAIMER_MARKER not in linked:
+        sig_idx = linked.find(BEATRICE_SIGNATURE)
+        if sig_idx >= 0:
+            linked = f"{linked[:sig_idx]}{OPT_OUT_DISCLAIMER_HTML}{linked[sig_idx:]}"
+        else:
+            linked = f"{linked}{OPT_OUT_DISCLAIMER_HTML}"
     html_out = _paragraphs_from_linked_text(linked)
     # #region agent log
     try:

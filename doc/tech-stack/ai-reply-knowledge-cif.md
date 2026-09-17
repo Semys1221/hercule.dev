@@ -53,17 +53,26 @@ Renoyer vers **hercule.dev/cvg/conseil-financier** pour le détail. En résumé 
 
 ## Briefing collectif (cohorte en cours — format unique)
 
-- Pour la **cohorte CIF en cours**, Hercule propose **uniquement un briefing collectif** (visio Zoom, plusieurs cabinets) — **pas d'audit 1:1** ni d'appel téléphonique ad hoc en alternative.
-- Le lien `{reservation_cif_link}` pointe vers **hercule.dev/reservation-conference.html** (briefing collectif) — même variable, URL personnalisée par lead.
-- Si le lead demande un RDV ou un appel : rediriger vers le briefing collectif via le lien CTA — ne pas inventer d'URL ni proposer un format individuel.
+- Pour la **cohorte CIF en cours**, Hercule propose un **briefing collectif** (visio Zoom, plusieurs cabinets) via `{reservation_cif_link}` → **hercule.dev/reservation-conference.html**.
+- Si le lead demande un RDV ou un appel : rediriger vers le briefing collectif via le lien CTA — ne pas inventer d'URL.
+- **Sur-mesure 1:1** : uniquement si le lead **répond à ce mail** pour discuter d'une solution sur-mesure avec le dirigeant — pas de lien Calendly 1:1 ni d'appel téléphonique ad hoc.
 
 ## Framework AER (toutes les réponses should_reply=true)
 
 Structure obligatoire dans `reply_text` :
 
-1. **Acknowledge** — valider l'objection sans céder (« Je comprends que le format collectif ne soit pas votre habitude. »).
-2. **Explain** — agiter la douleur / coût de l'inaction (« Sans action structurée, difficile de développer une clientèle professionnelle dès le mois suivant. »).
+1. **Acknowledge** — valider l'objection sans céder (« Je comprends que le format conférence ne soit pas votre habitude. »).
+2. **Explain** — agiter la douleur / coût de l'inaction ou expliquer le positionnement (voir script conférence ci-dessous).
 3. **Redirect** — CTA briefing collectif (`{reservation_cif_link}`), lien seul sur sa ligne.
+
+### Script objection conférence (prioritaire)
+
+Déclencheurs : « conférence », « appel à plusieurs », « appelez-moi », « pas de visio collective », « je ne fais pas les appels en conférence », etc.
+
+- **Acknowledge** : valider la réaction sans s'excuser.
+- **Explain** : un accompagnement Hercule sur-mesure démarre à **2 500 €** ; pour proposer une tarification accessible aux cabinets qui souhaitent une **solution clé en main** pour développer rapidement leur clientèle **professionnelle (cabinets dentistes et vétérinaires)**, Hercule présente cette offre en **appel conférence**. **Exception pricing** : le 2 500 € est le seul montant autorisé dans l'email pour cette objection.
+- **Redirect** : lien `{reservation_cif_link}` + « Si vous souhaitez réserver un appel en 1:1 avec le dirigeant pour discuter d'une solution sur-mesure, répondez à ce mail. »
+- `should_reply = true` — ce n'est **pas** une raison d'abstenir ; `recovery_confidence ≥ 75` si tag Lead / Not interested.
 
 ### Exemples recovery
 
@@ -71,7 +80,7 @@ Structure obligatoire dans `reply_text` :
 |---------|---------------------|--------------|-----|
 | « Non merci, pas notre cible » | 10–25 | false | — |
 | « Non mais je voudrais comprendre… » | 80+ | true | Acknowledge hésitation → Explain coût inaction → Redirect conférence |
-| « Appelez-moi, je ne fais pas d'appels en conférence » | 75+ | true | Acknowledge format → Explain bande passante / flux qualifiés → Redirect conférence (ne pas s'excuser ni proposer 1:1) |
+| « Appelez-moi, je ne fais pas d'appels en conférence » | 75+ | true | Acknowledge format → Explain 2 500 € sur-mesure vs clé en main conférence → Redirect conférence + option reply mail 1:1 |
 | « Oui » / question process | 90+ | true | AER light → Redirect conférence |
 
 ## FAQ cabinet (extraits)
@@ -86,7 +95,8 @@ Structure obligatoire dans `reply_text` :
 - **Qui peut postuler ?** Cabinets avec bande passante suffisante ; le seuil minimum 2 associés/collaborateurs est un indicateur, pas un refus automatique.
 - **« Je n'ai pas 2 collaborateurs »** : l'enjeu est la bande passante pour des visios qualifiantes (pas des appels de 10 min). Si le cabinet a la capacité (y compris sous-traitance stable), inviter à l'audit de compatibilité via Calendly.
 - **Objection tarif / « mensualités trop élevées »** : expliquer la valeur (10 missions/mois, garantie MRR, 0 % commission sur honoraires) ; mentionner Hercule Lite (1 799 €/mois, 5 missions/mois) comme offre d'entrée tant que le cabinet a la capacité d'absorber ; détail sur hercule.dev/cvg/conseil-financier.
-- **Demande d'appel téléphonique / format individuel** : AER — valider la demande sans céder ; expliquer que le briefing collectif permet de voir le système et les flux en cours ; rediriger vers `{reservation_cif_link}` (conférence). Ne pas proposer d'appel téléphonique ni de visio 1:1.
+- **Objection conférence / format collectif** : appliquer le script AER conférence (2 500 € sur-mesure, clé en main en conférence, option 1:1 en répondant au mail) — ne pas s'excuser, ne pas s'abstenir.
+- **Demande d'appel téléphonique / format individuel** : AER — rediriger vers le briefing collectif via `{reservation_cif_link}` ; pour une solution sur-mesure, inviter à **répondre à ce mail** pour un 1:1 avec le dirigeant — pas d'appel téléphonique ad hoc ni de lien Calendly 1:1.
 - **Apporteurs d'affaires / rémunération** : Hercule ne rémunère pas les apporteurs. Le cabinet souscrit à Hercule pour recevoir des missions qualifiées ; 0 % de commission sur les honoraires signés ; le dirigeant ne paie rien à Hercule.
 - **Réciprocité / contreparties / engagements** : Hercule ne demande pas de réciprocité commerciale (pas de renvoi de clients, pas de commission sur vos propres dossiers). Le cabinet acquiert l'accès au système pour recevoir des flux qualifiés en exclusivité selon les CGV souscrites — c'est la contrepartie contractuelle. Aucun engagement hors contrat.
 - **Garantie signature ?** Non. Garantie MRR uniquement sur Hercule Starter et Pack (voir CGV).

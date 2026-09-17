@@ -64,7 +64,7 @@ pnpm configure-booking-cron
 
 ## 5. Instantly bypass cron (every 10 min)
 
-Manual Streamlit sends outside the Paris send window are queued in `instantly_bypass_jobs`. This cron drains due jobs.
+E1 from the `lead_interested` webhook is dispatched **immediately** in the webhook handler (job row kept for audit + cron fallback). E2/E3 and manual Streamlit sends outside the Paris send window stay queued in `instantly_bypass_jobs`; this cron drains due jobs and retries transient failures.
 
 Use [cron-job.org](https://cron-job.org) only (no Vercel cron — see `vercel.json`):
 

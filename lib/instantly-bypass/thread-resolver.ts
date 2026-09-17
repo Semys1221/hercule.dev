@@ -163,3 +163,40 @@ export async function leadHasRepliedSince(
     return Boolean(ts && ts > sinceIso);
   });
 }
+
+export async function getLatestReceivedReplySince(
+  apiKey: string,
+  leadEmail: string,
+  sinceIso: string,
+): Promise<string | null> {
+  const received = await listEmails(apiKey, {
+    search: leadEmail,
+    emailType: "received",
+    limit: 20,
+  });
+
+  const latest = pickLatest(
+    received.filter((item) => {
+      const ts = item.timestamp_email ?? item.timestamp_created;
+      return Boolean(ts && ts > sinceIso);
+    }),
+  );
+  if (!latest) {
+    return null;
+  }
+
+  const record = latest as InstantlyEmailRecord & {
+    body?: { text?: string; html?: string };
+    body_text?: string;
+    body_html?: string;
+  };
+  const text = [
+    record.body?.text,
+    record.body_text,
+    record.body?.html,
+    record.body_html,
+  ]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join("\n");
+  return text.trim() || null;
+}

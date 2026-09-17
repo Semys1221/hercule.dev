@@ -18,7 +18,9 @@ import {
 import { hasPendingBypassJob, insertBypassJob } from "./scheduled-jobs";
 import { executeBypassFlow, STEP_AFTER_FLOW } from "./send-flow";
 import { isWithinSendWindow, nextSendSlot } from "./send-window";
-import { leadHasRepliedSince } from "./thread-resolver";
+import { detectOptOut } from "@/lib/lead-relances/opt-out";
+import { stopAllLeadRelances } from "@/lib/lead-relances/stop-all";
+import { getLatestReceivedReplySince, leadHasRepliedSince } from "./thread-resolver";
 import { listBypassConfigs } from "./templates";
 
 import type { BypassFlow, InstantlyLeadRecord } from "./types";
@@ -214,6 +216,15 @@ async function processLead(params: {
 
   const apiKey = getInstantlyApiKey();
   if (await leadHasRepliedSince(apiKey, leadEmail, sentAt)) {
+    const replyText = await getLatestReceivedReplySince(apiKey, leadEmail, sentAt);
+    if (replyText && detectOptOut(replyText)) {
+      await stopAllLeadRelances({
+        leadEmail,
+        campaignId,
+        reason: "opt-out inbound (pipeline advance)",
+      });
+      return "replied";
+    }
     await upsertPipelineStep(campaignId, leadEmail, "replies_to_handle");
     return "replied";
   }

@@ -775,6 +775,32 @@ def render_problem_tab(
         if raw_target in ("buyer", "seller"):
             target_type = raw_target
 
+    if config and st.button("Re-run Grok (read-only)", key="problem_rerun_grok"):
+        from agent_preview import generate_reply_preview
+        from lead_tags import build_interest_index, interest_label, lookup_lead_interest
+        from reply_gate import apply_reply_gate
+
+        interest_index = build_interest_index(instantly_client, campaign_id)
+        interest = lookup_lead_interest(
+            instantly_client, campaign_id, lead_email, interest_index
+        )
+        preview = generate_reply_preview(
+            config,
+            str(inbound.get("body_text") or ""),
+            lead_email,
+            interest_label=interest_label(interest),
+        )
+        gate = apply_reply_gate(interest, preview)
+        st.json(
+            {
+                "allow_reply": gate["allow_reply"],
+                "ai_status": gate["ai_status"],
+                "reason": gate["reason"],
+                "recovery_confidence": preview.get("recovery_confidence"),
+                "draft_preview": (preview.get("reply_text") or "")[:500],
+            }
+        )
+
     reply_text = st.text_area("Réponse manuelle", height=160, key="manual_reply")
     if st.button("Envoyer la réponse manuelle", disabled=not reply_text.strip()):
         try:
