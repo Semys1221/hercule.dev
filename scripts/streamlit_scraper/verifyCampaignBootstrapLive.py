@@ -79,7 +79,6 @@ CANONICAL_INSTANTLY_KEYS = (
     "reservation_entreprise_link",
     "confirmation_agence_link",
     "reservation_cif_link",
-    "confirmation_cif_link",
     "statut",
 )
 

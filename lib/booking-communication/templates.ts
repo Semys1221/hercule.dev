@@ -628,6 +628,58 @@ L'équipe Hercule`,
   },
 };
 
+export const CIF_CONFERENCE_EMAIL_TEMPLATE_OVERRIDES: Partial<
+  Record<BookingEmailTemplateType, Omit<BookingEmailTemplateRecord, "email_type">>
+> = {
+  conference_invite: {
+    subject: "Invitation — conférence Hercule (mercredi 10h)",
+    body: `{{firstNameLine}}
+
+Le volume de demandes d'audit CIF dépasse notre capacité en rendez-vous individuels.
+
+Nous organisons une conférence collective en visio — chaque mercredi à 10h (heure de Paris) — pour présenter la méthode Hercule et répondre à vos questions sur le déploiement du système inbound sur votre zone.
+
+Inscription (gratuite) :
+{{reservation_cif_link}}
+
+L'équipe Hercule`,
+  },
+  conference_invite_24: {
+    subject: "Rappel — prochaine conférence Hercule mercredi 10h",
+    body: `{{firstNameLine}}
+
+Petit rappel : la prochaine conférence Hercule CIF a lieu mercredi à 10h (heure de Paris).
+
+Inscription :
+{{reservation_cif_link}}
+
+L'équipe Hercule`,
+  },
+  conference_invite_48: {
+    subject: "Dernière place — conférence Hercule mercredi 10h",
+    body: `{{firstNameLine}}
+
+Nous vous réservons encore une place pour la conférence collective de mercredi à 10h (heure de Paris) — présentation de la méthode Hercule et échanges sur votre zone.
+
+Lien d'inscription :
+{{reservation_cif_link}}
+
+L'équipe Hercule`,
+  },
+  conference_invite_72: {
+    subject: "Clôture — conférence Hercule",
+    body: `{{firstNameLine}}
+
+Dernier message automatique de notre part : si vous souhaitez découvrir le système Hercule pour cabinets CIF, la conférence du mercredi à 10h (heure de Paris) reste ouverte :
+
+{{reservation_cif_link}}
+
+Sinon, nous clôturons ce fil. Répondez à cet email si vous souhaitez être recontacté plus tard.
+
+L'équipe Hercule`,
+  },
+};
+
 export function defaultBookingEmailTemplate(
   category: LeadCategory,
   emailType: BookingEmailTemplateType,
@@ -638,7 +690,13 @@ export function defaultBookingEmailTemplate(
       return comptableOverride;
     }
   }
-  if (category === "entreprise" || category === "cif") {
+  if (category === "cif") {
+    const cifOverride = CIF_CONFERENCE_EMAIL_TEMPLATE_OVERRIDES[emailType];
+    if (cifOverride) {
+      return cifOverride;
+    }
+  }
+  if (category === "entreprise") {
     const override = ENTREPRISE_BOOKING_EMAIL_TEMPLATE_OVERRIDES[emailType];
     if (override) {
       return override;

@@ -1,7 +1,6 @@
-import { CALENDLY_CIF_URL } from "@/lib/constants"
+import { CifMarketingPrimaryCta } from "@/components/cif/cif-marketing-cta"
 import {
   getMarketingCopy,
-  MARKETING_PRIMARY_CTA,
   MARKETING_SECONDARY_CTA,
 } from "@/lib/site/marketing-copy"
 
@@ -26,12 +25,7 @@ export function BandeAudit() {
             >
               {MARKETING_SECONDARY_CTA}
             </a>
-            <a
-              href={CALENDLY_CIF_URL}
-              className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
-            >
-              {MARKETING_PRIMARY_CTA}
-            </a>
+            <CifMarketingPrimaryCta className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm" />
           </div>
         </div>
       </div>

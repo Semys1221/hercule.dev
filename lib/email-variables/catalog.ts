@@ -67,12 +67,6 @@ export const EMAIL_VARIABLE_CATALOG: EmailVariableDefinition[] = [
     supabaseColumn: "reservation_cif_link",
   },
   {
-    key: "confirmation_cif_link",
-    niches: ["cif"],
-    family: "booking",
-    supabaseColumn: "confirmation_cif_link",
-  },
-  {
     key: "dashboardLink",
     niches: ["agence", "comptable", "entreprise", "cif"],
     family: "product",

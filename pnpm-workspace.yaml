@@ -2,6 +2,7 @@ packages:
   - "."
 
 allowBuilds:
+  '@zoom/meetingsdk': set this to true or false
   esbuild: true
   msw: set this to true or false
   sharp: true

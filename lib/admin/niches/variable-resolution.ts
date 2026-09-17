@@ -9,7 +9,7 @@ export function resolveSupabaseColumn(key: string, niche: Niche): string | null 
   }
   if (key === "confirmLink") {
     if (niche === "comptable") return "confirmation_comptable_link";
-    if (niche === "cif") return "confirmation_cif_link";
+    if (niche === "cif") return null;
     return "confirmation_agence_link";
   }
   if (key === "post_booking_link") {
@@ -41,7 +41,7 @@ export function resolveInstantlyKey(key: string, niche: Niche): string | null {
   if (key === "reservation_cif_link") {
     return "reservation_cif_link";
   }
-  if (key === "confirmation_agence_link" || key === "confirmation_comptable_link" || key === "confirmation_cif_link") {
+  if (key === "confirmation_agence_link" || key === "confirmation_comptable_link") {
     return "confirmation_agence_link";
   }
   if (key === "confirmLink") {

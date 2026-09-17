@@ -35,7 +35,6 @@ lookup.set("new@test.com", {
     email: "new@test.com",
     slug: "abc123",
     reservation_cif_link: "https://example.com/cif",
-    confirmation_cif_link: "https://example.com/confirm",
   } as LinkTrackingLead,
 });
 
@@ -65,6 +64,6 @@ const skippedVars = buildInstantlyCustomVariables(
   "cif",
 );
 assert.ok(skippedVars.reservation_cif_link);
-assert.ok(skippedVars.confirmation_agence_link);
+assert.equal(skippedVars.confirmation_agence_link, "");
 
 console.log("OK provision-by-emails unit tests passed");

@@ -1,5 +1,6 @@
 import type { ParsedCalendlyInvitee } from "@/lib/calendly";
 import { syncCalendlyMeetingLinks } from "@/lib/booking-communication/meeting-links";
+import { cancelConferenceInviteJobs } from "@/lib/booking-communication/jobs";
 import { upsertSalesCallFromBooking } from "@/lib/sales-calls/supabase";
 
 import { syncLeadMeetingBookedToInstantly } from "./instantly";
@@ -195,6 +196,10 @@ export async function bookLeadFromCalendly(
   }
 
   const extra = await syncInstantlyForBookedLead(lookup);
+
+  if (lookup.category === "cif") {
+    await cancelConferenceInviteJobs(lookup.lead.id);
+  }
 
   return {
     ok: true,

@@ -1,4 +1,16 @@
 {
+  "redirects": [
+    {
+      "source": "/reservation-cif.html",
+      "destination": "/reservation-conference.html",
+      "permanent": false
+    },
+    {
+      "source": "/reservation-cif.html/:slug",
+      "destination": "/reservation-conference.html/:slug",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/reservation.html/:slug",
@@ -10,7 +22,11 @@
     },
     {
       "source": "/reservation-cif.html/:slug",
-      "destination": "/reservation-cif.html?code=:slug"
+      "destination": "/reservation-conference.html?code=:slug"
+    },
+    {
+      "source": "/reservation-conference.html/:slug",
+      "destination": "/reservation-conference.html?code=:slug"
     },
     {
       "source": "/confirm-reservation.html/:slug",

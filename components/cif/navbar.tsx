@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { CifMarketingPrimaryCta } from "@/components/cif/cif-marketing-cta"
 import { HerculeMark } from "@/components/hercule-mark"
-import { CALENDLY_CIF_URL } from "@/lib/constants"
-import { MARKETING_NAV_PIPELINE, MARKETING_PRIMARY_CTA } from "@/lib/site/marketing-copy"
+import { MARKETING_NAV_PIPELINE } from "@/lib/site/marketing-copy"
 
 export function Navbar() {
   return (
@@ -38,12 +38,7 @@ export function Navbar() {
             >
               Je suis un expert-comptable
             </Link>
-            <a
-              href={CALENDLY_CIF_URL}
-              className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors"
-            >
-              {MARKETING_PRIMARY_CTA}
-            </a>
+            <CifMarketingPrimaryCta className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors" />
           </div>
         </div>
       </div>

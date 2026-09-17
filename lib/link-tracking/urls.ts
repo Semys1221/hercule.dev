@@ -7,7 +7,7 @@ const DEFAULT_TRACKING_BASE_ENTREPRISE =
 const DEFAULT_TRACKING_BASE_COMPTABLE =
   "https://www.hercule.dev/reservation-entreprise.html";
 const DEFAULT_TRACKING_BASE_CIF =
-  "https://www.hercule.dev/reservation-cif.html";
+  "https://www.hercule.dev/reservation-conference.html";
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_DASHBOARD_BASE = "https://www.hercule.dev/dashboard";
@@ -32,7 +32,6 @@ export type ComptableLeadUrls = {
 
 export type CifLeadUrls = {
   reservation_cif_link: string;
-  confirmation_cif_link: string;
   dashboard_link: string;
 };
 
@@ -162,7 +161,6 @@ export function buildComptableLeadUrls(
 export function buildCifLeadUrls(slug: string, email: string): CifLeadUrls {
   return {
     reservation_cif_link: buildTrackingUrl(slug, "cif"),
-    confirmation_cif_link: buildConfirmationComptableLink(slug, email),
     dashboard_link: buildDashboardUrl(slug),
   };
 }
@@ -217,7 +215,6 @@ export function resolveLeadSlug(
     | "reservation_cif_link"
     | "confirmation_agence_link"
     | "confirmation_comptable_link"
-    | "confirmation_cif_link"
     | "post_booking_link"
   >,
 ): string | null {
@@ -234,7 +231,6 @@ export function resolveLeadSlug(
     lead.reservation_cif_link,
     lead.confirmation_agence_link,
     lead.confirmation_comptable_link,
-    lead.confirmation_cif_link,
     lead.post_booking_link,
   ];
 
@@ -282,7 +278,6 @@ export function resolveSalesSessionDashboardLink(params: {
     | "reservation_cif_link"
     | "confirmation_agence_link"
     | "confirmation_comptable_link"
-    | "confirmation_cif_link"
     | "post_booking_link"
   > | null;
   bookingDashboardLink?: string | null;
@@ -391,11 +386,9 @@ export function reservationCifLinkFor(
 }
 
 export function confirmationCifLinkFor(
-  lead: Pick<LinkTrackingLead, "slug" | "email" | "confirmation_cif_link">,
+  _lead: Pick<LinkTrackingLead, "slug" | "email">,
 ): string {
-  const stored = lead.confirmation_cif_link?.trim();
-  if (stored) return stored;
-  return buildConfirmationComptableLink(lead.slug, lead.email);
+  return "";
 }
 
 export function buildInstantlyCustomVariables(
@@ -421,7 +414,7 @@ export function buildInstantlyCustomVariables(
     return {
       reservation_agence_link: "",
       reservation_entreprise_link: cifUrls.reservation_cif_link,
-      confirmation_agence_link: cifUrls.confirmation_cif_link,
+      confirmation_agence_link: "",
       statut,
       link: "",
       confirm_link: "",

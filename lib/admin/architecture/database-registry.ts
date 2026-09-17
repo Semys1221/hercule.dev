@@ -45,7 +45,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     label: "CIF leads",
     domain: "product",
     purpose: "Fiche cabinet CIF / CGP buyer — acquisition, onboarding, Calendly",
-    keyColumns: "id, email, statut, product_statut, slug, profile, retraction_status, retraction_ends_at, retraction_waived_at, reservation_cif_link, confirmation_cif_link, dashboard_link",
+    keyColumns: "id, email, statut, product_statut, slug, profile, retraction_status, retraction_ends_at, retraction_waived_at, reservation_cif_link, dashboard_link",
     writers: ["admin", "webhook", "cron"],
     readers: ["admin", "client", "cron"],
     profileKeys: "form, communication.delays, display.timeline",

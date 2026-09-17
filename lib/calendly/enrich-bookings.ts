@@ -188,7 +188,7 @@ export function buildCrmLinks(
       reservation_entreprise_link: urls.reservation_entreprise_link,
       reservation_comptable_link: cifUrls.reservation_cif_link,
       confirmation_agence_link: urls.confirmation_agence_link,
-      confirmation_comptable_link: cifUrls.confirmation_cif_link,
+      confirmation_comptable_link: "",
       dashboard_link: cifUrls.dashboard_link,
     };
   }

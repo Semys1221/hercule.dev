@@ -80,8 +80,7 @@ export function needsProvision(
   }
   if (category === "cif") {
     const reservationLink = row.reservation_cif_link?.trim();
-    const confirmLink = row.confirmation_cif_link?.trim();
-    return !slug || !reservationLink || !confirmLink;
+    return !slug || !reservationLink;
   }
   const entrepriseLink = row.reservation_entreprise_link?.trim();
   const confirmLink = row.confirmation_agence_link?.trim();

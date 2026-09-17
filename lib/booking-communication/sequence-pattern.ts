@@ -37,6 +37,12 @@ export const SEQUENCE_THREAD_FAMILIES: readonly BookingEmailType[][] = [
     "comptable_acquisition_rdv_reminder",
     "comptable_acquisition_rdv_final",
   ],
+  [
+    "conference_invite",
+    "conference_invite_24",
+    "conference_invite_48",
+    "conference_invite_72",
+  ],
 ];
 
 const familyByType = new Map<BookingEmailType, BookingEmailType[]>();

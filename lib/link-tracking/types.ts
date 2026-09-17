@@ -37,7 +37,6 @@ export type LinkTrackingLead = {
   reservation_comptable_link?: string | null;
   confirmation_comptable_link?: string | null;
   reservation_cif_link?: string | null;
-  confirmation_cif_link?: string | null;
   post_booking_link?: string | null;
   dashboard_link: string | null;
   instantly_lead_id: string | null;

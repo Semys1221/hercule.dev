@@ -182,6 +182,13 @@ const FOLLOW_UP_EMAIL_TYPES: BookingEmailType[] = [
   "modalites_enforce_cancel",
 ];
 
+export const CONFERENCE_INVITE_JOB_TYPES: BookingEmailType[] = [
+  "conference_invite",
+  "conference_invite_24",
+  "conference_invite_48",
+  "conference_invite_72",
+];
+
 export async function cancelPendingJobsForLead(
   leadId: string,
   emailTypes: BookingEmailType[],
@@ -209,6 +216,10 @@ export async function cancelPendingJobsForLead(
 
 export async function cancelFollowUpJobs(leadId: string): Promise<number> {
   return cancelPendingJobsForLead(leadId, FOLLOW_UP_EMAIL_TYPES);
+}
+
+export async function cancelConferenceInviteJobs(leadId: string): Promise<number> {
+  return cancelPendingJobsForLead(leadId, CONFERENCE_INVITE_JOB_TYPES);
 }
 
 export async function cancelAllPendingJobsForLead(leadId: string): Promise<number> {

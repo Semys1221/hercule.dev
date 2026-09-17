@@ -635,6 +635,38 @@ export async function markLeadConfirmed(
   };
 }
 
+export async function markLeadNotBooked(
+  client: SupabaseClient,
+  lookup: LeadLookup,
+): Promise<LeadLookup> {
+  const { data, error } = await client
+    .from(lookup.category)
+    .update({
+      statut: "NOTBOOKED",
+      scheduled_at: null,
+      booked_at: null,
+      calendly_invitee_uri: null,
+      calendly_join_url: null,
+      calendly_reschedule_url: null,
+      calendly_cancel_url: null,
+      calendly_links_synced_at: null,
+      calendly_links_sync_error: null,
+      calendly_payload: null,
+    })
+    .eq("id", lookup.lead.id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase not-booked reset failed: ${error.message}`);
+  }
+
+  return {
+    category: lookup.category,
+    lead: (data as LinkTrackingLead) ?? lookup.lead,
+  };
+}
+
 export async function markLeadCancelled(
   client: SupabaseClient,
   lookup: LeadLookup,

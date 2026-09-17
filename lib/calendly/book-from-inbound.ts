@@ -78,6 +78,10 @@ async function findExistingFutureBooking(
 export async function bookFromInbound(
   params: BookFromInboundParams,
 ): Promise<BookFromInboundResult> {
+  if (params.event === "cif") {
+    return { status: "disabled" };
+  }
+
   if (!isCalendlyAutoBookEnabled()) {
     return { status: "disabled" };
   }

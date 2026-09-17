@@ -1,7 +1,8 @@
 import { formatFrenchDate } from "@/lib/retraction/dates";
-import { dashboardLinkFor, reservationAgenceLinkFor } from "@/lib/link-tracking/urls";
+import { dashboardLinkFor, reservationAgenceLinkFor, reservationCifLinkFor } from "@/lib/link-tracking/urls";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
 import { createLinkTrackingClient, findLeadById } from "@/lib/link-tracking/supabase";
+import { isConferenceInviteEmailType } from "@/lib/cif-conference-sequence/orchestrator";
 
 import { findMatchForLeadEmailType } from "@/lib/matching/store";
 import {
@@ -62,6 +63,7 @@ export async function extraVarsForJob(
   activationDate?: string;
   retractionEndsAt?: string;
   scheduledAt?: string | null;
+  reservationCifLink?: string;
 }> {
   const dashboardLink = dashboardLinkFor(lead) ?? "";
   const reservationAgenceLink = reservationAgenceLinkFor(lead);
@@ -97,6 +99,14 @@ export async function extraVarsForJob(
   };
 
   const emailType = job.email_type as BookingEmailType;
+
+  if (isConferenceInviteEmailType(emailType) && job.lead_category === "cif") {
+    return {
+      ...base,
+      reservationCifLink: reservationCifLinkFor(lead),
+    };
+  }
+
   const needsMatch =
     emailType.startsWith("match_") ||
     emailType.startsWith("survey_") ||

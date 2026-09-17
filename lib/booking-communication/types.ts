@@ -46,6 +46,10 @@ export const BOOKING_EMAIL_TYPE_VALUES = [
   "comptable_acquisition_config_ready",
   "comptable_acquisition_rdv_reminder",
   "comptable_acquisition_rdv_final",
+  "conference_invite",
+  "conference_invite_24",
+  "conference_invite_48",
+  "conference_invite_72",
 ] as const;
 
 export type BookingEmailType = (typeof BOOKING_EMAIL_TYPE_VALUES)[number];
@@ -73,6 +77,7 @@ export const SEQUENCE_TRIGGERED_BY_VALUES = [
   "admin_complete_appt",
   "admin_modalites",
   "comptable_acquisition_sequence",
+  "cif_conference_sequence",
 ] as const;
 
 export type SequenceTriggeredBy = (typeof SEQUENCE_TRIGGERED_BY_VALUES)[number];

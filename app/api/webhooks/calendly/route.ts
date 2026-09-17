@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { cancelFollowUpJobs } from "@/lib/booking-communication/jobs";
+import { cancelConferenceInviteJobs, cancelFollowUpJobs } from "@/lib/booking-communication/jobs";
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 import {
   parseInviteeCanceledPayload,
@@ -13,7 +13,7 @@ import { bookLeadFromCalendly } from "@/lib/link-tracking/book-lead";
 import {
   createLinkTrackingClient,
   findLeadByEmail,
-  markLeadCancelled,
+  markLeadNotBooked,
 } from "@/lib/link-tracking/supabase";
 
 function firstNameFromFullName(name: string): string {
@@ -47,24 +47,25 @@ async function handleInviteeCanceled(payload: unknown) {
     return NextResponse.json({ ok: true, ignored: "lead_not_found" });
   }
 
-  if (lookup.lead.statut === "CANCELLED") {
-    return NextResponse.json({ ok: true, already_cancelled: true });
+  if (lookup.lead.statut === "NOTBOOKED" && !lookup.lead.scheduled_at) {
+    return NextResponse.json({ ok: true, already_not_booked: true });
   }
 
-  const cancelled = await markLeadCancelled(client, lookup);
-  await cancelFollowUpJobs(cancelled.lead.id);
+  const reset = await markLeadNotBooked(client, lookup);
+  await cancelFollowUpJobs(reset.lead.id);
+  await cancelConferenceInviteJobs(reset.lead.id);
 
   try {
     await syncLeadStatutToInstantly(
-      cancelled.lead,
-      cancelled.category,
-      "CANCELLED",
+      reset.lead,
+      reset.category,
+      "NOTBOOKED",
     );
   } catch (err) {
-    console.error("[link-tracking/calendly] Instantly cancel sync:", err);
+    console.error("[link-tracking/calendly] Instantly not-booked sync:", err);
   }
 
-  return NextResponse.json({ ok: true, statut: "CANCELLED" });
+  return NextResponse.json({ ok: true, statut: "NOTBOOKED" });
 }
 
 function revalidateBookingsAfterWebhook(): void {

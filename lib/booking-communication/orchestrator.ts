@@ -3,7 +3,10 @@ import {
   createLinkTrackingClient,
   markLeadCancelled,
 } from "@/lib/link-tracking/supabase";
+import { enforceModalitesCancelForLead } from "@/lib/modalites-campaign/enforce-cancel";
+import { isConferenceInviteEmailType } from "@/lib/cif-conference-sequence/orchestrator";
 import type { LinkTrackingLead } from "@/lib/link-tracking/types";
+import { isMeetingBookedStatus } from "@/lib/link-tracking/types";
 import {
   cancelScheduledEvent,
   extractEventUuidFromPayload,
@@ -31,7 +34,6 @@ import { buildTemporaryConfirmUrl, buildEntreprisePostBookingUrl } from "./templ
 import { defaultUseHtml } from "./signatures";
 import { confirmationAgenceLinkFor, dashboardLinkFor } from "@/lib/link-tracking/urls";
 import { modalitesConfirmUrlFor } from "@/lib/modalites-campaign/urls";
-import { enforceModalitesCancelForLead } from "@/lib/modalites-campaign/enforce-cancel";
 import { prepareThreadedSend } from "./threaded-send";
 import { bypassesSendWindow, isWithinSendWindow, nextSendSlot } from "./send-window";
 import {
@@ -313,6 +315,14 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
   }
 
   if (isDisabledMeetingConfirmationType(job.email_type)) {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  if (
+    isConferenceInviteEmailType(job.email_type) &&
+    isMeetingBookedStatus(lead.statut)
+  ) {
     await cancelJob(job.id);
     return true;
   }

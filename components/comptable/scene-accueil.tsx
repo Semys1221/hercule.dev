@@ -14,7 +14,8 @@ import { BlocGaranties } from "./bloc-garanties"
 import { BandeAudit } from "./bande-audit"
 import { Footer } from "./footer"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
-import { getMarketingCopy, MARKETING_SECONDARY_CTA } from "@/lib/site/marketing-copy"
+import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
+import { getMarketingCopy, MARKETING_CLIENT_CTA } from "@/lib/site/marketing-copy"
 
 interface AccueilSceneProps {
   demandes: DemandeContrat[]
@@ -87,10 +88,10 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 className="mt-8 flex flex-wrap items-center gap-6"
               >
                 <a
-                  href="#demandes"
+                  href={CALENDLY_ENTREPRISE_URL}
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 >
-                  {MARKETING_SECONDARY_CTA}
+                  {MARKETING_CLIENT_CTA}
                 </a>
               </motion.div>
             </div>

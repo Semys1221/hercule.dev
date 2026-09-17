@@ -1,7 +1,9 @@
 export type MarketingAudience = "comptable" | "cif" | "agence";
 
 export const MARKETING_PRIMARY_CTA = "Acquérir le système Hercule";
+export const MARKETING_INVITATION_ONLY_CTA = "Sur invitation";
 export const MARKETING_SECONDARY_CTA = "Voir le pipeline";
+export const MARKETING_CLIENT_CTA = "Je cherche un comptable";
 export const MARKETING_AUDIT_CTA = "Réserver un audit système";
 export const MARKETING_NAV_PIPELINE = "Pipeline";
 
@@ -81,9 +83,9 @@ export type MarketingAudienceCopy = {
 
 const COMPTABLE_COPY: MarketingAudienceCopy = {
   hero: {
-    title: "Déployez le système inbound Hercule sur votre zone.",
+    title: "Nous trouvons le meilleur comptable pour chaque demande client",
     subtitle:
-      "Infrastructure exclusive de capture, qualification et routage — live en 60 jours. Pas un apporteur, pas une file de leads.",
+      "Gratuit pour les dirigeants et indépendants. Décrivez votre besoin, nous qualifions votre demande et vous mettons en relation avec le cabinet adapté.",
   },
   pilier: {
     headline: "Un système inbound, pas une marketplace de dossiers.",

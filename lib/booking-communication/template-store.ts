@@ -99,8 +99,17 @@ const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
   "modalites_cancel",
 ];
 
+const CIF_EMAIL_TYPES: BookingEmailType[] = [
+  "conference_invite",
+  "conference_invite_24",
+  "conference_invite_48",
+  "conference_invite_72",
+];
+
 function emailTypesForCategory(category: LeadCategory): BookingEmailType[] {
-  return category === "entreprise" ? ENTREPRISE_EMAIL_TYPES : AGENCE_EMAIL_TYPES;
+  if (category === "cif") return CIF_EMAIL_TYPES;
+  if (category === "entreprise") return ENTREPRISE_EMAIL_TYPES;
+  return AGENCE_EMAIL_TYPES;
 }
 
 export function isProductBookingEmailType(emailType: BookingEmailType): boolean {
@@ -117,7 +126,8 @@ export function isProductBookingEmailType(emailType: BookingEmailType): boolean 
     emailType.startsWith("survey_") ||
     emailType === "sold_check_j7" ||
     emailType === "payment_notification_client" ||
-    emailType.startsWith("comptable_acquisition_")
+    emailType.startsWith("comptable_acquisition_") ||
+    emailType.startsWith("conference_invite")
   );
 }
 
@@ -273,6 +283,7 @@ export function buildBookingEmailVars(params: {
   estimatedFirstRdvDate?: string;
   trackingNumber?: string;
   rdvRangeLabel?: string;
+  reservationCifLink?: string;
 }): Record<string, string> {
   const { date, heure } = formatMeetingDateTime(params.scheduledAt);
   const confirmUrl = params.confirmUrl.trim();
@@ -300,6 +311,7 @@ export function buildBookingEmailVars(params: {
       "",
     trackingNumber: params.trackingNumber?.trim() ?? "",
     rdvRangeLabel: params.rdvRangeLabel?.trim() ?? "",
+    reservation_cif_link: params.reservationCifLink?.trim() ?? "",
   };
   if (params.emailType === "immediate") {
     delete vars.confirmUrl;
@@ -346,6 +358,8 @@ export function sampleBookingEmailVars(
     estimatedFirstRdvDate: "lundi 21 septembre 2026",
     trackingNumber: "HRC-exemple",
     rdvRangeLabel: "10 à 15",
+    reservationCifLink:
+      "https://www.hercule.dev/reservation-conference.html/exemple-slug",
   });
   return vars;
 }
@@ -494,6 +508,7 @@ export async function renderCustomBookingEmail(params: {
   estimatedFirstRdvDate?: string;
   trackingNumber?: string;
   rdvRangeLabel?: string;
+  reservationCifLink?: string;
 }): Promise<RenderedBookingEmail> {
   const vars = buildBookingEmailVars({
     firstName: params.firstName,
@@ -513,6 +528,7 @@ export async function renderCustomBookingEmail(params: {
     estimatedFirstRdvDate: params.estimatedFirstRdvDate,
     trackingNumber: params.trackingNumber,
     rdvRangeLabel: params.rdvRangeLabel,
+    reservationCifLink: params.reservationCifLink,
   });
 
   return finalizeRenderedEmail({
