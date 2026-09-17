@@ -452,17 +452,34 @@
             return url.toString();
         }
 
+        function buildConferenceRedirectUrl(slug) {
+            var target = new URL('/reservation-conference.html', window.location.origin);
+            target.searchParams.set('code', slug);
+            target.searchParams.set('niche', 'comptable');
+            if (prospectEmail) {
+                target.searchParams.set('email', prospectEmail);
+            }
+            return target.pathname + target.search;
+        }
+
         async function trackClick() {
-            if (!shortCode) return;
+            if (!shortCode) return false;
             try {
-                await fetch('/api/link-tracking/click', {
+                var response = await fetch('/api/link-tracking/click', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ slug: shortCode })
                 });
+                if (!response.ok) return false;
+                var data = await response.json();
+                if (data.category === 'comptable') {
+                    window.location.replace(buildConferenceRedirectUrl(shortCode));
+                    return true;
+                }
             } catch (err) {
                 // non-blocking
             }
+            return false;
         }
 
         function renderAvailabilityMessage(container, data) {
@@ -556,19 +573,21 @@
         if (new URLSearchParams(window.location.search).get('confirmed') === '1') {
             showConfirmation();
         } else {
-            void trackClick();
-            void fetchAvailabilityMessage('entreprise');
+            trackClick().then(function(redirected) {
+                if (redirected) return;
+                void fetchAvailabilityMessage('entreprise');
 
-            function bootCalendly() {
-                if (window.Calendly) {
-                    initCalendlyWidget();
-                } else {
-                    window.setTimeout(bootCalendly, 50);
+                function bootCalendly() {
+                    if (window.Calendly) {
+                        initCalendlyWidget();
+                    } else {
+                        window.setTimeout(bootCalendly, 50);
+                    }
                 }
-            }
 
-            bootCalendly();
-            window.setTimeout(hideLoader, 8000);
+                bootCalendly();
+                window.setTimeout(hideLoader, 8000);
+            });
         }
     </script>
 </body>
