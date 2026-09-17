@@ -108,16 +108,25 @@ export async function updateInboundStatus(
   aiReason?: string | null,
   groqModel?: string | null,
   groqCostUsdTicks?: number | null,
+  latencyMs?: number | null,
+  knowledgePackHash?: string | null,
 ): Promise<void> {
   const client = createAiReplyAgentClient();
+  const patch: Record<string, unknown> = {
+    ai_status: aiStatus,
+    ai_reason: aiReason ?? null,
+    groq_model: groqModel ?? null,
+    groq_cost_usd_ticks: groqCostUsdTicks ?? null,
+  };
+  if (latencyMs != null) {
+    patch.latency_ms = latencyMs;
+  }
+  if (knowledgePackHash != null) {
+    patch.knowledge_pack_hash = knowledgePackHash;
+  }
   const { error } = await client
     .from("ai_reply_agent_messages")
-    .update({
-      ai_status: aiStatus,
-      ai_reason: aiReason ?? null,
-      groq_model: groqModel ?? null,
-      groq_cost_usd_ticks: groqCostUsdTicks ?? null,
-    })
+    .update(patch)
     .eq("id", messageId);
   if (error) {
     throw new Error(`Failed to update message status: ${error.message}`);

@@ -15,7 +15,7 @@ import {
   sampleMeetingActionLinks,
   shouldIncludeMeetingActions,
 } from "./meeting-links";
-import { finalizeRenderedEmail } from "./signatures";
+import { finalizeRenderedEmail, isConferenceInviteBookingEmail } from "./signatures";
 import type { MeetingActionLinks } from "./meeting-links";
 import type { BookingEmailType, RenderedBookingEmail } from "./types";
 
@@ -455,6 +455,7 @@ export async function renderEmailFromStore(params: {
   estimatedFirstRdvDate?: string;
   trackingNumber?: string;
   rdvRangeLabel?: string;
+  reservationCifLink?: string;
 }): Promise<RenderedBookingEmail> {
   const template = await resolveBookingEmailTemplate({
     category: params.category,
@@ -483,6 +484,7 @@ export async function renderEmailFromStore(params: {
     estimatedFirstRdvDate: params.estimatedFirstRdvDate,
     trackingNumber: params.trackingNumber,
     rdvRangeLabel: params.rdvRangeLabel,
+    reservationCifLink: params.reservationCifLink,
   });
 }
 
@@ -531,12 +533,18 @@ export async function renderCustomBookingEmail(params: {
     reservationCifLink: params.reservationCifLink,
   });
 
+  const reservationLink = vars.reservation_cif_link?.trim() ?? "";
+  const confirmUrl =
+    isConferenceInviteBookingEmail(params.emailType) && reservationLink
+      ? reservationLink
+      : params.confirmUrl;
+
   return finalizeRenderedEmail({
     category: params.category,
     subject: renderTemplate(params.subject, vars),
     body: renderTemplate(params.body, vars),
     emailType: params.emailType,
-    confirmUrl: params.confirmUrl,
+    confirmUrl,
     useHtml: params.useHtml,
     meetingActionLinks: params.meetingActionLinks,
   });
@@ -551,12 +559,15 @@ export async function previewTemplate(
   category: LeadCategory = "agence",
 ): Promise<RenderedBookingEmail> {
   const vars = sampleBookingEmailVars(emailType);
+  const confirmUrl = isConferenceInviteBookingEmail(emailType)
+    ? vars.reservation_cif_link?.trim() || vars.confirmUrl || vars.confirmation_agence_link || ""
+    : vars.confirmUrl ?? vars.confirmation_agence_link ?? "";
   return finalizeRenderedEmail({
     category,
     subject: renderTemplate(subject, vars),
     body: renderTemplate(body, vars),
     emailType,
-    confirmUrl: vars.confirmUrl ?? vars.confirmation_agence_link ?? "",
+    confirmUrl: confirmUrl,
     useHtml,
     meetingActionLinks: shouldIncludeMeetingActions(emailType)
       ? sampleMeetingActionLinks()

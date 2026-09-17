@@ -8,7 +8,7 @@ import {
   inboundLooksLikeSchedulingAnswer,
 } from "./inbound-question";
 import { truncateInboundText } from "./inbound";
-import { buildKnowledgePack } from "./knowledge";
+import { buildKnowledgePack, hashKnowledgePack } from "./knowledge";
 import {
   bookFromInbound,
   formatBookingContextForGrok,
@@ -27,11 +27,38 @@ import {
 } from "@/lib/instantly-bypass/client";
 
 import type {
+  AiReplyMessageStatus,
   HandleReplyResult,
   InstantlyReplyWebhookPayload,
 } from "./types";
 
 const INTERESTED_STATUS = 1;
+
+type InboundFinalizeExtras = {
+  groqModel?: string | null;
+  groqCostUsdTicks?: number | null;
+  knowledgePackHash?: string | null;
+};
+
+async function finalizeInbound(
+  messageId: string,
+  aiStatus: AiReplyMessageStatus,
+  started: number,
+  aiReason?: string | null,
+  extras?: InboundFinalizeExtras,
+): Promise<number> {
+  const latencyMs = Date.now() - started;
+  await updateInboundStatus(
+    messageId,
+    aiStatus,
+    aiReason,
+    extras?.groqModel,
+    extras?.groqCostUsdTicks,
+    latencyMs,
+    extras?.knowledgePackHash,
+  );
+  return latencyMs;
+}
 const NOT_INTERESTED_STATUS = -1;
 
 function stripHtml(html: string): string {
@@ -158,16 +185,17 @@ export async function handleInstantlyReply(
 
   const recentCollision = await hasRecentHerculeCollision({ campaignId, leadEmail });
   if (recentCollision && !inboundLooksLikeQuestion(inboundText)) {
-    await updateInboundStatus(
+    const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_collision",
+      started,
       "Hercule already sent in-thread within 15 minutes",
     );
     return {
       ok: true,
       skipped: "collision_guard",
       aiStatus: "skipped_collision",
-      latencyMs: Date.now() - started,
+      latencyMs,
     };
   }
 
@@ -175,45 +203,52 @@ export async function handleInstantlyReply(
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
   if (interestStatus === NOT_INTERESTED_STATUS) {
-    await updateInboundStatus(
+    const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_not_interested",
+      started,
       "Lead marked Not interested in Instantly",
     );
     return {
       ok: true,
       skipped: "not_interested",
       aiStatus: "skipped_not_interested",
-      latencyMs: Date.now() - started,
+      latencyMs,
     };
   }
   if (interestStatus !== INTERESTED_STATUS) {
-    await updateInboundStatus(
+    const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_not_interested",
+      started,
       "Lead not tagged Interested",
     );
     return {
       ok: true,
       skipped: "not_interested",
       aiStatus: "skipped_not_interested",
-      latencyMs: Date.now() - started,
+      latencyMs,
     };
   }
 
   if (!config.prompt_snapshot?.trim()) {
-    await updateInboundStatus(
+    const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_unsafe",
+      started,
       "Missing prompt_snapshot on campaign config",
     );
     return {
       ok: true,
       skipped: "missing_prompt",
       aiStatus: "skipped_unsafe",
-      latencyMs: Date.now() - started,
+      latencyMs,
     };
   }
+
+  const knowledgePack = buildKnowledgePack(config);
+  const knowledgePackHash = hashKnowledgePack(knowledgePack);
+  const finalizeExtras = { knowledgePackHash };
 
   let decision;
   let model: string;
@@ -227,7 +262,7 @@ export async function handleInstantlyReply(
   });
   try {
     const groq = await generateReplyDecision({
-      knowledgePack: buildKnowledgePack(config),
+      knowledgePack,
       promptSnapshot: config.prompt_snapshot,
       inboundText: truncateInboundText(inboundText || "(empty body)"),
       leadEmail,
@@ -247,34 +282,46 @@ export async function handleInstantlyReply(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await updateInboundStatus(inbound.id, "failed", message);
-    return { ok: false, error: message, aiStatus: "failed" };
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "failed",
+      started,
+      message,
+      finalizeExtras,
+    );
+    return { ok: false, error: message, aiStatus: "failed", latencyMs };
   }
 
   if (!decision.should_reply || !decision.reply_text) {
-    await updateInboundStatus(
+    const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_unsafe",
+      started,
       decision.reason,
-      model,
-      costUsdTicks,
+      { ...finalizeExtras, groqModel: model, groqCostUsdTicks: costUsdTicks },
     );
     return {
       ok: true,
       skipped: "groq_abstain",
       aiStatus: "skipped_unsafe",
-      latencyMs: Date.now() - started,
+      latencyMs,
     };
   }
 
   await upsertLeadReply(campaignId, leadEmail, decision.reply_text);
 
   if (!(await isAutoSendEnabled())) {
-    await updateInboundStatus(inbound.id, "pending", decision.reason, model, costUsdTicks);
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "pending",
+      started,
+      decision.reason,
+      { ...finalizeExtras, groqModel: model, groqCostUsdTicks: costUsdTicks },
+    );
     return {
       ok: true,
       aiStatus: "pending",
-      latencyMs: Date.now() - started,
+      latencyMs,
     };
   }
 
@@ -289,7 +336,13 @@ export async function handleInstantlyReply(
       preferredEmailId: instantlyEmailId ?? undefined,
     });
 
-    await updateInboundStatus(inbound.id, "auto_replied", decision.reason, model, costUsdTicks);
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "auto_replied",
+      started,
+      decision.reason,
+      { ...finalizeExtras, groqModel: model, groqCostUsdTicks: costUsdTicks },
+    );
     await insertOutboundMessage({
       campaignId,
       leadEmail,
@@ -305,14 +358,20 @@ export async function handleInstantlyReply(
     return {
       ok: true,
       aiStatus: "auto_replied",
-      latencyMs: Date.now() - started,
+      latencyMs,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await updateInboundStatus(inbound.id, "failed", message, model);
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "failed",
+      started,
+      message,
+      { ...finalizeExtras, groqModel: model },
+    );
     if (message === "thread_not_found") {
-      return { ok: true, skipped: "thread_not_found", aiStatus: "failed" };
+      return { ok: true, skipped: "thread_not_found", aiStatus: "failed", latencyMs };
     }
-    return { ok: false, error: message, aiStatus: "failed" };
+    return { ok: false, error: message, aiStatus: "failed", latencyMs };
   }
 }

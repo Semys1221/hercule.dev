@@ -9,11 +9,11 @@ assert.ok(agenceEntries.length >= 10);
 assert.equal(agenceEntries[0].id, "faq-ag-001");
 
 const entrepriseEntries = getFaqEntries("entreprise");
-assert.equal(entrepriseEntries.length, 7);
+assert.equal(entrepriseEntries.length, 9);
 assert.match(entrepriseEntries[0].question, /gratuit/i);
 
 const comptableEntries = getFaqEntries("comptable");
-assert.ok(comptableEntries.length >= 8);
+assert.ok(comptableEntries.length >= 17);
 assert.equal(comptableEntries[0].id, "faq-cp-001");
 assert.match(comptableEntries[0].answer, /Pappers/);
 assert.match(comptableEntries[0].answer, /4 M/);

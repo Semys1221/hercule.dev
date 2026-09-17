@@ -37,6 +37,16 @@
       "id": "faq-en-007",
       "question": "Comment fonctionnent les emails Hercule ?",
       "answer": "Hercule utilise plusieurs adresses et domaines dédiés à ses différentes communications. Le domaine principal de la société et de la plateforme est hercule.dev."
+    },
+    {
+      "id": "faq-en-008",
+      "question": "Comment avez-vous eu mon contact ?",
+      "answer": "Hercule identifie les entreprises compatibles avec les demandes qualifiées en cours via signaux publics (Pappers, formalités) et campagnes d'approche B2B ciblées."
+    },
+    {
+      "id": "faq-en-009",
+      "question": "Opérez-vous en Belgique ?",
+      "answer": "Non. Hercule met en relation des entreprises et agences basées en France uniquement."
     }
   ]
 }

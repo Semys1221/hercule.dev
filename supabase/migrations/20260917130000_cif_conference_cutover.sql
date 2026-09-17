@@ -156,25 +156,25 @@ VALUES
         'cif',
         'conference_invite',
         'Invitation — conférence Hercule (mercredi 10h)',
-        E'{{firstNameLine}}\n\nLe volume de demandes d''audit CIF dépasse notre capacité en rendez-vous individuels.\n\nNous organisons une conférence collective en visio — chaque mercredi à 10h (heure de Paris) — pour présenter la méthode Hercule et répondre à vos questions sur le déploiement du système inbound sur votre zone.\n\nInscription (gratuite) :\n{{reservation_cif_link}}\n\nL''équipe Hercule'
+        E'{{firstNameLine}}\n\nLe volume de demandes d''audit CIF/DEC dépasse notre capacité en rendez-vous individuels.\n\nNous organisons une conférence collective en visio — chaque mercredi à 10h (heure de Paris) — pour présenter la méthode Hercule et répondre à vos questions sur le déploiement du système inbound sur votre zone.\n\nInscription (gratuite) :\n\nDévelopper ma clientèle professionnelle\n{{reservation_cif_link}}\n\nBéatrice Meyer'
     ),
     (
         'cif',
         'conference_invite_24',
         'Rappel — prochaine conférence Hercule mercredi 10h',
-        E'{{firstNameLine}}\n\nPetit rappel : la prochaine conférence Hercule CIF a lieu mercredi à 10h (heure de Paris).\n\nInscription :\n{{reservation_cif_link}}\n\nL''équipe Hercule'
+        E'{{firstNameLine}}\n\nPetit rappel : la prochaine conférence Hercule CIF a lieu mercredi à 10h (heure de Paris).\n\nInscription :\n\nDévelopper ma clientèle professionnelle\n{{reservation_cif_link}}\n\nBéatrice Meyer'
     ),
     (
         'cif',
         'conference_invite_48',
         'Dernière place — conférence Hercule mercredi 10h',
-        E'{{firstNameLine}}\n\nNous vous réservons encore une place pour la conférence collective de mercredi à 10h (heure de Paris) — présentation de la méthode Hercule et échanges sur votre zone.\n\nLien d''inscription :\n{{reservation_cif_link}}\n\nL''équipe Hercule'
+        E'{{firstNameLine}}\n\nNous vous réservons encore une place pour la conférence collective de mercredi à 10h (heure de Paris) — présentation de la méthode Hercule et échanges sur votre zone.\n\nInscription :\n\nDévelopper ma clientèle professionnelle\n{{reservation_cif_link}}\n\nBéatrice Meyer'
     ),
     (
         'cif',
         'conference_invite_72',
         'Clôture — conférence Hercule',
-        E'{{firstNameLine}}\n\nDernier message automatique de notre part : si vous souhaitez découvrir le système Hercule pour cabinets CIF, la conférence du mercredi à 10h (heure de Paris) reste ouverte :\n\n{{reservation_cif_link}}\n\nSinon, nous clôturons ce fil. Répondez à cet email si vous souhaitez être recontacté plus tard.\n\nL''équipe Hercule'
+        E'{{firstNameLine}}\n\nDernier message automatique de notre part : si vous souhaitez découvrir le système Hercule pour cabinets CIF, la conférence du mercredi à 10h (heure de Paris) reste ouverte :\n\nDévelopper ma clientèle professionnelle\n{{reservation_cif_link}}\n\nSinon, nous clôturons ce fil. Répondez à cet email si vous souhaitez être recontacté plus tard.\n\nBéatrice Meyer'
     )
 ON CONFLICT (category, email_type) DO UPDATE
 SET subject = EXCLUDED.subject,

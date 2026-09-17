@@ -285,7 +285,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     label: "AI reply agent messages",
     domain: "ai",
     purpose: "Inbound/outbound + statut AI",
-    keyColumns: "id, thread_id, direction, ai_status, body",
+    keyColumns: "id, direction, ai_status, latency_ms, knowledge_pack_hash, body",
     writers: ["webhook", "cron"],
     readers: ["admin", "cron"],
     profileKeys: "—",

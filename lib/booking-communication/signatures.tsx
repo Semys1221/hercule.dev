@@ -8,6 +8,9 @@ import type { LeadCategory } from "@/lib/link-tracking/types";
 import type { MeetingActionLinks } from "./meeting-links";
 import { isSequenceRoot } from "./sequence-pattern";
 import type { BookingEmailType } from "./types";
+import { CONFERENCE_INVITE_EMAIL_TYPES } from "@/lib/cif-conference-sequence/constants";
+
+export const CONFERENCE_INVITE_SIGNATURE_TAGLINE = "Courtage contrat BNC/BIC";
 
 export const HERCULE_LOGO_URL =
   "https://grzs6rqzvzupoxv9.public.blob.vercel-storage.com/hercule_logo_22kb.png";
@@ -23,10 +26,35 @@ export function signatureTagline(category: LeadCategory): string {
   return SIGNATURE_TAGLINES[category];
 }
 
+export function isConferenceInviteBookingEmail(
+  emailType: BookingEmailType,
+): boolean {
+  return CONFERENCE_INVITE_EMAIL_TYPES.includes(
+    emailType as (typeof CONFERENCE_INVITE_EMAIL_TYPES)[number],
+  );
+}
+
+export function signatureTaglineForEmail(
+  category: LeadCategory,
+  emailType: BookingEmailType,
+): string {
+  if (isConferenceInviteBookingEmail(emailType)) {
+    return CONFERENCE_INVITE_SIGNATURE_TAGLINE;
+  }
+  return signatureTagline(category);
+}
+
 export function buildPlainSignature(category: LeadCategory): string {
+  return buildPlainSignatureForEmail(category, "immediate");
+}
+
+export function buildPlainSignatureForEmail(
+  category: LeadCategory,
+  emailType: BookingEmailType,
+): string {
   return [
     "Hercule",
-    signatureTagline(category),
+    signatureTaglineForEmail(category, emailType),
     `Bordeaux, France | ${HERCULE_WEBSITE_URL}`,
     HERCULE_CONTACT_EMAIL,
   ].join("\n");
@@ -47,13 +75,14 @@ export function appendPlainSignature(
   body: string,
   category: LeadCategory,
   meetingActionsLine?: string | null,
+  emailType: BookingEmailType = "immediate",
 ): string {
   const cleaned = stripLegacyClosing(body);
   const parts = [cleaned];
   if (meetingActionsLine) {
     parts.push("", meetingActionsLine);
   }
-  parts.push("", buildPlainSignature(category));
+  parts.push("", buildPlainSignatureForEmail(category, emailType));
   return parts.join("\n");
 }
 
@@ -95,6 +124,9 @@ function confirmButtonLabel(
   body?: string,
   confirmUrl?: string,
 ): string {
+  if (isConferenceInviteBookingEmail(emailType) && !isSequenceRoot(emailType)) {
+    return "Développer ma clientèle professionnelle";
+  }
   if (emailType === "modalites_ask") {
     return "Confirmer le rendez-vous";
   }
@@ -129,6 +161,17 @@ function enhanceConfirmLinksInText(
     return textBody;
   }
 
+  if (isConferenceInviteBookingEmail(emailType)) {
+    if (textBody.includes("Développer ma clientèle professionnelle")) {
+      return textBody;
+    }
+    const escapedUrl = confirmUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return textBody.replace(
+      new RegExp(`^${escapedUrl}$`, "m"),
+      `Développer ma clientèle professionnelle\n${confirmUrl}`,
+    );
+  }
+
   if (textBody.includes("{{confirmLink}}")) {
     return textBody.replace(
       /\{\{confirmLink\}\}/g,
@@ -150,6 +193,7 @@ export async function renderBookingHtml(
   confirmUrl?: string,
   confirmButtonLabel?: string,
   meetingActionLinks?: MeetingActionLinks,
+  signatureTaglineOverride?: string,
 ): Promise<string> {
   return render(
     <BookingHtmlEmail
@@ -158,6 +202,7 @@ export async function renderBookingHtml(
       confirmUrl={confirmUrl}
       confirmButtonLabel={confirmButtonLabel}
       meetingActionLinks={meetingActionLinks}
+      signatureTagline={signatureTaglineOverride ?? signatureTagline(category)}
     />,
   );
 }
@@ -195,6 +240,7 @@ export async function finalizeRenderedEmail(params: {
         textBody,
         params.category,
         meetingActionsLine,
+        params.emailType,
       ),
       html: await renderBookingHtml(
         cleanedBody,
@@ -202,12 +248,18 @@ export async function finalizeRenderedEmail(params: {
         confirmUrl || undefined,
         confirmButtonLabel(params.emailType, cleanedBody, confirmUrl || undefined),
         params.meetingActionLinks,
+        signatureTaglineForEmail(params.category, params.emailType),
       ),
     };
   }
 
   return {
     subject: params.subject,
-    text: appendPlainSignature(textBody, params.category, meetingActionsLine),
+    text: appendPlainSignature(
+      textBody,
+      params.category,
+      meetingActionsLine,
+      params.emailType,
+    ),
   };
 }

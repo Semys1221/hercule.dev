@@ -27,6 +27,24 @@ Niche presets are imported from `app/streamlit_scraper/config_loader.PRESET_LABE
 - **Pending replies** — fetch, preview, edit, send within send window
 - **Prompts** — per-niche `*_buyer.md` and `*_seller.md` stored in Supabase via `prompt_store.py`
 - **Bulk actions** — `pending_bulk_actions.py`
+- **Health audit** — `pnpm audit-reply-agent` (Supabase failures + Instantly slow pending)
+- **Problem tab** — failures, stale pending (>24h), abstentions, OOO
+
+## Niche CIF (`conseillers_gestion_patrimoine`)
+
+| Rôle | Prompt | CTA |
+|------|--------|-----|
+| **buyer** | `prompts/conseillers_gestion_patrimoine_buyer.md` | `{reservation_cif_link}` → briefing collectif ou audit 1:1 |
+
+Knowledge pack : `doc/tech-stack/ai-reply-knowledge-cif.md` + `doc/legal-documentation/cif/faq.json`.
+
+**Conference cutover :** `{reservation_cif_link}` peut pointer vers `hercule.dev/reservation-conference.html` (briefing collectif). Détail dans le knowledge pack.
+
+Après modification des prompts :
+
+```bash
+pnpm resync-reply-agent-prompts
+```
 
 ## Niche comptable (`cabinets_expertise_comptable`)
 

@@ -14,6 +14,7 @@ type BookingHtmlEmailProps = {
   confirmUrl?: string;
   confirmButtonLabel?: string;
   meetingActionLinks?: MeetingActionLinks;
+  signatureTagline?: string;
 };
 
 const CONFIRM_MARKERS = [
@@ -101,6 +102,7 @@ export function BookingHtmlEmail({
   confirmUrl,
   confirmButtonLabel = "Confirmer ma présence",
   meetingActionLinks,
+  signatureTagline: signatureTaglineProp,
 }: BookingHtmlEmailProps) {
   const preview = bodyText
     .split(/\n{2,}/)
@@ -115,7 +117,7 @@ export function BookingHtmlEmail({
   return (
     <BookingEmailLayout
       preview={preview}
-      signatureTagline={signatureTagline(category)}
+      signatureTagline={signatureTaglineProp ?? signatureTagline(category)}
       meetingActionLinks={meetingActionLinks}
     >
       {renderPlainBody(bodyText, confirmUrl, confirmButtonLabel)}

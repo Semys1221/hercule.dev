@@ -34,6 +34,11 @@ do_not:
 
 ## FAQ entreprise (extraits)
 
+- **Comment avez-vous eu mon contact ?** Campagne d'approche B2B ou signaux publics (Pappers, formalités) — Hercule contacte les profils compatibles avec les demandes en cours.
+- **Belgique / hors France ?** France uniquement pour la mise en relation agence ↔ entreprise.
+- **Invitation Calendly déjà reçue ?** Confirmer brièvement ; ne pas renvoyer un second lien sans replanification demandée.
+- **Paiement / facturation ops ?** Renvoyer vers **contact@hercule.dev**.
+
 - **Gratuit ?** Oui. Qualification et mise en relation gratuites ; les agences financent le matching Hercule.
 - **Sélection agence ?** Compatibilité besoin ↔ profil agence (prestations, secteur, taille, tarifs, positionnement). Qualification téléphonique avant proposition.
 - **Commission Hercule ?** Non. Jamais de facturation entreprise, pas d'upsell après mise en relation.

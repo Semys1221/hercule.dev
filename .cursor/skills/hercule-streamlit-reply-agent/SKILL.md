@@ -69,8 +69,18 @@ Plus `doc/tech-stack/00-overview.md` (truncated). **Do not** load full `cvg_comp
 ## Scripts
 
 ```bash
-pnpm activate-reply-agents    # scripts/streamlit_reply_agent/activateReplyAgents.py
+pnpm activate-reply-agents           # bootstrap campaigns + webhooks
+pnpm audit-reply-agent               # failures, abstentions, slow pending report
+pnpm resync-reply-agent-prompts      # push prompts/*.md → prompt_snapshot (prod)
+pnpm configure-ai-reply-agent-health-cron  # cron-job.org health alerts
 ```
+
+## Niche CIF + conference cutover
+
+- Knowledge : `doc/tech-stack/ai-reply-knowledge-cif.md` (incl. briefing collectif)
+- FAQ : `doc/legal-documentation/cif/faq.json`
+- CTA `{reservation_cif_link}` may resolve to `reservation-conference.html` (cohort briefing)
+- Health cron : `/api/cron/ai-reply-agent-health` (failed + slow pending → `NOTIFICATION_OPS_EMAIL`)
 
 ## Cross-links
 

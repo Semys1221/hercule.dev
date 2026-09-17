@@ -7,24 +7,36 @@
  *   pnpm conference-cutover -- --execute
  *   pnpm conference-cutover -- --dry-run --preview-emails
  *   pnpm conference-cutover -- --test-fake-lead
+ *   pnpm conference-cutover -- --dry-run --provision-missing-cohort
+ *   CONFERENCE_INVITE_SEND_ENABLED=true pnpm conference-cutover -- --provision-missing-cohort
  */
 import {
   cancelScheduledEvent,
   extractUuidFromCalendlyUri,
 } from "@/lib/calendly";
-import { isCalendlyBookingCanceled, listUpcomingBookings } from "@/lib/calendly/list-bookings";
+import {
+  type CalendlyBookingRow,
+  isCalendlyBookingCanceled,
+  listUpcomingBookings,
+} from "@/lib/calendly/list-bookings";
 import {
   cancelConferenceInviteJobs,
   cancelFollowUpJobs,
 } from "@/lib/booking-communication/jobs";
 import { getBookingEmailTemplates, previewTemplate } from "@/lib/booking-communication/template-store";
 import {
+  CIF_CONFERENCE_CUTOVER_MISSING_EMAILS,
   isConferenceInviteKeeperEmail,
+  isConferenceInviteSendEnabled,
 } from "@/lib/cif-conference-sequence/constants";
 import {
   ensureConferenceTestLead,
   startConferenceInviteSequence,
 } from "@/lib/cif-conference-sequence/orchestrator";
+import {
+  ensureCifLeadForConferenceCutover,
+  findCifLeadByEmail,
+} from "@/lib/cif-conference-sequence/provision-cutover-lead";
 import { syncLeadStatutToInstantly } from "@/lib/link-tracking/instantly";
 import {
   createLinkTrackingClient,
@@ -41,20 +53,163 @@ type Args = {
   execute: boolean;
   previewEmails: boolean;
   testFakeLead: boolean;
+  cohortOnly: boolean;
+  provisionMissingCohort: boolean;
 };
 
 function parseArgs(): Args {
   const argv = process.argv.slice(2);
+  const provisionMissingCohort = argv.includes("--provision-missing-cohort");
   return {
-    dryRun: argv.includes("--dry-run") || (!argv.includes("--execute") && !argv.includes("--test-fake-lead")),
+    dryRun:
+      argv.includes("--dry-run") ||
+      (!argv.includes("--execute") &&
+        !argv.includes("--test-fake-lead") &&
+        !argv.includes("--cohort-only") &&
+        !provisionMissingCohort),
     execute: argv.includes("--execute"),
     previewEmails: argv.includes("--preview-emails"),
     testFakeLead: argv.includes("--test-fake-lead"),
+    cohortOnly: argv.includes("--cohort-only"),
+    provisionMissingCohort,
   };
 }
 
 function formatWhen(iso: string): string {
   return new Date(iso).toISOString().replace("T", " ").slice(0, 16);
+}
+
+async function listCutoverCanceledBookings(): Promise<CalendlyBookingRow[]> {
+  const [cif, comptable] = await Promise.all([
+    listUpcomingBookings({ niche: "cif", daysAhead: 60, daysBehind: 7 }),
+    listUpcomingBookings({ niche: "comptable", daysAhead: 60, daysBehind: 7 }),
+  ]);
+
+  const calendlyByEmail = new Map<string, CalendlyBookingRow>();
+  for (const row of [...cif, ...comptable]) {
+    if (!isCalendlyBookingCanceled(row)) {
+      continue;
+    }
+    if (isConferenceInviteKeeperEmail(row.email)) {
+      continue;
+    }
+    const email = row.email.trim().toLowerCase();
+    if (!email) {
+      continue;
+    }
+    calendlyByEmail.set(email, row);
+  }
+
+  return CIF_CONFERENCE_CUTOVER_MISSING_EMAILS.map((email) => {
+    const fromCalendly = calendlyByEmail.get(email);
+    if (fromCalendly) {
+      return fromCalendly;
+    }
+
+    return {
+      email,
+      name: "",
+      first_name: null,
+      company: null,
+      start_time: "",
+      invitee_uri: "",
+      event_uri: "",
+      event_status: "canceled" as const,
+      invitee_status: "canceled" as const,
+      questions: {},
+      slug: null,
+      lead_id: null,
+      lead_category: null,
+      booking_category: "agence" as const,
+      calendly_join_url: null,
+      calendly_reschedule_url: null,
+      calendly_cancel_url: null,
+    };
+  });
+}
+
+async function hasConferenceSequenceStarted(leadId: string): Promise<boolean> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from("booking_email_jobs")
+    .select("id")
+    .eq("lead_id", leadId)
+    .eq("lead_category", "cif")
+    .eq("email_type", "conference_invite")
+    .eq("status", "sent")
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to check conference sequence for ${leadId}: ${error.message}`);
+  }
+
+  return Boolean(data);
+}
+
+async function runProvisionMissingCohort(dryRun: boolean): Promise<void> {
+  console.log("\n--- Provision missing CIF cohort ---");
+  if (!dryRun && !isConferenceInviteSendEnabled()) {
+    throw new Error("CONFERENCE_INVITE_SEND_ENABLED must be true for --provision-missing-cohort");
+  }
+
+  const bookings = await listCutoverCanceledBookings();
+  console.log(`  canceled bookings to inspect: ${bookings.length}`);
+
+  let provisioned = 0;
+  let sequencesStarted = 0;
+  let skippedHasCifSequence = 0;
+  let failed = 0;
+
+  for (const booking of bookings) {
+    const email = booking.email.trim().toLowerCase();
+    const existingCif = await findCifLeadByEmail(email);
+
+    if (existingCif && (await hasConferenceSequenceStarted(existingCif.id))) {
+      console.log(`  skip ${email}: conference sequence already sent`);
+      skippedHasCifSequence += 1;
+      continue;
+    }
+
+    try {
+      const ensured = await ensureCifLeadForConferenceCutover({
+        email,
+        firstName: booking.first_name,
+        company: booking.company,
+        dryRun,
+      });
+
+      console.log(
+        `  ${dryRun ? "[dry-run] would provision" : "provisioned"} ${email}: slug=${ensured.slug} created=${ensured.created} updated=${ensured.updated}`,
+      );
+      provisioned += 1;
+
+      if (dryRun) {
+        console.log("    sequence preview: D0 + 3 follow-ups (conference_invite, _24, _48, _72)");
+        sequencesStarted += 1;
+        continue;
+      }
+
+      const result = await startConferenceInviteSequence({ leadId: ensured.leadId });
+      if (!result.started) {
+        console.warn(`  failed sequence ${email}: ${result.reason ?? "unknown"}`);
+        failed += 1;
+        continue;
+      }
+
+      console.log(
+        `  started ${email}: welcome=${result.welcomeSent ? "sent" : "no"} jobs=${result.scheduledJobs ?? 0}`,
+      );
+      sequencesStarted += 1;
+    } catch (err) {
+      console.error(`  error ${email}: ${err instanceof Error ? err.message : err}`);
+      failed += 1;
+    }
+  }
+
+  console.log(
+    `\nMissing cohort summary: ${provisioned} provisioned, ${sequencesStarted} sequences ${dryRun ? "previewed" : "started"}, ${skippedHasCifSequence} already sent, ${failed} failed`,
+  );
 }
 
 async function listActiveBookings() {
@@ -155,6 +310,64 @@ async function dryRunSequenceForCanceledEmails(emails: string[]): Promise<void> 
   console.log("\n  Real cohort enqueue blocked until CONFERENCE_INVITE_SEND_ENABLED=true + explicit approval.");
 }
 
+async function enqueueConferenceCohortForEmails(emails: string[]): Promise<void> {
+  console.log("\n--- Conference invite cohort ---");
+  const client = createLinkTrackingClient();
+  let started = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const email of emails) {
+    const lookup = await findLeadByEmail(client, email);
+    if (!lookup || lookup.category !== "cif") {
+      console.log(`  skip ${email}: not a CIF lead`);
+      skipped += 1;
+      continue;
+    }
+
+    try {
+      const result = await startConferenceInviteSequence({ leadId: lookup.lead.id });
+      if (!result.started) {
+        console.warn(`  failed ${email}: ${result.reason ?? "unknown"}`);
+        failed += 1;
+        continue;
+      }
+      console.log(
+        `  started ${email}: welcome=${result.welcomeSent ? "sent" : "no"} jobs=${result.scheduledJobs ?? 0}`,
+      );
+      started += 1;
+    } catch (err) {
+      console.error(
+        `  error ${email}: ${err instanceof Error ? err.message : err}`,
+      );
+      failed += 1;
+    }
+  }
+
+  console.log(`\nCohort summary: ${started} started, ${skipped} skipped, ${failed} failed`);
+}
+
+async function listCifNotBookedEmailsForCohort(): Promise<string[]> {
+  const client = createLinkTrackingClient();
+  const since = new Date();
+  since.setHours(since.getHours() - 6);
+
+  const { data, error } = await client
+    .from("cif")
+    .select("email")
+    .eq("statut", "NOTBOOKED")
+    .gte("updated_at", since.toISOString());
+
+  if (error) {
+    throw new Error(`Failed to list NOTBOOKED CIF leads: ${error.message}`);
+  }
+
+  return (data ?? [])
+    .map((row) => row.email?.trim().toLowerCase())
+    .filter((email): email is string => Boolean(email))
+    .filter((email) => !isConferenceInviteKeeperEmail(email));
+}
+
 async function runFakeLeadTest(): Promise<void> {
   console.log("\n--- Fake lead sequence test ---");
   const lead = await ensureConferenceTestLead();
@@ -177,18 +390,34 @@ async function main(): Promise<void> {
 
   console.log("CIF conference cutover");
   console.log(
-    `mode: ${args.testFakeLead ? "test-fake-lead" : args.execute ? "execute" : "dry-run"}`,
+    `mode: ${args.testFakeLead ? "test-fake-lead" : args.provisionMissingCohort ? args.dryRun ? "provision-missing-cohort-dry-run" : "provision-missing-cohort" : args.cohortOnly ? "cohort-only" : args.execute ? "execute" : "dry-run"}`,
   );
 
   await previewRedirectsAndLinks();
 
-  if (args.previewEmails || args.dryRun) {
+  if (args.provisionMissingCohort) {
+    await runProvisionMissingCohort(args.dryRun);
+    return;
+  }
+
+  if (args.previewEmails || (args.dryRun && !args.cohortOnly)) {
     await previewConferenceEmails();
   }
 
   const bookings = await listActiveBookings();
   const keepers = bookings.filter((row) => isConferenceInviteKeeperEmail(row.email));
   const toCancel = bookings.filter((row) => !isConferenceInviteKeeperEmail(row.email));
+
+  if (args.cohortOnly) {
+    if (!isConferenceInviteSendEnabled()) {
+      throw new Error("CONFERENCE_INVITE_SEND_ENABLED must be true for --cohort-only");
+    }
+    const emails = await listCifNotBookedEmailsForCohort();
+    console.log(`\nCIF NOTBOOKED leads for cohort: ${emails.length}`);
+    await enqueueConferenceCohortForEmails(emails);
+    console.log("\nCohort-only complete.");
+    return;
+  }
 
   console.log(`\n--- Calendly upcoming (${bookings.length} active) ---`);
   console.log(`  keep (${keepers.length}):`);
@@ -233,8 +462,15 @@ async function main(): Promise<void> {
         );
       }
     }
-    console.log("\nExecute complete — no conference relance enqueued on real cohort.");
-    console.log("ready to send waiting for approval");
+
+    if (isConferenceInviteSendEnabled()) {
+      await enqueueConferenceCohortForEmails(
+        toCancel.map((row) => row.email.trim().toLowerCase()),
+      );
+      console.log("\nExecute complete — Calendly canceled, CRM reset, cohort sequences started.");
+    } else {
+      console.log("\nExecute complete — no conference relance enqueued (set CONFERENCE_INVITE_SEND_ENABLED=true).");
+    }
     return;
   }
 

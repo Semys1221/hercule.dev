@@ -61,6 +61,7 @@ export async function sendProductEmailNow(params: {
     dashboardLink?: string;
     scheduledAt?: string | null;
     reservationAgenceLink?: string;
+    reservationCifLink?: string;
   };
 }): Promise<{ ok: boolean; error?: string }> {
   const client = createLinkTrackingClient();
@@ -110,6 +111,8 @@ export async function sendProductEmailNow(params: {
       params.extra?.estimatedFirstRdvDate ?? jobVars.estimatedFirstRdvDate,
     trackingNumber: params.extra?.trackingNumber ?? jobVars.trackingNumber,
     rdvRangeLabel: params.extra?.rdvRangeLabel ?? jobVars.rdvRangeLabel,
+    reservationCifLink:
+      params.extra?.reservationCifLink ?? jobVars.reservationCifLink,
   });
 
   const now = new Date();

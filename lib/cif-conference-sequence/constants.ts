@@ -14,6 +14,26 @@ export const CIF_CONFERENCE_TEST_EMAIL =
   process.env.CIF_CONFERENCE_TEST_EMAIL?.trim().toLowerCase() ||
   "conference-cutover-test@hercule.dev";
 
+/** Fallback when Calendly no longer returns canceled invitees from cutover execute. */
+export const CIF_CONFERENCE_CUTOVER_MISSING_EMAILS = [
+  "ldescolonges@kacius.fr",
+  "crlprtr782@gmail.com",
+  "jordan@anato-gp.com",
+  "mcolle@cabinet-igc.com",
+  "magali@acoeurpatrimoine.fr",
+  "lyessnaoui@gmail.com",
+  "daniel.droetto@mon-conseil-patrimonial.fr",
+  "dduville@champollion-conseils.fr",
+  "thomas@mgconseilscourtage.fr",
+  "e.bitschene@pc-alsace.fr",
+  "2apconseils@gmail.com",
+  "aurelia.poher@gmail.com",
+  "manon.capelli@capellietassocies.fr",
+  "matteo@mdpatrimoineconseils.com",
+  "contact@western-accounting.fr",
+  "dzelili-naser@outlook.be",
+] as const;
+
 export const CONFERENCE_INVITE_EMAIL_TYPES = [
   "conference_invite",
   "conference_invite_24",

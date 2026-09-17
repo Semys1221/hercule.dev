@@ -470,6 +470,7 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     estimatedFirstRdvDate: extra.estimatedFirstRdvDate,
     trackingNumber: extra.trackingNumber,
     rdvRangeLabel: extra.rdvRangeLabel,
+    reservationCifLink: extra.reservationCifLink,
   });
 }
 

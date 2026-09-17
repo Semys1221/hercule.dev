@@ -54,6 +54,12 @@ Renoyer vers **hercule.dev/cvg/comptable** pour le détail. En résumé interne 
 ## FAQ cabinet (extraits)
 
 - **D'où viennent les demandes ?** Dirigeants PME en reprise comptable, échéances fiscales, déclarations — qualifiés avant attribution.
+- **Comment avez-vous eu mon contact ?** Campagne d'approche B2B ciblée (signaux Pappers / formalités + secteurs compatibles). Pas de référence nominative à un tiers sans information dans le pack.
+- **Audit de comptabilité / reprise de dossiers ?** Hercule ne réalise pas d'audit comptable technique. L'**audit de compatibilité** (visio) vérifie zone, honoraires et bande passante pour recevoir des missions qualifiées.
+- **Retours d'expérience / ROI chiffré ?** Pas de benchmarks nominatifs publiés. Expliquer la valeur (flux qualifiés, 0 % commission, garantie MRR) — renvoyer hercule.dev/cvg/comptable sans inventer de chiffres clients.
+- **Belgique / hors France ?** France uniquement.
+- **Invitation Calendly déjà reçue ?** Confirmer brièvement le RDV si connu ; ne pas renvoyer un second lien sans demande de replanification.
+- **Paiement, facturation, congés ops ?** Renvoyer vers **contact@hercule.dev**.
 - **Qui peut postuler ?** Cabinets avec bande passante suffisante ; le seuil > 3 associés/collaborateurs est un indicateur, pas un refus automatique.
 - **« Je n'ai pas 3 collaborateurs »** : l'enjeu est la bande passante pour des visios qualifiantes (pas des appels de 10 min). Si le cabinet a la capacité (y compris sous-traitance stable), inviter à l'audit de compatibilité via Calendly.
 - **Objection tarif / « mensualités trop élevées »** : expliquer la valeur (10 missions/mois, garantie MRR, 0 % commission sur honoraires) ; mentionner Hercule Lite (1 799 €/mois, 5 missions/mois) comme offre d'entrée tant que le cabinet a la capacité d'absorber ; détail sur hercule.dev/cvg/comptable.

@@ -43,46 +43,66 @@ def _lead_summary(lead: dict[str, Any]) -> dict[str, str]:
     }
 
 
+def _norm(value: Any) -> str:
+    return " ".join(str(value or "").strip().lower().split())
+
+
+def _company_name(lead: dict[str, Any]) -> str:
+    payload = _payload(lead)
+    return _norm(lead.get("company_name") or payload.get("companyName"))
+
+
 def is_marketing_agency_lead(lead: dict[str, Any]) -> bool:
     """True when lead belongs in the Agence web campaign, not Comptable."""
     payload = _payload(lead)
-    service = str(payload.get("service") or "").strip().lower()
-    lead_type = str(payload.get("type") or "").strip().lower()
-    category = str(payload.get("category") or "").strip().lower()
-    niche = str(payload.get("niche") or "").strip().lower()
+    service = _norm(payload.get("service"))
+    lead_type = _norm(payload.get("type"))
+    category = _norm(payload.get("category"))
+    company = _company_name(lead)
     reservation_agence = str(payload.get("reservation_agence_link") or "").strip()
 
-    if service == "expertise comptable":
+    accountant_company_markers = (
+        "expertise comptable",
+        "expert-comptable",
+        "expert comptable",
+        "cabinet comptable",
+        "cabinet d'expertise",
+        "comptabilité",
+        "expert-comptables",
+    )
+    if any(marker in company for marker in accountant_company_markers):
         return False
-    if "cabinets expertise comptable" in niche:
-        return False
-    if lead_type in {
+
+    accountant_types = {
         "expert-comptable",
         "cabinet d'expertise comptable",
         "comptable",
-    }:
+        "certified public accountant",
+        "chartered accountant",
+        "accountant",
+        "accounting firm",
+        "bookkeeping service",
+    }
+    if lead_type in accountant_types:
         return False
     if category in {"expert-comptable", "accounting firm", "comptable"}:
         return False
-    if "expert-comptable" in lead_type or "cabinet d'expertise comptable" in lead_type:
-        return False
 
-    if service == "seo":
+    if service == "seo" or reservation_agence:
         return True
-    if lead_type.startswith("agence") or "agence de " in lead_type:
+
+    agency_categories = {
+        "concepteur de sites web",
+        "service de marketing internet",
+        "agence de marketing",
+        "agence de publicité",
+        "agence de design",
+        "graphiste",
+    }
+    if category in agency_categories:
         return True
-    if reservation_agence:
-        return True
-    if any(
-        marker in category
-        for marker in (
-            "concepteur de sites",
-            "marketing internet",
-            "agence de marketing",
-            "agence de publicité",
-            "graphiste",
-        )
-    ):
+
+    if lead_type.startswith("agence de ") or lead_type == "marketing agency":
         return True
 
     return False

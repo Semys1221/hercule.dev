@@ -84,6 +84,36 @@
       "question": "Rémunérez-vous les apporteurs d'affaires ?",
       "answer": "Hercule ne rémunère pas les apporteurs. Le cabinet acquiert le système Hercule pour capter et router des flux qualifiés en exclusivité. Hercule ne prélève aucune commission sur les honoraires que vous signez avec le dirigeant, et le dirigeant ne paie rien à Hercule.",
       "cvgLink": true
+    },
+    {
+      "id": "faq-cif-015",
+      "question": "Comment avez-vous eu mon contact ?",
+      "answer": "Hercule identifie les cabinets compatibles avec les flux qualifiés en cours via une campagne d'approche B2B ciblée (signaux Pappers, formalités, secteurs compatibles). Nous ne partageons pas de référence nominative à un tiers sans information contractuelle.",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cif-016",
+      "question": "Quelle est la différence entre le briefing collectif et l'audit 1:1 ?",
+      "answer": "Le briefing collectif (visio Zoom) présente le fonctionnement du système Hercule et les flux en cours pour une cohorte de cabinets. L'audit de compatibilité 1:1 approfondit zone, honoraires et bande passante pour un cabinet individuel. Le lien de réservation dans l'email indique le parcours adapté.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-017",
+      "question": "Avez-vous des retours d'expérience ou un ROI chiffré ?",
+      "answer": "Hercule ne publie pas de benchmarks nominatifs ni d'études de cas chiffrées. La valeur repose sur des flux qualifiés en exclusivité, 0 % de commission sur vos honoraires signés, et une garantie MRR sur Hercule Starter et le Pack. Détail : hercule.dev/cvg/conseil-financier.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-018",
+      "question": "Opérez-vous en Belgique ?",
+      "answer": "Non. Hercule met en relation des cabinets et dirigeants basés en France uniquement.",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cif-019",
+      "question": "Quelles sont vos modalités de réciprocité et contreparties ?",
+      "answer": "Hercule ne demande pas de réciprocité commerciale : pas de renvoi de clients, pas de commission sur vos dossiers existants. Le cabinet acquiert l'accès au système Hercule pour recevoir des flux qualifiés en exclusivité, selon les CGV souscrites. C'est la contrepartie contractuelle — aucun engagement hors contrat.",
+      "cvgLink": true
     }
   ]
 }

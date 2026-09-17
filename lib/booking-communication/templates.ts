@@ -635,14 +635,16 @@ export const CIF_CONFERENCE_EMAIL_TEMPLATE_OVERRIDES: Partial<
     subject: "Invitation — conférence Hercule (mercredi 10h)",
     body: `{{firstNameLine}}
 
-Le volume de demandes d'audit CIF dépasse notre capacité en rendez-vous individuels.
+Le volume de demandes d'audit CIF/DEC dépasse notre capacité en rendez-vous individuels.
 
 Nous organisons une conférence collective en visio — chaque mercredi à 10h (heure de Paris) — pour présenter la méthode Hercule et répondre à vos questions sur le déploiement du système inbound sur votre zone.
 
 Inscription (gratuite) :
+
+Développer ma clientèle professionnelle
 {{reservation_cif_link}}
 
-L'équipe Hercule`,
+Béatrice Meyer`,
   },
   conference_invite_24: {
     subject: "Rappel — prochaine conférence Hercule mercredi 10h",
@@ -651,9 +653,10 @@ L'équipe Hercule`,
 Petit rappel : la prochaine conférence Hercule CIF a lieu mercredi à 10h (heure de Paris).
 
 Inscription :
+
 {{reservation_cif_link}}
 
-L'équipe Hercule`,
+Béatrice Meyer`,
   },
   conference_invite_48: {
     subject: "Dernière place — conférence Hercule mercredi 10h",
@@ -661,10 +664,11 @@ L'équipe Hercule`,
 
 Nous vous réservons encore une place pour la conférence collective de mercredi à 10h (heure de Paris) — présentation de la méthode Hercule et échanges sur votre zone.
 
-Lien d'inscription :
+Inscription :
+
 {{reservation_cif_link}}
 
-L'équipe Hercule`,
+Béatrice Meyer`,
   },
   conference_invite_72: {
     subject: "Clôture — conférence Hercule",
@@ -676,7 +680,7 @@ Dernier message automatique de notre part : si vous souhaitez découvrir le syst
 
 Sinon, nous clôturons ce fil. Répondez à cet email si vous souhaitez être recontacté plus tard.
 
-L'équipe Hercule`,
+Béatrice Meyer`,
   },
 };
 

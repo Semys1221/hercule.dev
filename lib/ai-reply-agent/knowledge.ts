@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -112,4 +113,9 @@ export function buildKnowledgePack(config: AiReplyAgentConfig): string {
 /** Test helper — bypass cache. */
 export function buildKnowledgePackFresh(config: AiReplyAgentConfig): string {
   return buildKnowledgePackUncached(config);
+}
+
+/** Short hash for observability — ties a message to the knowledge pack version. */
+export function hashKnowledgePack(pack: string): string {
+  return createHash("sha256").update(pack).digest("hex").slice(0, 16);
 }

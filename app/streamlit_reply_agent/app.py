@@ -701,6 +701,18 @@ def render_inbox_tab(
         )
 
 
+def _problem_severity_label(status: str) -> str:
+    if status == "failed":
+        return "Échec"
+    if status == "pending":
+        return "Brouillon >24h"
+    if status == "skipped_unsafe":
+        return "Abstention IA"
+    if status == "skipped_ooo":
+        return "OOO"
+    return status
+
+
 def render_problem_tab(
     *,
     instantly_client: InstantlyClient,
@@ -712,8 +724,24 @@ def render_problem_tab(
         st.success("Aucun message en attente dans Problem.")
         return
 
+    by_severity: dict[str, list[dict]] = {}
+    for row in problems:
+        status = str(row.get("ai_status") or "unknown")
+        by_severity.setdefault(status, []).append(row)
+    summary_parts = [
+        f"{_problem_severity_label(status)}: {len(rows)}"
+        for status, rows in sorted(
+            by_severity.items(),
+            key=lambda item: {"failed": 0, "pending": 1, "skipped_unsafe": 2, "skipped_ooo": 3}.get(
+                item[0], 9
+            ),
+        )
+    ]
+    st.caption(" · ".join(summary_parts))
+
     labels = [
-        f"{row.get('lead_email')} · {row.get('ai_status')} · {row.get('created_at', '')[:16]}"
+        f"[{_problem_severity_label(str(row.get('ai_status') or ''))}] "
+        f"{row.get('lead_email')} · {row.get('created_at', '')[:16]}"
         for row in problems
     ]
     selected_idx = st.selectbox(

@@ -84,6 +84,24 @@
       "question": "Rémunérez-vous les apporteurs d'affaires ?",
       "answer": "Hercule ne rémunère pas les apporteurs. Le cabinet acquiert le système Hercule pour capter et router des flux qualifiés en exclusivité. Hercule ne prélève aucune commission sur les honoraires que vous signez avec le dirigeant, et le dirigeant ne paie rien à Hercule.",
       "cvgLink": true
+    },
+    {
+      "id": "faq-cp-015",
+      "question": "Comment avez-vous eu mon contact ?",
+      "answer": "Hercule identifie les cabinets compatibles avec les flux qualifiés en cours via une campagne d'approche B2B ciblée (signaux Pappers, formalités, secteurs compatibles).",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cp-016",
+      "question": "Proposez-vous un audit de comptabilité ?",
+      "answer": "Non. Hercule ne réalise pas d'audit comptable technique. L'audit de compatibilité (visio) vérifie zone, honoraires et bande passante pour recevoir des missions qualifiées en exclusivité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-017",
+      "question": "Opérez-vous en Belgique ?",
+      "answer": "Non. Hercule met en relation des cabinets et dirigeants basés en France uniquement.",
+      "cvgLink": false
     }
   ]
 }

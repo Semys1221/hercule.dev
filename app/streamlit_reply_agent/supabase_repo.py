@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from typing import Any
 
@@ -80,19 +80,62 @@ def list_inbound_messages(campaign_id: str, limit: int = 200) -> list[dict[str, 
     return resp.data or []
 
 
+_PROBLEM_STATUSES = ("failed", "skipped_unsafe", "skipped_ooo", "pending")
+_PROBLEM_SEVERITY = {
+    "failed": 0,
+    "pending": 1,
+    "skipped_unsafe": 2,
+    "skipped_ooo": 3,
+}
+
+
+def _is_stale_pending(row: dict[str, Any], stale_hours: int = 24) -> bool:
+    if str(row.get("ai_status") or "") != "pending":
+        return False
+    created = str(row.get("created_at") or "").strip()
+    if not created:
+        return False
+    if created.endswith("Z"):
+        created = f"{created[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(created)
+    except ValueError:
+        return False
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    else:
+        parsed = parsed.astimezone(timezone.utc)
+    return datetime.now(timezone.utc) - parsed >= timedelta(hours=stale_hours)
+
+
 def list_problem_messages(campaign_id: str, limit: int = 200) -> list[dict[str, Any]]:
+    """Inbound rows needing ops attention: failures, stale drafts, abstentions, OOO."""
     resp = (
         get_client()
         .table("ai_reply_agent_messages")
         .select("*")
         .eq("campaign_id", campaign_id)
         .eq("direction", "inbound")
-        .in_("ai_status", ["skipped_unsafe", "skipped_ooo"])
+        .in_("ai_status", list(_PROBLEM_STATUSES))
         .order("created_at", desc=True)
-        .limit(limit)
+        .limit(limit * 2)
         .execute()
     )
-    return resp.data or []
+    rows = resp.data or []
+    filtered = [
+        row
+        for row in rows
+        if str(row.get("ai_status") or "") != "pending"
+        or _is_stale_pending(row)
+    ]
+    filtered.sort(
+        key=lambda row: (
+            _PROBLEM_SEVERITY.get(str(row.get("ai_status") or ""), 9),
+            str(row.get("created_at") or ""),
+        ),
+        reverse=True,
+    )
+    return filtered[:limit]
 
 
 def list_thread_messages(

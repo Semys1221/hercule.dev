@@ -51,14 +51,29 @@ Renoyer vers **hercule.dev/cvg/conseil-financier** pour le détail. En résumé 
 - **0 % de commission** sur les honoraires signés par le cabinet.
 - **No-show** : prospect absent malgré relance H-24 → attribution recréditée, remplacement sous **14 jours ouvrés**.
 
+## Briefing collectif (conference cutover)
+
+- Pour une partie des cabinets CIF en **cohorte de lancement**, Hercule organise un **briefing collectif** (visio Zoom) plutôt qu'un audit 1:1 immédiat.
+- Le lien `{reservation_cif_link}` peut pointer vers **hercule.dev/reservation-conference.html** (briefing collectif) — même variable, URL personnalisée par lead.
+- **Audit 1:1** (compatibilité cabinet) : reste le parcours standard hors cohorte briefing, ou après le briefing collectif.
+- Si le lead demande un RDV : orienter vers le lien CTA fourni (briefing ou audit selon le contexte campagne) — ne pas inventer d'URL.
+- Quelques emails « keeper » restent sur le parcours 1:1 classique (ops) — ne pas généraliser sans contexte.
+
 ## FAQ cabinet (extraits)
 
 - **D'où viennent les demandes ?** Dirigeants PME en accompagnement patrimonial, échéances fiscales, déclarations — qualifiés avant attribution.
+- **Comment avez-vous eu mon contact / connu mon cabinet ?** Campagne d'approche B2B ciblée (signaux Pappers / formalités + secteurs compatibles). Hercule contacte les cabinets dont le profil correspond aux demandes qualifiées en cours — pas de référence nominative à un tiers sans information dans le pack.
+- **Retours d'expérience / ROI chiffré / études de cas ?** Hercule ne publie pas de benchmarks nominatifs. Expliquer la valeur (flux qualifiés, 0 % commission, garantie MRR sur Starter/Pack) et renvoyer vers l'audit ou le briefing — **sans inventer de chiffres clients**.
+- **Business plan / projections ?** Hercule ne rédige pas de business plan pour le cabinet. Proposer l'audit de compatibilité pour évaluer l'adéquation du flux avec la capacité du cabinet.
+- **Belgique / hors France ?** Hercule opère pour des **cabinets et dirigeants en France** uniquement — pas d'offre Belgique.
+- **Invitation Calendly déjà reçue / RDV déjà planifié ?** Accuser réception brièvement, confirmer le créneau si connu (contexte Calendly), ne pas renvoyer un second lien sauf replanification demandée.
+- **Paiement, facturation, congés ops (ex. 20–30 oct.) ?** Renvoyer vers **contact@hercule.dev** — pas de détail process interne dans l'email.
 - **Qui peut postuler ?** Cabinets avec bande passante suffisante ; le seuil minimum 2 associés/collaborateurs est un indicateur, pas un refus automatique.
 - **« Je n'ai pas 2 collaborateurs »** : l'enjeu est la bande passante pour des visios qualifiantes (pas des appels de 10 min). Si le cabinet a la capacité (y compris sous-traitance stable), inviter à l'audit de compatibilité via Calendly.
 - **Objection tarif / « mensualités trop élevées »** : expliquer la valeur (10 missions/mois, garantie MRR, 0 % commission sur honoraires) ; mentionner Hercule Lite (1 799 €/mois, 5 missions/mois) comme offre d'entrée tant que le cabinet a la capacité d'absorber ; détail sur hercule.dev/cvg/conseil-financier.
 - **Demande d'appel téléphonique** : demander « à quelles heures seriez-vous disponible cette semaine ? », proposer deux créneaux Calendly (visio) — pas d'appel téléphonique ad hoc. Si le cabinet répond avec un créneau précis (« mardi 14h », « demain matin »), le système peut **confirmer automatiquement** la visio Zoom via Calendly ; Grok doit alors le mentionner explicitement (lien de replanification si fourni).
 - **Apporteurs d'affaires / rémunération** : Hercule ne rémunère pas les apporteurs. Le cabinet souscrit à Hercule pour recevoir des missions qualifiées ; 0 % de commission sur les honoraires signés ; le dirigeant ne paie rien à Hercule.
+- **Réciprocité / contreparties / engagements** : Hercule ne demande pas de réciprocité commerciale (pas de renvoi de clients, pas de commission sur vos propres dossiers). Le cabinet acquiert l'accès au système pour recevoir des flux qualifiés en exclusivité selon les CGV souscrites — c'est la contrepartie contractuelle. Aucun engagement hors contrat.
 - **Garantie signature ?** Non. Garantie MRR uniquement sur Hercule Starter et Pack (voir CGV).
 - **Gratuit pour le dirigeant ?** Oui — le dirigeant ne paie rien à Hercule.
 

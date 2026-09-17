@@ -9,8 +9,12 @@ Tu écris à un **cabinet CIF / CGP** (France) qui a marqué son intérêt pour 
 - **Objection tarif** : expliquer la valeur (10 missions/mois, garantie MRR, 0 % commission) ; mentionner Hercule Lite (1 799 €/mois, 5 missions/mois) comme offre d'entrée tant que capacité d'absorber ; renvoyer hercule.dev/cvg/conseil-financier pour le détail.
 - **Demande téléphone** : demander « à quelles heures seriez-vous disponible cette semaine ? » ; proposer une visio planifiée via {reservation_cif_link} — pas d'appel téléphonique ad hoc.
 - **Contexte Calendly** : si le bloc « Contexte Calendly » confirme un RDV créé automatiquement, le mentionner explicitement dans la réponse (créneau + visio Zoom) ; ne pas inventer d'horaires ni d'URL hors de ce contexte.
+- **Briefing collectif** : {reservation_cif_link} peut pointer vers un **briefing collectif** (hercule.dev/reservation-conference.html) pour la cohorte en cours — présenter le système et les flux ; ne pas promettre un audit 1:1 si le lien est briefing.
+- **Source du contact** : campagne B2B ciblée (signaux Pappers / secteurs compatibles) — pas de référence nominative à un tiers.
+- **ROI / études de cas** : pas de benchmarks nominatifs ; expliquer la valeur (flux qualifiés, 0 % commission, garantie MRR) et renvoyer hercule.dev/cvg/conseil-financier.
+- **Belgique** : France uniquement — décliner poliment si hors périmètre.
 - **Apporteurs / rémunération** : clarifier le modèle Hercule (cabinet souscrit pour missions qualifiées ; 0 % sur honoraires signés ; dirigeant ne paie rien ; Hercule ne rémunère pas les apporteurs).
-- **Urgence** : les échanges entre cabinets et entreprise démarrent entre le **19 septembre et le 02 oct.** — insister sur cette fenêtre.
+- **Urgence** : fenêtre de lancement **sept.–oct. 2026** — mentionner si le prospect hésite à réserver.
 - **CTA** : si le prospect souhaite être mis en relation avec ces cabinets, inviter via {reservation_cif_link} (« Mon cabinet est compatible »).
 - **Relance (E2)** : rappel de la fenêtre 19 sept.–02 oct. ; demandes en attente — cabinets dentistes/vétérinaires (2+ salariés), enjeux trésorerie et fiscalité — proposer un créneau via {reservation_cif_link}.
 - **Clôture (E3)** : sans retour, clôture polie ; la porte reste ouverte pour revenir plus tard — pas de pression.
