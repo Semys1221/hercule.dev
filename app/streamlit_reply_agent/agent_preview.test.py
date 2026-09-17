@@ -55,15 +55,17 @@ class BuildGlobalRulesTests(unittest.TestCase):
 
     def test_includes_tone_anti_patterns(self) -> None:
         rules = build_global_rules(max_sentences=2)
-        self.assertIn("pas d'urgence artificielle", rules)
+        self.assertIn("urgence forcée", rules)
         self.assertIn("Merci pour votre message", rules)
         self.assertNotIn("CTA urgent", rules)
         self.assertNotIn("accuser réception →", rules)
 
-    def test_skips_not_interested_tag(self) -> None:
+    def test_includes_recovery_and_aer_rules(self) -> None:
         rules = build_global_rules(max_sentences=2)
-        self.assertIn("Not interested", rules)
-        self.assertIn("should_reply à false", rules)
+        self.assertIn("recovery_confidence", rules)
+        self.assertIn("Structure AER obligatoire", rules)
+        self.assertIn("briefing collectif", rules)
+        self.assertNotIn("ne jamais relancer", rules)
 
 
 class GrokTemperatureTests(unittest.TestCase):
@@ -160,22 +162,30 @@ class TruncateInboundTests(unittest.TestCase):
 
 
 class GenerateReplyPreviewTests(unittest.TestCase):
-    def test_skips_not_interested_without_calling_grok(self) -> None:
+    def test_not_interested_calls_grok(self) -> None:
         config = {
             "prompt_snapshot": "Campaign prompt",
             "target_type": "buyer",
             "niche_preset_id": "comptables",
         }
-        with patch("agent_preview._generate_with_models") as mock_grok:
+        decision = {
+            "should_reply": False,
+            "reply_text": None,
+            "reason": "Refus définitif",
+            "recovery_confidence": 15,
+        }
+        with patch(
+            "agent_preview._generate_with_models",
+            return_value=(decision, "grok-test", None),
+        ):
             preview = generate_reply_preview(
                 config,
-                "Hello",
+                "Non merci",
                 "lead@example.com",
                 interest_label="Not interested",
             )
-        mock_grok.assert_not_called()
         self.assertFalse(preview["should_reply"])
-        self.assertIn("Not interested", preview["reason"])
+        self.assertEqual(preview.get("recovery_confidence"), 15)
 
     def test_jomega_collaborator_objection_reply_preview(self) -> None:
         config = {
@@ -209,6 +219,7 @@ class GenerateReplyPreviewTests(unittest.TestCase):
             "agence_link": reserve,
             "entreprise_link": reserve,
             "comptable_link": reserve,
+            "cif_link": reserve,
         }
         with (
             patch(

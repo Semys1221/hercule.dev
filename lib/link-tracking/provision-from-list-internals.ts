@@ -76,11 +76,13 @@ export function needsProvision(
   if (category === "comptable") {
     const reservationLink = row.reservation_comptable_link?.trim();
     const confirmLink = row.confirmation_comptable_link?.trim();
-    return !slug || !reservationLink || !confirmLink;
+    if (!slug || !reservationLink || !confirmLink) return true;
+    return reservationLink.includes("reservation-entreprise.html");
   }
   if (category === "cif") {
     const reservationLink = row.reservation_cif_link?.trim();
-    return !slug || !reservationLink;
+    if (!slug || !reservationLink) return true;
+    return reservationLink.includes("reservation-cif.html");
   }
   const entrepriseLink = row.reservation_entreprise_link?.trim();
   const confirmLink = row.confirmation_agence_link?.trim();

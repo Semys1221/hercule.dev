@@ -75,11 +75,24 @@ pnpm resync-reply-agent-prompts      # push prompts/*.md → prompt_snapshot (pr
 pnpm configure-ai-reply-agent-health-cron  # cron-job.org health alerts
 ```
 
+## Recovery mode (Lead + Not interested)
+
+| Tag | Grok | Reply | On send |
+|-----|------|-------|---------|
+| Interested (1) | Yes | `should_reply` (no 70% gate) | unchanged |
+| Lead / Not interested | Yes | `should_reply` + `recovery_confidence ≥ 70` | auto-tag Interested |
+| No show (-4) | No | skip | — |
+
+- Gate : `reply_gate.py` (Streamlit) · `lib/ai-reply-agent/reply-gate.ts` (webhook)
+- Copy : **AER** (Acknowledge → Explain → Redirect) on all `should_reply=true` replies
+- CIF format : briefing collectif only — no 1:1 audit, no phone alternative
+- Migration : `pnpm apply-ai-reply-agent-recovery-migration` (`skipped_recovery` + `recovery_confidence` column)
+
 ## Niche CIF + conference cutover
 
-- Knowledge : `doc/tech-stack/ai-reply-knowledge-cif.md` (incl. briefing collectif)
+- Knowledge : `doc/tech-stack/ai-reply-knowledge-cif.md` (AER + briefing collectif)
 - FAQ : `doc/legal-documentation/cif/faq.json`
-- CTA `{reservation_cif_link}` may resolve to `reservation-conference.html` (cohort briefing)
+- CTA `{reservation_cif_link}` → `reservation-conference.html` (cohort briefing only)
 - Health cron : `/api/cron/ai-reply-agent-health` (failed + slow pending → `NOTIFICATION_OPS_EMAIL`)
 
 ## Cross-links

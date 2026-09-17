@@ -110,6 +110,7 @@ export async function updateInboundStatus(
   groqCostUsdTicks?: number | null,
   latencyMs?: number | null,
   knowledgePackHash?: string | null,
+  recoveryConfidence?: number | null,
 ): Promise<void> {
   const client = createAiReplyAgentClient();
   const patch: Record<string, unknown> = {
@@ -123,6 +124,12 @@ export async function updateInboundStatus(
   }
   if (knowledgePackHash != null) {
     patch.knowledge_pack_hash = knowledgePackHash;
+  }
+  if (recoveryConfidence != null) {
+    patch.recovery_confidence = Math.max(
+      0,
+      Math.min(100, Math.round(recoveryConfidence)),
+    );
   }
   const { error } = await client
     .from("ai_reply_agent_messages")

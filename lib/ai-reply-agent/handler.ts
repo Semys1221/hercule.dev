@@ -24,7 +24,13 @@ import { hasRecentHerculeCollision, sendAiReply } from "./send";
 import {
   findLeadByEmailInCampaign,
   getInstantlyApiKey,
+  updateLeadInterestStatusBypass,
 } from "@/lib/instantly-bypass/client";
+import {
+  applyReplyGate,
+  isRecoveryInterestTag,
+  NO_SHOW_STATUS,
+} from "./reply-gate";
 
 import type {
   AiReplyMessageStatus,
@@ -32,12 +38,11 @@ import type {
   InstantlyReplyWebhookPayload,
 } from "./types";
 
-const INTERESTED_STATUS = 1;
-
 type InboundFinalizeExtras = {
   groqModel?: string | null;
   groqCostUsdTicks?: number | null;
   knowledgePackHash?: string | null;
+  recoveryConfidence?: number | null;
 };
 
 async function finalizeInbound(
@@ -56,10 +61,30 @@ async function finalizeInbound(
     extras?.groqCostUsdTicks,
     latencyMs,
     extras?.knowledgePackHash,
+    extras?.recoveryConfidence,
   );
   return latencyMs;
 }
-const NOT_INTERESTED_STATUS = -1;
+
+async function retagLeadInterested(
+  apiKey: string,
+  campaignId: string,
+  leadEmail: string,
+): Promise<void> {
+  try {
+    await updateLeadInterestStatusBypass(apiKey, {
+      lead_email: leadEmail,
+      interest_value: 1,
+      campaign_id: campaignId,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[ai-reply-agent] failed to retag ${leadEmail} as Interested:`,
+      message,
+    );
+  }
+}
 
 function stripHtml(html: string): string {
   return html
@@ -202,30 +227,16 @@ export async function handleInstantlyReply(
   const apiKey = getInstantlyApiKey();
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
-  if (interestStatus === NOT_INTERESTED_STATUS) {
+  if (interestStatus === NO_SHOW_STATUS) {
     const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_not_interested",
       started,
-      "Lead marked Not interested in Instantly",
+      "Lead marked No show in Instantly",
     );
     return {
       ok: true,
-      skipped: "not_interested",
-      aiStatus: "skipped_not_interested",
-      latencyMs,
-    };
-  }
-  if (interestStatus !== INTERESTED_STATUS) {
-    const latencyMs = await finalizeInbound(
-      inbound.id,
-      "skipped_not_interested",
-      started,
-      "Lead not tagged Interested",
-    );
-    return {
-      ok: true,
-      skipped: "not_interested",
+      skipped: "no_show",
       aiStatus: "skipped_not_interested",
       latencyMs,
     };
@@ -292,18 +303,26 @@ export async function handleInstantlyReply(
     return { ok: false, error: message, aiStatus: "failed", latencyMs };
   }
 
-  if (!decision.should_reply || !decision.reply_text) {
+  const grokFinalizeExtras: InboundFinalizeExtras = {
+    ...finalizeExtras,
+    groqModel: model,
+    groqCostUsdTicks: costUsdTicks,
+    recoveryConfidence: decision.recovery_confidence ?? null,
+  };
+
+  const gate = applyReplyGate(interestStatus, decision);
+  if (!gate.allowReply) {
     const latencyMs = await finalizeInbound(
       inbound.id,
-      "skipped_unsafe",
+      gate.aiStatus,
       started,
-      decision.reason,
-      { ...finalizeExtras, groqModel: model, groqCostUsdTicks: costUsdTicks },
+      gate.reason,
+      grokFinalizeExtras,
     );
     return {
       ok: true,
-      skipped: "groq_abstain",
-      aiStatus: "skipped_unsafe",
+      skipped: gate.aiStatus === "skipped_recovery" ? "recovery_gate" : "groq_abstain",
+      aiStatus: gate.aiStatus,
       latencyMs,
     };
   }
@@ -316,7 +335,7 @@ export async function handleInstantlyReply(
       "pending",
       started,
       decision.reason,
-      { ...finalizeExtras, groqModel: model, groqCostUsdTicks: costUsdTicks },
+      grokFinalizeExtras,
     );
     return {
       ok: true,
@@ -341,7 +360,7 @@ export async function handleInstantlyReply(
       "auto_replied",
       started,
       decision.reason,
-      { ...finalizeExtras, groqModel: model, groqCostUsdTicks: costUsdTicks },
+      grokFinalizeExtras,
     );
     await insertOutboundMessage({
       campaignId,
@@ -355,6 +374,10 @@ export async function handleInstantlyReply(
       replyToUuid: sent.replyToUuid,
     });
 
+    if (isRecoveryInterestTag(interestStatus)) {
+      await retagLeadInterested(apiKey, campaignId, leadEmail);
+    }
+
     return {
       ok: true,
       aiStatus: "auto_replied",
@@ -367,7 +390,7 @@ export async function handleInstantlyReply(
       "failed",
       started,
       message,
-      { ...finalizeExtras, groqModel: model },
+      grokFinalizeExtras,
     );
     if (message === "thread_not_found") {
       return { ok: true, skipped: "thread_not_found", aiStatus: "failed", latencyMs };

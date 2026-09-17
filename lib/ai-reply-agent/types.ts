@@ -12,6 +12,7 @@ export type AiReplyMessageStatus =
   | "skipped_ooo"
   | "skipped_collision"
   | "skipped_not_interested"
+  | "skipped_recovery"
   | "manual_replied"
   | "manual_queued"
   | "failed";
@@ -57,6 +58,8 @@ export type GroqReplyDecision = {
   should_reply: boolean;
   reply_text: string | null;
   reason: string;
+  /** 0–100. Required for Lead / Not interested recovery gate. */
+  recovery_confidence?: number | null;
 };
 
 export type HandleReplyResult = {

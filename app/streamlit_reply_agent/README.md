@@ -28,17 +28,20 @@ Niche presets are imported from `app/streamlit_scraper/config_loader.PRESET_LABE
 - **Prompts** — per-niche `*_buyer.md` and `*_seller.md` stored in Supabase via `prompt_store.py`
 - **Bulk actions** — `pending_bulk_actions.py`
 - **Health audit** — `pnpm audit-reply-agent` (Supabase failures + Instantly slow pending)
-- **Problem tab** — failures, stale pending (>24h), abstentions, OOO
+- **Problem tab** — failures, stale pending (>24h), recovery gate (<70%), abstentions, OOO
+- **Recovery mode** — Lead + Not interested tags call Grok; reply only if `recovery_confidence ≥ 70` (`reply_gate.py` / `lib/ai-reply-agent/reply-gate.ts`)
 
 ## Niche CIF (`conseillers_gestion_patrimoine`)
 
 | Rôle | Prompt | CTA |
 |------|--------|-----|
-| **buyer** | `prompts/conseillers_gestion_patrimoine_buyer.md` | `{reservation_cif_link}` → briefing collectif ou audit 1:1 |
+| **buyer** | `prompts/conseillers_gestion_patrimoine_buyer.md` | `{reservation_cif_link}` → briefing collectif uniquement |
 
 Knowledge pack : `doc/tech-stack/ai-reply-knowledge-cif.md` + `doc/legal-documentation/cif/faq.json`.
 
-**Conference cutover :** `{reservation_cif_link}` peut pointer vers `hercule.dev/reservation-conference.html` (briefing collectif). Détail dans le knowledge pack.
+**Recovery + AER :** toutes les réponses `should_reply=true` suivent Acknowledge → Explain → Redirect. Tags Lead / Not interested : gate 70 % ; envoi réussi → retag Instantly **Interested**.
+
+**Conference cutover :** `{reservation_cif_link}` → `hercule.dev/reservation-conference.html` (briefing collectif, pas d'audit 1:1 pour la cohorte en cours).
 
 Après modification des prompts :
 

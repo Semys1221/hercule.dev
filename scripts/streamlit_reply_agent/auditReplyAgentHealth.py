@@ -102,6 +102,7 @@ def run_audit(
 
     failed = [r for r in inbound if r.get("ai_status") == "failed"]
     skipped = [r for r in inbound if r.get("ai_status") == "skipped_unsafe"]
+    skipped_recovery = [r for r in inbound if r.get("ai_status") == "skipped_recovery"]
     pending = [r for r in inbound if r.get("ai_status") == "pending"]
 
     stale_cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
@@ -161,6 +162,8 @@ def run_audit(
         "inbound_total": len(inbound),
         "status_by_campaign": _status_rollup(inbound),
         "failed_recent": failed[-20:],
+        "skipped_recovery_count": len(skipped_recovery),
+        "recovery_gate_clusters": _cluster_abstention_reasons(skipped_recovery),
         "abstention_clusters": _cluster_abstention_reasons(skipped),
         "stale_pending": stale_pending,
         "failed_jobs": failed_jobs,
@@ -180,6 +183,7 @@ def run_audit(
 def _print_summary(report: dict[str, Any]) -> None:
     print(f"Generated: {report.get('generated_at')}")
     print(f"Campaigns: {report.get('campaigns')} | Inbound messages: {report.get('inbound_total')}")
+    print(f"Recovery gate (skipped_recovery): {report.get('skipped_recovery_count', 0)}")
     print(f"Stale pending (>24h): {len(report.get('stale_pending') or [])}")
     print(f"Failed jobs: {len(report.get('failed_jobs') or [])}")
     print(f"Instantly slow pending: {len(report.get('instantly_slow_pending') or [])}")
@@ -189,6 +193,12 @@ def _print_summary(report: dict[str, Any]) -> None:
         preset = (report.get("config_index") or {}).get(cid, {}).get("niche_preset_id", "?")
         parts = ", ".join(f"{k}={v}" for k, v in sorted(statuses.items(), key=lambda x: -x[1]))
         print(f"  {preset} ({cid[:8]}…): {parts}")
+
+    recovery_clusters = report.get("recovery_gate_clusters") or {}
+    if recovery_clusters:
+        print("\n--- Top recovery gate reasons ---")
+        for reason, count in list(recovery_clusters.items())[:10]:
+            print(f"  [{count}] {reason[:100]}")
 
     clusters = report.get("abstention_clusters") or {}
     if clusters:

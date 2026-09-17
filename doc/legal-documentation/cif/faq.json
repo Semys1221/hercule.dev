@@ -76,7 +76,7 @@
     {
       "id": "faq-cif-013",
       "question": "Puis-je vous joindre par téléphone plutôt que via le formulaire ?",
-      "answer": "Les échanges se font en visioconférence planifiée (Calendly + Zoom provisionnés par Hercule), pas en appel téléphonique ad hoc. Indiquez vos disponibilités (« à quelle heure cette semaine ? ») : si le cabinet propose un créneau précis (ex. « mardi 14h »), Hercule peut confirmer automatiquement la visio ; sinon proposez deux créneaux Calendly via le lien de réservation.",
+      "answer": "Pour la cohorte en cours, Hercule organise un briefing collectif (visio Zoom) via le lien de réservation — pas d'appel téléphonique ad hoc ni de visio individuelle en alternative. Le briefing permet de voir le système et les flux qualifiés en cours.",
       "cvgLink": true
     },
     {
@@ -94,7 +94,7 @@
     {
       "id": "faq-cif-016",
       "question": "Quelle est la différence entre le briefing collectif et l'audit 1:1 ?",
-      "answer": "Le briefing collectif (visio Zoom) présente le fonctionnement du système Hercule et les flux en cours pour une cohorte de cabinets. L'audit de compatibilité 1:1 approfondit zone, honoraires et bande passante pour un cabinet individuel. Le lien de réservation dans l'email indique le parcours adapté.",
+      "answer": "Pour la cohorte CIF en cours, le parcours est le briefing collectif uniquement (visio Zoom, plusieurs cabinets) : présentation du système Hercule et des flux qualifiés. Le lien de réservation dans l'email pointe vers ce briefing — pas d'audit 1:1 individuel pour cette cohorte.",
       "cvgLink": true
     },
     {

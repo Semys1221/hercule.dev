@@ -1,6 +1,6 @@
 export const CALENDLY_AGENCE_URL = "/reservation.html"
 export const CALENDLY_ENTREPRISE_URL = "/reservation-entreprise.html"
-export const CALENDLY_CIF_URL = "/reservation-cif.html"
+export const CALENDLY_CIF_URL = "/reservation-conference.html"
 export const CALENDLY_CIF_CONFERENCE_URL = "/reservation-conference.html"
 
 /** When true, public CIF site CTAs show « Sur invitation » with no booking link. */

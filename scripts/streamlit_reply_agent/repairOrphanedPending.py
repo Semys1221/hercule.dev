@@ -56,10 +56,8 @@ def _classify_orphan(
         )
     ):
         return "mark_ooo"
-    if interest_status == -1:
-        return "mark_not_interested"
-    if interest_status != 1:
-        return "skip_untagged"
+    if interest_status == -4:
+        return "mark_no_show"
     return "retry_grok_send"
 
 
@@ -162,13 +160,13 @@ def repair_orphans(
                 )
             continue
 
-        if action == "mark_not_interested":
-            print("  set inbound status → skipped_not_interested")
+        if action == "mark_no_show":
+            print("  set inbound status → skipped_not_interested (No show)")
             if not dry_run:
                 update_message_status(
                     message_id,
                     "skipped_not_interested",
-                    "Lead marked Not interested in Instantly",
+                    "Lead marked No show in Instantly",
                 )
             continue
 
@@ -180,10 +178,6 @@ def repair_orphans(
                     "skipped_ooo",
                     "Auto-reply / bounce detected on repair",
                 )
-            continue
-
-        if action == "skip_untagged":
-            print("  skip (lead not tagged Interested)")
             continue
 
         inbound = (
@@ -203,17 +197,22 @@ def repair_orphans(
             email,
             interest_label=label,
         )
-        should = bool(preview.get("should_reply"))
+        from reply_gate import apply_reply_gate
+
+        gate = apply_reply_gate(item.get("interest_status"), preview)
         reply_text = str(preview.get("reply_text") or "").strip()
-        reason = str(preview.get("reason") or "")
-        print(f"  grok should_reply={should} reason={reason[:80]}")
+        reason = gate["reason"] or str(preview.get("reason") or "")
+        print(
+            f"  grok allow_reply={gate['allow_reply']} "
+            f"status={gate['ai_status']} reason={reason[:80]}"
+        )
         if reply_text:
             print(f"  draft: {reply_text[:100]}…")
 
-        if not should or not reply_text:
-            print("  set inbound status → skipped_unsafe")
+        if not gate["allow_reply"]:
+            print(f"  set inbound status → {gate['ai_status']}")
             if not dry_run:
-                update_message_status(message_id, "skipped_unsafe", reason)
+                update_message_status(message_id, gate["ai_status"], reason)
             continue
 
         if dry_run or not send:

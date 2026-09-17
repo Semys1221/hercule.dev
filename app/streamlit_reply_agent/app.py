@@ -706,6 +706,8 @@ def _problem_severity_label(status: str) -> str:
         return "Échec"
     if status == "pending":
         return "Brouillon >24h"
+    if status == "skipped_recovery":
+        return "Recovery <70%"
     if status == "skipped_unsafe":
         return "Abstention IA"
     if status == "skipped_ooo":
@@ -732,9 +734,13 @@ def render_problem_tab(
         f"{_problem_severity_label(status)}: {len(rows)}"
         for status, rows in sorted(
             by_severity.items(),
-            key=lambda item: {"failed": 0, "pending": 1, "skipped_unsafe": 2, "skipped_ooo": 3}.get(
-                item[0], 9
-            ),
+            key=lambda item: {
+                "failed": 0,
+                "pending": 1,
+                "skipped_recovery": 2,
+                "skipped_unsafe": 3,
+                "skipped_ooo": 4,
+            }.get(item[0], 9),
         )
     ]
     st.caption(" · ".join(summary_parts))

@@ -5,7 +5,7 @@ const DEFAULT_TRACKING_BASE_AGENCE =
 const DEFAULT_TRACKING_BASE_ENTREPRISE =
   "https://www.hercule.dev/reservation-entreprise.html";
 const DEFAULT_TRACKING_BASE_COMPTABLE =
-  "https://www.hercule.dev/reservation-entreprise.html";
+  "https://www.hercule.dev/reservation-conference.html";
 const DEFAULT_TRACKING_BASE_CIF =
   "https://www.hercule.dev/reservation-conference.html";
 const DEFAULT_CONFIRM_BASE =

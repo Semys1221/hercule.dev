@@ -38,12 +38,12 @@
 }
 ---
 
-Pour faire simple,<br/><br/>Nous avons des demandes de cabinets de dentistes et vétérinaires (2+ salariés), confrontés à des enjeux de croissance, trésorerie et pression fiscale.<br/><br/>L'expertise recherchée porte sur le placement des avoirs professionnels et privés et la réduction de la pression fiscale.<br/><br/>Les échanges démarrent entre le 19 sept. et le 02 oct.<br/><br/>Si vous souhaitez que nous vous mettions en relation avec ces cabinets : <a href="{{reservation_cif_link}}">Mon cabinet est compatible</a><br/><br/><i>L'appel se réalisera avec un membre de l'équipe</i><br/><br/>{{accountSignature}}
+Pour faire simple,<br/><br/>Nous avons des demandes de cabinets de dentistes et vétérinaires (2+ salariés), confrontés à des enjeux de croissance, trésorerie et pression fiscale.<br/><br/>L'expertise recherchée porte sur le placement des avoirs professionnels et privés et la réduction de la pression fiscale.<br/><br/>Les échanges démarrent entre le 19 sept. et le 02 oct.<br/><br/>Si vous souhaitez que nous vous mettions en relation avec ces cabinets : <a href="{{reservation_cif_link}}">Mon cabinet est compatible</a><br/><br/>Les appels de présentation sont réalisés tous les mercredis à 10h (heure de Paris).<br/><br/>{{accountSignature}}
 
 ---step---
 
-Bonjour,<br/><br/>Je reviens vers vous sur les demandes en attente — cabinets dentistes/vétérinaires (2+ salariés), enjeux trésorerie et fiscalité.<br/><br/>Les échanges démarrent entre le 19 sept. et le 02 oct.<br/><br/>Disponible le {{slot_1}} ou le {{slot_2}} ?<br/><br/><a href="{{reservation_cif_link}}">Mon cabinet est compatible</a><br/><br/>{{accountSignature}}
+Bonjour,<br/><br/>Je reviens vers vous sur les demandes en attente — cabinets dentistes/vétérinaires (2+ salariés), enjeux trésorerie et fiscalité.<br/><br/>Les échanges démarrent entre le 19 sept. et le 02 oct.<br/><br/>Les appels de présentation sont réalisés tous les mercredis à 10h (heure de Paris).<br/><br/><a href="{{reservation_cif_link}}">Mon cabinet est compatible</a><br/><br/>{{accountSignature}}
 
 ---step---
 
-Bonjour {{first_name}},<br/><br/>N'ayant pas reçu de retour de votre part, je me dois de clôturer nos échanges ici.<br/><br/>Si le sujet devient pertinent pour votre cabinet à l'avenir, vous pourrez simplement revenir vers moi.<br/><br/>Bonne continuation,<br/><br/>{{accountSignature}}
+Bonjour {{first_name}},<br/><br/>N'ayant pas reçu de retour de votre part, je me dois de clôturer nos échanges ici.<br/><br/>Si le sujet vous intéresse encore, les appels de présentation ont lieu tous les mercredis à 10h (heure de Paris) : <a href="{{reservation_cif_link}}">Mon cabinet est compatible</a><br/><br/>Bonne continuation,<br/><br/>{{accountSignature}}

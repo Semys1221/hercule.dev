@@ -51,13 +51,28 @@ Renoyer vers **hercule.dev/cvg/conseil-financier** pour le détail. En résumé 
 - **0 % de commission** sur les honoraires signés par le cabinet.
 - **No-show** : prospect absent malgré relance H-24 → attribution recréditée, remplacement sous **14 jours ouvrés**.
 
-## Briefing collectif (conference cutover)
+## Briefing collectif (cohorte en cours — format unique)
 
-- Pour une partie des cabinets CIF en **cohorte de lancement**, Hercule organise un **briefing collectif** (visio Zoom) plutôt qu'un audit 1:1 immédiat.
-- Le lien `{reservation_cif_link}` peut pointer vers **hercule.dev/reservation-conference.html** (briefing collectif) — même variable, URL personnalisée par lead.
-- **Audit 1:1** (compatibilité cabinet) : reste le parcours standard hors cohorte briefing, ou après le briefing collectif.
-- Si le lead demande un RDV : orienter vers le lien CTA fourni (briefing ou audit selon le contexte campagne) — ne pas inventer d'URL.
-- Quelques emails « keeper » restent sur le parcours 1:1 classique (ops) — ne pas généraliser sans contexte.
+- Pour la **cohorte CIF en cours**, Hercule propose **uniquement un briefing collectif** (visio Zoom, plusieurs cabinets) — **pas d'audit 1:1** ni d'appel téléphonique ad hoc en alternative.
+- Le lien `{reservation_cif_link}` pointe vers **hercule.dev/reservation-conference.html** (briefing collectif) — même variable, URL personnalisée par lead.
+- Si le lead demande un RDV ou un appel : rediriger vers le briefing collectif via le lien CTA — ne pas inventer d'URL ni proposer un format individuel.
+
+## Framework AER (toutes les réponses should_reply=true)
+
+Structure obligatoire dans `reply_text` :
+
+1. **Acknowledge** — valider l'objection sans céder (« Je comprends que le format collectif ne soit pas votre habitude. »).
+2. **Explain** — agiter la douleur / coût de l'inaction (« Sans action structurée, difficile de développer une clientèle professionnelle dès le mois suivant. »).
+3. **Redirect** — CTA briefing collectif (`{reservation_cif_link}`), lien seul sur sa ligne.
+
+### Exemples recovery
+
+| Inbound | recovery_confidence | should_reply | AER |
+|---------|---------------------|--------------|-----|
+| « Non merci, pas notre cible » | 10–25 | false | — |
+| « Non mais je voudrais comprendre… » | 80+ | true | Acknowledge hésitation → Explain coût inaction → Redirect conférence |
+| « Appelez-moi, je ne fais pas d'appels en conférence » | 75+ | true | Acknowledge format → Explain bande passante / flux qualifiés → Redirect conférence (ne pas s'excuser ni proposer 1:1) |
+| « Oui » / question process | 90+ | true | AER light → Redirect conférence |
 
 ## FAQ cabinet (extraits)
 
@@ -71,7 +86,7 @@ Renoyer vers **hercule.dev/cvg/conseil-financier** pour le détail. En résumé 
 - **Qui peut postuler ?** Cabinets avec bande passante suffisante ; le seuil minimum 2 associés/collaborateurs est un indicateur, pas un refus automatique.
 - **« Je n'ai pas 2 collaborateurs »** : l'enjeu est la bande passante pour des visios qualifiantes (pas des appels de 10 min). Si le cabinet a la capacité (y compris sous-traitance stable), inviter à l'audit de compatibilité via Calendly.
 - **Objection tarif / « mensualités trop élevées »** : expliquer la valeur (10 missions/mois, garantie MRR, 0 % commission sur honoraires) ; mentionner Hercule Lite (1 799 €/mois, 5 missions/mois) comme offre d'entrée tant que le cabinet a la capacité d'absorber ; détail sur hercule.dev/cvg/conseil-financier.
-- **Demande d'appel téléphonique** : demander « à quelles heures seriez-vous disponible cette semaine ? », proposer deux créneaux Calendly (visio) — pas d'appel téléphonique ad hoc. Si le cabinet répond avec un créneau précis (« mardi 14h », « demain matin »), le système peut **confirmer automatiquement** la visio Zoom via Calendly ; Grok doit alors le mentionner explicitement (lien de replanification si fourni).
+- **Demande d'appel téléphonique / format individuel** : AER — valider la demande sans céder ; expliquer que le briefing collectif permet de voir le système et les flux en cours ; rediriger vers `{reservation_cif_link}` (conférence). Ne pas proposer d'appel téléphonique ni de visio 1:1.
 - **Apporteurs d'affaires / rémunération** : Hercule ne rémunère pas les apporteurs. Le cabinet souscrit à Hercule pour recevoir des missions qualifiées ; 0 % de commission sur les honoraires signés ; le dirigeant ne paie rien à Hercule.
 - **Réciprocité / contreparties / engagements** : Hercule ne demande pas de réciprocité commerciale (pas de renvoi de clients, pas de commission sur vos propres dossiers). Le cabinet acquiert l'accès au système pour recevoir des flux qualifiés en exclusivité selon les CGV souscrites — c'est la contrepartie contractuelle. Aucun engagement hors contrat.
 - **Garantie signature ?** Non. Garantie MRR uniquement sur Hercule Starter et Pack (voir CGV).

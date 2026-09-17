@@ -44,18 +44,21 @@ export function buildGlobalRules(
       : "https://hercule.dev/cvg";
   return `Tu es Béatrice Meyer, responsable qualification chez Hercule (hercule.dev).
 
-Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string).
+Réponds uniquement en JSON avec les clés : should_reply (boolean), reply_text (string|null), reason (string), recovery_confidence (number 0–100, obligatoire si tag Lead ou Not interested).
 
 Règles quand should_reply est true :
 - Texte brut uniquement dans reply_text (pas de HTML, pas de markdown).
 - Rédige reply_text en français, vouvoiement, ton professionnel et direct — comme un email humain, pas une FAQ.
 - ${lengthRule}
-- Réponds d'abord à la question ou l'objection du lead ; n'accuse réception que si le message du lead le justifie.
+- Structure AER obligatoire dans reply_text : (1) Acknowledge — valider l'objection sans céder ; (2) Explain — agiter la douleur / coût de l'inaction (ex. sans action structurée, difficile de développer une clientèle professionnelle dès le mois suivant) ; (3) Redirect — lien CTA briefing collectif fourni.
 - Ne recopie pas mot à mot le pack de connaissances ; reformule avec tes mots.
-- Propose le lien CTA seulement si le prospect est prêt à avancer ou si le prompt campagne le demande — pas d'urgence artificielle.
 - Sépare le corps, le lien CTA et la signature par une ligne vide (\\n\\n).
 - Mets le lien CTA seul sur sa propre ligne, en URL brute (sera affiché « Réserver » à l'envoi).
 - Termine par « Béatrice Meyer », puis « hercule.dev Courtage contrat BNC/BIC », puis l'URL du site (https://hercule.dev ou ${pricingUrl} si question tarifs), chaque élément sur sa propre ligne.
+
+Position format (non négociable pour CIF) :
+- Uniquement briefing collectif via le lien CTA — pas d'audit 1:1, pas d'appel téléphonique ad hoc en alternative.
+- Objections « appelez-moi », « je ne fais pas les appels à plusieurs » → répondre en AER et rediriger vers le briefing collectif ; ce n'est PAS une raison d'abstenir.
 
 Ton — évite ces formulations :
 - « Merci pour votre message » (sauf si le lead partage une info personnelle ou émotionnelle)
@@ -65,8 +68,13 @@ Ton — évite ces formulations :
 - « réserver cette semaine » ou « réserver un créneau maintenant » (urgence forcée)
 - listes à puces ou numérotées dans reply_text
 
+Recovery (tags Lead ou Not interested) :
+- Toujours renseigner recovery_confidence (0–100) : probabilité que la relance soit rattrapable.
+- « Non merci, pas notre cible » / refus définitif → should_reply false, recovery_confidence 10–25.
+- « Non mais… » / objection format ou téléphone → should_reply true si rattrapable, recovery_confidence ≥ 75.
+- Tag Interested : recovery_confidence optionnel (ignoré).
+
 Sécurité :
-- Si le tag Instantly du lead est « Not interested », mets should_reply à false et indique dans reason que le lead a été marqué non intéressé — ne jamais relancer une conversation.
 - Si la réponse n'est PAS clairement couverte par le pack de connaissances, mets should_reply à false et explique dans reason (en français).
 - N'invente jamais de prix, délais, garanties ou fonctionnalités.
 - Utilise uniquement le lien CTA fourni — n'invente jamais d'URL.`;
@@ -142,10 +150,21 @@ function parseGrokJson(content: string): GroqReplyDecision {
       : null;
   const reason =
     typeof parsed.reason === "string" ? parsed.reason.trim() : "Aucune raison fournie";
+  let recoveryConfidence: number | null = null;
+  const rawConfidence = parsed.recovery_confidence;
+  if (typeof rawConfidence === "number" && Number.isFinite(rawConfidence)) {
+    recoveryConfidence = Math.max(0, Math.min(100, rawConfidence));
+  } else if (typeof rawConfidence === "string" && rawConfidence.trim()) {
+    const parsedConfidence = Number(rawConfidence);
+    if (Number.isFinite(parsedConfidence)) {
+      recoveryConfidence = Math.max(0, Math.min(100, parsedConfidence));
+    }
+  }
   return {
     should_reply: shouldReply && Boolean(replyText),
     reply_text: shouldReply && replyText ? replyText : null,
     reason,
+    recovery_confidence: recoveryConfidence,
   };
 }
 
@@ -223,18 +242,6 @@ export async function generateReplyDecision(params: {
   costUsdTicks: number | null;
 }> {
   const interestLabel = (params.interestLabel ?? "Lead").trim() || "Lead";
-  if (interestLabel === NOT_INTERESTED_LABEL) {
-    return {
-      decision: {
-        should_reply: false,
-        reply_text: null,
-        reason:
-          "Lead marqué Not interested dans Instantly — ne pas relancer.",
-      },
-      model: "skipped-not-interested",
-      costUsdTicks: null,
-    };
-  }
 
   const primaryModel = resolveModel("GROK_PRIMARY_MODEL", PRIMARY_MODEL);
   const fallbackModel = resolveModel("GROK_FALLBACK_MODEL", FALLBACK_MODEL);

@@ -51,6 +51,14 @@ Renoyer vers **hercule.dev/cvg/comptable** pour le détail. En résumé interne 
 - **0 % de commission** sur les honoraires signés par le cabinet.
 - **No-show** : prospect absent malgré relance H-24 → attribution recréditée, remplacement sous **14 jours ouvrés**.
 
+## Framework AER (toutes les réponses should_reply=true)
+
+1. **Acknowledge** — valider l'objection sans céder.
+2. **Explain** — agiter la douleur métier (ex. bande passante dossiers, visios qualifiantes sans absorber la production).
+3. **Redirect** — CTA `{reservation_comptable_link}`.
+
+Recovery Lead / Not interested : calibrer `recovery_confidence` (refus définitif 10–25 ; « non mais… » ou objection format 75+).
+
 ## FAQ cabinet (extraits)
 
 - **D'où viennent les demandes ?** Dirigeants PME en reprise comptable, échéances fiscales, déclarations — qualifiés avant attribution.

@@ -80,12 +80,19 @@ def list_inbound_messages(campaign_id: str, limit: int = 200) -> list[dict[str, 
     return resp.data or []
 
 
-_PROBLEM_STATUSES = ("failed", "skipped_unsafe", "skipped_ooo", "pending")
+_PROBLEM_STATUSES = (
+    "failed",
+    "skipped_unsafe",
+    "skipped_recovery",
+    "skipped_ooo",
+    "pending",
+)
 _PROBLEM_SEVERITY = {
     "failed": 0,
     "pending": 1,
-    "skipped_unsafe": 2,
-    "skipped_ooo": 3,
+    "skipped_recovery": 2,
+    "skipped_unsafe": 3,
+    "skipped_ooo": 4,
 }
 
 

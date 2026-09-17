@@ -27,12 +27,15 @@ Use this after merging CRM migrations to production.
 6. Tracking URLs (already in `.env.example`):
    - `TRACKING_BASE_URL_AGENCE=https://www.hercule.dev/reservation.html`
    - `TRACKING_BASE_URL_ENTREPRISE=https://www.hercule.dev/reservation-entreprise.html`
-   - `TRACKING_BASE_URL_CIF=https://www.hercule.dev/reservation-cif.html`
+   - `TRACKING_BASE_URL_CIF=https://www.hercule.dev/reservation-conference.html` (legacy `/reservation-cif.html` redirects here)
    - `BOOKING_CONFIRM_BASE_URL=https://www.hercule.dev/confirm-reservation.html`
 
 ## 2. vercel.json
 
-Already configured with slug rewrites for both reservation pages.
+Already configured with slug rewrites for reservation pages and a redirect from legacy CIF 1:1 URLs:
+
+- `/reservation-cif.html` → `/reservation-conference.html` (307 + legacy HTML fallback)
+- New CIF links should use `TRACKING_BASE_URL_CIF=…/reservation-conference.html` directly.
 
 ## 3. Calendly webhook
 
