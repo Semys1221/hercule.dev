@@ -10,13 +10,17 @@ from lead_links import TargetType, resolve_lead_cta_link
 
 HERCULE_WEBSITE_URL = "https://hercule.dev"
 BEATRICE_SIGNATURE = "Béatrice Meyer"
-HERCULE_SIGNATURE_TAGLINE = "hercule.dev Courtage contrat BNC/BIC"
+HERCULE_SIGNATURE_TAGLINE = "Hercule, Courtage contrat BNC/BIC"
+HERCULE_SIGNATURE_TAGLINE_LEGACY = "hercule.dev Courtage contrat BNC/BIC"
+HERCULE_SIGNATURE_TAGLINE_SUFFIX = "Courtage contrat BNC/BIC"
+HERCULE_SIGNATURE_TAGLINE_HTML = f"Hercule, <i>{HERCULE_SIGNATURE_TAGLINE_SUFFIX}</i>"
+CORDIALEMENT_CLOSING = "Cordialement,"
 
 OUTREACH_SIGNATURE_PLAIN = "\n".join(
-    (BEATRICE_SIGNATURE, HERCULE_SIGNATURE_TAGLINE, HERCULE_WEBSITE_URL)
+    (CORDIALEMENT_CLOSING, BEATRICE_SIGNATURE, HERCULE_SIGNATURE_TAGLINE)
 )
 
-OPT_OUT_DISCLAIMER_PLAIN = "_Répondez non si vous ne souhaitez plus de messages._"
+OPT_OUT_DISCLAIMER_PLAIN = "Répondez non si vous ne souhaitez plus de messages."
 OPT_OUT_DISCLAIMER_HTML = (
     "<p><i>Répondez non si vous ne souhaitez plus de messages.</i></p>"
 )
@@ -74,6 +78,18 @@ def _has_explicit_hercule_url(text: str) -> bool:
     return bool(_HERCULE_URL_RE.search(text))
 
 
+def _normalize_signature_spacing(text: str) -> str:
+    """Collapse blank lines between name and tagline in the outreach signature block."""
+    out = text
+    for marker in (BEATRICE_SIGNATURE, "Beatrice Meyer"):
+        pattern = (
+            rf"({re.escape(marker)})(?:[ \t]*\n[ \t]*)+"
+            rf"({re.escape(HERCULE_SIGNATURE_TAGLINE)})"
+        )
+        out = re.sub(pattern, r"\1\n\2", out)
+    return out
+
+
 def _structure_reply_plaintext(text: str) -> str:
     """Insert paragraph breaks before signature, CTA URLs, and site link."""
     body = _normalize_plain_text(text)
@@ -116,20 +132,50 @@ def _structure_reply_plaintext(text: str) -> str:
     return body.strip()
 
 
+def _normalize_legacy_signature_tagline(text: str) -> str:
+    return text.replace(HERCULE_SIGNATURE_TAGLINE_LEGACY, HERCULE_SIGNATURE_TAGLINE)
+
+
+def _strip_trailing_signature_site_url(text: str) -> str:
+    idx = _signature_index(text)
+    if idx < 0:
+        return text
+    signature_block = text[idx:]
+    trimmed = re.sub(
+        r"\nhttps?://(?:www\.)?hercule\.dev/?\s*$",
+        "",
+        signature_block,
+        flags=re.I,
+    )
+    if trimmed == signature_block:
+        return text
+    return f"{text[:idx]}{trimmed}".rstrip()
+
+
 def ensure_outreach_signature(text: str) -> str:
-    """Ensure outreach signature: name, tagline, then https://hercule.dev URL."""
-    body = text
+    """Ensure reply closing: Cordialement, name, tagline (no trailing site URL)."""
+    body = _strip_trailing_signature_site_url(_normalize_legacy_signature_tagline(text))
     if _signature_index(body) < 0:
         body = f"{body.rstrip()}\n\n{BEATRICE_SIGNATURE}"
 
     idx = _signature_index(body)
+    before_signature = body[:idx].rstrip()
     after_signature = body[idx:]
     if HERCULE_SIGNATURE_TAGLINE not in after_signature:
-        body = f"{body.rstrip()}\n{HERCULE_SIGNATURE_TAGLINE}"
+        body = f"{before_signature}\n\n{BEATRICE_SIGNATURE}\n{HERCULE_SIGNATURE_TAGLINE}"
 
-    if not _has_explicit_hercule_url(body):
-        body = f"{body.rstrip()}\n{HERCULE_WEBSITE_URL}"
-    return body
+    return _strip_trailing_signature_site_url(body)
+
+
+def ensure_cordialement_closing(text: str) -> str:
+    if CORDIALEMENT_CLOSING in text:
+        return text
+    idx = _signature_index(text)
+    if idx < 0:
+        return f"{text.rstrip()}\n\n{CORDIALEMENT_CLOSING}\n\n{BEATRICE_SIGNATURE}"
+    prefix = text[:idx].rstrip()
+    signature_and_after = text[idx:]
+    return f"{prefix}\n\n{CORDIALEMENT_CLOSING}\n\n{signature_and_after}"
 
 
 def ensure_beatrice_signature(text: str) -> str:
@@ -150,7 +196,7 @@ def _anchor_for_url(url: str) -> str:
     normalized = _normalize_url(url)
     escaped_href = html.escape(normalized, quote=True)
     if _is_reservation_url(url):
-        return f'<a href="{escaped_href}">Réserver</a>'
+        return f'<strong><a href="{escaped_href}">Réserver</a></strong>'
     if _is_hercule_site_url(url) or "hercule.dev" in url.lower():
         return f'<a href="{escaped_href}">hercule.dev</a>'
     escaped_url = html.escape(url, quote=False)
@@ -181,6 +227,18 @@ def _plain_to_linked_html(plain: str) -> str:
     return before + signature_block
 
 
+def _emphasize_reply_linked_text(linked: str) -> str:
+    out = linked
+    if "<i>Répondez non" not in out:
+        out = out.replace(
+            OPT_OUT_DISCLAIMER_PLAIN,
+            f"<i>{OPT_OUT_DISCLAIMER_PLAIN}</i>",
+        )
+    out = out.replace(HERCULE_SIGNATURE_TAGLINE, HERCULE_SIGNATURE_TAGLINE_HTML)
+    out = out.replace(HERCULE_SIGNATURE_TAGLINE_LEGACY, HERCULE_SIGNATURE_TAGLINE_HTML)
+    return out
+
+
 def _paragraphs_from_linked_text(linked: str) -> str:
     blocks = [block for block in linked.split("\n\n") if block.strip()]
     paragraphs: list[str] = []
@@ -196,6 +254,13 @@ def plain_text_to_html(text: str) -> str:
     return _paragraphs_from_linked_text(escaped)
 
 
+def _normalize_legacy_disclaimer(text: str) -> str:
+    return text.replace(
+        "_Répondez non si vous ne souhaitez plus de messages._",
+        OPT_OUT_DISCLAIMER_PLAIN,
+    )
+
+
 def format_reply_html(
     text: str,
     *,
@@ -204,7 +269,7 @@ def format_reply_html(
     cta_link: str | None = None,
 ) -> str:
     """Convert plain reply text to HTML with Réserver / hercule.dev anchors."""
-    body = _normalize_plain_text(text)
+    body = _normalize_plain_text(_normalize_legacy_disclaimer(text))
     if not body:
         body = BEATRICE_SIGNATURE
 
@@ -216,14 +281,18 @@ def format_reply_html(
 
     body = ensure_outreach_signature(body)
     if OPT_OUT_DISCLAIMER_MARKER not in body:
-        sig_idx = body.rfind(BEATRICE_SIGNATURE)
-        if sig_idx >= 0:
+        cord_idx = body.find(CORDIALEMENT_CLOSING)
+        sig_idx = _signature_index(body)
+        insert_idx = cord_idx if cord_idx >= 0 else sig_idx
+        if insert_idx >= 0:
             body = (
-                f"{body[:sig_idx].rstrip()}\n\n{OPT_OUT_DISCLAIMER_PLAIN}\n\n"
-                f"{body[sig_idx:]}"
+                f"{body[:insert_idx].rstrip()}\n\n{OPT_OUT_DISCLAIMER_PLAIN}\n\n"
+                f"{body[insert_idx:]}"
             )
         else:
             body = f"{body}\n\n{OPT_OUT_DISCLAIMER_PLAIN}"
+    body = ensure_cordialement_closing(body)
+    body = _normalize_signature_spacing(body)
     body = _structure_reply_plaintext(body)
     linked = _plain_to_linked_html(body)
     if OPT_OUT_DISCLAIMER_MARKER not in linked:
@@ -232,6 +301,7 @@ def format_reply_html(
             linked = f"{linked[:sig_idx]}{OPT_OUT_DISCLAIMER_HTML}{linked[sig_idx:]}"
         else:
             linked = f"{linked}{OPT_OUT_DISCLAIMER_HTML}"
+    linked = _emphasize_reply_linked_text(linked)
     html_out = _paragraphs_from_linked_text(linked)
     # #region agent log
     try:
@@ -241,18 +311,17 @@ def format_reply_html(
 
         payload = json.dumps(
             {
-                "sessionId": "000421",
-                "runId": "format",
-                "hypothesisId": "A",
+                "sessionId": "a778c7",
+                "runId": "post-fix-signature-spacing",
+                "hypothesisId": "F-G-H",
                 "location": "email_format.py:format_reply_html",
-                "message": "reply html formatted",
+                "message": "reply html emphasis applied",
                 "data": {
-                    "input_newlines": body.count("\n"),
-                    "paragraph_count": html_out.count("<p>"),
-                    "has_reserver_link": "Réserver</a>" in html_out,
-                    "has_raw_https": "https://" in html_out
-                    and "<a href=" not in html_out,
-                    "html_preview": html_out[:240],
+                    "has_italic_disclaimer": "<i>Répondez non" in html_out,
+                    "has_italic_tagline": "<i>Courtage contrat BNC/BIC</i>" in html_out,
+                    "has_double_br_in_signature": f"{BEATRICE_SIGNATURE}<br/> <br/>Hercule" in html_out,
+                    "has_bold_cta": "<strong><a href=" in html_out and ">Réserver</a></strong>" in html_out,
+                    "html_preview": html_out[:400],
                 },
                 "timestamp": int(time.time() * 1000),
             }
@@ -263,7 +332,7 @@ def format_reply_html(
                 data=payload,
                 headers={
                     "Content-Type": "application/json",
-                    "X-Debug-Session-Id": "000421",
+                    "X-Debug-Session-Id": "a778c7",
                 },
                 method="POST",
             ),

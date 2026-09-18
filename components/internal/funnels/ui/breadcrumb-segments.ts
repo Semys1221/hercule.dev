@@ -7,6 +7,7 @@ import {
   clientsHubHref,
   emailsHref,
   legalHref,
+  managementHref,
   sessionHubHref,
   type LegalDocSegment,
   type Niche,
@@ -16,6 +17,7 @@ const MODULE_LABELS: Record<string, string> = {
   session: MODULES.sales.label,
   bookings: MODULES.bookings.label,
   clients: MODULES.clients.label,
+  management: MODULES.management.label,
   legal: "Legal",
   emails: "Emails",
 };
@@ -36,6 +38,8 @@ function moduleHref(module: string, niche: Niche): string {
       return bookingsHref(niche);
     case "clients":
       return clientsHubHref(niche);
+    case "management":
+      return managementHref(niche);
     case "legal":
       return legalHref(niche);
     case "emails":

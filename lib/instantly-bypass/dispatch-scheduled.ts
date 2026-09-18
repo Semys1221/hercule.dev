@@ -1,4 +1,6 @@
 import { shouldBypassSendWindow } from "./constants";
+import { threadAlreadyHasE1 } from "./e1-thread-guard";
+import { getInstantlyApiKey } from "./client";
 import { hasBypassEvent, recordBypassEvent } from "./jobs";
 import { executeBypassFlow } from "./send-flow";
 import { isWithinSendWindow, nextSendSlot } from "./send-window";
@@ -93,10 +95,10 @@ async function handleBypassJobFailure(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Debug-Session-Id": "3be66b",
+        "X-Debug-Session-Id": "5869d5",
       },
       body: JSON.stringify({
-        sessionId: "3be66b",
+        sessionId: "5869d5",
         location: "lib/instantly-bypass/dispatch-scheduled.ts:retry",
         message: "Transient bypass job failure — rescheduled",
         data: {
@@ -140,13 +142,28 @@ export type BypassJobDispatchResult = {
 
 async function executeBypassJob(job: BypassJob): Promise<BypassJobDispatchResult> {
   const flow = flowFromJob(job);
+  const leadEmail = job.lead_email.trim().toLowerCase();
   if (!SENDABLE_FLOWS.has(flow)) {
     throw new Error(`Unsupported scheduled flow: ${flow}`);
   }
 
   if (await hasBypassEvent(job.idempotency_key)) {
-    await markBypassJobSent(job.id);
-    return { outcome: "skipped", skipped: "already_sent" };
+    if (flow === "interested_email1") {
+      const apiKey = getInstantlyApiKey();
+      const e1InThread = await threadAlreadyHasE1(apiKey, {
+        campaignId: job.campaign_id,
+        leadEmail,
+      });
+      if (!e1InThread) {
+        // Stale bypass audit — continue dispatch so E1 can be resent.
+      } else {
+        await markBypassJobSent(job.id);
+        return { outcome: "skipped", skipped: "already_sent" };
+      }
+    } else {
+      await markBypassJobSent(job.id);
+      return { outcome: "skipped", skipped: "already_sent" };
+    }
   }
 
   if (!shouldBypassSendWindow(job.payload) && !isWithinSendWindow()) {
@@ -154,7 +171,6 @@ async function executeBypassJob(job: BypassJob): Promise<BypassJobDispatchResult
     return { outcome: "rescheduled" };
   }
 
-  const leadEmail = job.lead_email.trim().toLowerCase();
   const snapshot = leadSnapshotFromJob(job) as InstantlyLeadRecord | null;
   const templateSnapshot = templateSnapshotFromJob(job);
   const customBodyHtml = templateSnapshot?.body_html?.trim() || null;

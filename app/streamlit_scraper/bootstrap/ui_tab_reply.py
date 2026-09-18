@@ -7,6 +7,7 @@ from pathlib import Path
 import streamlit as st
 
 from bootstrap.app_imports import load_app_module
+from bootstrap.campaign_layers import bootstrap_reply_prompt_layer
 from bootstrap.ui_helpers import load_preset_config, status_for_active
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -28,6 +29,15 @@ def render_reply_tab(preset_id: str) -> None:
 
     config = load_preset_config(preset_id)
     campaign_id = str(config.get("INSTANTLY_CAMPAIGN_ID") or "").strip()
+    label = str(config.get("PRESET_LABEL") or preset_id)
+
+    if not _load_existing_prompt(preset_id).strip():
+        try:
+            written = bootstrap_reply_prompt_layer(preset_id, label=label)
+            if written:
+                st.info(f"Prompts reply agent générés : {', '.join(Path(p).name for p in written)}")
+        except Exception as exc:
+            st.caption(f"Scaffold prompts : {exc}")
 
     existing = _load_existing_prompt(preset_id)
     if existing.strip():
@@ -69,7 +79,14 @@ def render_reply_tab(preset_id: str) -> None:
         else:
             st.success("Prompt enregistré (fichier).")
             if result.get("reason"):
-                st.caption(f"Supabase : {result['reason']}")
+                reason = str(result["reason"])
+                st.caption(f"Supabase : {reason}")
+                if reason in {"no_config", "not_active"} and campaign_id:
+                    st.caption(
+                        "Activez le reply agent en prod avec "
+                        "`pnpm activate-reply-agents --preset "
+                        f"{preset_id}` après validation du prompt."
+                    )
 
         status = status_for_active(preset_id)
         if status.complete:

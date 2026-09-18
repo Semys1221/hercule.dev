@@ -62,6 +62,30 @@ const QUESTION_KEYWORDS = [
   "commission",
   "sous-trait",
   "sous trait",
+  // Link / access requests (conference Zoom, Calendly, etc.)
+  "lien",
+  "link",
+  "connexion",
+  "connection",
+  "connecter",
+  "accès",
+  "acces",
+  "invitation",
+  "rejoindre",
+];
+
+const REQUEST_PHRASES = [
+  "je veux",
+  "j'ai besoin",
+  "j ai besoin",
+  "pas reçu",
+  "pas recu",
+  "n'ai pas reçu",
+  "n ai pas recu",
+  "envoyez",
+  "envoyer",
+  "transmettre",
+  "transmettez",
 ];
 
 function inboundProbe(text: string): string {
@@ -110,5 +134,9 @@ export function inboundLooksLikeQuestion(text: string): boolean {
     return true;
   }
 
-  return QUESTION_KEYWORDS.some((keyword) => probe.includes(keyword));
+  if (QUESTION_KEYWORDS.some((keyword) => probe.includes(keyword))) {
+    return true;
+  }
+
+  return REQUEST_PHRASES.some((phrase) => probe.includes(phrase));
 }

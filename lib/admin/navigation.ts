@@ -87,6 +87,11 @@ const FULL_MODULES: Record<string, NavNode> = {
     caption: CLIENTS_MODULE_CAPTION,
     leaf: "clients_hub",
   },
+  management: {
+    label: "Management",
+    caption: "Destinataires de séquences email — outreach, booking, client.",
+    leaf: "management_hub",
+  },
 };
 
 export const MODULES = FULL_MODULES;
@@ -250,6 +255,10 @@ export function clientsHubHref(niche: Niche = "agence"): string {
   return `/internal/funnels/clients/${niche}`;
 }
 
+export function managementHref(niche: Niche): string {
+  return `/internal/funnels/management/${niche}`;
+}
+
 /** @deprecated Legal docs live in doc/legal-documentation — redirects to bookings. */
 export function legalHref(niche: Niche, _doc?: LegalDocSegment): string {
   return bookingsSequencesHref(niche);
@@ -268,6 +277,7 @@ const MODULE_FIRST_PATTERNS: Array<{ module: string; pattern: RegExp }> = [
   { module: "session", pattern: new RegExp(`^/internal/funnels/session/(${NICHE_PATH_SEGMENT})`) },
   { module: "bookings", pattern: new RegExp(`^/internal/funnels/bookings/(${NICHE_PATH_SEGMENT})`) },
   { module: "clients", pattern: new RegExp(`^/internal/funnels/clients/(${NICHE_PATH_SEGMENT})`) },
+  { module: "management", pattern: new RegExp(`^/internal/funnels/management/(${NICHE_PATH_SEGMENT})`) },
 ];
 
 /**

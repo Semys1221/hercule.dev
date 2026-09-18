@@ -45,6 +45,20 @@ Le jeu. 10 sept. 2026, Béatrice Meyer a écrit :
       ),
     ).toBe(true);
   });
+
+  it("detects conference connection link requests without question mark", () => {
+    expect(
+      inboundLooksLikeQuestion(
+        "Bjr je veux juste de lien de connection de mercredi prochain\nMerci\nCrdt",
+      ),
+    ).toBe(true);
+  });
+
+  it("detects missing link follow-ups", () => {
+    expect(
+      inboundLooksLikeQuestion("Ok mais je n'ai pas de lien de connection (?)"),
+    ).toBe(true);
+  });
 });
 
 describe("inboundLooksLikePhoneRequest", () => {

@@ -57,6 +57,8 @@ class BuildGlobalRulesTests(unittest.TestCase):
         rules = build_global_rules(max_sentences=2)
         self.assertIn("urgence forcée", rules)
         self.assertIn("Merci pour votre message", rules)
+        self.assertIn("Je note votre question sur notre identité", rules)
+        self.assertIn("groupement d'entrepreneurs dirigé par Evan Sinclair", rules)
         self.assertNotIn("CTA urgent", rules)
         self.assertNotIn("accuser réception →", rules)
 

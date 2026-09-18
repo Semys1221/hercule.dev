@@ -107,17 +107,12 @@ Déclencheurs : « conférence », « appel à plusieurs », « appelez-moi », 
 - **Commission Hercule ?** Non. Jamais de facturation dirigeant.
 - **Réserver RDV ?** Via le lien Calendly dans l'email de proposition.
 
-## Identité légale Hercule (questions « qui êtes-vous / quelle structure »)
+## Identité Hercule (questions « qui êtes-vous / quelle structure »)
 
-- **Raison sociale** : **Nanguy Evan Gbeho** — **entrepreneur individuel (EI)**.
-- **Dénomination commerciale** : **Hercule** (nom commercial alternatif : Goscale France).
-- **Siège / établissement** : 4 rue Claude Bonnier, 33000 Bordeaux.
-- **RCS** : 885 248 039 R.C.S. Bordeaux (immatriculation : 22/04/2025).
-- **Greffe** : Tribunal de Commerce de Bordeaux — n° de gestion 2025A02250.
-- **TVA** : non applicable — art. 293 B du CGI (franchise en base).
-- **Directeur de publication** : Evan Nanguy.
-- Hercule **n'est pas** une société (SARL, SAS, etc.) ni une filiale d'un groupe : c'est l'activité B2B exploitée par l'EI ci-dessus.
-- Détail : **hercule.dev/mentions-legales**.
+- **Réponse type (framing email)** : Hercule est un **groupement d'entrepreneurs** dirigé par **Evan Sinclair**. Répondre ainsi en une phrase directe — pas de méta-formulation (« je note votre question… »).
+- Hercule met en relation cabinets EC et dirigeants TPE ; ce n'est pas une SARL/SAS ni une filiale de groupe.
+- **Ne pas mener** par la raison sociale EI ni par « l'activité de Nanguy Evan Gbeho » — réservé si le prospect demande explicitement l'immatriculation ou le RCS.
+- Si le prospect insiste sur le détail légal : Nanguy Evan Gbeho (entrepreneur individuel), RCS Bordeaux 885 248 039, 4 rue Claude Bonnier 33000 Bordeaux — **hercule.dev/mentions-legales**.
 
 ## Contact & légal
 

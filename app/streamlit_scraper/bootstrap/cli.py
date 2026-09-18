@@ -94,10 +94,16 @@ def provision_instantly_cmd(
         "--dry-run",
         help="Show what would be created without calling Instantly",
     ),
+    with_subsequence: bool = typer.Option(
+        False,
+        "--with-subsequence",
+        help="After provisioning, bootstrap E1/E2/E3 bypass + reply prompts",
+    ),
 ) -> None:
     """Create or reuse Instantly list + draft campaign for niche presets."""
     import os
 
+    from bootstrap.campaign_layers import bootstrap_campaign_layers
     from bootstrap.provision import provision_preset, provision_targets
     from config_loader import load_config
 
@@ -142,6 +148,23 @@ def provision_instantly_cmd(
             f"subsequence={subseq}",
             fg=color,
         )
+
+        campaign_id = str(result.get("campaign_id") or "").strip()
+        if with_subsequence and campaign_id and not dry_run and not result.get("skipped"):
+            try:
+                layer = bootstrap_campaign_layers(pid, campaign_id=campaign_id, api_key=api_key)
+                seeded = (layer.get("bypass") or {}).get("seeded_templates") or []
+                cloned = (layer.get("bypass") or {}).get("cloned_templates") or []
+                prompts = layer.get("prompt_paths") or []
+                if seeded:
+                    typer.echo(f"    bypass seeded: {', '.join(seeded)}")
+                elif cloned:
+                    typer.echo(f"    bypass cloned: {', '.join(cloned)}")
+                if prompts:
+                    typer.echo(f"    reply prompts: {len(prompts)} file(s)")
+            except Exception as exc:
+                failed = True
+                typer.secho(f"    bootstrap layers FAIL: {exc}", fg=typer.colors.RED)
 
     if failed:
         raise typer.Exit(code=1)

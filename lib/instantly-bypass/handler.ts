@@ -1,11 +1,10 @@
 import { findLeadByEmailInCampaign, getInstantlyApiKey } from "./client";
 import { e1WebhookScheduledFor } from "./constants";
-import { threadAlreadyHasE1 } from "./e1-thread-guard";
 import {
-  hasBypassEvent,
-  interestedIdempotencyKey,
-  recordBypassEvent,
-} from "./jobs";
+  getInterestedE1DeliveryState,
+  threadAlreadyHasE1,
+} from "./e1-thread-guard";
+import { interestedIdempotencyKey, recordBypassEvent } from "./jobs";
 import { upsertPipelineStep } from "./pipeline";
 import { dispatchBypassJobByIdempotencyKey } from "./dispatch-scheduled";
 import { insertBypassJob } from "./scheduled-jobs";
@@ -93,7 +92,37 @@ export async function handleLeadInterested(
     return { ok: true, skipped: "campaign_webhook_paused" };
   }
 
-  if (await hasBypassEvent(idempotencyKey)) {
+  const apiKey = getInstantlyApiKey();
+  const e1Delivery = await getInterestedE1DeliveryState(apiKey, {
+    campaignId,
+    leadEmail,
+  });
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "5869d5",
+    },
+    body: JSON.stringify({
+      sessionId: "5869d5",
+      location: "lib/instantly-bypass/handler.ts:e1Delivery",
+      message: "lead_interested E1 delivery state",
+      data: {
+        campaignId,
+        leadEmail,
+        bypassSent: e1Delivery.bypassSent,
+        e1InThread: e1Delivery.e1InThread,
+        delivered: e1Delivery.delivered,
+      },
+      timestamp: Date.now(),
+      runId: "pre-fix",
+      hypothesisId: "A,C",
+    }),
+  }).catch(() => {});
+  // #endregion
+
+  if (e1Delivery.delivered) {
     await upsertPipelineStep(campaignId, leadEmail, "step_1");
     if (!options?.skipReplyReprocess) {
       await triggerReplyReprocessAfterInterested(campaignId, leadEmail, "already_sent");
@@ -119,7 +148,6 @@ export async function handleLeadInterested(
       return { ok: false, error: "template_empty" };
     }
 
-    const apiKey = getInstantlyApiKey();
     let lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
 
     const needsReservationLink = templateRequiresReservationLink(template.body_html);

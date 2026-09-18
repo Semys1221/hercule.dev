@@ -107,17 +107,22 @@ Règles quand should_reply est true :
 - {length_rule}
 - Structure AER obligatoire dans reply_text : (1) Acknowledge — valider l'objection sans céder ; (2) Explain — agiter la douleur / coût de l'inaction ou expliquer le positionnement conférence ; (3) Redirect — lien CTA briefing collectif fourni.
 - Ne recopie pas mot à mot le pack de connaissances ; reformule avec tes mots.
-- Sépare le corps, le lien CTA et la signature par une ligne vide (\\n\\n).
-- Mets le lien CTA seul sur sa propre ligne, en URL brute (sera affiché « Réserver » à l'envoi).
-- Termine par « Béatrice Meyer », puis « hercule.dev Courtage contrat BNC/BIC », puis l'URL du site (https://hercule.dev ou {pricing_url} si question tarifs), chaque élément sur sa propre ligne.
+- Sépare le corps, le lien CTA briefing et la clôture par une ligne vide (\\n\\n).
+- Mets le lien CTA briefing seul sur sa propre ligne, en URL brute (sera affiché « Réserver » à l'envoi).
+- Pour renvoyer vers le site (hors CTA briefing), intègre hercule.dev dans la phrase (ex. « …n'hésitez pas à vous rendre sur notre site internet hercule.dev ») — pas sur une ligne séparée ; utilise {pricing_url} si question tarifs.
+- Termine par « Cordialement, », puis « Béatrice Meyer », puis « Hercule, Courtage contrat BNC/BIC », chaque élément sur sa propre ligne — sans URL https:// séparée en signature.
 {conference_section}
 Ton — évite ces formulations :
 - « Merci pour votre message » (sauf si le lead partage une info personnelle ou émotionnelle)
 - « Je comprends votre préoccupation »
-- « N'hésitez pas à »
 - « Je reste à votre disposition »
+- « Je note votre question sur notre identité » (ou toute méta-formulation du type « je note votre question »)
 - « réserver cette semaine » ou « réserver un créneau maintenant » (urgence forcée)
 - listes à puces ou numérotées dans reply_text
+
+Identité (questions « qui êtes-vous ») :
+- Framing : Hercule est un groupement d'entrepreneurs dirigé par Evan Sinclair — réponse directe en une phrase.
+- Ne pas mener par la raison sociale EI (Nanguy Evan Gbeho, entrepreneur individuel) sauf si le prospect demande explicitement l'immatriculation ou le RCS.
 
 Recovery (tag Lead) :
 - Toujours renseigner recovery_confidence (0–100) : probabilité que la relance soit rattrapable.
@@ -127,7 +132,7 @@ Recovery (tag Lead) :
 - Tag Interested : recovery_confidence optionnel (ignoré).
 
 Signature :
-- Avant la signature Béatrice Meyer, inclure sur sa propre ligne : _Répondez non si vous ne souhaitez plus de messages._
+- Avant « Cordialement, », inclure sur sa propre ligne : Répondez non si vous ne souhaitez plus de messages. (sans italique ni markdown)
 
 Sécurité :
 - Si la réponse n'est PAS clairement couverte par le pack de connaissances, mets should_reply à false et explique dans reason (en français).
@@ -412,9 +417,9 @@ def generate_reply_preview(
 
     knowledge_pack = build_knowledge_pack(config)
     legal_anchors = (
-        "Nanguy Evan Gbeho",
-        "entrepreneur individuel",
-        "885 248 039",
+        "groupement d'entrepreneurs",
+        "Evan Sinclair",
+        "je note votre question",
     )
     pack_lower = knowledge_pack.lower()
     # #region agent log
@@ -423,10 +428,10 @@ def generate_reply_preview(
             "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
             headers={
                 "Content-Type": "application/json",
-                "X-Debug-Session-Id": "4c294f",
+                "X-Debug-Session-Id": "be751a",
             },
             json={
-                "sessionId": "4c294f",
+                "sessionId": "be751a",
                 "runId": "pre-grok",
                 "hypothesisId": "A",
                 "location": "agent_preview.py:generate_reply_preview",
@@ -466,10 +471,10 @@ def generate_reply_preview(
             "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
             headers={
                 "Content-Type": "application/json",
-                "X-Debug-Session-Id": "4c294f",
+                "X-Debug-Session-Id": "be751a",
             },
             json={
-                "sessionId": "4c294f",
+                "sessionId": "be751a",
                 "runId": "post-grok",
                 "hypothesisId": "C",
                 "location": "agent_preview.py:generate_reply_preview",
@@ -477,10 +482,13 @@ def generate_reply_preview(
                 "data": {
                     "should_reply": decision.get("should_reply"),
                     "reason": decision.get("reason"),
-                    "reply_has_legal_name": "nanguy" in reply_lower,
-                    "reply_has_ei": "entrepreneur individuel" in reply_lower
-                    or " ei" in reply_lower,
-                    "reply_has_rcs": "885" in reply_lower or "rcs" in reply_lower,
+                    "reply_has_groupement": "groupement" in reply_lower,
+                    "reply_has_evan_sinclair": "evan sinclair" in reply_lower,
+                    "reply_has_bad_meta": "je note votre question" in reply_lower,
+                    "reply_has_bad_ei_lead": (
+                        reply_lower.startswith("hercule est l'activité")
+                        or "nanguy evan gbeho" in reply_lower[:120]
+                    ),
                     "reply_preview": reply_text[:180],
                 },
                 "timestamp": int(time.time() * 1000),

@@ -11,6 +11,7 @@ import {
   clientsHubHref,
   emailsHref,
   legalHref,
+  managementHref,
   moduleFromPathname,
   nicheFromPathname,
   sessionHubHref,
@@ -26,6 +27,8 @@ function hrefForModule(module: string | null, niche: Niche, pathname: string): s
       return bookingsHref(niche);
     case "clients":
       return clientsHubHref(niche);
+    case "management":
+      return managementHref(niche);
     case "legal":
       return legalHref(niche);
     case "emails":

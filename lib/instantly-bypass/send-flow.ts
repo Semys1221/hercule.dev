@@ -3,6 +3,7 @@ import {
   getInstantlyApiKey,
   replyToEmail,
 } from "./client";
+import { threadAlreadyHasE1 } from "./e1-thread-guard";
 import { flowIdempotencyKey, hasBypassEvent, recordBypassEvent } from "./jobs";
 import { upsertPipelineStep, type PipelineStep } from "./pipeline";
 import { resolveThreadForReply } from "./thread-resolver";
@@ -82,15 +83,22 @@ export async function executeBypassFlow(
   const idempotencyKey =
     params.idempotencyKey ?? flowIdempotencyKey(flow, campaignId, leadEmail);
 
-  if (await hasBypassEvent(idempotencyKey)) {
-    const nextStep = STEP_AFTER_FLOW[flow];
-    if (nextStep && !params.skipPipelineAdvance) {
-      await upsertPipelineStep(campaignId, leadEmail, nextStep);
-    }
-    return { ok: true, skipped: "already_sent" };
-  }
-
   const apiKey = getInstantlyApiKey();
+
+  if (await hasBypassEvent(idempotencyKey)) {
+    if (
+      flow === "interested_email1" &&
+      !(await threadAlreadyHasE1(apiKey, { campaignId, leadEmail }))
+    ) {
+      // Stale bypass audit without E1 in Unibox — allow resend (Lead→Interested retag).
+    } else {
+      const nextStep = STEP_AFTER_FLOW[flow];
+      if (nextStep && !params.skipPipelineAdvance) {
+        await upsertPipelineStep(campaignId, leadEmail, nextStep);
+      }
+      return { ok: true, skipped: "already_sent" };
+    }
+  }
   let lead =
     params.lead ??
     (await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail));

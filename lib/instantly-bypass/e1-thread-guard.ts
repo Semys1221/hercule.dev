@@ -1,6 +1,28 @@
 import { listEmails } from "./client";
+import { hasBypassEvent, interestedIdempotencyKey } from "./jobs";
 
 import type { InstantlyEmailRecord } from "./types";
+
+export type InterestedE1DeliveryState = {
+  bypassSent: boolean;
+  e1InThread: boolean;
+  delivered: boolean;
+};
+
+/** E1 counts as sent only when bypass audit is "sent" AND Unibox shows the E1 template. */
+export async function getInterestedE1DeliveryState(
+  apiKey: string,
+  params: { campaignId: string; leadEmail: string },
+): Promise<InterestedE1DeliveryState> {
+  const idempotencyKey = interestedIdempotencyKey(params.campaignId, params.leadEmail);
+  const bypassSent = await hasBypassEvent(idempotencyKey);
+  const e1InThread = await threadAlreadyHasE1(apiKey, params);
+  return {
+    bypassSent,
+    e1InThread,
+    delivered: bypassSent && e1InThread,
+  };
+}
 
 const PARTNER_CABINETS_MARKER = "cabinets partenaires";
 

@@ -5,7 +5,13 @@ import {
 } from "@/lib/lead-relances/disclaimer";
 import {
   BEATRICE_SIGNATURE,
+  CORDIALEMENT_CLOSING,
+  HERCULE_SIGNATURE_TAGLINE,
+  HERCULE_SIGNATURE_TAGLINE_HTML,
+  HERCULE_SIGNATURE_TAGLINE_LEGACY,
+  ensureCordialementClosing,
   ensureOutreachSignature,
+  normalizeSignatureSpacing,
 } from "@/lib/outreach-email/signature";
 
 export { BEATRICE_SIGNATURE, ensureBeatriceSignature } from "@/lib/outreach-email/signature";
@@ -116,7 +122,7 @@ function anchorForUrl(url: string): string {
   const normalized = normalizeUrl(url);
   const escapedHref = escapeHtml(normalized);
   if (isReservationUrl(url)) {
-    return `<a href="${escapedHref}">Réserver</a>`;
+    return `<strong><a href="${escapedHref}">Réserver</a></strong>`;
   }
   if (isHerculeSiteUrl(url) || url.toLowerCase().includes("hercule.dev")) {
     return `<a href="${escapedHref}">hercule.dev</a>`;
@@ -158,6 +164,22 @@ function plainToLinkedHtml(plain: string): string {
   return before + signatureBlock;
 }
 
+function emphasizeReplyLinkedText(linked: string): string {
+  let out = linked;
+  if (!out.includes("<i>Répondez non")) {
+    out = out.replace(
+      OPT_OUT_DISCLAIMER_PLAIN,
+      `<i>${OPT_OUT_DISCLAIMER_PLAIN}</i>`,
+    );
+  }
+  out = out.replaceAll(HERCULE_SIGNATURE_TAGLINE, HERCULE_SIGNATURE_TAGLINE_HTML);
+  out = out.replaceAll(
+    HERCULE_SIGNATURE_TAGLINE_LEGACY,
+    HERCULE_SIGNATURE_TAGLINE_HTML,
+  );
+  return out;
+}
+
 function paragraphsFromLinkedText(linked: string): string {
   const blocks = linked.split(/\n{2,}/).filter((block) => block.trim());
   return blocks
@@ -169,11 +191,18 @@ export function plainTextToHtml(text: string): string {
   return paragraphsFromLinkedText(escapeHtml(text));
 }
 
+function normalizeLegacyDisclaimer(text: string): string {
+  return text.replace(
+    /_Répondez non si vous ne souhaitez plus de messages\._/g,
+    OPT_OUT_DISCLAIMER_PLAIN,
+  );
+}
+
 export function formatReplyHtml(
   text: string,
   options?: { ctaLink?: string | null },
 ): string {
-  let body = normalizePlainText(text);
+  let body = normalizePlainText(normalizeLegacyDisclaimer(text));
   if (!body) {
     body = BEATRICE_SIGNATURE;
   }
@@ -185,13 +214,17 @@ export function formatReplyHtml(
 
   body = ensureOutreachSignature(body);
   if (!body.includes(OPT_OUT_DISCLAIMER_MARKER)) {
+    const cordIdx = body.indexOf(CORDIALEMENT_CLOSING);
     const sigIdx = signatureIndex(body);
-    if (sigIdx >= 0) {
-      body = `${body.slice(0, sigIdx).trimEnd()}\n\n${OPT_OUT_DISCLAIMER_PLAIN}\n\n${body.slice(sigIdx)}`;
+    const insertIdx = cordIdx >= 0 ? cordIdx : sigIdx;
+    if (insertIdx >= 0) {
+      body = `${body.slice(0, insertIdx).trimEnd()}\n\n${OPT_OUT_DISCLAIMER_PLAIN}\n\n${body.slice(insertIdx)}`;
     } else {
       body = `${body}\n\n${OPT_OUT_DISCLAIMER_PLAIN}`;
     }
   }
+  body = ensureCordialementClosing(body);
+  body = normalizeSignatureSpacing(body);
   body = structureReplyPlaintext(body);
   let linked = plainToLinkedHtml(body);
   if (!linked.includes(OPT_OUT_DISCLAIMER_MARKER)) {
@@ -202,30 +235,7 @@ export function formatReplyHtml(
       linked = `${linked}${OPT_OUT_DISCLAIMER_HTML}`;
     }
   }
+  linked = emphasizeReplyLinkedText(linked);
   const htmlOut = paragraphsFromLinkedText(linked);
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "000421",
-    },
-    body: JSON.stringify({
-      sessionId: "000421",
-      runId: "format",
-      hypothesisId: "A",
-      location: "format-reply-html.ts:formatReplyHtml",
-      message: "reply html formatted",
-      data: {
-        inputNewlines: body.split("\n").length - 1,
-        paragraphCount: (htmlOut.match(/<p>/g) ?? []).length,
-        hasReserverLink: htmlOut.includes("Réserver</a>"),
-        hasRawHttps: htmlOut.includes("https://") && !htmlOut.includes("<a href="),
-        htmlPreview: htmlOut.slice(0, 240),
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   return htmlOut;
 }

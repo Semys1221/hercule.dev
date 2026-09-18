@@ -101,6 +101,19 @@ const RAW_DATABASE: DatabaseEntry[] = [
     status: "migrated",
   },
   {
+    id: "email_sequence_recipients",
+    label: "Email sequence recipients",
+    domain: "communication",
+    purpose: "Management dashboard — enrollment registry per lead/sequence (outreach, booking, client)",
+    keyColumns:
+      "id, lead_email, lead_category, phase, sequence_slug, provider, status, scheduled_at",
+    writers: ["admin", "scripts"],
+    readers: ["admin"],
+    profileKeys: "—",
+    relatedTables: ["booking_email_jobs", "instantly_bypass_pipeline", "agence", "comptable", "cif"],
+    status: "migrated",
+  },
+  {
     id: "booking_email_jobs",
     label: "Booking email jobs",
     domain: "communication",

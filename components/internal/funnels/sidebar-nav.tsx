@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarCheck,
+  LayoutDashboard,
   TrendingUp,
   Users2,
   type LucideIcon,
@@ -26,6 +27,7 @@ import {
   MODULES,
   bookingsHref,
   clientsHubHref,
+  managementHref,
   nicheFromPathname,
   sessionHubHref,
   type Niche,
@@ -57,6 +59,12 @@ const PARCOURS_MODULES: Array<{
     label: MODULES.clients.label,
     icon: Users2,
     href: clientsHubHref,
+  },
+  {
+    id: "management",
+    label: MODULES.management.label,
+    icon: LayoutDashboard,
+    href: managementHref,
   },
 ];
 

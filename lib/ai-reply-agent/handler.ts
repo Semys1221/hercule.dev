@@ -301,7 +301,7 @@ export async function handleInstantlyReply(
   }
 
   if (interestStatus === INTERESTED_STATUS) {
-    const e1Result = await ensureInterestedE1IfMissing({
+    await ensureInterestedE1IfMissing({
       campaignId,
       leadEmail,
       emailAccount: payload.email_account?.trim(),

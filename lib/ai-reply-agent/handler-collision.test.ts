@@ -14,4 +14,10 @@ C'est donc problématique d'après ce que vous me dites..`;
     expect(inboundLooksLikeQuestion("non")).toBe(false);
     expect(inboundLooksLikeQuestion("NON.")).toBe(false);
   });
+
+  it("allows grok path for conference link follow-up after auto-reply", () => {
+    const inbound =
+      "Bjr je veux juste de lien de connection de mercredi prochain\nMerci\nCrdt";
+    expect(inboundLooksLikeQuestion(inbound)).toBe(true);
+  });
 });

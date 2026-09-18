@@ -93,9 +93,8 @@ class LegalContentTests(unittest.TestCase):
         self.assertIn("Hercule Comptable", reply_safe)
         self.assertNotIn("Starter 1 489", reply_safe)
         for anchor in (
-            "Nanguy Evan Gbeho",
-            "entrepreneur individuel",
-            "885 248 039",
+            "groupement d'entrepreneurs",
+            "Evan Sinclair",
             "Qui êtes-vous ? De quelle structure dépendez-vous ?",
             "bande passante",
             "visioconférences",

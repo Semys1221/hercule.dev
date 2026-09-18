@@ -11,7 +11,6 @@
  */
 
 import { randomBytes } from "node:crypto";
-import * as fs from "node:fs";
 
 import { handleInstantlyReply } from "@/lib/ai-reply-agent/handler";
 import { checkInterestedE1ReplyGate } from "@/lib/ai-reply-agent/e1-reply-gate";
@@ -21,32 +20,9 @@ import {
   interestedIdempotencyKey,
 } from "@/lib/instantly-bypass/jobs";
 
-const LOG_PATH = "/Users/evqn/dev/hercule.dev/.cursor/debug-b89d54.log";
-const SESSION_ID = "b89d54";
-
 const DEFAULT_CAMPAIGN_ID = "e3bdb573-fe9f-437d-bd96-4ceb52869dd4";
 const DEFAULT_LEAD_EMAIL = "contact@gscredits.net";
 const GSCREDITS_INBOUND_AT = "2026-09-18T06:53:39.000Z";
-
-function debugLog(
-  location: string,
-  message: string,
-  data: Record<string, unknown>,
-  hypothesisId: string,
-  runId: string,
-): void {
-  const entry = {
-    sessionId: SESSION_ID,
-    runId,
-    hypothesisId,
-    location,
-    message,
-    data,
-    timestamp: Date.now(),
-  };
-  fs.appendFileSync(LOG_PATH, `${JSON.stringify(entry)}\n`);
-  console.log(JSON.stringify(entry));
-}
 
 async function assertMigrationApplied(): Promise<void> {
   const client = createAiReplyAgentClient();
@@ -93,20 +69,12 @@ async function main(): Promise<void> {
     inboundAt,
   });
 
-  debugLog(
-    "verifyE1ReplyGate.ts:gate",
-    "Production gate check (gscredits inbound predates E1)",
-    {
-      campaignId,
-      leadEmail,
-      inboundAt,
-      e1SentAt,
-      allowReply: gate.allowReply,
-      reason: gate.reason,
-    },
-    "A,D",
-    "post-fix",
-  );
+  console.log("gate pre-E1:", {
+    allowReply: gate.allowReply,
+    reason: gate.reason,
+    inboundAt,
+    e1SentAt,
+  });
 
   if (gate.allowReply) {
     throw new Error("Expected gate to block pre-E1 Interested inbound");
@@ -122,20 +90,11 @@ async function main(): Promise<void> {
       : "2099-01-01T00:00:00.000Z",
   });
 
-  debugLog(
-    "verifyE1ReplyGate.ts:gate-post-e1",
-    "Gate allows inbound strictly after E1",
-    {
-      campaignId,
-      leadEmail,
-      allowReply: postE1Gate.allowReply,
-      reason: postE1Gate.reason,
-      e1SentAt,
-      inboundAt: postE1Gate.inboundAt,
-    },
-    "D",
-    "post-fix",
-  );
+  console.log("gate post-E1:", {
+    allowReply: postE1Gate.allowReply,
+    reason: postE1Gate.reason,
+    inboundAt: postE1Gate.inboundAt,
+  });
 
   if (!postE1Gate.allowReply) {
     throw new Error(`Expected post-E1 inbound to pass gate: ${postE1Gate.reason}`);
@@ -154,21 +113,12 @@ async function main(): Promise<void> {
     reply_text: "Vous pouvez.",
   });
 
-  debugLog(
-    "verifyE1ReplyGate.ts:handler",
-    "Handler result for pre-E1 Interested confirmation",
-    {
-      campaignId,
-      leadEmail,
-      smokeEmailId,
-      ok: handlerResult.ok,
-      skipped: handlerResult.skipped ?? null,
-      aiStatus: handlerResult.aiStatus ?? null,
-      error: handlerResult.error ?? null,
-    },
-    "A,B",
-    "post-fix",
-  );
+  console.log("handler:", {
+    ok: handlerResult.ok,
+    skipped: handlerResult.skipped ?? null,
+    aiStatus: handlerResult.aiStatus ?? null,
+    error: handlerResult.error ?? null,
+  });
 
   if (handlerResult.aiStatus !== "skipped_waiting_e1") {
     throw new Error(

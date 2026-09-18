@@ -2,37 +2,44 @@
 
 from __future__ import annotations
 
-import json
-import time
 from pathlib import Path
 
 import streamlit as st
 
+from bootstrap.campaign_layers import _agent_debug_log, load_bypass_templates_for_ui
 from bootstrap.onboarding_state import save_onboarding_state
 from bootstrap.ui_helpers import get_api_key, load_preset_config
 from instantly_client import instantly_resource_name
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _SUBSEQUENCE_APP = _REPO_ROOT / "app" / "streamlit_subsequence"
-_DEBUG_LOG_PATH = _REPO_ROOT / ".cursor" / "debug-b2bdef.log"
 
 
-def _agent_debug_log(message: str, data: dict[str, str], hypothesis_id: str) -> None:
-    # region agent log
-    try:
-        payload = {
-            "sessionId": "b2bdef",
-            "hypothesisId": hypothesis_id,
-            "location": "bootstrap/ui_tab_subsequence.py",
-            "message": message,
-            "data": data,
-            "timestamp": int(time.time() * 1000),
-        }
-        with _DEBUG_LOG_PATH.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
-    except OSError:
-        pass
-    # endregion
+def _prefill_subsequence_fields(campaign_id: str) -> None:
+    cache_key = f"sub_prefill_{campaign_id}"
+    if st.session_state.get(cache_key):
+        return
+
+    templates = load_bypass_templates_for_ui(campaign_id)
+    for ui_key in ("e1", "e2", "e3"):
+        row = templates.get(ui_key) or {}
+        subject = str(row.get("subject") or "").strip()
+        body = str(row.get("body") or "").strip()
+        if subject:
+            st.session_state[f"sub_{ui_key}_subject"] = subject
+        if body:
+            st.session_state[f"sub_{ui_key}_body"] = body
+
+    st.session_state[cache_key] = True
+    _agent_debug_log(
+        "bootstrap_subsequence_prefill",
+        {
+            "campaign_id": campaign_id,
+            "loaded_keys": sorted(templates.keys()),
+        },
+        "D",
+        "bootstrap/ui_tab_subsequence.py:_prefill_subsequence_fields",
+    )
 
 
 def _save_supabase_templates(campaign_id: str, campaign_name: str, emails: list[dict[str, str]]) -> None:
@@ -88,6 +95,8 @@ def render_subsequence_tab(preset_id: str) -> None:
         st.warning("Liez d'abord une campagne (onglet 3).")
         return
 
+    _prefill_subsequence_fields(campaign_id)
+
     label = str(config.get("PRESET_LABEL") or preset_id)
     sub_name = instantly_resource_name(f"{label} — Interested")
 
@@ -124,6 +133,7 @@ def render_subsequence_tab(preset_id: str) -> None:
                 "instantly_subsequence_skipped": "true",
             },
             "A",
+            "bootstrap/ui_tab_subsequence.py:render_subsequence_tab",
         )
 
         try:
@@ -136,7 +146,9 @@ def render_subsequence_tab(preset_id: str) -> None:
             "bootstrap_save_e1_e3_done",
             {"preset_id": preset_id, "campaign_id": campaign_id},
             "A",
+            "bootstrap/ui_tab_subsequence.py:render_subsequence_tab",
         )
         st.success("Templates bypass E1–E3 + webhook enregistrés (sans subsequence Instantly).")
         save_onboarding_state(preset_id, {"subsequence_saved": True})
+        st.session_state.pop(f"sub_prefill_{campaign_id}", None)
         st.rerun()

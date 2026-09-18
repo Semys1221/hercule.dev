@@ -43,6 +43,8 @@ describe("buildGlobalRules", () => {
     const rules = buildGlobalRules(2);
     expect(rules).toContain("urgence forcée");
     expect(rules).toContain("Merci pour votre message");
+    expect(rules).toContain("Je note votre question sur notre identité");
+    expect(rules).toContain("groupement d'entrepreneurs dirigé par Evan Sinclair");
     expect(rules).not.toContain("CTA urgent");
     expect(rules).not.toContain("accuser réception →");
   });

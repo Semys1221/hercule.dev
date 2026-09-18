@@ -47,10 +47,10 @@ export async function POST(request: Request) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Debug-Session-Id": "3be66b",
+        "X-Debug-Session-Id": "5869d5",
       },
       body: JSON.stringify({
-        sessionId: "3be66b",
+        sessionId: "5869d5",
         location: "app/api/webhooks/instantly/route.ts:result",
         message: "lead_interested webhook handled",
         data: {
