@@ -20,6 +20,7 @@ from instantly_client import (
 )
 from audit_filter import run_audit
 from core_logic import (
+    backfill_taxonomy_push,
     clear_local_leads,
     output_paths,
     run_filter_audit,
@@ -635,6 +636,148 @@ def enrich_csv_cmd(
         f"Enrich done — {len(valid)} valid, {len(rejected)} rejected → {out_path}",
         fg=typer.colors.GREEN,
     )
+
+
+@app.command("registry-push")
+def registry_push_cmd(
+    preset: str = PresetOption,
+    csv_path: str = typer.Option("", help="CSV to validate (default: preset output CSV)"),
+    limit: int = typer.Option(0, help="Max rows to process (0 = all)"),
+    batch_size: int = typer.Option(0, help="Registry batch size (0 = config PAPPERS_BATCH_SIZE)"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Validate only — do not push to Instantly"),
+) -> None:
+    """Fast-path: re-validate saved CSV through SIRENE registry gate and push to Instantly.
+
+    Skips website enrich — uses PAPPERS_FAST_MODE + on_unknown from preset config.
+    Use after switching from slow enrich config to taxonomy+registry fast path.
+    """
+    import pandas as pd
+
+    from company_registry import validate_leads
+    from instantly_client import push_leads_to_list
+    from scrape_state import load_scrape_state, save_scrape_state
+
+    preset = _validate_preset(preset)
+    paths = output_paths(preset)
+    config = load_config(preset)
+    resolved_csv = csv_path or paths.csv
+
+    if not os.path.isfile(resolved_csv):
+        raise typer.BadParameter(f"CSV not found: {resolved_csv}")
+    if not bool(config.get("PAPPERS_ENABLED", False)):
+        raise typer.BadParameter("PAPPERS_ENABLED must be true for registry-push")
+
+    df = pd.read_csv(resolved_csv)
+    if df.empty:
+        raise typer.BadParameter(f"CSV is empty: {resolved_csv}")
+
+    rows = [
+        {str(k): ("" if pd.isna(v) else str(v)) for k, v in row.items()}
+        for row in df.to_dict(orient="records")
+    ]
+    if limit > 0:
+        rows = rows[:limit]
+
+    reg_batch = batch_size or max(int(config.get("PAPPERS_BATCH_SIZE", 100)), 1)
+    _log(
+        f"Registry-push — {len(rows)} row(s), batch {reg_batch}, "
+        f"fast_mode={config.get('PAPPERS_FAST_MODE')}, "
+        f"on_unknown={config.get('PAPPERS_ON_UNKNOWN')}"
+    )
+
+    valid_total: list[dict[str, str]] = []
+    rejected_total = 0
+    started = datetime.now(timezone.utc)
+
+    for offset in range(0, len(rows), reg_batch):
+        chunk = rows[offset : offset + reg_batch]
+        _log(f"Registry batch {offset // reg_batch + 1} — {len(chunk)} lead(s)...")
+        valid, rejected = asyncio.run(validate_leads(chunk, config, log_cb=_log))
+        valid_total.extend(valid)
+        rejected_total += len(rejected)
+        _log(
+            f"  → {len(valid)} valid, {len(rejected)} rejected "
+            f"(running totals: {len(valid_total)} valid / {rejected_total} rejected)"
+        )
+
+    elapsed = (datetime.now(timezone.utc) - started).total_seconds()
+    rate = len(rows) / max(elapsed, 0.01)
+    _log(f"Registry validation done in {elapsed:.1f}s ({rate:.1f} leads/s)")
+
+    if dry_run:
+        typer.secho(
+            f"Dry-run — {len(valid_total)} valid, {rejected_total} rejected "
+            f"(not pushed to Instantly)",
+            fg=typer.colors.YELLOW,
+        )
+        return
+
+    if not valid_total:
+        typer.secho("No valid leads to push.", fg=typer.colors.RED)
+        raise typer.Exit(1)
+
+    api_key = config.get("INSTANTLY_API_KEY", "").strip()
+    list_id = config.get("INSTANTLY_LIST_ID", "").strip()
+    if not api_key or not list_id:
+        raise typer.BadParameter("INSTANTLY_API_KEY and INSTANTLY_LIST_ID required to push")
+
+    push_stats = asyncio.run(
+        push_leads_to_list(
+            api_key,
+            list_id,
+            valid_total,
+            skip_if_in_campaign=bool(config.get("INSTANTLY_SKIP_IF_IN_CAMPAIGN", True)),
+            skip_if_in_list=bool(config.get("INSTANTLY_SKIP_IF_IN_LIST", True)),
+            log_cb=_log,
+        )
+    )
+
+    state = load_scrape_state(paths.scrape_state) or {}
+    prev_pushed = int(state.get("instantly_pushed", 0) or 0)
+    state["instantly_pushed"] = prev_pushed + push_stats["pushed"]
+    state["leads_enriched_valid"] = int(state.get("leads_enriched_valid", 0) or 0) + len(valid_total)
+    state["leads_enriched_rejected"] = rejected_total
+    save_scrape_state(state, path=paths.scrape_state)
+
+    typer.secho(
+        f"Registry-push complete — {len(valid_total)} valid, {rejected_total} rejected, "
+        f"{push_stats['pushed']} pushed to Instantly "
+        f"({push_stats['skipped_duplicate']} duplicate skip)",
+        fg=typer.colors.GREEN,
+    )
+
+
+@app.command("taxonomy-push")
+def taxonomy_push_cmd(
+    preset: str = PresetOption,
+    csv_path: str = typer.Option("", help="CSV to backfill (default: preset output CSV)"),
+    batch_size: int = typer.Option(100, help="Instantly upload batch size"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Taxonomy filter only — no Instantly upload"),
+) -> None:
+    """Re-filter saved CSV with taxonomy gate only, then push to Instantly."""
+    preset = _validate_preset(preset)
+    paths = output_paths(preset)
+    config = load_config(preset)
+    resolved_csv = csv_path or paths.csv
+
+    summary = asyncio.run(
+        backfill_taxonomy_push(
+            config,
+            csv_path=resolved_csv,
+            state_path=paths.scrape_state,
+            log_cb=_log,
+            preset=preset,
+            batch_size=batch_size,
+            dry_run=dry_run,
+        )
+    )
+    msg = (
+        f"Taxonomy backfill [{preset}] — {summary['taxonomy_pass']}/{summary['csv_rows']} pass, "
+        f"{summary['pushed']} pushed, {summary['skipped_duplicate']} duplicate skip"
+    )
+    if summary.get("failed"):
+        msg += f", {summary['failed']} failed"
+    typer.secho(msg, fg=typer.colors.GREEN if summary.get("pushed") else typer.colors.YELLOW)
 
 
 @app.command("push-instantly")

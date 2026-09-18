@@ -130,8 +130,8 @@ class CompanyGate:
                 hit.siret_from_site = siret_from_site
                 return hit, False
 
-        # 3. Mentions légales → API
-        if not siret and not siren:
+        # 3. Mentions légales → API (skipped in fast mode — too slow for scrape throughput)
+        if not self.config.fast_mode and not siret and not siren:
             legal_html = await fetch_mentions_legales(client, website)
             extra_siret, extra_siren = extract_siret_siren(legal_html)
             siret = extra_siret
@@ -155,12 +155,16 @@ class CompanyGate:
                     hit.siret_from_site = True
                     return hit, False
 
-        # 4. SIRENE by name+city
+        # 4. SIRENE by name+city (local index — fast when available)
         if self._sirene.available and company:
             hit = self._sirene.lookup_name_city(company, city)
             if hit:
                 hit.siret_from_site = siret_from_site
                 return hit, False
+
+        # Fast mode: stop after index + single API pass (no Annuaire HTML crawl).
+        if self.config.fast_mode:
+            return None, False
 
         # 5. Annuaire HTML (deep enrich or last resort when identifiers known)
         if deep or siret or siren:
@@ -176,7 +180,11 @@ class CompanyGate:
         return None, False
 
     def _reject(self, reason: RejectReason, record: CompanyRecord) -> GateVerdict:
-        if reason == RejectReason.UNKNOWN_EFFECTIF and self.config.on_unknown == "accept":
+        if self.config.on_unknown == "accept" and reason in (
+            RejectReason.UNKNOWN_EFFECTIF,
+            RejectReason.NOT_FOUND,
+            RejectReason.UNAVAILABLE,
+        ):
             return GateVerdict(True, "", record)
         return GateVerdict(False, str(reason), record)
 
@@ -203,6 +211,13 @@ class CompanyGate:
 
         if record.effectif_min is not None:
             if record.effectif_min < self.config.min_employees:
+                return GateVerdict(
+                    False, str(RejectReason.EMPLOYEE_COUNT), record, lead_score=score, taille_entreprise=taille
+                )
+            if (
+                self.config.max_employees is not None
+                and record.effectif_min > self.config.max_employees
+            ):
                 return GateVerdict(
                     False, str(RejectReason.EMPLOYEE_COUNT), record, lead_score=score, taille_entreprise=taille
                 )

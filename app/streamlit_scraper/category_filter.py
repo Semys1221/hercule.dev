@@ -42,6 +42,16 @@ def taxonomy_text(business: dict[str, Any]) -> str:
     return " | ".join(part for part in raw_parts if part).lower()
 
 
+def taxonomy_text_from_csv_row(row: dict[str, Any]) -> str:
+    """Rebuild taxonomy text from exported CSV columns."""
+    raw_parts = [
+        str(row.get("Type") or "").strip(),
+        str(row.get("Category") or "").strip(),
+        _normalize_subtypes(row.get("Subtypes")),
+    ]
+    return " | ".join(part for part in raw_parts if part).lower()
+
+
 def taxonomy_fields(business: dict[str, Any]) -> dict[str, str]:
     """Separate Outscraper taxonomy fields for CSV and Instantly custom variables."""
     return {

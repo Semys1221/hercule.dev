@@ -9,3 +9,5 @@ beautifulsoup4>=4.12
 lxml>=5.0
 rapidfuzz>=3.0
 paramiko>=3.4
+outscraper>=6.0.4
+supabase>=2.10.0

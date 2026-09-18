@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -12,12 +14,53 @@ from instantly_client import instantly_resource_name
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _SUBSEQUENCE_APP = _REPO_ROOT / "app" / "streamlit_subsequence"
 _REPLY_APP = _REPO_ROOT / "app" / "streamlit_reply_agent"
+_DEBUG_LOG_PATH = _REPO_ROOT / ".cursor" / "debug-339c9a.log"
+_SESSION_ID = "339c9a"
+_INGEST_URL = "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d"
 
 _TEMPLATE_KEY_TO_UI = {
     "interested_email1": "e1",
     "interested_email2": "e2",
     "interested_email3": "e3",
 }
+
+
+def _agent_debug_log(
+    message: str,
+    data: dict[str, Any],
+    hypothesis_id: str,
+    location: str,
+) -> None:
+    # region agent log
+    payload = {
+        "sessionId": _SESSION_ID,
+        "hypothesisId": hypothesis_id,
+        "location": location,
+        "message": message,
+        "data": data,
+        "timestamp": int(time.time() * 1000),
+    }
+    try:
+        with _DEBUG_LOG_PATH.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+    try:
+        import urllib.request
+
+        req = urllib.request.Request(
+            _INGEST_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": _SESSION_ID,
+            },
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=1)  # noqa: S310
+    except Exception:
+        pass
+    # endregion
 
 
 def _load_subsequence_module(module_name: str):
@@ -80,6 +123,18 @@ def bootstrap_bypass_layer(
     label = str(config.get("PRESET_LABEL") or preset_id)
     name = campaign_name or instantly_resource_name(f"{label} — Interested")
 
+    _agent_debug_log(
+        "bootstrap_bypass_start",
+        {
+            "preset_id": preset_id,
+            "campaign_id": campaign_id,
+            "campaign_name": name,
+            "clone_from_arg": clone_from or "",
+        },
+        "A",
+        "bootstrap/campaign_layers.py:bootstrap_bypass_layer",
+    )
+
     niche_bodies = resolve_niche_template_bodies(preset_id)
     source = clone_from or ("" if niche_bodies else resolve_clone_source_campaign(preset_id))
 
@@ -119,6 +174,18 @@ def bootstrap_bypass_layer(
     elif cloned:
         result["cloned_templates"] = cloned
 
+    _agent_debug_log(
+        "bootstrap_bypass_done",
+        {
+            "preset_id": preset_id,
+            "campaign_id": campaign_id,
+            "seeded_templates": seeded,
+            "cloned_templates": cloned,
+            "has_config": bool(result.get("campaign_id") or campaign_id),
+        },
+        "A",
+        "bootstrap/campaign_layers.py:bootstrap_bypass_layer",
+    )
     return result
 
 
@@ -134,6 +201,16 @@ def bootstrap_reply_prompt_layer(preset_id: str, *, label: str = "") -> list[str
     scaffold = load_app_module(_REPLY_APP, "prompt_scaffold")
     written = scaffold.scaffold_ai_reply_prompts(preset_id, prompt_label)
 
+    _agent_debug_log(
+        "bootstrap_reply_prompts",
+        {
+            "preset_id": preset_id,
+            "written_paths": written,
+            "buyer_exists": bool(written),
+        },
+        "B",
+        "bootstrap/campaign_layers.py:bootstrap_reply_prompt_layer",
+    )
     return written
 
 
@@ -182,4 +259,16 @@ def bootstrap_campaign_layers(
         "bypass": bypass,
         "prompt_paths": prompts,
     }
+    _agent_debug_log(
+        "bootstrap_campaign_layers_done",
+        {
+            "preset_id": preset_id,
+            "campaign_id": campaign_id,
+            "seeded": bypass.get("seeded_templates") or [],
+            "cloned": bypass.get("cloned_templates") or [],
+            "prompts_written": len(prompts),
+        },
+        "C",
+        "bootstrap/campaign_layers.py:bootstrap_campaign_layers",
+    )
     return summary

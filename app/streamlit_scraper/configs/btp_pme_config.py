@@ -1,0 +1,162 @@
+"""BTP PME (France) scraper preset — Outscraper taxonomy gate + SIRENE employee filter."""
+
+from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
+
+PRESET_ID = "btp_pme"
+PRESET_LABEL = "BTP PME (France)"
+
+_LIST_ID = "913e03b9-f854-4d99-96a1-5b4a257cb5d9"
+_CAMPAIGN_ID = "25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a"
+_SUBSEQUENCE_ID = ""
+
+BTP_PME_CONFIG = {
+    "OUTSCRAPER_API_KEY": "",
+    "INSTANTLY_API_KEY": "",
+    "INSTANTLY_LIST_ID": _LIST_ID,
+    "INSTANTLY_CAMPAIGN_ID": _CAMPAIGN_ID,
+    "INSTANTLY_SUBSEQUENCE_ID": _SUBSEQUENCE_ID,
+    "INSTANTLY_DEDUP_LIST_IDS": [_LIST_ID],
+    "INSTANTLY_DEDUP_CAMPAIGN_IDS": [_CAMPAIGN_ID],
+    "INSTANTLY_SKIP_IF_IN_CAMPAIGN": False,
+    "INSTANTLY_SKIP_IF_IN_LIST": False,
+    "INSTANTLY_PUSH_EVERY": 50,
+    "ENRICH_ENABLED": False,
+    "OUTSCRAPER_FILTERS": ["only_with_website", "operational_only"],
+    # ── Taxonomy gate ──────────────────────────────────────────────────────────
+    # Checked against Outscraper type / category / subtypes (Google Maps taxonomy).
+    # Only ONE included keyword needs to match; hard-excluded keywords fire first
+    # and reject even if an included keyword would also match.
+    "TAXONOMY_GATE_ENABLED": True,
+    "TAXONOMY_INCLUDED_KEYWORDS": [
+        # Google Maps category strings (French)
+        "entrepreneur en bâtiment",
+        "société de construction",
+        "entreprise de construction",
+        "entreprise de bâtiment",
+        "travaux de construction",
+        "travaux publics",
+        "artisan bâtiment",
+        "artisan du bâtiment",
+        # Trade-specific Google Maps categories
+        "plombier",
+        "électricien",
+        "maçon",
+        "carreleur",
+        "peintre en bâtiment",
+        "couvreur",
+        "menuisier",
+        "charpentier",
+        "chauffagiste",
+        "plaquiste",
+        "façadier",
+        "terrassier",
+        "terrassement",
+        "isolation thermique",
+        "installateur de systèmes de chauffage",
+        "constructeur de maisons",
+        # Generic terms still valid when they appear in the taxonomy text
+        "rénovation",
+        "btp",
+        "génie civil",
+        "gros œuvre",
+        "second œuvre",
+    ],
+    # Hard exclusions — noise categories that use BTP-adjacent words but are not
+    # BTP contractors.  Checked BEFORE inclusions; any match → immediate reject.
+    "TAXONOMY_HARD_EXCLUDED_KEYWORDS": [
+        "magasin de matériaux",
+        "négoce de matériaux",
+        "grossiste en matériaux",
+        "distributeur de matériaux",
+        "fournisseur de matériaux",
+        "quincaillerie",
+        "point p",
+        "école",
+        "centre de formation",
+        "organisme de formation",
+        "bureau d'études",
+        "cabinet d'ingénierie",
+        "ingénierie du bâtiment",
+        "cabinet d'architecture",
+        "architecte",
+        "maître d'œuvre",          # project manager, not contractor
+        "promoteur immobilier",
+        "agence immobilière",
+        "agent immobilier",
+        "expert immobilier",
+        "location d'équipement",
+        "location de matériel",
+        "location d'engins",
+        "location de nacelles",
+        "syndicat",
+        "association",
+        "administration",
+        "collectivité",
+        "assurance construction",
+        "garantie décennale",
+    ],
+    "ENRICH_INCLUDED_KEYWORDS": [],
+    "ENRICH_HARD_EXCLUDED_KEYWORDS": [],
+    "ENRICH_SOFT_EXCLUDED_KEYWORDS": [],
+    # Taxonomy-only pipeline — niche fit is gated by TAXONOMY_* keywords, not SIRENE.
+    "PAPPERS_ENABLED": False,
+    # ── Outscraper settings ────────────────────────────────────────────────────
+    "OUTSCRAPER_BATCH_SIZE": 200,
+    "OUTSCRAPER_CONCURRENCY": 16,
+    "OUTSCRAPER_LIMIT_PER_QUERY": 50,
+    "OUTSCRAPER_POLL_INITIAL_S": 10,
+    "OUTSCRAPER_POLL_INTERVAL_S": 5,
+    "OUTSCRAPER_POLL_SLOW_S": 10,
+    "OUTSCRAPER_POLL_TIMEOUT_S": 300,
+    "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
+    # ── Geo expansion / reload (prevents early "query space exhausted") ───────
+    "SCRAPE_SKIP_PHASE_ENABLED": True,
+    "SCRAPE_SKIP_SATURATION_TO_DEPARTMENT": True,
+    "DUPLICATE_GEO_ADVANCE_RATE": 0.50,
+    "SCRAPE_RELOAD_ENABLED": True,
+    "SCRAPE_RELOAD_MAX_ROUNDS": 4,
+    "SCRAPE_RELOAD_START_GEO_PHASE": "pass",
+    "SCRAPE_RELOAD_START_QUERY_PASS": 0,
+    # ── Target / pipeline ─────────────────────────────────────────────────────
+    "TARGET_LEADS": 5000,
+    "TARGET_MODE": "instantly_pushed",
+    "SERVICE_DEFAULT": "BTP / rénovation",
+    "SERVICE_RULES": [],
+    "KEYWORDS": [
+        "entreprise BTP",
+        "artisan bâtiment",
+        "rénovation",
+        "travaux",
+        "plombier",
+        "électricien bâtiment",
+    ],
+    "EXPANSION_KEYWORDS": [
+        "maçon",
+        "carreleur",
+        "peintre bâtiment",
+        "couvreur",
+        "menuisier",
+    ],
+    "LOCATIONS": FRENCH_LOCATIONS,
+    "EXPANSION_LOCATIONS": FRENCH_EXPANSION_LOCATIONS,
+    "EXCLUDE_DOMAINS": [
+        "duckduckgo.com",
+        "google.com",
+        "google.fr",
+        "facebook.com",
+        "instagram.com",
+        "linkedin.com",
+        "youtube.com",
+        "pinterest.com",
+        "tiktok.com",
+        "societe.com",
+        "pagesjaunes.fr",
+    ],
+    "NICHE_METADATA": {
+        "angle": "Lead gen pour entreprises BTP PME",
+        "valeur_client": "Prise de RDV avec des artisans et PME du bâtiment",
+        "effectif_cible": "3-15 salariés",
+    },
+}
+
+CONFIG = BTP_PME_CONFIG

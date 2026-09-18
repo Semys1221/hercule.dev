@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import os
+import sys
 from typing import Any, Callable
 
 import httpx
@@ -13,11 +15,31 @@ from company_registry.gate import CompanyGate, build_validator
 from company_registry.models import GateVerdict, LegacyVerdict
 from company_registry.siret_extract import resolve_identifiers
 
+_LIB_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_APP_DIR = os.path.dirname(_LIB_DIR)
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+from outreach_data import scraper_output_base  # noqa: E402
+
+
+def _registry_cache_policy_hash(config: dict[str, Any]) -> str:
+    """Short hash so cache invalidates when gate policy changes."""
+    parts = [
+        str(config.get("PAPPERS_ON_UNKNOWN") or "reject"),
+        str(config.get("PAPPERS_MIN_EMPLOYEES", 3)),
+        str(config.get("PAPPERS_MAX_EMPLOYEES") or ""),
+        str(config.get("PAPPERS_MIN_SCORE", 55)),
+        str(config.get("PAPPERS_FAST_MODE", False)),
+        str(config.get("PAPPERS_SCORING_ENABLED", True)),
+        "|".join(sorted(str(p) for p in (config.get("PAPPERS_NAF_PREFIXES") or []))),
+    ]
+    return hashlib.sha256("\n".join(parts).encode()).hexdigest()[:12]
+
 
 def _cache_path_for_config(config: dict[str, Any]) -> str:
     preset = str(config.get("PRESET_ID") or config.get("_preset_id") or "default")
-    lib_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(lib_dir, "output", preset, "siret_cache.json")
+    policy = _registry_cache_policy_hash(config)
+    return os.path.join(scraper_output_base(), preset, f"siret_cache_{policy}.json")
 
 
 def _dedup_groups(rows: list[dict[str, str]]) -> dict[str, list[int]]:

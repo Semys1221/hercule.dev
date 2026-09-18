@@ -6,7 +6,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from bootstrap.campaign_layers import load_bypass_templates_for_ui
+from bootstrap.campaign_layers import _agent_debug_log, load_bypass_templates_for_ui
 from bootstrap.onboarding_state import save_onboarding_state
 from bootstrap.ui_helpers import get_api_key, load_preset_config
 from instantly_client import instantly_resource_name
@@ -31,6 +31,15 @@ def _prefill_subsequence_fields(campaign_id: str) -> None:
             st.session_state[f"sub_{ui_key}_body"] = body
 
     st.session_state[cache_key] = True
+    _agent_debug_log(
+        "bootstrap_subsequence_prefill",
+        {
+            "campaign_id": campaign_id,
+            "loaded_keys": sorted(templates.keys()),
+        },
+        "D",
+        "bootstrap/ui_tab_subsequence.py:_prefill_subsequence_fields",
+    )
 
 
 def _save_supabase_templates(campaign_id: str, campaign_name: str, emails: list[dict[str, str]]) -> None:
@@ -116,12 +125,29 @@ def render_subsequence_tab(preset_id: str) -> None:
                 return
             emails.append({"subject": subject, "body": body})
 
+        _agent_debug_log(
+            "bootstrap_save_e1_e3",
+            {
+                "preset_id": preset_id,
+                "campaign_id": campaign_id,
+                "instantly_subsequence_skipped": "true",
+            },
+            "A",
+            "bootstrap/ui_tab_subsequence.py:render_subsequence_tab",
+        )
+
         try:
             _save_supabase_templates(campaign_id, sub_name, emails)
         except Exception as exc:
             st.error(f"Enregistrement Supabase / webhook : {exc}")
             return
 
+        _agent_debug_log(
+            "bootstrap_save_e1_e3_done",
+            {"preset_id": preset_id, "campaign_id": campaign_id},
+            "A",
+            "bootstrap/ui_tab_subsequence.py:render_subsequence_tab",
+        )
         st.success("Templates bypass E1–E3 + webhook enregistrés (sans subsequence Instantly).")
         save_onboarding_state(preset_id, {"subsequence_saved": True})
         st.session_state.pop(f"sub_prefill_{campaign_id}", None)

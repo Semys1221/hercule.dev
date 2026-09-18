@@ -88,13 +88,16 @@ def build_config_identity_fingerprint(config: dict) -> str:
         target_mode(config),
         str(config.get("PAPPERS_ENABLED", "")),
         str(config.get("PAPPERS_MIN_EMPLOYEES", "")),
+        str(config.get("PAPPERS_MAX_EMPLOYEES", "")),
         str(config.get("PAPPERS_MIN_SCORE", "")),
         str(config.get("PAPPERS_SCORING_ENABLED", "")),
         str(config.get("PAPPERS_ON_UNKNOWN", "")),
+        str(config.get("PAPPERS_FAST_MODE", "")),
         str(config.get("SIRENE_INDEX_ENABLED", "")),
         str(config.get("REGISTRY_DEEP_ENRICH", "")),
         str(config.get("REJECT_HOLDINGS", "")),
         "|".join(sorted(str(item) for item in (config.get("PAPPERS_NAF_PREFIXES") or []))),
+        "|".join(sorted(config.get("TAXONOMY_HARD_EXCLUDED_KEYWORDS") or [])),
     ]
     payload = "\n".join(parts)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
@@ -132,6 +135,7 @@ def build_config_legacy_fingerprint(config: dict) -> str:
         target_mode(config),
         str(config.get("PAPPERS_ENABLED", "")),
         str(config.get("PAPPERS_MIN_EMPLOYEES", "")),
+        str(config.get("PAPPERS_MAX_EMPLOYEES", "")),
         str(config.get("PAPPERS_MIN_SCORE", "")),
         str(config.get("PAPPERS_SCORING_ENABLED", "")),
         str(config.get("PAPPERS_ON_UNKNOWN", "")),
@@ -152,6 +156,82 @@ def config_fingerprint_compatible(saved: str | None, config: dict) -> bool:
     if saved == current:
         return True
     return saved == build_config_legacy_fingerprint(config)
+
+
+def apply_pipeline_config_migration(
+    run_state: dict[str, Any],
+    config: dict,
+    *,
+    log_cb: Any = None,
+) -> bool:
+    """Reset geo/reload flags when pipeline identity changes (e.g. enrich off, on_unknown accept).
+
+    Returns True when migration was applied.
+    """
+    import commune_passes
+
+    current_identity = build_config_identity_fingerprint(config)
+    saved_identity = str(run_state.get("config_identity_fingerprint") or "")
+
+    if saved_identity and saved_identity == current_identity:
+        return False
+
+    run_state["config_identity_fingerprint"] = current_identity
+    run_state["config_fingerprint"] = build_config_fingerprint(config)
+    run_state.pop("geo_reload_exhausted", None)
+    run_state["reload_round"] = 0
+    run_state["reload_round_pushed_start"] = int(run_state.get("instantly_pushed", 0) or 0)
+    geo_phase, query_pass, skip_places = commune_passes.initial_geo_state(config)
+    run_state["geo_phase"] = geo_phase
+    run_state["query_pass"] = query_pass
+    run_state["skip_places"] = skip_places
+    run_state["last_completed_batch_index"] = -1
+    run_state["last_submitted_batch_index"] = -1
+    run_state["inflight_tasks"] = []
+    run_state["status"] = STATUS_INCOMPLETE
+
+    if log_cb:
+        if saved_identity:
+            log_cb(
+                "Pipeline config changed — geo state reset "
+                f"(enrich={config.get('ENRICH_ENABLED')}, "
+                f"on_unknown={config.get('PAPPERS_ON_UNKNOWN')}, "
+                f"fast_mode={config.get('PAPPERS_FAST_MODE')})."
+            )
+            if int(run_state.get("leads_saved", 0) or 0) > 0:
+                log_cb(
+                    "Existing CSV dedup is still active — run with reset=True for a "
+                    "clean scrape, or `registry-push` to re-validate saved leads."
+                )
+        else:
+            log_cb("Pipeline identity fingerprint stored for future migrations.")
+
+    _clear_stale_registry_caches(config, preset=str(run_state.get("preset") or ""))
+
+    return bool(saved_identity)
+
+
+def _clear_stale_registry_caches(config: dict, *, preset: str = "") -> None:
+    """Remove legacy unversioned siret_cache.json after policy-versioned caches."""
+    try:
+        from company_registry.validate import _cache_path_for_config
+
+        preset_id = preset or str(config.get("PRESET_ID") or "")
+        if not preset_id:
+            return
+        config = {**config, "PRESET_ID": preset_id}
+        current = _cache_path_for_config(config)
+        out_dir = os.path.dirname(current)
+        if not os.path.isdir(out_dir):
+            return
+        for name in os.listdir(out_dir):
+            if not name.startswith("siret_cache") or not name.endswith(".json"):
+                continue
+            path = os.path.join(out_dir, name)
+            if path != current and os.path.isfile(path):
+                os.remove(path)
+    except OSError:
+        pass
 
 
 def count_csv_leads(csv_path: str) -> int:
@@ -257,6 +337,7 @@ def new_scrape_state(
         "status": STATUS_RUNNING,
         "preset": preset,
         "config_fingerprint": build_config_fingerprint(config),
+        "config_identity_fingerprint": build_config_identity_fingerprint(config),
         "target": int(config["TARGET_LEADS"]),
         "target_mode": target_mode(config),
         "push_to_instantly": push_to_instantly,

@@ -9,7 +9,7 @@ from contextlib import closing
 
 import pytest
 
-from company_registry.classifier import classify_company, tranche_min
+from company_registry.classifier import classify_company, tranche_max, tranche_min
 from company_registry.config import CompanyGateConfig
 from company_registry.gate import CompanyGate
 from company_registry.matcher import normalize_name, score_api_result
@@ -31,6 +31,12 @@ def test_tranche_min_mapping():
     assert tranche_min("02") == 3
     assert tranche_min("01") == 1
     assert tranche_min("11") == 10
+
+
+def test_tranche_max_mapping():
+    assert tranche_max("02") == 5
+    assert tranche_max("11") == 19
+    assert tranche_max("12") == 49
 
 
 def test_classify_tpe_pme_eti():
@@ -75,6 +81,33 @@ def test_gate_rejects_low_effectif():
 def test_gate_accepts_known_effectif():
     gate = CompanyGate(CompanyGateConfig(min_employees=3))
     record = CompanyRecord(effectif_min=10, code_naf="69.20Z")
+    verdict = gate._apply_rules(record, company="Test", city="Paris")
+    assert verdict.accepted
+
+
+def test_gate_accepts_not_found_when_on_unknown_accept():
+    gate = CompanyGate(CompanyGateConfig(on_unknown="accept"))
+    verdict = gate._reject(RejectReason.NOT_FOUND, CompanyRecord())
+    assert verdict.accepted
+
+
+def test_gate_accepts_unavailable_when_on_unknown_accept():
+    gate = CompanyGate(CompanyGateConfig(on_unknown="accept"))
+    verdict = gate._reject(RejectReason.UNAVAILABLE, CompanyRecord())
+    assert verdict.accepted
+
+
+def test_gate_rejects_high_effectif_with_max():
+    gate = CompanyGate(CompanyGateConfig(min_employees=3, max_employees=15))
+    record = CompanyRecord(effectif_min=20, tranche_effectif="12", code_naf="43.22A")
+    verdict = gate._apply_rules(record, company="Test", city="Paris")
+    assert not verdict.accepted
+    assert verdict.reason == str(RejectReason.EMPLOYEE_COUNT)
+
+
+def test_gate_accepts_ambiguous_tranche_within_max():
+    gate = CompanyGate(CompanyGateConfig(min_employees=3, max_employees=15))
+    record = CompanyRecord(effectif_min=10, tranche_effectif="11", code_naf="43.22A")
     verdict = gate._apply_rules(record, company="Test", city="Paris")
     assert verdict.accepted
 

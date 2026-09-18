@@ -85,6 +85,8 @@ EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 _BACKOFF_BASE = 2.0
 _MAX_RETRIES = 4
 _HTTP_TIMEOUT = httpx.Timeout(10.0, read=60.0)
+# Jitter cap for exponential back-off (seconds) — prevents thundering-herd on 429s
+_BACKOFF_JITTER_MAX = 2.0
 _OUTSCRAPER_CLOUD = "https://api.outscraper.cloud"
 _OUTSCRAPER_LEGACY = "https://api.outscraper.com"
 _CSV_COLUMNS = [
@@ -334,24 +336,39 @@ def _normalize_web(raw: str) -> str:
     web = raw.lower().strip()
     for prefix in ("https://", "http://", "www."):
         if web.startswith(prefix):
-            web = web[len(prefix) :]
+            web = web[len(prefix):]
     return web.rstrip("/")
 
 
 def _root_domain(web: str) -> str:
-    """Extract registrable hostname from normalized website (no scheme/path)."""
+    """Extract registrable hostname from a normalized website string.
+
+    Strips scheme, www prefix, port, path, query-string, and fragment so that
+    ``https://www.example.com:443/path?x=1#section`` → ``example.com``.
+    """
     if not web:
         return ""
-    host = web.split("/")[0].split(":")[0].strip().lower()
-    return host.removeprefix("www.")
+    # Remove any residual scheme (safe even after _normalize_web)
+    for prefix in ("https://", "http://", "//"):
+        if web.startswith(prefix):
+            web = web[len(prefix):]
+    # Isolate hostname (drop path)
+    host = web.split("/")[0].strip().lower()
+    # Drop port
+    if ":" in host and not host.startswith("["):
+        host = host.rsplit(":", 1)[0]
+    # Drop www. prefix
+    host = host.removeprefix("www.")
+    return host
 
 
 def _company_dedup_key(web: str, email: str) -> str:
+    """Stable dedup key: root domain when available, else email domain."""
     root = _root_domain(web)
     if root:
         return root
     if "@" in email:
-        return email.split("@", 1)[1]
+        return email.split("@", 1)[1].lower()
     return ""
 
 
@@ -409,17 +426,22 @@ class OutscraperClient:
         url: str,
         **kwargs: Any,
     ) -> httpx.Response | None:
+        import random
+
         for attempt in range(1, _MAX_RETRIES + 1):
             try:
                 response = await self.client.request(method, url, **kwargs)
                 if response.status_code == 429:
-                    retry_after = int(
+                    # Honour Retry-After; add ±jitter to avoid synchronized retries
+                    base_wait = float(
                         response.headers.get("Retry-After", str(_BACKOFF_BASE * attempt))
                     )
-                    await asyncio.sleep(retry_after)
+                    jitter = random.uniform(0, _BACKOFF_JITTER_MAX)
+                    await asyncio.sleep(base_wait + jitter)
                     continue
                 if response.status_code >= 500:
-                    await asyncio.sleep(_BACKOFF_BASE**attempt)
+                    wait = _BACKOFF_BASE**attempt + random.uniform(0, _BACKOFF_JITTER_MAX)
+                    await asyncio.sleep(wait)
                     continue
                 if response.status_code < 300:
                     return response
@@ -427,14 +449,16 @@ class OutscraperClient:
                     try:
                         error_msg = response.json().get("errorMessage", "")
                         if "Too many requests" in error_msg:
-                            await asyncio.sleep(_BACKOFF_BASE**attempt)
+                            wait = _BACKOFF_BASE**attempt + random.uniform(0, _BACKOFF_JITTER_MAX)
+                            await asyncio.sleep(wait)
                             continue
                     except Exception:
                         pass
                 response.raise_for_status()
                 return response
             except httpx.TimeoutException:
-                await asyncio.sleep(_BACKOFF_BASE**attempt)
+                wait = _BACKOFF_BASE**attempt + random.uniform(0, _BACKOFF_JITTER_MAX)
+                await asyncio.sleep(wait)
             except httpx.HTTPError:
                 return None
         return None
@@ -750,6 +774,13 @@ def _append_enrich_audit_row(row: dict[str, str]) -> None:
         writer.writerow({col: row.get(col, "") for col in _ENRICH_AUDIT_COLUMNS})
 
 
+def _pappers_batch_settings(config: dict) -> dict[str, Any]:
+    return {
+        "enabled": bool(config.get("PAPPERS_ENABLED", False)),
+        "batch_size": max(int(config.get("PAPPERS_BATCH_SIZE", 100)), 1),
+    }
+
+
 def _enrich_settings(config: dict) -> dict[str, Any]:
     hard = list(config.get("ENRICH_HARD_EXCLUDED_KEYWORDS") or [])
     soft = list(config.get("ENRICH_SOFT_EXCLUDED_KEYWORDS") or [])
@@ -828,6 +859,7 @@ async def _maybe_enrich_and_push(
             break
         force_enrich = False
         batch_n = min(len(pending_scraped), enrich_batch_size)
+    
         log_cb(f"Enrich batch — {batch_n} scraped lead(s) queued for website check")
         valid, rejected = await _run_enrich_batch(pending_scraped, config, log_cb=log_cb)
         leads_enriched_valid += len(valid)
@@ -837,24 +869,49 @@ async def _maybe_enrich_and_push(
             f"Enrich batch done — {len(valid)} valid, {len(rejected)} rejected "
             f"(totals: {leads_enriched_valid} valid / {leads_enriched_rejected} rejected)"
         )
+    
         metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
         if on_progress_persist:
             on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
 
-    if not enrich_enabled and pending_scraped:
-        to_push = list(pending_scraped)
-        pending_scraped.clear()
-        if bool(config.get("PAPPERS_ENABLED", False)):
-            from company_registry import validate_leads
+    pappers_cfg = _pappers_batch_settings(config)
+    while (
+        not enrich_enabled
+        and pappers_cfg["enabled"]
+        and pending_scraped
+        and (len(pending_scraped) >= pappers_cfg["batch_size"] or force_enrich)
+    ):
+        force_enrich = False
+        batch_n = min(len(pending_scraped), pappers_cfg["batch_size"])
+        to_push = pending_scraped[:batch_n]
+        del pending_scraped[:batch_n]
+        from company_registry import validate_leads
 
-            valid, rejected = await validate_leads(to_push, config, log_cb=log_cb)
-            for row in rejected:
-                _append_enrich_audit_row(row)
-            leads_enriched_rejected += len(rejected)
-            leads_enriched_valid += len(valid)
-            to_push = valid
-            metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
-        pending_instantly.extend(to_push)
+    
+        log_cb(f"SIRET batch — {batch_n} scraped lead(s) queued for registry check")
+        started = time.time()
+        valid, rejected = await validate_leads(to_push, config, log_cb=log_cb)
+        duration_s = round(time.time() - started, 2)
+        for row in rejected:
+            _append_enrich_audit_row(row)
+        leads_enriched_rejected += len(rejected)
+        leads_enriched_valid += len(valid)
+        pending_instantly.extend(valid)
+        log_cb(
+            f"SIRET batch done — {len(valid)} valid, {len(rejected)} rejected "
+            f"in {duration_s}s (totals: {leads_enriched_valid} valid / "
+            f"{leads_enriched_rejected} rejected)"
+        )
+    
+        metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
+        if on_progress_persist:
+            on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
+
+    if not enrich_enabled and pending_scraped and not pappers_cfg["enabled"]:
+        moved = len(pending_scraped)
+        pending_instantly.extend(pending_scraped)
+        pending_scraped.clear()
+    
 
     while instantly_enabled and len(pending_instantly) >= push_every:
         flush_stats = await _flush_instantly_buffer(
@@ -944,14 +1001,23 @@ def _process_business(
     if config.get("TAXONOMY_GATE_ENABLED"):
         from taxonomy_gate import matches_taxonomy
 
-        ok, _ = matches_taxonomy(b, config.get("TAXONOMY_INCLUDED_KEYWORDS") or [])
+        from taxonomy_gate import taxonomy_excluded_keywords
+
+        ok, matched = matches_taxonomy(
+            b,
+            config.get("TAXONOMY_INCLUDED_KEYWORDS") or [],
+            excluded_keywords=taxonomy_excluded_keywords(config) or None,
+        )
         if not ok:
+            reason = "taxonomy_mismatch"
+            if matched and matched.startswith("excluded:"):
+                reason = f"taxonomy_hard_excluded ({matched[9:]})"
             audit = {
                 "Email": email,
                 "Company": company,
                 "Category": category_display,
                 "Verdict": "rejected",
-                "Reason": "taxonomy_mismatch",
+                "Reason": reason,
             }
             return None, audit
 
@@ -1039,42 +1105,6 @@ async def _flush_instantly_buffer(
     pending.clear()
 
     should_provision = bool(batch_emails and config.get("INSTANTLY_PROVISION_LINKS"))
-    # #region agent log
-    try:
-        with open(
-            os.path.join(_APP_DIR, "..", "..", ".cursor", "debug-9b2cb9.log"),
-            "a",
-            encoding="utf-8",
-        ) as _fh:
-            _fh.write(
-                json.dumps(
-                    {
-                        "sessionId": "9b2cb9",
-                        "runId": "post-fix",
-                        "hypothesisId": "H1-H2",
-                        "location": "core_logic.py:_flush_instantly_buffer",
-                        "message": "Instantly flush provision gate",
-                        "data": {
-                            "batchEmails": len(batch_emails),
-                            "pushed": push_stats["pushed"],
-                            "skippedDuplicate": push_stats["skipped_duplicate"],
-                            "shouldProvision": should_provision,
-                            "provisionLinksEnabled": bool(
-                                config.get("INSTANTLY_PROVISION_LINKS")
-                            ),
-                            "listId": str(config.get("INSTANTLY_LIST_ID") or "")[:8],
-                            "campaignId": str(config.get("INSTANTLY_CAMPAIGN_ID") or "")[
-                                :8
-                            ],
-                        },
-                        "timestamp": int(time.time() * 1000),
-                    }
-                )
-                + "\n"
-            )
-    except OSError:
-        pass
-    # #endregion
 
     if should_provision:
         from link_provision_client import provision_leads_after_push
@@ -1192,6 +1222,8 @@ async def _process_batch_results(
     accepted = 0
     rejected = 0
     duplicate_rejects = 0
+    taxonomy_mismatches = 0
+    taxonomy_hard_excluded = 0
     started = time.time()
     target_reached = False
 
@@ -1214,6 +1246,11 @@ async def _process_batch_results(
                     reason = str(audit.get("Reason") or "")
                     if "duplicate" in reason.lower():
                         duplicate_rejects += 1
+                    if reason == "taxonomy_mismatch":
+                        taxonomy_mismatches += 1
+                    elif reason.startswith("taxonomy_hard_excluded"):
+                        taxonomy_hard_excluded += 1
+                        taxonomy_mismatches += 1
                     _append_filter_audit_row(audit)
             if not row:
                 continue
@@ -1265,6 +1302,9 @@ async def _process_batch_results(
         if target_reached:
             break
 
+    taxonomy_total = taxonomy_mismatches
+    taxonomy_rate = round(taxonomy_total / max(raw_places, 1) * 100, 1)
+
     _append_metrics(
         {
             "event": "batch_complete",
@@ -1273,6 +1313,9 @@ async def _process_batch_results(
             "accepted": accepted,
             "rejected": rejected,
             "duplicate_rejects": duplicate_rejects,
+            "taxonomy_mismatches": taxonomy_mismatches,
+            "taxonomy_hard_excluded": taxonomy_hard_excluded,
+            "taxonomy_trash_rate_pct": taxonomy_rate,
             "leads_saved": leads_saved,
             "leads_enriched_valid": leads_enriched_valid,
             "leads_enriched_rejected": leads_enriched_rejected,
@@ -1284,6 +1327,18 @@ async def _process_batch_results(
         f"Scrape stats — places={raw_places}, emails={with_email}, "
         f"accepted={accepted}, rejected={rejected}, enriched_valid={leads_enriched_valid}"
     )
+
+    # Taxonomy trash-rate monitoring — warn when the taxonomy gate is too loose
+    if config.get("TAXONOMY_GATE_ENABLED") and raw_places >= 10:
+        from taxonomy_gate import TAXONOMY_TRASH_RATE_WARN, is_taxonomy_trash_rate_high
+
+        if is_taxonomy_trash_rate_high(taxonomy_mismatches, raw_places):
+            log_cb(
+                f"⚠️  Taxonomy trash rate high: {taxonomy_rate}% of places rejected by taxonomy "
+                f"(threshold {int(TAXONOMY_TRASH_RATE_WARN * 100)}%). "
+                f"Hard-excluded: {taxonomy_hard_excluded}. "
+                f"Consider tightening TAXONOMY_INCLUDED_KEYWORDS or adding TAXONOMY_HARD_EXCLUDED_KEYWORDS."
+            )
     duplicate_saturated = batch_duplicate_saturated(accepted, rejected, duplicate_rejects)
     if duplicate_saturated:
         rate = duplicate_rejects / max(accepted + rejected, 1) * 100
@@ -1662,6 +1717,7 @@ async def run_scraper_pipeline(
     preset: str = "biggy_agency",
 ) -> dict[str, Any]:
     from scrape_state import (
+        apply_pipeline_config_migration,
         build_config_fingerprint,
         config_fingerprint_compatible,
         is_instantly_push_mode,
@@ -1738,17 +1794,46 @@ async def run_scraper_pipeline(
     else:
         log_cb("Website enrich disabled — scraped leads go directly to Instantly push")
     if bool(config.get("PAPPERS_ENABLED", False)):
+        pappers_batch = _pappers_batch_settings(config)
+        max_effectif = int(config.get("PAPPERS_MAX_EMPLOYEES") or 0)
+        max_label = f", max effectif {max_effectif}" if max_effectif > 0 else ""
+        fast_label = ", fast_mode" if config.get("PAPPERS_FAST_MODE") else ""
         log_cb(
-            f"SIRET lookup enabled — site + Annuaire, min effectif "
-            f"{int(config.get('PAPPERS_MIN_EMPLOYEES', 3))}, "
+            f"SIRET lookup enabled — batch {pappers_batch['batch_size']}, "
+            f"min effectif {int(config.get('PAPPERS_MIN_EMPLOYEES', 3))}{max_label}, "
             f"min_score={int(config.get('PAPPERS_MIN_SCORE', 55) or 55)}, "
-            f"on_unknown={config.get('PAPPERS_ON_UNKNOWN') or 'reject'}"
+            f"on_unknown={config.get('PAPPERS_ON_UNKNOWN') or 'reject'}{fast_label}"
         )
+        if bool(config.get("SIRENE_INDEX_ENABLED", True)):
+            from company_registry.sirene_build import check_index
+            from company_registry.config import CompanyGateConfig
+
+            gate_cfg = CompanyGateConfig.from_dict(config)
+            sirene_status = check_index(gate_cfg.resolve_sirene_path())
+            if not sirene_status.get("exists"):
+                log_cb(
+                    "⚠️  SIRENE index missing — registry uses API fast path only. "
+                    "Build with: python -m company_registry.sirene_build"
+                )
+            else:
+                log_cb(
+                    f"SIRENE index ready — {sirene_status.get('rows', 0):,} rows "
+                    f"({sirene_status.get('age_days', '?')} days old)"
+                )
     else:
         log_cb("SIRET lookup disabled")
 
     for sample in pass0_queries[:3]:
         log_cb(f"  sample query: {sample}")
+
+    # Taxonomy gate summary — helps operators verify config before scraping begins
+    if config.get("TAXONOMY_GATE_ENABLED"):
+        included_n = len(config.get("TAXONOMY_INCLUDED_KEYWORDS") or [])
+        excluded_n = len(config.get("TAXONOMY_HARD_EXCLUDED_KEYWORDS") or [])
+        log_cb(
+            f"Taxonomy gate enabled — {included_n} included keyword(s), "
+            f"{excluded_n} hard-excluded keyword(s)"
+        )
 
     if dry_run:
         if not config.get("OUTSCRAPER_API_KEY"):
@@ -1817,13 +1902,18 @@ async def run_scraper_pipeline(
         log_cb("Loading Instantly dedup emails for duplicate skip...")
         dedup_list_ids = config.get("INSTANTLY_DEDUP_LIST_IDS") or []
         dedup_campaign_ids = config.get("INSTANTLY_DEDUP_CAMPAIGN_IDS") or []
+
+        def _dedup_progress(n: int) -> None:
+            log_cb(f"  dedup index: {n} emails loaded...")
+            touch_worker_heartbeat(paths.out_dir, preset=preset, status="running")
+
         workspace_emails = fetch_workspace_emails(
             config["INSTANTLY_API_KEY"],
             list_ids=dedup_list_ids,
             campaign_ids=dedup_campaign_ids,
             cache_path=paths.workspace_cache,
             log_cb=log_cb,
-            on_progress=lambda n: log_cb(f"  dedup index: {n} emails loaded..."),
+            on_progress=_dedup_progress,
         )
         before = len(seen_em)
         seen_em.update(workspace_emails)
@@ -1849,6 +1939,8 @@ async def run_scraper_pipeline(
             log_cb(
                 "Config fingerprint changed — migrating checkpoint and continuing resume."
             )
+        if apply_pipeline_config_migration(existing_state, config, log_cb=log_cb):
+            save_scrape_state(existing_state, path=_active.scrape_state)
         query_pass = int(existing_state.get("query_pass", 0))
         geo_phase = str(existing_state.get("geo_phase") or "pass")
         skip_places = int(existing_state.get("skip_places", 0) or 0)
@@ -2187,6 +2279,34 @@ async def run_scraper_pipeline(
             force_enrich=True,
         )
 
+    if not enrich_enabled and pending_scraped and bool(config.get("PAPPERS_ENABLED", False)):
+        log_cb(f"Final SIRET flush — {len(pending_scraped)} scraped lead(s) remaining")
+        (
+            leads_enriched_valid,
+            leads_enriched_rejected,
+            instantly_pushed,
+        ) = await _maybe_enrich_and_push(
+            config=config,
+            pending_scraped=pending_scraped,
+            pending_instantly=pending_instantly,
+            instantly_enabled=instantly_enabled,
+            push_every=push_every,
+            enrich_batch_size=enrich_batch_size,
+            enrich_enabled=False,
+            log_cb=log_cb,
+            progress_cb=progress_cb,
+            metric_cb=metric_cb,
+            target=target,
+            target_mode=mode,
+            leads_saved=leads_saved,
+            leads_enriched_valid=leads_enriched_valid,
+            leads_enriched_rejected=leads_enriched_rejected,
+            instantly_pushed=instantly_pushed,
+            batches_total=total_batches,
+            last_completed=-1,
+            force_enrich=True,
+        )
+
     if instantly_enabled and pending_instantly:
         flush_stats = await _flush_instantly_buffer(
             pending_instantly,
@@ -2362,4 +2482,122 @@ async def run_filter_audit(
         "total": total,
         "acceptance_rate": rate,
         "audit_path": paths.filter_audit,
+    }
+
+
+async def backfill_taxonomy_push(
+    config: dict,
+    *,
+    csv_path: str,
+    state_path: str,
+    log_cb: Callable[[str], None],
+    preset: str = "biggy_agency",
+    batch_size: int = 100,
+    dry_run: bool = False,
+) -> dict[str, int]:
+    """Re-filter saved CSV rows with taxonomy only, then push to Instantly."""
+    from instantly_client import push_leads_to_list
+    from scrape_state import load_scrape_state, save_scrape_state
+    from taxonomy_gate import matches_taxonomy_csv_row, taxonomy_excluded_keywords
+
+    if not os.path.isfile(csv_path):
+        raise FileNotFoundError(f"CSV not found: {csv_path}")
+
+    df = pd.read_csv(csv_path)
+    if df.empty or "Email" not in df.columns:
+        return {
+            "csv_rows": 0,
+            "taxonomy_pass": 0,
+            "taxonomy_reject": 0,
+            "attempted": 0,
+            "pushed": 0,
+            "skipped_duplicate": 0,
+            "failed": 0,
+        }
+
+    included = list(config.get("TAXONOMY_INCLUDED_KEYWORDS") or [])
+    excluded = taxonomy_excluded_keywords(config)
+    taxonomy_enabled = bool(config.get("TAXONOMY_GATE_ENABLED"))
+
+    valid_rows: list[dict[str, str]] = []
+    taxonomy_reject = 0
+    for _, series in df.iterrows():
+        row = {str(k): ("" if pd.isna(v) else str(v)) for k, v in series.items()}
+        email = str(row.get("Email") or "").strip().lower()
+        if not email or "@" not in email:
+            taxonomy_reject += 1
+            continue
+        if taxonomy_enabled:
+            ok, _matched = matches_taxonomy_csv_row(row, included, excluded or None)
+            if not ok:
+                taxonomy_reject += 1
+                continue
+        valid_rows.append(row)
+
+    log_cb(
+        f"Taxonomy backfill — {len(df)} CSV row(s), {len(valid_rows)} pass taxonomy, "
+        f"{taxonomy_reject} rejected"
+    )
+
+    if dry_run or not valid_rows:
+        return {
+            "csv_rows": len(df),
+            "taxonomy_pass": len(valid_rows),
+            "taxonomy_reject": taxonomy_reject,
+            "attempted": 0,
+            "pushed": 0,
+            "skipped_duplicate": 0,
+            "failed": 0,
+        }
+
+    api_key = str(config.get("INSTANTLY_API_KEY") or "").strip()
+    list_id = str(config.get("INSTANTLY_LIST_ID") or "").strip()
+    if not api_key or not list_id:
+        raise SystemExit("INSTANTLY_API_KEY and INSTANTLY_LIST_ID required for taxonomy backfill")
+
+    attempted = 0
+    pushed = 0
+    skipped = 0
+    failed = 0
+    chunk = max(int(batch_size), 1)
+
+    for offset in range(0, len(valid_rows), chunk):
+        batch = valid_rows[offset : offset + chunk]
+        log_cb(f"Instantly backfill batch {offset // chunk + 1} — {len(batch)} lead(s)")
+        stats = await push_leads_to_list(
+            api_key,
+            list_id,
+            batch,
+            skip_if_in_campaign=bool(config.get("INSTANTLY_SKIP_IF_IN_CAMPAIGN", True)),
+            skip_if_in_list=bool(config.get("INSTANTLY_SKIP_IF_IN_LIST", True)),
+            log_cb=log_cb,
+        )
+        attempted += stats["attempted"]
+        pushed += stats["pushed"]
+        skipped += stats["skipped_duplicate"]
+        failed += stats["failed"]
+
+    state = load_scrape_state(state_path) or {}
+    prev_pushed = int(state.get("instantly_pushed", 0) or 0)
+    state["instantly_pushed"] = prev_pushed + pushed
+    state["instantly_skipped_duplicate"] = int(state.get("instantly_skipped_duplicate", 0) or 0) + skipped
+    state["push_to_instantly"] = True
+    state["leads_saved"] = max(int(state.get("leads_saved", 0) or 0), len(df))
+    state["leads_enriched_valid"] = len(valid_rows)
+    state["leads_enriched_rejected"] = taxonomy_reject
+    save_scrape_state(state, path=state_path)
+
+    log_cb(
+        f"Taxonomy backfill done — pushed {pushed}, skipped duplicate {skipped}, "
+        f"failed {failed} (checkpoint {state['instantly_pushed']})"
+    )
+
+    return {
+        "csv_rows": len(df),
+        "taxonomy_pass": len(valid_rows),
+        "taxonomy_reject": taxonomy_reject,
+        "attempted": attempted,
+        "pushed": pushed,
+        "skipped_duplicate": skipped,
+        "failed": failed,
     }

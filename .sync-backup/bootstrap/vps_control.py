@@ -91,9 +91,40 @@ def _connect_ssh(cfg: VpsConfig):
     return client
 
 
+def _debug_log(message: str, data: dict, *, hypothesis_id: str) -> None:
+    # #region agent log
+    import json
+
+    payload = {
+        "sessionId": "a01eb9",
+        "runId": "pre-fix",
+        "hypothesisId": hypothesis_id,
+        "location": "vps_control.py",
+        "message": message,
+        "data": data,
+        "timestamp": int(time.time() * 1000),
+    }
+    try:
+        with open(
+            os.path.join(_REPO_ROOT, ".cursor", "debug-a01eb9.log"),
+            "a",
+            encoding="utf-8",
+        ) as handle:
+            handle.write(json.dumps(payload) + "\n")
+    except OSError:
+        pass
+    # #endregion
+
 
 def _ssh_exec(cfg: VpsConfig, command: str, *, timeout: int = 120) -> tuple[int, str, str]:
     if _ssh_in_backoff():
+        # #region agent log
+        _debug_log(
+            "ssh_exec skipped due to backoff",
+            {"command_prefix": command[:80], "backoff_until": _ssh_backoff_until},
+            hypothesis_id="E",
+        )
+        # #endregion
         return 1, "", _ssh_last_error or "SSH unavailable (retrying shortly)"
 
     try:
@@ -101,19 +132,46 @@ def _ssh_exec(cfg: VpsConfig, command: str, *, timeout: int = 120) -> tuple[int,
     except ImportError:
         return 1, "", "paramiko not installed"
 
+    started = time.monotonic()
     try:
+        connect_started = time.monotonic()
         client = _connect_ssh(cfg)
+        connect_ms = int((time.monotonic() - connect_started) * 1000)
         try:
+            exec_started = time.monotonic()
             _, stdout, stderr = client.exec_command(command, timeout=timeout)
             out = stdout.read().decode("utf-8", errors="replace")
             err = stderr.read().decode("utf-8", errors="replace")
             code = stdout.channel.recv_exit_status()
+            exec_ms = int((time.monotonic() - exec_started) * 1000)
+            total_ms = int((time.monotonic() - started) * 1000)
+            # #region agent log
+            _debug_log(
+                "ssh_exec completed",
+                {
+                    "command_prefix": command[:80],
+                    "connect_ms": connect_ms,
+                    "exec_ms": exec_ms,
+                    "total_ms": total_ms,
+                    "exit_code": code,
+                },
+                hypothesis_id="A",
+            )
+            # #endregion
             _clear_ssh_failure()
             return code, out, err
         finally:
             client.close()
     except Exception as exc:
+        total_ms = int((time.monotonic() - started) * 1000)
         message = f"SSH failed: {exc}"
+        # #region agent log
+        _debug_log(
+            "ssh_exec failed",
+            {"command_prefix": command[:80], "total_ms": total_ms, "error": message},
+            hypothesis_id="B",
+        )
+        # #endregion
         _mark_ssh_failure(message)
         return 1, "", message
 
@@ -312,6 +370,17 @@ def load_panel_state(
         remote_files.get(cron_path, ""),
         max_lines=max_cron_lines,
     )
+    # #region agent log
+    _debug_log(
+        "load_panel_state completed",
+        {
+            "preset": preset,
+            "total_ms": int((time.monotonic() - panel_started) * 1000),
+            "remote_file_count": len(remote_paths),
+        },
+        hypothesis_id="C",
+    )
+    # #endregion
     return state, log_tail, out_dir, heartbeat, cron_events
 
 

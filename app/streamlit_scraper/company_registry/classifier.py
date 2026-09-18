@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from company_registry.config import TRANCHE_MIN
+from company_registry.config import TRANCHE_MAX, TRANCHE_MIN
 from company_registry.models import CompanySize
 
 
@@ -13,6 +13,13 @@ def tranche_min(code: str) -> int | None:
     if not raw:
         return None
     return TRANCHE_MIN.get(raw.upper()) or TRANCHE_MIN.get(raw)
+
+
+def tranche_max(code: str) -> int | None:
+    raw = (code or "").strip()
+    if not raw:
+        return None
+    return TRANCHE_MAX.get(raw.upper()) or TRANCHE_MAX.get(raw)
 
 
 def parse_ca_euros(raw: str) -> int | None:
