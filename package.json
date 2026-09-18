@@ -102,6 +102,7 @@
     "configure-instantly-pipeline-cron": "tsx --env-file=.env ./scripts/instantly-bypass/configurePipelineCronJob.ts",
     "configure-booking-cron": "tsx --env-file=.env ./scripts/crm/configureBookingCronJob.ts",
     "configure-link-provisioning-cron": "tsx --env-file=.env ./scripts/crm/configureLinkProvisioningCronJob.ts",
+    "configure-management-recipients-sync-cron": "tsx --env-file=.env ./scripts/crm/configureManagementRecipientsSyncCronJob.ts",
     "provision-list-links": "python3 ./scripts/crm/provisionListLinks.py",
     "provision-comptable-links": "tsx --env-file=.env ./scripts/crm/provisionComptableLinks.ts",
     "provision-cif-links": "tsx --env-file=.env ./scripts/crm/provisionCifLinks.ts",

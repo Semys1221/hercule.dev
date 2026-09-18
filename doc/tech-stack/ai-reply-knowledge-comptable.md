@@ -91,6 +91,7 @@ Déclencheurs : « conférence », « appel à plusieurs », « appelez-moi », 
 - **Retours d'expérience / ROI chiffré ?** Pas de benchmarks nominatifs publiés. Expliquer la valeur (flux qualifiés, 0 % commission, garantie MRR) — renvoyer hercule.dev/cvg/comptable sans inventer de chiffres clients.
 - **Belgique / hors France ?** France uniquement.
 - **Invitation Calendly déjà reçue ?** Confirmer brièvement le RDV si connu ; ne pas renvoyer un second lien sans demande de replanification.
+- **Réponse positive sans réservation (ex. « avec plaisir pour échanger », « d'accord ») ?** Accuser réception de ce qu'il partage, puis demander s'il peut confirmer qu'il a bien réservé son créneau via le lien envoyé — ne pas présumer que le RDV est pris.
 - **Paiement, facturation, congés ops ?** Renvoyer vers **contact@hercule.dev**.
 - **Qui peut postuler ?** Cabinets avec bande passante suffisante ; le seuil > 3 associés/collaborateurs est un indicateur, pas un refus automatique.
 - **« Je n'ai pas 3 collaborateurs »** : l'enjeu est la bande passante pour des visios qualifiantes (pas des appels de 10 min). Si le cabinet a la capacité (y compris sous-traitance stable), inviter à l'audit de compatibilité via Calendly.

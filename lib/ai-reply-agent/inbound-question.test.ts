@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  inboundClaimsBookingDone,
   inboundLooksLikePhoneRequest,
   inboundLooksLikeQuestion,
   inboundLooksLikeSchedulingAnswer,
@@ -96,6 +97,28 @@ describe("inboundProvidesPhoneNumber", () => {
 describe("inboundShowsInterest", () => {
   it("detects interest keywords", () => {
     expect(inboundShowsInterest("Je peut être intéressé")).toBe(true);
+  });
+
+  it("detects soft agreement with exchange intent", () => {
+    expect(
+      inboundShowsInterest(
+        "D'accord, avec plaisir pour échanger sur le sujet.",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("inboundClaimsBookingDone", () => {
+  it("detects explicit booking claims", () => {
+    expect(inboundClaimsBookingDone("J'ai réservé un créneau via Calendly.")).toBe(
+      true,
+    );
+  });
+
+  it("returns false for soft interest only", () => {
+    expect(
+      inboundClaimsBookingDone("Avec plaisir pour échanger sur le sujet."),
+    ).toBe(false);
   });
 });
 

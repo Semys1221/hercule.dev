@@ -37,6 +37,11 @@ export type InstantlyEmailRecord = {
   lead_id?: string;
   thread_id?: string;
   subject?: string;
+  from_address_email?: string;
+  content_preview?: string;
+  body_text?: string;
+  body_html?: string;
+  body?: { text?: string; html?: string };
   timestamp_email?: string;
   timestamp_created?: string;
   email_type?: string;

@@ -23,6 +23,33 @@ const INTEREST_KEYWORDS = [
   "peut etre interesse",
   "cela peut m'intéresser",
   "cela peut m interesser",
+  "avec plaisir",
+  "volontiers",
+  "pour échanger",
+  "pour echanger",
+  "échanger sur le sujet",
+  "echanger sur le sujet",
+  "effectivement",
+];
+
+const BOOKING_CLAIM_KEYWORDS = [
+  "j'ai réservé",
+  "j ai réservé",
+  "j'ai book",
+  "j ai book",
+  "créneau réservé",
+  "creneau reserve",
+  "rdv pris",
+  "rendez-vous pris",
+  "rendez vous pris",
+  "réservation effectuée",
+  "reservation effectuee",
+  "j'ai pris rendez",
+  "j ai pris rendez",
+  "calendly confirmé",
+  "calendly confirme",
+  "j'ai choisi un créneau",
+  "j ai choisi un creneau",
 ];
 
 const VERIFICATION_KEYWORDS = [
@@ -195,6 +222,15 @@ export function inboundShowsInterest(text: string): boolean {
     return false;
   }
   return INTEREST_KEYWORDS.some((keyword) => probe.includes(keyword));
+}
+
+/** Lead states they already booked — do not ask again for confirmation. */
+export function inboundClaimsBookingDone(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return BOOKING_CLAIM_KEYWORDS.some((keyword) => probe.includes(keyword));
 }
 
 /** Lead asks to verify Hercule identity before continuing. */

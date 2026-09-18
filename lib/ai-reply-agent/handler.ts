@@ -2,19 +2,10 @@ import { upsertLeadReply } from "./lead-replies";
 import { isAutoSendEnabled, isCampaignConfigReady, loadAiReplyConfig } from "./config";
 import { isHandledReplyAgentEvent, isOooReplyEvent } from "./events";
 import { generateReplyDecision, interestLabelFromStatus } from "./grok";
-import {
-  inboundLooksLikePhoneRequest,
-  inboundLooksLikeSchedulingAnswer,
-  inboundNeedsFollowUp,
-} from "./inbound-question";
+import { inboundNeedsFollowUp } from "./inbound-question";
 import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack, hashKnowledgePack } from "./knowledge";
-import {
-  bookFromInbound,
-  formatBookingContextForGrok,
-  type BookFromInboundMode,
-} from "@/lib/calendly/book-from-inbound";
-import { resolveCategoryForCampaign } from "@/lib/link-tracking/provision-campaign-lead";
+import { resolveBookingContext } from "./booking-context";
 import {
   insertInboundMessage,
   insertOutboundMessage,
@@ -38,6 +29,10 @@ import {
 } from "./reply-gate";
 import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
 import { ensureInterestedE1IfMissing } from "@/lib/instantly-bypass/ensure-interested-e1";
+import {
+  resolveReplyFromEmail,
+  syncLeadReplyFromEmail,
+} from "./reply-from-email";
 
 import type {
   AiReplyMessageStatus,
@@ -122,41 +117,6 @@ function resolveLeadDisplayName(
   return leadEmail;
 }
 
-async function resolveBookingContext(params: {
-  campaignId: string;
-  inboundText: string;
-  leadEmail: string;
-  leadName: string;
-}): Promise<string | null> {
-  try {
-    const category = await resolveCategoryForCampaign(params.campaignId);
-    if (category !== "comptable" && category !== "cif") {
-      return null;
-    }
-
-    const mode: BookFromInboundMode = inboundLooksLikeSchedulingAnswer(
-      params.inboundText,
-    )
-      ? "try_book"
-      : inboundLooksLikePhoneRequest(params.inboundText)
-        ? "suggest_slots"
-        : "none";
-
-    const result = await bookFromInbound({
-      event: category,
-      leadEmail: params.leadEmail,
-      leadName: params.leadName,
-      inboundText: params.inboundText,
-      mode,
-    });
-    return formatBookingContextForGrok(result);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn("[ai-reply-agent] calendly booking failed:", message);
-    return null;
-  }
-}
-
 export async function handleInstantlyReply(
   payload: InstantlyReplyWebhookPayload,
 ): Promise<HandleReplyResult> {
@@ -187,6 +147,26 @@ export async function handleInstantlyReply(
   const inboundText = readInboundText(payload);
   const instantlyEmailId = payload.email_id?.trim() ?? null;
   const isOoo = isOooReplyEvent(eventType);
+  const apiKey = getInstantlyApiKey();
+  const replyFromEmail = await resolveReplyFromEmail(apiKey, {
+    payload,
+    leadEmail,
+    instantlyEmailId,
+  });
+
+  if (replyFromEmail && replyFromEmail !== leadEmail) {
+    await syncLeadReplyFromEmail(apiKey, {
+      campaignId,
+      leadEmail,
+      replyFromEmail,
+    }).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[ai-reply-agent] failed to sync reply_from_email for ${leadEmail}:`,
+        message,
+      );
+    });
+  }
 
   const inbound = await insertInboundMessage({
     campaignId,
@@ -196,6 +176,7 @@ export async function handleInstantlyReply(
     subject: payload.reply_subject?.trim() ?? null,
     bodyText: inboundText || "(empty body)",
     emailAccount: payload.email_account?.trim() ?? null,
+    replyFromEmail,
     uniboxUrl: payload.unibox_url?.trim() ?? null,
     aiStatus: isOoo ? "skipped_ooo" : "pending",
     aiReason: isOoo ? "Auto-reply / out-of-office detected" : null,
@@ -217,30 +198,6 @@ export async function handleInstantlyReply(
 
   const recentCollision = await hasRecentHerculeCollision({ campaignId, leadEmail });
   const needsFollowUp = inboundNeedsFollowUp(inboundText);
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "eb88d5",
-    },
-    body: JSON.stringify({
-      sessionId: "eb88d5",
-      runId: "pre-fix",
-      hypothesisId: "collision-bypass",
-      location: "handler.ts:collision-guard",
-      message: "collision guard decision",
-      data: {
-        campaignId,
-        leadEmail,
-        recentCollision,
-        needsFollowUp,
-        inboundPreview: inboundText.slice(0, 120),
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   if (recentCollision && !needsFollowUp) {
     const latencyMs = await finalizeInbound(
       inbound.id,
@@ -256,7 +213,6 @@ export async function handleInstantlyReply(
     };
   }
 
-  const apiKey = getInstantlyApiKey();
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
   if (interestStatus === NO_SHOW_STATUS) {
@@ -373,7 +329,9 @@ export async function handleInstantlyReply(
     campaignId,
     inboundText,
     leadEmail,
+    replyFromEmail,
     leadName: resolveLeadDisplayName(lead, leadEmail),
+    interestStatus,
   });
   try {
     const groq = await generateReplyDecision({

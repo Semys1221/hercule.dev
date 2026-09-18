@@ -149,6 +149,7 @@ async function main(): Promise<void> {
       console.log("    pnpm configure-instantly-bypass-cron");
       console.log("    pnpm configure-instantly-pipeline-cron");
       console.log("    pnpm configure-ai-reply-agent-cron");
+      console.log("    pnpm configure-management-recipients-sync-cron");
     }
     if (!allHealthy) {
       console.log("- One or more endpoints failed. Check Vercel deploy + CRON_SECRET match.");

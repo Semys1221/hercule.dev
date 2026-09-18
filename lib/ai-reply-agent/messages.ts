@@ -21,6 +21,7 @@ export async function insertInboundMessage(params: {
   subject: string | null;
   bodyText: string;
   emailAccount: string | null;
+  replyFromEmail?: string | null;
   uniboxUrl: string | null;
   aiStatus: AiReplyMessageStatus;
   aiReason?: string | null;
@@ -36,6 +37,7 @@ export async function insertInboundMessage(params: {
     subject: params.subject,
     body_text: params.bodyText,
     email_account: params.emailAccount,
+    reply_from_email: params.replyFromEmail?.trim().toLowerCase() ?? null,
     unibox_url: params.uniboxUrl,
     ai_status: params.aiStatus,
     ai_reason: params.aiReason ?? null,

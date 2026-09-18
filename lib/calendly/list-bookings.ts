@@ -496,35 +496,15 @@ export async function listUpcomingBookings(options: {
   const listParams = buildScheduledEventsListParams(eventListOptions);
 
   if (bookingsPipelineBlockedByMissingEventType(options.niche, listParams.event_type)) {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
-      body: JSON.stringify({
-        sessionId: "d17331",
-        runId: "pre-fix",
-        hypothesisId: "H1",
-        location: "list-bookings.ts:blocked-missing-event-type",
-        message: "Bookings pipeline blocked — no event type URI",
-        data: { niche: options.niche ?? null },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     return [];
   }
 
-  const eventsFetchStartedAt = Date.now();
   const events = await listScheduledEventsInWindow(eventListOptions);
-  const eventsFetchDurationMs = Date.now() - eventsFetchStartedAt;
-
-  const inviteesFetchStartedAt = Date.now();
   const parsedInvitees = (
     await mapWithConcurrency(events, INVITEE_FETCH_CONCURRENCY, (event) =>
       fetchEventInvitees(event, now, includePast),
     )
   ).flat();
-  const inviteesFetchDurationMs = Date.now() - inviteesFetchStartedAt;
 
   const candidates: InviteeCandidate[] = [];
   for (const { invitee } of parsedInvitees) {
@@ -541,36 +521,9 @@ export async function listUpcomingBookings(options: {
     });
   }
 
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "2ea86d" },
-    body: JSON.stringify({
-      sessionId: "2ea86d",
-      runId: "pre-fix",
-      hypothesisId: "H1-H2",
-      location: "list-bookings.ts:listUpcomingBookings:pre-filter",
-      message: "Calendly events fetched before row build",
-      data: {
-        niche: options.niche ?? null,
-        category: options.category ?? null,
-        resolvedEventTypeUri,
-        eventCount: events.length,
-        parsedInviteeCount: parsedInvitees.length,
-        candidateCount: candidates.length,
-        eventsFetchDurationMs,
-        inviteesFetchDurationMs,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-
   const lookupByKey = await batchResolveLeadLookups(candidates);
   const rows: CalendlyBookingRow[] = [];
   const seenInviteeUris = new Set<string>();
-
-  let skippedWrongEventType = 0;
 
   for (const { event, eventUri, eventStart, invitee } of parsedInvitees) {
     const email = normalizeEmail(String(invitee.email ?? ""));
@@ -581,7 +534,6 @@ export async function listUpcomingBookings(options: {
     if (resolvedEventTypeUri) {
       const rowEventTypeUri = String(event.event_type ?? "").trim();
       if (rowEventTypeUri !== resolvedEventTypeUri) {
-        skippedWrongEventType += 1;
         continue;
       }
     }
@@ -632,28 +584,6 @@ export async function listUpcomingBookings(options: {
 
   const finalizedRows = finalizeBookingRows(rows);
   finalizedRows.sort((a, b) => a.start_time.localeCompare(b.start_time));
-
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d17331" },
-    body: JSON.stringify({
-      sessionId: "d17331",
-      runId: "pre-fix",
-      hypothesisId: "H1",
-      location: "list-bookings.ts:listUpcomingBookings:post-filter",
-      message: "Bookings rows after event-type filter",
-      data: {
-        niche: options.niche ?? null,
-        resolvedEventTypeUri,
-        rowCount: finalizedRows.length,
-        rawRowCount: rows.length,
-        skippedWrongEventType,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
 
   return finalizedRows;
 }

@@ -87,6 +87,25 @@ Sync `CRON_SECRET` to Vercel if it differs from local `.env`:
 vercel env add CRON_SECRET production --force --yes --value "<same as .env>"
 ```
 
+## 5b. Management recipients sync cron (hourly)
+
+Reconciles `email_sequence_recipients` from pipeline and booking jobs (safety net for live webhook sync).
+
+Use [cron-job.org](https://cron-job.org):
+
+- URL: `https://www.hercule.dev/api/cron/management-recipients-sync`
+- Method: `GET`
+- Schedule: hourly at `:30` (Europe/Paris)
+- Header: `Authorization: Bearer <CRON_SECRET>`
+
+Automated registration:
+
+```bash
+pnpm configure-management-recipients-sync-cron
+```
+
+**Deploy first:** production must include the route before the cron returns `200`.
+
 ## 6. Streamlit admin
 
 Not hosted on Vercel. Run locally:
@@ -105,4 +124,5 @@ Or deploy `app/streamlit_links/` to Streamlit Cloud with the same env vars as ro
 - [ ] Calendly test booking updates Supabase statut
 - [ ] `GET /api/cron/booking-emails` with Bearer token returns `{ ok: true }`
 - [ ] `GET /api/cron/instantly-bypass-jobs` with Bearer token returns `{ ok: true }`
+- [ ] `GET /api/cron/management-recipients-sync` with Bearer token returns `{ ok: true }`
 - [ ] Email confirm link opens `/confirm-reservation.html?code=…&email=…`

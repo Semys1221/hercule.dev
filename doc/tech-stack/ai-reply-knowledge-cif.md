@@ -91,6 +91,7 @@ Déclencheurs : « conférence », « appel à plusieurs », « appelez-moi », 
 - **Business plan / projections ?** Hercule ne rédige pas de business plan pour le cabinet. Proposer l'audit de compatibilité pour évaluer l'adéquation du flux avec la capacité du cabinet.
 - **Belgique / hors France ?** Hercule opère pour des **cabinets et dirigeants en France** uniquement — pas d'offre Belgique.
 - **Invitation Calendly déjà reçue / RDV déjà planifié ?** Accuser réception brièvement, confirmer le créneau si connu (contexte Calendly), ne pas renvoyer un second lien sauf replanification demandée.
+- **Réponse positive sans réservation (ex. « avec plaisir pour échanger », « d'accord ») ?** Accuser réception de ce qu'il partage, puis demander s'il peut confirmer qu'il a bien réservé son créneau via le lien envoyé — ne pas présumer que le RDV est pris.
 - **Paiement, facturation, congés ops (ex. 20–30 oct.) ?** Renvoyer vers **contact@hercule.dev** — pas de détail process interne dans l'email.
 - **Qui peut postuler ?** Cabinets avec bande passante suffisante ; le seuil minimum 2 associés/collaborateurs est un indicateur, pas un refus automatique.
 - **« Je n'ai pas 2 collaborateurs »** : l'enjeu est la bande passante pour des visios qualifiantes (pas des appels de 10 min). Si le cabinet a la capacité (y compris sous-traitance stable), inviter à l'audit de compatibilité via Calendly.

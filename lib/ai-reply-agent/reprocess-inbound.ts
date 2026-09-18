@@ -22,16 +22,7 @@ import {
   updateLeadInterestStatusBypass,
 } from "@/lib/instantly-bypass/client";
 import { syncPipelineStepFromSentFlows } from "@/lib/instantly-bypass/sync-pipeline-from-events";
-import {
-  bookFromInbound,
-  formatBookingContextForGrok,
-  type BookFromInboundMode,
-} from "@/lib/calendly/book-from-inbound";
-import { resolveCategoryForCampaign } from "@/lib/link-tracking/provision-campaign-lead";
-import {
-  inboundLooksLikePhoneRequest,
-  inboundLooksLikeSchedulingAnswer,
-} from "./inbound-question";
+import { resolveBookingContext } from "./booking-context";
 import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
 import { detectOptOut } from "@/lib/lead-relances/opt-out";
 
@@ -79,41 +70,6 @@ function resolveLeadDisplayName(
     return parts.join(" ");
   }
   return leadEmail;
-}
-
-async function resolveBookingContext(params: {
-  campaignId: string;
-  inboundText: string;
-  leadEmail: string;
-  leadName: string;
-}): Promise<string | null> {
-  try {
-    const category = await resolveCategoryForCampaign(params.campaignId);
-    if (category !== "comptable" && category !== "cif") {
-      return null;
-    }
-
-    const mode: BookFromInboundMode = inboundLooksLikeSchedulingAnswer(
-      params.inboundText,
-    )
-      ? "try_book"
-      : inboundLooksLikePhoneRequest(params.inboundText)
-        ? "suggest_slots"
-        : "none";
-
-    const result = await bookFromInbound({
-      event: category,
-      leadEmail: params.leadEmail,
-      leadName: params.leadName,
-      inboundText: params.inboundText,
-      mode,
-    });
-    return formatBookingContextForGrok(result);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn("[ai-reply-agent] calendly booking failed:", message);
-    return null;
-  }
 }
 
 async function hasOutboundSinceInbound(
@@ -266,6 +222,7 @@ export async function reprocessInboundForLead(params: {
     inboundText,
     leadEmail,
     leadName: resolveLeadDisplayName(lead, leadEmail),
+    interestStatus,
   });
 
   let decision;

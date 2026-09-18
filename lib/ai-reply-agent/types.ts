@@ -31,6 +31,9 @@ export type InstantlyReplyWebhookPayload = {
   reply_text?: string;
   reply_html?: string;
   reply_text_snippet?: string;
+  reply_from_email?: string;
+  from_address_email?: string;
+  from_email?: string;
   unibox_url?: string;
   step?: number;
   variant?: number;

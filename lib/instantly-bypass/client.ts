@@ -20,6 +20,32 @@ export type ListEmailsParams = {
   limit?: number;
 };
 
+export async function getEmailById(
+  apiKey: string,
+  emailId: string,
+): Promise<InstantlyEmailRecord | null> {
+  try {
+    return await instantlyFetch<InstantlyEmailRecord>(
+      apiKey,
+      `/emails/${emailId.trim()}`,
+      { method: "GET" },
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function patchLeadCustomVariables(
+  apiKey: string,
+  leadId: string,
+  customVariables: Record<string, string | number | boolean | null>,
+): Promise<unknown> {
+  return instantlyFetch(apiKey, `/leads/${leadId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ custom_variables: customVariables }),
+  });
+}
+
 export async function listEmails(
   apiKey: string,
   params: ListEmailsParams = {},

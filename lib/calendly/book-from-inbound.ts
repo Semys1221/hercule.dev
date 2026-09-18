@@ -14,6 +14,8 @@ export type BookFromInboundMode = "none" | "suggest_slots" | "try_book";
 export type BookFromInboundParams = {
   event: CalendlyBookingEvent;
   leadEmail: string;
+  /** When the lead replied from another inbox, use it for booking lookup. */
+  replyFromEmail?: string | null;
   leadName: string;
   inboundText: string;
   mode: BookFromInboundMode;
@@ -54,8 +56,13 @@ async function loadSlotCandidates(
 async function findExistingFutureBooking(
   event: CalendlyBookingEvent,
   leadEmail: string,
+  replyFromEmail?: string | null,
 ): Promise<{ slotLabel: string; rescheduleUrl: string } | null> {
-  const normalized = normalizeEmail(leadEmail);
+  const emails = new Set(
+    [leadEmail, replyFromEmail]
+      .map((value) => normalizeEmail(value ?? ""))
+      .filter(Boolean),
+  );
   const rows = await listUpcomingBookings({
     niche: event,
     daysAhead: 30,
@@ -63,7 +70,7 @@ async function findExistingFutureBooking(
   });
   const match = rows.find(
     (row) =>
-      normalizeEmail(row.email) === normalized &&
+      emails.has(normalizeEmail(row.email)) &&
       row.calendly_reschedule_url?.trim(),
   );
   if (!match) {
@@ -90,7 +97,12 @@ export async function bookFromInbound(
     return { status: "skipped", reason: "no_scheduling_intent" };
   }
 
-  const existing = await findExistingFutureBooking(params.event, params.leadEmail);
+  const bookingEmail = normalizeEmail(params.replyFromEmail ?? "") || params.leadEmail;
+  const existing = await findExistingFutureBooking(
+    params.event,
+    params.leadEmail,
+    params.replyFromEmail,
+  );
   if (existing) {
     return {
       status: "already_booked",
@@ -116,7 +128,7 @@ export async function bookFromInbound(
     const booked = await createInvitee({
       eventTypeUri,
       startTime: match.startTime,
-      inviteeEmail: params.leadEmail,
+      inviteeEmail: bookingEmail,
       inviteeName: params.leadName,
     });
     return {
