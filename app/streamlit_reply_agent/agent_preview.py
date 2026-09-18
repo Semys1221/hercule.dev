@@ -124,11 +124,18 @@ Identité (questions « qui êtes-vous ») :
 - Framing : Hercule est un groupement d'entrepreneurs dirigé par Evan Sinclair — réponse directe en une phrase.
 - Ne pas mener par la raison sociale EI (Nanguy Evan Gbeho, entrepreneur individuel) sauf si le prospect demande explicitement l'immatriculation ou le RCS.
 
+Contexte fil (historique de conversation) :
+- Lis tout l'historique fourni avant de décider should_reply.
+- Si le prospect remercie ou confirme sans nouvelle question après qu'un lien CTA / une réservation a déjà été échangée → should_reply false (ne pas renvoyer un rappel conférence).
+- Si le prospect dit ne pas avoir saisi / ne pas comprendre (« je n'ai pas saisi », « je n'ai pas compris ») → should_reply true : clarifier en AER qui est Hercule (groupement d'entrepreneurs, Evan Sinclair) et le lien avec son métier — même si le cabinet est hors France.
+- Un accusé de réception court (« top merci », « parfait merci ») qui clôt l'échange ne mérite pas de nouvelle relance.
+
 Recovery (tag Lead) :
 - Toujours renseigner recovery_confidence (0–100) : probabilité que la relance soit rattrapable.
 - « Non merci, pas notre cible » / refus définitif → should_reply false, recovery_confidence 10–25.
 - « Non mais… » / objection format ou téléphone → should_reply true si rattrapable, recovery_confidence ≥ 75.
-- Opt-out explicite (« non merci », « c'est mort », « stop », « ne plus me contacter ») → should_reply false, recovery_confidence 0 — ne pas confondre avec « non mais ».
+- « Je n'ai pas saisi » / incompréhension → should_reply true, recovery_confidence ≥ 80.
+- Opt-out explicite (« non merci », « c'est mort », « stop », « ne plus me contacter ») → should_reply false, recovery_confidence 0 — ne pas confondre avec « non mais » ou un simple merci après réservation.
 - Tag Interested : recovery_confidence optionnel (ignoré).
 
 Signature :
@@ -365,6 +372,7 @@ def generate_reply_preview(
     custom_directive: str | None = None,
     interest_label: str | None = None,
     lead_name: str | None = None,
+    thread_context: str | None = None,
 ) -> dict[str, Any]:
     prompt_snapshot = (
         prompt_override
@@ -403,17 +411,28 @@ def generate_reply_preview(
         custom_directive=custom_directive,
         booking_context=booking_context,
     )
-    user_prompt = "\n".join(
+    user_prompt_parts = [
+        f"Email du lead : {lead_email}",
+        f"Tag Instantly du lead : {tag_label}",
+        "",
+        f"Lien CTA (utilise exactement cette URL dans reply_text) : {prompt_links['primary']}",
+    ]
+    if (thread_context or "").strip():
+        user_prompt_parts.extend(
+            [
+                "",
+                "Historique du fil (du plus ancien au plus récent) :",
+                thread_context.strip(),
+            ]
+        )
+    user_prompt_parts.extend(
         [
-            f"Email du lead : {lead_email}",
-            f"Tag Instantly du lead : {tag_label}",
             "",
-            f"Lien CTA (utilise exactement cette URL dans reply_text) : {prompt_links['primary']}",
-            "",
-            "Réponse entrante à traiter :",
+            "Réponse entrante à traiter (dernier message du prospect) :",
             truncate_inbound_text(inbound_text),
         ]
     )
+    user_prompt = "\n".join(user_prompt_parts)
 
     knowledge_pack = build_knowledge_pack(config)
     legal_anchors = (

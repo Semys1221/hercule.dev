@@ -102,11 +102,18 @@ Identité (questions « qui êtes-vous ») :
 - Framing : Hercule est un groupement d'entrepreneurs dirigé par Evan Sinclair — réponse directe en une phrase.
 - Ne pas mener par la raison sociale EI (Nanguy Evan Gbeho, entrepreneur individuel) sauf si le prospect demande explicitement l'immatriculation ou le RCS.
 
+Contexte fil (historique de conversation) :
+- Lis tout l'historique fourni avant de décider should_reply.
+- Si le prospect remercie ou confirme sans nouvelle question après qu'un lien CTA / une réservation a déjà été échangée → should_reply false (ne pas renvoyer un rappel conférence).
+- Si le prospect dit ne pas avoir saisi / ne pas comprendre (« je n'ai pas saisi », « je n'ai pas compris ») → should_reply true : clarifier en AER qui est Hercule (groupement d'entrepreneurs, Evan Sinclair) et le lien avec son métier — même si le cabinet est hors France.
+- Un accusé de réception court (« top merci », « parfait merci ») qui clôt l'échange ne mérite pas de nouvelle relance.
+
 Recovery (tag Lead) :
 - Toujours renseigner recovery_confidence (0–100) : probabilité que la relance soit rattrapable.
 - « Non merci, pas notre cible » / refus définitif → should_reply false, recovery_confidence 10–25.
 - « Non mais… » / objection format ou téléphone → should_reply true si rattrapable, recovery_confidence ≥ 75.
-- Opt-out explicite (« non merci », « c'est mort », « stop », « ne plus me contacter ») → should_reply false, recovery_confidence 0 — ne pas confondre avec « non mais ».
+- « Je n'ai pas saisi » / incompréhension → should_reply true, recovery_confidence ≥ 80.
+- Opt-out explicite (« non merci », « c'est mort », « stop », « ne plus me contacter ») → should_reply false, recovery_confidence 0 — ne pas confondre avec « non mais » ou un simple merci après réservation.
 - Tag Interested : recovery_confidence optionnel (ignoré).
 
 Signature :
@@ -370,6 +377,7 @@ export async function generateReplyDecision(params: {
   customDirective?: string;
   interestLabel?: string | null;
   bookingContext?: string | null;
+  threadContext?: string | null;
 }): Promise<{
   decision: GroqReplyDecision;
   model: string;
@@ -400,15 +408,26 @@ export async function generateReplyDecision(params: {
     bookingContext: params.bookingContext,
   });
 
-  const userPrompt = [
+  const threadContext = params.threadContext?.trim();
+  const userPromptParts = [
     `Email du lead : ${params.leadEmail}`,
     `Tag Instantly du lead : ${interestLabel}`,
     "",
     `Lien CTA (utilise exactement cette URL dans reply_text) : ${promptLinks.primary}`,
+  ];
+  if (threadContext) {
+    userPromptParts.push(
+      "",
+      "Historique du fil (du plus ancien au plus récent) :",
+      threadContext,
+    );
+  }
+  userPromptParts.push(
     "",
-    "Réponse entrante à traiter :",
+    "Réponse entrante à traiter (dernier message du prospect) :",
     truncateInboundText(params.inboundText),
-  ].join("\n");
+  );
+  const userPrompt = userPromptParts.join("\n");
 
   try {
     return await callGrokModel(primaryModel, systemPrompt, userPrompt);

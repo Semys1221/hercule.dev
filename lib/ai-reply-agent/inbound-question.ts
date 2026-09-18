@@ -139,6 +139,40 @@ const QUESTION_KEYWORDS = [
   "rejoindre",
 ];
 
+const CONFUSION_KEYWORDS = [
+  "pas saisi",
+  "pas saisie",
+  "pas compris",
+  "n'ai pas compris",
+  "n ai pas compris",
+  "ne comprends pas",
+  "je ne comprends pas",
+  "n'ai pas bien compris",
+  "n ai pas bien compris",
+  "mal compris",
+  "pas clair",
+  "c'est quoi",
+  "c est quoi",
+  "qu'est-ce",
+  "qu est-ce",
+];
+
+const ACKNOWLEDGMENT_KEYWORDS = [
+  "merci",
+  "thanks",
+  "thank you",
+  "parfait",
+  "top",
+  "super",
+  "ok",
+  "d'accord",
+  "d accord",
+  "bien reçu",
+  "bien recu",
+  "noté",
+  "note",
+];
+
 const REQUEST_PHRASES = [
   "je veux",
   "j'ai besoin",
@@ -224,6 +258,27 @@ export function inboundShowsInterest(text: string): boolean {
   return INTEREST_KEYWORDS.some((keyword) => probe.includes(keyword));
 }
 
+/**
+ * True when the inbound contains ONLY a positive interest signal (INTEREST_KEYWORDS)
+ * with NO substantive follow-up content — e.g. a CTA-button click "Mon cabinet est compatible",
+ * "Avec plaisir", "Effectivement", "D'accord".
+ *
+ * These do NOT require an immediate AI reply right after E1 is launched:
+ * the lead will ask questions once they have read E1. Replying immediately creates
+ * a confusing double-send (E1 + AI reply landing in the same delivery batch).
+ */
+export function inboundIsPureInterestSignal(text: string): boolean {
+  if (!inboundShowsInterest(text)) return false;
+  if (inboundLooksLikeQuestion(text)) return false;
+  if (inboundShowsConfusion(text)) return false;
+  if (inboundLooksLikePhoneRequest(text)) return false;
+  if (inboundProvidesPhoneNumber(text)) return false;
+  if (inboundLooksLikeSchedulingAnswer(text)) return false;
+  if (inboundRequestsVerification(text)) return false;
+  if (inboundClaimsBookingDone(text)) return false;
+  return true;
+}
+
 /** Lead states they already booked — do not ask again for confirmation. */
 export function inboundClaimsBookingDone(text: string): boolean {
   const probe = inboundProbe(text);
@@ -231,6 +286,44 @@ export function inboundClaimsBookingDone(text: string): boolean {
     return false;
   }
   return BOOKING_CLAIM_KEYWORDS.some((keyword) => probe.includes(keyword));
+}
+
+/** Lead signals they did not understand the outreach. */
+export function inboundShowsConfusion(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return CONFUSION_KEYWORDS.some((keyword) => probe.includes(keyword));
+}
+
+/** Short thank-you / closure without a new question or objection. */
+export function inboundIsPureAcknowledgment(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+
+  if (probe.includes("?")) {
+    return false;
+  }
+
+  if (
+    inboundLooksLikeQuestion(text) ||
+    inboundShowsConfusion(text) ||
+    inboundLooksLikePhoneRequest(text) ||
+    inboundLooksLikeSchedulingAnswer(text) ||
+    inboundRequestsVerification(text)
+  ) {
+    return false;
+  }
+
+  const firstLine = probe.split("\n")[0]?.trim() ?? probe;
+  if (firstLine.length > 80) {
+    return false;
+  }
+
+  return ACKNOWLEDGMENT_KEYWORDS.some((keyword) => probe.includes(keyword));
 }
 
 /** Lead asks to verify Hercule identity before continuing. */
@@ -268,6 +361,7 @@ export function inboundNeedsFollowUp(text: string): boolean {
     inboundLooksLikeSchedulingAnswer(text) ||
     inboundProvidesPhoneNumber(text) ||
     inboundShowsInterest(text) ||
+    inboundShowsConfusion(text) ||
     inboundRequestsVerification(text)
   );
 }

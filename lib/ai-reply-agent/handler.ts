@@ -2,10 +2,19 @@ import { upsertLeadReply } from "./lead-replies";
 import { isAutoSendEnabled, isCampaignConfigReady, loadAiReplyConfig } from "./config";
 import { isHandledReplyAgentEvent, isOooReplyEvent } from "./events";
 import { generateReplyDecision, interestLabelFromStatus } from "./grok";
-import { inboundNeedsFollowUp } from "./inbound-question";
 import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack, hashKnowledgePack } from "./knowledge";
 import { resolveBookingContext } from "./booking-context";
+import { evaluateConversationGate } from "./conversation-gate";
+import {
+  inboundIsPureAcknowledgment,
+  inboundNeedsFollowUp,
+  inboundShowsConfusion,
+} from "./inbound-question";
+import {
+  fetchThreadMessages,
+  formatThreadForGrok,
+} from "./thread-context";
 import {
   insertInboundMessage,
   insertOutboundMessage,
@@ -317,9 +326,84 @@ export async function handleInstantlyReply(
     };
   }
 
+  const conversationGate = await evaluateConversationGate({
+    campaignId,
+    leadEmail,
+    replyFromEmail,
+    inboundText,
+  });
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "36db50",
+    },
+    body: JSON.stringify({
+      sessionId: "36db50",
+      runId: "pre-fix",
+      hypothesisId: "A-B-D",
+      location: "handler.ts:conversation-gate",
+      message: "inbound signals before grok",
+      data: {
+        needsFollowUp: inboundNeedsFollowUp(inboundText),
+        isPureAcknowledgment: inboundIsPureAcknowledgment(inboundText),
+        showsConfusion: inboundShowsConfusion(inboundText),
+        conversationGateSkip: conversationGate.skip,
+        conversationGateReason: conversationGate.reason,
+        interestStatus,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  if (conversationGate.skip) {
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_unsafe",
+      started,
+      conversationGate.reason,
+    );
+    return {
+      ok: true,
+      skipped: "conversation_closed",
+      aiStatus: "skipped_unsafe",
+      latencyMs,
+    };
+  }
+
   const knowledgePack = buildKnowledgePack(config);
   const knowledgePackHash = hashKnowledgePack(knowledgePack);
   const finalizeExtras = { knowledgePackHash };
+
+  const threadMessages = await fetchThreadMessages({
+    campaignId,
+    leadEmail,
+    preferredEmailId: instantlyEmailId,
+  }).catch(() => []);
+  const threadContext = formatThreadForGrok(threadMessages);
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "36db50",
+    },
+    body: JSON.stringify({
+      sessionId: "36db50",
+      runId: "pre-fix",
+      hypothesisId: "A",
+      location: "handler.ts:thread-context",
+      message: "thread context loaded",
+      data: {
+        threadMessageCount: threadMessages.length,
+        hasThreadContext: Boolean(threadContext),
+        threadPreview: threadContext?.slice(0, 240) ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
 
   let decision;
   let model: string;
@@ -344,8 +428,32 @@ export async function handleInstantlyReply(
       maxSentences,
       interestLabel: interestLabelFromStatus(interestStatus),
       bookingContext,
+      threadContext,
     });
     decision = groq.decision;
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "36db50",
+      },
+      body: JSON.stringify({
+        sessionId: "36db50",
+        runId: "pre-fix",
+        hypothesisId: "C-E",
+        location: "handler.ts:grok-decision",
+        message: "grok reply decision",
+        data: {
+          shouldReply: decision.should_reply,
+          reason: decision.reason,
+          recoveryConfidence: decision.recovery_confidence ?? null,
+          hasBookingContext: Boolean(bookingContext),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     model = groq.model;
     costUsdTicks = groq.costUsdTicks;
     if (costUsdTicks != null) {
@@ -373,6 +481,28 @@ export async function handleInstantlyReply(
   };
 
   const gate = applyReplyGate(interestStatus, decision);
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "36db50",
+    },
+    body: JSON.stringify({
+      sessionId: "36db50",
+      runId: "pre-fix",
+      hypothesisId: "E",
+      location: "handler.ts:reply-gate",
+      message: "reply gate result",
+      data: {
+        allowReply: gate.allowReply,
+        aiStatus: gate.aiStatus,
+        reason: gate.reason,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (!gate.allowReply) {
     const latencyMs = await finalizeInbound(
       inbound.id,

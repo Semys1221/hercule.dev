@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   inboundClaimsBookingDone,
+  inboundIsPureAcknowledgment,
+  inboundIsPureInterestSignal,
   inboundLooksLikePhoneRequest,
   inboundLooksLikeQuestion,
   inboundLooksLikeSchedulingAnswer,
   inboundNeedsFollowUp,
   inboundProvidesPhoneNumber,
   inboundRequestsVerification,
+  inboundShowsConfusion,
   inboundShowsInterest,
 } from "./inbound-question";
 
@@ -132,13 +135,108 @@ describe("inboundRequestsVerification", () => {
   });
 });
 
+describe("inboundShowsConfusion", () => {
+  it("detects je n'ai pas saisi", () => {
+    expect(
+      inboundShowsConfusion(
+        "Je n'ai pas saisi. Nous sommes un bureau d'expertise comptable belge.",
+      ),
+    ).toBe(true);
+  });
+
+  it("returns false for short thanks", () => {
+    expect(inboundShowsConfusion("Top merci")).toBe(false);
+  });
+});
+
+describe("inboundIsPureAcknowledgment", () => {
+  it("detects top merci", () => {
+    expect(inboundIsPureAcknowledgment("Top merci")).toBe(true);
+  });
+
+  it("returns false for confusion messages", () => {
+    expect(
+      inboundIsPureAcknowledgment("Je n'ai pas saisi. Nous sommes un cabinet belge."),
+    ).toBe(false);
+  });
+
+  it("returns false for questions", () => {
+    expect(inboundIsPureAcknowledgment("Merci, pouvez-vous m'envoyer le lien ?")).toBe(
+      false,
+    );
+  });
+});
+
 describe("inboundNeedsFollowUp", () => {
   it("combines actionable signals and ignores short refusals", () => {
     expect(inboundNeedsFollowUp("non")).toBe(false);
+    expect(
+      inboundNeedsFollowUp(
+        "Je n'ai pas saisi. Nous sommes un bureau d'expertise comptable belge.",
+      ),
+    ).toBe(true);
     expect(inboundNeedsFollowUp("Jeudi 15h ou vendredi 16h")).toBe(true);
     expect(
       inboundNeedsFollowUp("Je vous invite à me contacter au 07 80 99 48 70."),
     ).toBe(true);
+  });
+});
+
+describe("inboundIsPureInterestSignal", () => {
+  it("detects CTA click 'Mon cabinet est compatible'", () => {
+    expect(inboundIsPureInterestSignal("Mon cabinet est compatible")).toBe(true);
+  });
+
+  it("detects short soft agreement 'Avec plaisir'", () => {
+    expect(inboundIsPureInterestSignal("Avec plaisir")).toBe(true);
+  });
+
+  it("detects 'Effectivement' alone", () => {
+    expect(inboundIsPureInterestSignal("Effectivement")).toBe(true);
+  });
+
+  it("detects 'd'accord' alone", () => {
+    expect(inboundIsPureInterestSignal("D'accord")).toBe(true);
+  });
+
+  it("returns false when interest is accompanied by a question", () => {
+    expect(
+      inboundIsPureInterestSignal("Avec plaisir, comment cela fonctionne-t-il ?"),
+    ).toBe(false);
+  });
+
+  it("returns false when interest is accompanied by a phone request", () => {
+    expect(
+      inboundIsPureInterestSignal("Je suis intéressé, pouvez-vous m'appeler ?"),
+    ).toBe(false);
+  });
+
+  it("returns false when interest is accompanied by a scheduling answer", () => {
+    expect(
+      inboundIsPureInterestSignal("D'accord, je suis disponible lundi 14h"),
+    ).toBe(false);
+  });
+
+  it("returns false for pure acknowledgment without interest keyword", () => {
+    // "merci" alone is NOT in INTEREST_KEYWORDS
+    expect(inboundIsPureInterestSignal("Merci")).toBe(false);
+  });
+
+  it("returns false for empty text", () => {
+    expect(inboundIsPureInterestSignal("")).toBe(false);
+    expect(inboundIsPureInterestSignal("(empty body)")).toBe(false);
+  });
+
+  it("returns false when text contains no interest keyword", () => {
+    // Refusal without any keyword from INTEREST_KEYWORDS
+    expect(inboundIsPureInterestSignal("Bonjour, nous n'avons pas besoin de ce service.")).toBe(false);
+    expect(inboundIsPureInterestSignal("Non merci.")).toBe(false);
+  });
+
+  it("returns false when booking is claimed", () => {
+    expect(
+      inboundIsPureInterestSignal("D'accord, j'ai réservé un créneau Calendly."),
+    ).toBe(false);
   });
 });
 

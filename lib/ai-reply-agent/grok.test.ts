@@ -49,6 +49,13 @@ describe("buildGlobalRules", () => {
     expect(rules).not.toContain("accuser réception →");
   });
 
+  it("includes conversation thread rules for should_reply", () => {
+    const rules = buildGlobalRules(2);
+    expect(rules).toContain("Contexte fil (historique de conversation)");
+    expect(rules).toContain("je n'ai pas saisi");
+    expect(rules).toContain("top merci");
+  });
+
   it("embeds conference objection rules for comptable and CIF", () => {
     const comptable = buildGlobalRules(3, "cabinets_expertise_comptable");
     const cif = buildGlobalRules(3, "conseillers_gestion_patrimoine");

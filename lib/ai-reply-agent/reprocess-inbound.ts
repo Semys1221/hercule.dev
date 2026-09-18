@@ -23,7 +23,13 @@ import {
 } from "@/lib/instantly-bypass/client";
 import { syncPipelineStepFromSentFlows } from "@/lib/instantly-bypass/sync-pipeline-from-events";
 import { resolveBookingContext } from "./booking-context";
+import { evaluateConversationGate } from "./conversation-gate";
+import {
+  fetchThreadMessages,
+  formatThreadForGrok,
+} from "./thread-context";
 import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
+import { inboundIsPureInterestSignal } from "./inbound-question";
 import { detectOptOut } from "@/lib/lead-relances/opt-out";
 
 import type {
@@ -173,6 +179,36 @@ export async function reprocessInboundForLead(params: {
   }
 
   const inboundText = String(inbound.body_text ?? "").trim() || "(empty body)";
+
+  // [Bug fix — double send] Do NOT reprocess a pure CTA-click interest signal that
+  // was blocked waiting for E1 to be sent.  The inbound ("Mon cabinet est compatible"
+  // and similar) is the same click that triggered Interested → E1.  Answering it
+  // immediately after E1 dispatch creates a confusing double-send where the lead
+  // receives both E1 (with the conference link) and an AI reply in the same batch,
+  // producing either a conference-objection AER that was never requested, or a
+  // redundant booking-confirmation message the lead cannot act on before reading E1.
+  // The lead will naturally ask follow-up questions after reading E1 — those new
+  // inbounds will flow through the normal handler path.
+  if (
+    inbound.ai_status === "skipped_waiting_e1" &&
+    inboundIsPureInterestSignal(inboundText)
+  ) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_unsafe",
+      "Signal d'intérêt pur (clic CTA) bloqué en attente E1 — pas de double envoi avec E1",
+      null,
+      null,
+      Date.now() - started,
+      null,
+    );
+    return {
+      ok: true,
+      skipped: "pure_interest_cta_post_e1",
+      aiStatus: "skipped_unsafe",
+    };
+  }
+
   if (detectOptOut(inboundText)) {
     return { ok: true, skipped: "opt_out" };
   }
@@ -217,9 +253,40 @@ export async function reprocessInboundForLead(params: {
     };
   }
 
+  const conversationGate = await evaluateConversationGate({
+    campaignId,
+    leadEmail,
+    inboundText,
+  });
+  if (conversationGate.skip) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_unsafe",
+      conversationGate.reason,
+      null,
+      null,
+      Date.now() - started,
+      null,
+    );
+    return {
+      ok: true,
+      skipped: "conversation_closed",
+      aiStatus: "skipped_unsafe",
+    };
+  }
+
   const knowledgePack = buildKnowledgePack(config);
   const knowledgePackHash = hashKnowledgePack(knowledgePack);
   const maxSentences = Math.max(1, Math.min(10, config.max_sentences ?? 2));
+  const threadMessages = await fetchThreadMessages({
+    campaignId,
+    leadEmail,
+    preferredEmailId:
+      inbound.reply_to_uuid?.trim() ||
+      inbound.instantly_email_id?.trim() ||
+      undefined,
+  }).catch(() => []);
+  const threadContext = formatThreadForGrok(threadMessages);
   const bookingContext = await resolveBookingContext({
     campaignId,
     inboundText,
@@ -242,6 +309,7 @@ export async function reprocessInboundForLead(params: {
       maxSentences,
       interestLabel: interestLabelFromStatus(interestStatus),
       bookingContext,
+      threadContext,
     });
     decision = groq.decision;
     model = groq.model;

@@ -19,7 +19,7 @@ import {
 } from "./inbound-question";
 import { INTERESTED_STATUS } from "./reply-gate";
 
-async function leadHasUpcomingBooking(
+export async function leadHasUpcomingBooking(
   category: LeadCategory,
   leadEmail: string,
   replyFromEmail?: string | null,
