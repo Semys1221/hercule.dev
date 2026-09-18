@@ -31,10 +31,12 @@ import { stopAllLeadRelances } from "@/lib/lead-relances/stop-all";
 import { syncPipelineStepFromSentFlows } from "@/lib/instantly-bypass/sync-pipeline-from-events";
 import {
   applyReplyGate,
+  INTERESTED_STATUS,
   isRecoveryInterestTag,
   NOT_INTERESTED_STATUS,
   NO_SHOW_STATUS,
 } from "./reply-gate";
+import { ensureInterestedE1IfMissing } from "@/lib/instantly-bypass/ensure-interested-e1";
 
 import type {
   AiReplyMessageStatus,
@@ -337,6 +339,46 @@ export async function handleInstantlyReply(
       aiStatus: "skipped_unsafe",
       latencyMs,
     };
+  }
+
+  if (interestStatus === INTERESTED_STATUS) {
+    const e1Result = await ensureInterestedE1IfMissing({
+      campaignId,
+      leadEmail,
+      emailAccount: payload.email_account?.trim(),
+      firstName: lead?.first_name ?? undefined,
+    }).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[ai-reply-agent] ensure E1 failed for ${leadEmail}:`,
+        message,
+      );
+      return { ok: false as const, error: message };
+    });
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "a791ab",
+      },
+      body: JSON.stringify({
+        sessionId: "a791ab",
+        runId: "interested-reply",
+        hypothesisId: "E1-on-reply",
+        location: "handler.ts:ensure-e1",
+        message: "Ensured E1 on Interested inbound reply",
+        data: {
+          leadEmail,
+          campaignId,
+          e1Ok: e1Result.ok,
+          e1Skipped: "skipped" in e1Result ? e1Result.skipped : null,
+          e1Error: "error" in e1Result ? e1Result.error : null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
   }
 
   const knowledgePack = buildKnowledgePack(config);

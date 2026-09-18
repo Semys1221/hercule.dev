@@ -13,7 +13,7 @@ import type { AiReplyTargetType, GroqReplyDecision } from "./types";
 const GROK_API_URL = "https://api.x.ai/v1/chat/completions";
 const PRIMARY_MODEL = "grok-4-1-fast";
 const FALLBACK_MODEL = "grok-build-0.1";
-const MAX_OUTPUT_TOKENS = 200;
+const MAX_OUTPUT_TOKENS = 320;
 export const DEFAULT_GROK_TEMPERATURE = 0.5;
 
 export function resolveGrokTemperature(): number {
@@ -171,11 +171,37 @@ function isRateLimitError(err: unknown): boolean {
   return text.includes("429") || /rate limit/i.test(text);
 }
 
-function parseGrokJson(content: string): GroqReplyDecision {
-  const trimmed = content.trim();
-  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
-  const raw = jsonMatch ? jsonMatch[0] : trimmed;
-  const parsed = JSON.parse(raw) as Partial<GroqReplyDecision>;
+function isRetryableGrokError(err: unknown): boolean {
+  if (isRateLimitError(err)) {
+    return true;
+  }
+  const text = err instanceof Error ? err.message : String(err);
+  return /json|unterminated string|unexpected token/i.test(text);
+}
+
+function unescapeJsonString(value: string): string {
+  return value
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\r")
+    .replace(/\\t/g, "\t")
+    .replace(/\\"/g, '"')
+    .replace(/\\\\/g, "\\");
+}
+
+function parseRecoveryConfidence(raw: unknown): number | null {
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return Math.max(0, Math.min(100, raw));
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed)) {
+      return Math.max(0, Math.min(100, parsed));
+    }
+  }
+  return null;
+}
+
+function buildGroqDecision(parsed: Partial<GroqReplyDecision>): GroqReplyDecision {
   const shouldReply = Boolean(parsed.should_reply);
   const replyText =
     typeof parsed.reply_text === "string" && parsed.reply_text.trim()
@@ -183,22 +209,85 @@ function parseGrokJson(content: string): GroqReplyDecision {
       : null;
   const reason =
     typeof parsed.reason === "string" ? parsed.reason.trim() : "Aucune raison fournie";
-  let recoveryConfidence: number | null = null;
-  const rawConfidence = parsed.recovery_confidence;
-  if (typeof rawConfidence === "number" && Number.isFinite(rawConfidence)) {
-    recoveryConfidence = Math.max(0, Math.min(100, rawConfidence));
-  } else if (typeof rawConfidence === "string" && rawConfidence.trim()) {
-    const parsedConfidence = Number(rawConfidence);
-    if (Number.isFinite(parsedConfidence)) {
-      recoveryConfidence = Math.max(0, Math.min(100, parsedConfidence));
-    }
-  }
   return {
     should_reply: shouldReply && Boolean(replyText),
     reply_text: shouldReply && replyText ? replyText : null,
     reason,
-    recovery_confidence: recoveryConfidence,
+    recovery_confidence: parseRecoveryConfidence(parsed.recovery_confidence),
   };
+}
+
+function extractJsonStringField(content: string, field: string): string | null {
+  const marker = `"${field}"`;
+  const index = content.indexOf(marker);
+  if (index < 0) {
+    return null;
+  }
+  const colon = content.indexOf(":", index + marker.length);
+  if (colon < 0) {
+    return null;
+  }
+  let cursor = colon + 1;
+  while (cursor < content.length && /\s/.test(content[cursor] ?? "")) {
+    cursor += 1;
+  }
+  if (content[cursor] !== '"') {
+    return null;
+  }
+  cursor += 1;
+
+  let value = "";
+  while (cursor < content.length) {
+    const char = content[cursor] ?? "";
+    if (char === "\\") {
+      const next = content[cursor + 1];
+      if (next) {
+        value += char + next;
+        cursor += 2;
+        continue;
+      }
+    }
+    if (char === '"') {
+      return unescapeJsonString(value);
+    }
+    value += char;
+    cursor += 1;
+  }
+
+  return value.trim() ? unescapeJsonString(value.trim()) : null;
+}
+
+function parseGrokJsonLenient(content: string): GroqReplyDecision {
+  const shouldReplyMatch = content.match(/"should_reply"\s*:\s*(true|false)/i);
+  const shouldReply = shouldReplyMatch?.[1]?.toLowerCase() === "true";
+  const replyText = extractJsonStringField(content, "reply_text");
+  const reason =
+    extractJsonStringField(content, "reason") ?? "Aucune raison fournie (parse partiel)";
+  const confidenceMatch = content.match(
+    /"recovery_confidence"\s*:\s*(\d+(?:\.\d+)?)/,
+  );
+  const recoveryConfidence = confidenceMatch
+    ? parseRecoveryConfidence(Number(confidenceMatch[1]))
+    : null;
+
+  return buildGroqDecision({
+    should_reply: shouldReply,
+    reply_text: replyText,
+    reason,
+    recovery_confidence: recoveryConfidence,
+  });
+}
+
+export function parseGrokJson(content: string): GroqReplyDecision {
+  const trimmed = content.trim();
+  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
+  const raw = jsonMatch ? jsonMatch[0] : trimmed;
+  try {
+    const parsed = JSON.parse(raw) as Partial<GroqReplyDecision>;
+    return buildGroqDecision(parsed);
+  } catch {
+    return parseGrokJsonLenient(raw);
+  }
 }
 
 function parseCostUsdTicks(data: {
@@ -251,8 +340,15 @@ async function callGrokModel(
   if (!content?.trim()) {
     throw new Error(`Grok ${model} returned empty content`);
   }
+  let decision: GroqReplyDecision;
+  try {
+    decision = parseGrokJson(content);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Grok ${model} JSON parse failed: ${message}`);
+  }
   return {
-    decision: parseGrokJson(content),
+    decision,
     model,
     costUsdTicks: parseCostUsdTicks(data),
   };
@@ -315,7 +411,7 @@ export async function generateReplyDecision(params: {
     const primaryMessage =
       primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
     console.warn("[ai-reply-agent] primary Grok model failed:", primaryMessage);
-    if (!fallbackModel || !isRateLimitError(primaryErr)) {
+    if (!fallbackModel || !isRetryableGrokError(primaryErr)) {
       throw primaryErr instanceof Error ? primaryErr : new Error(primaryMessage);
     }
     try {

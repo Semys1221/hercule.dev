@@ -4,6 +4,7 @@ import {
   buildConferenceObjectionRules,
   buildGlobalRules,
   DEFAULT_GROK_TEMPERATURE,
+  parseGrokJson,
   resolveGrokTemperature,
 } from "./grok";
 
@@ -82,5 +83,44 @@ describe("resolveGrokTemperature", () => {
     expect(resolveGrokTemperature()).toBe(1);
     process.env.GROK_TEMPERATURE = "-1";
     expect(resolveGrokTemperature()).toBe(0);
+  });
+});
+
+describe("parseGrokJson", () => {
+  it("parses valid JSON", () => {
+    const result = parseGrokJson(
+      JSON.stringify({
+        should_reply: true,
+        reply_text: "Bonjour,\n\nLien ici.",
+        reason: "Lead intéressé",
+        recovery_confidence: 80,
+      }),
+    );
+    expect(result.should_reply).toBe(true);
+    expect(result.reply_text).toContain("Bonjour");
+    expect(result.recovery_confidence).toBe(80);
+  });
+
+  it("recovers truncated reply_text from malformed JSON", () => {
+    const malformed = `{
+  "should_reply": true,
+  "reply_text": "Je comprends votre demande. Hercule est la dénomination commerciale de notre structure. Voici le lien pour réserver :
+`;
+    const result = parseGrokJson(malformed);
+    expect(result.should_reply).toBe(true);
+    expect(result.reply_text).toContain("Hercule est la dénomination commerciale");
+  });
+
+  it("extracts reason when reply_text is truncated before reason field", () => {
+    const malformed = `{
+  "should_reply": false,
+  "reply_text": null,
+  "reason": "Hors périmètre connaissance",
+  "recovery_confidence": 15
+}`;
+    const result = parseGrokJson(malformed);
+    expect(result.should_reply).toBe(false);
+    expect(result.reason).toContain("Hors périmètre");
+    expect(result.recovery_confidence).toBe(15);
   });
 });

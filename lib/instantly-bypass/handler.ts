@@ -13,6 +13,8 @@ import { ensureCampaignLeadLinks } from "@/lib/link-tracking/provision-campaign-
 import { readReservationLink, templateRequiresReservationLink } from "./reservation-links";
 import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate } from "./templates";
 
+import { reprocessInboundForLead } from "@/lib/ai-reply-agent/reprocess-inbound";
+
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
 
 function debugLog(
@@ -41,6 +43,49 @@ function debugLog(
   // #endregion
 }
 
+async function triggerReplyReprocessAfterInterested(
+  campaignId: string,
+  leadEmail: string,
+  e1Outcome?: string,
+): Promise<void> {
+  const replyReprocess = await reprocessInboundForLead({ campaignId, leadEmail }).catch(
+    (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[instantly-bypass] reply reprocess failed for ${leadEmail}:`,
+        message,
+      );
+      return { ok: false as const, error: message };
+    },
+  );
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "3903b6",
+    },
+    body: JSON.stringify({
+      sessionId: "3903b6",
+      runId: "post-fix",
+      hypothesisId: "A,B",
+      location: "lib/instantly-bypass/handler.ts:reply-reprocess",
+      message: "Reply reprocess after lead_interested",
+      data: {
+        campaignId,
+        leadEmail,
+        e1Outcome: e1Outcome ?? null,
+        replySkipped: "skipped" in replyReprocess ? replyReprocess.skipped : null,
+        replyAiStatus: "aiStatus" in replyReprocess ? replyReprocess.aiStatus : null,
+        replyError: "error" in replyReprocess ? replyReprocess.error : null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+}
+
 async function recordSkippedInterested(
   params: {
     idempotencyKey: string;
@@ -63,6 +108,7 @@ async function recordSkippedInterested(
 
 export async function handleLeadInterested(
   payload: InstantlyWebhookPayload,
+  options?: { skipReplyReprocess?: boolean },
 ): Promise<HandleInterestedResult> {
   const campaignId = payload.campaign_id?.trim();
   const leadEmail = payload.lead_email?.trim().toLowerCase();
@@ -124,6 +170,9 @@ export async function handleLeadInterested(
       { campaignId, leadEmail },
       "E",
     );
+    if (!options?.skipReplyReprocess) {
+      await triggerReplyReprocessAfterInterested(campaignId, leadEmail, "already_sent");
+    }
     return { ok: true, skipped: "already_sent" };
   }
 
@@ -189,6 +238,13 @@ export async function handleLeadInterested(
         errorMessage: "E1 already present in Unibox thread",
       });
       await upsertPipelineStep(campaignId, leadEmail, "step_1");
+      if (!options?.skipReplyReprocess) {
+        await triggerReplyReprocessAfterInterested(
+          campaignId,
+          leadEmail,
+          "e1_already_in_thread",
+        );
+      }
       return { ok: true, skipped: "e1_already_in_thread" };
     }
 
@@ -255,6 +311,10 @@ export async function handleLeadInterested(
       }),
     }).catch(() => {});
     // #endregion
+
+    if (!options?.skipReplyReprocess) {
+      await triggerReplyReprocessAfterInterested(campaignId, leadEmail, dispatch.outcome);
+    }
 
     if (dispatch.outcome === "sent") {
       return {
