@@ -195,6 +195,17 @@ export async function startComptableAcquisitionSequence(
   }).catch(() => {});
   // #endregion
 
+  const { syncClientSequenceStarted } = await import(
+    "@/lib/admin/management/recipients/hooks"
+  );
+  syncClientSequenceStarted({
+    niche: "comptable",
+    leadEmail: typedLead.email,
+    leadId: params.leadId,
+    sequenceSlug: "comptable-acquisition-post-payment",
+    currentStep: "comptable_acquisition_welcome",
+  });
+
   return {
     welcomeSent: welcome.ok,
     scheduledJobs: inserted,

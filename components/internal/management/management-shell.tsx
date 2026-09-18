@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { ManagementEnrollDialog } from "@/components/internal/management/management-enroll-dialog";
+import { ManagementKanbanBoard } from "@/components/internal/management/management-kanban-board";
 import { ManagementRecipientSheet } from "@/components/internal/management/management-recipient-sheet";
 import { ManagementRecipientsTable } from "@/components/internal/management/management-recipients-table";
 import { ManagementStatusBoard } from "@/components/internal/management/management-status-board";
@@ -12,6 +14,7 @@ import { MANAGEMENT_PHASE_LABELS } from "@/lib/admin/management/recipients/statu
 import type {
   EmailSequenceRecipient,
   ManagementPhase,
+  RecipientListRow,
   RecipientStatus,
   RecipientStatusCounts,
 } from "@/lib/admin/management/recipients/types";
@@ -26,18 +29,22 @@ const EMPTY_COUNTS: RecipientStatusCounts = {
   failed: 0,
 };
 
+type ViewMode = "table" | "kanban-status" | "kanban-phase";
+
 type ManagementShellProps = {
   niche: Niche;
 };
 
 export function ManagementShell({ niche }: ManagementShellProps) {
+  const searchParams = useSearchParams();
   const [phase, setPhase] = useState<ManagementPhase>("outreach");
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [statusFilter, setStatusFilter] = useState<RecipientStatus | null>(null);
-  const [rows, setRows] = useState<EmailSequenceRecipient[]>([]);
+  const [rows, setRows] = useState<RecipientListRow[]>([]);
   const [counts, setCounts] = useState<RecipientStatusCounts>(EMPTY_COUNTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<EmailSequenceRecipient | null>(null);
+  const [selected, setSelected] = useState<RecipientListRow | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const loadRows = useCallback(async () => {
@@ -50,7 +57,7 @@ export function ManagementShell({ niche }: ManagementShellProps) {
       }
       const response = await fetch(`/api/admin/management/recipients?${params}`);
       const body = (await response.json()) as {
-        recipients?: EmailSequenceRecipient[];
+        recipients?: RecipientListRow[];
         counts?: RecipientStatusCounts;
         error?: string;
       };
@@ -71,6 +78,21 @@ export function ManagementShell({ niche }: ManagementShellProps) {
   useEffect(() => {
     void loadRows();
   }, [loadRows]);
+
+  useEffect(() => {
+    const recipientId = searchParams.get("recipient");
+    if (!recipientId || rows.length === 0) return;
+    const match = rows.find((row) => row.id === recipientId);
+    if (match) {
+      setSelected(match);
+      setSheetOpen(true);
+    }
+  }, [searchParams, rows]);
+
+  function handleRowClick(row: EmailSequenceRecipient) {
+    setSelected(row as RecipientListRow);
+    setSheetOpen(true);
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,6 +116,16 @@ export function ManagementShell({ niche }: ManagementShellProps) {
             ))}
           </TabsList>
           <div className="flex flex-wrap items-center gap-2">
+            <Tabs
+              value={viewMode}
+              onValueChange={(value) => setViewMode(value as ViewMode)}
+            >
+              <TabsList>
+                <TabsTrigger value="table">Table</TabsTrigger>
+                <TabsTrigger value="kanban-status">Kanban statuts</TabsTrigger>
+                <TabsTrigger value="kanban-phase">Kanban phases</TabsTrigger>
+              </TabsList>
+            </Tabs>
             <Button variant="outline" onClick={() => void loadRows()}>
               Rafraîchir
             </Button>
@@ -103,15 +135,22 @@ export function ManagementShell({ niche }: ManagementShellProps) {
 
         {(Object.keys(MANAGEMENT_PHASE_LABELS) as ManagementPhase[]).map((tabPhase) => (
           <TabsContent key={tabPhase} value={tabPhase} className="mt-0">
-            <ManagementRecipientsTable
-              rows={rows}
-              loading={loading}
-              error={error}
-              onRowClick={(row) => {
-                setSelected(row);
-                setSheetOpen(true);
-              }}
-            />
+            {viewMode === "table" ? (
+              <ManagementRecipientsTable
+                rows={rows}
+                loading={loading}
+                error={error}
+                onRowClick={handleRowClick}
+              />
+            ) : (
+              <ManagementKanbanBoard
+                niche={niche}
+                rows={rows}
+                view={viewMode === "kanban-status" ? "status" : "phase"}
+                onRowClick={handleRowClick}
+                onUpdated={loadRows}
+              />
+            )}
           </TabsContent>
         ))}
       </Tabs>

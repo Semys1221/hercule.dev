@@ -55,6 +55,16 @@ export async function startNoShowSequence(
   await dispatchDueJobsForLead(lead.id);
 
   if (inserted > 0) {
+    const { syncClientSequenceStarted } = await import(
+      "@/lib/admin/management/recipients/hooks"
+    );
+    syncClientSequenceStarted({
+      niche: category,
+      leadEmail: lead.email,
+      leadId: lead.id,
+      sequenceSlug: "sales-call-no-show",
+      currentStep: "no_show_indecis_1",
+    });
     return { started: true, dispatched: true };
   }
 

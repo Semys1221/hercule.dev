@@ -105,6 +105,18 @@ export async function rescheduleJobsForRecipient(
   return false;
 }
 
+export async function resumeJobsForRecipient(
+  recipient: EmailSequenceRecipient,
+): Promise<boolean> {
+  const scheduledAt = recipient.scheduled_at
+    ? new Date(recipient.scheduled_at)
+    : new Date();
+  if (Number.isNaN(scheduledAt.getTime())) {
+    return rescheduleJobsForRecipient(recipient, new Date());
+  }
+  return rescheduleJobsForRecipient(recipient, scheduledAt);
+}
+
 export async function resolveCampaignIdForNiche(niche: Niche): Promise<string | null> {
   const { getOutreachConfigView } = await import("@/lib/admin/niches/outreach-config");
   const config = await getOutreachConfigView(niche);

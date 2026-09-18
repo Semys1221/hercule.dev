@@ -101,6 +101,29 @@ export async function markJobSent(
   if (error) {
     throw new Error(`Failed to mark job sent: ${error.message}`);
   }
+
+  const { data: job } = await client
+    .from("booking_email_jobs")
+    .select("lead_id, lead_category, email_type")
+    .eq("id", jobId)
+    .maybeSingle();
+
+  if (job?.lead_id) {
+    const { data: lead } = await client
+      .from(String(job.lead_category))
+      .select("email")
+      .eq("id", job.lead_id)
+      .maybeSingle();
+    if (lead?.email) {
+      const { syncBookingJobSent } = await import("@/lib/admin/management/recipients/hooks");
+      syncBookingJobSent({
+        leadEmail: String(lead.email),
+        niche: job.lead_category as LeadCategory,
+        emailType: String(job.email_type),
+        leadId: String(job.lead_id),
+      });
+    }
+  }
 }
 
 export async function markJobEngagement(

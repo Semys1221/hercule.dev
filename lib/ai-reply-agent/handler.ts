@@ -4,8 +4,8 @@ import { isHandledReplyAgentEvent, isOooReplyEvent } from "./events";
 import { generateReplyDecision, interestLabelFromStatus } from "./grok";
 import {
   inboundLooksLikePhoneRequest,
-  inboundLooksLikeQuestion,
   inboundLooksLikeSchedulingAnswer,
+  inboundNeedsFollowUp,
 } from "./inbound-question";
 import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack, hashKnowledgePack } from "./knowledge";
@@ -216,8 +216,32 @@ export async function handleInstantlyReply(
   }
 
   const recentCollision = await hasRecentHerculeCollision({ campaignId, leadEmail });
-  const looksLikeQuestion = inboundLooksLikeQuestion(inboundText);
-  if (recentCollision && !looksLikeQuestion) {
+  const needsFollowUp = inboundNeedsFollowUp(inboundText);
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "eb88d5",
+    },
+    body: JSON.stringify({
+      sessionId: "eb88d5",
+      runId: "pre-fix",
+      hypothesisId: "collision-bypass",
+      location: "handler.ts:collision-guard",
+      message: "collision guard decision",
+      data: {
+        campaignId,
+        leadEmail,
+        recentCollision,
+        needsFollowUp,
+        inboundPreview: inboundText.slice(0, 120),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
+  if (recentCollision && !needsFollowUp) {
     const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_collision",

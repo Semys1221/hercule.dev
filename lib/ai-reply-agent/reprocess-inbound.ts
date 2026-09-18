@@ -30,7 +30,6 @@ import {
 import { resolveCategoryForCampaign } from "@/lib/link-tracking/provision-campaign-lead";
 import {
   inboundLooksLikePhoneRequest,
-  inboundLooksLikeQuestion,
   inboundLooksLikeSchedulingAnswer,
 } from "./inbound-question";
 import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
@@ -46,6 +45,7 @@ const REPROCESSABLE_STATUSES = new Set<AiReplyMessageStatus>([
   "skipped_not_interested",
   "skipped_recovery",
   "skipped_unsafe",
+  "skipped_collision",
 ]);
 
 const SKIP_REPROCESS_REASONS = new Set([
@@ -170,10 +170,7 @@ async function findReprocessCandidate(
       }
       continue;
     }
-    const isCollisionQuestion =
-      status === "skipped_collision" &&
-      inboundLooksLikeQuestion(String(row.body_text ?? ""));
-    if (!REPROCESSABLE_STATUSES.has(status) && !isCollisionQuestion) {
+    if (!REPROCESSABLE_STATUSES.has(status)) {
       continue;
     }
     if (SKIP_REPROCESS_REASONS.has(reason)) {

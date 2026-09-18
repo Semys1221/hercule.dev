@@ -201,6 +201,13 @@ export async function bookLeadFromCalendly(
     await cancelConferenceInviteJobs(lookup.lead.id);
   }
 
+  const { syncCalendlyBooked } = await import("@/lib/admin/management/recipients/hooks");
+  syncCalendlyBooked({
+    niche: lookup.category,
+    leadEmail: lookup.lead.email,
+    leadId: lookup.lead.id,
+  });
+
   return {
     ok: true,
     updated: true,

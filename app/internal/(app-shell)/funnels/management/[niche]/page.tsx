@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { ManagementShell } from "@/components/internal/management/management-shell";
 import { NicheSwitcher } from "@/components/internal/funnels/niche-switcher";
@@ -28,7 +29,9 @@ export default async function ManagementNichePage({
       <div className="mb-6">
         <NicheSwitcher />
       </div>
-      <ManagementShell niche={niche} />
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+        <ManagementShell niche={niche} />
+      </Suspense>
     </main>
   );
 }

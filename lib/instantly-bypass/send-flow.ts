@@ -210,6 +210,10 @@ export async function executeBypassFlow(
   const nextStep = STEP_AFTER_FLOW[flow];
   if (nextStep && !params.skipPipelineAdvance) {
     await upsertPipelineStep(campaignId, leadEmail, nextStep);
+    const { syncBypassFlowAdvanced } = await import(
+      "@/lib/admin/management/recipients/hooks"
+    );
+    syncBypassFlowAdvanced({ campaignId, leadEmail, flow });
   }
 
   await recordBypassEvent({

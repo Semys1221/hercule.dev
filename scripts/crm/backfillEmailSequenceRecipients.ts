@@ -5,15 +5,16 @@
  *   pnpm exec tsx --env-file=.env ./scripts/crm/backfillEmailSequenceRecipients.ts -- --dry-run
  */
 
-import { backfillRecipientsForNiche } from "@/lib/admin/management/recipients/sync";
+import { backfillAllNiches } from "@/lib/admin/management/recipients/sync";
 
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
-  const niches = ["comptable", "cif"] as const;
+  const results = await backfillAllNiches(dryRun);
 
-  for (const niche of niches) {
-    const result = await backfillRecipientsForNiche(niche, dryRun);
-    console.log(`${niche}: inserted=${result.inserted} skipped=${result.skipped}${dryRun ? " (dry-run)" : ""}`);
+  for (const [niche, result] of Object.entries(results)) {
+    console.log(
+      `${niche}: inserted=${result.inserted} updated=${result.updated} skipped=${result.skipped}${dryRun ? " (dry-run)" : ""}`,
+    );
   }
 }
 

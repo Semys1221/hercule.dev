@@ -9,7 +9,11 @@ import {
   RECIPIENT_STATUS_LABELS,
   statusBadgeVariant,
 } from "@/lib/admin/management/recipients/status-labels";
-import type { EmailSequenceRecipient } from "@/lib/admin/management/recipients/types";
+import type {
+  EmailSequenceRecipient,
+  RecipientListRow,
+} from "@/lib/admin/management/recipients/types";
+import Link from "next/link";
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -21,7 +25,7 @@ function formatDate(value: string | null): string {
   });
 }
 
-const columns: ColumnDef<EmailSequenceRecipient>[] = [
+const columns: ColumnDef<RecipientListRow>[] = [
   {
     accessorKey: "lead_email",
     header: "Email",
@@ -62,10 +66,26 @@ const columns: ColumnDef<EmailSequenceRecipient>[] = [
     header: "Planifié",
     cell: ({ row }) => formatDate(row.original.scheduled_at),
   },
+  {
+    id: "cockpit",
+    header: "Cockpit",
+    cell: ({ row }) =>
+      row.original.cockpit_href ? (
+        <Link
+          href={row.original.cockpit_href}
+          className="text-sm text-primary hover:underline"
+          onClick={(event) => event.stopPropagation()}
+        >
+          Ouvrir
+        </Link>
+      ) : (
+        "—"
+      ),
+  },
 ];
 
 type ManagementRecipientsTableProps = {
-  rows: EmailSequenceRecipient[];
+  rows: RecipientListRow[];
   loading?: boolean;
   error?: string | null;
   onRowClick?: (row: EmailSequenceRecipient) => void;

@@ -68,7 +68,7 @@
     "test-comptable-not-paid-milestones": "tsx ./lib/dashboard/comptable-not-paid-milestones.test.ts",
     "smoke-product-email-render": "tsx ./scripts/crm/smokeProductEmailRender.ts",
     "test-booking-email-resolve": "tsx ./lib/booking-communication/resolve-template.test.ts",
-    "test-management-recipients": "tsx ./lib/admin/management/recipients/phase-map.test.ts && tsx ./lib/admin/management/recipients/actions/start.test.ts",
+    "test-management-recipients": "tsx ./lib/admin/management/recipients/phase-map.test.ts && tsx ./lib/admin/management/recipients/actions/start.test.ts && tsx ./lib/admin/management/recipients/live-sync.test.ts && tsx ./lib/admin/management/recipients/transitions.test.ts && tsx ./lib/admin/management/recipients/cockpit-link.test.ts",
     "backfill-email-sequence-recipients": "tsx --env-file=.env ./scripts/crm/backfillEmailSequenceRecipients.ts",
     "test-booking-send-window": "tsx ./lib/booking-communication/send-window.test.ts",
     "test-booking-confirmation-disabled": "tsx ./lib/booking-communication/confirmation-disabled.test.ts",

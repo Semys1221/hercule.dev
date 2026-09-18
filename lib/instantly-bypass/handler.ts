@@ -232,6 +232,14 @@ export async function handleLeadInterested(
     }
 
     if (dispatch.outcome === "sent") {
+      const { syncInterestedEnrolled } = await import(
+        "@/lib/admin/management/recipients/hooks"
+      );
+      syncInterestedEnrolled({
+        campaignId,
+        leadEmail,
+        currentStep: "interested_email1",
+      });
       return {
         ok: true,
         latencyMs: dispatch.latencyMs,

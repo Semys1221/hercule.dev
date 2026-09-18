@@ -49,7 +49,7 @@ export async function startSequenceForBookedLead(params: {
 
   if (kind === "recovery") {
     const schedule = planRecoveryByMeetingWeekday(lead.scheduled_at);
-    return startRoleRecoverySequence({
+    const result = await startRoleRecoverySequence({
       category,
       lead,
       triggeredBy,
@@ -58,7 +58,30 @@ export async function startSequenceForBookedLead(params: {
         roleSeq24: schedule.roleSeq24,
       },
     });
+    const { syncBookingSequenceStarted } = await import(
+      "@/lib/admin/management/recipients/hooks"
+    );
+    syncBookingSequenceStarted({
+      niche: category,
+      leadEmail: lead.email,
+      leadId: lead.id,
+      sequenceSlug: "role-recovery",
+    });
+    return result;
   }
 
-  return startBookingSequence({ category, lead, triggeredBy });
+  const result = await startBookingSequence({ category, lead, triggeredBy });
+  const { meetingSequenceSlugForNiche } = await import(
+    "@/lib/admin/email-sequences/registry"
+  );
+  const { syncBookingSequenceStarted } = await import(
+    "@/lib/admin/management/recipients/hooks"
+  );
+  syncBookingSequenceStarted({
+    niche: category,
+    leadEmail: lead.email,
+    leadId: lead.id,
+    sequenceSlug: meetingSequenceSlugForNiche(category),
+  });
+  return result;
 }

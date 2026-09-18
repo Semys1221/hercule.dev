@@ -3,13 +3,14 @@ import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
 import type { Niche } from "@/lib/admin/navigation";
 import { getOutreachConfigView } from "@/lib/admin/niches/outreach-config";
 
+import { enrollRecipient } from "./live-sync";
 import { phaseForSequenceSlug, providerForSlug } from "./phase-map";
-import { upsertRecipientRow } from "./queries";
+import { findActiveRecipient } from "./queries";
 import type { RecipientStatus } from "./types";
 
 const TERMINAL_PIPELINE_STEPS = new Set(["step_4", "closed", "done"]);
 
-function slugFromBookingEmailTypes(emailTypes: string[]): string | null {
+export function slugFromBookingEmailTypes(emailTypes: string[]): string | null {
   const typeSet = new Set(emailTypes);
   if (CONFERENCE_INVITE_JOB_TYPES.some((type) => typeSet.has(type))) {
     return "cif-conference-invite";
@@ -29,12 +30,57 @@ function slugFromBookingEmailTypes(emailTypes: string[]): string | null {
   return null;
 }
 
+async function upsertFromBackfill(params: {
+  leadEmail: string;
+  leadId: string | null;
+  niche: Niche;
+  sequenceSlug: string;
+  status: RecipientStatus;
+  campaignId: string | null;
+  currentStep: string | null;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  metadata: Record<string, unknown>;
+  dryRun: boolean;
+}): Promise<"inserted" | "updated" | "skipped"> {
+  if (params.dryRun) {
+    return "inserted";
+  }
+
+  const phase = phaseForSequenceSlug(params.sequenceSlug);
+  const provider = providerForSlug(params.sequenceSlug);
+  if (!phase || !provider) {
+    return "skipped";
+  }
+
+  const existing = await findActiveRecipient({
+    leadEmail: params.leadEmail,
+    niche: params.niche,
+    sequenceSlug: params.sequenceSlug,
+  });
+
+  await enrollRecipient({
+    leadEmail: params.leadEmail,
+    niche: params.niche,
+    sequenceSlug: params.sequenceSlug,
+    leadId: params.leadId,
+    campaignId: params.campaignId,
+    status: params.status,
+    currentStep: params.currentStep,
+    scheduledAt: params.scheduledAt,
+    metadata: { ...params.metadata, backfill: true },
+  });
+
+  return existing ? "updated" : "inserted";
+}
+
 export async function backfillRecipientsForNiche(
   niche: Niche,
   dryRun = false,
-): Promise<{ inserted: number; skipped: number }> {
+): Promise<{ inserted: number; updated: number; skipped: number }> {
   const client = createLinkTrackingClient();
   let inserted = 0;
+  let updated = 0;
   let skipped = 0;
 
   const outreachConfig = await getOutreachConfigView(niche);
@@ -59,28 +105,22 @@ export async function backfillRecipientsForNiche(
         skipped += 1;
         continue;
       }
-      if (dryRun) {
-        inserted += 1;
-        continue;
-      }
-      await upsertRecipientRow({
-        lead_email: String(row.lead_email).trim().toLowerCase(),
-        lead_id: null,
-        lead_category: niche,
-        phase,
-        sequence_slug: slug,
-        provider,
+      const result = await upsertFromBackfill({
+        leadEmail: String(row.lead_email).trim().toLowerCase(),
+        leadId: null,
+        niche,
+        sequenceSlug: slug,
         status: "active",
-        campaign_id: String(row.campaign_id),
-        current_step: step,
-        scheduled_at: null,
-        started_at: new Date().toISOString(),
-        paused_at: null,
-        completed_at: null,
-        stopped_reason: null,
-        metadata: { backfill: "instantly_bypass_pipeline" },
+        campaignId: String(row.campaign_id),
+        currentStep: step,
+        scheduledAt: null,
+        startedAt: new Date().toISOString(),
+        metadata: { source: "instantly_bypass_pipeline" },
+        dryRun,
       });
-      inserted += 1;
+      if (result === "inserted") inserted += 1;
+      else if (result === "updated") updated += 1;
+      else skipped += 1;
     }
   }
 
@@ -120,30 +160,59 @@ export async function backfillRecipientsForNiche(
       continue;
     }
 
-    if (dryRun) {
-      inserted += 1;
-      continue;
-    }
-
-    await upsertRecipientRow({
-      lead_email: String(lead.email).trim().toLowerCase(),
-      lead_id: leadId,
-      lead_category: niche,
-      phase,
-      sequence_slug: slug,
-      provider,
-      status: "scheduled" as RecipientStatus,
-      campaign_id: null,
-      current_step: types[0] ?? null,
-      scheduled_at: scheduled,
-      started_at: null,
-      paused_at: null,
-      completed_at: null,
-      stopped_reason: null,
-      metadata: { backfill: "booking_email_jobs" },
+    const result = await upsertFromBackfill({
+      leadEmail: String(lead.email).trim().toLowerCase(),
+      leadId,
+      niche,
+      sequenceSlug: slug,
+      status: "scheduled",
+      campaignId: null,
+      currentStep: types[0] ?? null,
+      scheduledAt: scheduled,
+      startedAt: null,
+      metadata: { source: "booking_email_jobs" },
+      dryRun,
     });
-    inserted += 1;
+    if (result === "inserted") inserted += 1;
+    else if (result === "updated") updated += 1;
+    else skipped += 1;
   }
 
-  return { inserted, skipped };
+  const { data: replyPipelines } = await client
+    .from("instantly_bypass_pipeline")
+    .select("lead_email, step, campaign_id")
+    .eq("step", "replies_to_handle");
+
+  for (const row of replyPipelines ?? []) {
+    const slug = "reply-agent";
+    const result = await upsertFromBackfill({
+      leadEmail: String(row.lead_email).trim().toLowerCase(),
+      leadId: null,
+      niche,
+      sequenceSlug: slug,
+      status: "active",
+      campaignId: String(row.campaign_id),
+      currentStep: String(row.step),
+      scheduledAt: null,
+      startedAt: new Date().toISOString(),
+      metadata: { source: "reply_agent_pipeline" },
+      dryRun,
+    });
+    if (result === "inserted") inserted += 1;
+    else if (result === "updated") updated += 1;
+    else skipped += 1;
+  }
+
+  return { inserted, updated, skipped };
+}
+
+export async function backfillAllNiches(dryRun = false): Promise<
+  Record<string, { inserted: number; updated: number; skipped: number }>
+> {
+  const { ALL_NICHES } = await import("@/lib/admin/navigation");
+  const results: Record<string, { inserted: number; updated: number; skipped: number }> = {};
+  for (const niche of ALL_NICHES) {
+    results[niche] = await backfillRecipientsForNiche(niche, dryRun);
+  }
+  return results;
 }

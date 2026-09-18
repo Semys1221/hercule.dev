@@ -99,5 +99,10 @@ export async function stopAllLeadRelances(params: {
     result.instantlyTagged = true;
   }
 
+  if (!dryRun) {
+    const { syncStopAllForEmail } = await import("@/lib/admin/management/recipients/hooks");
+    syncStopAllForEmail(leadEmail, params.reason);
+  }
+
   return result;
 }

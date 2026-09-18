@@ -131,6 +131,8 @@ async function closePipelineLead(params: {
 
   const dispatchedAt = new Date();
   await upsertPipelineStep(campaignId, leadEmail, "step_4");
+  const { syncPipelineClosed } = await import("@/lib/admin/management/recipients/hooks");
+  syncPipelineClosed({ campaignId, leadEmail });
   await recordBypassEvent({
     idempotencyKey,
     flow: "pipeline_close",
@@ -226,6 +228,14 @@ async function processLead(params: {
       return "replied";
     }
     await upsertPipelineStep(campaignId, leadEmail, "replies_to_handle");
+    const { syncReplyAgentPipeline } = await import(
+      "@/lib/admin/management/recipients/hooks"
+    );
+    syncReplyAgentPipeline({
+      campaignId,
+      leadEmail,
+      currentStep: "replies_to_handle",
+    });
     return "replied";
   }
 

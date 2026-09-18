@@ -63,6 +63,12 @@ export async function POST(request: Request) {
     const confirmed = await markLeadConfirmed(client, lookup);
     await cancelFollowUpJobs(confirmed.lead.id);
 
+    const { syncLeadConfirmed } = await import("@/lib/admin/management/recipients/hooks");
+    syncLeadConfirmed({
+      niche: confirmed.category,
+      leadEmail: confirmed.lead.email,
+    });
+
     try {
       await syncLeadConfirmedToInstantly(confirmed.lead, confirmed.category);
       await markInstantlyConfirmedSynced(

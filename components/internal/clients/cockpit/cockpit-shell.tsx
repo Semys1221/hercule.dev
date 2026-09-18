@@ -19,6 +19,7 @@ import { CockpitHeaderActions } from "./cockpit-header-actions";
 import { CockpitMatchPanel } from "./cockpit-match-panel";
 import { CockpitOverview } from "./cockpit-overview";
 import { CockpitPaymentLink } from "./cockpit-payment-link";
+import { CockpitSequencesPanel } from "./cockpit-sequences-panel";
 import { CockpitTimelineEditor } from "./cockpit-timeline-editor";
 
 type ClientCockpitProps = {
@@ -65,6 +66,7 @@ export function ClientCockpit({ initial }: ClientCockpitProps) {
             </>
           ) : null}
           <TabsTrigger value="email">Email</TabsTrigger>
+          <TabsTrigger value="sequences">Séquences</TabsTrigger>
         </TabsList>
         <TabsContent value="etat" className="mt-6">
           <CockpitOverview data={data} />
@@ -93,6 +95,9 @@ export function ClientCockpit({ initial }: ClientCockpitProps) {
         ) : null}
         <TabsContent value="email" className="mt-6">
           <CockpitEmailPanel data={data} />
+        </TabsContent>
+        <TabsContent value="sequences" className="mt-6">
+          <CockpitSequencesPanel data={data} />
         </TabsContent>
       </Tabs>
     </main>

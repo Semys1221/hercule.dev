@@ -38,6 +38,7 @@ export async function GET(request: Request) {
       niche: niche as Niche,
       phase: parsePhase(searchParams.get("phase")),
       status: parseStatus(searchParams.get("status")),
+      leadEmail: searchParams.get("leadEmail") ?? undefined,
     });
     return NextResponse.json(result);
   } catch (error) {

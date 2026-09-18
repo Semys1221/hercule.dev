@@ -68,6 +68,7 @@ export const databaseActorSchema = z.enum([
   "webhook",
   "cron",
   "public",
+  "scripts",
 ]);
 
 export const databaseStatusSchema = z.enum(["migrated", "planned"]);

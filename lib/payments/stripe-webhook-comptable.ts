@@ -213,6 +213,19 @@ export async function handleComptableCheckoutCompleted(
     );
   }
 
+  const { data: leadRow } = await client
+    .from(ownerTable(owner))
+    .select("email")
+    .eq("id", leadId)
+    .maybeSingle();
+  if (leadRow?.email) {
+    const { syncStripePaymentStops } = await import("@/lib/admin/management/recipients/hooks");
+    syncStripePaymentStops({
+      niche: owner === "cif" ? "cif" : owner,
+      leadEmail: String(leadRow.email),
+    });
+  }
+
   return true;
 }
 

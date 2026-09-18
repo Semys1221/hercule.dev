@@ -65,6 +65,12 @@ async function handleInviteeCanceled(payload: unknown) {
     console.error("[link-tracking/calendly] Instantly not-booked sync:", err);
   }
 
+  const { syncCalendlyCancelled } = await import("@/lib/admin/management/recipients/hooks");
+  syncCalendlyCancelled({
+    niche: reset.category,
+    leadEmail: reset.lead.email,
+  });
+
   return NextResponse.json({ ok: true, statut: "NOTBOOKED" });
 }
 

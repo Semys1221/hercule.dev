@@ -220,6 +220,14 @@ export async function activateAfterRetraction(params: {
         "@/lib/onboarding-sequence/orchestrator"
       );
       await startOnboardingSequence(params.category, params.leadId);
+      const { syncOnboardingStarted } = await import(
+        "@/lib/admin/management/recipients/hooks"
+      );
+      syncOnboardingStarted({
+        niche: params.category,
+        leadEmail: lead.email,
+        leadId: params.leadId,
+      });
     } catch (sequenceError) {
       console.error(
         "[retraction/activate] onboarding sequence failed:",

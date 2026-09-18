@@ -38,10 +38,17 @@ export type ListRecipientsParams = {
   niche: Niche;
   phase?: ManagementPhase;
   status?: RecipientStatus;
+  leadEmail?: string;
   limit?: number;
 };
 
+export type RecipientListRow = EmailSequenceRecipient & {
+  slug?: string | null;
+  cockpit_href?: string | null;
+  sequence_name?: string | null;
+};
+
 export type ListRecipientsResult = {
-  recipients: EmailSequenceRecipient[];
+  recipients: RecipientListRow[];
   counts: RecipientStatusCounts;
 };

@@ -108,6 +108,14 @@ async function handleAgenceCheckoutCompleted(
       .single();
 
     if (agenceLead) {
+      const { syncStripePaymentStops } = await import(
+        "@/lib/admin/management/recipients/hooks"
+      );
+      syncStripePaymentStops({
+        niche: "agence",
+        leadEmail: agenceLead.email,
+      });
+
       const emailType = "product_payment_welcome" as const;
       const idempotencyKey = `payment:welcome:${agenceId}`;
       const dashboardLink =

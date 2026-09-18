@@ -107,7 +107,7 @@ const RAW_DATABASE: DatabaseEntry[] = [
     purpose: "Management dashboard — enrollment registry per lead/sequence (outreach, booking, client)",
     keyColumns:
       "id, lead_email, lead_category, phase, sequence_slug, provider, status, scheduled_at",
-    writers: ["admin", "scripts"],
+    writers: ["admin", "scripts", "webhook", "cron"],
     readers: ["admin"],
     profileKeys: "—",
     relatedTables: ["booking_email_jobs", "instantly_bypass_pipeline", "agence", "comptable", "cif"],

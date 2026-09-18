@@ -3,12 +3,50 @@ const PHONE_REQUEST_KEYWORDS = [
   "telephone",
   "appeler",
   "appel ",
+  "contacter",
+  "contactez",
   "formulaire",
   "numéro",
   "numero",
   "joignable",
   "rappeler",
 ];
+
+const INTEREST_KEYWORDS = [
+  "intéressé",
+  "interesse",
+  "d'accord",
+  "d accord",
+  "je suis ouvert",
+  "mon cabinet est compatible",
+  "peut être intéressé",
+  "peut etre interesse",
+  "cela peut m'intéresser",
+  "cela peut m interesser",
+];
+
+const VERIFICATION_KEYWORDS = [
+  "identifier",
+  "identité",
+  "identite",
+  "vérif",
+  "verif",
+  "coordonnées professionnelles",
+  "coordonnees professionnelles",
+  "qui êtes-vous",
+  "qui etes-vous",
+  "quelle société",
+  "quelle societe",
+  "origine de cette sollicitation",
+  "vous représenter",
+  "vous representer",
+  "pas de confiance",
+  "ne vous fais pas confiance",
+];
+
+/** French mobile/landline in body (07 80 99 48 70, +33 7..., 06.12.34.56.78). */
+const FRENCH_PHONE_PATTERN =
+  /\b(?:0[1-9]|\+33[\s.]?[1-9])(?:[\s.\-]?\d{2}){4}\b/;
 
 const SCHEDULING_ANSWER_KEYWORDS = [
   "disponib",
@@ -139,4 +177,61 @@ export function inboundLooksLikeQuestion(text: string): boolean {
   }
 
   return REQUEST_PHRASES.some((phrase) => probe.includes(phrase));
+}
+
+/** Lead shares a callable phone number in the inbound body. */
+export function inboundProvidesPhoneNumber(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return FRENCH_PHONE_PATTERN.test(probe);
+}
+
+/** Lead signals interest or agreement worth answering after a recent Hercule send. */
+export function inboundShowsInterest(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return INTEREST_KEYWORDS.some((keyword) => probe.includes(keyword));
+}
+
+/** Lead asks to verify Hercule identity before continuing. */
+export function inboundRequestsVerification(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return VERIFICATION_KEYWORDS.some((keyword) => probe.includes(keyword));
+}
+
+function inboundIsShortRefusal(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  const firstLine = probe.split("\n")[0]?.trim() ?? probe;
+  return (
+    /^(non|nope|pas intéressé|pas interesse)\b/.test(firstLine) &&
+    firstLine.length < 40
+  );
+}
+
+/**
+ * True when an inbound deserves a reply agent response even if Hercule
+ * sent in-thread within the collision window.
+ */
+export function inboundNeedsFollowUp(text: string): boolean {
+  if (inboundIsShortRefusal(text)) {
+    return false;
+  }
+  return (
+    inboundLooksLikeQuestion(text) ||
+    inboundLooksLikePhoneRequest(text) ||
+    inboundLooksLikeSchedulingAnswer(text) ||
+    inboundProvidesPhoneNumber(text) ||
+    inboundShowsInterest(text) ||
+    inboundRequestsVerification(text)
+  );
 }

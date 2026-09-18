@@ -81,3 +81,13 @@ export function sequencesForPhase(niche: Niche, phase: ManagementPhase): EmailSe
 export function isMeetingSequenceSlug(slug: string): boolean {
   return slug.startsWith(MEETING_SLUG_PREFIX) || slug === "role-recovery";
 }
+
+export function nextPhaseForSlug(slug: string): ManagementPhase | null {
+  const phase = phaseForSequenceSlug(slug);
+  const order: ManagementPhase[] = ["outreach", "booking", "client"];
+  const index = phase ? order.indexOf(phase) : -1;
+  if (index < 0 || index >= order.length - 1) {
+    return null;
+  }
+  return order[index + 1];
+}

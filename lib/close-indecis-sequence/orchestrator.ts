@@ -56,6 +56,16 @@ export async function startCloseIndecisSequence(
   await dispatchDueJobsForLead(lead.id);
 
   if (inserted > 0) {
+    const { syncClientSequenceStarted } = await import(
+      "@/lib/admin/management/recipients/hooks"
+    );
+    syncClientSequenceStarted({
+      niche: category,
+      leadEmail: lead.email,
+      leadId: lead.id,
+      sequenceSlug: "close-indecis",
+      currentStep: "close_indecis_1",
+    });
     return { started: true, dispatched: true };
   }
 

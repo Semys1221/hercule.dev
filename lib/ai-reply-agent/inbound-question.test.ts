@@ -4,6 +4,10 @@ import {
   inboundLooksLikePhoneRequest,
   inboundLooksLikeQuestion,
   inboundLooksLikeSchedulingAnswer,
+  inboundNeedsFollowUp,
+  inboundProvidesPhoneNumber,
+  inboundRequestsVerification,
+  inboundShowsInterest,
 } from "./inbound-question";
 
 describe("inboundLooksLikeQuestion", () => {
@@ -74,6 +78,44 @@ describe("inboundLooksLikePhoneRequest", () => {
     expect(inboundLooksLikePhoneRequest("Je suis disponible mardi 14h")).toBe(
       false,
     );
+  });
+});
+
+describe("inboundProvidesPhoneNumber", () => {
+  it("detects spaced French mobile numbers", () => {
+    expect(
+      inboundProvidesPhoneNumber("Je vous invite à me contacter au 07 80 99 48 70."),
+    ).toBe(true);
+  });
+
+  it("returns false without a phone number", () => {
+    expect(inboundProvidesPhoneNumber("Merci pour votre message")).toBe(false);
+  });
+});
+
+describe("inboundShowsInterest", () => {
+  it("detects interest keywords", () => {
+    expect(inboundShowsInterest("Je peut être intéressé")).toBe(true);
+  });
+});
+
+describe("inboundRequestsVerification", () => {
+  it("detects identity verification requests", () => {
+    expect(
+      inboundRequestsVerification(
+        "Pouvez-vous identifier clairement la société que vous représenter ?",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("inboundNeedsFollowUp", () => {
+  it("combines actionable signals and ignores short refusals", () => {
+    expect(inboundNeedsFollowUp("non")).toBe(false);
+    expect(inboundNeedsFollowUp("Jeudi 15h ou vendredi 16h")).toBe(true);
+    expect(
+      inboundNeedsFollowUp("Je vous invite à me contacter au 07 80 99 48 70."),
+    ).toBe(true);
   });
 });
 
