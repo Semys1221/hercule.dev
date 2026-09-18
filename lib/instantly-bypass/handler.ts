@@ -17,31 +17,6 @@ import { reprocessInboundForLead } from "@/lib/ai-reply-agent/reprocess-inbound"
 
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
 
-function debugLog(
-  location: string,
-  message: string,
-  data: Record<string, unknown>,
-  hypothesisId: string,
-): void {
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "3be66b",
-    },
-    body: JSON.stringify({
-      sessionId: "3be66b",
-      location,
-      message,
-      data,
-      timestamp: Date.now(),
-      runId: "pre-fix",
-      hypothesisId,
-    }),
-  }).catch(() => {});
-  // #endregion
-}
 
 async function triggerReplyReprocessAfterInterested(
   campaignId: string,
@@ -58,32 +33,6 @@ async function triggerReplyReprocessAfterInterested(
       return { ok: false as const, error: message };
     },
   );
-
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "3903b6",
-    },
-    body: JSON.stringify({
-      sessionId: "3903b6",
-      runId: "post-fix",
-      hypothesisId: "A,B",
-      location: "lib/instantly-bypass/handler.ts:reply-reprocess",
-      message: "Reply reprocess after lead_interested",
-      data: {
-        campaignId,
-        leadEmail,
-        e1Outcome: e1Outcome ?? null,
-        replySkipped: "skipped" in replyReprocess ? replyReprocess.skipped : null,
-        replyAiStatus: "aiStatus" in replyReprocess ? replyReprocess.aiStatus : null,
-        replyError: "error" in replyReprocess ? replyReprocess.error : null,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
 }
 
 async function recordSkippedInterested(
@@ -114,12 +63,6 @@ export async function handleLeadInterested(
   const leadEmail = payload.lead_email?.trim().toLowerCase();
 
   if (!campaignId || !leadEmail) {
-    debugLog(
-      "lib/instantly-bypass/handler.ts:entry",
-      "Missing campaign or lead email",
-      { campaignId: campaignId ?? null, leadEmail: leadEmail ?? null },
-      "D",
-    );
     return { ok: false, error: "missing_campaign_or_lead_email" };
   }
 
@@ -130,12 +73,6 @@ export async function handleLeadInterested(
 
   const config = await loadBypassConfig(campaignId);
   if (!config) {
-    debugLog(
-      "lib/instantly-bypass/handler.ts:config",
-      "Campaign bypass config missing",
-      { campaignId, leadEmail },
-      "B",
-    );
     await recordSkippedInterested({
       idempotencyKey,
       campaignId,
@@ -146,12 +83,6 @@ export async function handleLeadInterested(
     return { ok: true, skipped: "campaign_not_initialized" };
   }
   if (config.webhook_auto_send_enabled === false) {
-    debugLog(
-      "lib/instantly-bypass/handler.ts:config",
-      "Campaign webhook auto-send paused",
-      { campaignId, leadEmail },
-      "B",
-    );
     await recordSkippedInterested({
       idempotencyKey,
       campaignId,
@@ -164,12 +95,6 @@ export async function handleLeadInterested(
 
   if (await hasBypassEvent(idempotencyKey)) {
     await upsertPipelineStep(campaignId, leadEmail, "step_1");
-    debugLog(
-      "lib/instantly-bypass/handler.ts:idempotency",
-      "E1 already sent for lead",
-      { campaignId, leadEmail },
-      "E",
-    );
     if (!options?.skipReplyReprocess) {
       await triggerReplyReprocessAfterInterested(campaignId, leadEmail, "already_sent");
     }
@@ -272,45 +197,7 @@ export async function handleLeadInterested(
       },
     });
 
-    debugLog(
-      "lib/instantly-bypass/handler.ts:schedule",
-      "E1 job queued — dispatching immediately",
-      {
-        campaignId,
-        leadEmail,
-        scheduledFor: scheduledFor.toISOString(),
-        hasReservationLink: Boolean(reservationLink),
-      },
-      "A,C",
-    );
-
     const dispatch = await dispatchBypassJobByIdempotencyKey(idempotencyKey);
-
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "b88b1a",
-      },
-      body: JSON.stringify({
-        sessionId: "b88b1a",
-        location: "lib/instantly-bypass/handler.ts:dispatch",
-        message: "E1 webhook immediate dispatch result",
-        data: {
-          campaignId,
-          leadEmail,
-          outcome: dispatch.outcome,
-          latencyMs: dispatch.latencyMs ?? null,
-          skipped: dispatch.skipped ?? null,
-          error: dispatch.error ?? null,
-        },
-        timestamp: Date.now(),
-        runId: "post-fix",
-        hypothesisId: "E1-instant",
-      }),
-    }).catch(() => {});
-    // #endregion
 
     if (!options?.skipReplyReprocess) {
       await triggerReplyReprocessAfterInterested(campaignId, leadEmail, dispatch.outcome);
@@ -335,12 +222,6 @@ export async function handleLeadInterested(
     return { ok: false, error: dispatch.error ?? "dispatch_failed" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    debugLog(
-      "lib/instantly-bypass/handler.ts:catch",
-      "handleLeadInterested failed",
-      { campaignId, leadEmail, error: message },
-      "A",
-    );
     await recordBypassEvent({
       idempotencyKey,
       flow: "interested_email1",

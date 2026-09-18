@@ -12,6 +12,7 @@ const REPROCESSABLE_STATUSES: AiReplyMessageStatus[] = [
   "skipped_not_interested",
   "skipped_recovery",
   "skipped_unsafe",
+  "skipped_collision",
   "failed",
 ];
 

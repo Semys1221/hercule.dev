@@ -36,6 +36,7 @@ import {
   NOT_INTERESTED_STATUS,
   NO_SHOW_STATUS,
 } from "./reply-gate";
+import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
 import { ensureInterestedE1IfMissing } from "@/lib/instantly-bypass/ensure-interested-e1";
 
 import type {
@@ -215,7 +216,8 @@ export async function handleInstantlyReply(
   }
 
   const recentCollision = await hasRecentHerculeCollision({ campaignId, leadEmail });
-  if (recentCollision && !inboundLooksLikeQuestion(inboundText)) {
+  const looksLikeQuestion = inboundLooksLikeQuestion(inboundText);
+  if (recentCollision && !looksLikeQuestion) {
     const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_collision",
@@ -233,31 +235,6 @@ export async function handleInstantlyReply(
   const apiKey = getInstantlyApiKey();
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "9923ed",
-    },
-    body: JSON.stringify({
-      sessionId: "9923ed",
-      runId: "pre-fix",
-      hypothesisId: "A,E",
-      location: "handler.ts:interest-status",
-      message: "Resolved Instantly interest status before Grok gate",
-      data: {
-        leadEmail,
-        campaignId,
-        interestStatus,
-        isNoShow: interestStatus === NO_SHOW_STATUS,
-        isNotInterested: interestStatus === -1,
-        isRecoveryTag: isRecoveryInterestTag(interestStatus),
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   if (interestStatus === NO_SHOW_STATUS) {
     const latencyMs = await finalizeInbound(
       inbound.id,
@@ -274,24 +251,6 @@ export async function handleInstantlyReply(
   }
 
   if (interestStatus === NOT_INTERESTED_STATUS) {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "9923ed",
-      },
-      body: JSON.stringify({
-        sessionId: "9923ed",
-        runId: "post-fix",
-        hypothesisId: "A",
-        location: "handler.ts:skip-not-interested",
-        message: "Skipped Grok for Not interested tag",
-        data: { leadEmail, campaignId, interestStatus },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     const latencyMs = await finalizeInbound(
       inbound.id,
       "skipped_not_interested",
@@ -355,30 +314,27 @@ export async function handleInstantlyReply(
       );
       return { ok: false as const, error: message };
     });
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "a791ab",
-      },
-      body: JSON.stringify({
-        sessionId: "a791ab",
-        runId: "interested-reply",
-        hypothesisId: "E1-on-reply",
-        location: "handler.ts:ensure-e1",
-        message: "Ensured E1 on Interested inbound reply",
-        data: {
-          leadEmail,
-          campaignId,
-          e1Ok: e1Result.ok,
-          e1Skipped: "skipped" in e1Result ? e1Result.skipped : null,
-          e1Error: "error" in e1Result ? e1Result.error : null,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
+  }
+
+  const e1ReplyGate = await checkInterestedE1ReplyGate({
+    campaignId,
+    leadEmail,
+    interestStatus,
+    inboundAt: payload.timestamp,
+  });
+  if (!e1ReplyGate.allowReply) {
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_waiting_e1",
+      started,
+      e1ReplyGate.reason,
+    );
+    return {
+      ok: true,
+      skipped: "waiting_for_post_e1",
+      aiStatus: "skipped_waiting_e1",
+      latencyMs,
+    };
   }
 
   const knowledgePack = buildKnowledgePack(config);
@@ -396,32 +352,6 @@ export async function handleInstantlyReply(
     leadName: resolveLeadDisplayName(lead, leadEmail),
   });
   try {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "9923ed",
-      },
-      body: JSON.stringify({
-        sessionId: "9923ed",
-        runId: "pre-fix",
-        hypothesisId: "A,B",
-        location: "handler.ts:before-grok",
-        message: "Calling generateReplyDecision (Grok reads inbound)",
-        data: {
-          leadEmail,
-          interestStatus,
-          interestLabel: interestLabelFromStatus(interestStatus),
-          inboundPreview: truncateInboundText(inboundText || "(empty body)").slice(
-            0,
-            80,
-          ),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     const groq = await generateReplyDecision({
       knowledgePack,
       promptSnapshot: config.prompt_snapshot,

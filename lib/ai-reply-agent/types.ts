@@ -12,6 +12,7 @@ export type AiReplyMessageStatus =
   | "skipped_ooo"
   | "skipped_collision"
   | "skipped_not_interested"
+  | "skipped_waiting_e1"
   | "skipped_recovery"
   | "manual_replied"
   | "manual_queued"

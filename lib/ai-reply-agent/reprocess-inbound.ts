@@ -30,8 +30,10 @@ import {
 import { resolveCategoryForCampaign } from "@/lib/link-tracking/provision-campaign-lead";
 import {
   inboundLooksLikePhoneRequest,
+  inboundLooksLikeQuestion,
   inboundLooksLikeSchedulingAnswer,
 } from "./inbound-question";
+import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
 import { detectOptOut } from "@/lib/lead-relances/opt-out";
 
 import type {
@@ -168,7 +170,10 @@ async function findReprocessCandidate(
       }
       continue;
     }
-    if (!REPROCESSABLE_STATUSES.has(status)) {
+    const isCollisionQuestion =
+      status === "skipped_collision" &&
+      inboundLooksLikeQuestion(String(row.body_text ?? ""));
+    if (!REPROCESSABLE_STATUSES.has(status) && !isCollisionQuestion) {
       continue;
     }
     if (SKIP_REPROCESS_REASONS.has(reason)) {
@@ -221,32 +226,6 @@ export async function reprocessInboundForLead(params: {
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
 
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "3903b6",
-    },
-    body: JSON.stringify({
-      sessionId: "3903b6",
-      runId: "reprocess",
-      hypothesisId: "A",
-      location: "reprocess-inbound.ts:interest-status",
-      message: "Reprocess candidate interest status",
-      data: {
-        leadEmail,
-        campaignId,
-        messageId: inbound.id,
-        interestStatus,
-        oldStatus: inbound.ai_status,
-        oldReason: inbound.ai_reason,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-
   if (interestStatus === NO_SHOW_STATUS || interestStatus === NOT_INTERESTED_STATUS) {
     return { ok: true, skipped: "not_eligible_tag" };
   }
@@ -257,6 +236,29 @@ export async function reprocessInboundForLead(params: {
 
   if (!config.prompt_snapshot?.trim()) {
     return { ok: true, skipped: "missing_prompt" };
+  }
+
+  const e1ReplyGate = await checkInterestedE1ReplyGate({
+    campaignId,
+    leadEmail,
+    interestStatus,
+    inboundAt: inbound.created_at,
+  });
+  if (!e1ReplyGate.allowReply) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_waiting_e1",
+      e1ReplyGate.reason,
+      null,
+      null,
+      Date.now() - started,
+      null,
+    );
+    return {
+      ok: true,
+      skipped: "waiting_for_post_e1",
+      aiStatus: "skipped_waiting_e1",
+    };
   }
 
   const knowledgePack = buildKnowledgePack(config);
@@ -382,25 +384,6 @@ export async function reprocessInboundForLead(params: {
       });
       await syncPipelineStepFromSentFlows(campaignId, leadEmail);
     }
-
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "3903b6",
-      },
-      body: JSON.stringify({
-        sessionId: "3903b6",
-        runId: "reprocess",
-        hypothesisId: "A",
-        location: "reprocess-inbound.ts:sent",
-        message: "Reprocess auto-replied",
-        data: { leadEmail, campaignId, messageId: inbound.id },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
 
     return { ok: true, aiStatus: "auto_replied", latencyMs: Date.now() - started };
   } catch (err) {
