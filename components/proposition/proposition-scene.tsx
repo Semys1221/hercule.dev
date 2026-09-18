@@ -10,8 +10,14 @@ import type { PropositionConfig } from "@/lib/propositions/schema";
 
 const PROSPECTS = listPropositions();
 
-export function PropositionScene() {
-  const [activeConfig, setActiveConfig] = useState<PropositionConfig | null>(null);
+type PropositionSceneProps = {
+  slug?: string;
+};
+
+export function PropositionScene({ slug }: PropositionSceneProps) {
+  const [activeConfig, setActiveConfig] = useState<PropositionConfig | null>(() =>
+    slug ? getProposition(slug) : null,
+  );
 
   const handleStart = useCallback((slug: string) => {
     const config = getProposition(slug);
@@ -39,9 +45,15 @@ export function PropositionScene() {
       />
 
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-10">
-        <header className="flex flex-col items-center gap-3 pt-2">
+        <header className="flex flex-col items-center gap-3 pt-2 text-center">
           <HerculeMark className="size-10 text-zinc-50" />
-          <p className="text-lg font-semibold tracking-tight text-zinc-50">Hercule</p>
+          {activeConfig?.pageTitle ? (
+            <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
+              {activeConfig.pageTitle}
+            </h1>
+          ) : (
+            <p className="text-lg font-semibold tracking-tight text-zinc-50">Hercule</p>
+          )}
         </header>
 
         <main className="flex flex-1 flex-col items-center justify-center py-12">

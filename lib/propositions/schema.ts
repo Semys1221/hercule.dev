@@ -70,6 +70,7 @@ export const propositionConfigSchema = z.object({
   schemaVersion: z.literal(1),
   slug: z.string().min(1),
   label: z.string().min(1),
+  pageTitle: z.string().min(1).optional(),
   tenant: propositionTenantSchema,
   prospect: propositionProspectSchema,
   recap: z.array(propositionRecapSlideSchema).min(1),
