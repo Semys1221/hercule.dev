@@ -6,7 +6,12 @@ import {
   BarChart3,
   Briefcase,
   Building2,
+  DollarSign,
+  FileText,
   Globe,
+  LineChart,
+  PiggyBank,
+  Scale,
   TrendingUp,
   User,
   Users,
@@ -17,6 +22,7 @@ import { HerculeMark } from "@/components/hercule-mark";
 import { AnimatedBeam } from "@/components/ui/animated-beam";
 import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar";
 import { AnimatedList } from "@/components/ui/animated-list";
+import { NumberTicker } from "@/components/ui/number-ticker";
 import { OrbitingCircles } from "@/components/ui/orbiting-circles";
 import { cn } from "@/lib/utils";
 
@@ -142,9 +148,9 @@ function AnimatedLeads() {
   );
 }
 
-// ─── 3. ORBITING TEAM ─────────────────────────────────────────────────────────
-// Shows: Cabinet at center, collaborators orbiting in inner ring, sectors in outer ring
-function OrbitingTeam() {
+// ─── 3. CABINET 360 ───────────────────────────────────────────────────────────
+// Shows: Cabinet at center, service icons orbiting inner ring, result icons in outer ring
+function Cabinet360() {
   return (
     <div className="relative flex h-56 w-full flex-col items-center justify-center overflow-hidden">
       {/* Center — cabinet */}
@@ -155,32 +161,32 @@ function OrbitingTeam() {
         <span className="text-xs font-medium text-zinc-400">Cabinet</span>
       </div>
 
-      {/* Inner orbit (slower) — 4 collaborateurs */}
+      {/* Inner orbit — 4 services */}
       <OrbitingCircles iconSize={36} radius={76} duration={18} speed={0.9}>
-        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800">
-          <User className="size-4 text-zinc-300" />
+        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800" title="Comptabilité">
+          <FileText className="size-4 text-zinc-300" />
         </div>
-        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800">
-          <User className="size-4 text-zinc-300" />
+        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800" title="Fiscal">
+          <Scale className="size-4 text-zinc-300" />
         </div>
-        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800">
-          <User className="size-4 text-zinc-300" />
+        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800" title="Patrimoine">
+          <PiggyBank className="size-4 text-zinc-300" />
         </div>
-        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800">
-          <User className="size-4 text-zinc-300" />
+        <div className="flex size-9 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800" title="Conseil">
+          <LineChart className="size-4 text-zinc-300" />
         </div>
       </OrbitingCircles>
 
-      {/* Outer orbit (reverse, faster) — 4 sectors */}
+      {/* Outer orbit (reverse) — results */}
       <OrbitingCircles iconSize={32} radius={128} duration={24} speed={0.6} reverse>
         <div className="flex size-8 items-center justify-center rounded-full border border-indigo-700/50 bg-indigo-900/50">
-          <Briefcase className="size-3.5 text-indigo-300" />
+          <TrendingUp className="size-3.5 text-indigo-300" />
         </div>
         <div className="flex size-8 items-center justify-center rounded-full border border-emerald-700/50 bg-emerald-900/50">
-          <TrendingUp className="size-3.5 text-emerald-300" />
+          <Users className="size-3.5 text-emerald-300" />
         </div>
         <div className="flex size-8 items-center justify-center rounded-full border border-amber-700/50 bg-amber-900/50">
-          <Globe className="size-3.5 text-amber-300" />
+          <DollarSign className="size-3.5 text-amber-300" />
         </div>
         <div className="flex size-8 items-center justify-center rounded-full border border-purple-700/50 bg-purple-900/50">
           <BarChart3 className="size-3.5 text-purple-300" />
@@ -188,8 +194,59 @@ function OrbitingTeam() {
       </OrbitingCircles>
 
       <p className="absolute bottom-1 text-xs text-zinc-500">
-        10 collaborateurs · multi-zones France
+        comptabilité · fiscal · patrimoine · conseil
       </p>
+    </div>
+  );
+}
+
+// ─── 4. ROI COUNTER ───────────────────────────────────────────────────────────
+// Shows: 3 animated cards — prospects, honoraire, projected monthly revenue
+function RoiCounter({ prospects = 15, honoraire = 300 }: { prospects?: number; honoraire?: number }) {
+  const monthlyRevenue = prospects * honoraire;
+
+  return (
+    <div className="grid grid-cols-3 gap-3 py-2">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
+        className="flex flex-col items-center justify-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-4"
+      >
+        <Users className="mb-1 size-4 text-zinc-400" />
+        <p className="text-2xl font-semibold text-zinc-100">
+          <NumberTicker value={prospects} />
+        </p>
+        <p className="text-center text-xs text-zinc-400">profils / mois</p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.22, duration: 0.4 }}
+        className="flex flex-col items-center justify-center gap-1 rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-4"
+      >
+        <DollarSign className="mb-1 size-4 text-zinc-400" />
+        <p className="text-2xl font-semibold text-zinc-100">
+          <NumberTicker value={honoraire} />
+          <span className="ml-0.5 text-sm font-normal text-zinc-400">€</span>
+        </p>
+        <p className="text-center text-xs text-zinc-400">honoraire moyen</p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.34, duration: 0.4 }}
+        className="flex flex-col items-center justify-center gap-1 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-4"
+      >
+        <TrendingUp className="mb-1 size-4 text-indigo-400" />
+        <p className="text-2xl font-semibold text-indigo-300">
+          <NumberTicker value={monthlyRevenue} />
+          <span className="ml-0.5 text-sm font-normal text-indigo-400">€</span>
+        </p>
+        <p className="text-center text-xs text-indigo-400">CA projeté / mois</p>
+      </motion.div>
     </div>
   );
 }
@@ -300,7 +357,7 @@ function StepProgress() {
         />
         <div className="text-center">
           <p className="text-xs font-semibold text-zinc-200">Palier 2</p>
-          <p className="text-xs text-zinc-400">25 profils</p>
+          <p className="text-xs text-zinc-400">45 profils</p>
         </div>
       </div>
     </div>
@@ -312,6 +369,8 @@ export const PROPOSITION_VISUALS = [
   "beam-pipeline",
   "animated-leads",
   "orbiting-team",
+  "cabinet-360",
+  "roi-counter",
   "circular-progress",
   "ripple-signal",
   "step-progress",
@@ -319,14 +378,26 @@ export const PROPOSITION_VISUALS = [
 
 export type PropositionVisualType = (typeof PROPOSITION_VISUALS)[number];
 
-export function PropositionVisual({ visual }: { visual: string }) {
+export function PropositionVisual({
+  visual,
+  prospects,
+  honoraire,
+}: {
+  visual: string;
+  prospects?: number;
+  honoraire?: number;
+}) {
   switch (visual as PropositionVisualType) {
     case "beam-pipeline":
       return <BeamPipeline />;
     case "animated-leads":
       return <AnimatedLeads />;
     case "orbiting-team":
-      return <OrbitingTeam />;
+      return <Cabinet360 />;
+    case "cabinet-360":
+      return <Cabinet360 />;
+    case "roi-counter":
+      return <RoiCounter prospects={prospects} honoraire={honoraire} />;
     case "circular-progress":
       return <CircularProgress />;
     case "ripple-signal":

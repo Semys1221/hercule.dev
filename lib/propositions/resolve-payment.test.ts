@@ -20,10 +20,10 @@ describe("resolveStripePaymentLinkUrl", () => {
 
   it("uses selected pricing option URL when options exist", () => {
     const options = getPricingOptions(ludovicConfig);
-    const growthOption = options?.find((option) => option.id === "formule-croissance-25");
+    const growthOption = options?.find((option) => option.id === "formule-croissance-45");
 
     expect(growthOption).toBeDefined();
-    expect(resolveStripePaymentLinkUrl(ludovicConfig, "formule-croissance-25")).toBe(
+    expect(resolveStripePaymentLinkUrl(ludovicConfig, "formule-croissance-45")).toBe(
       growthOption?.stripePaymentLinkUrl,
     );
   });

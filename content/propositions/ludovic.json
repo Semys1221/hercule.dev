@@ -19,7 +19,7 @@
         "Vous n'êtes plus au stade de la consolidation — vous préparez la prochaine phase de croissance."
       ],
       "confirmLabel": "Je confirme ce récapitulatif",
-      "visual": "orbiting-team"
+      "visual": "cabinet-360"
     },
     {
       "id": "problematique",
@@ -30,7 +30,9 @@
         "Hercule répond à ce besoin : prospects qualifiés, ciblage exclusivement B2B, et contrôle du type de profil présenté en entretien."
       ],
       "confirmLabel": "Je confirme ce récapitulatif",
-      "visual": "animated-leads"
+      "visual": "roi-counter",
+      "visualProspects": 15,
+      "visualHonoraire": 300
     },
     {
       "id": "objectif",
@@ -74,7 +76,7 @@
         "description": "On commence à 15 profils pour mesurer la capacité de conversion de votre équipe, puis on augmente par paliers selon vos résultats.",
         "bullets": [
           "Premier palier : 15 profils sur 20 à 25 jours",
-          "Palier 25 disponible dès validation du premier palier",
+          "Palier 45 disponible dès validation du premier palier",
           "Volume ajusté en continu selon vos retours et votre capacité d'absorption"
         ],
         "visual": "step-progress"
@@ -82,7 +84,7 @@
     ],
     "roi": {
       "title": "Retour sur investissement",
-      "summary": "15 profils × 300 €/mois = 4 500 € de CA mensuel projeté",
+      "summary": "Jusqu'à 45 profils × 300 €/mois = 13 500 € de CA mensuel projeté",
       "details": [
         "Taux de conversion estimé : 12 à 13 entrées sur 25 profils qualifiés",
         "Honoraires tout-en-un : comptabilité + conseil fiscal + accompagnement patrimonial",
@@ -92,7 +94,7 @@
       "sliders": {
         "prospectsDefault": 15,
         "prospectsMin": 5,
-        "prospectsMax": 30,
+        "prospectsMax": 45,
         "honoraireDefault": 300,
         "honoraireMin": 150,
         "honoraireMax": 600
@@ -118,12 +120,12 @@
           "recommended": true
         },
         {
-          "id": "formule-croissance-25",
-          "label": "Formule Croissance — 25 profils",
-          "amountLabel": "1 799 € / mois",
+          "id": "formule-croissance-45",
+          "label": "Formule Croissance — 45 profils",
+          "amountLabel": "2 399 € / mois",
           "details": [
-            "25 profils dès le départ",
-            "Montée en charge accélérée pour votre équipe de 10 collaborateurs",
+            "45 profils — montée en charge complète",
+            "Objectif : alimenter significativement vos 10 collaborateurs",
             "Calibration infrastructure entre J+0 et J+25"
           ],
           "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",

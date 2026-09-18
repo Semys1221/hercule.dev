@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "slug": "cabinet-exemple",
   "label": "Cabinet comptable — vision stratégique",
+  "pageTitle": "Votre proposition R2I",
   "tenant": "comptable",
   "prospect": {
     "companyName": "Cabinet comptable",
@@ -18,7 +19,7 @@
         "Cette différenciation constitue le corps de valeur que nous transmettons à Hercule pour identifier des profils de qualité, alignés sur votre expertise."
       ],
       "confirmLabel": "Je confirme ce récapitulatif",
-      "visual": "animated-leads"
+      "visual": "cabinet-360"
     },
     {
       "id": "alignement",
@@ -39,7 +40,9 @@
         "L'objectif est une connexion immédiate entre le prospect et votre cabinet, dès l'émission du signal."
       ],
       "confirmLabel": "Je confirme ce récapitulatif",
-      "visual": "ripple-signal"
+      "visual": "roi-counter",
+      "visualProspects": 10,
+      "visualHonoraire": 300
     }
   ],
   "proposal": {
@@ -80,21 +83,53 @@
     ],
     "roi": {
       "title": "Retour sur investissement et garantie qualité",
-      "summary": "Formule test — 1 mensualité, 10 profils planifiés",
+      "summary": "10 profils × 300 €/mois = 3 000 € de CA mensuel projeté",
       "details": [
         "J+20 à J+25 : premiers profils (calibration sur mesure, ~25 jours)",
         "J+30 : planification d'environ 10 profils sur le mois suivant",
         "Une seule mensualité suffit — pas de double engagement",
         "Garantie : profils alignés sur votre expertise — entrepreneurs +2 salariés, engagement annuel en honoraires, pas de libéraux ou indépendants isolés"
-      ]
+      ],
+      "sliders": {
+        "prospectsDefault": 10,
+        "prospectsMin": 5,
+        "prospectsMax": 15,
+        "honoraireDefault": 300,
+        "honoraireMin": 150,
+        "honoraireMax": 600
+      }
     },
     "pricing": {
-      "title": "Investissement — formule test",
-      "amountLabel": "1 489 € — formule test (1 mois)",
+      "title": "Investissement — choisissez votre formule",
+      "amountLabel": "À partir de 1 489 € / mois",
       "details": [
-        "1 mensualité unique pour lancer le test",
-        "10 profils planifiés à partir de J+30",
-        "Calibration infrastructure entre J+0 et J+25"
+        "Choisissez la formule adaptée à votre palier de démarrage"
+      ],
+      "options": [
+        {
+          "id": "formule-test-10",
+          "label": "Formule Test — 10 profils",
+          "amountLabel": "1 489 € / mois",
+          "details": [
+            "1 mensualité unique pour lancer le test",
+            "10 profils planifiés à partir de J+30",
+            "Calibration infrastructure entre J+0 et J+25"
+          ],
+          "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",
+          "recommended": true
+        },
+        {
+          "id": "formule-croissance-15",
+          "label": "Formule Croissance — 15 profils",
+          "amountLabel": "1 799 € / mois",
+          "details": [
+            "15 profils dès le départ",
+            "Montée en charge accélérée",
+            "Calibration infrastructure entre J+0 et J+25"
+          ],
+          "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",
+          "recommended": false
+        }
       ]
     }
   },

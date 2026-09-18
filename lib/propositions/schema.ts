@@ -20,6 +20,8 @@ export const propositionRecapSlideSchema = z.object({
   items: z.array(propositionRecapItemSchema).optional(),
   confirmLabel: z.string().min(1).optional(),
   visual: z.string().optional(),
+  visualProspects: z.number().int().min(1).optional(),
+  visualHonoraire: z.number().int().min(1).optional(),
 });
 
 export const propositionBlockSchema = z.object({

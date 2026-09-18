@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 
 import { StepLayout } from "@/components/proposition/steps/step-layout";
+import { AnimatedCircularProgressBar } from "@/components/ui/animated-circular-progress-bar";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,8 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
   const [honoraire, setHonoraire] = useState(sliders?.honoraireDefault ?? 300);
 
   const monthlyRevenue = useMemo(() => prospects * honoraire, [prospects, honoraire]);
+  const convertedClients = useMemo(() => Math.round(prospects * 0.5), [prospects]);
+  const conversionRate = 50;
 
   const prospectsMin = sliders?.prospectsMin ?? 5;
   const prospectsMax = sliders?.prospectsMax ?? 30;
@@ -88,6 +91,29 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
               <p className="mt-2 text-xs text-zinc-500">
                 {prospects} profils × {formatEuros(honoraire)}/mois
               </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="flex items-center gap-5 rounded-xl border border-zinc-800 bg-zinc-900/40 px-5 py-4"
+            >
+              <AnimatedCircularProgressBar
+                value={conversionRate}
+                max={100}
+                gaugePrimaryColor="#6366f1"
+                gaugeSecondaryColor="rgba(99,102,241,0.12)"
+                className="size-16 shrink-0"
+              />
+              <div>
+                <p className="text-sm font-semibold text-zinc-100">
+                  ~{convertedClients} clients convertis
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  Taux de conversion estimé : 50 % · réactif au slider
+                </p>
+              </div>
             </motion.div>
           </div>
         ) : (

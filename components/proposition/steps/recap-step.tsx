@@ -28,7 +28,11 @@ export function RecapStep({ slide, accepted, onAcceptedChange }: RecapStepProps)
       onAcceptedChange={onAcceptedChange}
     >
       {slide.visual ? (
-        <PropositionVisual visual={slide.visual} />
+        <PropositionVisual
+          visual={slide.visual}
+          prospects={slide.visualProspects}
+          honoraire={slide.visualHonoraire}
+        />
       ) : (
         <div className="space-y-3">
           {slide.paragraphs.slice(1).map((paragraph, index) => (
