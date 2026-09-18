@@ -90,7 +90,7 @@ def _load_tuning_from_preset(copy_from: str) -> dict[str, Any]:
 def _default_tuning() -> dict[str, Any]:
     return {
         "INSTANTLY_PUSH_EVERY": 100,
-        "ENRICH_ENABLED": True,
+        "ENRICH_ENABLED": False,
         "ENRICH_BATCH_SIZE": 50,
         "ENRICH_CONCURRENCY": 20,
         "ENRICH_TIMEOUT_MS": 10000,
@@ -115,7 +115,7 @@ def _default_tuning() -> dict[str, Any]:
             "societe.com",
             "pagesjaunes.fr",
         ],
-        "PAPPERS_ENABLED": True,
+        "PAPPERS_ENABLED": False,
         "PAPPERS_MIN_EMPLOYEES": 3,
         "PAPPERS_MIN_SCORE": 55,
         "PAPPERS_SCORING_ENABLED": True,

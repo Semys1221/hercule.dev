@@ -6,7 +6,7 @@ import json
 import os
 import time
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 _LIVE_CACHE: dict[str, tuple[float, int]] = {}
 _LIVE_CACHE_TTL_S = 60.0
@@ -144,3 +144,24 @@ def heartbeat_age_seconds(heartbeat: dict[str, Any] | None) -> float | None:
         return max((datetime.now(timezone.utc) - seen).total_seconds(), 0.0)
     except ValueError:
         return None
+
+
+def wrap_progress_with_heartbeat(
+    on_progress: Callable[[int], None] | None,
+    heartbeat_cb: Callable[[], None],
+    *,
+    interval_s: float = 30.0,
+) -> Callable[[int], None]:
+    """Call on_progress on each update; heartbeat_cb at most every interval_s."""
+    last_hb = 0.0
+
+    def _wrapped(count: int) -> None:
+        nonlocal last_hb
+        if on_progress:
+            on_progress(count)
+        now = time.time()
+        if now - last_hb >= interval_s:
+            heartbeat_cb()
+            last_hb = now
+
+    return _wrapped

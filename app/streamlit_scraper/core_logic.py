@@ -788,7 +788,7 @@ def _enrich_settings(config: dict) -> dict[str, Any]:
     if not hard and not soft and legacy_excluded:
         hard = legacy_excluded
     return {
-        "enabled": bool(config.get("ENRICH_ENABLED", True)),
+        "enabled": bool(config.get("ENRICH_ENABLED", False)),
         "batch_size": max(int(config.get("ENRICH_BATCH_SIZE", 50)), 1),
         "concurrency": max(int(config.get("ENRICH_CONCURRENCY", 10)), 1),
         "timeout_ms": max(int(config.get("ENRICH_TIMEOUT_MS", 15000)), 1000),
@@ -1119,6 +1119,101 @@ async def _flush_instantly_buffer(
         "pushed": push_stats["pushed"],
         "skipped_duplicate": push_stats["skipped_duplicate"],
     }
+
+
+def _backlog_push_min(config: dict) -> int:
+    raw = config.get("INSTANTLY_BACKLOG_PUSH_MIN")
+    if raw is not None:
+        return max(int(raw), 1)
+    return max(int(config.get("INSTANTLY_PUSH_EVERY", 100)), 1)
+
+
+async def _push_csv_backlog_if_needed(
+    config: dict,
+    *,
+    workspace_emails: set[str],
+    csv_path: str,
+    state_path: str,
+    log_cb: Callable[[str], None],
+    instantly_pushed: int,
+    run_state: dict[str, Any] | None,
+) -> tuple[int, int]:
+    """Push CSV rows not yet on Instantly when backlog exceeds threshold."""
+    if not os.path.isfile(csv_path):
+        return instantly_pushed, 0
+
+    min_backlog = _backlog_push_min(config)
+    push_every = max(int(config.get("INSTANTLY_PUSH_EVERY", 100)), 1)
+
+    from taxonomy_gate import matches_taxonomy_csv_row, taxonomy_excluded_keywords
+
+    try:
+        df = pd.read_csv(csv_path)
+    except (OSError, pd.errors.EmptyDataError, ValueError):
+        return instantly_pushed, 0
+
+    if df.empty or "Email" not in df.columns:
+        return instantly_pushed, 0
+
+    included = list(config.get("TAXONOMY_INCLUDED_KEYWORDS") or [])
+    excluded = taxonomy_excluded_keywords(config)
+    taxonomy_enabled = bool(config.get("TAXONOMY_GATE_ENABLED"))
+
+    backlog_rows: list[dict[str, str]] = []
+    for _, series in df.iterrows():
+        row = {str(k): ("" if pd.isna(v) else str(v)) for k, v in series.items()}
+        email = str(row.get("Email") or "").strip().lower()
+        if not email or "@" not in email:
+            continue
+        if email in workspace_emails:
+            continue
+        if taxonomy_enabled:
+            ok, _matched = matches_taxonomy_csv_row(row, included, excluded or None)
+            if not ok:
+                continue
+        backlog_rows.append(row)
+
+    if len(backlog_rows) < min_backlog:
+        log_cb(
+            f"Backlog push skip — {len(backlog_rows)} CSV row(s) not on Instantly "
+            f"(min {min_backlog})"
+        )
+        return instantly_pushed, 0
+
+    log_cb(
+        f"Backlog push — {len(backlog_rows)} CSV row(s) not yet on Instantly "
+        f"(threshold {min_backlog})"
+    )
+
+    total_pushed = 0
+    total_skipped = 0
+    for offset in range(0, len(backlog_rows), push_every):
+        batch = backlog_rows[offset : offset + push_every]
+        pending = list(batch)
+        flush_stats = await _flush_instantly_buffer(
+            pending,
+            config,
+            log_cb=log_cb,
+            label=f"backlog batch {offset // push_every + 1}",
+        )
+        total_pushed += flush_stats["pushed"]
+        total_skipped += flush_stats["skipped_duplicate"]
+
+    instantly_pushed += total_pushed
+
+    from scrape_state import load_scrape_state, save_scrape_state
+
+    state = run_state if run_state is not None else load_scrape_state(state_path) or {}
+    state["instantly_pushed"] = instantly_pushed
+    state["instantly_skipped_duplicate"] = int(state.get("instantly_skipped_duplicate", 0) or 0) + total_skipped
+    state["push_to_instantly"] = True
+    save_scrape_state(state, path=state_path)
+
+    log_cb(
+        f"Backlog push done — pushed {total_pushed}, skipped duplicate {total_skipped} "
+        f"(checkpoint {instantly_pushed})"
+    )
+    return instantly_pushed, total_pushed
 
 
 async def clear_local_leads(
@@ -1892,12 +1987,17 @@ async def run_scraper_pipeline(
     leads_saved = len(seen_em)
     if leads_saved:
         log_cb(f"Loaded {leads_saved} existing lead(s) from CSV for dedup.")
+    touch_worker_heartbeat(paths.out_dir, preset=preset, status="running")
 
     instantly_enabled = push_to_instantly and bool(
         config.get("INSTANTLY_API_KEY") and config.get("INSTANTLY_LIST_ID")
     )
+    workspace_emails: set[str] = set()
     if instantly_enabled:
+        import asyncio
+
         from instantly_client import fetch_workspace_emails
+        from scrape_metrics import wrap_progress_with_heartbeat
 
         log_cb("Loading Instantly dedup emails for duplicate skip...")
         dedup_list_ids = config.get("INSTANTLY_DEDUP_LIST_IDS") or []
@@ -1905,15 +2005,21 @@ async def run_scraper_pipeline(
 
         def _dedup_progress(n: int) -> None:
             log_cb(f"  dedup index: {n} emails loaded...")
-            touch_worker_heartbeat(paths.out_dir, preset=preset, status="running")
 
-        workspace_emails = fetch_workspace_emails(
+        progress_cb = wrap_progress_with_heartbeat(
+            _dedup_progress,
+            lambda: touch_worker_heartbeat(paths.out_dir, preset=preset, status="running"),
+            interval_s=30.0,
+        )
+
+        workspace_emails = await asyncio.to_thread(
+            fetch_workspace_emails,
             config["INSTANTLY_API_KEY"],
             list_ids=dedup_list_ids,
             campaign_ids=dedup_campaign_ids,
             cache_path=paths.workspace_cache,
             log_cb=log_cb,
-            on_progress=_dedup_progress,
+            on_progress=progress_cb,
         )
         before = len(seen_em)
         seen_em.update(workspace_emails)
@@ -1921,6 +2027,7 @@ async def run_scraper_pipeline(
             f"Instantly workspace dedup — {len(seen_em) - before} new email(s) added to skip set "
             f"({len(seen_em)} total)."
         )
+        touch_worker_heartbeat(paths.out_dir, preset=preset, status="running")
 
     query_pass = initial_query_pass(config)
     start_batch = 0
@@ -2009,6 +2116,20 @@ async def run_scraper_pipeline(
             )
         else:
             log_cb(f"Starting engine — target {target} ({mode}).")
+
+    if instantly_enabled and leads_saved > 0:
+        instantly_pushed, _backlog_delta = await _push_csv_backlog_if_needed(
+            config,
+            workspace_emails=workspace_emails,
+            csv_path=paths.csv,
+            state_path=paths.scrape_state,
+            log_cb=log_cb,
+            instantly_pushed=instantly_pushed,
+            run_state=run_state,
+        )
+        if run_state is not None and _backlog_delta > 0:
+            run_state["instantly_pushed"] = instantly_pushed
+            save_scrape_state(run_state, path=_active.scrape_state)
 
     pending_scraped: list[dict[str, str]] = []
     pending_instantly: list[dict[str, str]] = []

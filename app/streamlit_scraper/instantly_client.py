@@ -237,9 +237,13 @@ class InstantlyClient:
         *,
         on_progress: Callable[[int], None] | None = None,
         on_page: Callable[[set[str]], None] | None = None,
+        on_scope_complete: Callable[[str], None] | None = None,
+        initial_emails: set[str] | None = None,
+        skip_scopes: set[str] | None = None,
     ) -> set[str]:
         """Return emails from configured Instantly lists and campaigns."""
-        emails: set[str] = set()
+        emails: set[str] = set(initial_emails or [])
+        skip = set(skip_scopes or [])
 
         def _checkpoint(scope_emails: set[str]) -> None:
             combined = set(emails)
@@ -250,19 +254,29 @@ class InstantlyClient:
                 on_page(combined)
 
         for list_id in list_ids:
+            scope_key = f"list:{list_id}"
+            if scope_key in skip:
+                continue
             scoped = self._paginate_lead_emails(
                 {"list_id": list_id},
                 on_page=_checkpoint,
             )
             emails.update(scoped)
+            if on_scope_complete:
+                on_scope_complete(scope_key)
             _checkpoint(set())
 
         for campaign_id in campaign_ids:
+            scope_key = f"campaign:{campaign_id}"
+            if scope_key in skip:
+                continue
             scoped = self._paginate_lead_emails(
                 {"campaign": campaign_id},
                 on_page=_checkpoint,
             )
             emails.update(scoped)
+            if on_scope_complete:
+                on_scope_complete(scope_key)
             _checkpoint(set())
 
         if on_progress:
@@ -638,7 +652,33 @@ def load_workspace_email_cache(
     campaign_ids: list[str] | None = None,
     max_age_s: int = WORKSPACE_CACHE_TTL_S,
     cache_path: str | None = None,
+    allow_partial: bool = False,
 ) -> set[str] | None:
+    entry = load_workspace_cache_entry(
+        list_ids=list_ids,
+        campaign_ids=campaign_ids,
+        max_age_s=max_age_s,
+        cache_path=cache_path,
+        allow_partial=allow_partial,
+    )
+    if entry is None:
+        return None
+    if not allow_partial and not entry.get("complete"):
+        return None
+    if allow_partial and entry.get("complete"):
+        return None
+    emails = entry.get("emails")
+    return set(emails) if isinstance(emails, set) else None
+
+
+def load_workspace_cache_entry(
+    *,
+    list_ids: list[str] | None = None,
+    campaign_ids: list[str] | None = None,
+    max_age_s: int = WORKSPACE_CACHE_TTL_S,
+    cache_path: str | None = None,
+    allow_partial: bool = False,
+) -> dict[str, Any] | None:
     path = cache_path or WORKSPACE_CACHE_PATH
     if not os.path.isfile(path):
         return None
@@ -648,7 +688,10 @@ def load_workspace_email_cache(
         saved_at = float(data.get("saved_at", 0))
         if saved_at <= 0 or time.time() - saved_at > max_age_s:
             return None
-        if not data.get("complete", False):
+        complete = bool(data.get("complete", False))
+        if complete and allow_partial:
+            return None
+        if not complete and not allow_partial:
             return None
         cached_lists = _normalize_scope_ids(data.get("list_ids"))
         cached_campaigns = _normalize_scope_ids(data.get("campaign_ids"))
@@ -657,7 +700,17 @@ def load_workspace_email_cache(
         if cached_campaigns != _normalize_scope_ids(campaign_ids):
             return None
         raw = data.get("emails") or []
-        return {str(email).strip().lower() for email in raw if "@" in str(email)}
+        emails = {str(email).strip().lower() for email in raw if "@" in str(email)}
+        completed_scopes = [
+            str(scope).strip()
+            for scope in (data.get("completed_scopes") or [])
+            if str(scope).strip()
+        ]
+        return {
+            "emails": emails,
+            "complete": complete,
+            "completed_scopes": completed_scopes,
+        }
     except (OSError, TypeError, ValueError, json.JSONDecodeError):
         return None
 
@@ -668,6 +721,7 @@ def save_workspace_email_cache(
     list_ids: list[str] | None = None,
     campaign_ids: list[str] | None = None,
     complete: bool = True,
+    completed_scopes: list[str] | None = None,
     cache_path: str | None = None,
 ) -> None:
     path = cache_path or WORKSPACE_CACHE_PATH
@@ -679,6 +733,7 @@ def save_workspace_email_cache(
         "campaign_ids": _normalize_scope_ids(campaign_ids),
         "emails": sorted(emails),
         "complete": complete,
+        "completed_scopes": _normalize_scope_ids(completed_scopes or []),
     }
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
@@ -712,6 +767,9 @@ def fetch_workspace_emails(
             )
         return set()
 
+    initial_emails: set[str] = set()
+    completed_scopes: list[str] = []
+
     if use_cache:
         cached = load_workspace_email_cache(
             list_ids=norm_lists,
@@ -723,14 +781,39 @@ def fetch_workspace_emails(
                 on_progress(len(cached))
             return cached
 
+        partial = load_workspace_cache_entry(
+            list_ids=norm_lists,
+            campaign_ids=norm_campaigns,
+            cache_path=cache_path,
+            allow_partial=True,
+        )
+        if partial is not None:
+            initial_emails = set(partial.get("emails") or set())
+            completed_scopes = list(partial.get("completed_scopes") or [])
+            if log_cb:
+                log_cb(
+                    f"Instantly dedup: resuming partial cache — "
+                    f"{len(initial_emails)} email(s), "
+                    f"{len(completed_scopes)} scope(s) already done"
+                )
+            if on_progress and initial_emails:
+                on_progress(len(initial_emails))
+
+    completed_scope_set = set(completed_scopes)
+
     def _checkpoint(emails: set[str]) -> None:
         save_workspace_email_cache(
             emails,
             list_ids=norm_lists,
             campaign_ids=norm_campaigns,
             complete=False,
+            completed_scopes=completed_scopes,
             cache_path=cache_path,
         )
+
+    def _scope_complete(scope_key: str) -> None:
+        if scope_key not in completed_scopes:
+            completed_scopes.append(scope_key)
 
     client = InstantlyClient(api_key)
     emails = client.fetch_dedup_emails(
@@ -738,12 +821,16 @@ def fetch_workspace_emails(
         norm_campaigns,
         on_progress=on_progress,
         on_page=_checkpoint,
+        on_scope_complete=_scope_complete,
+        initial_emails=initial_emails,
+        skip_scopes=completed_scope_set,
     )
     save_workspace_email_cache(
         emails,
         list_ids=norm_lists,
         campaign_ids=norm_campaigns,
         complete=True,
+        completed_scopes=completed_scopes,
         cache_path=cache_path,
     )
     return emails
