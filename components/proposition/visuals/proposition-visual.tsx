@@ -203,7 +203,7 @@ function Cabinet360() {
 // ─── 4. ROI COUNTER ───────────────────────────────────────────────────────────
 // Shows: 3 animated cards — prospects, honoraire, projected monthly revenue
 function RoiCounter({ prospects = 15, honoraire = 300 }: { prospects?: number; honoraire?: number }) {
-  const monthlyRevenue = prospects * honoraire;
+  const monthlyRevenue = Math.round((prospects * honoraire) / 2);
 
   return (
     <div className="grid grid-cols-3 gap-3 py-2">
