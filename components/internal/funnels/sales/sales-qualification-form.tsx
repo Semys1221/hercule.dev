@@ -148,36 +148,6 @@ export function SalesQualificationForm({
             .filter((question) => isQuestionVisible(question, watchedValues, showCoachScripts)),
     [audience, bleedTrack, clientSegment, section.id, showCoachScripts, watchedValues],
   );
-  const questionKey = questions.map((question) => question.id).join("|");
-
-  useEffect(() => {
-    if (section.id !== "objectifs" || !showCoachScripts) {
-      return;
-    }
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "4210ea",
-      },
-      body: JSON.stringify({
-        sessionId: "4210ea",
-        runId: "pre-fix",
-        hypothesisId: "C",
-        location: "sales-qualification-form.tsx:useEffect",
-        message: "flat SalesQualificationForm rendering objectifs",
-        data: {
-          audience,
-          questionIds: questions.map((question) => question.id),
-          questionCount: questions.length,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [audience, questionKey, questions, section.id, showCoachScripts]);
-
   if (section.id === "rendez-vous" || section.id === "introduction") {
     return null;
   }

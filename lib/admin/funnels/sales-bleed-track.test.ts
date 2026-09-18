@@ -13,15 +13,13 @@ function main() {
   const bleed = buildBleedTrack(SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, "comptable");
 
   assert.equal(bleed.businessNoun, "cabinet");
-  assert.equal(bleed.goalType, "more_volume");
-  assert.match(bleed.goal ?? "", /600/);
-  assert.match(bleed.goal ?? "", /dossiers/);
-  assert.match(bleed.current ?? "", /90 clients/);
+  assert.equal(bleed.goalType, "more_dossiers");
+  assert.match(bleed.goal ?? "", /8 dossiers/);
+  assert.match(bleed.current ?? "", /4 dossiers/);
   assert.equal(bleed.openingYear, "2020");
   assert.match(bleed.primaryMethod ?? "", /Bouche-à-oreille/);
-  assert.match(bleed.methodBrake ?? bleed.cause, /scalable|relations/i);
-  assert.match(bleed.gap ?? "", /\+3 dossiers/);
-  assert.match(bleed.gap ?? "", /ne pas stagner|philosophie/i);
+  assert.match(bleed.methodBrake ?? bleed.cause, /Non scalable/);
+  assert.equal(bleed.gapId, "significant_gap");
   assert.equal(bleed.honorairesAnnual, SALES_TEST_SESSION_COMPTABLE_QUALIFICATION.q13);
   assert.equal(bleed.reservedCapacity, SALES_TEST_SESSION_COMPTABLE_QUALIFICATION.q20);
 
@@ -40,14 +38,6 @@ function main() {
   const emptyBleed = buildBleedTrack(
     {
       ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-      w1: undefined,
-      w2: undefined,
-      w3: undefined,
-      w4: undefined,
-      w5: undefined,
-      w6: undefined,
-      w7: undefined,
-      w8: undefined,
       b1: undefined,
       b2: undefined,
       b4: undefined,

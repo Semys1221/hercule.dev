@@ -33,10 +33,12 @@ import type {
 
 const REPROCESSABLE_STATUSES = new Set<AiReplyMessageStatus>([
   "pending",
+  "failed",
   "skipped_not_interested",
   "skipped_recovery",
   "skipped_unsafe",
   "skipped_collision",
+  "skipped_waiting_e1",
 ]);
 
 const SKIP_REPROCESS_REASONS = new Set([
@@ -196,6 +198,7 @@ export async function reprocessInboundForLead(params: {
     leadEmail,
     interestStatus,
     inboundAt: inbound.created_at,
+    allowPreE1Race: true,
   });
   if (!e1ReplyGate.allowReply) {
     await updateInboundStatus(

@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "slug": "ludovic",
+  "label": "Ludovic — cabinet B2B",
+  "tenant": "comptable",
+  "prospect": {
+    "companyName": "Cabinet Ludovic",
+    "contactName": "Ludovic",
+    "email": "ludovic@exemple.fr"
+  },
+  "recap": [
+    {
+      "id": "situation",
+      "title": "Votre entreprise aujourd'hui",
+      "paragraphs": [
+        "Votre cabinet est en forte croissance : environ 10 collaborateurs, une présence établie sur plusieurs zones en France, un chiffre d'affaires déjà conséquent.",
+        "En tant que dirigeant détenant 70 % des parts, vous avez construit une structure solide avec une forte ambition de développement.",
+        "Vous n'êtes plus au stade de la consolidation — vous préparez la prochaine phase de croissance."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "orbiting-team"
+    },
+    {
+      "id": "problematique",
+      "title": "La problématique identifiée",
+      "paragraphs": [
+        "Vous souhaitez développer l'activité sur un pôle de clientèle spécifique, mais vous n'avez pas encore un flux de prospects qui correspond précisément à cette cible.",
+        "Vous recherchez davantage de contrôle sur les profils que vous rencontrez — pas simplement du volume, mais des dirigeants B2B qualifiés en amont.",
+        "Hercule répond à ce besoin : prospects qualifiés, ciblage exclusivement B2B, et contrôle du type de profil présenté en entretien."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "animated-leads"
+    },
+    {
+      "id": "objectif",
+      "title": "Vos objectifs",
+      "paragraphs": [
+        "Votre vision initiale : 30 entrées mensuelles pour alimenter significativement vos 10 collaborateurs.",
+        "Hercule recommande une montée en charge par paliers : première étape à 25 entrées, avec environ 12 à 13 conversions attendues.",
+        "Cette approche préserve la qualité du ciblage, mesure la capacité réelle de conversion, et permet d'augmenter progressivement le volume selon les résultats."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "circular-progress"
+    }
+  ],
+  "proposal": {
+    "blocks": [
+      {
+        "id": "pilier-calibration",
+        "title": "Pilier 1 — Calibration B2B sur mesure",
+        "description": "Nous dimensionnons un pipeline exclusivement sur votre cible dirigeants B2B, pour alimenter vos collaborateurs en flux continu et qualifié.",
+        "bullets": [
+          "Ciblage dirigeants B2B exclusif — pas de libéraux ni d'indépendants isolés",
+          "Profils filtrés selon vos critères : secteur, taille, zone géographique",
+          "Exclusivité : aucun autre cabinet sur la même cible"
+        ],
+        "visual": "beam-pipeline"
+      },
+      {
+        "id": "pilier-controle",
+        "title": "Pilier 2 — Contrôle total des profils",
+        "description": "Vous définissez le profil exact du prospect que vous voulez voir en entretien. Nous filtrons en amont — vous n'avez que des rendez-vous qualifiés.",
+        "bullets": [
+          "Qualification effectuée avant toute transmission",
+          "Sélection sur critères : secteur, effectif, engagement annuel",
+          "Tableau de bord en temps réel pour valider ou rejeter des profils"
+        ],
+        "visual": "ripple-signal"
+      },
+      {
+        "id": "pilier-montee",
+        "title": "Pilier 3 — Montée en puissance progressive",
+        "description": "On commence à 15 profils pour mesurer la capacité de conversion de votre équipe, puis on augmente par paliers selon vos résultats.",
+        "bullets": [
+          "Premier palier : 15 profils sur 20 à 25 jours",
+          "Palier 25 disponible dès validation du premier palier",
+          "Volume ajusté en continu selon vos retours et votre capacité d'absorption"
+        ],
+        "visual": "step-progress"
+      }
+    ],
+    "roi": {
+      "title": "Retour sur investissement",
+      "summary": "15 profils × 300 €/mois = 4 500 € de CA mensuel projeté",
+      "details": [
+        "Taux de conversion estimé : 12 à 13 entrées sur 25 profils qualifiés",
+        "Honoraires tout-en-un : comptabilité + conseil fiscal + accompagnement patrimonial",
+        "Pack à 300 €/mois justifié par la valeur stratégique — pas de la tenue comptable simple",
+        "Vos clients cherchent du ROI business, pas simplement à gagner du temps"
+      ],
+      "sliders": {
+        "prospectsDefault": 15,
+        "prospectsMin": 5,
+        "prospectsMax": 30,
+        "honoraireDefault": 300,
+        "honoraireMin": 150,
+        "honoraireMax": 600
+      }
+    },
+    "pricing": {
+      "title": "Investissement — formule test",
+      "amountLabel": "À partir de 1 489 € / mois",
+      "details": [
+        "Choisissez la formule adaptée à votre palier de démarrage"
+      ],
+      "options": [
+        {
+          "id": "formule-test-15",
+          "label": "Formule Test — 15 profils",
+          "amountLabel": "1 489 € / mois",
+          "details": [
+            "1 mensualité unique pour lancer le test",
+            "15 profils planifiés à partir de J+30",
+            "Calibration infrastructure entre J+0 et J+25"
+          ],
+          "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",
+          "recommended": true
+        },
+        {
+          "id": "formule-croissance-25",
+          "label": "Formule Croissance — 25 profils",
+          "amountLabel": "1 799 € / mois",
+          "details": [
+            "25 profils dès le départ",
+            "Montée en charge accélérée pour votre équipe de 10 collaborateurs",
+            "Calibration infrastructure entre J+0 et J+25"
+          ],
+          "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",
+          "recommended": false
+        }
+      ]
+    }
+  },
+  "payment": {
+    "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m"
+  }
+}

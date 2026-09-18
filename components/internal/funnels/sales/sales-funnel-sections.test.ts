@@ -3,7 +3,6 @@
 import assert from "node:assert/strict";
 
 import { getSalesFunnelSections } from "@/components/internal/funnels/sales/sales-funnel-sections";
-import { SESSION_SECTION_SYSTEM_LABEL } from "@/lib/admin/funnels/ui-copy";
 
 const AUDIENCES = ["agence", "comptable", "cif", "entreprise"] as const;
 
@@ -17,32 +16,31 @@ function main() {
   }
 
   const comptableSections = getSalesFunnelSections("comptable");
-  assert.ok(comptableSections.some((section) => section.id === "pitch"));
-  assert.ok(comptableSections.some((section) => section.id === "sliders"));
-  assert.equal(
-    comptableSections.find((section) => section.id === "pitch")?.label,
-    SESSION_SECTION_SYSTEM_LABEL,
-  );
-  assert.equal(comptableSections.find((section) => section.id === "sliders")?.label, "Sliders");
-  const slidersIndex = comptableSections.findIndex((section) => section.id === "sliders");
-  const mappingIndex = comptableSections.findIndex((section) => section.id === "mapping");
-  assert.ok(slidersIndex >= 0 && mappingIndex >= 0 && slidersIndex < mappingIndex);
-  assert.ok(!comptableSections.some((section) => section.id === "conditions"));
+  assert.ok(comptableSections.some((section) => section.id === "presentation-societe"));
+  assert.ok(comptableSections.some((section) => section.id === "capacite"));
+  assert.ok(comptableSections.some((section) => section.id === "standards"));
+  assert.ok(comptableSections.some((section) => section.id === "conditions"));
+  assert.ok(!comptableSections.some((section) => section.id === "pitch"));
+  assert.ok(!comptableSections.some((section) => section.id === "sliders"));
+  assert.ok(!comptableSections.some((section) => section.id === "mapping"));
   assert.equal(
     comptableSections.find((section) => section.id === "introduction")?.label,
-    "Avant-propos",
+    "Audit de compatibilité",
   );
+  assert.equal(comptableSections.at(-1)?.id, "conditions");
 
   const cifSections = getSalesFunnelSections("cif");
-  assert.ok(cifSections.some((section) => section.id === "pitch"));
-  assert.ok(cifSections.some((section) => section.id === "sliders"));
-  assert.ok(!cifSections.some((section) => section.id === "standards"));
-  assert.ok(cifSections.some((section) => section.id === "mapping"));
-  assert.equal(cifSections.at(-1)?.id, "mapping");
+  assert.ok(cifSections.some((section) => section.id === "presentation-societe"));
+  assert.ok(cifSections.some((section) => section.id === "standards"));
+  assert.ok(cifSections.some((section) => section.id === "conditions"));
+  assert.ok(!cifSections.some((section) => section.id === "pitch"));
+  assert.ok(!cifSections.some((section) => section.id === "sliders"));
+  assert.ok(!cifSections.some((section) => section.id === "mapping"));
   assert.equal(
     cifSections.find((section) => section.id === "introduction")?.label,
-    "Avant-propos",
+    "Audit de compatibilité",
   );
+  assert.equal(cifSections.at(-1)?.id, "conditions");
 
   const agenceIntro = getSalesFunnelSections("agence").find(
     (section) => section.id === "introduction",
@@ -52,10 +50,6 @@ function main() {
   const entrepriseSections = getSalesFunnelSections("entreprise");
   assert.ok(!entrepriseSections.some((section) => section.id === "mapping"));
   assert.ok(!getSalesFunnelSections("agence").some((section) => section.id === "sliders"));
-
-  const comptableMapping = comptableSections.find((section) => section.id === "mapping");
-  assert.ok(comptableMapping?.documentationOnly);
-  assert.equal(comptableSections.at(-1)?.id, "mapping");
 
   const agenceConditions = getSalesFunnelSections("agence").find(
     (section) => section.id === "conditions",

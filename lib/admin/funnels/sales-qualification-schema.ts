@@ -696,57 +696,14 @@ const SECTION_QUESTION_KEYS: Record<
 };
 
 const CABINET_OBJECTIFS_KEYS: Array<keyof SalesQualificationValues> = [
-  "w1",
-  "w2",
-  "w3",
-  "w4",
-  "w5",
-  "w6",
-  "w7",
-  "w19",
-  "w8",
-  "w8Tried",
-  "w8Brake",
-  "w9Acknowledged",
-  "w8Criteria",
-  "w10",
-  "w11",
-  "w12Confirmed",
-  "w13",
-  "w14",
-  "w15",
-  "w18",
-  "w17Acknowledged",
+  "b1",
+  "b2",
+  "b3",
+  "b4",
+  "b5",
+  "b7",
+  "b8",
   "bleedDiagnosticAccepted",
-];
-
-const CABINET_PITCH_KEYS: Array<keyof SalesQualificationValues> = [
-  "p2DecisionMakers",
-  "p2MissingRole",
-  "p3Acknowledged",
-  "pCgvAccepted",
-  "p5BuyIn",
-  "p7FoundationBuyIn",
-  "p7BuyIn",
-  "p9BuyIn",
-  "pRoiAcknowledged",
-  "p11TempCheck",
-  "p11WhyId",
-  "p12Plan",
-  "p12WhyId",
-  "pitchWizardCompleted",
-];
-
-const CABINET_SLIDERS_KEYS: Array<keyof SalesQualificationValues> = [
-  "sCaptureTied",
-  "sEngineTied",
-  "sPartnerTied",
-  "sTempCheck",
-  "sThinkBeat1",
-  "sThinkBeat2",
-  "sThinkBeat3",
-  "sOffer",
-  "sOfferCopiedAt",
 ];
 
 export function getSectionQuestionKeys(
@@ -755,12 +712,6 @@ export function getSectionQuestionKeys(
 ): Array<keyof SalesQualificationValues> {
   if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
     return CABINET_OBJECTIFS_KEYS;
-  }
-  if (sectionId === "pitch" && isCabinetBuyerSalesAudience(audience)) {
-    return CABINET_PITCH_KEYS;
-  }
-  if (sectionId === "sliders" && isCabinetBuyerSalesAudience(audience)) {
-    return CABINET_SLIDERS_KEYS;
   }
   return SECTION_QUESTION_KEYS[sectionId];
 }
@@ -971,61 +922,8 @@ export function isSalesSectionComplete(
   }
 
   if (sectionId === "objectifs" && isCabinetBuyerSalesAudience(audience)) {
-    if (values.w13 === "no" && !isValidW13WhySelection(values)) {
-      return false;
-    }
-    if (values.w13 === "yes" && !values.wExchangeWhy13) {
-      return false;
-    }
-    if (
-      values.w13 === "yes" &&
-      values.w14 !== undefined &&
-      values.w14 !== "12m" &&
-      !values.wExchangeWhy14
-    ) {
-      return false;
-    }
-    if (
-      ((values.w15 === "wait" && values.w14 === "12m") ||
-        (values.w13 === "yes" && values.w15 === "shortcut")) &&
-      !values.wExchangeWhy15
-    ) {
-      return false;
-    }
-    if (isWizardUrgencyStepVisible(values) && !values.w16) {
-      return false;
-    }
-    if (values.w16 === "strategic" && !values.w16StrategicSub) {
-      return false;
-    }
-    if (values.w16 === "resale" && !values.w16ResaleSub) {
-      return false;
-    }
-    if (values.w16 === "other" && !isValidW16DetailSelection(values)) {
-      return false;
-    }
-    if (
-      (values.w18 === "near_target" || values.w18 === "at_capacity") &&
-      !values.wExchangeWhy18
-    ) {
-      return false;
-    }
-    if (needsW8TriedWho(values) && !values.w8TriedWho?.trim()) {
-      return false;
-    }
-    if (values.w9Acknowledged !== true) {
-      return false;
-    }
-    if ((values.w8Criteria?.length ?? 0) < 1) {
-      return false;
-    }
-    if (!values.w11) {
-      return false;
-    }
-    if (values.w17Acknowledged !== true) {
-      return false;
-    }
-    if (!values.w18) {
+    const b5Count = values.b5?.length ?? 0;
+    if (b5Count > 1 && !values.b5b) {
       return false;
     }
   }
@@ -1044,57 +942,12 @@ export function isSalesSectionComplete(
     return values.q21.length > 0 && values.q21.length <= 3;
   }
 
-  if (sectionId === "sliders" && isCabinetBuyerSalesAudience(audience)) {
-    return (
-      values.sTempCheck === "yes" &&
-      (values.sOffer === "core" || values.sOffer === "horizon") &&
-      Boolean(values.sOfferCopiedAt)
-    );
-  }
-
-  if (sectionId === "pitch" && isCabinetBuyerSalesAudience(audience)) {
-    if (values.bleedDiagnosticAccepted !== true) {
-      return false;
-    }
-    if (!values.p2DecisionMakers) {
-      return false;
-    }
-    if (
-      values.p2DecisionMakers === "missing" &&
-      !values.p2MissingRole
-    ) {
-      return false;
-    }
-    if (values.p3Acknowledged !== true) {
-      return false;
-    }
-    if (values.pCgvAccepted !== true) {
-      return false;
-    }
-    if (values.p5BuyIn !== "clear" || values.p7FoundationBuyIn !== "clear" || values.p7BuyIn !== "clear" || values.p9BuyIn !== "clear") {
-      return false;
-    }
-    if (values.pRoiAcknowledged !== true) {
-      return false;
-    }
-    if (!values.p11TempCheck) {
-      return false;
-    }
-    if (values.p11TempCheck === "yes" && !values.p11WhyId) {
-      return false;
-    }
-    return values.pitchWizardCompleted === true;
-  }
-
   return true;
 }
 
 function getQualificationSectionIds(
   audience: Audience = "agence",
 ): Array<Exclude<SalesFunnelSectionId, "rendez-vous">> {
-  if (isCabinetBuyerSalesAudience(audience)) {
-    return ["introduction", "objectifs", "pitch"];
-  }
   return [
     "introduction",
     "objectifs",

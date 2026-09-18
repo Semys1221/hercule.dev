@@ -417,8 +417,9 @@ import {
   CIF_SLIDER_CONFIGS,
 } from "./sales-questions-cif";
 import { AGENCE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-agence";
+import { COMPTABLE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-comptable";
+import { CIF_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-cif";
 import { ENTREPRISE_OBJECTIFS_QUESTIONS } from "./sales-questions-objectifs-entreprise";
-import { getWizardObjectifsQuestions } from "./sales-questions-objectifs-wizard";
 
 export function getHerculeMonthlyMin(audience: Audience = "agence"): number {
   if (audience === "cif") return CIF_MONTHLY_MIN;
@@ -431,8 +432,11 @@ export function getSliderConfigs(audience: Audience = "agence") {
 }
 
 function getObjectifsQuestions(audience: Audience): SalesQuestion[] {
-  if (isCabinetBuyerSalesAudience(audience)) {
-    return getWizardObjectifsQuestions(audience);
+  if (audience === "cif") {
+    return CIF_OBJECTIFS_QUESTIONS;
+  }
+  if (isComptableSalesAudience(audience)) {
+    return COMPTABLE_OBJECTIFS_QUESTIONS;
   }
   if (audience === "entreprise") {
     return ENTREPRISE_OBJECTIFS_QUESTIONS;

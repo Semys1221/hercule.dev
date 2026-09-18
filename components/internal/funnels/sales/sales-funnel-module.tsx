@@ -86,11 +86,9 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     Set<SalesClosingSectionId>
   >(() => new Set());
   const [sessionResetKey, setSessionResetKey] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const hasAutoTransitionedRef = useRef(false);
   const transitionTimeoutRef = useRef<number | null>(null);
-  const renderCountRef = useRef(0);
 
   const pitchSidebarEnabled = useSyncExternalStore(
     subscribePitchSidebarEnabled,
@@ -232,12 +230,6 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     audience,
     clientSegment,
   );
-  const immersiveCabinetWizard =
-    phase === "qualification" &&
-    isCabinetBuyerSalesAudience(audience) &&
-    (activeQualificationId === "objectifs" ||
-      activeQualificationId === "pitch" ||
-      activeQualificationId === "sliders");
 
   const meetingInfo: MeetingInfo | null = selectedBooking
     ? {
@@ -465,79 +457,6 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     };
   }, [clearTransitionTimeout]);
 
-  const handleSidebarOpenChange = useCallback((open: boolean) => {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d7ea7b" },
-      body: JSON.stringify({
-        sessionId: "d7ea7b",
-        runId: "post-fix",
-        hypothesisId: "C",
-        location: "sales-funnel-module.tsx:onOpenChange",
-        message: "SidebarProvider open change",
-        data: { open },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-    setSidebarOpen(open);
-  }, []);
-
-  const handleLiveTrackSectionChange = useCallback(
-    (section: SalesFunnelSectionId) => {
-      setActiveQualificationId((current) => {
-        const willChange = current !== section;
-        // #region agent log
-        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8ae7a5" },
-          body: JSON.stringify({
-            sessionId: "8ae7a5",
-            runId: "pre-fix",
-            hypothesisId: "D",
-            location: "sales-funnel-module.tsx:onLiveTrackSectionChange",
-            message: "live track section sync to parent",
-            data: { section, current, willChange },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-        // #endregion
-        return willChange ? section : current;
-      });
-    },
-    [],
-  );
-
-  // #region agent log
-  renderCountRef.current += 1;
-  useEffect(() => {
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d7ea7b" },
-      body: JSON.stringify({
-        sessionId: "d7ea7b",
-        runId: "post-fix",
-        hypothesisId: "A-E",
-        location: "sales-funnel-module.tsx:render",
-        message: "SalesFunnelShell render",
-        data: {
-          renderCount: renderCountRef.current,
-          phase,
-          contentPhase,
-          activeQualificationId,
-          activeClosingId,
-          immersiveCabinetWizard,
-          sidebarOpen,
-          clientSegment,
-          collapsible: immersiveCabinetWizard ? "offcanvas" : "none",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  });
-  // #endregion
-
   const sidebarProps = {
     audience,
     name: meetingName,
@@ -560,45 +479,9 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
     onEnterClosing: () => enterClosingPhase({ animated: true }),
     onBackToQualification: backToQualification,
     onSectionChange: (sectionId: SalesFunnelSectionId | SalesClosingSectionId) => {
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d7ea7b" },
-        body: JSON.stringify({
-          sessionId: "d7ea7b",
-          runId: "post-fix",
-          hypothesisId: "C",
-          location: "sales-funnel-module.tsx:onSectionChange",
-          message: "sidebar section change",
-          data: {
-            sectionId,
-            activeQualificationId,
-            activeClosingId,
-            sidebarOpen,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
-      if (
-        isCabinetBuyerSalesAudience(audience) &&
-        (sectionId === "objectifs" || sectionId === "pitch")
-      ) {
-        setSidebarOpen(false);
-      } else if (isCabinetBuyerSalesAudience(audience)) {
-        setSidebarOpen(true);
-      }
       if (isSalesClosingSectionId(sectionId)) {
         setPhase("closing");
         setActiveClosingId(sectionId);
-        return;
-      }
-      if (
-        sectionId === "pitch" &&
-        isCabinetBuyerSalesAudience(audience) &&
-        !objectifsComplete &&
-        !developerModeEnabled
-      ) {
         return;
       }
       setPhase("qualification");
@@ -607,16 +490,8 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
   };
 
   const sessionContent = (
-    <SidebarProvider
-      className="flex min-h-0 flex-1 overflow-hidden"
-      open={immersiveCabinetWizard ? sidebarOpen : undefined}
-      onOpenChange={immersiveCabinetWizard ? handleSidebarOpenChange : undefined}
-    >
-      <SalesFunnelSidebar
-        {...sidebarProps}
-        collapsible={immersiveCabinetWizard ? "offcanvas" : "none"}
-        className={immersiveCabinetWizard ? "z-50" : undefined}
-      />
+    <SidebarProvider className="flex min-h-0 flex-1 overflow-hidden">
+      <SalesFunnelSidebar {...sidebarProps} />
       <SalesFunnelWorkspace
         audience={audience}
         phase={phase}
@@ -632,17 +507,6 @@ export function SalesFunnelShell({ audience }: SalesFunnelShellProps) {
         sessionResetKey={sessionResetKey}
         developerModeEnabled={developerModeEnabled}
         prospectFirstName={prospectFirstName}
-        immersiveCabinetWizard={immersiveCabinetWizard}
-        sidebarOpen={sidebarOpen}
-        onOpenSidebar={() => {
-          setSidebarOpen((open) => !open);
-        }}
-        onGoToObjectifs={() => {
-          setPhase("qualification");
-          setActiveQualificationId("objectifs");
-          setSidebarOpen(false);
-        }}
-        onLiveTrackSectionChange={handleLiveTrackSectionChange}
         onClosingChange={(patch) =>
           setClosingValues((current) => ({ ...current, ...patch }))
         }

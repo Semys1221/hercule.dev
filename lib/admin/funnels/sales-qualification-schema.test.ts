@@ -28,27 +28,8 @@ function main() {
   assert.equal(comptableDefaults.q16, null);
   assert.equal(comptableDefaults.bleedDiagnosticAccepted, false);
   assert.equal(comptableDefaults.o3Duration, undefined);
-  assert.equal(comptableDefaults.pitchWizardCompleted, false);
 
   assert.deepEqual(comptableDefaults.q21, []);
-
-  assert.equal(
-    isSalesSectionComplete("pitch", SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, "comptable"),
-    true,
-    "comptable test preset completes pitch section",
-  );
-
-  assert.equal(
-    isSalesSectionComplete(
-      "pitch",
-      {
-        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        pitchWizardCompleted: false,
-      },
-      "comptable",
-    ),
-    false,
-  );
 
   assert.equal(
     isSalesSectionComplete(
@@ -113,26 +94,13 @@ function main() {
       "objectifs",
       {
         ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        w17Acknowledged: false,
+        b5: ["word_of_mouth", "partnerships"],
+        b5b: undefined,
       },
       "comptable",
     ),
     false,
-    "wizard requires w17Acknowledged",
-  );
-
-  assert.equal(
-    isSalesSectionComplete(
-      "objectifs",
-      {
-        ...SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
-        w13: "no",
-        w13Why: "",
-      },
-      "comptable",
-    ),
-    false,
-    "w13Why required when w13 is no",
+    "b5b required when multiple b5 selections",
   );
 
   const cifDefaults = getSalesQualificationDefaultValues("cif");
@@ -140,19 +108,25 @@ function main() {
   assert.equal(cifDefaults.q13, CIF_ANNUAL_TYPICAL);
   assert.equal(cifDefaults.q15, "mixte");
 
-  assert.equal(
-    isSalesSectionComplete("pitch", SALES_TEST_SESSION_CIF_QUALIFICATION, "cif"),
-    true,
-  );
-
   const comptableProgress = getSalesQualificationProgress(
     SALES_TEST_SESSION_COMPTABLE_QUALIFICATION,
     "comptable",
   );
-  assert.equal(comptableProgress.totalSections, 3);
-  assert.equal(comptableProgress.completedSections, 3);
+  assert.equal(comptableProgress.totalSections, 6);
+  assert.equal(comptableProgress.completedSections, 6);
   assert.equal(
     isSalesQualificationComplete(SALES_TEST_SESSION_COMPTABLE_QUALIFICATION, "comptable"),
+    true,
+  );
+
+  const cifProgress = getSalesQualificationProgress(
+    SALES_TEST_SESSION_CIF_QUALIFICATION,
+    "cif",
+  );
+  assert.equal(cifProgress.totalSections, 6);
+  assert.equal(cifProgress.completedSections, 6);
+  assert.equal(
+    isSalesQualificationComplete(SALES_TEST_SESSION_CIF_QUALIFICATION, "cif"),
     true,
   );
 

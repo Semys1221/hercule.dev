@@ -7,8 +7,6 @@ import {
   SALES_SKIP_VALUE,
   type SalesQualificationValues,
 } from "@/lib/admin/funnels/sales-qualification-schema";
-import { buildCabinetWizardPresetValues } from "@/lib/admin/funnels/sales-objectifs-wizard-preset";
-import { buildCabinetPitchPresetValues } from "@/lib/admin/funnels/sales-pitch-wizard-preset";
 import type { Audience } from "@/lib/admin/navigation";
 import { isComptableSalesAudience } from "@/lib/admin/funnels/sales-audience";
 import type { LeadCategory } from "@/lib/link-tracking/types";
@@ -100,8 +98,16 @@ export const SALES_TEST_SESSION_COMPTABLE_QUALIFICATION: SalesQualificationValue
   o5: [],
   o6: "",
   o3FollowUp: "",
-  ...buildCabinetWizardPresetValues("comptable"),
-  ...buildCabinetPitchPresetValues("comptable"),
+  b1: "more_dossiers",
+  b2: 4,
+  b3: "y2020",
+  b3Year: 2020,
+  b4: 8,
+  b5: ["word_of_mouth"],
+  b6Acknowledged: true,
+  b7: "wom_scale",
+  b8: "significant_gap",
+  bleedDiagnosticAccepted: true,
   q11: ["freelancers", "tpe"],
   q1: ["google_ads", "seo", "web_creation"],
   q2: ["paid_acquisition", "organic_seo"],
@@ -124,8 +130,16 @@ export const SALES_TEST_SESSION_CIF_QUALIFICATION: SalesQualificationValues = {
   o5: [],
   o6: "",
   o3FollowUp: "",
-  ...buildCabinetWizardPresetValues("cif"),
-  ...buildCabinetPitchPresetValues("cif"),
+  b1: "more_dossiers",
+  b2: 3,
+  b3: "y2017",
+  b3Year: 2017,
+  b4: 6,
+  b5: ["partnerships"],
+  b6Acknowledged: true,
+  b7: "part_inactive",
+  b8: "significant_gap",
+  bleedDiagnosticAccepted: true,
   q11: ["freelancers", "tpe"],
   q1: ["patrimoine_epargne", "tresorerie_entreprise", "transmission"],
   q2: ["cif_amf", "ingenierie", "tresorerie"],

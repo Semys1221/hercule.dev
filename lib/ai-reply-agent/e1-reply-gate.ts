@@ -35,15 +35,23 @@ export function resolveInboundTimestamp(
   return null;
 }
 
+/** Max ms a pre-E1 inbound can predate E1 and still be treated as a race-condition reply. */
+const PRE_E1_RACE_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+
 /**
  * Interested leads: reply agent may only answer an inbound that arrived strictly
  * after interested_email1 (E1) was dispatched — not the confirmation that triggered Interested.
+ *
+ * `allowPreE1Race`: set true in reprocess paths where E1 is already confirmed sent.
+ * Allows inbounds that arrived up to 30 minutes BEFORE E1 (race-condition replies that
+ * triggered Interested before E1 was dispatched — safe to answer after the fact).
  */
 export async function checkInterestedE1ReplyGate(params: {
   campaignId: string;
   leadEmail: string;
   interestStatus: number | null | undefined;
   inboundAt: string | null | undefined;
+  allowPreE1Race?: boolean;
 }): Promise<E1ReplyGateResult> {
   const inboundAt = resolveInboundTimestamp(params.inboundAt, null);
 
@@ -79,6 +87,19 @@ export async function checkInterestedE1ReplyGate(params: {
   }
 
   if (inboundAt <= e1SentAt) {
+    // In reprocess mode, allow if the inbound arrived within the race window before E1.
+    // This covers leads whose reply triggered Interested seconds before E1 was dispatched.
+    if (params.allowPreE1Race) {
+      const gapMs = Date.parse(e1SentAt) - Date.parse(inboundAt);
+      if (gapMs <= PRE_E1_RACE_WINDOW_MS) {
+        return {
+          allowReply: true,
+          reason: "",
+          e1SentAt,
+          inboundAt,
+        };
+      }
+    }
     return {
       allowReply: false,
       reason: "Inbound predates E1 — wait for lead reply after interested_email1",

@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "slug": "cabinet-exemple",
+  "label": "Cabinet comptable — vision stratégique",
+  "tenant": "comptable",
+  "prospect": {
+    "companyName": "Cabinet comptable",
+    "contactName": "Dirigeant",
+    "email": "contact@exemple.fr"
+  },
+  "recap": [
+    {
+      "id": "vision",
+      "title": "Votre cabinet aujourd'hui",
+      "paragraphs": [
+        "Vous avez une vision élargie de la comptabilité : vous n'êtes pas un cabinet d'exécution et de saisie, vous apportez un véritable conseil stratégique aux dirigeants pour piloter leur entreprise.",
+        "Vous intégrez une phase de conseil orientée rentabilité — c'est ce qui vous différencie sur votre marché.",
+        "Cette différenciation constitue le corps de valeur que nous transmettons à Hercule pour identifier des profils de qualité, alignés sur votre expertise."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "animated-leads"
+    },
+    {
+      "id": "alignement",
+      "title": "Alignement avec Hercule",
+      "paragraphs": [
+        "Votre cabinet s'aligne naturellement avec le modèle de qualification Hercule : profils sérieux, engagement sur la durée, orientation rentabilité.",
+        "L'acquisition doit refléter cette exigence — nous ne cherchons pas du volume, nous cherchons des entrepreneurs prêts à s'engager avec un cabinet qui apporte de la valeur stratégique."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "beam-pipeline"
+    },
+    {
+      "id": "problematique",
+      "title": "La problématique identifiée",
+      "paragraphs": [
+        "Au-delà de la qualification, vous avez une exigence de réactivité : vous ne souhaitez pas traiter des intentions qui ont refroidi pendant 3 à 7 jours.",
+        "Vous voulez capturer le prospect dès l'instant où il témoigne une intention — au moment où le signal est chaud, pas quand il est tiède.",
+        "L'objectif est une connexion immédiate entre le prospect et votre cabinet, dès l'émission du signal."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "ripple-signal"
+    }
+  ],
+  "proposal": {
+    "blocks": [
+      {
+        "id": "pilier-acquisition",
+        "title": "Pilier 1 — Méthode Hercule dédiée",
+        "description": "Nous conservons la méthode d'acquisition Hercule — notre algorithme propriétaire — en le faisant tourner exclusivement pour votre cabinet.",
+        "bullets": [
+          "Même technologie d'acquisition, ciblage sur mesure",
+          "Pipeline dédié à votre cabinet uniquement",
+          "Profils filtrés selon votre corps de valeur"
+        ],
+        "visual": "beam-pipeline"
+      },
+      {
+        "id": "pilier-instantane",
+        "title": "Pilier 2 — Exclusivité et connexion instantanée",
+        "description": "Dès qu'une demande est mentionnée, nous relions instantanément les informations du cabinet et du prospect.",
+        "bullets": [
+          "Transmission immédiate : téléphone et calendrier du cabinet",
+          "Coordonnées prospect transmises en temps réel (email, téléphone)",
+          "Signal émis = connexion instantanée, sans délai de 3 à 7 jours"
+        ],
+        "visual": "ripple-signal"
+      },
+      {
+        "id": "pilier-calibrage",
+        "title": "Pilier 3 — Calibrage de l'infrastructure",
+        "description": "Nous pilotons l'infrastructure sur mesure pour atteindre des volumes raisonnables et soutenables pour votre cabinet.",
+        "bullets": [
+          "Calibration dédiée sur environ 25 jours",
+          "Volumes ajustés à votre capacité d'absorption",
+          "Infrastructure dimensionnée pour la qualité, pas le volume brut"
+        ],
+        "visual": "circular-progress"
+      }
+    ],
+    "roi": {
+      "title": "Retour sur investissement et garantie qualité",
+      "summary": "Formule test — 1 mensualité, 10 profils planifiés",
+      "details": [
+        "J+20 à J+25 : premiers profils (calibration sur mesure, ~25 jours)",
+        "J+30 : planification d'environ 10 profils sur le mois suivant",
+        "Une seule mensualité suffit — pas de double engagement",
+        "Garantie : profils alignés sur votre expertise — entrepreneurs +2 salariés, engagement annuel en honoraires, pas de libéraux ou indépendants isolés"
+      ]
+    },
+    "pricing": {
+      "title": "Investissement — formule test",
+      "amountLabel": "1 489 € — formule test (1 mois)",
+      "details": [
+        "1 mensualité unique pour lancer le test",
+        "10 profils planifiés à partir de J+30",
+        "Calibration infrastructure entre J+0 et J+25"
+      ]
+    }
+  },
+  "payment": {
+    "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m"
+  }
+}
