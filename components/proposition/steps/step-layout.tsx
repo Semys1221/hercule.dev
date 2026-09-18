@@ -34,16 +34,17 @@ export function StepLayout({
       </div>
 
       {showCheckbox && onAcceptedChange ? (
-        <div className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+        <Label
+          htmlFor={confirmId}
+          className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:border-zinc-700 hover:bg-zinc-900/60 has-[[data-state=checked]]:border-indigo-500/40 has-[[data-state=checked]]:bg-indigo-500/5"
+        >
           <Checkbox
             id={confirmId}
             checked={accepted}
             onCheckedChange={(value) => onAcceptedChange(value === true)}
           />
-          <Label htmlFor={confirmId} className="text-sm leading-relaxed text-zinc-200">
-            {confirmLabel}
-          </Label>
-        </div>
+          <span className="text-sm leading-relaxed text-zinc-200">{confirmLabel}</span>
+        </Label>
       ) : null}
     </div>
   );
