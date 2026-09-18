@@ -42,8 +42,10 @@ describe("buildPropositionSteps", () => {
   it("parses cabinet-exemple config with roi sliders and pricing options", () => {
     expect(cabinetConfig.pageTitle).toBe("Votre proposition R2I");
     expect(cabinetConfig.proposal.roi.sliders?.prospectsDefault).toBe(10);
-    expect(cabinetConfig.proposal.roi.sliders?.prospectsMax).toBe(15);
+    expect(cabinetConfig.proposal.roi.sliders?.prospectsMax).toBe(20);
     expect(cabinetConfig.proposal.pricing.options).toHaveLength(2);
     expect(cabinetConfig.proposal.pricing.options?.find((o) => o.id === "formule-test-10")).toBeDefined();
+    expect(cabinetConfig.proposal.pricing.options?.find((o) => o.id === "formule-croissance-20")).toBeDefined();
+    expect(cabinetConfig.proposal.roi.sliders?.prospectsMax).toBe(20);
   });
 });

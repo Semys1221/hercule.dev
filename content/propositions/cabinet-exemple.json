@@ -83,7 +83,7 @@
     ],
     "roi": {
       "title": "Retour sur investissement et garantie qualité",
-      "summary": "10 profils × 300 €/mois = 3 000 € de CA mensuel projeté",
+      "summary": "Jusqu'à 20 profils × 300 €/mois = 6 000 € de CA mensuel projeté",
       "details": [
         "J+20 à J+25 : premiers profils (calibration sur mesure, ~25 jours)",
         "J+30 : planification d'environ 10 profils sur le mois suivant",
@@ -93,7 +93,7 @@
       "sliders": {
         "prospectsDefault": 10,
         "prospectsMin": 5,
-        "prospectsMax": 15,
+        "prospectsMax": 20,
         "honoraireDefault": 300,
         "honoraireMin": 150,
         "honoraireMax": 600
@@ -119,12 +119,12 @@
           "recommended": true
         },
         {
-          "id": "formule-croissance-15",
-          "label": "Formule Croissance — 15 profils",
-          "amountLabel": "1 799 € / mois",
+          "id": "formule-croissance-20",
+          "label": "Formule Croissance — 20 profils",
+          "amountLabel": "2 199 € / mois",
           "details": [
-            "15 profils dès le départ",
-            "Montée en charge accélérée",
+            "20 profils dès le départ",
+            "Montée en charge accélérée pour votre cabinet",
             "Calibration infrastructure entre J+0 et J+25"
           ],
           "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",
