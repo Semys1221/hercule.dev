@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "slug": "cabinet-cif",
+  "label": "Cabinet CIF — conseil en investissements financiers",
+  "pageTitle": "Votre proposition Hercule",
+  "tenant": "cif",
+  "prospect": {
+    "companyName": "Votre cabinet CIF",
+    "contactName": "Conseiller"
+  },
+  "recap": [
+    {
+      "id": "situation",
+      "title": "Votre cabinet aujourd'hui",
+      "paragraphs": [
+        "Vous êtes conseiller en investissements financiers : vous accompagnez vos clients dans la structuration et la gestion de leur patrimoine — SCPI, PEA, assurance-vie, contrats de capitalisation.",
+        "Votre valeur ne se résume pas à la vente d'un produit financier. Vous construisez une relation de confiance sur le long terme, avec un suivi personnalisé et une vision globale du patrimoine.",
+        "Vous cherchez maintenant à accélérer votre acquisition en trouvant des profils avec un réel potentiel d'encours — pas des curieux, des investisseurs prêts à agir."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "cabinet-360"
+    },
+    {
+      "id": "problematique",
+      "title": "La problématique identifiée",
+      "paragraphs": [
+        "Le vrai obstacle dans votre métier n'est pas la conviction — c'est de trouver des prospects qui ont réellement des capitaux à investir et une intention d'agir.",
+        "Vous perdez du temps avec des profils qui n'ont pas les moyens ou qui ne sont pas encore prêts. Chaque rendez-vous sans encours derrière est un coût d'opportunité.",
+        "Hercule répond à cette problématique : qualifier en amont les prospects sur leur capacité patrimoniale, et ne vous transmettre que ceux qui ont un projet d'investissement concret."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "roi-counter",
+      "visualProspects": 8,
+      "visualHonoraire": 200
+    },
+    {
+      "id": "objectif",
+      "title": "Vos objectifs",
+      "paragraphs": [
+        "Objectif initial : 8 à 10 nouveaux prospects qualifiés par mois — un volume maîtrisé pour valider la qualité des profils avant d'augmenter la cadence.",
+        "Avec un taux de conversion estimé à 50 %, soit 4 à 5 nouveaux clients investisseurs par mois, chacun apportant un encours moyen significatif.",
+        "L'approche par paliers vous permet de mesurer la qualité réelle des profils, d'ajuster le ciblage et de monter en puissance une fois la machine validée."
+      ],
+      "confirmLabel": "Je confirme ce récapitulatif",
+      "visual": "circular-progress",
+      "visualProspects": 8
+    }
+  ],
+  "proposal": {
+    "blocks": [
+      {
+        "id": "pilier-ciblage",
+        "title": "Pilier 1 — Ciblage patrimonial qualifié",
+        "description": "Nous construisons un pipeline dédié à votre cible : des profils avec un patrimoine financier disponible, une intention d'investissement et une capacité d'engagement réelle.",
+        "bullets": [
+          "Ciblage sur critères patrimoniaux — pas de la quantité, de la qualité",
+          "Filtrage en amont : investisseurs actifs, pas de simples curieux",
+          "Exclusivité : aucun autre CIF sur les mêmes profils dans votre zone"
+        ],
+        "visual": "beam-pipeline"
+      },
+      {
+        "id": "pilier-qualification",
+        "title": "Pilier 2 — Qualification des encours en amont",
+        "description": "Avant de vous transmettre un profil, Hercule s'assure que la capacité d'investissement est réelle — vous ne recevez que des prospects avec un projet concret.",
+        "bullets": [
+          "Vérification de la capacité patrimoniale avant transmission",
+          "Profils filtrés : projet d'investissement identifié, capital disponible",
+          "Zéro rendez-vous perdu sur un prospect sans encours réel"
+        ],
+        "visual": "ripple-signal"
+      },
+      {
+        "id": "pilier-montee",
+        "title": "Pilier 3 — Montée en puissance progressive",
+        "description": "On commence à 8 profils qualifiés pour calibrer la conversion, puis on augmente par paliers selon vos résultats et votre capacité d'absorption.",
+        "bullets": [
+          "Premier palier : 8 profils sur 20 à 25 jours",
+          "Palier 20 disponible dès validation du premier palier",
+          "Volume ajusté selon vos retours et l'encours moyen observé"
+        ],
+        "visual": "step-progress",
+        "visualProspects": 8,
+        "visualPalier2": 20
+      }
+    ],
+    "roi": {
+      "title": "Retour sur investissement — frais d'entrée + encours",
+      "summary": "Jusqu'à 20 clients × 250 €/mois (frais + encours) = 5 000 € de revenus mensuels projetés",
+      "details": [
+        "Frais d'entrée : 2 % sur l'encours investi à la souscription (revenu immédiat, ex. 4 000 € pour 200 k€ investis)",
+        "Revenus sur encours : 1 % / an sur l'encours géré (revenu récurrent, ex. 167 €/mois pour 200 k€)",
+        "Encours moyen estimé : 150 000 € à 300 000 € par client qualifié transmis",
+        "Taux de conversion estimé : 50 % des profils présentés → clients signés"
+      ],
+      "sliders": {
+        "prospectsDefault": 8,
+        "prospectsMin": 3,
+        "prospectsMax": 20,
+        "prospectsLabel": "Nouveaux clients / mois",
+        "honoraireDefault": 200,
+        "honoraireMin": 100,
+        "honoraireMax": 500,
+        "honoraireLabel": "Revenu mensuel / client (frais + encours)",
+        "revenueLabel": "Revenus mensuels projetés",
+        "revenueSubLabel": "{prospects} clients × {honoraire}/mois"
+      }
+    },
+    "pricing": {
+      "title": "Investissement — choisissez votre formule",
+      "amountLabel": "À partir de 1 489 € / mois",
+      "details": [
+        "Choisissez la formule adaptée à votre palier de démarrage"
+      ],
+      "options": [
+        {
+          "id": "formule-test-8",
+          "label": "Formule Test — 8 profils",
+          "amountLabel": "1 489 € / mois",
+          "details": [
+            "1 mensualité unique pour lancer le test",
+            "8 profils qualifiés planifiés à partir de J+30",
+            "Calibration infrastructure entre J+0 et J+25"
+          ],
+          "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",
+          "recommended": true
+        },
+        {
+          "id": "formule-croissance-20",
+          "label": "Formule Croissance — 20 profils",
+          "amountLabel": "2 199 € / mois",
+          "details": [
+            "20 profils dès le départ — montée en charge accélérée",
+            "Objectif : 10 nouveaux clients investisseurs / mois",
+            "Calibration infrastructure entre J+0 et J+25"
+          ],
+          "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m",
+          "recommended": false
+        }
+      ]
+    }
+  },
+  "payment": {
+    "stripePaymentLinkUrl": "https://buy.stripe.com/3cI3cuewZe9D0mXgAE3Je0m"
+  }
+}

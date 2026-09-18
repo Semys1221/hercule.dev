@@ -38,9 +38,13 @@ export const propositionRoiSlidersSchema = z.object({
   prospectsDefault: z.number().int().min(1),
   prospectsMin: z.number().int().min(1).optional(),
   prospectsMax: z.number().int().min(1).optional(),
+  prospectsLabel: z.string().optional(),
   honoraireDefault: z.number().int().min(1),
   honoraireMin: z.number().int().min(1).optional(),
   honoraireMax: z.number().int().min(1).optional(),
+  honoraireLabel: z.string().optional(),
+  revenueLabel: z.string().optional(),
+  revenueSubLabel: z.string().optional(),
 });
 
 export const propositionRoiSchema = z.object({

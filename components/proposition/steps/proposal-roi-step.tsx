@@ -91,7 +91,7 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
           <div className="space-y-6">
             <div ref={prospectsSliderRef} className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <Label className="text-zinc-300">Nombre de profils / mois</Label>
+                <Label className="text-zinc-300">{sliders.prospectsLabel ?? "Nombre de profils / mois"}</Label>
                 <span className="font-medium text-zinc-100">{prospects}</span>
               </div>
               <Slider
@@ -128,7 +128,7 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
 
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <Label className="text-zinc-300">Honoraire mensuel moyen (€)</Label>
+                <Label className="text-zinc-300">{sliders.honoraireLabel ?? "Honoraire mensuel moyen (€)"}</Label>
                 <span className="font-medium text-zinc-100">{honoraire} €</span>
               </div>
               <Slider
@@ -151,12 +151,14 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
               transition={{ duration: 0.4 }}
               className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-5 py-6 text-center"
             >
-              <p className="text-sm text-zinc-400">CA mensuel projeté</p>
+              <p className="text-sm text-zinc-400">{sliders.revenueLabel ?? "CA mensuel projeté"}</p>
               <p className="mt-2 text-4xl font-semibold tracking-tight text-indigo-300">
                 <NumberTicker value={monthlyRevenue} /> €
               </p>
               <p className="mt-2 text-xs text-zinc-500">
-                {prospects} profils × {formatEuros(honoraire)}/mois
+                {sliders.revenueSubLabel
+                  ? sliders.revenueSubLabel.replace("{prospects}", String(prospects)).replace("{honoraire}", formatEuros(honoraire))
+                  : `${prospects} profils × ${formatEuros(honoraire)}/mois`}
               </p>
             </motion.div>
 
