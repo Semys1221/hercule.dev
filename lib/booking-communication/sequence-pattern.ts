@@ -38,6 +38,12 @@ export const SEQUENCE_THREAD_FAMILIES: readonly BookingEmailType[][] = [
     "comptable_acquisition_rdv_final",
   ],
   [
+    "proposition_ludovic_welcome",
+    "proposition_ludovic_config_ready",
+    "proposition_ludovic_rdv_reminder",
+    "proposition_ludovic_rdv_final",
+  ],
+  [
     "conference_invite",
     "conference_invite_24",
     "conference_invite_48",

@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import { revalidateBookingsCache } from "@/lib/calendly/bookings-cache";
 import { ensureComptableAcquisitionLead } from "@/lib/comptable-acquisition/provision-lead";
 import { startComptableAcquisitionSequence } from "@/lib/comptable-acquisition-sequence/orchestrator";
+import { startPropositionLudovicSequence } from "@/lib/proposition-ludovic-sequence/orchestrator";
 import {
   amountCentsForComptableAcquisition1489,
   COMPTABLE_ACQUISITION_OFFER_TYPE,
@@ -108,11 +109,36 @@ export async function handleComptableAcquisitionCheckoutCompleted(
   revalidateBookingsCache();
 
   try {
-    await startComptableAcquisitionSequence({
-      leadId: lead.id,
-      paymentAt: new Date(succeededAt),
-      stripeCheckoutSessionId: session.id,
-    });
+    const propositionSlug = session.metadata?.proposition_slug;
+    if (propositionSlug === "ludovic") {
+      // Dedicated sequence for /proposition/ludovic payments
+      const offerId = session.metadata?.offer_id ?? "";
+      const profileVolume = Number(session.metadata?.profile_volume ?? 0);
+      const amountCents = session.amount_total ?? 0;
+      const amountLabel = amountCents
+        ? `${Math.round(amountCents / 100).toLocaleString("fr-FR")} € / mois`
+        : "";
+
+      // Map offer_id → human label (mirrors ludovic.json pricing options)
+      const offerLabelMap: Record<string, string> = {
+        "formule-test-15": "Formule Test — 15 profils",
+        "formule-croissance-45": "Formule Croissance — 45 profils",
+      };
+      const offerLabel = offerLabelMap[offerId] ?? offerId;
+
+      await startPropositionLudovicSequence({
+        leadId: lead.id,
+        paymentAt: new Date(succeededAt),
+        stripeCheckoutSessionId: session.id,
+        payment: { offerId, offerLabel, profileVolume, amountLabel },
+      });
+    } else {
+      await startComptableAcquisitionSequence({
+        leadId: lead.id,
+        paymentAt: new Date(succeededAt),
+        stripeCheckoutSessionId: session.id,
+      });
+    }
   } catch (sequenceError) {
     console.error(
       "[stripe/webhook] comptable acquisition email sequence failed:",

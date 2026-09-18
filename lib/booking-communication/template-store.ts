@@ -67,6 +67,10 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "comptable_acquisition_config_ready",
   "comptable_acquisition_rdv_reminder",
   "comptable_acquisition_rdv_final",
+  "proposition_ludovic_welcome",
+  "proposition_ludovic_config_ready",
+  "proposition_ludovic_rdv_reminder",
+  "proposition_ludovic_rdv_final",
 ];
 
 const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
@@ -127,6 +131,7 @@ export function isProductBookingEmailType(emailType: BookingEmailType): boolean 
     emailType === "sold_check_j7" ||
     emailType === "payment_notification_client" ||
     emailType.startsWith("comptable_acquisition_") ||
+    emailType.startsWith("proposition_ludovic_") ||
     emailType.startsWith("conference_invite")
   );
 }

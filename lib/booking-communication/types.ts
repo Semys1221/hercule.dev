@@ -46,6 +46,10 @@ export const BOOKING_EMAIL_TYPE_VALUES = [
   "comptable_acquisition_config_ready",
   "comptable_acquisition_rdv_reminder",
   "comptable_acquisition_rdv_final",
+  "proposition_ludovic_welcome",
+  "proposition_ludovic_config_ready",
+  "proposition_ludovic_rdv_reminder",
+  "proposition_ludovic_rdv_final",
   "conference_invite",
   "conference_invite_24",
   "conference_invite_48",
@@ -77,6 +81,7 @@ export const SEQUENCE_TRIGGERED_BY_VALUES = [
   "admin_complete_appt",
   "admin_modalites",
   "comptable_acquisition_sequence",
+  "proposition_ludovic_sequence",
   "cif_conference_sequence",
 ] as const;
 

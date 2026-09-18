@@ -64,6 +64,10 @@ export async function extraVarsForJob(
   retractionEndsAt?: string;
   scheduledAt?: string | null;
   reservationCifLink?: string;
+  /** proposition_ludovic_* only */
+  profileVolume?: string;
+  offerLabel?: string;
+  amountLabel?: string;
 }> {
   const dashboardLink = dashboardLinkFor(lead) ?? "";
   const reservationAgenceLink = reservationAgenceLinkFor(lead);
@@ -85,17 +89,41 @@ export async function extraVarsForJob(
         }
       : {};
 
+  // Extras for proposition_ludovic_* emails — read persisted data from lead.profile
+  const propositionLudovicExtras = (job.email_type as BookingEmailType).startsWith(
+    "proposition_ludovic_",
+  )
+    ? (() => {
+        const profile = (lead.profile ?? {}) as Record<string, unknown>;
+        const payment = (profile.proposition_payment ?? {}) as Record<string, unknown>;
+        return {
+          trackingNumber: trackingNumberForSlug(slug),
+          estimatedFirstRdvDate: estimatedFromLead,
+          profileVolume: String(payment.profileVolume ?? ""),
+          offerLabel: String(payment.offerLabel ?? ""),
+          amountLabel: String(payment.amountLabel ?? ""),
+        };
+      })()
+    : {};
+
   const base = {
     dashboardLink,
     reservationAgenceLink,
     company: lead.company,
     email: lead.email,
     estimatedFirstBookingDate: estimatedFromLead,
-    estimatedFirstRdvDate: estimatedFromLead,
-    trackingNumber: acquisitionExtras.trackingNumber ?? "",
+    estimatedFirstRdvDate:
+      propositionLudovicExtras.estimatedFirstRdvDate ??
+      acquisitionExtras.estimatedFirstRdvDate ??
+      estimatedFromLead,
+    trackingNumber:
+      propositionLudovicExtras.trackingNumber ?? acquisitionExtras.trackingNumber ?? "",
     rdvRangeLabel: acquisitionExtras.rdvRangeLabel ?? "",
     activationDate,
     retractionEndsAt,
+    profileVolume: propositionLudovicExtras.profileVolume ?? "",
+    offerLabel: propositionLudovicExtras.offerLabel ?? "",
+    amountLabel: propositionLudovicExtras.amountLabel ?? "",
   };
 
   const emailType = job.email_type as BookingEmailType;

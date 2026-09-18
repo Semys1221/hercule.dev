@@ -253,11 +253,12 @@ function RoiCounter({ prospects = 15, honoraire = 300 }: { prospects?: number; h
 
 // ─── 4. CIRCULAR PROGRESS ─────────────────────────────────────────────────────
 // Shows: Animated conversion rate progress bar
-function CircularProgress() {
+function CircularProgress({ prospects = 15 }: { prospects?: number }) {
   const [value, setValue] = useState(0);
+  const converted = Math.round(prospects * 0.5);
 
   useEffect(() => {
-    const t = setTimeout(() => setValue(62), 400);
+    const t = setTimeout(() => setValue(50), 400);
     return () => clearTimeout(t);
   }, []);
 
@@ -272,7 +273,9 @@ function CircularProgress() {
       />
       <div className="text-center">
         <p className="text-sm font-semibold text-zinc-100">Taux de conversion estimé</p>
-        <p className="mt-0.5 text-xs text-zinc-400">12 → 13 clients convertis / 20 profils</p>
+        <p className="mt-0.5 text-xs text-zinc-400">
+          ~{converted} clients convertis / {prospects} profils
+        </p>
       </div>
     </div>
   );
@@ -316,7 +319,7 @@ function RippleSignal() {
 
 // ─── 6. STEP PROGRESS ─────────────────────────────────────────────────────────
 // Shows: Two circular progress bars side by side for palier 1 and palier 2
-function StepProgress() {
+function StepProgress({ prospects = 15, palier2 = 45 }: { prospects?: number; palier2?: number }) {
   const [v1, setV1] = useState(0);
   const [v2, setV2] = useState(0);
 
@@ -341,7 +344,7 @@ function StepProgress() {
         />
         <div className="text-center">
           <p className="text-xs font-semibold text-zinc-200">Palier 1</p>
-          <p className="text-xs text-zinc-400">15 profils</p>
+          <p className="text-xs text-zinc-400">{prospects} profils</p>
         </div>
       </div>
 
@@ -357,7 +360,7 @@ function StepProgress() {
         />
         <div className="text-center">
           <p className="text-xs font-semibold text-zinc-200">Palier 2</p>
-          <p className="text-xs text-zinc-400">45 profils</p>
+          <p className="text-xs text-zinc-400">{palier2} profils</p>
         </div>
       </div>
     </div>
@@ -382,10 +385,12 @@ export function PropositionVisual({
   visual,
   prospects,
   honoraire,
+  palier2,
 }: {
   visual: string;
   prospects?: number;
   honoraire?: number;
+  palier2?: number;
 }) {
   switch (visual as PropositionVisualType) {
     case "beam-pipeline":
@@ -399,11 +404,11 @@ export function PropositionVisual({
     case "roi-counter":
       return <RoiCounter prospects={prospects} honoraire={honoraire} />;
     case "circular-progress":
-      return <CircularProgress />;
+      return <CircularProgress prospects={prospects} />;
     case "ripple-signal":
       return <RippleSignal />;
     case "step-progress":
-      return <StepProgress />;
+      return <StepProgress prospects={prospects} palier2={palier2} />;
     default:
       return null;
   }

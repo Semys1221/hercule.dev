@@ -474,6 +474,73 @@ Un aperçu du déroulé de votre entretien est disponible ici : {{confirmLink}}`
     subject: "",
     body: modalitesCancelBody(),
   },
+  proposition_ludovic_welcome: {
+    subject: "Confirmation paiement — votre acquisition Hercule est lancée",
+    body: `{{firstNameLine}}
+
+Votre paiement {{offerLabel}} a bien été reçu. Nous lançons votre acquisition dès aujourd'hui.
+
+Configuration par défaut de votre acquisition :
+• Entreprise 2+ salariés
+• Engagement annuel en honoraires
+• Besoin exprimé : rentabilité (pas tenue comptable manuelle) — conseil stratégique & gestion
+
+Si vous souhaitez modifier ces paramètres, répondez à cet email avec vos critères sur mesure.
+
+Volume planifié : {{profileVolume}} profils / mois.
+Vous recevrez un email Calendly pour connecter votre agenda sous 24 h.
+
+Numéro de suivi : {{trackingNumber}}
+Vos premiers rendez-vous devraient arriver vers le {{estimatedFirstRdvDate}}.
+
+{{dashboardLink}}
+
+Béatrice Meyer`,
+  },
+  proposition_ludovic_config_ready: {
+    subject: "Configuration terminée — connectez votre agenda",
+    body: `{{firstNameLine}}
+
+La configuration de votre espace Hercule est terminée de notre côté.
+
+Vous allez recevoir très prochainement une invitation Calendly pour connecter votre agenda professionnel. Ce lien vous permet de synchroniser vos disponibilités et recevoir les rendez-vous directement dans votre calendrier.
+
+Volume prévu : {{profileVolume}} profils / mois.
+Premier rendez-vous estimé : {{estimatedFirstRdvDate}}.
+
+Numéro de suivi : {{trackingNumber}}
+{{dashboardLink}}
+
+Béatrice Meyer`,
+  },
+  proposition_ludovic_rdv_reminder: {
+    subject: "Rappel — vos premiers rendez-vous arrivent",
+    body: `{{firstNameLine}}
+
+Petit rappel : vos premiers rendez-vous devraient commencer vers le {{estimatedFirstRdvDate}}.
+
+Volume planifié : {{profileVolume}} profils / mois.
+
+Numéro de suivi : {{trackingNumber}}
+{{dashboardLink}}
+
+Béatrice Meyer`,
+  },
+  proposition_ludovic_rdv_final: {
+    subject: "Dernier rappel automatique — premiers rendez-vous",
+    body: `{{firstNameLine}}
+
+Dernier rappel automatique : vos premiers rendez-vous sont attendus vers le {{estimatedFirstRdvDate}}.
+
+Volume planifié : {{profileVolume}} profils / mois.
+
+Numéro de suivi : {{trackingNumber}}
+{{dashboardLink}}
+
+Il s'agit du dernier email automatique de cette séquence. Pour toute question : contact@hercule.dev
+
+Béatrice Meyer`,
+  },
   comptable_acquisition_welcome: {
     subject: "Bienvenue — votre acquisition Hercule est lancée",
     body: `{{firstNameLine}}

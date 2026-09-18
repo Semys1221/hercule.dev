@@ -2,6 +2,7 @@ import { BOOKING_CONFIRMATION_DISABLED } from "@/lib/booking-communication/confi
 import { startConferenceInviteSequence } from "@/lib/cif-conference-sequence/orchestrator";
 import { startCloseIndecisSequence } from "@/lib/close-indecis-sequence/orchestrator";
 import { startComptableAcquisitionSequence } from "@/lib/comptable-acquisition-sequence/orchestrator";
+import { startPropositionLudovicSequence } from "@/lib/proposition-ludovic-sequence/orchestrator";
 import { handleLeadInterested } from "@/lib/instantly-bypass/handler";
 import { executeBypassFlow } from "@/lib/instantly-bypass/send-flow";
 import { getOutreachConfigView } from "@/lib/admin/niches/outreach-config";
@@ -189,6 +190,24 @@ export async function dispatchSequenceStart(params: {
         return { ok: false, error: "acquisition_not_started" };
       }
       return { ok: true, currentStep: "comptable_acquisition_welcome" };
+    }
+    case "proposition-ludovic-post-payment": {
+      // Manual replay — default to formule-test-15 if no offer metadata available
+      const result = await startPropositionLudovicSequence({
+        leadId: lead.id,
+        paymentAt: params.scheduledAt ?? new Date(),
+        stripeCheckoutSessionId: `management:${lead.id}`,
+        payment: {
+          offerId: "formule-test-15",
+          offerLabel: "Formule Test — 15 profils",
+          profileVolume: 15,
+          amountLabel: "1 489 € / mois",
+        },
+      });
+      if (!result.welcomeSent && result.scheduledJobs === 0) {
+        return { ok: false, error: "proposition_ludovic_not_started" };
+      }
+      return { ok: true, currentStep: "proposition_ludovic_welcome" };
     }
     default:
       return { ok: false, error: `unsupported_sequence:${params.sequenceSlug}` };

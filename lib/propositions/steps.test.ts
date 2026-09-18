@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import cabinetB2b from "@/content/propositions/cabinet-b2b.json";
 import cabinetExemple from "@/content/propositions/cabinet-exemple.json";
 import ludovic from "@/content/propositions/ludovic.json";
 import { parsePropositionConfig } from "@/lib/propositions/schema";
@@ -46,6 +47,20 @@ describe("buildPropositionSteps", () => {
     expect(cabinetConfig.proposal.pricing.options).toHaveLength(2);
     expect(cabinetConfig.proposal.pricing.options?.find((o) => o.id === "formule-test-10")).toBeDefined();
     expect(cabinetConfig.proposal.pricing.options?.find((o) => o.id === "formule-croissance-20")).toBeDefined();
-    expect(cabinetConfig.proposal.roi.sliders?.prospectsMax).toBe(20);
+  });
+
+  it("parses cabinet-b2b config as generic proposition with volumes 15/30", () => {
+    const cabinetB2bConfig = parsePropositionConfig(cabinetB2b);
+    expect(cabinetB2bConfig.slug).toBe("cabinet-b2b");
+    expect(cabinetB2bConfig.pageTitle).toBe("Votre proposition Hercule");
+    expect(cabinetB2bConfig.proposal.roi.sliders?.prospectsDefault).toBe(15);
+    expect(cabinetB2bConfig.proposal.roi.sliders?.prospectsMax).toBe(30);
+    expect(cabinetB2bConfig.proposal.pricing.options).toHaveLength(2);
+    expect(cabinetB2bConfig.proposal.pricing.options?.find((o) => o.id === "formule-test-15")).toBeDefined();
+    expect(cabinetB2bConfig.proposal.pricing.options?.find((o) => o.id === "formule-croissance-30")).toBeDefined();
+    const pilier3 = cabinetB2bConfig.proposal.blocks.find((b) => b.id === "pilier-montee");
+    expect(pilier3?.visualProspects).toBe(15);
+    expect(pilier3?.visualPalier2).toBe(30);
+    expect(buildPropositionSteps(cabinetB2bConfig).length).toBeGreaterThan(8);
   });
 });

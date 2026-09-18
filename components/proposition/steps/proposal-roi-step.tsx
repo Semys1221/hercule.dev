@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import { StepLayout } from "@/components/proposition/steps/step-layout";
@@ -24,10 +24,14 @@ function formatEuros(value: number): string {
   }).format(value);
 }
 
+const ROI_SLIDER_CLASSNAME =
+  "[&_[data-slot=slider-track]]:bg-zinc-700/80 [&_[data-slot=slider-range]]:bg-indigo-500 [&_[data-slot=slider-thumb]]:border-indigo-400 [&_[data-slot=slider-thumb]]:bg-white";
+
 export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoiStepProps) {
   const sliders = roi.sliders;
   const [prospects, setProspects] = useState(sliders?.prospectsDefault ?? 15);
   const [honoraire, setHonoraire] = useState(sliders?.honoraireDefault ?? 300);
+  const prospectsSliderRef = useRef<HTMLDivElement>(null);
 
   const monthlyRevenue = useMemo(() => prospects * honoraire, [prospects, honoraire]);
   const convertedClients = useMemo(() => Math.round(prospects * 0.5), [prospects]);
@@ -37,6 +41,41 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
   const prospectsMax = sliders?.prospectsMax ?? 30;
   const honoraireMin = sliders?.honoraireMin ?? 150;
   const honoraireMax = sliders?.honoraireMax ?? 600;
+
+  useEffect(() => {
+    if (!sliders) {
+      return;
+    }
+
+    const sliderRoot = prospectsSliderRef.current?.querySelector('[data-slot="slider"]');
+    const track = sliderRoot?.querySelector('[data-slot="slider-track"]');
+    const range = sliderRoot?.querySelector('[data-slot="slider-range"]');
+    const trackWidth = track?.getBoundingClientRect().width ?? 0;
+    const rangeWidth = range?.getBoundingClientRect().width ?? 0;
+
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "c521a9" },
+      body: JSON.stringify({
+        sessionId: "c521a9",
+        runId: "pre-fix",
+        hypothesisId: "H1",
+        location: "proposal-roi-step.tsx:mount",
+        message: "ROI slider visual metrics",
+        data: {
+          prospects,
+          prospectsMin,
+          prospectsMax,
+          rangeWidthRatio: trackWidth > 0 ? rangeWidth / trackWidth : null,
+          trackBg: track ? getComputedStyle(track).backgroundColor : null,
+          rangeBg: range ? getComputedStyle(range).backgroundColor : null,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [prospects, prospectsMax, prospectsMin, sliders]);
 
   return (
     <StepLayout
@@ -50,18 +89,41 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
       <div className="space-y-6">
         {sliders ? (
           <div className="space-y-6">
-            <div className="space-y-3">
+            <div ref={prospectsSliderRef} className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <Label className="text-zinc-300">Nombre de profils / mois</Label>
                 <span className="font-medium text-zinc-100">{prospects}</span>
               </div>
               <Slider
+                className={ROI_SLIDER_CLASSNAME}
                 value={[prospects]}
                 min={prospectsMin}
                 max={prospectsMax}
                 step={1}
-                onValueChange={(value) => setProspects(value[0] ?? prospectsMin)}
+                onValueChange={(value) => {
+                  const next = value[0] ?? prospectsMin;
+                  setProspects(next);
+                  // #region agent log
+                  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "c521a9" },
+                    body: JSON.stringify({
+                      sessionId: "c521a9",
+                      runId: "pre-fix",
+                      hypothesisId: "H2",
+                      location: "proposal-roi-step.tsx:prospects-change",
+                      message: "Prospects slider value change",
+                      data: { next, prospectsMin, prospectsMax },
+                      timestamp: Date.now(),
+                    }),
+                  }).catch(() => {});
+                  // #endregion
+                }}
               />
+              <div className="flex justify-between text-xs text-zinc-500">
+                <span>{prospectsMin}</span>
+                <span>{prospectsMax}</span>
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -70,12 +132,17 @@ export function ProposalRoiStep({ roi, accepted, onAcceptedChange }: ProposalRoi
                 <span className="font-medium text-zinc-100">{honoraire} €</span>
               </div>
               <Slider
+                className={ROI_SLIDER_CLASSNAME}
                 value={[honoraire]}
                 min={honoraireMin}
                 max={honoraireMax}
                 step={10}
                 onValueChange={(value) => setHonoraire(value[0] ?? honoraireMin)}
               />
+              <div className="flex justify-between text-xs text-zinc-500">
+                <span>{formatEuros(honoraireMin)}</span>
+                <span>{formatEuros(honoraireMax)}</span>
+              </div>
             </div>
 
             <motion.div

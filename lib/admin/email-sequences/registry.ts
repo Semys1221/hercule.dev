@@ -332,6 +332,47 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     bookingCategory: "agence",
   },
   {
+    id: "proposition-ludovic-post-payment",
+    slug: "proposition-ludovic-post-payment",
+    name: "Proposition Ludovic — post-paiement",
+    phase: "close",
+    category: "Onboarding",
+    stepCount: 4,
+    status: "built",
+    provider: "resend",
+    audiences: ["comptable"],
+    description:
+      "Déclenchée par Payment Link Stripe (metadata proposition_slug=ludovic). E1 immédiat avec config par défaut, E2 +24h (Calendly), E3 +48h, E4 +5j. Premier RDV estimé J+20. Volume selon offre (15 ou 45 profils).",
+    steps: [
+      {
+        id: "proposition_ludovic_welcome",
+        label: "Confirmation paiement + config par défaut",
+        delay: "Immédiat (stripe_payment)",
+        emailType: "proposition_ludovic_welcome",
+      },
+      {
+        id: "proposition_ludovic_config_ready",
+        label: "Configuration terminée + invitation Calendly",
+        delay: "+24h",
+        emailType: "proposition_ludovic_config_ready",
+      },
+      {
+        id: "proposition_ludovic_rdv_reminder",
+        label: "Rappel premier RDV",
+        delay: "+48h",
+        emailType: "proposition_ludovic_rdv_reminder",
+      },
+      {
+        id: "proposition_ludovic_rdv_final",
+        label: "Dernier rappel automatique",
+        delay: "+5j",
+        emailType: "proposition_ludovic_rdv_final",
+      },
+    ],
+    editorKind: "booking",
+    bookingCategory: "comptable",
+  },
+  {
     id: "comptable-acquisition-post-payment",
     slug: "comptable-acquisition-post-payment",
     name: "Acquisition comptable 1 489 € — post-paiement",

@@ -45,6 +45,10 @@ const PRODUCT_TYPES: BookingEmailType[] = [
   "comptable_acquisition_config_ready",
   "comptable_acquisition_rdv_reminder",
   "comptable_acquisition_rdv_final",
+  "proposition_ludovic_welcome",
+  "proposition_ludovic_config_ready",
+  "proposition_ludovic_rdv_reminder",
+  "proposition_ludovic_rdv_final",
 ];
 
 const SAMPLE_VARS: Record<string, string> = {
@@ -62,6 +66,10 @@ const SAMPLE_VARS: Record<string, string> = {
   surveyLink: "https://www.hercule.dev/survey/example-token",
   date: "mardi 9 septembre 2026",
   heure: "14:00",
+  // proposition_ludovic_* extras
+  profileVolume: "15",
+  offerLabel: "Formule Test — 15 profils",
+  amountLabel: "1 489 € / mois",
 };
 
 function assertNoForbiddenCopy(label: string, text: string) {
@@ -77,7 +85,8 @@ function assertNoForbiddenCopy(label: string, text: string) {
 function main() {
   for (const emailType of PRODUCT_TYPES) {
     const category =
-      emailType.startsWith("comptable_acquisition_")
+      emailType.startsWith("comptable_acquisition_") ||
+      emailType.startsWith("proposition_ludovic_")
         ? "comptable"
         : emailType.startsWith("match_") && emailType !== "match_booking_agence"
           ? "entreprise"

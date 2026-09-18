@@ -30,6 +30,8 @@ export const propositionBlockSchema = z.object({
   description: z.string().min(1),
   bullets: z.array(z.string().min(1)).min(1),
   visual: z.string().optional(),
+  visualProspects: z.number().int().min(1).optional(),
+  visualPalier2: z.number().int().min(1).optional(),
 });
 
 export const propositionRoiSlidersSchema = z.object({

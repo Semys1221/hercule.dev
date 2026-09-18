@@ -28,7 +28,11 @@ export function ProposalBlockStep({
       onAcceptedChange={onAcceptedChange}
     >
       {block.visual ? (
-        <PropositionVisual visual={block.visual} />
+        <PropositionVisual
+          visual={block.visual}
+          prospects={block.visualProspects}
+          palier2={block.visualPalier2}
+        />
       ) : (
         <ul className="space-y-3">
           {block.bullets.map((bullet, index) => (

@@ -1,3 +1,4 @@
+import cabinetB2b from "@/content/propositions/cabinet-b2b.json";
 import cabinetExemple from "@/content/propositions/cabinet-exemple.json";
 import ludovic from "@/content/propositions/ludovic.json";
 import {
@@ -5,7 +6,7 @@ import {
   type PropositionConfig,
 } from "@/lib/propositions/schema";
 
-const RAW_PROPOSITIONS = [cabinetExemple, ludovic] as const;
+const RAW_PROPOSITIONS = [cabinetExemple, ludovic, cabinetB2b] as const;
 
 const PROPOSITIONS: PropositionConfig[] = RAW_PROPOSITIONS.map((raw) =>
   parsePropositionConfig(raw),

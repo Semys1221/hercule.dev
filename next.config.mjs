@@ -106,6 +106,10 @@ const nextConfig = {
     return {
       beforeFiles: [
         {
+          source: "/ludovic",
+          destination: "/proposition/ludovic",
+        },
+        {
           source: "/dashboard.html/:slug",
           destination: "/dashboard/:slug",
         },
