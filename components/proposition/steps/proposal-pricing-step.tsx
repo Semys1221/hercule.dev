@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { StepLayout } from "@/components/proposition/steps/step-layout";
 import { Badge } from "@/components/ui/badge";
 import { BorderBeam } from "@/components/ui/border-beam";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { PropositionPricing, PropositionPricingOption } from "@/lib/propositions/schema";
 
@@ -15,6 +16,7 @@ type ProposalPricingStepProps = {
   onAcceptedChange: (accepted: boolean) => void;
   selectedOptionId: string | null;
   onOptionSelect: (optionId: string) => void;
+  paymentLinkUrl: string;
 };
 
 function PricingOptionCard({
@@ -90,12 +92,15 @@ export function ProposalPricingStep({
   onAcceptedChange,
   selectedOptionId,
   onOptionSelect,
+  paymentLinkUrl,
 }: ProposalPricingStepProps) {
   const options = pricing.options;
   const subtitle =
     options && options.length > 0
       ? "Choisissez la formule adaptée à votre palier de démarrage."
       : pricing.amountLabel;
+  const hasSelectedOption = options ? selectedOptionId !== null : true;
+  const canPay = accepted && hasSelectedOption;
 
   return (
     <StepLayout
@@ -106,38 +111,61 @@ export function ProposalPricingStep({
       accepted={accepted}
       onAcceptedChange={onAcceptedChange}
     >
-      {options && options.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {options.map((option, index) => (
-            <PricingOptionCard
-              key={option.id}
-              option={option}
-              index={index}
-              selected={selectedOptionId === option.id}
-              onSelect={() => onOptionSelect(option.id)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-3xl font-semibold tracking-tight text-zinc-50">
-            {pricing.amountLabel}
-          </p>
-          <ul className="space-y-2">
-            {pricing.details.map((detail, index) => (
-              <motion.li
-                key={detail}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08 }}
-                className="text-sm text-zinc-300"
-              >
-                {detail}
-              </motion.li>
+      <div className="space-y-6">
+        {options && options.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {options.map((option, index) => (
+              <PricingOptionCard
+                key={option.id}
+                option={option}
+                index={index}
+                selected={selectedOptionId === option.id}
+                onSelect={() => onOptionSelect(option.id)}
+              />
             ))}
-          </ul>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-3xl font-semibold tracking-tight text-zinc-50">
+              {pricing.amountLabel}
+            </p>
+            <ul className="space-y-2">
+              {pricing.details.map((detail, index) => (
+                <motion.li
+                  key={detail}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.08 }}
+                  className="text-sm text-zinc-300"
+                >
+                  {detail}
+                </motion.li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex flex-col items-center gap-2 border-t border-zinc-800 pt-6">
+          {canPay ? (
+            <Button asChild size="lg" className="w-full sm:w-auto min-w-[280px]">
+              <a href={paymentLinkUrl} target="_blank" rel="noopener noreferrer">
+                Commencer mon acquisition
+              </a>
+            </Button>
+          ) : (
+            <Button size="lg" className="w-full sm:w-auto min-w-[280px]" disabled>
+              Commencer mon acquisition
+            </Button>
+          )}
+          {!canPay ? (
+            <p className="text-center text-xs text-zinc-500">
+              {hasSelectedOption
+                ? "Cochez la validation pour activer le paiement."
+                : "Sélectionnez une formule pour continuer."}
+            </p>
+          ) : null}
         </div>
-      )}
+      </div>
     </StepLayout>
   );
 }

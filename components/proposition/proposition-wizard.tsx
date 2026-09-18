@@ -171,6 +171,7 @@ export function PropositionWizard({ config }: PropositionWizardProps) {
               onAcceptedChange={(accepted) => setStepValidated(currentStep.id, accepted)}
               selectedOptionId={selectedPricingOptionId}
               onOptionSelect={setSelectedPricingOptionId}
+              paymentLinkUrl={stripePaymentLinkUrl}
             />
           ) : null}
 
