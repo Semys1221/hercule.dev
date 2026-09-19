@@ -34,10 +34,13 @@ export async function instantlyFetch<T>(
     const retryAfterHeader = response.headers.get("retry-after");
     const retryAfterSeconds = retryAfterHeader
       ? Number.parseInt(retryAfterHeader, 10)
-      : 65;
-    const waitMs = Number.isFinite(retryAfterSeconds)
-      ? retryAfterSeconds * 1000
-      : 65000;
+      : null;
+    // Prefer Retry-After; otherwise short exponential backoff (5s, 10s, 20s…)
+    // instead of a fixed 65s stall that made mass patches crawl.
+    const waitMs =
+      retryAfterSeconds != null && Number.isFinite(retryAfterSeconds)
+        ? retryAfterSeconds * 1000
+        : Math.min(60_000, 5_000 * 2 ** attempt);
     console.warn(
       `Rate limited on ${endpoint}. Retrying in ${Math.ceil(waitMs / 1000)}s...`,
     );
@@ -253,7 +256,7 @@ export async function patchLeadsCustomVariablesParallel(
     return { patched: 0, failed: 0, errors: [] };
   }
 
-  const workers = Math.max(1, Math.min(maxConcurrency, items.length, 16));
+  const workers = Math.max(1, Math.min(maxConcurrency, items.length, 48));
   let patched = 0;
   let failed = 0;
   const errors: string[] = [];
