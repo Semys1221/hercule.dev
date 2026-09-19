@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import io
-import json
 import os
 import random
+import sys
 import time
 from typing import Callable, Optional
 
@@ -15,6 +15,12 @@ import requests
 from core_logic import get_api_key
 from paths import data_dir
 
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+from shared.mev_export import validate_mev_upload_emails  # noqa: E402
+
 RUN_MODE_DRY = "dry_run"
 
 _BASE_URL = "https://client.myemailverifier.com"
@@ -23,13 +29,7 @@ _HTTP_TIMEOUT = (10, 120)
 _MAX_RETRIES = 4
 _BACKOFF_BASE = 2.0
 _POLL_INTERVAL = 30
-_DOWNLOAD_RETRY_ATTEMPTS = 10
-_DOWNLOAD_RETRY_INTERVAL = 30
 _MAX_CHUNK_SIZE = 100_000
-# MEV accepts up to 100k per file, but large single uploads can phantom-complete
-# (status=completed, credit_used=0). Smaller chunks are more reliable.
-_BULK_UPLOAD_CHUNK_SIZE = 500
-_PHANTOM_COMPLETE_MAX_POLLS = 6
 
 BulkProgressCallback = Callable[[str, float], None]
 
@@ -62,47 +62,6 @@ def _normalize_email(email: object) -> str:
     if email is None or (isinstance(email, float) and pd.isna(email)):
         return ""
     return str(email).strip().lower()
-
-
-def _ready_for_download(file_info: dict) -> bool:
-    """MEV sets ready_for_download=1 only when the CSV export is actually ready."""
-    value = file_info.get("ready_for_download")
-    return value in (1, "1", True) or str(value).strip() == "1"
-
-
-def _bulk_job_counts(file_info: dict) -> tuple[int, int, int]:
-    total = int(file_info.get("total_emails") or file_info.get("total") or 0)
-    credit_used = int(file_info.get("credit_used") or 0)
-    processed = int(file_info.get("processed_res") or 0)
-    return total, credit_used, processed
-
-
-def _is_bulk_job_ready(file_info: dict) -> bool:
-    """
-    True when MEV has actually finished verification (not a phantom 'completed').
-    Runtime evidence: large jobs can show completed + downloadable with credit_used=0.
-    """
-    status_label = str(file_info.get("status_label") or "").lower()
-    if status_label != "completed":
-        return False
-    if not file_info.get("downloadable"):
-        return False
-    if not _ready_for_download(file_info):
-        return False
-
-    total, credit_used, processed = _bulk_job_counts(file_info)
-    if total > 0 and credit_used == 0 and processed == 0:
-        return False
-    if total > 0 and credit_used < total and processed < total:
-        # Allow partial only while still processing; completed should have full counts.
-        result_total = sum(
-            int(file_info.get(key) or 0)
-            for key in ("valid", "invalid", "catchall", "unknown", "duplicates")
-        )
-        if result_total == 0:
-            return False
-
-    return True
 
 
 def _find_column(df: pd.DataFrame, candidates: tuple[str, ...]) -> Optional[str]:
@@ -202,25 +161,12 @@ class BulkEmailVerifierClient:
 
         return int(file_id)
 
-    def _probe_download_url(self, file_info: dict) -> bool:
-        download_url = file_info.get("download_all_csv") or file_info.get("file_path")
-        if not download_url:
-            return False
-        try:
-            response = self.session.get(str(download_url), timeout=(10, 30))
-            return response.status_code == 200 and "text/csv" in (
-                response.headers.get("Content-Type") or ""
-            )
-        except requests.exceptions.RequestException:
-            return False
-
     def poll_until_complete(
         self,
         file_id: int,
         on_progress: Optional[BulkProgressCallback] = None,
     ) -> dict:
         url = f"{_BASE_URL}/verifier/file_info/{self.api_key}/{file_id}"
-        phantom_complete_polls = 0
 
         while True:
             response = self._request_with_retry("GET", url)
@@ -235,78 +181,22 @@ class BulkEmailVerifierClient:
 
             file_info = data.get("file") or {}
             status_label = str(file_info.get("status_label") or "").lower()
-            total, credit_used, processed = _bulk_job_counts(file_info)
 
             if on_progress:
                 message, fraction = _format_bulk_progress(file_info)
                 on_progress(message, fraction)
 
-            if status_label == "failed":
-                raise RuntimeError(
-                    f"MEV bulk job {file_id} failed on MyEmailVerifier's side"
-                )
-
             if status_label == "completed":
-                download_probe_ok = self._probe_download_url(file_info)
-                if _is_bulk_job_ready(file_info) and download_probe_ok:
-                    return file_info
-
-                phantom_complete_polls += 1
-
-                if phantom_complete_polls >= _PHANTOM_COMPLETE_MAX_POLLS:
-                    raise RuntimeError(
-                        f"MEV bulk job {file_id} reported completed but no verification "
-                        f"ran (credit_used={credit_used}, processed={processed}, "
-                        f"total={total}). Check the MEV dashboard and retry the upload."
-                    )
-
-            else:
-                phantom_complete_polls = 0
+                if not file_info.get("downloadable"):
+                    raise RuntimeError("Bulk job completed but results are not downloadable yet")
+                return file_info
 
             time.sleep(_POLL_INTERVAL)
 
-    def _download_url_candidates(
-        self,
-        download_url: str,
-        file_info: dict | None = None,
-    ) -> list[str]:
-        candidates: list[str] = []
-        for key in ("download_all_csv", "file_path", "download_xls"):
-            url = (file_info or {}).get(key)
-            if url and url not in candidates:
-                candidates.append(str(url))
-        if download_url and download_url not in candidates:
-            candidates.insert(0, download_url)
-        return candidates
-
-    def download_results(
-        self,
-        download_url: str,
-        *,
-        file_info: dict | None = None,
-    ) -> pd.DataFrame:
-        last_error: requests.HTTPError | None = None
-
-        for candidate_url in self._download_url_candidates(download_url, file_info):
-            for attempt in range(1, _DOWNLOAD_RETRY_ATTEMPTS + 1):
-                response = self._request_with_retry("GET", candidate_url)
-
-                if response.status_code == 200:
-                    return pd.read_csv(io.StringIO(response.text))
-
-                if response.status_code == 404 and attempt < _DOWNLOAD_RETRY_ATTEMPTS:
-                    time.sleep(_DOWNLOAD_RETRY_INTERVAL)
-                    continue
-
-                try:
-                    response.raise_for_status()
-                except requests.HTTPError as exc:
-                    last_error = exc
-                break
-
-        if last_error:
-            raise last_error
-        raise RuntimeError("Bulk job completed but CSV download failed for all URLs")
+    def download_results(self, download_url: str) -> pd.DataFrame:
+        response = self._request_with_retry("GET", download_url)
+        response.raise_for_status()
+        return pd.read_csv(io.StringIO(response.text))
 
     def parse_results_df(self, df: pd.DataFrame) -> dict[str, str]:
         email_col = _find_column(df, ("Address", "Email", "email", "E-mail"))
@@ -361,7 +251,8 @@ def _format_bulk_progress(file_info: dict) -> tuple[str, float]:
 def _write_upload_csv(emails: list[str], prefix: str, chunk_index: int) -> str:
     os.makedirs(data_dir(), exist_ok=True)
     path = os.path.join(data_dir(), f"{prefix}_mev_upload_{chunk_index}.csv")
-    upload_df = pd.DataFrame({"email": emails})
+    cleaned = validate_mev_upload_emails(emails)
+    upload_df = pd.DataFrame({"email": cleaned})
     upload_df.to_csv(path, index=False)
     return path
 
@@ -451,10 +342,9 @@ def verify_emails_bulk(
 
     client = BulkEmailVerifierClient(api_key)
     prefix = artifact_prefix or "bulk"
-    chunk_size = min(_BULK_UPLOAD_CHUNK_SIZE, _MAX_CHUNK_SIZE)
     chunks = [
-        pending_emails[index : index + chunk_size]
-        for index in range(0, len(pending_emails), chunk_size)
+        pending_emails[index : index + _MAX_CHUNK_SIZE]
+        for index in range(0, len(pending_emails), _MAX_CHUNK_SIZE)
     ]
 
     if on_progress:
@@ -505,7 +395,7 @@ def verify_emails_bulk(
             if on_progress:
                 on_progress("Downloading bulk verification results...", 0.92)
 
-            results_df = client.download_results(download_url, file_info=file_info)
+            results_df = client.download_results(download_url)
             merged.update(client.parse_results_df(results_df))
 
             if on_status_map_updated:

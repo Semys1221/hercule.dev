@@ -48,6 +48,7 @@ class OutputPaths:
     ingester_audit: str
     borderline: str
     email_recovery: str
+    mev_emails: str
 
 
 def output_paths(preset: str = "biggy_agency") -> OutputPaths:
@@ -65,6 +66,7 @@ def output_paths(preset: str = "biggy_agency") -> OutputPaths:
         ingester_audit=os.path.join(out_dir, "ingester_audit.csv"),
         borderline=os.path.join(out_dir, "borderline.csv"),
         email_recovery=os.path.join(out_dir, "pending_email_recovery.jsonl"),
+        mev_emails=os.path.join(out_dir, "mev_emails.csv"),
     )
 
 
@@ -798,6 +800,20 @@ async def _poll_until_ready(
         else:
             await asyncio.sleep(wait_s)
 
+def _sync_mev_emails_sidecar(log_cb: Callable[[str], None] | None = None) -> int:
+    _REPO_ROOT = os.path.dirname(_APP_DIR)
+    if _REPO_ROOT not in sys.path:
+        sys.path.insert(0, _REPO_ROOT)
+    from shared.mev_export import sync_mev_csv_from_leads_csv
+
+    if not os.path.isfile(_active.csv):
+        return 0
+    count = sync_mev_csv_from_leads_csv(_active.csv, _active.mev_emails, email_column="Email")
+    if log_cb and count:
+        log_cb(f"MEV export: {count} email(s) → {os.path.basename(_active.mev_emails)}")
+    return count
+
+
 def _append_lead_row(row: dict[str, str]) -> None:
     write_header = not os.path.exists(_active.csv) or os.path.getsize(_active.csv) == 0
     with open(_active.csv, "a", encoding="utf-8", newline="") as f:
@@ -1251,14 +1267,6 @@ async def _flush_instantly_buffer(
         if "@" in str(row.get("Email") or "")
     ]
 
-    # #region agent log
-    try:
-        import json as _json, time as _time
-        with open("/Users/evqn/dev/hercule.dev/.cursor/debug-74e6fe.log", "a", encoding="utf-8") as _f:
-            _f.write(_json.dumps({"sessionId": "74e6fe", "runId": "scrape-test", "hypothesisId": "C", "location": "core_logic.py:_flush_instantly_buffer", "message": "instantly flush start", "data": {"pending_n": len(pending), "list_id": str(config.get("INSTANTLY_LIST_ID") or "")[:8]}, "timestamp": int(_time.time() * 1000)}) + "\n")
-    except Exception:
-        pass
-    # #endregion
     push_stats = await push_leads_to_list(
         config["INSTANTLY_API_KEY"],
         config["INSTANTLY_LIST_ID"],
@@ -1267,15 +1275,8 @@ async def _flush_instantly_buffer(
         skip_if_in_list=bool(config.get("INSTANTLY_SKIP_IF_IN_LIST", True)),
         log_cb=log_cb,
     )
-    # #region agent log
-    try:
-        import json as _json, time as _time
-        with open("/Users/evqn/dev/hercule.dev/.cursor/debug-74e6fe.log", "a", encoding="utf-8") as _f:
-            _f.write(_json.dumps({"sessionId": "74e6fe", "runId": "scrape-test", "hypothesisId": "C", "location": "core_logic.py:_flush_instantly_buffer:done", "message": "instantly flush result", "data": {"pushed": push_stats.get("pushed"), "skipped_duplicate": push_stats.get("skipped_duplicate")}, "timestamp": int(_time.time() * 1000)}) + "\n")
-    except Exception:
-        pass
-    # #endregion
     pending.clear()
+    _sync_mev_emails_sidecar(log_cb=log_cb)
 
     should_provision = bool(batch_emails and config.get("INSTANTLY_PROVISION_LINKS"))
 
@@ -2722,6 +2723,7 @@ async def run_scraper_pipeline(
             f"enriched valid: {leads_enriched_valid}, Instantly: {instantly_pushed}."
         )
 
+    _sync_mev_emails_sidecar(log_cb=log_cb)
     return summary
 
 

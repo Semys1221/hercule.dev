@@ -67,6 +67,17 @@ export function urlFieldsForCategory(
     : buildLeadUrls(slug, email);
 }
 
+/** True when Supabase points at a different Instantly row than the live campaign lead. */
+export function needsInstantlyLeadResync(
+  storedLeadId: string | null | undefined,
+  currentLeadId: string | null | undefined,
+): boolean {
+  const current = String(currentLeadId ?? "").trim();
+  if (!current) return false;
+  const stored = String(storedLeadId ?? "").trim();
+  return !stored || stored !== current;
+}
+
 export function needsProvision(
   email: string,
   lookup: Map<string, { category: LeadCategory; lead: LinkTrackingLead }>,

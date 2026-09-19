@@ -17,6 +17,7 @@ repo .env  →  config_loader.py  →  configs/{preset}_config.py
                               main.py      app.py (st.navigation)
                                         ↓
                           output/{preset}/outscraper_leads.csv
+                          output/{preset}/mev_emails.csv
                           output/{preset}/onboarding_state.json
 ```
 
@@ -110,6 +111,7 @@ Pass 2+ expands communes via [`commune_passes.py`](commune_passes.py).
 | Mode | Progress / worker stop |
 |------|------------------------|
 | `csv_saved` | Rows in `outscraper_leads.csv` |
+| `mev_emails.csv` | Single-column MEV upload file (auto-regenerated; header `email`) |
 | `instantly_pushed` | **Instantly live** list count (API) — pipe A comptable |
 | `instantly_pushed_run` | **Checkpoint** `instantly_pushed` in `scrape_state.json` — pipe vol (shared list) |
 

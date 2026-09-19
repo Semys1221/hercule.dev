@@ -38,6 +38,11 @@ repo .env → config_loader.py → configs/{preset}_config.py
 | `scrape_log.py` | Persistent `scrape.log` on disk |
 | `commune_passes.py` | Pass 2+ commune expansion chunks |
 | `taxonomy_gate.py` | Métier filter on Outscraper `type` / `category` / `subtypes` |
+| `../../shared/mev_export.py` | Single-column MEV CSV sidecar (`mev_emails.csv`) |
+
+## MEV sidecar
+
+Each preset output dir gets `mev_emails.csv` (header: `email`, one column) regenerated after Instantly flush and scrape completion. Use for manual MyEmailVerifier upload — **not** the 22-column `outscraper_leads.csv` or Instantly UI export.
 
 ## Preset rules
 

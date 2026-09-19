@@ -10,6 +10,7 @@ import {
 import type { LeadCategory } from "@/lib/link-tracking/types";
 import {
   executeProvisionForSelectedLeads,
+  needsInstantlyLeadResync,
   needsProvision,
   parseInstantlyLead,
   type ParsedLead,
@@ -104,7 +105,17 @@ export async function provisionLinksFromList(
       skippedWrongCategory += 1;
       continue;
     }
-    if (resyncAll || needsProvision(lead.email, lookup, category)) {
+    const staleInstantlyId =
+      fromCampaign &&
+      needsInstantlyLeadResync(
+        existing?.lead.instantly_lead_id,
+        lead.instantlyLeadId,
+      );
+    if (
+      resyncAll ||
+      needsProvision(lead.email, lookup, category) ||
+      staleInstantlyId
+    ) {
       selected.push(lead);
     }
   }

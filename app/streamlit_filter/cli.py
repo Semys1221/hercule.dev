@@ -25,6 +25,11 @@ from downloader import (  # noqa: E402
     download_and_backup,
     load_backup_csv,
 )
+from shared.mev_export import extract_emails_from_dataframe, write_mev_csv  # noqa: E402
+from shared.instantly_client import (  # noqa: E402
+    fetch_leads_from_list,
+    leads_to_dataframe,
+)
 from filter_runner import non_valid_rows, run_filter, valid_rows  # noqa: E402
 from instantly_client import get_api_key  # noqa: E402
 from paths import output_dir  # noqa: E402
@@ -161,6 +166,33 @@ def run(
         f"failed={clean_stats.failed}",
         fg=typer.colors.GREEN,
     )
+
+
+@app.command("export-mev")
+def export_mev(
+    list_id: str = typer.Option(..., "--list-id", help="Instantly source list UUID"),
+    output: str = typer.Option(
+        "mev_emails.csv",
+        "--output",
+        "-o",
+        help="Output path for single-column MEV CSV",
+    ),
+) -> None:
+    """Export Instantly list emails as a MyEmailVerifier-ready CSV."""
+    if not get_api_key():
+        raise typer.BadParameter("INSTANTLY_API_KEY is missing")
+
+    _log(f"Downloading leads from Instantly list {list_id}...")
+    leads = fetch_leads_from_list(
+        list_id,
+        on_progress=lambda n: _log(f"Downloaded {n} leads"),
+    )
+    emails = extract_emails_from_dataframe(leads_to_dataframe(leads))
+    if not emails:
+        raise typer.BadParameter("No valid emails found in list")
+
+    count = write_mev_csv(emails, output)
+    typer.secho(f"Wrote {count} email(s) to {output}", fg=typer.colors.GREEN)
 
 
 @app.command("filter-csv")

@@ -1,4 +1,7 @@
-import { findLeadByEmailInList } from "@/lib/instantly-bypass/client";
+import {
+  findLeadByEmailInCampaign,
+  findLeadByEmailInList,
+} from "@/lib/instantly-bypass/client";
 import {
   createLinkTrackingClient,
   findLeadsByEmails,
@@ -10,6 +13,7 @@ import { getInstantlyApiKey } from "@/lib/instantly";
 
 import {
   executeProvisionForSelectedLeads,
+  needsInstantlyLeadResync,
   needsProvision,
   parseInstantlyLead,
   type ParsedLead,
@@ -54,6 +58,7 @@ export function normalizeProvisionEmails(
 async function resolveListLead(
   apiKey: string,
   listId: string,
+  campaignId: string,
   email: string,
 ): Promise<ParsedLead> {
   const listLead = await findLeadByEmailInList(apiKey, listId, email);
@@ -61,6 +66,22 @@ async function resolveListLead(
     const parsed = parseInstantlyLead(listLead as InstantlyListLead);
     if (parsed) return parsed;
   }
+
+  const campaignLead = await findLeadByEmailInCampaign(
+    apiKey,
+    campaignId,
+    email,
+  );
+  if (campaignLead?.id) {
+    return {
+      email,
+      instantlyLeadId: String(campaignLead.id).trim(),
+      firstName: String(campaignLead.first_name ?? "").trim() || null,
+      companyName: String(campaignLead.company_name ?? "").trim() || null,
+      source: { email, ...campaignLead } as InstantlyListLead,
+    };
+  }
+
   return {
     email,
     instantlyLeadId: "",
@@ -86,7 +107,7 @@ export async function provisionLeadsByEmails(params: {
 
   const parsed: ParsedLead[] = [];
   for (const email of normalizedEmails) {
-    parsed.push(await resolveListLead(apiKey, listId, email));
+    parsed.push(await resolveListLead(apiKey, listId, campaignId, email));
   }
 
   const selected: ParsedLead[] = [];
@@ -99,7 +120,11 @@ export async function provisionLeadsByEmails(params: {
       skippedWrongCategory += 1;
       continue;
     }
-    if (needsProvision(lead.email, lookup, category)) {
+    const staleInstantlyId = needsInstantlyLeadResync(
+      existing?.lead.instantly_lead_id,
+      lead.instantlyLeadId,
+    );
+    if (needsProvision(lead.email, lookup, category) || staleInstantlyId) {
       selected.push(lead);
     } else {
       skipped += 1;

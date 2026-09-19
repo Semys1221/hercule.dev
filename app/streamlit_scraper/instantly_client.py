@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import sys
 import time
 from typing import Any, Callable
 
@@ -1314,5 +1315,14 @@ async def push_csv_to_instantly(
                 config=provision_config,
                 log_cb=log_cb or (lambda _message: None),
             )
+
+    _repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if _repo_root not in sys.path:
+        sys.path.insert(0, _repo_root)
+    from shared.mev_export import sync_mev_csv_from_leads_csv
+
+    mev_count = sync_mev_csv_from_leads_csv(csv_path)
+    if log_cb and mev_count:
+        log_cb(f"MEV export: {mev_count} email(s) → mev_emails.csv")
 
     return push_stats

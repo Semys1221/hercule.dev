@@ -1,22 +1,28 @@
-import json
 import os
+import sys
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from shared.mev_export import extract_emails_from_dataframe, mev_csv_bytes
+
 from checkpoint import list_checkpoints, partial_verified_path
-from job_runner import JobConfig, cancel_job, load_job_status, resolve_job_prefix, start_job
-from job_state import STATUS_COMPLETED, STATUS_FAILED, load_active_job
 from paths import data_dir
-from result_loader import load_pipeline_result_from_disk
 from core_logic import get_api_key
 from instantly_client import (
     count_leads_in_campaign,
     count_leads_in_list,
+    fetch_leads_from_list,
     format_resource_label,
     get_api_key as get_instantly_api_key,
     list_all_campaigns,
     list_all_lead_lists,
+    leads_to_dataframe,
 )
 from pipeline import (
     RUN_MODE_CUSTOM,
@@ -25,17 +31,14 @@ from pipeline import (
     RUN_MODE_TEST_50,
     estimate_credits,
     estimate_minutes,
-    partial_push_manifest_path,
-    push_partial_clean,
     run_cleaning_pipeline,
 )
 
 st.set_page_config(page_title="Email CSV Cleaner", layout="wide")
 st.title("📧 Email Cleaner & Instantly Pipeline")
 st.caption(
-    "Quick local pre-filter → MyEmailVerifier → provision tracking URLs "
-    "→ purge source list (Full Clean) → push to Instantly campaign "
-    "(skip duplicates already in target campaign)."
+    "Quick local pre-filter → MyEmailVerifier → purge source list (Full Clean) "
+    "→ push to Instantly campaign (workspace duplicate check always on)."
 )
 
 if "funnel_step" not in st.session_state:
@@ -46,10 +49,6 @@ if "campaign_validated" not in st.session_state:
     st.session_state.campaign_validated = False
 if "pipeline_result" not in st.session_state:
     st.session_state.pipeline_result = None
-if "active_job_prefix" not in st.session_state:
-    st.session_state.active_job_prefix = None
-if "job_monitoring" not in st.session_state:
-    st.session_state.job_monitoring = False
 
 
 def _step_indicator(current: int) -> None:
@@ -121,20 +120,6 @@ def _render_validation_screen(result, *, show_push: bool) -> None:
         q2.metric("Garbage domain", result.quick_stats.get("garbage_domains", 0))
         q3.metric("Dead DNS", result.quick_stats.get("dns_errors", 0))
 
-    if show_push and (
-        result.provision_created
-        or result.provision_patched
-        or result.provision_failed
-        or result.provision_skipped
-    ):
-        st.info(
-            "Link provision — "
-            f"created {result.provision_created}, "
-            f"patched {result.provision_patched}, "
-            f"skipped {result.provision_skipped}, "
-            f"failed {result.provision_failed}."
-        )
-
     if show_push and result.push_attempted:
         st.info(
             f"Pushed {result.push_pushed} leads to campaign "
@@ -186,143 +171,6 @@ def _render_validation_screen(result, *, show_push: bool) -> None:
             st.rerun()
 
 
-def _list_local_csv_backups() -> list[dict]:
-    directory = data_dir()
-    if not os.path.isdir(directory):
-        return []
-
-    backups: list[dict] = []
-    for name in os.listdir(directory):
-        if not name.endswith(".csv"):
-            continue
-        if "_quick_clean" not in name and not name.endswith("_raw.csv"):
-            continue
-        path = os.path.join(directory, name)
-        if not os.path.isfile(path):
-            continue
-        backups.append(
-            {
-                "name": name,
-                "path": path,
-                "kind": "quick_clean" if "_quick_clean" in name else "raw",
-            }
-        )
-
-    backups.sort(key=lambda item: item["name"], reverse=True)
-    return backups
-
-
-def _resolve_email_column(df: pd.DataFrame, preferred: str | None = None) -> str:
-    if preferred and preferred in df.columns:
-        return preferred
-    for candidate in ("email", "Email", "E-mail"):
-        if candidate in df.columns:
-            return candidate
-    return str(df.columns[0])
-
-
-def _source_summary() -> str:
-    if st.session_state.get("source_type") == "local_csv":
-        kind = "quick-clean backup" if st.session_state.get("skip_quick_verify") else "raw backup"
-        return (
-            f"Local CSV: **{st.session_state.get('list_name')}** "
-            f"({st.session_state.get('list_count', 0)} leads, {kind})"
-        )
-    return (
-        f"Instantly list: **{st.session_state.get('list_name')}** "
-        f"({st.session_state.get('list_count', 0)} leads)"
-    )
-
-
-def _provision_links_enabled() -> bool:
-    return os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower() not in {
-        "1",
-        "true",
-        "yes",
-    }
-
-
-def _job_progress_fraction(job: dict) -> float:
-    verified = job.get("verified_count")
-    total = job.get("total_target")
-    if verified is None or not total:
-        return 0.0
-    return min(max(int(verified) / int(total), 0.0), 1.0)
-
-
-def _render_job_monitor(prefix: str, *, show_push: bool) -> None:
-    status = load_job_status(prefix)
-    if not status:
-        st.warning(f"Job `{prefix}` not found on disk.")
-        return
-
-    st.subheader(f"Job monitor — `{prefix}`")
-    st.caption(
-        "Runs in a detached subprocess. Safe to refresh this page — progress is saved on disk."
-    )
-
-    job_status = str(status.get("status") or "unknown")
-    st.write(f"**Status:** {job_status}")
-    if status.get("phase"):
-        st.write(f"**Phase:** {status['phase']}")
-    if status.get("error"):
-        st.error(str(status["error"]))
-
-    fraction = _job_progress_fraction(status)
-    if fraction > 0:
-        st.progress(fraction, text=f"{status.get('verified_count', 0)}/{status.get('total_target', '?')} verified")
-
-    col_refresh, col_cancel = st.columns(2)
-    with col_refresh:
-        if st.button("Refresh status", key=f"refresh_job_{prefix}"):
-            st.rerun()
-    with col_cancel:
-        if status.get("running") and st.button("Cancel job", key=f"cancel_job_{prefix}"):
-            ok, message = cancel_job(prefix)
-            if ok:
-                st.warning(message)
-            else:
-                st.error(message)
-
-    log_tail = status.get("log_tail") or ""
-    if log_tail:
-        with st.expander("Job log", expanded=status.get("running", False)):
-            st.text(log_tail)
-
-    if job_status == STATUS_COMPLETED:
-        result = load_pipeline_result_from_disk(prefix)
-        if result is not None:
-            st.session_state.pipeline_result = result
-            st.session_state.active_job_prefix = None
-            st.session_state.job_monitoring = False
-            if show_push:
-                st.session_state.funnel_step = 5
-            st.rerun()
-    elif job_status == STATUS_FAILED:
-        st.error("Job failed. Check the log above or resume from the checkpoint panel.")
-
-
-def _build_job_config_from_session() -> JobConfig:
-    run_mode = st.session_state.get("run_mode", RUN_MODE_DRY)
-    source_type = st.session_state.get("source_type", "instantly")
-    return JobConfig(
-        run_mode=run_mode,
-        allowed_statuses=st.session_state.get("allowed_statuses", ["Valid", "Catch All"]),
-        list_id=st.session_state.get("list_id"),
-        campaign_id=st.session_state.get("campaign_id"),
-        source_type=source_type,
-        local_csv_path=st.session_state.get("local_csv_path"),
-        email_column=st.session_state.get("email_column"),
-        skip_quick_verify=bool(st.session_state.get("skip_quick_verify")),
-        custom_limit=st.session_state.get("custom_limit"),
-        purge_source=(
-            run_mode == RUN_MODE_FULL and source_type == "instantly"
-        ),
-        provision_links=_provision_links_enabled(),
-        skip_push=False,
-    )
-
-
 def _reset_funnel() -> None:
     for key in (
         "funnel_step",
@@ -331,10 +179,6 @@ def _reset_funnel() -> None:
         "list_id",
         "list_name",
         "list_count",
-        "source_type",
-        "local_csv_path",
-        "email_column",
-        "skip_quick_verify",
         "campaign_id",
         "campaign_name",
         "campaign_count",
@@ -343,8 +187,6 @@ def _reset_funnel() -> None:
         "custom_limit",
         "pipeline_result",
         "csv_pipeline_result",
-        "active_job_prefix",
-        "job_monitoring",
     ):
         st.session_state.pop(key, None)
     st.session_state.funnel_step = 1
@@ -355,27 +197,16 @@ def _reset_funnel() -> None:
     st.rerun()
 
 
-def _list_resumable_checkpoints() -> list[dict]:
-    """Jobs with MEV verification still in progress (checkpoint < total)."""
-    resumable: list[dict] = []
-    for item in list_checkpoints():
-        total = item.get("total_target")
-        verified = item.get("verified_count", 0)
-        if total and verified < total:
-            resumable.append(item)
-    return resumable
-
-
 def _render_resume_panel(*, show_push: bool) -> None:
-    checkpoints = _list_resumable_checkpoints()
+    checkpoints = list_checkpoints()
     if not checkpoints:
         return
 
     st.divider()
     st.subheader("Resume interrupted job")
     st.caption(
-        "Verified emails are saved in checkpoints. You can push partial clean leads now "
-        "and resume MEV later — the checkpoint is never deleted by a partial push."
+        "Verified emails are saved in checkpoints. Resume only verifies the remaining "
+        "addresses (no duplicate MEV credits for emails already checked)."
     )
 
     options = {}
@@ -386,16 +217,6 @@ def _render_resume_panel(*, show_push: bool) -> None:
         options[label] = item
     selected_label = st.selectbox("Interrupted job", list(options.keys()))
     selected = options[selected_label]
-
-    meta_bits = []
-    if selected.get("run_mode"):
-        meta_bits.append(f"mode={selected['run_mode']}")
-    if selected.get("list_id"):
-        meta_bits.append(f"list `{selected['list_id']}`")
-    if selected.get("campaign_id"):
-        meta_bits.append(f"campaign `{selected['campaign_id']}`")
-    if meta_bits:
-        st.caption("Saved run config: " + ", ".join(meta_bits))
 
     quick_clean_path = os.path.join(data_dir(), f"{selected['prefix']}_quick_clean.csv")
     source_artifact = selected.get("source_artifact") or quick_clean_path
@@ -425,67 +246,12 @@ def _render_resume_panel(*, show_push: bool) -> None:
                 mime="text/csv",
             )
 
-    manifest_path = partial_push_manifest_path(selected["prefix"])
-    if os.path.isfile(manifest_path):
-        with open(manifest_path, encoding="utf-8") as handle:
-            manifest = json.load(handle)
-        st.success(
-            f"Partial push already done: {manifest.get('pushed', 0)} uploaded, "
-            f"{manifest.get('skipped_duplicate', 0)} skipped duplicate "
-            f"({manifest.get('verified_count_at_push', '?')} verified at that time)."
-        )
-
     allowed_statuses = st.multiselect(
         "Include these statuses",
         options=["Valid", "Catch All", "Unknown"],
         default=["Valid", "Catch All"],
         key=f"resume_statuses_{selected['prefix']}",
     )
-
-    try:
-        campaigns = _cached_campaigns()
-    except Exception as exc:
-        st.error(f"Could not load Instantly campaigns: {exc}")
-        campaigns = []
-    selected_campaign = _select_instantly_resource(
-        resources=campaigns,
-        label="Destination campaign",
-        key=f"resume_campaign_{selected['prefix']}",
-        current_id=st.session_state.get("campaign_id"),
-    )
-    destination_campaign_id = selected_campaign["id"] if selected_campaign else None
-    if destination_campaign_id:
-        st.caption(f"Campaign ID: `{destination_campaign_id}`")
-
-    push_partial_clicked = st.button(
-        "Push partial clean now (pause-safe)",
-        key=f"push_partial_{selected['prefix']}",
-        disabled=not destination_campaign_id,
-    )
-    if push_partial_clicked:
-        if not destination_campaign_id:
-            st.error("Select a destination campaign first.")
-        else:
-            try:
-                partial_stats = push_partial_clean(
-                    selected["prefix"],
-                    destination_campaign_id,
-                    allowed_statuses,
-                    source_list_id=st.session_state.get("list_id"),
-                    provision_links=os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower()
-                    not in {"1", "true", "yes"},
-                )
-                st.success(
-                    f"Pushed {partial_stats['pushed']} lead(s) "
-                    f"({partial_stats['skipped_duplicate']} skipped as workspace duplicates, "
-                    f"{partial_stats['failed']} failed). "
-                    f"Link provision: created={partial_stats.get('provision_created', 0)}, "
-                    f"patched={partial_stats.get('provision_patched', 0)}. "
-                    f"Checkpoint preserved — resume MEV whenever ready."
-                )
-            except Exception as exc:
-                st.error(f"Partial push failed: {exc}")
-
     run_mode = st.selectbox(
         "Run mode",
         options=[RUN_MODE_FULL, RUN_MODE_TEST_50, RUN_MODE_DRY],
@@ -497,24 +263,9 @@ def _render_resume_panel(*, show_push: bool) -> None:
         key=f"resume_mode_{selected['prefix']}",
     )
 
-    push_when_complete = st.checkbox(
-        "Also push to campaign when verification completes",
-        value=False,
-        key=f"resume_push_complete_{selected['prefix']}",
-        help="Leave unchecked to verify only. Duplicates are skipped automatically if you already pushed partial clean.",
-    )
-
     if st.button("Resume verification", type="primary", key=f"resume_btn_{selected['prefix']}"):
         if run_mode != RUN_MODE_DRY and not get_api_key():
             st.error("MYEMAILVERIFIER_API_KEY is missing.")
-            return
-        if (
-            show_push
-            and run_mode != RUN_MODE_DRY
-            and push_when_complete
-            and not destination_campaign_id
-        ):
-            st.error("Select a destination campaign before resuming with push.")
             return
 
         progress_bar = st.progress(0)
@@ -536,14 +287,12 @@ def _render_resume_panel(*, show_push: bool) -> None:
                 run_mode=run_mode,
                 custom_limit=None,
                 allowed_statuses=allowed_statuses,
-                destination_campaign_id=destination_campaign_id
-                if show_push and run_mode != RUN_MODE_DRY and push_when_complete
+                destination_campaign_id=st.session_state.get("campaign_id")
+                if show_push
                 else None,
-                source_list_id=st.session_state.get("list_id"),
+                source_list_id=None,
                 purge_source=False,
                 email_column=email_col,
-                provision_links=os.getenv("CLEAN_SKIP_PROVISION", "").strip().lower()
-                not in {"1", "true", "yes"},
                 on_progress=on_progress,
                 resume_prefix=selected["prefix"],
                 skip_quick_verify=True,
@@ -666,22 +415,6 @@ tab_instantly, tab_csv = st.tabs(["Instantly Pipeline", "CSV Upload"])
 
 with tab_instantly:
     _step_indicator(st.session_state.funnel_step)
-    _render_resume_panel(show_push=True)
-
-    active_job = load_active_job()
-    if active_job and st.session_state.get("active_job_prefix") is None:
-        prefix = str(active_job.get("prefix") or "")
-        if prefix and str(active_job.get("status") or "") not in {
-            STATUS_COMPLETED,
-            STATUS_FAILED,
-        }:
-            st.session_state.active_job_prefix = prefix
-            st.session_state.job_monitoring = True
-            if st.session_state.funnel_step < 4:
-                st.session_state.funnel_step = 4
-
-    if st.session_state.get("job_monitoring") and st.session_state.get("active_job_prefix"):
-        _render_job_monitor(st.session_state.active_job_prefix, show_push=True)
 
     if not get_instantly_api_key():
         st.error(
@@ -692,141 +425,85 @@ with tab_instantly:
     step = st.session_state.funnel_step
 
     if step == 1:
-        st.subheader("Step 1 — Source list or CSV backup")
+        st.subheader("Step 1 — Source Instantly list")
 
-        source_type = st.radio(
-            "Source type",
-            ("Instantly list", "Local CSV backup"),
-            horizontal=True,
-            key="step1_source_type",
+        refresh_col, _ = st.columns([1, 3])
+        with refresh_col:
+            if st.button("Refresh lists", key="refresh_lists"):
+                _cached_lead_lists.clear()
+                st.rerun()
+
+        try:
+            lead_lists = _cached_lead_lists()
+        except Exception as exc:
+            st.error(f"Could not load Instantly lists: {exc}")
+            lead_lists = []
+
+        selected_list = _select_instantly_resource(
+            resources=lead_lists,
+            label="Select source list",
+            key="source_list_select",
+            current_id=st.session_state.get("list_id"),
         )
 
-        if source_type == "Instantly list":
-            refresh_col, _ = st.columns([1, 3])
-            with refresh_col:
-                if st.button("Refresh lists", key="refresh_lists"):
-                    _cached_lead_lists.clear()
-                    st.rerun()
-
-            try:
-                lead_lists = _cached_lead_lists()
-            except Exception as exc:
-                st.error(f"Could not load Instantly lists: {exc}")
-                lead_lists = []
-
-            selected_list = _select_instantly_resource(
-                resources=lead_lists,
-                label="Select source list",
-                key="source_list_select",
-                current_id=st.session_state.get("list_id"),
-            )
-
-            if selected_list:
-                st.caption(f"List ID: `{selected_list['id']}`")
-
-            if st.button(
-                "Validate list",
-                type="primary",
-                disabled=selected_list is None,
-            ):
-                try:
-                    count = count_leads_in_list(selected_list["id"])
-                    st.session_state.source_type = "instantly"
-                    st.session_state.list_id = selected_list["id"]
-                    st.session_state.list_name = selected_list["name"]
-                    st.session_state.list_count = count
-                    st.session_state.local_csv_path = None
-                    st.session_state.email_column = None
-                    st.session_state.skip_quick_verify = False
-                    st.session_state.list_validated = True
-                    st.session_state.funnel_step = 2
-                    st.rerun()
-                except Exception as exc:
-                    st.error(f"Could not validate list: {exc}")
-        else:
+        if selected_list:
+            st.caption(f"List ID: `{selected_list['id']}`")
             st.caption(
-                "Use a saved pipeline backup when the Instantly source list was purged. "
-                "Prefer `*_quick_clean.csv` backups to skip the free local pre-filter."
+                "For manual MyEmailVerifier upload, use **Download for MEV** below — "
+                "do not export from the Instantly UI (wrong column layout)."
             )
-
-            local_backups = _list_local_csv_backups()
-            local_mode = st.radio(
-                "CSV source",
-                ("Saved backup", "Upload file"),
-                horizontal=True,
-                key="step1_local_csv_mode",
-            )
-
-            preview_df: pd.DataFrame | None = None
-            selected_path: str | None = None
-            skip_quick = False
-
-            if local_mode == "Saved backup":
-                if not local_backups:
-                    st.warning(
-                        f"No saved backups found in `{data_dir()}`. "
-                        "Upload a CSV instead, or run once from Instantly to create backups."
+            if st.button("Prepare MEV download", key="prepare_mev_download"):
+                with st.spinner("Fetching emails from Instantly..."):
+                    leads = fetch_leads_from_list(selected_list["id"])
+                    emails = extract_emails_from_dataframe(leads_to_dataframe(leads))
+                    st.session_state.mev_download_bytes = mev_csv_bytes(emails)
+                    st.session_state.mev_download_count = len(emails)
+                    st.session_state.mev_download_name = (
+                        f"mev_{selected_list['id'][:8]}.csv"
                     )
-                else:
-                    backup_labels = [
-                        f"{item['name']} ({item['kind'].replace('_', ' ')})"
-                        for item in local_backups
-                    ]
-                    backup_index = st.selectbox(
-                        "Saved CSV backup",
-                        options=range(len(local_backups)),
-                        format_func=lambda index: backup_labels[index],
-                        key="step1_saved_backup_select",
-                    )
-                    selected_backup = local_backups[backup_index]
-                    selected_path = selected_backup["path"]
-                    skip_quick = selected_backup["kind"] == "quick_clean"
-                    preview_df = pd.read_csv(selected_path)
-            else:
-                uploaded_file = st.file_uploader(
-                    "Upload CSV file",
-                    type=["csv"],
-                    key="step1_local_csv_upload",
-                )
-                if uploaded_file is not None:
-                    preview_df = pd.read_csv(uploaded_file)
-                    uploads_dir = os.path.join(data_dir(), "uploads")
-                    os.makedirs(uploads_dir, exist_ok=True)
-                    selected_path = os.path.join(uploads_dir, uploaded_file.name)
-                    with open(selected_path, "wb") as handle:
-                        handle.write(uploaded_file.getbuffer())
-
-            if preview_df is not None and selected_path:
-                st.write("### Data preview")
-                st.dataframe(preview_df.head(3))
-                email_column = st.selectbox(
-                    "Email column",
-                    preview_df.columns,
-                    index=preview_df.columns.get_loc(
-                        _resolve_email_column(preview_df)
+            if st.session_state.get("mev_download_bytes"):
+                st.download_button(
+                    label=(
+                        f"Download for MEV "
+                        f"({st.session_state.get('mev_download_count', 0)} emails)"
                     ),
-                    key="step1_local_email_column",
+                    data=st.session_state.mev_download_bytes,
+                    file_name=st.session_state.get(
+                        "mev_download_name", "mev_emails.csv"
+                    ),
+                    mime="text/csv",
+                    key="download_mev_csv",
                 )
 
-                if st.button("Validate CSV source", type="primary"):
-                    st.session_state.source_type = "local_csv"
-                    st.session_state.list_id = None
-                    st.session_state.list_name = os.path.basename(selected_path)
-                    st.session_state.list_count = len(preview_df)
-                    st.session_state.local_csv_path = selected_path
-                    st.session_state.email_column = email_column
-                    st.session_state.skip_quick_verify = skip_quick
-                    st.session_state.list_validated = True
-                    st.session_state.funnel_step = 2
-                    st.rerun()
+        if st.button(
+            "Validate list",
+            type="primary",
+            disabled=selected_list is None,
+        ):
+            try:
+                count = count_leads_in_list(selected_list["id"])
+                st.session_state.list_id = selected_list["id"]
+                st.session_state.list_name = selected_list["name"]
+                st.session_state.list_count = count
+                st.session_state.list_validated = True
+                st.session_state.funnel_step = 2
+                st.rerun()
+            except Exception as exc:
+                st.error(f"Could not validate list: {exc}")
 
         if st.session_state.list_validated:
-            st.info(_source_summary())
+            st.info(
+                f"List **{st.session_state.get('list_name')}** — "
+                f"{st.session_state.get('list_count', 0)} leads"
+            )
 
     elif step == 2:
         st.subheader("Step 2 — Destination campaign")
         if st.session_state.list_validated:
-            st.info(f"Source: {_source_summary()}")
+            st.info(
+                f"Source: **{st.session_state.get('list_name')}** "
+                f"({st.session_state.get('list_count', 0)} leads)"
+            )
 
         refresh_col, _ = st.columns([1, 3])
         with refresh_col:
@@ -876,7 +553,10 @@ with tab_instantly:
 
     elif step == 3:
         st.subheader("Step 3 — Run configuration")
-        st.info(f"Source: {_source_summary()}")
+        st.info(
+            f"Source list: **{st.session_state.get('list_name')}** "
+            f"({st.session_state.get('list_count', 0)} leads)"
+        )
         st.info(
             f"Destination campaign: **{st.session_state.get('campaign_name')}** "
             f"({st.session_state.get('campaign_count', 0)} leads)"
@@ -895,6 +575,10 @@ with tab_instantly:
         elif run_mode == RUN_MODE_CUSTOM and custom_limit:
             preview_count = min(custom_limit, preview_count)
 
+        st.caption(
+            "MEV receives a single-column `email` CSV automatically during the pipeline."
+        )
+
         if run_mode != RUN_MODE_DRY and not get_api_key():
             st.error(
                 "Set MYEMAILVERIFIER_API_KEY in `.env` before running real verification."
@@ -906,16 +590,11 @@ with tab_instantly:
                 f"Estimated: ~{credits} credits, ~{minutes} min via MEV bulk API "
                 f"(after quick verify reduces the set)."
             )
-            if run_mode == RUN_MODE_FULL and st.session_state.get("source_type") == "instantly":
+            if run_mode == RUN_MODE_FULL:
                 st.warning(
                     "Full Clean will permanently remove all leads from the source "
                     "Instantly list after download (local raw.csv backup). "
                     "Clean leads are then pushed to the destination campaign."
-                )
-            elif run_mode == RUN_MODE_FULL:
-                st.info(
-                    "Full Clean will verify the entire local CSV backup and push "
-                    "clean leads to the destination campaign."
                 )
 
         col_back, col_next = st.columns(2)
@@ -934,10 +613,6 @@ with tab_instantly:
     elif step == 5:
         st.subheader("Step 5 — Results")
         result = st.session_state.get("pipeline_result")
-        if result is None and st.session_state.get("active_job_prefix"):
-            result = load_pipeline_result_from_disk(st.session_state.active_job_prefix)
-            if result is not None:
-                st.session_state.pipeline_result = result
         if result is None:
             st.warning("No results found. Start a new cleaning run.")
             if st.button("Go to source list"):
@@ -946,23 +621,16 @@ with tab_instantly:
         else:
             _render_validation_screen(result, show_push=True)
 
-    elif step == 4 and st.session_state.get("job_monitoring"):
-        pass
-
     elif step == 4:
         st.subheader("Step 4 — Execute pipeline")
         run_mode = st.session_state.get("run_mode", RUN_MODE_DRY)
         custom_limit = st.session_state.get("custom_limit")
         allowed_statuses = st.session_state.get("allowed_statuses", ["Valid", "Catch All"])
 
-        source_line = _source_summary()
-        if st.session_state.get("source_type") == "local_csv":
-            source_line += f"\n  - File: `{st.session_state.get('local_csv_path')}`"
-        else:
-            source_line += f"\n  - List ID: `{st.session_state.get('list_id')}`"
-
         st.markdown(
-            f"- **Source:** {source_line}\n"
+            f"- **List:** {st.session_state.get('list_name')} "
+            f"(`{st.session_state.get('list_id')}`) — "
+            f"{st.session_state.get('list_count', 0)} leads\n"
             f"- **Campaign:** {st.session_state.get('campaign_name')} "
             f"(`{st.session_state.get('campaign_id')}`) — "
             f"{st.session_state.get('campaign_count', 0)} leads\n"
@@ -971,7 +639,7 @@ with tab_instantly:
             + f"\n- **Allowed statuses:** {', '.join(allowed_statuses)}"
         )
 
-        if run_mode == RUN_MODE_FULL and st.session_state.get("source_type") == "instantly":
+        if run_mode == RUN_MODE_FULL:
             st.warning(
                 "Full Clean: the source list will be emptied on Instantly after "
                 "download (backup in local raw.csv). This cannot be undone on Instantly."
@@ -990,19 +658,45 @@ with tab_instantly:
             if run_mode != RUN_MODE_DRY and not get_api_key():
                 st.error("Cannot start: MYEMAILVERIFIER_API_KEY is missing.")
             else:
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                log_expander = st.expander("Live log", expanded=True)
+                log_lines: list[str] = []
+
+                def on_progress(message: str, fraction: float) -> None:
+                    progress_bar.progress(min(max(fraction, 0.0), 1.0))
+                    status_text.text(message)
+                    log_lines.append(message)
+                    with log_expander:
+                        st.text("\n".join(log_lines[-30:]))
+
                 try:
-                    config = _build_job_config_from_session()
-                    prefix = resolve_job_prefix(config)
-                    ok, message = start_job(config)
-                    if ok:
-                        st.session_state.active_job_prefix = prefix
-                        st.session_state.job_monitoring = True
-                        st.success(message)
-                        st.rerun()
-                    else:
-                        st.error(message)
+                    on_progress("Downloading leads from Instantly list...", 0.02)
+                    leads = fetch_leads_from_list(
+                        st.session_state.list_id,
+                        on_progress=lambda n: on_progress(
+                            f"Downloaded {n} leads...",
+                            0.02 + min(n / max(st.session_state.list_count, 1), 1) * 0.03,
+                        ),
+                    )
+                    source_df = leads_to_dataframe(leads)
+                    on_progress(f"Downloaded {len(source_df)} leads.", 0.05)
+
+                    result = run_cleaning_pipeline(
+                        source_df=source_df,
+                        run_mode=run_mode,
+                        custom_limit=custom_limit,
+                        allowed_statuses=allowed_statuses,
+                        destination_campaign_id=st.session_state.campaign_id,
+                        source_list_id=st.session_state.list_id,
+                        purge_source=(run_mode == RUN_MODE_FULL),
+                        on_progress=on_progress,
+                    )
+                    st.session_state.pipeline_result = result
+                    st.session_state.funnel_step = 5
+                    st.rerun()
                 except Exception as exc:
-                    st.error(f"Could not start job: {exc}")
+                    st.error(f"Pipeline failed: {exc}")
 
 with tab_csv:
     st.subheader("CSV Upload")
