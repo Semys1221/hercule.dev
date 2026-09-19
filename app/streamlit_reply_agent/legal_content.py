@@ -35,6 +35,13 @@ def legal_audience_from_niche_preset(niche_preset_id: str) -> str:
         or ident.startswith("cif_")
     ):
         return "cif"
+    if (
+        "jum" in ident
+        or "restaurant" in ident
+        or "terrassement" in ident
+        or "dentiste" in ident
+    ):
+        return "jum"
     return "agence"
 
 
@@ -44,6 +51,10 @@ def is_comptable_niche_preset(niche_preset_id: str) -> bool:
 
 def is_cif_niche_preset(niche_preset_id: str) -> bool:
     return legal_audience_from_niche_preset(niche_preset_id) == "cif"
+
+
+def is_jum_niche_preset(niche_preset_id: str) -> bool:
+    return legal_audience_from_niche_preset(niche_preset_id) == "jum"
 
 
 def get_cvg_markdown(*, audience: str = "buyer") -> str:
@@ -65,6 +76,10 @@ def get_ai_reply_knowledge_markdown(*, audience: str = "agence") -> str:
         return _read_text(_DOC_DIR / "ai-reply-knowledge-comptable.md")
     if audience == "cif":
         return _read_text(_DOC_DIR / "ai-reply-knowledge-cif.md")
+    if audience == "jum":
+        jum_path = _DOC_DIR / "ai-reply-knowledge-jum.md"
+        if jum_path.is_file():
+            return _read_text(jum_path)
     return _read_text(_DOC_DIR / "ai-reply-knowledge.md")
 
 
@@ -125,6 +140,8 @@ def _speaking_to_label(target_type: str, audience: str) -> str:
         return "cabinet EC (Buyer)" if target_type == "buyer" else "dirigeant TPE (Seller)"
     if audience == "cif":
         return "cabinet CIF (Buyer)" if target_type == "buyer" else "dirigeant PME (Seller)"
+    if audience == "jum":
+        return "prospect JUM (restaurant, dirigeant, dentiste)"
     return "agence (Buyer)" if target_type == "buyer" else "entreprise (Seller)"
 
 
@@ -151,7 +168,9 @@ def _build_knowledge_pack_uncached(
     niche_effectif: str,
 ) -> str:
     audience = legal_audience_from_niche_preset(niche_preset_id)
-    pack_audience = audience if audience in {"comptable", "cif"} else "agence"
+    pack_audience = (
+        audience if audience in {"comptable", "cif", "jum"} else "agence"
+    )
     ai_reply_knowledge = get_ai_reply_knowledge_markdown(audience=pack_audience)
     overview = (_DOC_DIR / "00-overview.md").read_text(encoding="utf-8")
 
@@ -163,6 +182,21 @@ def _build_knowledge_pack_uncached(
         faq_section = format_faq_for_audience("cif")
         faq_heading = "## FAQ CIF (Buyer/Seller)"
         faq_fallback = "Cabinet CIF min. 2 associés. Dirigeant PME : service gratuit."
+    elif pack_audience == "jum":
+        faq_section = format_faq_for_audience("jum")
+        if not faq_section:
+            jum_content = _REPO_ROOT / "content" / "faq" / "jum.json"
+            if jum_content.is_file():
+                data = json.loads(jum_content.read_text(encoding="utf-8"))
+                rows = []
+                for entry in data.get("entries") or []:
+                    q = str(entry.get("question") or "").strip()
+                    a = str(entry.get("answer") or "").strip()
+                    if q and a:
+                        rows.append(f"Q: {q}\nA: {a}")
+                faq_section = "\n\n".join(rows)
+        faq_heading = "## FAQ JUM Advisory"
+        faq_fallback = "JUM Advisory — accompagnement comptable restaurants, BTP, dentistes."
     else:
         deliverance = (_DOC_DIR / "deliverance" / "front-client.md").read_text(
             encoding="utf-8"

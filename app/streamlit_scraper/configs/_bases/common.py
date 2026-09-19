@@ -26,6 +26,7 @@ OUTSCRAPER_SETTINGS = {
     "OUTSCRAPER_POLL_TIMEOUT_S": 600,
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
     "OUTSCRAPER_FILTERS": [],
+    "OUTSCRAPER_ENRICHMENT": ["leads_n_contacts"],
 }
 
 ENRICH_SETTINGS = {
@@ -33,6 +34,43 @@ ENRICH_SETTINGS = {
     "ENRICH_BATCH_SIZE": 50,
     "ENRICH_CONCURRENCY": 20,
     "ENRICH_TIMEOUT_MS": 10000,
+}
+
+INGESTER_SETTINGS = {
+    "INGESTER_ENABLED": False,
+    "INGESTER_MIN_SCORE": 0.60,
+    "INGESTER_BORDERLINE_MIN": 0.40,
+    "INGESTER_SIGNAL_WEIGHTS": {
+        "taxonomy": 0.20,
+        "website": 0.40,
+        "review": 0.25,
+        "registry": 0.15,
+    },
+    "INGESTER_CONCURRENCY": 10,
+    "INGESTER_FETCH_TIMEOUT": 8.0,
+    "INGESTER_REVIEW_ICP_KEYWORDS": [
+        "cabinet",
+        "expert",
+        "comptable",
+        "mission",
+        "client",
+        "conseil",
+        "bilan",
+        "déclaration",
+        "fiscalité",
+    ],
+    "INGESTER_REVIEW_ANTI_ICP_KEYWORDS": [
+        "logiciel",
+        "plateforme",
+        "solution en ligne",
+        "outil",
+        "recrutement",
+        "recruter",
+        "chasseur de têtes",
+        "immobilier",
+        "assurance",
+        "gestion de patrimoine",
+    ],
 }
 
 TARGET_SETTINGS = {

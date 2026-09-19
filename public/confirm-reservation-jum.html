@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de présence · JUM Advisory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #faf8f5;
+            --foreground: #1c1917;
+            --muted: #78716c;
+            --accent: #9a3412;
+            --success: #15803d;
+            --error: #b91c1c;
+            --font-serif: 'Cormorant Garamond', Georgia, serif;
+            --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: var(--font-sans);
+            background: linear-gradient(180deg, var(--background) 0%, #f5f0ea 100%);
+            color: var(--foreground);
+            line-height: 1.6;
+        }
+
+        .page {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 48px 24px 64px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-serif);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .brand span {
+            font-family: var(--font-serif);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-family: var(--font-serif);
+            font-size: 30px;
+            font-weight: 600;
+            margin: 0 0 12px;
+        }
+
+        .intro {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 15px;
+        }
+
+        .status { margin-top: 8px; font-size: 15px; }
+        .status.ok { color: var(--success); }
+        .status.error { color: var(--error); }
+        .status.pending { color: var(--muted); }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="brand">
+            <div class="brand-mark" aria-hidden="true">J</div>
+            <span>JUM Advisory</span>
+        </div>
+
+        <h1>Confirmer votre présence</h1>
+        <p class="intro" id="intro">Merci de confirmer que vous serez présent(e) à votre rendez-vous.</p>
+        <p id="status" class="status pending" aria-live="polite">Confirmation en cours…</p>
+    </div>
+
+    <script>
+        var params = new URLSearchParams(window.location.search);
+        var pathMatch = window.location.pathname.match(/\/confirm-reservation-jum\.html\/([^/]+)\/?$/);
+        var slug = params.get('code') || params.get('slug') || (pathMatch ? pathMatch[1] : '') || '';
+        var email = params.get('email') || '';
+        var statusEl = document.getElementById('status');
+        var introEl = document.getElementById('intro');
+
+        async function confirmPresence() {
+            if (!slug) {
+                statusEl.textContent = 'Lien invalide — code manquant.';
+                statusEl.className = 'status error';
+                return;
+            }
+
+            try {
+                var response = await fetch('/api/link-tracking/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug: slug, email: email || undefined })
+                });
+                var data = await response.json().catch(function() { return {}; });
+
+                if (response.ok && data.ok) {
+                    statusEl.textContent = 'Merci — votre présence est confirmée.';
+                    statusEl.className = 'status ok';
+                    introEl.textContent = 'Nous vous attendons à l\'heure prévue. Vous recevrez les détails par email.';
+                    return;
+                }
+
+                statusEl.textContent = data.error || data.reason || 'Impossible de confirmer pour le moment.';
+                statusEl.className = 'status error';
+            } catch (err) {
+                statusEl.textContent = 'Erreur de connexion. Réessayez dans un instant.';
+                statusEl.className = 'status error';
+            }
+        }
+
+        confirmPresence();
+    </script>
+</body>
+</html>

@@ -45,6 +45,9 @@ class OutputPaths:
     metrics: str
     scrape_state: str
     workspace_cache: str
+    ingester_audit: str
+    borderline: str
+    email_recovery: str
 
 
 def output_paths(preset: str = "biggy_agency") -> OutputPaths:
@@ -59,6 +62,9 @@ def output_paths(preset: str = "biggy_agency") -> OutputPaths:
         metrics=os.path.join(out_dir, "scrape_metrics.jsonl"),
         scrape_state=os.path.join(out_dir, "scrape_state.json"),
         workspace_cache=os.path.join(out_dir, "workspace_emails.json"),
+        ingester_audit=os.path.join(out_dir, "ingester_audit.csv"),
+        borderline=os.path.join(out_dir, "borderline.csv"),
+        email_recovery=os.path.join(out_dir, "pending_email_recovery.jsonl"),
     )
 
 
@@ -198,6 +204,17 @@ def outscraper_filters(config: dict) -> list[str]:
     return [str(item).strip() for item in raw if str(item).strip()]
 
 
+def outscraper_enrichment(config: dict) -> list[str]:
+    """Post-processing enrichments for Google Maps Search (modern Outscraper API)."""
+    raw = config.get("OUTSCRAPER_ENRICHMENT")
+    if raw is None:
+        return ["leads_n_contacts"]
+    if isinstance(raw, str):
+        text = raw.strip()
+        return [text] if text else []
+    return [str(item).strip() for item in raw if str(item).strip()]
+
+
 def outscraper_request_language(config: dict) -> str:
     """Outscraper quick filters require language=en."""
     if outscraper_filters(config):
@@ -206,7 +223,7 @@ def outscraper_request_language(config: dict) -> str:
 
 
 def website_required_for_scrape(config: dict) -> bool:
-    if config.get("ENRICH_ENABLED"):
+    if config.get("ENRICH_ENABLED") or config.get("INGESTER_ENABLED"):
         return True
     return "only_with_website" not in outscraper_filters(config)
 
@@ -215,11 +232,31 @@ DUPLICATE_GEO_ADVANCE_RATE = 0.45
 DUPLICATE_GEO_MIN_SAMPLES = 10
 
 
-def batch_duplicate_saturated(accepted: int, rejected: int, duplicate_rejects: int) -> bool:
+def duplicate_geo_advance_rate(config: dict | None = None) -> float:
+    if config is None:
+        return DUPLICATE_GEO_ADVANCE_RATE
+    raw = config.get("DUPLICATE_GEO_ADVANCE_RATE")
+    if raw is None:
+        return DUPLICATE_GEO_ADVANCE_RATE
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return DUPLICATE_GEO_ADVANCE_RATE
+
+
+def batch_duplicate_saturated(
+    accepted: int,
+    rejected: int,
+    duplicate_rejects: int,
+    *,
+    rate: float | None = None,
+    config: dict | None = None,
+) -> bool:
     total = accepted + rejected
     if total < DUPLICATE_GEO_MIN_SAMPLES:
         return False
-    return duplicate_rejects / total > DUPLICATE_GEO_ADVANCE_RATE
+    threshold = rate if rate is not None else duplicate_geo_advance_rate(config)
+    return duplicate_rejects / total > threshold
 
 
 def _target_mode(config: dict) -> str:
@@ -416,6 +453,7 @@ class OutscraperClient:
             timeout=_HTTP_TIMEOUT,
         )
         self.qps_delay = 0.05
+        self.last_error: str | None = None
 
     async def aclose(self) -> None:
         await self.client.aclose()
@@ -444,6 +482,7 @@ class OutscraperClient:
                     await asyncio.sleep(wait)
                     continue
                 if response.status_code < 300:
+                    self.last_error = None
                     return response
                 if response.status_code == 400:
                     try:
@@ -454,13 +493,25 @@ class OutscraperClient:
                             continue
                     except Exception:
                         pass
+                # #region agent log
+                try:
+                    import json as _json, time as _time
+                    with open("/Users/evqn/dev/hercule.dev/.cursor/debug-74e6fe.log", "a", encoding="utf-8") as _f:
+                        _f.write(_json.dumps({"sessionId": "74e6fe", "runId": "scrape-test", "hypothesisId": "D", "location": "OutscraperClient._request_with_retry", "message": "outscraper non-2xx", "data": {"status": response.status_code, "url": url.split("?")[0][-40:], "body": (response.text or "")[:160]}, "timestamp": int(_time.time() * 1000)}) + "\n")
+                except Exception:
+                    pass
+                # #endregion
+                self.last_error = f"HTTP {response.status_code}: {(response.text or '')[:160]}"
                 response.raise_for_status()
                 return response
             except httpx.TimeoutException:
                 wait = _BACKOFF_BASE**attempt + random.uniform(0, _BACKOFF_JITTER_MAX)
                 await asyncio.sleep(wait)
-            except httpx.HTTPError:
+                self.last_error = "timeout"
+            except httpx.HTTPError as exc:
+                self.last_error = f"HTTPError: {exc}"
                 return None
+        self.last_error = self.last_error or "retries_exhausted"
         return None
 
     def _parse_task_id(self, data: dict[str, Any]) -> str | None:
@@ -478,6 +529,7 @@ class OutscraperClient:
         skip_places: int = 0,
         filters: list[str] | None = None,
         language: str = "fr",
+        enrichment: list[str] | None = None,
     ) -> str | None:
         payload: dict[str, Any] = {
             "query": queries,
@@ -486,8 +538,12 @@ class OutscraperClient:
             "dropDuplicates": True,
             "language": language,
             "region": "FR",
-            "extractContacts": True,
         }
+        enrich = [str(item).strip() for item in (enrichment or []) if str(item).strip()]
+        if enrich:
+            payload["enrichment"] = enrich
+        else:
+            payload["extractContacts"] = True
         if total_limit is not None:
             payload["totalLimit"] = total_limit
         if skip_places > 0:
@@ -830,6 +886,47 @@ async def _run_enrich_batch(
     return valid, rejected
 
 
+async def _run_ingester_batch(
+    pending_scraped: list[dict[str, str]],
+    config: dict,
+    *,
+    log_cb: Callable[[str], None],
+    batch_size: int,
+) -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[str, str]]]:
+    """Run one ingester batch. Returns (accepted, borderline, rejected)."""
+    from lead_ingester import ingest_batch
+
+    batch = pending_scraped[:batch_size]
+    del pending_scraped[: len(batch)]
+    # #region agent log
+    try:
+        import json as _json, time as _time
+        with open("/Users/evqn/dev/hercule.dev/.cursor/debug-74e6fe.log", "a", encoding="utf-8") as _f:
+            _f.write(_json.dumps({"sessionId": "74e6fe", "runId": "scrape-test", "hypothesisId": "A", "location": "core_logic.py:_run_ingester_batch", "message": "ingester batch start", "data": {"batch_n": len(batch), "enabled": bool(config.get("INGESTER_ENABLED")), "min_score": config.get("INGESTER_MIN_SCORE"), "preset_list": config.get("INSTANTLY_LIST_ID", "")[:8]}, "timestamp": int(_time.time() * 1000)}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    result = await ingest_batch(batch, config, _active)
+    # #region agent log
+    try:
+        import json as _json, time as _time
+        reasons = {}
+        for r in result.rejected[:20]:
+            key = str(r.get("_ingester_reason") or "unknown")
+            reasons[key] = reasons.get(key, 0) + 1
+        fetch_errs = sum(1 for a in result.audit_rows if a.get("website_error"))
+        with open("/Users/evqn/dev/hercule.dev/.cursor/debug-74e6fe.log", "a", encoding="utf-8") as _f:
+            _f.write(_json.dumps({"sessionId": "74e6fe", "runId": "scrape-test", "hypothesisId": "B", "location": "core_logic.py:_run_ingester_batch:done", "message": "ingester batch result", "data": {"accepted": len(result.accepted), "borderline": len(result.borderline), "rejected": len(result.rejected), "website_errors": fetch_errs, "reject_reasons": reasons, "sample_scores": [a.get("composite_score") for a in result.audit_rows[:5]], "sample_verdicts": [a.get("verdict") for a in result.audit_rows[:5]]}, "timestamp": int(_time.time() * 1000)}) + "\n")
+    except Exception:
+        pass
+    # #endregion
+    log_cb(
+        f"Ingester: {len(result.accepted)} accepted, "
+        f"{len(result.borderline)} borderline, {len(result.rejected)} rejected"
+    )
+    return result.accepted, result.borderline, result.rejected
+
+
 async def _maybe_enrich_and_push(
     *,
     config: dict,
@@ -853,13 +950,36 @@ async def _maybe_enrich_and_push(
     force_enrich: bool = False,
     on_progress_persist: Callable[[int, int, int], None] | None = None,
 ) -> tuple[int, int, int]:
-    """Run enrich batch if buffer full; flush Instantly if buffer full. Returns updated counters."""
-    while enrich_enabled and (len(pending_scraped) >= enrich_batch_size or force_enrich):
+    """Run enrich/ingester batch if buffer full; flush Instantly if buffer full. Returns updated counters."""
+    ingester_enabled = bool(config.get("INGESTER_ENABLED", False))
+    # Ingester replaces the legacy website enrich path when enabled
+    use_enrich = enrich_enabled and not ingester_enabled
+
+    while ingester_enabled and (len(pending_scraped) >= enrich_batch_size or force_enrich):
         if not pending_scraped:
             break
         force_enrich = False
         batch_n = min(len(pending_scraped), enrich_batch_size)
-    
+        log_cb(f"Ingester batch — {batch_n} scraped lead(s) queued for scoring")
+        accepted, borderline, rejected = await _run_ingester_batch(
+            pending_scraped,
+            config,
+            log_cb=log_cb,
+            batch_size=batch_n,
+        )
+        leads_enriched_valid += len(accepted)
+        leads_enriched_rejected += len(rejected) + len(borderline)
+        pending_instantly.extend(accepted)
+        metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
+        if on_progress_persist:
+            on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
+
+    while use_enrich and (len(pending_scraped) >= enrich_batch_size or force_enrich):
+        if not pending_scraped:
+            break
+        force_enrich = False
+        batch_n = min(len(pending_scraped), enrich_batch_size)
+
         log_cb(f"Enrich batch — {batch_n} scraped lead(s) queued for website check")
         valid, rejected = await _run_enrich_batch(pending_scraped, config, log_cb=log_cb)
         leads_enriched_valid += len(valid)
@@ -869,14 +989,15 @@ async def _maybe_enrich_and_push(
             f"Enrich batch done — {len(valid)} valid, {len(rejected)} rejected "
             f"(totals: {leads_enriched_valid} valid / {leads_enriched_rejected} rejected)"
         )
-    
+
         metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
         if on_progress_persist:
             on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
 
     pappers_cfg = _pappers_batch_settings(config)
     while (
-        not enrich_enabled
+        not use_enrich
+        and not ingester_enabled
         and pappers_cfg["enabled"]
         and pending_scraped
         and (len(pending_scraped) >= pappers_cfg["batch_size"] or force_enrich)
@@ -887,7 +1008,7 @@ async def _maybe_enrich_and_push(
         del pending_scraped[:batch_n]
         from company_registry import validate_leads
 
-    
+
         log_cb(f"SIRET batch — {batch_n} scraped lead(s) queued for registry check")
         started = time.time()
         valid, rejected = await validate_leads(to_push, config, log_cb=log_cb)
@@ -902,16 +1023,21 @@ async def _maybe_enrich_and_push(
             f"in {duration_s}s (totals: {leads_enriched_valid} valid / "
             f"{leads_enriched_rejected} rejected)"
         )
-    
+
         metric_cb(leads_saved, leads_enriched_valid, instantly_pushed)
         if on_progress_persist:
             on_progress_persist(leads_saved, leads_enriched_valid, instantly_pushed)
 
-    if not enrich_enabled and pending_scraped and not pappers_cfg["enabled"]:
+    if (
+        not use_enrich
+        and not ingester_enabled
+        and pending_scraped
+        and not pappers_cfg["enabled"]
+    ):
         moved = len(pending_scraped)
         pending_instantly.extend(pending_scraped)
         pending_scraped.clear()
-    
+
 
     while instantly_enabled and len(pending_instantly) >= push_every:
         flush_stats = await _flush_instantly_buffer(
@@ -944,6 +1070,30 @@ def _append_metrics(event: dict[str, Any]) -> None:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
 
+def _append_email_recovery(
+    business: dict[str, Any],
+    *,
+    website: str,
+    company: str,
+) -> None:
+    """Queue a no-email business with website for later emails-and-contacts recovery."""
+    path = _active.email_recovery
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    payload = {
+        "website": website,
+        "company": company,
+        "type": str(business.get("type") or "").strip(),
+        "category": str(business.get("category") or "").strip(),
+        "subtypes": business.get("subtypes"),
+        "city": str(business.get("city") or business.get("full_address") or "").strip(),
+        "phone": str(business.get("phone") or "").strip(),
+        "name": str(business.get("name") or company).strip(),
+        "queued_at": time.time(),
+    }
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False) + "\n")
+
+
 def _process_business(
     b: dict[str, Any],
     config: dict,
@@ -958,6 +1108,9 @@ def _process_business(
     web = _normalize_web(_business_website(b))
 
     if not email or not EMAIL_REGEX.match(email):
+        if web and bool(config.get("OUTSCRAPER_EMAIL_RECOVERY_ENABLED")):
+            if not any(ex in web for ex in (config.get("EXCLUDE_DOMAINS") or [])):
+                _append_email_recovery(b, website=web, company=company)
         audit = {
             "Email": email,
             "Company": company,
@@ -1041,6 +1194,10 @@ def _process_business(
         "Siret": siret,
         "Siren": siren,
     }
+    # Ephemeral: keep reviews for the ingester (not written to CSV columns)
+    reviews = b.get("reviews_data")
+    if isinstance(reviews, list) and reviews:
+        row["_reviews_data"] = reviews
     audit = {
         "Email": email,
         "Company": company,
@@ -1094,6 +1251,14 @@ async def _flush_instantly_buffer(
         if "@" in str(row.get("Email") or "")
     ]
 
+    # #region agent log
+    try:
+        import json as _json, time as _time
+        with open("/Users/evqn/dev/hercule.dev/.cursor/debug-74e6fe.log", "a", encoding="utf-8") as _f:
+            _f.write(_json.dumps({"sessionId": "74e6fe", "runId": "scrape-test", "hypothesisId": "C", "location": "core_logic.py:_flush_instantly_buffer", "message": "instantly flush start", "data": {"pending_n": len(pending), "list_id": str(config.get("INSTANTLY_LIST_ID") or "")[:8]}, "timestamp": int(_time.time() * 1000)}) + "\n")
+    except Exception:
+        pass
+    # #endregion
     push_stats = await push_leads_to_list(
         config["INSTANTLY_API_KEY"],
         config["INSTANTLY_LIST_ID"],
@@ -1102,6 +1267,14 @@ async def _flush_instantly_buffer(
         skip_if_in_list=bool(config.get("INSTANTLY_SKIP_IF_IN_LIST", True)),
         log_cb=log_cb,
     )
+    # #region agent log
+    try:
+        import json as _json, time as _time
+        with open("/Users/evqn/dev/hercule.dev/.cursor/debug-74e6fe.log", "a", encoding="utf-8") as _f:
+            _f.write(_json.dumps({"sessionId": "74e6fe", "runId": "scrape-test", "hypothesisId": "C", "location": "core_logic.py:_flush_instantly_buffer:done", "message": "instantly flush result", "data": {"pushed": push_stats.get("pushed"), "skipped_duplicate": push_stats.get("skipped_duplicate")}, "timestamp": int(_time.time() * 1000)}) + "\n")
+    except Exception:
+        pass
+    # #endregion
     pending.clear()
 
     should_provision = bool(batch_emails and config.get("INSTANTLY_PROVISION_LINKS"))
@@ -1434,7 +1607,9 @@ async def _process_batch_results(
                 f"Hard-excluded: {taxonomy_hard_excluded}. "
                 f"Consider tightening TAXONOMY_INCLUDED_KEYWORDS or adding TAXONOMY_HARD_EXCLUDED_KEYWORDS."
             )
-    duplicate_saturated = batch_duplicate_saturated(accepted, rejected, duplicate_rejects)
+    duplicate_saturated = batch_duplicate_saturated(
+        accepted, rejected, duplicate_rejects, config=config
+    )
     if duplicate_saturated:
         rate = duplicate_rejects / max(accepted + rejected, 1) * 100
         log_cb(
@@ -1487,6 +1662,7 @@ async def _run_concurrent_scrape(
     inflight: dict[str, InflightBatch] = {job.task_id: job for job in resume_inflight}
     out_filters = outscraper_filters(config)
     out_language = outscraper_request_language(config)
+    out_enrichment = outscraper_enrichment(config)
     last_completed = start_batch - 1
     if run_state is not None:
         last_completed = int(run_state.get("last_completed_batch_index", start_batch - 1))
@@ -1538,6 +1714,7 @@ async def _run_concurrent_scrape(
                         skip_places=skip_places,
                         filters=out_filters or None,
                         language=out_language,
+                        enrichment=out_enrichment or None,
                     )
                     if task_id:
                         inflight[task_id] = InflightBatch(
@@ -1666,6 +1843,7 @@ async def _run_concurrent_scrape(
                 skip_places=skip_places,
                 filters=out_filters or None,
                 language=out_language,
+                enrichment=out_enrichment or None,
             )
             if task_id:
                 inflight[task_id] = InflightBatch(
@@ -1675,7 +1853,8 @@ async def _run_concurrent_scrape(
                 )
                 log_cb(f"Task [{task_id}] submitted.")
             else:
-                log_cb(f"Failed to submit batch {next_submit_idx + 1}.")
+                detail = getattr(client, "last_error", None) or "unknown error"
+                log_cb(f"Failed to submit batch {next_submit_idx + 1}: {detail}")
 
             _persist_run_state(
                 run_state,
@@ -1881,7 +2060,15 @@ async def run_scraper_pipeline(
     )
     log_cb(f"Target: {target} ({mode}) — output: {paths.out_dir}")
     enrich_cfg = _enrich_settings(config)
-    if enrich_cfg["enabled"]:
+    if bool(config.get("INGESTER_ENABLED", False)):
+        weights = config.get("INGESTER_SIGNAL_WEIGHTS") or {}
+        log_cb(
+            f"Ingester enabled — min_score={config.get('INGESTER_MIN_SCORE', 0.60)}, "
+            f"borderline_min={config.get('INGESTER_BORDERLINE_MIN', 0.40)}, "
+            f"concurrency={config.get('INGESTER_CONCURRENCY', 10)}, "
+            f"weights={weights}"
+        )
+    elif enrich_cfg["enabled"]:
         log_cb(
             f"Website enrich enabled — batch {enrich_cfg['batch_size']}, "
             f"concurrency {enrich_cfg['concurrency']}, timeout {enrich_cfg['timeout_ms']}ms"
@@ -1983,6 +2170,25 @@ async def run_scraper_pipeline(
             )
             raise SystemExit(hint)
 
+    if resume and existing_state:
+        import commune_passes
+
+        if commune_passes.geo_idle_blocked(config, existing_state):
+            reload_round = int((existing_state or {}).get("reload_round", 0) or 0)
+            pushed = int((existing_state or {}).get("instantly_pushed", 0) or 0)
+            log_cb(
+                f"Geo idle — exhausted with no reload rounds left "
+                f"(reload_round={reload_round}); skipping Outscraper/Instantly work."
+            )
+            summary["geo_reload_exhausted"] = True
+            summary["leads_saved"] = int(existing_state.get("leads_saved", 0) or 0)
+            summary["instantly_pushed"] = pushed
+            summary["instantly_skipped_duplicate"] = int(
+                existing_state.get("instantly_skipped_duplicate", 0) or 0
+            )
+            summary["status"] = "geo_idle"
+            return summary
+
     seen_em, seen_domain = _load_seen_from_csv()
     leads_saved = len(seen_em)
     if leads_saved:
@@ -2006,7 +2212,7 @@ async def run_scraper_pipeline(
         def _dedup_progress(n: int) -> None:
             log_cb(f"  dedup index: {n} emails loaded...")
 
-        progress_cb = wrap_progress_with_heartbeat(
+        dedup_progress_cb = wrap_progress_with_heartbeat(
             _dedup_progress,
             lambda: touch_worker_heartbeat(paths.out_dir, preset=preset, status="running"),
             interval_s=30.0,
@@ -2019,7 +2225,7 @@ async def run_scraper_pipeline(
             campaign_ids=dedup_campaign_ids,
             cache_path=paths.workspace_cache,
             log_cb=log_cb,
-            on_progress=progress_cb,
+            on_progress=dedup_progress_cb,
         )
         before = len(seen_em)
         seen_em.update(workspace_emails)
@@ -2372,8 +2578,9 @@ async def run_scraper_pipeline(
     finally:
         await out_client.aclose()
 
-    if enrich_enabled and pending_scraped:
-        log_cb(f"Final enrich flush — {len(pending_scraped)} scraped lead(s) remaining")
+    if (enrich_enabled or bool(config.get("INGESTER_ENABLED", False))) and pending_scraped:
+        label = "ingester" if config.get("INGESTER_ENABLED") else "enrich"
+        log_cb(f"Final {label} flush — {len(pending_scraped)} scraped lead(s) remaining")
         (
             leads_enriched_valid,
             leads_enriched_rejected,
@@ -2400,7 +2607,12 @@ async def run_scraper_pipeline(
             force_enrich=True,
         )
 
-    if not enrich_enabled and pending_scraped and bool(config.get("PAPPERS_ENABLED", False)):
+    if (
+        not enrich_enabled
+        and not bool(config.get("INGESTER_ENABLED", False))
+        and pending_scraped
+        and bool(config.get("PAPPERS_ENABLED", False))
+    ):
         log_cb(f"Final SIRET flush — {len(pending_scraped)} scraped lead(s) remaining")
         (
             leads_enriched_valid,
@@ -2553,9 +2765,11 @@ async def run_filter_audit(
                 settings.limit_per_query,
                 filters=outscraper_filters(config) or None,
                 language=outscraper_request_language(config),
+                enrichment=outscraper_enrichment(config) or None,
             )
             if not task_id:
-                log_cb(f"Failed to submit batch {idx + 1}.")
+                detail = getattr(out_client, "last_error", None) or "unknown error"
+                log_cb(f"Failed to submit batch {idx + 1}: {detail}")
                 continue
 
             job = InflightBatch(
@@ -2722,3 +2936,208 @@ async def backfill_taxonomy_push(
         "skipped_duplicate": skipped,
         "failed": failed,
     }
+
+
+def _load_email_recovery_queue(path: str) -> list[dict[str, Any]]:
+    if not os.path.isfile(path):
+        return []
+    rows: list[dict[str, Any]] = []
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                item = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(item, dict):
+                rows.append(item)
+    return rows
+
+
+def _dedupe_recovery_by_website(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    unique: list[dict[str, Any]] = []
+    for row in rows:
+        website = _normalize_web(str(row.get("website") or ""))
+        if not website or website in seen:
+            continue
+        seen.add(website)
+        unique.append({**row, "website": website})
+    return unique
+
+
+def _email_from_recovery_result(item: dict[str, Any]) -> str:
+    for key in ("email", "Email"):
+        value = item.get(key)
+        if isinstance(value, str) and "@" in value:
+            return value.strip().lower()
+    emails = item.get("emails")
+    if isinstance(emails, list):
+        for entry in emails:
+            if isinstance(entry, str) and "@" in entry:
+                return entry.strip().lower()
+            if isinstance(entry, dict):
+                value = entry.get("value") or entry.get("email") or ""
+                if isinstance(value, str) and "@" in value:
+                    return value.strip().lower()
+    for idx in range(1, 10):
+        value = item.get(f"email_{idx}")
+        if isinstance(value, str) and "@" in value:
+            return value.strip().lower()
+    return ""
+
+
+def _website_from_recovery_result(item: dict[str, Any], fallback: str) -> str:
+    for key in ("query", "domain", "website", "site", "url"):
+        value = item.get(key)
+        if isinstance(value, str) and value.strip():
+            return _normalize_web(value)
+    return fallback
+
+
+async def run_email_recovery(
+    config: dict,
+    *,
+    log_cb: Callable[[str], None],
+    preset: str = "",
+    batch_size: int = 25,
+    push_to_instantly: bool = True,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Recover emails for queued domains via Outscraper emails-and-contacts."""
+    paths = activate_output_paths(preset or "biggy_agency")
+    queued = _load_email_recovery_queue(paths.email_recovery)
+    unique = _dedupe_recovery_by_website(queued)
+    summary: dict[str, Any] = {
+        "queued": len(queued),
+        "unique_domains": len(unique),
+        "recovered": 0,
+        "accepted": 0,
+        "pushed": 0,
+        "skipped_duplicate": 0,
+        "failed": 0,
+        "dry_run": dry_run,
+    }
+    if not unique:
+        log_cb("Email recovery — queue empty.")
+        return summary
+
+    if not bool(config.get("OUTSCRAPER_EMAIL_RECOVERY_ENABLED", True)):
+        log_cb("Email recovery disabled (OUTSCRAPER_EMAIL_RECOVERY_ENABLED=false).")
+        return summary
+
+    api_key = str(config.get("OUTSCRAPER_API_KEY") or "").strip()
+    if not api_key:
+        raise SystemExit("OUTSCRAPER_API_KEY required for email recovery")
+
+    from outscraper_client import OutscraperClient as SdkOutscraperClient
+
+    client = SdkOutscraperClient(api_key)
+    activate_output_paths(preset or "biggy_agency")
+    seen_em, seen_domain = _load_seen_from_csv()
+
+    pending_instantly: list[dict[str, str]] = []
+    accepted_rows: list[dict[str, str]] = []
+    chunk = max(int(batch_size), 1)
+
+    log_cb(
+        f"Email recovery — {len(unique)} unique domain(s) "
+        f"(from {len(queued)} queued row(s)), batch_size={chunk}"
+    )
+
+    for offset in range(0, len(unique), chunk):
+        batch = unique[offset : offset + chunk]
+        domains = [str(row.get("website") or "") for row in batch]
+        log_cb(f"Recovering emails batch {offset // chunk + 1} — {len(domains)} domain(s)")
+        if dry_run:
+            continue
+        results = await client.emails_and_contacts(domains)
+        by_domain: dict[str, dict[str, Any]] = {}
+        for item in results:
+            if not isinstance(item, dict):
+                continue
+            domain = _website_from_recovery_result(item, "")
+            if domain:
+                by_domain[domain] = item
+
+        for queued_row in batch:
+            website = str(queued_row.get("website") or "")
+            recovered = by_domain.get(website) or by_domain.get(_normalize_web(website))
+            if not recovered:
+                # Try fuzzy match: any result whose domain is contained in website
+                for domain, item in by_domain.items():
+                    if domain and (domain in website or website in domain):
+                        recovered = item
+                        break
+            if not recovered:
+                continue
+            email = _email_from_recovery_result(recovered)
+            if not email:
+                continue
+            summary["recovered"] += 1
+            business = {
+                "name": queued_row.get("name") or queued_row.get("company") or "",
+                "site": website,
+                "website": website,
+                "email": email,
+                "type": queued_row.get("type") or "",
+                "category": queued_row.get("category") or "",
+                "subtypes": queued_row.get("subtypes"),
+                "city": queued_row.get("city") or "",
+                "phone": queued_row.get("phone") or "",
+            }
+            # Avoid re-queuing into the sidecar while processing recovery results.
+            gate_config = {**config, "OUTSCRAPER_EMAIL_RECOVERY_ENABLED": False}
+            row, audit = _process_business(
+                business,
+                gate_config,
+                seen_domain=seen_domain,
+                seen_em=seen_em,
+            )
+            if audit and audit.get("Verdict") == "accepted" and row:
+                summary["accepted"] += 1
+                seen_em.add(row["Email"])
+                seen_domain.add(_company_dedup_key(row["Website"], row["Email"]))
+                _append_lead_row(row)
+                accepted_rows.append(row)
+                if push_to_instantly:
+                    pending_instantly.append(row)
+
+        if push_to_instantly and pending_instantly and not dry_run:
+            flush_stats = await _flush_instantly_buffer(
+                pending_instantly,
+                config,
+                log_cb=log_cb,
+                label=f"email recovery batch {offset // chunk + 1}",
+            )
+            summary["pushed"] += int(flush_stats.get("pushed", 0) or 0)
+            summary["skipped_duplicate"] += int(
+                flush_stats.get("skipped_duplicate", 0) or 0
+            )
+            summary["failed"] += int(flush_stats.get("failed", 0) or 0)
+
+    if push_to_instantly and pending_instantly and not dry_run:
+        flush_stats = await _flush_instantly_buffer(
+            pending_instantly,
+            config,
+            log_cb=log_cb,
+            label="email recovery final",
+        )
+        summary["pushed"] += int(flush_stats.get("pushed", 0) or 0)
+        summary["skipped_duplicate"] += int(flush_stats.get("skipped_duplicate", 0) or 0)
+        summary["failed"] += int(flush_stats.get("failed", 0) or 0)
+
+    if not dry_run and unique:
+        # Clear sidecar after a successful recovery pass
+        with open(paths.email_recovery, "w", encoding="utf-8") as handle:
+            handle.write("")
+        log_cb(f"Email recovery queue cleared — {paths.email_recovery}")
+
+    log_cb(
+        f"Email recovery done — recovered={summary['recovered']}, "
+        f"accepted={summary['accepted']}, pushed={summary['pushed']}, "
+        f"skipped_duplicate={summary['skipped_duplicate']}"
+    )
+    return summary

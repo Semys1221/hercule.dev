@@ -16,6 +16,7 @@ export type PromptLinks = {
   entrepriseLink: string;
   comptableLink: string;
   cifLink: string;
+  jumLink: string;
 };
 
 export function ctaLinkColumn(targetType: AiReplyTargetType): CtaColumn {
@@ -39,6 +40,7 @@ export async function resolvePromptLinks(
   let entrepriseLink = fallbackCtaLink("seller");
   let comptableLink = entrepriseLink;
   let cifLink = entrepriseLink;
+  let jumLink = entrepriseLink;
 
   if (lookup?.lead) {
     const agence = lookup.lead.reservation_agence_link?.trim();
@@ -52,6 +54,9 @@ export async function resolvePromptLinks(
 
     const cif = lookup.lead.reservation_cif_link?.trim();
     if (cif) cifLink = cif;
+
+    const jum = lookup.lead.reservation_jum_link?.trim();
+    if (jum) jumLink = jum;
   }
 
   const primary =
@@ -59,11 +64,13 @@ export async function resolvePromptLinks(
       ? comptableLink
       : lookup?.category === "cif"
         ? cifLink
+        : lookup?.category === "jum"
+          ? jumLink
         : targetType === "buyer"
           ? agenceLink
           : entrepriseLink;
 
-  return { primary, agenceLink, entrepriseLink, comptableLink, cifLink };
+  return { primary, agenceLink, entrepriseLink, comptableLink, cifLink, jumLink };
 }
 
 export async function resolveLeadCtaLink(
@@ -78,7 +85,10 @@ export function applyPromptLinkVariables(
   prompt: string,
   ctaLink: string,
   targetType: AiReplyTargetType,
-  links?: Pick<PromptLinks, "agenceLink" | "entrepriseLink" | "comptableLink" | "cifLink">,
+  links?: Pick<
+    PromptLinks,
+    "agenceLink" | "entrepriseLink" | "comptableLink" | "cifLink" | "jumLink"
+  >,
 ): string {
   const agenceLink =
     links?.agenceLink ??
@@ -92,6 +102,9 @@ export function applyPromptLinkVariables(
   const cifLink =
     links?.cifLink ??
     (prompt.includes("reservation_cif_link") ? ctaLink : entrepriseLink);
+  const jumLink =
+    links?.jumLink ??
+    (prompt.includes("reservation_jum_link") ? ctaLink : entrepriseLink);
 
   let result = prompt;
   for (const [key, value] of [
@@ -99,6 +112,7 @@ export function applyPromptLinkVariables(
     ["reservation_entreprise_link", entrepriseLink],
     ["reservation_comptable_link", comptableLink],
     ["reservation_cif_link", cifLink],
+    ["reservation_jum_link", jumLink],
   ] as const) {
     result = result.replaceAll(`{{${key}}}`, value);
     result = result.replaceAll(`{${key}}`, value);

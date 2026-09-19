@@ -5,7 +5,7 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 PRESET_ID = "restaurants_independants"
 PRESET_LABEL = "Restaurants indépendants (France)"
 
-_LIST_ID = "2f2cfd29-2214-4310-905b-0d28f9717666"
+_LIST_ID = "8ad641e7-3456-42df-9281-2c11f97df1c5"
 _CAMPAIGN_ID = "e4f11e76-717e-4be9-a6ad-c7f0a331afb7"
 _SUBSEQUENCE_ID = ""
 
@@ -19,8 +19,43 @@ RESTAURANTS_INDEPENDANTS_CONFIG = {
     "INSTANTLY_DEDUP_CAMPAIGN_IDS": [_CAMPAIGN_ID],
     "INSTANTLY_SKIP_IF_IN_CAMPAIGN": False,
     "INSTANTLY_SKIP_IF_IN_LIST": False,
-    "INSTANTLY_PUSH_EVERY": 50,
+    "INSTANTLY_PROVISION_LINKS": True,
+    "LINK_PROVISION_CATEGORY": "jum",
     "ENRICH_ENABLED": False,
+    "INGESTER_ENABLED": True,
+    "INGESTER_MIN_SCORE": 0.55,
+    "INGESTER_BORDERLINE_MIN": 0.35,
+    "INGESTER_CONCURRENCY": 12,
+    "INGESTER_FETCH_TIMEOUT": 8.0,
+    "INGESTER_SIGNAL_WEIGHTS": {
+        "taxonomy": 0.30,
+        "website": 0.35,
+        "review": 0.20,
+        "registry": 0.15,
+    },
+    "INGESTER_REVIEW_ICP_KEYWORDS": [
+        "restaurant",
+        "brasserie",
+        "bistrot",
+        "cuisine",
+        "menu",
+        "carte",
+        "chef",
+        "repas",
+        "déjeuner",
+        "dîner",
+    ],
+    "INGESTER_REVIEW_ANTI_ICP_KEYWORDS": [
+        "livraison uniquement",
+        "dark kitchen",
+        "franchise",
+        "chaîne",
+        "mcdonald",
+        "kfc",
+        "burger king",
+        "logiciel",
+        "plateforme",
+    ],
     "OUTSCRAPER_FILTERS": ["only_with_website", "operational_only"],
     "TAXONOMY_GATE_ENABLED": True,
     "TAXONOMY_INCLUDED_KEYWORDS": [
@@ -33,9 +68,31 @@ RESTAURANTS_INDEPENDANTS_CONFIG = {
         "restaurant français",
         "gastronomique",
     ],
-    "ENRICH_INCLUDED_KEYWORDS": [],
-    "ENRICH_HARD_EXCLUDED_KEYWORDS": [],
-    "ENRICH_SOFT_EXCLUDED_KEYWORDS": [],
+    "ENRICH_INCLUDED_KEYWORDS": [
+        "restaurant",
+        "brasserie",
+        "bistrot",
+        "cuisine",
+        "menu",
+        "carte",
+        "réservation",
+        "chef",
+        "gastronomie",
+        "terroir",
+    ],
+    "ENRICH_HARD_EXCLUDED_KEYWORDS": [
+        "franchise",
+        "dark kitchen",
+        "logiciel de caisse",
+        "logiciel restauration",
+        "plateforme de livraison",
+        "recrutement",
+    ],
+    "ENRICH_SOFT_EXCLUDED_KEYWORDS": [
+        "traiteur uniquement",
+        "food truck",
+        "livraison",
+    ],
     "OUTSCRAPER_BATCH_SIZE": 200,
     "OUTSCRAPER_CONCURRENCY": 16,
     "OUTSCRAPER_LIMIT_PER_QUERY": 50,
@@ -44,8 +101,9 @@ RESTAURANTS_INDEPENDANTS_CONFIG = {
     "OUTSCRAPER_POLL_SLOW_S": 10,
     "OUTSCRAPER_POLL_TIMEOUT_S": 300,
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
-    "TARGET_LEADS": 5000,
-    "TARGET_MODE": "instantly_pushed",
+    "TARGET_LEADS": 100,
+    "TARGET_MODE": "instantly_pushed_run",
+    "INSTANTLY_PUSH_EVERY": 25,
     "SERVICE_DEFAULT": "Restauration",
     "SERVICE_RULES": [],
     "KEYWORDS": [

@@ -36,7 +36,7 @@ FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
         "plus de 3 associes",
         "proposer mon cabinet",
         "mon cabinet est compatible",
-        "agences e-commerce",
+        "entreprises de btp",
         "dentistes et veterinaires",
         "approche a 360",
         "echanges entre cabinets et entreprise",

@@ -9,7 +9,7 @@ import {
 
 const DOC_DIR = join(process.cwd(), "doc/tech-stack")
 
-export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif"
+export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif" | "jum"
 
 export const CVG_DOC_FILES = {
   onboarding: "cvg_onboarding.md",
@@ -78,6 +78,9 @@ export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "comptable
   }
   if (audience === "cif") {
     return readDocFile("ai-reply-knowledge-cif.md")
+  }
+  if (audience === "jum") {
+    return readDocFile("ai-reply-knowledge-jum.md")
   }
   return readDocFile("ai-reply-knowledge.md")
 }

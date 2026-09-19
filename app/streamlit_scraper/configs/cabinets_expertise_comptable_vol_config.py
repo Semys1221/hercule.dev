@@ -5,7 +5,7 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 PRESET_ID = "cabinets_expertise_comptable_vol"
 PRESET_LABEL = "Cabinets EC vol (Outscraper taxonomy)"
 
-_LIST_ID = "bfb0fc90-ec59-4d49-b266-3891f59d3ea8"
+_LIST_ID = "ca3e72d4-5a43-4399-a89b-566095e69c25"
 _LEGACY_LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c"
 _CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6"
 _SUBSEQUENCE_ID = "7105ed91-f2b7-4316-96c9-76a3c374cd6e"
@@ -21,6 +21,8 @@ CABINETS_EXPERTISE_COMPTABLE_VOL_CONFIG = {
     "INSTANTLY_SKIP_IF_IN_CAMPAIGN": False,
     "INSTANTLY_SKIP_IF_IN_LIST": True,
     "INSTANTLY_PUSH_EVERY": 50,
+    "INSTANTLY_PROVISION_LINKS": True,
+    "LINK_PROVISION_CATEGORY": "comptable",
     "ENRICH_ENABLED": False,
     "OUTSCRAPER_FILTERS": ["only_with_website", "operational_only"],
     "ENRICH_INCLUDED_KEYWORDS": [],
@@ -36,6 +38,11 @@ CABINETS_EXPERTISE_COMPTABLE_VOL_CONFIG = {
         "accounting firm",
         "chartered accountant",
         "comptable",
+        "tax advisor",
+        "tax preparation service",
+        "financial auditor",
+        "payroll service",
+        "auditor",
     ],
     "OUTSCRAPER_BATCH_SIZE": 200,
     "OUTSCRAPER_CONCURRENCY": 16,
@@ -45,11 +52,14 @@ CABINETS_EXPERTISE_COMPTABLE_VOL_CONFIG = {
     "OUTSCRAPER_POLL_SLOW_S": 10,
     "OUTSCRAPER_POLL_TIMEOUT_S": 300,
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
+    "OUTSCRAPER_ENRICHMENT": ["leads_n_contacts"],
+    "OUTSCRAPER_EMAIL_RECOVERY_ENABLED": True,
     "TARGET_LEADS": 10000,
     "TARGET_MODE": "instantly_pushed_run",
     "SCRAPE_START_QUERY_PASS": 2,
+    "DUPLICATE_GEO_ADVANCE_RATE": 0.30,
     "SCRAPE_RELOAD_ENABLED": True,
-    "SCRAPE_RELOAD_MAX_ROUNDS": 3,
+    "SCRAPE_RELOAD_MAX_ROUNDS": 6,
     "SERVICE_DEFAULT": "Expertise comptable",
     "SERVICE_RULES": [],
     "KEYWORDS": [

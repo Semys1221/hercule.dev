@@ -16,6 +16,7 @@ import {
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
   buildInstantlyCustomVariables,
+  buildJumLeadUrls,
   buildLeadUrls,
   leadSlug,
 } from "@/lib/link-tracking/urls";
@@ -58,6 +59,9 @@ export function urlFieldsForCategory(
   if (category === "cif") {
     return buildCifLeadUrls(slug, email);
   }
+  if (category === "jum") {
+    return buildJumLeadUrls(slug, email);
+  }
   return category === "entreprise"
     ? buildEntrepriseLeadUrls(slug, email)
     : buildLeadUrls(slug, email);
@@ -83,6 +87,12 @@ export function needsProvision(
     const reservationLink = row.reservation_cif_link?.trim();
     if (!slug || !reservationLink) return true;
     return reservationLink.includes("reservation-cif.html");
+  }
+  if (category === "jum") {
+    const reservationLink = row.reservation_jum_link?.trim();
+    const confirmLink = row.confirmation_jum_link?.trim();
+    if (!slug || !reservationLink || !confirmLink) return true;
+    return !reservationLink.includes("reservation-jum.html");
   }
   const entrepriseLink = row.reservation_entreprise_link?.trim();
   const confirmLink = row.confirmation_agence_link?.trim();
@@ -147,6 +157,7 @@ export async function executeProvisionForSelectedLeads(params: {
   campaignId: string;
   category: LeadCategory;
   fromCampaign: boolean;
+  jumSegment?: string | null;
 }): Promise<{
   created: number;
   updated: number;
@@ -155,7 +166,7 @@ export async function executeProvisionForSelectedLeads(params: {
   errors: string[];
   customVariablesByEmail: Record<string, Record<string, string>>;
 }> {
-  const { lookup, campaignId, category, fromCampaign } = params;
+  const { lookup, campaignId, category, fromCampaign, jumSegment } = params;
   let selected = params.selected;
   const apiKey = getInstantlyApiKey();
   const client = createLinkTrackingClient();
@@ -188,6 +199,10 @@ export async function executeProvisionForSelectedLeads(params: {
       const rows = chunk.map((lead, index) => {
         const slug = newSlugs[start + index] ?? newSlugs[index];
         const urls = urlFieldsForCategory(category, slug, lead.email);
+        const profile =
+          category === "jum" && jumSegment?.trim()
+            ? { segment: jumSegment.trim(), jum_segment: jumSegment.trim() }
+            : {};
         return {
           email: lead.email,
           statut: "NOTBOOKED",
@@ -199,6 +214,7 @@ export async function executeProvisionForSelectedLeads(params: {
           first_name: lead.firstName,
           company: lead.companyName,
           calendly_questions: {},
+          profile,
         };
       });
 
@@ -265,6 +281,15 @@ export async function executeProvisionForSelectedLeads(params: {
       lead.email,
       dbRow.statut ?? "NOTBOOKED",
       category,
+      category === "jum"
+        ? {
+            jumSegment:
+              jumSegment?.trim() ||
+              (typeof dbRow.profile?.segment === "string"
+                ? dbRow.profile.segment
+                : null),
+          }
+        : undefined,
     );
     result.customVariablesByEmail[lead.email] = customVariables;
     if (!lead.instantlyLeadId) continue;

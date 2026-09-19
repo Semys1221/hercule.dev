@@ -1,4 +1,5 @@
 import agenceFaqData from "@/doc/legal-documentation/agence/faq.json";
+import jumFaqData from "@/content/faq/jum.json";
 import cifFaqData from "@/doc/legal-documentation/cif/faq.json";
 import comptableFaqData from "@/doc/legal-documentation/comptable/faq.json";
 import entrepriseFaqData from "@/doc/legal-documentation/entreprise/faq.json";
@@ -10,6 +11,7 @@ const BUNDLED_FAQ: Record<FaqAudience, FaqDocument> = {
   entreprise: faqDocumentSchema.parse(entrepriseFaqData),
   comptable: faqDocumentSchema.parse(comptableFaqData),
   cif: faqDocumentSchema.parse(cifFaqData),
+  jum: faqDocumentSchema.parse(jumFaqData),
 };
 
 export function getFaqEntries(audience: FaqAudience): FaqEntry[] {
@@ -35,6 +37,7 @@ const FAQ_TITLES: Record<FaqAudience, string> = {
   entreprise: "FAQ entreprise",
   comptable: "FAQ comptable",
   cif: "FAQ conseiller financier",
+  jum: "FAQ JUM Advisory",
 };
 
 export function faqEntriesToMarkdown(audience: FaqAudience, entries: FaqEntry[]): string {
@@ -51,6 +54,7 @@ const FAQ_ID_PREFIX: Record<FaqAudience, string> = {
   entreprise: "faq-en",
   comptable: "faq-cp",
   cif: "faq-cif",
+  jum: "faq-jum",
 };
 
 export function generateFaqEntryId(audience: FaqAudience, entries: FaqEntry[]): string {

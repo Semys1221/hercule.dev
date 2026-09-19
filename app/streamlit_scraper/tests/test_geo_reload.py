@@ -11,6 +11,7 @@ if str(_LIB) not in sys.path:
 
 from commune_passes import (  # noqa: E402
     GEO_PHASE_PASS,
+    geo_idle_blocked,
     initial_geo_state,
     maybe_begin_reload_round,
     reload_enabled,
@@ -29,7 +30,7 @@ def test_vol_config_starts_commune_pass() -> None:
     assert config.get("SCRAPE_START_QUERY_PASS") == 2
     assert config.get("OUTSCRAPER_FILTERS") == ["only_with_website", "operational_only"]
     assert config.get("SCRAPE_RELOAD_ENABLED") is True
-    assert config.get("SCRAPE_RELOAD_MAX_ROUNDS") == 3
+    assert config.get("SCRAPE_RELOAD_MAX_ROUNDS") == 6
 
 
 def test_initial_geo_state_uses_start_pass() -> None:
@@ -43,6 +44,18 @@ def test_initial_geo_state_uses_start_pass() -> None:
     geo_phase, query_pass, skip_places = initial_geo_state(config)
     assert geo_phase == GEO_PHASE_PASS
     assert query_pass == 0
+    assert skip_places == 0
+
+
+def test_initial_geo_state_reload_uses_reload_start_pass() -> None:
+    config = {
+        "SCRAPE_START_QUERY_PASS": 0,
+        "SCRAPE_RELOAD_START_QUERY_PASS": 1,
+        "SCRAPE_RELOAD_START_GEO_PHASE": "pass",
+    }
+    geo_phase, query_pass, skip_places = initial_geo_state(config, for_reload=True)
+    assert geo_phase == GEO_PHASE_PASS
+    assert query_pass == 1
     assert skip_places == 0
 
 
@@ -151,3 +164,42 @@ def test_reload_disabled_breaks_on_exhaustion() -> None:
     )
     assert not started
     assert new_geo is None
+
+
+def test_geo_idle_blocked_without_reload() -> None:
+    config = {"SCRAPE_RELOAD_ENABLED": False}
+    state = {"geo_reload_exhausted": True, "reload_round": 0}
+    assert geo_idle_blocked(config, state)
+
+
+def test_geo_idle_blocked_with_remaining_reload_rounds() -> None:
+    config = {"SCRAPE_RELOAD_ENABLED": True, "SCRAPE_RELOAD_MAX_ROUNDS": 3}
+    state = {"geo_reload_exhausted": True, "reload_round": 2}
+    assert geo_idle_blocked(config, state)
+
+
+def test_geo_idle_blocked_with_inflight_tasks() -> None:
+    config = {"SCRAPE_RELOAD_ENABLED": True}
+    state = {"geo_reload_exhausted": True, "inflight_tasks": [{"task_id": "x"}]}
+    assert not geo_idle_blocked(config, state)
+
+
+def test_geo_idle_blocked_clears_on_new_reload_round() -> None:
+    config = _vol_config()
+    run_state = new_scrape_state(
+        config,
+        queries_total=10,
+        batches_total=1,
+        instantly_pushed=100,
+    )
+    run_state["geo_reload_exhausted"] = True
+    started, _ = maybe_begin_reload_round(
+        config,
+        run_state,
+        instantly_pushed=100,
+        target=int(config["TARGET_LEADS"]),
+        target_mode="instantly_pushed_run",
+        log_cb=lambda _msg: None,
+    )
+    assert started
+    assert "geo_reload_exhausted" not in run_state

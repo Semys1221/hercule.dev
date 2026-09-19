@@ -63,6 +63,7 @@ class OutscraperClient:
         filters: list[str] | None = None,
         language: str = "fr",
         region: str = "FR",
+        enrichment: list[str] | None = None,
     ) -> str | None:
         payload: dict[str, Any] = {
             "query": queries,
@@ -71,8 +72,12 @@ class OutscraperClient:
             "dropDuplicates": True,
             "language": language,
             "region": region.strip().upper() or "FR",
-            "extractContacts": True,
         }
+        enrich = [str(item).strip() for item in (enrichment or []) if str(item).strip()]
+        if enrich:
+            payload["enrichment"] = enrich
+        else:
+            payload["extractContacts"] = True
         if total_limit is not None:
             payload["totalLimit"] = total_limit
         if skip_places > 0:
@@ -125,6 +130,32 @@ class OutscraperClient:
                 continue
             return None
         return None
+
+    async def emails_and_contacts(self, domains: list[str]) -> list[dict[str, Any]]:
+        """Crawl domains for emails via Outscraper emails-and-contacts endpoint."""
+        cleaned = [str(d).strip() for d in domains if str(d).strip()]
+        if not cleaned:
+            return []
+
+        def _call() -> Any:
+            return self._sdk.emails_and_contacts(cleaned)
+
+        try:
+            result = await asyncio.to_thread(_call)
+        except Exception as exc:
+            self.last_error = str(exc)
+            return []
+
+        if result is None:
+            return []
+        if isinstance(result, list):
+            return [item for item in result if isinstance(item, dict)]
+        if isinstance(result, dict):
+            data = result.get("data")
+            if isinstance(data, list):
+                return [item for item in data if isinstance(item, dict)]
+            return [result]
+        return []
 
     async def check_task_status(self, task_id: str) -> list | None:
         def _fetch() -> dict[str, Any]:

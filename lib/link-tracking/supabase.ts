@@ -12,11 +12,12 @@ import {
   buildComptableLeadUrls,
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
+  buildJumLeadUrls,
   buildLeadUrls,
 } from "./urls";
 
-// Lookup order: agence → comptable → entreprise (deterministic, no ambiguous matches).
-const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise", "cif"];
+// Lookup order: agence → comptable → entreprise → cif → jum (deterministic, no ambiguous matches).
+const TABLES: LeadCategory[] = ["agence", "comptable", "entreprise", "cif", "jum"];
 
 function getServiceRoleKey(): string {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -419,6 +420,8 @@ function buildBookingIdentityPatch(
         Object.assign(patch, buildComptableLeadUrls(slug, bookingEmail));
       } else if (lookup.category === "cif") {
         Object.assign(patch, buildCifLeadUrls(slug, bookingEmail));
+      } else if (lookup.category === "jum") {
+        Object.assign(patch, buildJumLeadUrls(slug, bookingEmail));
       } else if (lookup.category === "agence") {
         Object.assign(patch, buildLeadUrls(slug, bookingEmail));
       } else if (lookup.category === "entreprise") {
@@ -460,7 +463,8 @@ async function ensureDashboardLink(
   if (
     lookup.category !== "agence" &&
     lookup.category !== "comptable" &&
-    lookup.category !== "cif"
+    lookup.category !== "cif" &&
+    lookup.category !== "jum"
   ) {
     return lookup;
   }
@@ -548,7 +552,8 @@ export async function markLeadBooked(
   if (
     lookup.category === "agence" ||
     lookup.category === "comptable" ||
-    lookup.category === "cif"
+    lookup.category === "cif" ||
+    lookup.category === "jum"
   ) {
     patch.dashboard_link = buildDashboardUrl(lookup.lead.slug);
   }

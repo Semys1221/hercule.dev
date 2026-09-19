@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const salesSessionSettingsAudienceSchema = z.enum(["agence", "entreprise", "comptable", "cif"]);
+export const salesSessionSettingsAudienceSchema = z.enum([
+  "agence",
+  "entreprise",
+  "comptable",
+  "cif",
+  "jum",
+]);
 
 export const salesSessionSettingsDocumentSchema = z.object({
   schemaVersion: z.literal(1),

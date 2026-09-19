@@ -1,0 +1,56 @@
+[
+  {
+    "niche": "BTP",
+    "list_name": "TEMP - BTP",
+    "list_id": "ffcb555d-3303-4f92-a04f-d3f9644988d1",
+    "pushed": 4440,
+    "skipped_duplicate": 0,
+    "failed": 0,
+    "attempted": 4440
+  },
+  {
+    "niche": "COMPTABLE",
+    "list_name": "TEMP - COMPTABLE",
+    "list_id": "ca3e72d4-5a43-4399-a89b-566095e69c25",
+    "pushed": 3061,
+    "skipped_duplicate": 0,
+    "failed": 0,
+    "attempted": 3061
+  },
+  {
+    "niche": "CONSEIL_FINANCIER",
+    "list_name": "TEMP - CONSEIL_FINANCIER",
+    "list_id": "0f54a7a8-5bd0-4cc5-b018-1414fc7cc718",
+    "pushed": 1956,
+    "skipped_duplicate": 0,
+    "failed": 0,
+    "attempted": 1956
+  },
+  {
+    "niche": "DENTISTE",
+    "list_name": "TEMP - DENTISTE",
+    "list_id": "c4eb10d7-2285-4fc3-aa06-3230d2498d8e",
+    "pushed": 2518,
+    "skipped_duplicate": 0,
+    "failed": 0,
+    "attempted": 2518
+  },
+  {
+    "niche": "RESTAURANT",
+    "list_name": "TEMP - RESTAURANT",
+    "list_id": "8ad641e7-3456-42df-9281-2c11f97df1c5",
+    "pushed": 4974,
+    "skipped_duplicate": 0,
+    "failed": 0,
+    "attempted": 4974
+  },
+  {
+    "niche": "TERRASSEMENT",
+    "list_name": "TEMP - TERRASSEMENT",
+    "list_id": "ef52cbe1-e6cb-4076-85bc-55ead03cb4bd",
+    "pushed": 4470,
+    "skipped_duplicate": 0,
+    "failed": 0,
+    "attempted": 4470
+  }
+]

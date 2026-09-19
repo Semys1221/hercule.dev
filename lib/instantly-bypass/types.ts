@@ -1,5 +1,8 @@
 export type BypassTemplateKey =
   | "interested_email1"
+  | "interested_email1_restaurant"
+  | "interested_email1_b2b"
+  | "interested_email1_dentiste"
   | "interested_email2"
   | "interested_email3"
   | "no_show_email1"
@@ -56,6 +59,7 @@ export type InstantlyLeadRecord = {
   last_name?: string | null;
   company_name?: string | null;
   lt_interest_status?: number | null;
+  custom_variables?: Record<string, unknown> | null;
   payload?: Record<string, unknown> | null;
   status_summary_subseq?: {
     stepID?: string;

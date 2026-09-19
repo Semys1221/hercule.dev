@@ -43,6 +43,8 @@ function main() {
       agenceLink: "https://www.hercule.dev/reservation.html",
       entrepriseLink: "https://www.hercule.dev/reservation-entreprise.html",
       comptableLink: comptableUrl,
+      cifLink: "https://www.hercule.dev/reservation-conference.html",
+      jumLink: "https://www.hercule.dev/reservation-jum.html",
     }),
     `Postuler: ${comptableUrl}`,
   );

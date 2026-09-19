@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { JUM_VERTICALS } from "@/lib/admin/niches/jum-verticals";
 import {
   resolveInstantlyCampaignId,
   resolveInstantlyListId,
@@ -45,6 +46,26 @@ export async function GET(request: Request) {
         );
       }
     }
+
+    for (const vertical of JUM_VERTICALS) {
+      nicheResults.push(
+        await provisionLinksFromList({
+          campaignId: vertical.campaignId,
+          category: "jum",
+          fromCampaign: true,
+          jumSegment: vertical.segment,
+        }),
+      );
+      nicheResults.push(
+        await provisionLinksFromList({
+          listId: vertical.listId,
+          campaignId: vertical.campaignId,
+          category: "jum",
+          jumSegment: vertical.segment,
+        }),
+      );
+    }
+
     const list = await provisionLinksFromList();
     const created =
       nicheResults.reduce((sum, row) => sum + row.created, 0) + list.created;

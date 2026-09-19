@@ -606,6 +606,9 @@ const LEGACY_EMAIL_PATH_REDIRECTS_BY_AUDIENCE: Record<
   cif: {
     "emails/pre_close/booking": "meeting-cif",
   },
+  jum: {
+    "emails/pre_close/booking": "meeting-jum",
+  },
 };
 
 export function resolveLegacyEmailSlugForAudience(
@@ -636,6 +639,7 @@ export const BOOKING_SEQUENCE_SLUGS: Record<string, BookingEmailType[]> = {
   "meeting-agence": ["immediate", "h48_confirm", "h24_relance"],
   "meeting-comptable": ["immediate", "h48_confirm", "h24_relance"],
   "meeting-cif": ["immediate", "h48_confirm", "h24_relance"],
+  "meeting-jum": ["immediate", "h48_confirm", "h24_relance"],
   "meeting-entreprise": ["immediate", "h48_confirm", "h24_relance"],
   "role-recovery": ["role_seq_48", "role_seq_24"],
   "calendly-seat-onboarding": [

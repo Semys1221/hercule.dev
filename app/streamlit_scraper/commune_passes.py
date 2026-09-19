@@ -227,6 +227,13 @@ def max_skip_places(config: dict) -> int:
     return skip_places_step(limit) * pages
 
 
+def skip_phase_enabled(config: dict) -> bool:
+    """Whether skipPlaces pagination runs between city passes and départements."""
+    if "SCRAPE_SKIP_PHASE_ENABLED" in config:
+        return bool(config.get("SCRAPE_SKIP_PHASE_ENABLED"))
+    return True
+
+
 def next_geo_phase(
     config: dict,
     *,
@@ -239,9 +246,13 @@ def next_geo_phase(
     if geo_phase == GEO_PHASE_PASS:
         if query_pass < max_location_pass_index(config):
             return GEO_PHASE_PASS, query_pass + 1, 0
-        return GEO_PHASE_SKIP, 0, 0
+        if skip_phase_enabled(config):
+            return GEO_PHASE_SKIP, 0, 0
+        return GEO_PHASE_DEPARTMENT, 0, 0
 
     if geo_phase == GEO_PHASE_SKIP:
+        if not skip_phase_enabled(config):
+            return GEO_PHASE_DEPARTMENT, 0, 0
         step = skip_places_step(limit_per_query)
         next_skip = skip_places + step
         if next_skip < max_skip_places(config):
@@ -276,10 +287,24 @@ def reload_max_rounds(config: dict) -> int:
     return max(int(config.get("SCRAPE_RELOAD_MAX_ROUNDS", 0) or 0), 0)
 
 
-def initial_geo_state(config: dict) -> tuple[str, int, int]:
+def initial_geo_state(config: dict, *, for_reload: bool = False) -> tuple[str, int, int]:
     """Return (geo_phase, query_pass, skip_places) for a fresh geo sweep."""
+    if for_reload:
+        start_pass = max(int(config.get("SCRAPE_RELOAD_START_QUERY_PASS", 0) or 0), 0)
+        geo_phase = str(config.get("SCRAPE_RELOAD_START_GEO_PHASE") or GEO_PHASE_PASS).strip()
+        if geo_phase not in (GEO_PHASE_PASS, GEO_PHASE_SKIP, GEO_PHASE_DEPARTMENT):
+            geo_phase = GEO_PHASE_PASS
+        return geo_phase, start_pass, 0
     start_pass = max(int(config.get("SCRAPE_START_QUERY_PASS", 0) or 0), 0)
     return GEO_PHASE_PASS, start_pass, 0
+
+
+def geo_idle_blocked(config: dict, run_state: dict | None) -> bool:
+    """True when geo is exhausted and the pipeline has no in-flight Outscraper work."""
+    del config  # reserved for future preset-specific idle rules
+    if not run_state or not run_state.get("geo_reload_exhausted"):
+        return False
+    return not bool(run_state.get("inflight_tasks"))
 
 
 def maybe_begin_reload_round(
@@ -323,7 +348,8 @@ def maybe_begin_reload_round(
     new_round = reload_round + 1
     run_state["reload_round"] = new_round
     run_state["reload_round_pushed_start"] = instantly_pushed
-    geo_phase, query_pass, skip_places = initial_geo_state(config)
+    run_state.pop("geo_reload_exhausted", None)
+    geo_phase, query_pass, skip_places = initial_geo_state(config, for_reload=True)
     run_state["geo_phase"] = geo_phase
     run_state["query_pass"] = query_pass
     run_state["skip_places"] = skip_places

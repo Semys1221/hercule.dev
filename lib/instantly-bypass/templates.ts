@@ -95,12 +95,16 @@ export function buildTemplateVariables(
     first_name?: string | null;
     company_name?: string | null;
     payload?: Record<string, unknown> | null;
+    custom_variables?: Record<string, unknown> | null;
   },
 ): TemplateVariables {
   const leadPayload = lead?.payload ?? {};
+  const customVariables = lead?.custom_variables ?? {};
   const read = (key: string, alt?: string): string => {
     const fromPayload = payload[key] ?? payload[alt ?? ""];
     if (typeof fromPayload === "string" && fromPayload.trim()) return fromPayload.trim();
+    const fromCustom = customVariables[key] ?? customVariables[alt ?? ""];
+    if (typeof fromCustom === "string" && fromCustom.trim()) return fromCustom.trim();
     const fromLead = leadPayload[key] ?? leadPayload[alt ?? ""];
     if (typeof fromLead === "string" && fromLead.trim()) return fromLead.trim();
     if (key === "first_name" && lead?.first_name) return lead.first_name;
@@ -108,15 +112,22 @@ export function buildTemplateVariables(
     return "";
   };
 
+  const reservationJumLink = read("reservation_jum_link");
+  const reservationEntrepriseLink =
+    read("reservation_entreprise_link") || reservationJumLink;
+  const reservationCifLink = read("reservation_cif_link");
+  const reservationComptableLink = read("reservation_comptable_link");
+
   const vars = {
     first_name: read("first_name", "firstName") || "there",
     last_name: read("last_name", "lastName"),
     company_name: read("company_name", "companyName"),
     subject: read("subject", "reply_subject") || "your message",
     reservation_agence_link: read("reservation_agence_link"),
-    reservation_entreprise_link: read("reservation_entreprise_link"),
-    reservation_cif_link: read("reservation_cif_link"),
-    reservation_comptable_link: read("reservation_comptable_link"),
+    reservation_entreprise_link: reservationEntrepriseLink,
+    reservation_cif_link: reservationCifLink,
+    reservation_comptable_link: reservationComptableLink,
+    reservation_jum_link: reservationJumLink || reservationEntrepriseLink,
   };
   return vars;
 }

@@ -10,6 +10,7 @@ export function resolveSupabaseColumn(key: string, niche: Niche): string | null 
   if (key === "confirmLink") {
     if (niche === "comptable") return "confirmation_comptable_link";
     if (niche === "cif") return null;
+    if (niche === "jum") return "confirmation_jum_link";
     return "confirmation_agence_link";
   }
   if (key === "post_booking_link") {
@@ -23,6 +24,12 @@ export function resolveSupabaseColumn(key: string, niche: Niche): string | null 
   }
   if (key === "reservation_cif_link") {
     return "reservation_cif_link";
+  }
+  if (key === "reservation_jum_link") {
+    return "reservation_jum_link";
+  }
+  if (key === "confirmation_jum_link") {
+    return "confirmation_jum_link";
   }
   if (key === "dashboardLink") {
     return "dashboard_link";
@@ -41,11 +48,18 @@ export function resolveInstantlyKey(key: string, niche: Niche): string | null {
   if (key === "reservation_cif_link") {
     return "reservation_cif_link";
   }
+  if (key === "reservation_jum_link") {
+    return "reservation_jum_link";
+  }
   if (key === "confirmation_agence_link" || key === "confirmation_comptable_link") {
     return "confirmation_agence_link";
   }
   if (key === "confirmLink") {
+    if (niche === "jum") return "confirmation_jum_link";
     return "confirmation_agence_link";
+  }
+  if (key === "confirmation_jum_link") {
+    return "confirmation_jum_link";
   }
   if (niche === "entreprise" && key === "post_booking_link") {
     return null;

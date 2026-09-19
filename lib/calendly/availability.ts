@@ -1,4 +1,5 @@
 import { getCalendlyApiToken } from "@/lib/calendly";
+import { defaultJumVertical } from "@/lib/admin/niches/jum-verticals";
 
 const CALENDLY_API_BASE = "https://api.calendly.com";
 const PARIS_TIMEZONE = "Europe/Paris";
@@ -7,13 +8,14 @@ const WINDOW_DAYS = 7;
 const DEFAULT_HORIZON_DAYS = 42;
 const MIN_FUTURE_BUFFER_MS = 60_000;
 
-export type CalendlyBookingEvent = "agence" | "comptable" | "entreprise" | "cif";
+export type CalendlyBookingEvent = "agence" | "comptable" | "entreprise" | "cif" | "jum";
 
 export const CALENDLY_BOOKING_EVENTS: CalendlyBookingEvent[] = [
   "agence",
   "comptable",
   "entreprise",
   "cif",
+  "jum",
 ];
 
 export const CALENDLY_SCHEDULING_URLS: Record<CalendlyBookingEvent, string | null> = {
@@ -23,6 +25,7 @@ export const CALENDLY_SCHEDULING_URLS: Record<CalendlyBookingEvent, string | nul
   comptable:
     "https://calendly.com/hercule-connect/candidature-web-apport-d-affaires-clone",
   cif: "https://calendly.com/hercule-connect/hercule-briefing-dec-cif",
+  jum: defaultJumVertical().calendlySchedulingUrl,
 };
 
 const EVENT_TYPE_URI_ENV: Record<CalendlyBookingEvent, string> = {
@@ -30,6 +33,7 @@ const EVENT_TYPE_URI_ENV: Record<CalendlyBookingEvent, string> = {
   entreprise: "CALENDLY_EVENT_TYPE_URI_ENTREPRISE",
   comptable: "CALENDLY_EVENT_TYPE_URI_COMPTABLE",
   cif: "CALENDLY_EVENT_TYPE_URI_CIF",
+  jum: "CALENDLY_EVENT_TYPE_URI_JUM",
 };
 
 const eventTypeUriCache: Partial<Record<CalendlyBookingEvent, string>> = {};
@@ -67,7 +71,8 @@ export function parseBookingEvent(
     normalized === "agence" ||
     normalized === "entreprise" ||
     normalized === "comptable" ||
-    normalized === "cif"
+    normalized === "cif" ||
+    normalized === "jum"
   ) {
     return normalized;
   }

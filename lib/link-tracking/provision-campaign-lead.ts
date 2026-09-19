@@ -1,4 +1,5 @@
 import { campaignIdFromEnv } from "@/lib/admin/niches/outreach-config";
+import { resolveJumVerticalByCampaignId } from "@/lib/admin/niches/jum-verticals";
 import { findLeadByEmailInCampaign, getInstantlyApiKey } from "@/lib/instantly-bypass/client";
 import { patchLeadsCustomVariablesParallel } from "@/lib/instantly";
 import {
@@ -15,6 +16,7 @@ import {
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
   buildInstantlyCustomVariables,
+  buildJumLeadUrls,
   buildLeadUrls,
   leadSlug,
 } from "@/lib/link-tracking/urls";
@@ -26,6 +28,9 @@ export type EnsureCampaignLeadLinksResult =
 const KNOWN_CAMPAIGN_CATEGORY: Record<string, LeadCategory> = {
   "e4c58718-ca00-4e27-b714-68e522fe4db6": "comptable",
   "e3bdb573-fe9f-437d-bd96-4ceb52869dd4": "cif",
+  "e4f11e76-717e-4be9-a6ad-c7f0a331afb7": "jum",
+  "05bc06f8-4f60-4e6c-bae1-7afe30df38c7": "jum",
+  "0f0b450a-e550-461c-96f6-1a7681678d67": "jum",
 };
 
 export async function resolveCategoryForCampaign(
@@ -34,6 +39,11 @@ export async function resolveCategoryForCampaign(
   const known = KNOWN_CAMPAIGN_CATEGORY[campaignId];
   if (known) {
     return known;
+  }
+
+  const jumVertical = resolveJumVerticalByCampaignId(campaignId);
+  if (jumVertical) {
+    return "jum";
   }
 
   const client = createLinkTrackingClient();
@@ -72,10 +82,21 @@ function urlFieldsForCategory(
   if (category === "cif") {
     return buildCifLeadUrls(slug, email);
   }
+  if (category === "jum") {
+    return buildJumLeadUrls(slug, email);
+  }
   if (category === "entreprise") {
     return buildEntrepriseLeadUrls(slug, email);
   }
   return buildLeadUrls(slug, email);
+}
+
+function jumProfileForCampaign(
+  campaignId: string,
+): Record<string, string> | undefined {
+  const vertical = resolveJumVerticalByCampaignId(campaignId);
+  if (!vertical) return undefined;
+  return { segment: vertical.segment, jum_segment: vertical.segment };
 }
 
 /** Provision link-tracking row + Instantly custom vars for one campaign lead. */
@@ -111,6 +132,9 @@ export async function ensureCampaignLeadLinks(params: {
     };
   }
 
+  const jumProfile = category === "jum" ? jumProfileForCampaign(campaignId) : undefined;
+  const jumSegment = jumProfile?.jum_segment ?? null;
+
   let dbRow: LinkTrackingLead | null = existing?.lead ?? null;
   let created = false;
 
@@ -135,6 +159,7 @@ export async function ensureCampaignLeadLinks(params: {
         first_name: String(instantlyLead.first_name ?? "").trim() || null,
         company: String(instantlyLead.company_name ?? "").trim() || null,
         calendly_questions: {},
+        ...(jumProfile ? { profile: jumProfile } : {}),
       })
       .select("*")
       .maybeSingle();
@@ -161,6 +186,7 @@ export async function ensureCampaignLeadLinks(params: {
         dashboard_link: dbRow.dashboard_link?.trim() || buildDashboardUrl(slug),
         instantly_lead_id: instantlyLead.id,
         instantly_campaign_id: campaignId,
+        ...(jumProfile ? { profile: { ...(dbRow.profile ?? {}), ...jumProfile } } : {}),
       })
       .eq("id", dbRow.id)
       .select("*")
@@ -185,6 +211,15 @@ export async function ensureCampaignLeadLinks(params: {
     email,
     dbRow.statut ?? "NOTBOOKED",
     category,
+    category === "jum"
+      ? {
+          jumSegment:
+            jumSegment ||
+            (typeof dbRow.profile?.segment === "string"
+              ? dbRow.profile.segment
+              : null),
+        }
+      : undefined,
   );
 
   const patchStats = await patchLeadsCustomVariablesParallel(apiKey, [

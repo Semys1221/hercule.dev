@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "audience": "comptable",
+  "updatedAt": "2026-11-18T00:00:00.000Z",
+  "entries": [
+    {
+      "id": "jum-1",
+      "question": "Quels secteurs accompagnez-vous ?",
+      "answer": "Restaurants et CHR, franchises, boulangeries, coffee shops, ainsi que les dirigeants de PME et indépendants sur la comptabilité, la fiscalité et le pilotage."
+    },
+    {
+      "id": "jum-2",
+      "question": "Où êtes-vous basés ?",
+      "answer": "JUM Advisory est un cabinet d'expertise comptable à Lyon, avec une approche proche du terrain et des outils clairs."
+    },
+    {
+      "id": "jum-3",
+      "question": "Comment prendre rendez-vous ?",
+      "answer": "Réservez un créneau via le lien Calendly fourni dans l'email — c'est le moyen le plus rapide pour échanger avec l'équipe."
+    },
+    {
+      "id": "jum-4",
+      "question": "Proposez-vous un accompagnement pour la création d'entreprise ?",
+      "answer": "Oui — création, reprise, développement et accompagnement stratégique des dirigeants font partie de nos expertises."
+    }
+  ]
+}

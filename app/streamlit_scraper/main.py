@@ -23,6 +23,7 @@ from core_logic import (
     backfill_taxonomy_push,
     clear_local_leads,
     output_paths,
+    run_email_recovery,
     run_filter_audit,
     run_scraper_pipeline,
 )
@@ -436,6 +437,55 @@ def worker_loop_cmd(
             else None
         )
         pushed_before = int(state_before.get("instantly_pushed", 0)) if state_before else 0
+
+        from commune_passes import geo_idle_blocked
+
+        if state_before and geo_idle_blocked(config, state_before):
+            idle_sleep = min(max(sleep_s * 10, 300), 900)
+            touch_worker_heartbeat(paths.out_dir, preset=preset, status="blocked")
+            _log(
+                f"Geo idle blocked — backing off {idle_sleep}s "
+                f"(progress={progress}/{goal}, no reload rounds left)."
+            )
+            # region agent log
+            try:
+                import json as _json
+                import time as _time
+                import urllib.request as _urllib
+
+                _urllib.urlopen(
+                    _urllib.Request(
+                        "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
+                        data=_json.dumps(
+                            {
+                                "sessionId": "5d1755",
+                                "runId": "pre-fix",
+                                "hypothesisId": "H1",
+                                "location": "main.py:worker_loop_geo_idle",
+                                "message": "worker geo idle backoff",
+                                "data": {
+                                    "preset": preset,
+                                    "progress": progress,
+                                    "goal": goal,
+                                    "idle_sleep_s": idle_sleep,
+                                },
+                                "timestamp": int(_time.time() * 1000),
+                            }
+                        ).encode(),
+                        headers={
+                            "Content-Type": "application/json",
+                            "X-Debug-Session-Id": "5d1755",
+                        },
+                        method="POST",
+                    ),
+                    timeout=1,
+                )
+            except Exception:
+                pass
+            # endregion
+            time.sleep(idle_sleep)
+            continue
+
         _log(
             f"Scrape iteration — resume={should_resume}, "
             f"progress={progress}, live={live if live is not None else '?'}, "
@@ -480,9 +530,10 @@ def worker_loop_cmd(
             state_after and state_after.get("geo_reload_exhausted")
         )
         if geo_reload_exhausted and progress_after <= progress and pushed_delta <= 0:
-            _log("Geo reload exhausted — waiting before next heal check.")
+            idle_sleep = min(max(sleep_s * 10, 300), 900)
+            _log(f"Geo reload exhausted — backing off {idle_sleep}s before next check.")
             if sleep_s > 0:
-                time.sleep(sleep_s)
+                time.sleep(idle_sleep)
             continue
         if progress_after <= progress and pushed_delta <= 0:
             _log("No progress this iteration — retrying immediately (geo continuation).")
@@ -778,6 +829,39 @@ def taxonomy_push_cmd(
     if summary.get("failed"):
         msg += f", {summary['failed']} failed"
     typer.secho(msg, fg=typer.colors.GREEN if summary.get("pushed") else typer.colors.YELLOW)
+
+
+@app.command("recover-emails")
+def recover_emails_cmd(
+    preset: str = PresetOption,
+    batch_size: int = typer.Option(25, help="Domains per Outscraper emails-and-contacts call"),
+    push_instantly: bool = typer.Option(
+        True,
+        "--push-instantly/--no-push-instantly",
+        help="Push accepted recovered leads to Instantly",
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help="List queue size without API calls"),
+) -> None:
+    """Recover emails for queued no-email businesses via Outscraper emails-and-contacts."""
+    preset = _validate_preset(preset)
+    config = load_config(preset, require_keys=not dry_run)
+    summary = asyncio.run(
+        run_email_recovery(
+            config,
+            log_cb=_log,
+            preset=preset,
+            batch_size=batch_size,
+            push_to_instantly=push_instantly,
+            dry_run=dry_run,
+        )
+    )
+    typer.secho(
+        f"Email recovery [{preset}] — queued={summary['queued']} "
+        f"unique={summary['unique_domains']} recovered={summary['recovered']} "
+        f"accepted={summary['accepted']} pushed={summary['pushed']} "
+        f"skipped_duplicate={summary['skipped_duplicate']}",
+        fg=typer.colors.GREEN,
+    )
 
 
 @app.command("push-instantly")

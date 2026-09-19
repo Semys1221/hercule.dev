@@ -5,7 +5,7 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 PRESET_ID = "terrassement_vrd"
 PRESET_LABEL = "Terrassement / VRD (France)"
 
-_LIST_ID = "a423fed0-1896-4d51-8491-ffce592dba8d"
+_LIST_ID = "ef52cbe1-e6cb-4076-85bc-55ead03cb4bd"
 _CAMPAIGN_ID = "05bc06f8-4f60-4e6c-bae1-7afe30df38c7"
 _SUBSEQUENCE_ID = ""
 
@@ -20,6 +20,8 @@ TERRASSEMENT_VRD_CONFIG = {
     "INSTANTLY_SKIP_IF_IN_CAMPAIGN": False,
     "INSTANTLY_SKIP_IF_IN_LIST": False,
     "INSTANTLY_PUSH_EVERY": 50,
+    "INSTANTLY_PROVISION_LINKS": True,
+    "LINK_PROVISION_CATEGORY": "jum",
     "ENRICH_ENABLED": False,
     "OUTSCRAPER_FILTERS": ["only_with_website", "operational_only"],
     # ── Taxonomy gate ──────────────────────────────────────────────────────────

@@ -17,6 +17,7 @@ const NICHE_FOLDER: Record<LegalDocumentationNiche, string> = {
   entreprise: "entreprise",
   comptable: "comptable",
   cif: "cif",
+  jum: "comptable",
 };
 
 export function legalDocumentationNicheDir(niche: LegalDocumentationNiche): string {
@@ -56,4 +57,5 @@ export const LEGACY_CGV_FILENAMES: Record<LegalDocumentationNiche, string> = {
   entreprise: "cvg_entreprise.md",
   comptable: "cvg_comptable.md",
   cif: "cvg_cif.md",
+  jum: "cvg_comptable.md",
 };

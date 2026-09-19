@@ -8,8 +8,12 @@ const DEFAULT_TRACKING_BASE_COMPTABLE =
   "https://www.hercule.dev/reservation-conference.html";
 const DEFAULT_TRACKING_BASE_CIF =
   "https://www.hercule.dev/reservation-conference.html";
+const DEFAULT_TRACKING_BASE_JUM =
+  "https://www.hercule.dev/reservation-jum.html";
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
+const DEFAULT_CONFIRM_BASE_JUM =
+  "https://www.hercule.dev/confirm-reservation-jum.html";
 const DEFAULT_DASHBOARD_BASE = "https://www.hercule.dev/dashboard";
 const DEFAULT_ENTREPRISE_POST_BASE =
   "https://www.hercule.dev/post-booking-entreprise.html";
@@ -35,6 +39,12 @@ export type CifLeadUrls = {
   dashboard_link: string;
 };
 
+export type JumLeadUrls = {
+  reservation_jum_link: string;
+  confirmation_jum_link: string;
+  dashboard_link: string;
+};
+
 export type InstantlyCanonicalVariables = LeadUrls & {
   statut: string;
   link: string;
@@ -42,6 +52,7 @@ export type InstantlyCanonicalVariables = LeadUrls & {
   tracking_url: string;
   post_booking_link?: string;
   reservation_cif_link?: string;
+  reservation_jum_link?: string;
 };
 
 export function getTrackingBaseUrl(category: LeadCategory): string {
@@ -64,13 +75,25 @@ export function getTrackingBaseUrl(category: LeadCategory): string {
       DEFAULT_TRACKING_BASE_CIF
     );
   }
+  if (category === "jum") {
+    return (
+      process.env.TRACKING_BASE_URL_JUM?.trim().replace(/\/$/, "") ??
+      DEFAULT_TRACKING_BASE_JUM
+    );
+  }
   return (
     process.env.TRACKING_BASE_URL_ENTREPRISE?.trim().replace(/\/$/, "") ??
     DEFAULT_TRACKING_BASE_ENTREPRISE
   );
 }
 
-export function getConfirmBaseUrl(): string {
+export function getConfirmBaseUrl(category?: LeadCategory): string {
+  if (category === "jum") {
+    return (
+      process.env.BOOKING_CONFIRM_BASE_URL_JUM?.trim().replace(/\/$/, "") ??
+      DEFAULT_CONFIRM_BASE_JUM
+    );
+  }
   return (
     process.env.BOOKING_CONFIRM_BASE_URL?.trim().replace(/\/$/, "") ??
     DEFAULT_CONFIRM_BASE
@@ -165,6 +188,22 @@ export function buildCifLeadUrls(slug: string, email: string): CifLeadUrls {
   };
 }
 
+export function buildConfirmationJumLink(slug: string, email: string): string {
+  const url = new URL(`${getConfirmBaseUrl("jum")}/${slug}`);
+  if (email.trim()) {
+    url.searchParams.set("email", email.trim().toLowerCase());
+  }
+  return url.toString();
+}
+
+export function buildJumLeadUrls(slug: string, email: string): JumLeadUrls {
+  return {
+    reservation_jum_link: buildTrackingUrl(slug, "jum"),
+    confirmation_jum_link: buildConfirmationJumLink(slug, email),
+    dashboard_link: buildDashboardUrl(slug),
+  };
+}
+
 export function dashboardLinkFor(
   lead: Pick<
     LinkTrackingLead,
@@ -174,7 +213,9 @@ export function dashboardLinkFor(
     | "reservation_entreprise_link"
     | "reservation_comptable_link"
     | "reservation_cif_link"
+    | "reservation_jum_link"
     | "confirmation_agence_link"
+    | "confirmation_jum_link"
     | "post_booking_link"
   >,
 ): string | null {
@@ -213,8 +254,10 @@ export function resolveLeadSlug(
     | "reservation_entreprise_link"
     | "reservation_comptable_link"
     | "reservation_cif_link"
+    | "reservation_jum_link"
     | "confirmation_agence_link"
     | "confirmation_comptable_link"
+    | "confirmation_jum_link"
     | "post_booking_link"
   >,
 ): string | null {
@@ -229,8 +272,10 @@ export function resolveLeadSlug(
     lead.reservation_agence_link,
     lead.reservation_comptable_link,
     lead.reservation_cif_link,
+    lead.reservation_jum_link,
     lead.confirmation_agence_link,
     lead.confirmation_comptable_link,
+    lead.confirmation_jum_link,
     lead.post_booking_link,
   ];
 
@@ -391,12 +436,31 @@ export function confirmationCifLinkFor(
   return "";
 }
 
+export function reservationJumLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "email" | "reservation_jum_link">,
+): string {
+  const stored = lead.reservation_jum_link?.trim();
+  if (stored) return stored;
+  const slug = lead.slug?.trim();
+  if (!slug) return "";
+  return buildTrackingUrl(slug, "jum");
+}
+
+export function confirmationJumLinkFor(
+  lead: Pick<LinkTrackingLead, "slug" | "email" | "confirmation_jum_link">,
+): string {
+  const stored = lead.confirmation_jum_link?.trim();
+  if (stored) return stored;
+  return buildConfirmationJumLink(lead.slug, lead.email);
+}
+
 export function buildInstantlyCustomVariables(
   slug: string,
   email: string,
   statut: string,
   category: LeadCategory = "entreprise",
-): InstantlyCanonicalVariables {
+  options?: { jumSegment?: string | null },
+): InstantlyCanonicalVariables & { jum_segment?: string; reservation_jum_link?: string } {
   if (category === "comptable") {
     const comptableUrls = buildComptableLeadUrls(slug, email);
     return {
@@ -420,6 +484,21 @@ export function buildInstantlyCustomVariables(
       confirm_link: "",
       tracking_url: "",
       reservation_cif_link: cifUrls.reservation_cif_link,
+    };
+  }
+  if (category === "jum") {
+    const jumUrls = buildJumLeadUrls(slug, email);
+    const segment = options?.jumSegment?.trim();
+    return {
+      reservation_agence_link: "",
+      reservation_entreprise_link: jumUrls.reservation_jum_link,
+      confirmation_agence_link: jumUrls.confirmation_jum_link,
+      statut,
+      link: "",
+      confirm_link: jumUrls.confirmation_jum_link,
+      tracking_url: "",
+      reservation_jum_link: jumUrls.reservation_jum_link,
+      ...(segment ? { jum_segment: segment } : {}),
     };
   }
   const urls =

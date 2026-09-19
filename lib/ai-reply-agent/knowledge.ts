@@ -2,7 +2,9 @@ import { createHash } from "crypto";
 import { readFileSync } from "fs";
 import { join } from "path";
 
+import jumFaqData from "@/content/faq/jum.json";
 import { getFaqEntries } from "@/lib/site/faq-data";
+import { faqDocumentSchema } from "@/lib/site/faq-types";
 import { getAiReplyKnowledgeMarkdown } from "@/lib/site/legal-content";
 import { legalAudienceFromNichePreset } from "@/lib/site/niche-preset";
 
@@ -22,9 +24,14 @@ function formatFaq(audience: "entreprise" | "comptable" | "cif"): string {
     .join("\n\n");
 }
 
+function formatJumFaq(): string {
+  const doc = faqDocumentSchema.parse(jumFaqData);
+  return doc.entries.map((entry) => `Q: ${entry.question}\nA: ${entry.answer}`).join("\n\n");
+}
+
 function speakingToLabel(
   targetType: AiReplyAgentConfig["target_type"],
-  audience: "agence" | "comptable" | "cif",
+  audience: "agence" | "comptable" | "cif" | "jum",
 ): string {
   if (audience === "comptable") {
     return targetType === "buyer"
@@ -35,6 +42,9 @@ function speakingToLabel(
     return targetType === "buyer"
       ? "cabinet CIF (Buyer)"
       : "dirigeant PME (Seller)";
+  }
+  if (audience === "jum") {
+    return "prospect JUM (restaurant, dirigeant, dentiste)";
   }
   return targetType === "buyer" ? "agence (Buyer)" : "entreprise (Seller)";
 }
@@ -50,21 +60,27 @@ function knowledgeCacheKey(config: AiReplyAgentConfig): string {
 function buildKnowledgePackUncached(config: AiReplyAgentConfig): string {
   const audience = legalAudienceFromNichePreset(config.niche_preset_id);
   const packAudience =
-    audience === "cif" || audience === "comptable" ? audience : "agence";
+    audience === "cif" || audience === "comptable" || audience === "jum"
+      ? audience
+      : "agence";
   const aiReplyKnowledge = getAiReplyKnowledgeMarkdown(packAudience);
   const overview = readRepoFile("doc/tech-stack/00-overview.md");
   const faqSection =
-    packAudience === "comptable"
-      ? formatFaq("comptable")
-      : packAudience === "cif"
-        ? formatFaq("cif")
-        : formatFaq("entreprise");
+    packAudience === "jum"
+      ? formatJumFaq()
+      : packAudience === "comptable"
+        ? formatFaq("comptable")
+        : packAudience === "cif"
+          ? formatFaq("cif")
+          : formatFaq("entreprise");
   const faqHeading =
-    packAudience === "comptable"
-      ? "## FAQ comptable (Buyer/Seller)"
-      : packAudience === "cif"
-        ? "## FAQ CIF (Buyer/Seller)"
-        : "## Entreprise FAQ (Seller)";
+    packAudience === "jum"
+      ? "## FAQ JUM Advisory"
+      : packAudience === "comptable"
+        ? "## FAQ comptable (Buyer/Seller)"
+        : packAudience === "cif"
+          ? "## FAQ CIF (Buyer/Seller)"
+          : "## Entreprise FAQ (Seller)";
   const niche = config.niche_metadata ?? {};
   const nicheAngle =
     typeof niche.angle === "string" ? niche.angle : config.niche_preset_id;

@@ -12,7 +12,8 @@
 import { provisionLinksFromList } from "@/lib/link-tracking/provision-from-list";
 
 const CIF_CAMPAIGN_ID = "e3bdb573-fe9f-437d-bd96-4ceb52869dd4";
-const CIF_LIST_ID = "4a616678-06a0-44d2-a27c-f9248a4c34bf";
+/** TEMP - CONSEIL_FINANCIER */
+const CIF_LIST_ID = "0f54a7a8-5bd0-4cc5-b018-1414fc7cc718";
 
 const resyncAll = process.argv.includes("--resync-all");
 const listOnly = process.argv.includes("--list-only");

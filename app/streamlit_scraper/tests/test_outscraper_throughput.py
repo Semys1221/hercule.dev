@@ -56,3 +56,42 @@ def test_batch_duplicate_saturated() -> None:
     assert batch_duplicate_saturated(10, 90, 50) is True
     assert batch_duplicate_saturated(40, 60, 40) is False
     assert batch_duplicate_saturated(1, 1, 1) is False
+    assert batch_duplicate_saturated(
+        10, 90, 35, config={"DUPLICATE_GEO_ADVANCE_RATE": 0.30}
+    ) is True
+    assert batch_duplicate_saturated(
+        10, 90, 25, config={"DUPLICATE_GEO_ADVANCE_RATE": 0.30}
+    ) is False
+
+
+def test_vol_config_duplicate_rate_and_taxonomy() -> None:
+    from config_loader import load_config
+
+    config = load_config("cabinets_expertise_comptable_vol", require_keys=False)
+    assert config.get("DUPLICATE_GEO_ADVANCE_RATE") == 0.30
+    assert "tax advisor" in (config.get("TAXONOMY_INCLUDED_KEYWORDS") or [])
+    assert config.get("OUTSCRAPER_ENRICHMENT") == ["leads_n_contacts"]
+
+
+def test_cif_config_skip_phase_disabled() -> None:
+    from config_loader import load_config
+    from commune_passes import (
+        GEO_PHASE_DEPARTMENT,
+        GEO_PHASE_PASS,
+        max_location_pass_index,
+        next_geo_phase,
+    )
+
+    config = load_config("cabinets_conseiller_financier", require_keys=False)
+    assert config.get("SCRAPE_SKIP_PHASE_ENABLED") is False
+    assert config.get("SCRAPE_CONTINUOUS_MAX_ZERO_CYCLES") == 3
+    last_pass = max_location_pass_index(config)
+    nxt = next_geo_phase(
+        config,
+        geo_phase=GEO_PHASE_PASS,
+        query_pass=last_pass,
+        skip_places=0,
+        limit_per_query=200,
+    )
+    assert nxt is not None
+    assert nxt[0] == GEO_PHASE_DEPARTMENT

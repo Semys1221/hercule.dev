@@ -20,6 +20,7 @@ export const SIGNATURE_TAGLINES: Record<LeadCategory, string> = {
   comptable: "Missions de tenue comptable · cabinets",
   cif: "Conseil fiscal et trésorerie · cabinets CIF",
   entreprise: "Missions de tenue comptable · PME",
+  jum: "JUM Advisory · expertise comptable",
 };
 
 export function signatureTagline(category: LeadCategory): string {

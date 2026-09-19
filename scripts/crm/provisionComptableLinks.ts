@@ -15,6 +15,9 @@ const fromCampaign = process.argv.includes("--from-campaign");
 const resyncAll = process.argv.includes("--resync-all");
 const listOnly = process.argv.includes("--list-only");
 
+/** TEMP - COMPTABLE */
+const TEMP_COMPTABLE_LIST_ID = "ca3e72d4-5a43-4399-a89b-566095e69c25";
+
 async function main(): Promise<void> {
   const campaignId = "e4c58718-ca00-4e27-b714-68e522fe4db6";
   const category = "comptable" as const;
@@ -31,9 +34,10 @@ async function main(): Promise<void> {
   }
 
   if (!fromCampaign) {
-    const listId = process.env.LINK_PROVISIONING_LIST_ID?.trim();
-    results.recoveryList = await provisionLinksFromList({
-      ...(listId ? { listId } : {}),
+    const listId =
+      process.env.LINK_PROVISIONING_LIST_ID?.trim() || TEMP_COMPTABLE_LIST_ID;
+    results.tempList = await provisionLinksFromList({
+      listId,
       campaignId,
       category,
       resyncAll,

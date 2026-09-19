@@ -6,6 +6,7 @@ import {
 } from "@/lib/calendly/availability";
 import { createLinkTrackingClient, isMissingRelationError } from "@/lib/link-tracking/supabase";
 import type { Niche } from "@/lib/admin/navigation";
+import { defaultJumVertical } from "@/lib/admin/niches/jum-verticals";
 
 export type NicheOutreachConfig = {
   niche: Niche;
@@ -33,6 +34,7 @@ const CAMPAIGN_ENV: Record<Niche, string> = {
   entreprise: "INSTANTLY_CAMPAIGN_ID_ENTREPRISE",
   comptable: "INSTANTLY_CAMPAIGN_ID_COMPTABLE",
   cif: "INSTANTLY_CAMPAIGN_ID_CIF",
+  jum: "INSTANTLY_CAMPAIGN_ID_JUM",
 };
 
 const CALENDLY_ENV: Record<Niche, string> = {
@@ -40,11 +42,13 @@ const CALENDLY_ENV: Record<Niche, string> = {
   entreprise: "CALENDLY_EVENT_TYPE_URI_ENTREPRISE",
   comptable: "CALENDLY_EVENT_TYPE_URI_COMPTABLE",
   cif: "CALENDLY_EVENT_TYPE_URI_CIF",
+  jum: "CALENDLY_EVENT_TYPE_URI_JUM",
 };
 
 const LIST_ENV: Partial<Record<Niche, string>> = {
   cif: "INSTANTLY_LIST_ID_CIF",
   comptable: "INSTANTLY_LIST_ID_COMPTABLE",
+  jum: "INSTANTLY_LIST_ID_JUM",
 };
 
 /** @internal Exported for unit tests. */
@@ -59,6 +63,9 @@ export function campaignIdFromEnv(niche: Niche): string | null {
   if (niche === "entreprise") {
     return process.env.LINK_PROVISIONING_CAMPAIGN_ID?.trim() || null;
   }
+  if (niche === "jum") {
+    return defaultJumVertical().campaignId;
+  }
   return null;
 }
 
@@ -70,8 +77,14 @@ export function calendlyUriFromEnv(niche: Niche): string | null {
 /** @internal Exported for unit tests. */
 export function listIdFromEnv(niche: Niche): string | null {
   const key = LIST_ENV[niche];
-  if (!key) return null;
-  return process.env[key]?.trim() || null;
+  if (key) {
+    const fromEnv = process.env[key]?.trim();
+    if (fromEnv) return fromEnv;
+  }
+  if (niche === "jum") {
+    return defaultJumVertical().listId;
+  }
+  return null;
 }
 
 export async function getOutreachConfigRow(

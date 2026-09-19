@@ -9,7 +9,9 @@ import { writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
+import { isLeadCategory } from "@/lib/link-tracking/types";
 import { isStaleAgenceCopyOnEntreprise } from "@/lib/booking-communication/template-store";
+import type { BookingEmailType } from "@/lib/booking-communication/types";
 
 type BookingRow = {
   category: string;
@@ -82,7 +84,13 @@ function auditBookingRow(row: BookingRow): Finding[] {
   }
 
   if (
-    isStaleAgenceCopyOnEntreprise(row.category, row.email_type, row.subject, row.body)
+    isLeadCategory(row.category) &&
+    isStaleAgenceCopyOnEntreprise(
+      row.category,
+      row.email_type as BookingEmailType,
+      row.subject,
+      row.body,
+    )
   ) {
     findings.push({
       table: "booking_email_templates",

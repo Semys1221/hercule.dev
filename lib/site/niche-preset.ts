@@ -14,6 +14,14 @@ export function legalAudienceFromNichePreset(presetId: string): LegalAudience {
   ) {
     return "cif";
   }
+  if (
+    id.includes("jum") ||
+    id.includes("restaurant") ||
+    id.includes("terrassement") ||
+    id.includes("dentiste")
+  ) {
+    return "jum";
+  }
   return "agence";
 }
 
@@ -23,4 +31,8 @@ export function isComptableNichePreset(presetId: string): boolean {
 
 export function isCifNichePreset(presetId: string): boolean {
   return legalAudienceFromNichePreset(presetId) === "cif";
+}
+
+export function isJumNichePreset(presetId: string): boolean {
+  return legalAudienceFromNichePreset(presetId) === "jum";
 }

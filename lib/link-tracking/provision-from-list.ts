@@ -15,8 +15,8 @@ import {
   type ParsedLead,
 } from "@/lib/link-tracking/provision-from-list-internals";
 
-/** Active comptable intake list (Cabinets EC vol throughput recovery). */
-const DEFAULT_LIST_ID = "bfb0fc90-ec59-4d49-b266-3891f59d3ea8";
+/** Active comptable intake list (TEMP - COMPTABLE). */
+const DEFAULT_LIST_ID = "ca3e72d4-5a43-4399-a89b-566095e69c25";
 /** Legacy list kept for dedup / historical rows. */
 export const LEGACY_COMPTABLE_LIST_ID = "edfd3090-6306-4f71-bd83-01192b06666c";
 const DEFAULT_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6";
@@ -52,7 +52,8 @@ function readConfig(): {
     categoryRaw !== "agence" &&
     categoryRaw !== "comptable" &&
     categoryRaw !== "entreprise" &&
-    categoryRaw !== "cif"
+    categoryRaw !== "cif" &&
+    categoryRaw !== "jum"
   ) {
     throw new Error(`Invalid LINK_PROVISIONING_CATEGORY: ${categoryRaw}`);
   }
@@ -67,6 +68,7 @@ export async function provisionLinksFromList(
     maxLeads: number | null;
     resyncAll: boolean;
     fromCampaign: boolean;
+    jumSegment: string | null;
   }> = {},
 ): Promise<ProvisionFromListResult> {
   const config = readConfig();
@@ -132,6 +134,7 @@ export async function provisionLinksFromList(
     campaignId,
     category,
     fromCampaign,
+    jumSegment: overrides.jumSegment ?? null,
   });
 
   return {

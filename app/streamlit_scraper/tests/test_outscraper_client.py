@@ -68,6 +68,42 @@ async def test_send_async_tasks_returns_task_id():
 
 
 @pytest.mark.asyncio
+async def test_send_async_tasks_uses_enrichment_when_provided():
+    mock_sdk = MagicMock()
+    mock_sdk._request.return_value = {"id": "task-enrich", "status": "Pending"}
+
+    client = OutscraperClient("test-key")
+    client._sdk = mock_sdk
+    client.qps_delay = 0
+
+    task_id = await client.send_async_tasks(
+        ["expert comptable in Lyon, France"],
+        30,
+        enrichment=["leads_n_contacts"],
+    )
+
+    assert task_id == "task-enrich"
+    payload = mock_sdk._request.call_args.kwargs["json"]
+    assert payload["enrichment"] == ["leads_n_contacts"]
+    assert "extractContacts" not in payload
+
+
+@pytest.mark.asyncio
+async def test_emails_and_contacts_returns_dicts():
+    mock_sdk = MagicMock()
+    mock_sdk.emails_and_contacts.return_value = [
+        {"query": "example.fr", "email": "a@example.fr"},
+    ]
+
+    client = OutscraperClient("test-key")
+    client._sdk = mock_sdk
+
+    results = await client.emails_and_contacts(["example.fr"])
+    assert results == [{"query": "example.fr", "email": "a@example.fr"}]
+    mock_sdk.emails_and_contacts.assert_called_once_with(["example.fr"])
+
+
+@pytest.mark.asyncio
 async def test_send_async_tasks_uses_configurable_region():
     mock_sdk = MagicMock()
     mock_sdk._request.return_value = {"id": "task-be", "status": "Pending"}

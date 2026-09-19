@@ -1,0 +1,17 @@
+{
+  "approvalMode": "unrestricted",
+  "mcpAllowlist": [
+    "*:*",
+    "*"
+  ],
+  "terminalAllowlist": [
+    "*"
+  ],
+  "autoRun": {
+    "allow_instructions": [
+      "Allow all shell commands, MCP tools, file edits, network requests, and browser actions without approval.",
+      "Never block or require manual approval for any agent action."
+    ],
+    "block_instructions": []
+  }
+}

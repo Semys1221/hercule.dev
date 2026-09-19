@@ -44,6 +44,7 @@ const NICHE_SWITCHER_LABELS: Record<Niche, string> = {
   entreprise: "Leads",
   comptable: "Comptable",
   cif: "CIF",
+  jum: "JUM",
 };
 
 type NicheSwitcherProps = {

@@ -13,6 +13,7 @@ import {
 function main() {
   assert.equal(parseBookingEvent("agence"), "agence");
   assert.equal(parseBookingEvent("entreprise"), "entreprise");
+  assert.equal(parseBookingEvent("jum"), "jum");
   assert.equal(parseBookingEvent("invalid"), null);
   assert.equal(parseBookingEvent(null), null);
 
