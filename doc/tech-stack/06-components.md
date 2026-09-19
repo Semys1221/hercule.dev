@@ -73,7 +73,7 @@ Référence archivée : `archive/2026-09-pre-architecture/documentations_2/` (da
 | calendly-seat-sequence-ui | component | communication | `/internal/funnels/agence/emails/calendly-seat-onboarding` |
 | instantly-bypass-cron | cron | communication | `/api/cron/instantly-bypass-jobs` |
 | pipeline-cron | cron | communication | `/api/cron/instantly-bypass-pipeline` |
-| ai-reply-agent-cron | cron | communication | `/api/cron/ai-reply-agent-jobs` |
+| ai-reply-agent-cron | cron | communication | `/api/cron/ai-reply-agent-jobs` (+ health / reprocess / interested-sweep) |
 | booking-orchestrator | orchestrator | communication | `lib/booking-communication/orchestrator.ts` |
 | booking-communication-api | api_route | communication | `/api/booking-communication/*` |
 | streamlit-links | component | dashboard_internal | `app/streamlit_links/app.py` |

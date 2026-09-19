@@ -15,6 +15,9 @@ const TARGETS = [
   { path: "/api/cron/instantly-bypass-jobs", label: "instantly-bypass-jobs" },
   { path: "/api/cron/instantly-bypass-pipeline", label: "instantly-bypass-pipeline" },
   { path: "/api/cron/ai-reply-agent-jobs", label: "ai-reply-agent-jobs" },
+  { path: "/api/cron/ai-reply-agent-health", label: "ai-reply-agent-health" },
+  { path: "/api/cron/ai-reply-agent-reprocess", label: "ai-reply-agent-reprocess" },
+  { path: "/api/cron/ai-reply-agent-interested-sweep", label: "ai-reply-agent-interested-sweep" },
   { path: "/api/cron/link-provisioning", label: "link-provisioning" },
   { path: "/api/cron/management-recipients-sync", label: "management-recipients-sync" },
 ] as const;
@@ -149,6 +152,9 @@ async function main(): Promise<void> {
       console.log("    pnpm configure-instantly-bypass-cron");
       console.log("    pnpm configure-instantly-pipeline-cron");
       console.log("    pnpm configure-ai-reply-agent-cron");
+      console.log("    pnpm configure-ai-reply-agent-health-cron");
+      console.log("    pnpm configure-ai-reply-agent-reprocess-cron");
+      console.log("    pnpm configure-ai-reply-agent-interested-sweep-cron");
       console.log("    pnpm configure-management-recipients-sync-cron");
     }
     if (!allHealthy) {

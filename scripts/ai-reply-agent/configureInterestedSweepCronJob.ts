@@ -4,7 +4,7 @@
 
 const CRON_JOB_API = "https://api.cron-job.org";
 const JOB_TITLE = "hercule ai-reply-agent-interested-sweep";
-const SCHEDULE_MINUTES = [15, 45];
+const SCHEDULE_MINUTES = [0, 15, 30, 45];
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();

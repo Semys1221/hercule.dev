@@ -29,6 +29,9 @@ Auth **infra** : Bearer / signatures — **fail-closed**.
 | `GET /api/cron/instantly-bypass-jobs` | cron | CRON_SECRET |
 | `GET /api/cron/instantly-bypass-pipeline` | cron | CRON_SECRET |
 | `GET /api/cron/ai-reply-agent-jobs` | cron | CRON_SECRET |
+| `GET /api/cron/ai-reply-agent-health` | cron | CRON_SECRET |
+| `GET /api/cron/ai-reply-agent-reprocess` | cron | CRON_SECRET |
+| `GET /api/cron/ai-reply-agent-interested-sweep` | cron | CRON_SECRET |
 | `/api/link-tracking/*` | api | slug |
 | `/api/booking-communication/*` | api | admin URL |
 | `/api/admin/funnels*` `/faq` `/pricing` `/demandes` `/onboarding/[category]` | api | none |

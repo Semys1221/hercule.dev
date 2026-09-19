@@ -12,6 +12,7 @@ import { ensureCampaignLeadLinks } from "@/lib/link-tracking/provision-campaign-
 import { readReservationLink, templateRequiresReservationLink } from "./reservation-links";
 import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate } from "./templates";
 
+import { sweepMissedRepliesForLead } from "@/lib/ai-reply-agent/missed-reply-sweep";
 import { reprocessInboundForLead } from "@/lib/ai-reply-agent/reprocess-inbound";
 
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
@@ -20,18 +21,23 @@ import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
 async function triggerReplyReprocessAfterInterested(
   campaignId: string,
   leadEmail: string,
-  e1Outcome?: string,
+  _e1Outcome?: string,
 ): Promise<void> {
-  const replyReprocess = await reprocessInboundForLead({ campaignId, leadEmail }).catch(
-    (err: unknown) => {
-      const message = err instanceof Error ? err.message : String(err);
-      console.warn(
-        `[instantly-bypass] reply reprocess failed for ${leadEmail}:`,
-        message,
-      );
-      return { ok: false as const, error: message };
-    },
-  );
+  await sweepMissedRepliesForLead({ campaignId, leadEmail }).catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[instantly-bypass] missed-reply sweep failed for ${leadEmail}:`,
+      message,
+    );
+  });
+
+  await reprocessInboundForLead({ campaignId, leadEmail }).catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[instantly-bypass] reply reprocess failed for ${leadEmail}:`,
+      message,
+    );
+  });
 }
 
 async function recordSkippedInterested(
@@ -97,30 +103,6 @@ export async function handleLeadInterested(
     campaignId,
     leadEmail,
   });
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "5869d5",
-    },
-    body: JSON.stringify({
-      sessionId: "5869d5",
-      location: "lib/instantly-bypass/handler.ts:e1Delivery",
-      message: "lead_interested E1 delivery state",
-      data: {
-        campaignId,
-        leadEmail,
-        bypassSent: e1Delivery.bypassSent,
-        e1InThread: e1Delivery.e1InThread,
-        delivered: e1Delivery.delivered,
-      },
-      timestamp: Date.now(),
-      runId: "pre-fix",
-      hypothesisId: "A,C",
-    }),
-  }).catch(() => {});
-  // #endregion
 
   if (e1Delivery.delivered) {
     await upsertPipelineStep(campaignId, leadEmail, "step_1");

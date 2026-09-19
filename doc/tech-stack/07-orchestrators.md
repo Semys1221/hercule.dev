@@ -21,7 +21,7 @@ Pas de nouveau runtime. Pattern actuel : **webhook → table job → cron**.
 |----|--------|--------|-------|
 | orch-booking | Calendly vente + cron 15 min | Resend | `lib/booking-communication/orchestrator.ts` |
 | orch-bypass | Instantly Interested | Instantly API E1–E3 | **Next envoie** (LEG-02) ; Streamlit config |
-| orch-ai-reply | Instantly reply_received | Grok → Unibox | Streamlit Inbox/Problem |
+| orch-ai-reply | Instantly reply_received (hint) + interested-sweep poll | Grok → Unibox | Streamlit Inbox/Problem; `/api/cron/ai-reply-agent-interested-sweep` polls Instantly `listEmails` |
 | orch-link | clic slug | `CLICKED` + Calendly URLs | |
 
 ---

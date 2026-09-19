@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { sweepAlternateReplyInboxes } from "@/lib/ai-reply-agent/alternate-reply-sweep";
+import { sweepMissedReplyInboxes } from "@/lib/ai-reply-agent/missed-reply-sweep";
 import { sweepInterestedLeads } from "@/lib/ai-reply-agent/interested-sweep";
 import { listBypassConfigs } from "@/lib/instantly-bypass/templates";
 
@@ -23,25 +23,25 @@ export async function GET(request: Request) {
     const configs = await listBypassConfigs();
     const targets = configs.filter((config) => Boolean(config.initialized_at));
     const results: Record<string, Awaited<ReturnType<typeof sweepInterestedLeads>>> = {};
-    const alternateReply: Record<
+    const missedReply: Record<
       string,
-      Awaited<ReturnType<typeof sweepAlternateReplyInboxes>>
+      Awaited<ReturnType<typeof sweepMissedReplyInboxes>>
     > = {};
 
     for (const config of targets) {
+      missedReply[config.campaign_id] = await sweepMissedReplyInboxes({
+        campaignId: config.campaign_id,
+        limit: 40,
+      });
       results[config.campaign_id] = await sweepInterestedLeads({
         campaignId: config.campaign_id,
         e1Limit: 15,
         replyLimit: 15,
         sinceDays: 30,
       });
-      alternateReply[config.campaign_id] = await sweepAlternateReplyInboxes({
-        campaignId: config.campaign_id,
-        limit: 40,
-      });
     }
 
-    return NextResponse.json({ ok: true, results, alternateReply });
+    return NextResponse.json({ ok: true, results, missedReply });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[cron/ai-reply-agent-interested-sweep]", message);

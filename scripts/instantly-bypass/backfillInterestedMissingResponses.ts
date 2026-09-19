@@ -10,6 +10,7 @@
 
 import { handleLeadInterested } from "@/lib/instantly-bypass/handler";
 import { findLeadByEmailInCampaign, getInstantlyApiKey } from "@/lib/instantly-bypass/client";
+import { sweepMissedRepliesForLead, sweepMissedReplyInboxes } from "@/lib/ai-reply-agent/missed-reply-sweep";
 import { sweepInterestedLeads } from "@/lib/ai-reply-agent/interested-sweep";
 import { listBypassConfigs } from "@/lib/instantly-bypass/templates";
 import { INTERESTED_STATUS } from "@/lib/ai-reply-agent/reply-gate";
@@ -53,9 +54,14 @@ async function backfillContacts(params: {
       continue;
     }
     if (params.dryRun) {
-      console.log(`[dry-run] would E1+reply ${leadEmail}`);
+      console.log(`[dry-run] would missed-reply sweep + E1+reply ${leadEmail}`);
       continue;
     }
+    const missed = await sweepMissedRepliesForLead({
+      campaignId: params.campaignId,
+      leadEmail,
+    });
+    console.log(`Missed-reply sweep ${leadEmail}:`, missed);
     const result = await handleLeadInterested({
       timestamp: new Date().toISOString(),
       event_type: "lead_interested",
@@ -96,13 +102,18 @@ async function main() {
       continue;
     }
 
+    const missed = await sweepMissedReplyInboxes({
+      campaignId: config.campaign_id,
+      limit: args.limit,
+    });
+    console.log("Missed-reply sweep:", missed);
     const stats = await sweepInterestedLeads({
       campaignId: config.campaign_id,
       e1Limit: args.limit,
       replyLimit: args.limit,
       sinceDays: args.sinceDays,
     });
-    console.log("Sweep:", stats);
+    console.log("Interested sweep:", stats);
   }
 }
 
