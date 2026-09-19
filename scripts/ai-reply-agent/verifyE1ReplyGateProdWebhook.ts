@@ -83,7 +83,8 @@ async function main(): Promise<void> {
     deploymentBaseUrl: baseUrl(),
   });
 
-  if (!response.ok || body.aiStatus !== "skipped_waiting_e1") {
+  const blockedStatuses = new Set(["skipped_waiting_e1", "superseded_by_e1"]);
+  if (!response.ok || !body.aiStatus || !blockedStatuses.has(body.aiStatus)) {
     throw new Error(
       `Production webhook verification failed: status=${response.status} body=${JSON.stringify(body)}`,
     );
