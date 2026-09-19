@@ -6,11 +6,7 @@ import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack, hashKnowledgePack } from "./knowledge";
 import { resolveBookingContext } from "./booking-context";
 import { evaluateConversationGate } from "./conversation-gate";
-import {
-  inboundIsPureAcknowledgment,
-  inboundNeedsFollowUp,
-  inboundShowsConfusion,
-} from "./inbound-question";
+import { inboundNeedsFollowUp } from "./inbound-question";
 import {
   fetchThreadMessages,
   formatThreadForGrok,
@@ -36,7 +32,11 @@ import {
   NOT_INTERESTED_STATUS,
   NO_SHOW_STATUS,
 } from "./reply-gate";
-import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
+import {
+  checkInterestedE1ReplyGate,
+  resolveInboundEmailTimestamp,
+} from "./e1-reply-gate";
+import { hasOutboundSinceInbound } from "./send-mutex";
 import { ensureInterestedE1IfMissing } from "@/lib/instantly-bypass/ensure-interested-e1";
 import {
   resolveReplyFromEmail,
@@ -305,23 +305,56 @@ export async function handleInstantlyReply(
     });
   }
 
+  const inboundAt = await resolveInboundEmailTimestamp({
+    instantlyEmailId,
+    webhookTimestamp: payload.timestamp,
+  });
   const e1ReplyGate = await checkInterestedE1ReplyGate({
     campaignId,
     leadEmail,
     interestStatus,
-    inboundAt: payload.timestamp,
+    inboundAt,
+    inboundText,
   });
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "7d80e9",
+    },
+    body: JSON.stringify({
+      sessionId: "7d80e9",
+      runId: "post-fix",
+      hypothesisId: "E1-GATE",
+      location: "handler.ts:e1-reply-gate",
+      message: "E1 reply gate evaluated",
+      data: {
+        allowReply: e1ReplyGate.allowReply,
+        reason: e1ReplyGate.reason,
+        inboundAt,
+        e1SentAt: e1ReplyGate.e1SentAt,
+        interestStatus,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (!e1ReplyGate.allowReply) {
+    const blockedStatus: AiReplyMessageStatus =
+      e1ReplyGate.e1SentAt && inboundAt && inboundAt <= e1ReplyGate.e1SentAt
+        ? "superseded_by_e1"
+        : "skipped_waiting_e1";
     const latencyMs = await finalizeInbound(
       inbound.id,
-      "skipped_waiting_e1",
+      blockedStatus,
       started,
       e1ReplyGate.reason,
     );
     return {
       ok: true,
       skipped: "waiting_for_post_e1",
-      aiStatus: "skipped_waiting_e1",
+      aiStatus: blockedStatus,
       latencyMs,
     };
   }
@@ -332,31 +365,6 @@ export async function handleInstantlyReply(
     replyFromEmail,
     inboundText,
   });
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "36db50",
-    },
-    body: JSON.stringify({
-      sessionId: "36db50",
-      runId: "pre-fix",
-      hypothesisId: "A-B-D",
-      location: "handler.ts:conversation-gate",
-      message: "inbound signals before grok",
-      data: {
-        needsFollowUp: inboundNeedsFollowUp(inboundText),
-        isPureAcknowledgment: inboundIsPureAcknowledgment(inboundText),
-        showsConfusion: inboundShowsConfusion(inboundText),
-        conversationGateSkip: conversationGate.skip,
-        conversationGateReason: conversationGate.reason,
-        interestStatus,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   if (conversationGate.skip) {
     const latencyMs = await finalizeInbound(
       inbound.id,
@@ -382,28 +390,6 @@ export async function handleInstantlyReply(
     preferredEmailId: instantlyEmailId,
   }).catch(() => []);
   const threadContext = formatThreadForGrok(threadMessages);
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "36db50",
-    },
-    body: JSON.stringify({
-      sessionId: "36db50",
-      runId: "pre-fix",
-      hypothesisId: "A",
-      location: "handler.ts:thread-context",
-      message: "thread context loaded",
-      data: {
-        threadMessageCount: threadMessages.length,
-        hasThreadContext: Boolean(threadContext),
-        threadPreview: threadContext?.slice(0, 240) ?? null,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
 
   let decision;
   let model: string;
@@ -431,29 +417,6 @@ export async function handleInstantlyReply(
       threadContext,
     });
     decision = groq.decision;
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "36db50",
-      },
-      body: JSON.stringify({
-        sessionId: "36db50",
-        runId: "pre-fix",
-        hypothesisId: "C-E",
-        location: "handler.ts:grok-decision",
-        message: "grok reply decision",
-        data: {
-          shouldReply: decision.should_reply,
-          reason: decision.reason,
-          recoveryConfidence: decision.recovery_confidence ?? null,
-          hasBookingContext: Boolean(bookingContext),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     model = groq.model;
     costUsdTicks = groq.costUsdTicks;
     if (costUsdTicks != null) {
@@ -481,28 +444,6 @@ export async function handleInstantlyReply(
   };
 
   const gate = applyReplyGate(interestStatus, decision);
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "36db50",
-    },
-    body: JSON.stringify({
-      sessionId: "36db50",
-      runId: "pre-fix",
-      hypothesisId: "E",
-      location: "handler.ts:reply-gate",
-      message: "reply gate result",
-      data: {
-        allowReply: gate.allowReply,
-        aiStatus: gate.aiStatus,
-        reason: gate.reason,
-      },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
   if (!gate.allowReply) {
     const latencyMs = await finalizeInbound(
       inbound.id,
@@ -532,6 +473,22 @@ export async function handleInstantlyReply(
     return {
       ok: true,
       aiStatus: "pending",
+      latencyMs,
+    };
+  }
+
+  if (await hasOutboundSinceInbound({ campaignId, leadEmail, inboundCreatedAt: inboundAt })) {
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_collision",
+      started,
+      "Outbound already sent for this inbound window",
+      grokFinalizeExtras,
+    );
+    return {
+      ok: true,
+      skipped: "send_mutex",
+      aiStatus: "skipped_collision",
       latencyMs,
     };
   }

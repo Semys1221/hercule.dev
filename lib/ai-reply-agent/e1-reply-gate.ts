@@ -1,9 +1,12 @@
+import { getEmailById, getInstantlyApiKey } from "@/lib/instantly-bypass/client";
 import {
   getBypassEventSentAt,
   interestedIdempotencyKey,
 } from "@/lib/instantly-bypass/jobs";
+import { loadBypassConfig } from "@/lib/instantly-bypass/templates";
 
-import { INTERESTED_STATUS } from "./reply-gate";
+import { inboundLooksLikeQuestion, inboundShowsInterest } from "./inbound-question";
+import { INTERESTED_STATUS, isRecoveryInterestTag } from "./reply-gate";
 
 export type E1ReplyGateResult = {
   allowReply: boolean;
@@ -35,27 +38,41 @@ export function resolveInboundTimestamp(
   return null;
 }
 
-/** Max ms a pre-E1 inbound can predate E1 and still be treated as a race-condition reply. */
-const PRE_E1_RACE_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+export async function resolveInboundEmailTimestamp(params: {
+  instantlyEmailId?: string | null;
+  webhookTimestamp?: string | null;
+  storedCreatedAt?: string | null;
+}): Promise<string | null> {
+  const emailId = params.instantlyEmailId?.trim();
+  if (emailId) {
+    const record = await getEmailById(getInstantlyApiKey(), emailId);
+    const emailTs = record?.timestamp_email ?? record?.timestamp_created;
+    if (typeof emailTs === "string" && emailTs.trim()) {
+      const parsed = Date.parse(emailTs);
+      if (!Number.isNaN(parsed)) {
+        return new Date(parsed).toISOString();
+      }
+    }
+  }
+  return resolveInboundTimestamp(params.webhookTimestamp, params.storedCreatedAt);
+}
 
 /**
- * Interested leads: reply agent may only answer an inbound that arrived strictly
- * after interested_email1 (E1) was dispatched — not the confirmation that triggered Interested.
- *
- * `allowPreE1Race`: set true in reprocess paths where E1 is already confirmed sent.
- * Allows inbounds that arrived up to 30 minutes BEFORE E1 (race-condition replies that
- * triggered Interested before E1 was dispatched — safe to answer after the fact).
+ * Interested / E1-bypass campaigns: Grok may only answer inbounds strictly after
+ * interested_email1 was dispatched. Pre-E1 qualification replies are answered by E1.
  */
 export async function checkInterestedE1ReplyGate(params: {
   campaignId: string;
   leadEmail: string;
   interestStatus: number | null | undefined;
   inboundAt: string | null | undefined;
-  allowPreE1Race?: boolean;
+  inboundText?: string;
 }): Promise<E1ReplyGateResult> {
   const inboundAt = resolveInboundTimestamp(params.inboundAt, null);
+  const bypass = await loadBypassConfig(params.campaignId);
+  const usesE1Bypass = Boolean(bypass);
 
-  if (params.interestStatus !== INTERESTED_STATUS) {
+  if (!usesE1Bypass && params.interestStatus !== INTERESTED_STATUS) {
     return {
       allowReply: true,
       reason: "",
@@ -69,9 +86,40 @@ export async function checkInterestedE1ReplyGate(params: {
   );
 
   if (!e1SentAt) {
+    const inboundText = params.inboundText ?? "";
+    const qualificationReply =
+      inboundShowsInterest(inboundText) || inboundLooksLikeQuestion(inboundText);
+    if (usesE1Bypass && qualificationReply) {
+      return {
+        allowReply: false,
+        reason: "E1 not sent yet — reply agent waits for interested_email1",
+        e1SentAt: null,
+        inboundAt,
+      };
+    }
+    if (
+      usesE1Bypass &&
+      isRecoveryInterestTag(params.interestStatus) &&
+      !qualificationReply
+    ) {
+      return {
+        allowReply: true,
+        reason: "",
+        e1SentAt: null,
+        inboundAt,
+      };
+    }
+    if (usesE1Bypass || params.interestStatus === INTERESTED_STATUS) {
+      return {
+        allowReply: false,
+        reason: "E1 not sent yet — reply agent waits for interested_email1",
+        e1SentAt: null,
+        inboundAt,
+      };
+    }
     return {
-      allowReply: false,
-      reason: "E1 not sent yet — reply agent waits for interested_email1",
+      allowReply: true,
+      reason: "",
       e1SentAt: null,
       inboundAt,
     };
@@ -87,22 +135,9 @@ export async function checkInterestedE1ReplyGate(params: {
   }
 
   if (inboundAt <= e1SentAt) {
-    // In reprocess mode, allow if the inbound arrived within the race window before E1.
-    // This covers leads whose reply triggered Interested seconds before E1 was dispatched.
-    if (params.allowPreE1Race) {
-      const gapMs = Date.parse(e1SentAt) - Date.parse(inboundAt);
-      if (gapMs <= PRE_E1_RACE_WINDOW_MS) {
-        return {
-          allowReply: true,
-          reason: "",
-          e1SentAt,
-          inboundAt,
-        };
-      }
-    }
     return {
       allowReply: false,
-      reason: "Inbound predates E1 — wait for lead reply after interested_email1",
+      reason: "Inbound predates E1 — E1 is the answer; wait for post-E1 reply",
       e1SentAt,
       inboundAt,
     };

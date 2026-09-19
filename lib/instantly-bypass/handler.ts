@@ -13,28 +13,18 @@ import { readReservationLink, templateRequiresReservationLink } from "./reservat
 import { isTemplateBodyEmpty, loadBypassConfig, loadTemplate } from "./templates";
 
 import { sweepMissedRepliesForLead } from "@/lib/ai-reply-agent/missed-reply-sweep";
-import { reprocessInboundForLead } from "@/lib/ai-reply-agent/reprocess-inbound";
 
 import type { HandleInterestedResult, InstantlyWebhookPayload } from "./types";
 
 
-async function triggerReplyReprocessAfterInterested(
+async function triggerMissedReplySweepAfterE1(
   campaignId: string,
   leadEmail: string,
-  _e1Outcome?: string,
 ): Promise<void> {
   await sweepMissedRepliesForLead({ campaignId, leadEmail }).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     console.warn(
       `[instantly-bypass] missed-reply sweep failed for ${leadEmail}:`,
-      message,
-    );
-  });
-
-  await reprocessInboundForLead({ campaignId, leadEmail }).catch((err: unknown) => {
-    const message = err instanceof Error ? err.message : String(err);
-    console.warn(
-      `[instantly-bypass] reply reprocess failed for ${leadEmail}:`,
       message,
     );
   });
@@ -107,7 +97,7 @@ export async function handleLeadInterested(
   if (e1Delivery.delivered) {
     await upsertPipelineStep(campaignId, leadEmail, "step_1");
     if (!options?.skipReplyReprocess) {
-      await triggerReplyReprocessAfterInterested(campaignId, leadEmail, "already_sent");
+      await triggerMissedReplySweepAfterE1(campaignId, leadEmail);
     }
     return { ok: true, skipped: "already_sent" };
   }
@@ -174,11 +164,7 @@ export async function handleLeadInterested(
       });
       await upsertPipelineStep(campaignId, leadEmail, "step_1");
       if (!options?.skipReplyReprocess) {
-        await triggerReplyReprocessAfterInterested(
-          campaignId,
-          leadEmail,
-          "e1_already_in_thread",
-        );
+        await triggerMissedReplySweepAfterE1(campaignId, leadEmail);
       }
       return { ok: true, skipped: "e1_already_in_thread" };
     }
@@ -210,7 +196,7 @@ export async function handleLeadInterested(
     const dispatch = await dispatchBypassJobByIdempotencyKey(idempotencyKey);
 
     if (!options?.skipReplyReprocess) {
-      await triggerReplyReprocessAfterInterested(campaignId, leadEmail, dispatch.outcome);
+      await triggerMissedReplySweepAfterE1(campaignId, leadEmail);
     }
 
     if (dispatch.outcome === "sent") {

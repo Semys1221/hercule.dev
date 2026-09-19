@@ -12,6 +12,7 @@ const NO_OUTBOUND_EXCLUDED_STATUSES = [
   "skipped_not_interested",
   "skipped_ooo",
   "skipped_waiting_e1",
+  "superseded_by_e1",
 ] as const;
 
 export type AiReplyHealthIssue = {

@@ -201,7 +201,7 @@ async function main() {
   if (args.phase === "waiting_e1") {
     const targets = await listWaitingE1Interested(args.limit);
     console.log(
-      `Phase waiting_e1: ${targets.length} leads with inbound≤E1, now unlocked via allowPreE1Race (max ${args.limit} Grok)`,
+      `Phase waiting_e1: ${targets.length} leads with pre-E1 inbound (superseded by E1 — skipped, max ${args.limit} Grok for post-E1 only)`,
     );
     for (const t of targets) console.log(`- ${t.leadEmail}`);
     await reprocessTargets(targets);

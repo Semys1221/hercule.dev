@@ -28,9 +28,12 @@ import {
   fetchThreadMessages,
   formatThreadForGrok,
 } from "./thread-context";
-import { checkInterestedE1ReplyGate } from "./e1-reply-gate";
-import { inboundIsPureInterestSignal } from "./inbound-question";
+import {
+  checkInterestedE1ReplyGate,
+  resolveInboundEmailTimestamp,
+} from "./e1-reply-gate";
 import { detectOptOut } from "@/lib/lead-relances/opt-out";
+import { hasOutboundSinceInbound } from "./send-mutex";
 
 import type {
   AiReplyMessageStatus,
@@ -44,7 +47,6 @@ const REPROCESSABLE_STATUSES = new Set<AiReplyMessageStatus>([
   "skipped_recovery",
   "skipped_unsafe",
   "skipped_collision",
-  "skipped_waiting_e1",
 ]);
 
 const SKIP_REPROCESS_REASONS = new Set([
@@ -78,31 +80,6 @@ function resolveLeadDisplayName(
     return parts.join(" ");
   }
   return leadEmail;
-}
-
-async function hasOutboundSinceInbound(
-  campaignId: string,
-  leadEmail: string,
-  inboundCreatedAt: string | null,
-): Promise<boolean> {
-  const client = createAiReplyAgentClient();
-  let query = client
-    .from("ai_reply_agent_messages")
-    .select("id")
-    .eq("campaign_id", campaignId)
-    .eq("lead_email", leadEmail.trim().toLowerCase())
-    .eq("direction", "outbound")
-    .limit(1);
-
-  if (inboundCreatedAt) {
-    query = query.gte("created_at", inboundCreatedAt);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    throw new Error(`Failed to check outbound messages: ${error.message}`);
-  }
-  return (data?.length ?? 0) > 0;
 }
 
 async function findReprocessCandidate(
@@ -150,8 +127,8 @@ async function findReprocessCandidate(
 }
 
 /**
- * Re-run Grok + auto-send for the latest unhandled inbound after a lead becomes Interested.
- * Covers the race where reply_received arrives before Instantly applies the Interested tag.
+ * Re-run Grok + auto-send for the latest unhandled post-E1 inbound.
+ * Pre-E1 inbounds are never reprocessed — E1 is their answer.
  */
 export async function reprocessInboundForLead(params: {
   campaignId: string;
@@ -180,35 +157,6 @@ export async function reprocessInboundForLead(params: {
 
   const inboundText = String(inbound.body_text ?? "").trim() || "(empty body)";
 
-  // [Bug fix — double send] Do NOT reprocess a pure CTA-click interest signal that
-  // was blocked waiting for E1 to be sent.  The inbound ("Mon cabinet est compatible"
-  // and similar) is the same click that triggered Interested → E1.  Answering it
-  // immediately after E1 dispatch creates a confusing double-send where the lead
-  // receives both E1 (with the conference link) and an AI reply in the same batch,
-  // producing either a conference-objection AER that was never requested, or a
-  // redundant booking-confirmation message the lead cannot act on before reading E1.
-  // The lead will naturally ask follow-up questions after reading E1 — those new
-  // inbounds will flow through the normal handler path.
-  if (
-    inbound.ai_status === "skipped_waiting_e1" &&
-    inboundIsPureInterestSignal(inboundText)
-  ) {
-    await updateInboundStatus(
-      inbound.id,
-      "skipped_unsafe",
-      "Signal d'intérêt pur (clic CTA) bloqué en attente E1 — pas de double envoi avec E1",
-      null,
-      null,
-      Date.now() - started,
-      null,
-    );
-    return {
-      ok: true,
-      skipped: "pure_interest_cta_post_e1",
-      aiStatus: "skipped_unsafe",
-    };
-  }
-
   if (detectOptOut(inboundText)) {
     return { ok: true, skipped: "opt_out" };
   }
@@ -229,17 +177,25 @@ export async function reprocessInboundForLead(params: {
     return { ok: true, skipped: "missing_prompt" };
   }
 
+  const inboundAt = await resolveInboundEmailTimestamp({
+    instantlyEmailId: inbound.instantly_email_id,
+    storedCreatedAt: inbound.created_at,
+  });
   const e1ReplyGate = await checkInterestedE1ReplyGate({
     campaignId,
     leadEmail,
     interestStatus,
-    inboundAt: inbound.created_at,
-    allowPreE1Race: true,
+    inboundAt,
+    inboundText,
   });
   if (!e1ReplyGate.allowReply) {
+    const blockedStatus: AiReplyMessageStatus =
+      e1ReplyGate.e1SentAt && inboundAt && inboundAt <= e1ReplyGate.e1SentAt
+        ? "superseded_by_e1"
+        : "skipped_waiting_e1";
     await updateInboundStatus(
       inbound.id,
-      "skipped_waiting_e1",
+      blockedStatus,
       e1ReplyGate.reason,
       null,
       null,
@@ -249,7 +205,7 @@ export async function reprocessInboundForLead(params: {
     return {
       ok: true,
       skipped: "waiting_for_post_e1",
-      aiStatus: "skipped_waiting_e1",
+      aiStatus: blockedStatus,
     };
   }
 
@@ -361,6 +317,20 @@ export async function reprocessInboundForLead(params: {
       decision.recovery_confidence ?? null,
     );
     return { ok: true, aiStatus: "pending" };
+  }
+
+  if (await hasOutboundSinceInbound({ campaignId, leadEmail, inboundCreatedAt: inboundAt })) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_collision",
+      "Outbound already sent for this inbound window",
+      model,
+      costUsdTicks,
+      Date.now() - started,
+      knowledgePackHash,
+      decision.recovery_confidence ?? null,
+    );
+    return { ok: true, skipped: "send_mutex", aiStatus: "skipped_collision" };
   }
 
   const preferredEmailId =

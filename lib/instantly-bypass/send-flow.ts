@@ -229,6 +229,23 @@ export async function executeBypassFlow(
     replyToUuid: thread.replyToUuid,
   });
 
+  if (flow === "interested_email1") {
+    const { supersedePreE1Inbounds } = await import(
+      "@/lib/ai-reply-agent/supersede-pre-e1"
+    );
+    await supersedePreE1Inbounds({
+      campaignId,
+      leadEmail,
+      e1DispatchedAt: dispatchedAt.toISOString(),
+    }).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[instantly-bypass] supersede pre-E1 inbounds failed for ${leadEmail}:`,
+        message,
+      );
+    });
+  }
+
   return {
     ok: true,
     dispatchedAt,

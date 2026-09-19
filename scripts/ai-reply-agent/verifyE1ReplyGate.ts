@@ -42,10 +42,26 @@ async function assertMigrationApplied(): Promise<void> {
     );
   }
 
+  const supersededProbeId = `verify-superseded-${randomBytes(4).toString("hex")}`;
+  const { error: supersededError } = await client.from("ai_reply_agent_messages").insert({
+    campaign_id: "00000000-0000-0000-0000-000000000001",
+    lead_email: "verify-superseded@smoke.hercule.dev",
+    direction: "inbound",
+    body_text: "probe",
+    ai_status: "superseded_by_e1",
+    instantly_email_id: supersededProbeId,
+  });
+
+  if (supersededError) {
+    throw new Error(
+      `Migration not applied (superseded_by_e1 rejected): ${supersededError.message}`,
+    );
+  }
+
   await client
     .from("ai_reply_agent_messages")
     .delete()
-    .eq("instantly_email_id", probeId);
+    .in("instantly_email_id", [probeId, supersededProbeId]);
 }
 
 async function main(): Promise<void> {
@@ -120,12 +136,13 @@ async function main(): Promise<void> {
     error: handlerResult.error ?? null,
   });
 
-  if (handlerResult.aiStatus !== "skipped_waiting_e1") {
+  const blockedStatuses = new Set(["skipped_waiting_e1", "superseded_by_e1"]);
+  if (!handlerResult.aiStatus || !blockedStatuses.has(handlerResult.aiStatus)) {
     throw new Error(
-      `Expected handler skipped_waiting_e1, got ${handlerResult.aiStatus ?? handlerResult.skipped ?? handlerResult.error}`,
+      `Expected handler skipped_waiting_e1 or superseded_by_e1, got ${handlerResult.aiStatus ?? handlerResult.skipped ?? handlerResult.error}`,
     );
   }
-  console.log("OK handler returns skipped_waiting_e1 for pre-E1 confirmation");
+  console.log(`OK handler blocks pre-E1 confirmation (${handlerResult.aiStatus})`);
 
   await createAiReplyAgentClient()
     .from("ai_reply_agent_messages")
