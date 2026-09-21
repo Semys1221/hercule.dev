@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { verifyProvisionLeadsSecret } from "@/app/(legacy)/api/link-tracking/provision-leads/route";
+import { verifyProvisionLeadsSecret } from "@/app/api/link-tracking/provision-leads/route";
 
 const previousCron = process.env.CRON_SECRET;
 const previousWebhook = process.env.LINK_TRACKING_WEBHOOK_SECRET;

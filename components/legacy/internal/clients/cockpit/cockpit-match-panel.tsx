@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import type { ClientRow } from "@/app/(legacy)/api/admin/clients/route";
+import type { ClientRow } from "@/app/api/admin/clients/route";
 import { InternalStatusAlert } from "@/components/legacy/internal/funnels/ui/internal-status-alert";
 import { Button } from "@/components/ui/button";
 import {

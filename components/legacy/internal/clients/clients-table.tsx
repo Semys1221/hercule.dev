@@ -4,7 +4,7 @@ import { ExternalLink, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
-import type { ClientRow } from "@/app/(legacy)/api/admin/clients/route";
+import type { ClientRow } from "@/app/api/admin/clients/route";
 import type { ColumnDef } from "@/components/legacy/internal/architecture/architecture-data-table";
 import { ArchitectureDataTable } from "@/components/legacy/internal/architecture/architecture-data-table";
 import {

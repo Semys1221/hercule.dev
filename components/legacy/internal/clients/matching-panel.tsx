@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { ClientRow } from "@/app/(legacy)/api/admin/clients/route";
+import type { ClientRow } from "@/app/api/admin/clients/route";
 
 type MatchingPanelProps = {
   entrepriseId: string;
