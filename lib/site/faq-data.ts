@@ -1,8 +1,9 @@
-import agenceFaqData from "@/doc/legal-documentation/agence/faq.json";
+import agenceFaqData from "@/content/legal-documentation/agence/faq.json";
 import jumFaqData from "@/content/faq/jum.json";
-import cifFaqData from "@/doc/legal-documentation/cif/faq.json";
-import comptableFaqData from "@/doc/legal-documentation/comptable/faq.json";
-import entrepriseFaqData from "@/doc/legal-documentation/entreprise/faq.json";
+import assuranceFaqData from "@/content/legal-documentation/assurance/faq.json";
+import cifFaqData from "@/content/legal-documentation/cif/faq.json";
+import comptableFaqData from "@/content/legal-documentation/comptable/faq.json";
+import entrepriseFaqData from "@/content/legal-documentation/entreprise/faq.json";
 import type { FaqAudience, FaqComponentConfig, FaqDocument, FaqEntry } from "@/lib/site/faq-types";
 import { faqDocumentSchema } from "@/lib/site/faq-types";
 
@@ -12,6 +13,7 @@ const BUNDLED_FAQ: Record<FaqAudience, FaqDocument> = {
   comptable: faqDocumentSchema.parse(comptableFaqData),
   cif: faqDocumentSchema.parse(cifFaqData),
   jum: faqDocumentSchema.parse(jumFaqData),
+  assurance: faqDocumentSchema.parse(assuranceFaqData),
 };
 
 export function getFaqEntries(audience: FaqAudience): FaqEntry[] {
@@ -36,8 +38,9 @@ const FAQ_TITLES: Record<FaqAudience, string> = {
   agence: "FAQ agence",
   entreprise: "FAQ entreprise",
   comptable: "FAQ comptable",
-  cif: "FAQ conseiller financier",
-  jum: "FAQ JUM Advisory",
+  cif: "FAQ courtier financier",
+  jum: "FAQ DEC (ops alias jum)",
+  assurance: "FAQ courtier en assurance",
 };
 
 export function faqEntriesToMarkdown(audience: FaqAudience, entries: FaqEntry[]): string {
@@ -55,6 +58,7 @@ const FAQ_ID_PREFIX: Record<FaqAudience, string> = {
   comptable: "faq-cp",
   cif: "faq-cif",
   jum: "faq-jum",
+  assurance: "faq-as",
 };
 
 export function generateFaqEntryId(audience: FaqAudience, entries: FaqEntry[]): string {

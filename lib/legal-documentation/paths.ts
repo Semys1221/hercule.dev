@@ -3,8 +3,8 @@ import { join } from "node:path";
 import type { FaqAudience } from "@/lib/site/faq-types";
 import type { PricingAudience } from "@/lib/site/pricing-types";
 
-/** Git-backed legal documentation root. */
-export const LEGAL_DOCUMENTATION_ROOT = join(process.cwd(), "doc", "legal-documentation");
+/** Canon legal documentation root (migrated from doc/legal-documentation). */
+export const LEGAL_DOCUMENTATION_ROOT = join(process.cwd(), "content", "legal-documentation");
 
 export type LegalDocumentationNiche = FaqAudience;
 
@@ -18,6 +18,7 @@ const NICHE_FOLDER: Record<LegalDocumentationNiche, string> = {
   comptable: "comptable",
   cif: "cif",
   jum: "comptable",
+  assurance: "assurance",
 };
 
 export function legalDocumentationNicheDir(niche: LegalDocumentationNiche): string {
@@ -28,8 +29,13 @@ export function cgvMarkdownPath(niche: LegalDocumentationNiche): string {
   return join(legalDocumentationNicheDir(niche), "cgv.md");
 }
 
+/** Unified CGV source (DEC · IAS · CIF sections). */
+export function getSharedCvgMarkdownPath(): string {
+  return join(LEGAL_DOCUMENTATION_ROOT, "_shared", "cgv.md");
+}
+
 export function pricingJsonPath(audience: PricingAudience): string {
-  return join(legalDocumentationNicheDir(audience), "pricing.json");
+  return join(legalDocumentationNicheDir(audience as LegalDocumentationNiche), "pricing.json");
 }
 
 export function faqJsonPath(audience: FaqAudience): string {
@@ -49,8 +55,11 @@ export function sequencesDir(niche: LegalDocumentationNiche): string {
   return join(legalDocumentationNicheDir(niche), "sequences");
 }
 
-/** Legacy doc/tech-stack paths — stubs point here after migration. */
-export const LEGACY_TECH_STACK_DOC_DIR = join(process.cwd(), "doc", "tech-stack");
+/** Runtime tech notes formerly under doc/tech-stack (served by /cvg/[doc]). */
+export const TECH_CONTENT_DIR = join(process.cwd(), "content", "tech");
+
+/** @deprecated Use TECH_CONTENT_DIR */
+export const LEGACY_TECH_STACK_DOC_DIR = TECH_CONTENT_DIR;
 
 export const LEGACY_CGV_FILENAMES: Record<LegalDocumentationNiche, string> = {
   agence: "cvg_master.md",
@@ -58,4 +67,5 @@ export const LEGACY_CGV_FILENAMES: Record<LegalDocumentationNiche, string> = {
   comptable: "cvg_comptable.md",
   cif: "cvg_cif.md",
   jum: "cvg_comptable.md",
+  assurance: "cvg_assurance.md",
 };

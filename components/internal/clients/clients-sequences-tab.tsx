@@ -77,6 +77,7 @@ function SequenceTabPanel({
       title={sequence.name}
       description={tab.description ?? sequence.description}
       adapter={adapter}
+      editorKind={sequence.editorKind}
     />
   );
 }

@@ -578,6 +578,23 @@ export async function markLeadBooked(
     return { updated: false, lookup, reason: "conditional_update_failed" };
   }
 
+  // SaaS autonome — sync lead_assignments + client slot RDV counter
+  try {
+    const { syncSaasAssignmentOnBooking } = await import(
+      "@/lib/capacity/pipeline-bridge"
+    );
+    await syncSaasAssignmentOnBooking({
+      client,
+      email: String(data.email ?? params.email ?? ""),
+      slug: lookup.lead.slug,
+    });
+  } catch (err) {
+    console.error(
+      "[markLeadBooked] saas assignment sync failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   return {
     updated: true,
     lookup: { category: lookup.category, lead: data as LinkTrackingLead },

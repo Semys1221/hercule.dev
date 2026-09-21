@@ -16,6 +16,10 @@ import {
   isHerculeLiberalCheckoutSession,
 } from "@/lib/payments/stripe-webhook-hercule-liberal";
 import {
+  handleSaasAutonomeCheckoutCompleted,
+  isSaasAutonomeCheckoutSession,
+} from "@/lib/payments/stripe-webhook-saas-autonome";
+import {
   insertJob,
   markJobFailed,
   markJobSent,
@@ -266,6 +270,18 @@ export async function POST(request: Request) {
         if (handled) {
           return NextResponse.json({ ok: true });
         }
+      }
+
+      if (isSaasAutonomeCheckoutSession(session)) {
+        const result = await handleSaasAutonomeCheckoutCompleted(
+          session,
+          event.id,
+        );
+        return NextResponse.json({
+          ok: true,
+          product: "saas_autonome",
+          ...result,
+        });
       }
 
       if (agenceId) {

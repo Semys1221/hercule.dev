@@ -20,6 +20,10 @@ const TARGETS = [
   { path: "/api/cron/ai-reply-agent-interested-sweep", label: "ai-reply-agent-interested-sweep" },
   { path: "/api/cron/link-provisioning", label: "link-provisioning" },
   { path: "/api/cron/management-recipients-sync", label: "management-recipients-sync" },
+  {
+    path: "/api/cron/campaign-restaurant-switch",
+    label: "campaign-restaurant-switch",
+  },
 ] as const;
 
 function env(name: string): string {

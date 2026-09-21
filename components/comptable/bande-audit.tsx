@@ -1,10 +1,22 @@
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
 import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
-import { getMarketingCopy, MARKETING_SECONDARY_CTA } from "@/lib/site/marketing-copy"
+import {
+  getMarketingCopy,
+  MARKETING_SECONDARY_CTA,
+  type MarketingAudience,
+} from "@/lib/site/marketing-copy"
 
-const copy = getMarketingCopy("comptable")
+type BandeAuditProps = {
+  audience?: MarketingAudience
+  bookingHref?: string
+}
 
-export function BandeAudit() {
+export function BandeAudit({
+  audience = "comptable",
+  bookingHref = CALENDLY_ENTREPRISE_URL,
+}: BandeAuditProps) {
+  const copy = getMarketingCopy(audience)
+
   return (
     <section id="contact" className="py-24 px-6" style={{ backgroundColor: "#09090B" }}>
       <div className="max-w-6xl mx-auto">
@@ -24,7 +36,7 @@ export function BandeAudit() {
               {MARKETING_SECONDARY_CTA}
             </a>
             <MarketingBookingCta
-              href={CALENDLY_ENTREPRISE_URL}
+              href={bookingHref}
               className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
             />
           </div>

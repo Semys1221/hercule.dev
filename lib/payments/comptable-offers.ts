@@ -11,6 +11,7 @@ import type Stripe from "stripe";
 
 import {
   getComptableMonthlyPriceId,
+  getComptableMonthlyTrialPriceId,
   getComptablePack3PriceId,
   getComptableStarterPriceId,
 } from "@/lib/payments/stripe";
@@ -21,8 +22,15 @@ export function isComptableSubscriptionOffer(
   return (
     offerType === OFFER_TYPES_COMPTABLE.starter999_5 ||
     offerType === OFFER_TYPES_COMPTABLE.monthly1499 ||
+    offerType === OFFER_TYPES_COMPTABLE.monthly1499Trial ||
     offerType === COMPTABLE_ACQUISITION_OFFER_TYPE
   );
+}
+
+export function isComptableFreeTrialOffer(
+  offerType: string | null | undefined,
+): boolean {
+  return offerType === OFFER_TYPES_COMPTABLE.monthly1499Trial;
 }
 
 export function comptableCheckoutMode(
@@ -48,6 +56,10 @@ export function priceIdForComptableOffer(offerType: OfferTypeComptable): string 
   if (offerType === COMPTABLE_ACQUISITION_OFFER_TYPE) {
     return priceIdForComptableAcquisition1489();
   }
+  if (offerType === OFFER_TYPES_COMPTABLE.monthly1499Trial) {
+    return getComptableMonthlyTrialPriceId();
+  }
+  // monthly_1499
   return getComptableMonthlyPriceId();
 }
 
@@ -61,5 +73,6 @@ export function amountCentsForComptableOffer(offerType: OfferTypeComptable): num
   if (offerType === COMPTABLE_ACQUISITION_OFFER_TYPE) {
     return COMMERCIAL_COMPTABLE.acquisition1489PriceCents;
   }
+  // monthly_1499 + monthly_1499_trial
   return COMMERCIAL_COMPTABLE.growthMonthlyPriceCents;
 }

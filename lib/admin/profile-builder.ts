@@ -63,6 +63,13 @@ export function buildDefaultProfile(
       timeline: timeline.map((label) => ({ label })),
     },
     match: { active_rdv: false },
+    // SaaS autonome defaults (overridden when client_outreach_slot exists)
+    capacity: {
+      inbox_allocation: 30,
+      rdv_goal_monthly: 10,
+      phase: "warmup",
+      estimated_activation_at: null,
+    },
   };
 }
 

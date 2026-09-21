@@ -34,6 +34,6 @@ export const LEGAL_ENTITY = {
   gestionNumber: "2025A02250",
   director: "Evan Nanguy (Evan Sinclair)",
   activity:
-    "Prestations de services en marketing digital, génération de leads via campagnes publicitaires et mise en relation B2B",
+    "Prestations de services en courtage de projets B2B et mise en relation entre dirigeants et cabinets partenaires",
   website: "hercule.dev",
 } as const

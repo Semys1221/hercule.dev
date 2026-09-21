@@ -2,19 +2,23 @@
 
 import { motion } from "framer-motion"
 import { Calendar, Shield, Users, Video, ClipboardCheck } from "lucide-react"
-import { getMarketingCopy } from "@/lib/site/marketing-copy"
+import { getMarketingCopy, type MarketingAudience } from "@/lib/site/marketing-copy"
 
-const copy = getMarketingCopy("comptable")
-
-const cabinetStack = [
-  { name: "Live Qualification", icon: ClipboardCheck },
+const partnerStack = [
+  { name: "Qualification live", icon: ClipboardCheck },
   { name: "Zone exclusive", icon: Shield },
   { name: "Calendly Pro", icon: Calendar },
   { name: "Zoom Pro", icon: Video },
-  { name: "Capture brandée", icon: Users },
+  { name: "Attribution exclusive", icon: Users },
 ]
 
-export function BandeStack() {
+type BandeStackProps = {
+  audience?: MarketingAudience
+}
+
+export function BandeStack({ audience = "comptable" }: BandeStackProps) {
+  const copy = getMarketingCopy(audience)
+
   return (
     <div className="relative z-20 pb-24 pt-8" style={{ backgroundColor: "#09090B" }}>
       <div className="w-full flex justify-center px-6">
@@ -35,7 +39,7 @@ export function BandeStack() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-zinc-500 mb-16"
           >
-            Infrastructure live en 60 jours — tenue, fiscal, obligations administratives.
+            {copy.bandeStack.subtext}
           </motion.p>
 
           <motion.div
@@ -45,7 +49,7 @@ export function BandeStack() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid grid-cols-2 md:grid-cols-5 gap-x-8 gap-y-6 items-center justify-items-center"
           >
-            {cabinetStack.map((item) => {
+            {partnerStack.map((item) => {
               const Icon = item.icon
               return (
                 <div key={item.name} className="text-zinc-200 font-semibold text-lg flex items-center gap-3">

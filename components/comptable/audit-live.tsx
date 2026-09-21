@@ -2,11 +2,15 @@
 
 import { motion } from "framer-motion"
 import { ChevronRight, Users, CheckCircle2, Inbox } from "lucide-react"
-import { getMarketingCopy } from "@/lib/site/marketing-copy"
+import { getMarketingCopy, type MarketingAudience } from "@/lib/site/marketing-copy"
 
-const copy = getMarketingCopy("comptable")
+type AuditLiveProps = {
+  audience?: MarketingAudience
+}
 
-export function AuditLive() {
+export function AuditLive({ audience = "comptable" }: AuditLiveProps) {
+  const copy = getMarketingCopy(audience)
+
   return (
     <div className="relative z-20 py-40" style={{ backgroundColor: "#09090B" }}>
       <div
@@ -60,7 +64,7 @@ export function AuditLive() {
             <div className="px-6 py-4 border-b border-zinc-800 flex items-center gap-3">
               <Inbox className="size-5 text-emerald-400" />
               <span className="text-white font-medium text-sm">{copy.auditLive.panelTitle}</span>
-              <span className="ml-auto text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">3 routés</span>
+              <span className="ml-auto text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">3 attribués</span>
             </div>
             <div className="p-6 space-y-4">
               <div className="flex items-start gap-3 p-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50">

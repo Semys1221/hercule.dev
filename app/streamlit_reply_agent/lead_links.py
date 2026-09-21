@@ -37,16 +37,28 @@ def fallback_cta_link(target_type: TargetType) -> str:
 def _find_lead_by_email(email: str) -> tuple[str | None, dict[str, Any] | None]:
     normalized = email.strip().lower()
     client = get_client()
-    for table in _LEAD_TABLES:
-        resp = (
-            client.table(table)
-            .select("*")
-            .eq("email", normalized)
-            .limit(1)
-            .execute()
-        )
-        if resp.data:
-            return table, resp.data[0]
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            for table in _LEAD_TABLES:
+                resp = (
+                    client.table(table)
+                    .select("*")
+                    .eq("email", normalized)
+                    .limit(1)
+                    .execute()
+                )
+                if resp.data:
+                    return table, resp.data[0]
+            return None, None
+        except Exception as err:
+            last_error = err
+            if attempt < 2:
+                import time
+
+                time.sleep(0.5 * (attempt + 1))
+    if last_error is not None:
+        raise last_error
     return None, None
 
 

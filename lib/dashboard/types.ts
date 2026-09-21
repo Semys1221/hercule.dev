@@ -103,6 +103,20 @@ export type DashboardData = {
   milestones?: TimelineStep[];
   bleedContext?: DashboardBleedContext;
   closing?: DashboardClosingState;
+  /** SaaS autonome KPI (present when client_outreach_slot exists) */
+  saasKpi?: {
+    hasSlot: boolean;
+    slotId: string | null;
+    capacityStatus: string | null;
+    rdvBookedThisMonth: number;
+    rdvGoalMonthly: number;
+    progressPct: number;
+    phase: string;
+    estimatedActivationAt: string | null;
+    inboxAllocation: number;
+    sendsThisMonth: number;
+    monthlySendBudget: number;
+  } | null;
 };
 
 export type OnboardingIntentionLevel = "strong" | "moderate" | "hesitate";

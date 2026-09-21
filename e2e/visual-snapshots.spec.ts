@@ -46,6 +46,9 @@ test.describe("@visual Visual regression snapshots", () => {
   test("marketing home", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Je suis courtier financier" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Je suis comptable" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Je suis courtier en assurance" })).toBeVisible();
     await expect(page).toHaveScreenshot("marketing-home.png", {
       fullPage: true,
       maxDiffPixelRatio: 0.03,

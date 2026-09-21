@@ -29,12 +29,56 @@ export function fallbackCtaLink(targetType: AiReplyTargetType): string {
   return targetType === "buyer" ? FALLBACK_BUYER : FALLBACK_SELLER;
 }
 
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  attempts = 3,
+  delayMs = 500,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
 export async function resolvePromptLinks(
   leadEmail: string,
   targetType: AiReplyTargetType,
+  campaignId?: string | null,
 ): Promise<PromptLinks> {
   const client = createLinkTrackingClient();
-  const lookup = await findLeadByEmail(client, leadEmail);
+
+  // SaaS autonome — prefer Calendly URL from client_outreach_slot when campaign known
+  if (campaignId?.trim()) {
+    try {
+      const { resolveSlotByCampaignId } = await import(
+        "@/lib/capacity/pipeline-bridge"
+      );
+      const slot = await resolveSlotByCampaignId(client, campaignId);
+      if (slot?.calendlySchedulingUrl) {
+        const url = slot.calendlySchedulingUrl;
+        return {
+          primary: url,
+          agenceLink: url,
+          entrepriseLink: fallbackCtaLink("seller"),
+          comptableLink: url,
+          cifLink: url,
+          jumLink: url,
+        };
+      }
+    } catch {
+      // fall through to link-tracking lookup
+    }
+  }
+
+  const lookup = await withRetry(() => findLeadByEmail(client, leadEmail));
 
   let agenceLink = fallbackCtaLink("buyer");
   let entrepriseLink = fallbackCtaLink("seller");

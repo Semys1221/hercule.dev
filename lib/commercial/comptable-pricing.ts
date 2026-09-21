@@ -52,7 +52,11 @@ export function getComptablePricingPlans(): {
 export const COMPTABLE_OFFER_LABELS: Record<OfferTypeComptable, string> = {
   [OFFER_TYPES_COMPTABLE.starter999_5]: "Hercule Lite — 1 799 €/mois",
   [OFFER_TYPES_COMPTABLE.monthly1499]: "Hercule Starter — 2 199 €/mois",
+  [OFFER_TYPES_COMPTABLE.monthly1499Trial]:
+    "Essai gratuit 14 jours — puis 1 499 €/mois",
   [OFFER_TYPES_COMPTABLE.pack3x1499]: "Pack 3 mois Starter — 5 277,60 €",
+  [OFFER_TYPES_COMPTABLE.acquisition1489_1m]:
+    "Acquisition comptable — 1 489 €/mois",
 };
 
 export function comptableOfferLabel(offerType: string | null | undefined): string {

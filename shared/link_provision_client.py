@@ -22,11 +22,46 @@ def backend_url() -> str:
 
 
 def cron_secret() -> str:
+    # Prefer LINK_TRACKING_WEBHOOK_SECRET first — matches
+    # app/api/link-tracking/provision-leads/route.ts verifyProvisionLeadsSecret.
     return (
-        os.getenv("CRON_SECRET", "").strip()
-        or os.getenv("LINK_TRACKING_WEBHOOK_SECRET", "").strip()
+        os.getenv("LINK_TRACKING_WEBHOOK_SECRET", "").strip()
+        or os.getenv("CRON_SECRET", "").strip()
         or os.getenv("INSTANTLY_BYPASS_WEBHOOK_SECRET", "").strip()
     )
+
+
+def _debug_log(message: str, data: dict[str, Any], hypothesis_id: str) -> None:
+    # #region agent log
+    try:
+        import json
+        import time
+        from pathlib import Path
+
+        payload = {
+            "sessionId": "5eb40c",
+            "runId": "post-fix",
+            "hypothesisId": hypothesis_id,
+            "location": "shared/link_provision_client.py",
+            "message": message,
+            "data": data,
+            "timestamp": int(time.time() * 1000),
+        }
+        line = json.dumps(payload, ensure_ascii=False) + "\n"
+        for path in (
+            Path("/Users/evqn/dev/hercule.dev/.cursor/debug-5eb40c.log"),
+            Path("/var/lib/hercule/streamlit_scraper/output/courtiers_prevoyance_b2b/debug-5eb40c.log"),
+            Path("/tmp/debug-5eb40c-provision.log"),
+        ):
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with path.open("a", encoding="utf-8") as f:
+                    f.write(line)
+            except OSError:
+                continue
+    except Exception:
+        pass
+    # #endregion
 
 
 def _normalize_emails(emails: list[str]) -> list[str]:
@@ -68,6 +103,25 @@ def provision_leads_batches(
     Skips gracefully when CRON_SECRET is missing.
     """
     secret = cron_secret()
+    # #region agent log
+    _debug_log(
+        "provision_start",
+        {
+            "backend": backend_url(),
+            "secret_present": bool(secret),
+            "secret_len": len(secret) if secret else 0,
+            "has_link_tracking": bool(
+                os.getenv("LINK_TRACKING_WEBHOOK_SECRET", "").strip()
+            ),
+            "has_cron": bool(os.getenv("CRON_SECRET", "").strip()),
+            "email_count": len(emails),
+            "list_id": list_id,
+            "campaign_id": campaign_id,
+            "niche": niche,
+        },
+        "B",
+    )
+    # #endregion
     if not secret:
         if log_cb:
             log_cb(
@@ -111,6 +165,32 @@ def provision_leads_batches(
         stats["batches"] += 1
 
         if response.status_code == 401:
+            # #region agent log
+            _debug_log(
+                "provision_401",
+                {
+                    "url": url,
+                    "secret_present": bool(secret),
+                    "secret_len": len(secret),
+                    "secret_source": (
+                        "LINK_TRACKING_WEBHOOK_SECRET"
+                        if os.getenv("LINK_TRACKING_WEBHOOK_SECRET", "").strip()
+                        else "CRON_SECRET"
+                        if os.getenv("CRON_SECRET", "").strip()
+                        else "INSTANTLY_BYPASS_WEBHOOK_SECRET"
+                        if os.getenv("INSTANTLY_BYPASS_WEBHOOK_SECRET", "").strip()
+                        else "none"
+                    ),
+                    "status": response.status_code,
+                    "body": (response.text or "")[:120],
+                    "campaign_id": campaign_id,
+                    "list_id": list_id,
+                    "niche": niche,
+                    "batch_emails": len(batch),
+                },
+                "A",
+            )
+            # #endregion
             if log_cb:
                 log_cb("Link provision failed — unauthorized (check CRON_SECRET)")
             return {**stats, "custom_variables_by_email": custom_variables_by_email}
@@ -126,6 +206,27 @@ def provision_leads_batches(
 
         data = response.json()
         result = data.get("result") if isinstance(data, dict) else None
+        # #region agent log
+        _debug_log(
+            "provision_ok",
+            {
+                "status": response.status_code,
+                "has_result": isinstance(result, dict),
+                "created": int((result or {}).get("created") or 0)
+                if isinstance(result, dict)
+                else None,
+                "updated": int((result or {}).get("updated") or 0)
+                if isinstance(result, dict)
+                else None,
+                "patched": int((result or {}).get("patched") or 0)
+                if isinstance(result, dict)
+                else None,
+                "batch_emails": len(batch),
+                "campaign_id": campaign_id,
+            },
+            "C",
+        )
+        # #endregion
         if not isinstance(result, dict):
             if log_cb:
                 log_cb("Link provision OK (no result payload)")

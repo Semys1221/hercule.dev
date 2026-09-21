@@ -3,9 +3,10 @@ import type Stripe from "stripe";
 import { z } from "zod";
 
 import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
-import { OFFER_TYPES_COMPTABLE } from "@/lib/commercial/constants";
+import { OFFER_TYPES_COMPTABLE, FREE_TRIAL_PERIOD_DAYS, FREE_TRIAL_STRIPE_PRODUCT } from "@/lib/commercial/constants";
 import {
   amountCentsForComptableOffer,
+  isComptableFreeTrialOffer,
   priceIdForComptableOffer,
   stripeCheckoutModeForComptablePrice,
 } from "@/lib/payments/comptable-offers";
@@ -21,6 +22,7 @@ const bodySchema = z.object({
   offerType: z.enum([
     OFFER_TYPES_COMPTABLE.starter999_5,
     OFFER_TYPES_COMPTABLE.monthly1499,
+    OFFER_TYPES_COMPTABLE.monthly1499Trial,
     OFFER_TYPES_COMPTABLE.pack3x1499,
   ]),
 });
@@ -123,6 +125,9 @@ export async function POST(request: Request) {
       payment_id: paymentRow.id,
       slug: lead.slug,
       offer_type: offerType,
+      ...(isComptableFreeTrialOffer(offerType)
+        ? { product: FREE_TRIAL_STRIPE_PRODUCT }
+        : {}),
     };
 
     const sharedSessionParams = {
@@ -144,7 +149,12 @@ export async function POST(request: Request) {
         ? await stripe.checkout.sessions.create({
             mode: "subscription",
             ...sharedSessionParams,
-            subscription_data: { metadata },
+            subscription_data: {
+              metadata,
+              ...(isComptableFreeTrialOffer(offerType)
+                ? { trial_period_days: FREE_TRIAL_PERIOD_DAYS }
+                : {}),
+            },
           } as Stripe.Checkout.SessionCreateParams)
         : await stripe.checkout.sessions.create({
             mode: "payment",

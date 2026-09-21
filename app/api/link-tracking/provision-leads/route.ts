@@ -21,11 +21,48 @@ const bodySchema = z.object({
 });
 
 function verifyProvisionLeadsSecret(request: Request): boolean {
-  const expected =
-    process.env.LINK_TRACKING_WEBHOOK_SECRET?.trim() ||
-    process.env.CRON_SECRET?.trim();
-  if (!expected) return false;
-  return request.headers.get("authorization") === `Bearer ${expected}`;
+  const linkTracking = process.env.LINK_TRACKING_WEBHOOK_SECRET?.trim() || "";
+  const cron = process.env.CRON_SECRET?.trim() || "";
+  const auth = request.headers.get("authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+  // Accept either secret — VPS scrapers typically send CRON_SECRET while
+  // production may prefer LINK_TRACKING_WEBHOOK_SECRET.
+  const matchedLink = Boolean(linkTracking) && token === linkTracking;
+  const matchedCron = Boolean(cron) && token === cron;
+  const ok = Boolean(token) && (matchedLink || matchedCron);
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "45f10f",
+    },
+    body: JSON.stringify({
+      sessionId: "45f10f",
+      runId: "provision-server-or-auth",
+      hypothesisId: "A",
+      location: "app/api/link-tracking/provision-leads/route.ts:verify",
+      message: "provision_auth_check",
+      data: {
+        ok,
+        matchedLink,
+        matchedCron,
+        hasLinkTracking: Boolean(linkTracking),
+        hasCron: Boolean(cron),
+        authPresent: auth.startsWith("Bearer "),
+        authLen: token.length,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  console.info("[provision-leads-debug]", {
+    ok,
+    matchedLink,
+    matchedCron,
+    authLen: token.length,
+  });
+  // #endregion
+  return ok;
 }
 
 export { verifyProvisionLeadsSecret };

@@ -252,6 +252,14 @@ export function syncStripePaymentStops(params: {
       sequenceSlug: "sales-call-no-show",
       reason: "payment_received",
     });
+    if (niche === "comptable") {
+      await stopRecipient({
+        leadEmail: params.leadEmail,
+        niche,
+        sequenceSlug: "free-trial",
+        reason: "payment_received",
+      });
+    }
   }, "stripe_payment_stops");
 }
 

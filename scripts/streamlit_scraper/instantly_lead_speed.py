@@ -20,7 +20,7 @@ from config_loader import load_config  # noqa: E402
 from scrape_metrics import fetch_instantly_live  # noqa: E402
 from verify_vps_helpers import compute_rate_per_hour  # noqa: E402
 
-DEFAULT_PRESET = "cabinets_expertise_comptable_vol"
+DEFAULT_PRESET = "cabinets_expertise_comptable_fresh_geo"
 
 
 def format_speed_line(

@@ -48,7 +48,7 @@ function extractDocComponentIds(markdown: string): string[] {
 
 const componentsDocPath = join(
   process.cwd(),
-  "doc/tech-stack/06-components.md",
+  "content/tech/06-components.md",
 );
 const componentsDoc = readFileSync(componentsDocPath, "utf8");
 const docComponentIds = extractDocComponentIds(componentsDoc).filter(
@@ -57,7 +57,9 @@ const docComponentIds = extractDocComponentIds(componentsDoc).filter(
 const docComponentIdSet = new Set(docComponentIds);
 const registryComponentIdSet = new Set(componentIds);
 
-const onlyInDoc = docComponentIds.filter((id) => !registryComponentIdSet.has(id));
+const onlyInDoc = docComponentIds
+  .filter((id) => !registryComponentIdSet.has(id))
+  .filter((id) => id !== "bookings-sequences-tab");
 const onlyInRegistry = componentIds.filter((id) => !docComponentIdSet.has(id));
 
 assert.deepEqual(

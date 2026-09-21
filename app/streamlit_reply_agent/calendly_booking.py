@@ -8,7 +8,11 @@ from typing import Any, Literal
 import requests
 
 from config import app_base_url
-from legal_content import is_cif_niche_preset, is_comptable_niche_preset
+from legal_content import (
+    is_assurance_niche_preset,
+    is_cif_niche_preset,
+    is_comptable_niche_preset,
+)
 
 BookFromInboundMode = Literal["none", "suggest_slots", "try_book"]
 
@@ -30,6 +34,70 @@ def _scheduling_mode(inbound_text: str) -> BookFromInboundMode:
     return "none"
 
 
+def _resolve_international_1to1_context(
+    *,
+    inbound_text: str,
+    lead_email: str,
+    thread_context: str | None = None,
+) -> str | None:
+    from inbound_question import (
+        can_issue_international_1to1_link,
+        inbound_looks_like_international_lead,
+    )
+
+    if not inbound_looks_like_international_lead(inbound_text, lead_email):
+        return None
+    if not can_issue_international_1to1_link(
+        inbound_text=inbound_text,
+        thread_context=thread_context,
+    ):
+        return None
+
+    try:
+        response = requests.post(
+            f"{app_base_url()}/api/calendly/international-1to1-link",
+            json={
+                "leadEmail": lead_email,
+                "inboundText": inbound_text,
+                "threadContext": thread_context or "",
+            },
+            timeout=45,
+        )
+        data = response.json()
+        if not response.ok or not data.get("ok"):
+            return None
+        booking_context = data.get("bookingContext")
+        if isinstance(booking_context, str) and booking_context.strip():
+            return booking_context.strip()
+        result = data.get("result") or {}
+        booking_url = str(result.get("bookingUrl") or "").strip()
+        if result.get("status") == "ready" and booking_url:
+            return "\n".join(
+                [
+                    "Le cabinet international a accepté explicitement les tarifications exposées dans le fil.",
+                    f"Lien de planification unique (ne pas inventer) : {booking_url}",
+                    "Confirmez brièvement et incluez ce lien seul sur sa propre ligne.",
+                    "Ne pas renvoyer le briefing collectif France ni le lien conférence.",
+                ]
+            )
+    except Exception:
+        return None
+    return None
+
+
+def _format_soft_rdv_follow_up_context() -> str:
+    return "\n".join(
+        [
+            "Le prospect remercie pour la proposition sans confirmer ni refuser clairement.",
+            "Ton doux et court — pas de « Merci pour votre message », pas d'AER.",
+            "Reformulez brièvement l'enjeu (échange sur le modèle Hercule), puis demandez poliment s'il souhaite prendre rendez-vous pour l'appel de présentation du mercredi 23 septembre à 10h (Paris).",
+            "Inclure le lien CTA briefing collectif seul sur sa propre ligne.",
+            "Ne pas insister agressivement ; une question ouverte suffit.",
+            "should_reply true — recovery_confidence ≥ 70 si tag Lead.",
+        ]
+    )
+
+
 def resolve_booking_context(
     *,
     campaign_id: str,
@@ -37,10 +105,31 @@ def resolve_booking_context(
     inbound_text: str,
     lead_email: str,
     lead_name: str,
+    thread_context: str | None = None,
 ) -> str | None:
+    if not (
+        is_cif_niche_preset(niche_preset_id)
+        or is_comptable_niche_preset(niche_preset_id)
+        or is_assurance_niche_preset(niche_preset_id)
+    ):
+        return None
+
+    from inbound_question import inbound_is_polite_proposal_acknowledgment
+
+    if inbound_is_polite_proposal_acknowledgment(inbound_text):
+        return _format_soft_rdv_follow_up_context()
+
+    international_context = _resolve_international_1to1_context(
+        inbound_text=inbound_text,
+        lead_email=lead_email,
+        thread_context=thread_context,
+    )
+    if international_context:
+        return international_context
+
     if not _auto_book_enabled():
         return None
-    if is_cif_niche_preset(niche_preset_id):
+    if is_cif_niche_preset(niche_preset_id) or is_assurance_niche_preset(niche_preset_id):
         event = "cif"
     elif is_comptable_niche_preset(niche_preset_id):
         event = "comptable"

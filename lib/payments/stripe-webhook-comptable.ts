@@ -16,8 +16,14 @@ import {
   resolveBookingEmailTemplate,
 } from "@/lib/booking-communication/template-store";
 import { prepareThreadedSend } from "@/lib/booking-communication/threaded-send";
+import { FREE_TRIAL_STRIPE_PRODUCT } from "@/lib/commercial/constants";
+import { FREE_TRIAL_EMAIL_TYPES } from "@/lib/free-trial-sequence/orchestrator";
+import { startFreeTrialStartedSequence } from "@/lib/free-trial-started-sequence/orchestrator";
 import { buildDashboardUrl } from "@/lib/link-tracking/urls";
-import { isComptableSubscriptionOffer } from "@/lib/payments/comptable-offers";
+import {
+  isComptableFreeTrialOffer,
+  isComptableSubscriptionOffer,
+} from "@/lib/payments/comptable-offers";
 import type { OfferTypeComptable } from "@/lib/commercial/constants";
 
 type ComptableOwner = "comptable" | "entreprise" | "cif";
@@ -142,6 +148,21 @@ function paymentIntentIdFromSession(session: Stripe.Checkout.Session): string | 
   return session.payment_intent?.id ?? null;
 }
 
+function customerIdFromSession(session: Stripe.Checkout.Session): string | null {
+  if (typeof session.customer === "string") {
+    return session.customer;
+  }
+  return session.customer?.id ?? null;
+}
+
+function isFreeTrialCheckoutSession(session: Stripe.Checkout.Session): boolean {
+  const product = session.metadata?.product?.trim();
+  if (product === FREE_TRIAL_STRIPE_PRODUCT) {
+    return true;
+  }
+  return isComptableFreeTrialOffer(session.metadata?.offer_type);
+}
+
 export async function handleComptableCheckoutCompleted(
   client: SupabaseClient,
   session: Stripe.Checkout.Session,
@@ -194,7 +215,10 @@ export async function handleComptableCheckoutCompleted(
     "close_indecis_2",
     "close_indecis_3",
   ];
-  await cancelPendingJobsForLead(leadId, closeIndecisTypes);
+  await cancelPendingJobsForLead(leadId, [
+    ...closeIndecisTypes,
+    ...FREE_TRIAL_EMAIL_TYPES,
+  ]);
 
   const salesCallOwnerColumn =
     owner === "cif" ? "cif_id" : owner === "comptable" ? "comptable_id" : "entreprise_id";
@@ -204,13 +228,31 @@ export async function handleComptableCheckoutCompleted(
     .eq(salesCallOwnerColumn, leadId)
     .in("status", ["scheduled", "not_paid", "completed", "no_show"]);
 
-  try {
-    await sendComptableWelcomeEmail(client, owner, leadId);
-  } catch (emailError) {
-    console.error(
-      "[stripe/webhook] comptable payment welcome email failed:",
-      emailError instanceof Error ? emailError.message : emailError,
-    );
+  const freeTrial = owner === "comptable" && isFreeTrialCheckoutSession(session);
+
+  if (freeTrial) {
+    try {
+      await startFreeTrialStartedSequence({
+        leadId,
+        paymentAt: new Date(succeededAt),
+        stripeCheckoutSessionId: session.id,
+        stripeCustomerId: customerIdFromSession(session),
+      });
+    } catch (sequenceError) {
+      console.error(
+        "[stripe/webhook] free-trial-started sequence failed:",
+        sequenceError instanceof Error ? sequenceError.message : sequenceError,
+      );
+    }
+  } else {
+    try {
+      await sendComptableWelcomeEmail(client, owner, leadId);
+    } catch (emailError) {
+      console.error(
+        "[stripe/webhook] comptable payment welcome email failed:",
+        emailError instanceof Error ? emailError.message : emailError,
+      );
+    }
   }
 
   const { data: leadRow } = await client

@@ -36,6 +36,15 @@
     "attempted": 2518
   },
   {
+    "niche": "MEDECIN",
+    "list_name": "Hercule — Médecins généralistes (France)",
+    "list_id": "7e3b619f-9823-4d64-bc50-31f01bb08e6d",
+    "pushed": 0,
+    "skipped_duplicate": 0,
+    "failed": 0,
+    "attempted": 0
+  },
+  {
     "niche": "RESTAURANT",
     "list_name": "TEMP - RESTAURANT",
     "list_id": "8ad641e7-3456-42df-9281-2c11f97df1c5",
@@ -47,7 +56,7 @@
   {
     "niche": "TERRASSEMENT",
     "list_name": "TEMP - TERRASSEMENT",
-    "list_id": "ef52cbe1-e6cb-4076-85bc-55ead03cb4bd",
+    "list_id": "ea5818ff-e086-4ed3-aee7-87b614fc7432",
     "pushed": 4470,
     "skipped_duplicate": 0,
     "failed": 0,

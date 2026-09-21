@@ -8,7 +8,7 @@ Before editing, read:
 2. [`.cursor/skills/hercule-nextjs/SKILL.md`](../../.cursor/skills/hercule-nextjs/SKILL.md) (router)
 3. [`.cursor/skills/hercule-nextjs-internal/SKILL.md`](../../.cursor/skills/hercule-nextjs-internal/SKILL.md) (this domain)
 
-Canon: [doc/README.md](../../doc/README.md) reading order for business rules.
+Canon: [.cursor/skills/hercule-tech-spec](../../.cursor/skills/hercule-tech-spec/SKILL.md) for business rules.
 
 L'espace `/internal` (Funnel Builder, inventaire composants, inventaire database) est un **outil interne sans authentification applicative**.
 

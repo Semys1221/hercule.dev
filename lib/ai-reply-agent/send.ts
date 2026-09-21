@@ -16,11 +16,20 @@ import type { AiReplyAgentConfig } from "./types";
 const COLLISION_MINUTES = 15;
 const HERCULE_FINGERPRINTS = ["beatrice meyer", "hercule.dev", "béatrice meyer"];
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function readCtaForLead(
   leadEmail: string,
   config: AiReplyAgentConfig,
+  campaignId?: string,
 ): Promise<string> {
-  const links = await resolvePromptLinks(leadEmail, config.target_type);
+  const links = await resolvePromptLinks(
+    leadEmail,
+    config.target_type,
+    campaignId ?? null,
+  );
   return links.primary;
 }
 
@@ -70,6 +79,28 @@ export async function hasRecentHerculeCollision(params: {
   return Boolean(data && data.length > 0);
 }
 
+async function resolveThreadWithRetry(
+  apiKey: string,
+  params: {
+    leadEmail: string;
+    campaignId: string;
+    fallbackEaccount?: string;
+    preferredEmailId?: string;
+  },
+): Promise<Awaited<ReturnType<typeof resolveThreadForReply>>> {
+  let thread = await resolveThreadForReply(apiKey, params);
+  if (thread) {
+    return thread;
+  }
+
+  await sleep(2000);
+  thread = await resolveThreadForReply(apiKey, {
+    ...params,
+    preferredEmailId: undefined,
+  });
+  return thread;
+}
+
 export async function sendAiReply(params: {
   config: AiReplyAgentConfig;
   campaignId: string;
@@ -80,9 +111,13 @@ export async function sendAiReply(params: {
   preferredEmailId?: string;
 }): Promise<{ replyToUuid: string }> {
   const apiKey = getInstantlyApiKey();
-  const ctaLink = await readCtaForLead(params.leadEmail, params.config);
+  const ctaLink = await readCtaForLead(
+    params.leadEmail,
+    params.config,
+    params.campaignId,
+  );
 
-  const thread = await resolveThreadForReply(apiKey, {
+  const thread = await resolveThreadWithRetry(apiKey, {
     leadEmail: params.leadEmail,
     campaignId: params.campaignId,
     fallbackEaccount: params.emailAccount,
@@ -98,12 +133,38 @@ export async function sendAiReply(params: {
       ? thread.subject
       : `Re: ${thread.subject ?? "votre message"}`);
 
-  await replyToEmail(apiKey, {
+  const payload = {
     eaccount: thread.eaccount,
     replyToUuid: thread.replyToUuid,
     subject,
     html: formatReplyHtml(params.replyText, { ctaLink }),
-  });
+  };
+
+  try {
+    await replyToEmail(apiKey, payload);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!/404|not found/i.test(message)) {
+      throw err;
+    }
+
+    const refreshed = await resolveThreadWithRetry(apiKey, {
+      leadEmail: params.leadEmail,
+      campaignId: params.campaignId,
+      fallbackEaccount: params.emailAccount,
+      preferredEmailId: undefined,
+    });
+    if (!refreshed) {
+      throw new Error("thread_not_found");
+    }
+
+    await replyToEmail(apiKey, {
+      ...payload,
+      eaccount: refreshed.eaccount,
+      replyToUuid: refreshed.replyToUuid,
+    });
+    return { replyToUuid: refreshed.replyToUuid };
+  }
 
   return { replyToUuid: thread.replyToUuid };
 }

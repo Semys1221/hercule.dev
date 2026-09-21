@@ -32,7 +32,18 @@ def resolve_niche_template_bodies(preset_id: str) -> dict[str, str] | None:
     pid = preset_id.lower()
     if "comptable" in pid:
         return dict(default_templates.COMPTABLE_TEMPLATE_BODIES)
-    if "jum" in pid:
+    if any(
+        token in pid
+        for token in (
+            "jum",
+            "medecin",
+            "dentiste",
+            "kine",
+            "avocat",
+            "architecte",
+            "veterinaire",
+        )
+    ):
         return dict(default_templates.JUM_TEMPLATE_BODIES)
     if any(token in pid for token in ("conseiller", "patrimoine", "cif")):
         return dict(default_templates.CIF_TEMPLATE_BODIES)

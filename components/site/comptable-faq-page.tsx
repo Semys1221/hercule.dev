@@ -14,7 +14,7 @@ function FaqAnswer({ answer, cvgLink }: { answer: string; cvgLink?: boolean }) {
       {cvgLink && (
         <>
           {" "}
-          <Link href="/cvg" className="text-zinc-300 hover:text-white underline underline-offset-2">
+          <Link href="/cvg#dec" className="text-zinc-300 hover:text-white underline underline-offset-2">
             Voir les CGV
           </Link>
         </>
@@ -31,8 +31,8 @@ export function ComptableFaqPage() {
       <Navbar />
       <main className="pt-28 pb-24 px-6">
         <div className="max-w-3xl mx-auto">
-          <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-8 inline-block">
-            ← Retour à l&apos;accueil
+          <Link href="/comptable" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-8 inline-block">
+            ← Retour à l&apos;accueil comptable
           </Link>
 
           <h1
@@ -42,7 +42,7 @@ export function ComptableFaqPage() {
             Questions fréquentes
           </h1>
           <p className="text-zinc-500 text-sm leading-relaxed mb-10 max-w-2xl">
-            Réponses aux questions les plus courantes sur le service Hercule pour les cabinets partenaires.
+            Réponses aux questions les plus courantes sur le courtage de projets comptables Hercule (BNC, BIC, TNS).
           </p>
 
           <Accordion type="single" collapsible className="border border-zinc-800 rounded-xl px-4 sm:px-6">

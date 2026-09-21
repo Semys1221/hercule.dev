@@ -20,6 +20,9 @@ import { executeBypassFlow, STEP_AFTER_FLOW } from "./send-flow";
 import { isWithinSendWindow, nextSendSlot } from "./send-window";
 import { detectOptOut } from "@/lib/lead-relances/opt-out";
 import { stopAllLeadRelances } from "@/lib/lead-relances/stop-all";
+import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
+import { isCampaignLeadAlreadyBooked } from "@/lib/link-tracking/split-booking";
+import { resolveCategoryForCampaign } from "@/lib/link-tracking/provision-campaign-lead";
 import { getLatestReceivedReplySince, leadHasRepliedSince } from "./thread-resolver";
 import { listBypassConfigs } from "./templates";
 
@@ -214,6 +217,15 @@ async function processLead(params: {
 
   if (!sentAt || !isDue(sentAt, rule.delayHours)) {
     return "skipped";
+  }
+
+  const category = await resolveCategoryForCampaign(campaignId);
+  if (category) {
+    const client = createLinkTrackingClient();
+    if (await isCampaignLeadAlreadyBooked(client, category, leadEmail)) {
+      await upsertPipelineStep(campaignId, leadEmail, "step_4");
+      return "skipped";
+    }
   }
 
   const apiKey = getInstantlyApiKey();

@@ -12,7 +12,13 @@ import { normalizeEmail } from "@/lib/link-tracking/supabase";
 import type { LeadCategory } from "@/lib/link-tracking/types";
 
 import {
+  formatInternational1to1BookingContextForGrok,
+  resolveInternational1to1BookingContext,
+} from "@/lib/calendly/international-1to1-booking";
+
+import {
   inboundClaimsBookingDone,
+  inboundIsPoliteProposalAcknowledgment,
   inboundLooksLikePhoneRequest,
   inboundLooksLikeSchedulingAnswer,
   inboundShowsInterest,
@@ -63,6 +69,18 @@ export function formatPendingBookingConfirmationContext(): string {
   ].join("\n");
 }
 
+/** Prospect thanks for the proposal without confirming or declining — soft RDV nudge. */
+export function formatSoftRdvFollowUpContext(): string {
+  return [
+    "Le prospect remercie pour la proposition sans confirmer ni refuser clairement.",
+    "Ton doux et court — pas de « Merci pour votre message », pas d'AER.",
+    "Reformulez brièvement l'enjeu (échange sur le modèle Hercule), puis demandez poliment s'il souhaite prendre rendez-vous pour l'appel de présentation du mercredi 23 septembre à 10h (Paris).",
+    "Inclure le lien CTA briefing collectif seul sur sa propre ligne.",
+    "Ne pas insister agressivement ; une question ouverte suffit.",
+    "should_reply true — recovery_confidence ≥ 70 si tag Lead.",
+  ].join("\n");
+}
+
 async function resolveAutoBookContext(params: {
   category: LeadCategory;
   inboundText: string;
@@ -85,6 +103,26 @@ async function resolveAutoBookContext(params: {
     mode,
   });
   return formatBookingContextForGrok(result);
+}
+
+async function resolveSoftRdvFollowUpContext(params: {
+  category: LeadCategory;
+  inboundText: string;
+  leadEmail: string;
+  replyFromEmail?: string | null;
+}): Promise<string | null> {
+  if (!inboundIsPoliteProposalAcknowledgment(params.inboundText)) {
+    return null;
+  }
+  const hasBooking = await leadHasUpcomingBooking(
+    params.category,
+    params.leadEmail,
+    params.replyFromEmail,
+  );
+  if (hasBooking) {
+    return null;
+  }
+  return formatSoftRdvFollowUpContext();
 }
 
 async function resolvePendingBookingContext(params: {
@@ -111,6 +149,19 @@ async function resolvePendingBookingContext(params: {
   return formatPendingBookingConfirmationContext();
 }
 
+async function resolveInternational1to1Context(params: {
+  inboundText: string;
+  leadEmail: string;
+  threadContext?: string | null;
+}): Promise<string | null> {
+  const result = await resolveInternational1to1BookingContext({
+    inboundText: params.inboundText,
+    leadEmail: params.leadEmail,
+    threadContext: params.threadContext,
+  });
+  return formatInternational1to1BookingContextForGrok(result);
+}
+
 export async function resolveBookingContext(params: {
   campaignId: string;
   inboundText: string;
@@ -118,11 +169,21 @@ export async function resolveBookingContext(params: {
   replyFromEmail?: string | null;
   leadName: string;
   interestStatus?: number | null;
+  threadContext?: string | null;
 }): Promise<string | null> {
   try {
     const category = await resolveCategoryForCampaign(params.campaignId);
     if (category !== "comptable" && category !== "cif") {
       return null;
+    }
+
+    const internationalContext = await resolveInternational1to1Context({
+      inboundText: params.inboundText,
+      leadEmail: params.leadEmail,
+      threadContext: params.threadContext,
+    });
+    if (internationalContext) {
+      return internationalContext;
     }
 
     const autoBookContext = await resolveAutoBookContext({
@@ -134,6 +195,16 @@ export async function resolveBookingContext(params: {
     });
     if (autoBookContext) {
       return autoBookContext;
+    }
+
+    const softRdvContext = await resolveSoftRdvFollowUpContext({
+      category,
+      inboundText: params.inboundText,
+      leadEmail: params.leadEmail,
+      replyFromEmail: params.replyFromEmail,
+    });
+    if (softRdvContext) {
+      return softRdvContext;
     }
 
     return await resolvePendingBookingContext({

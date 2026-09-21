@@ -22,7 +22,7 @@ from scrape_state import new_scrape_state  # noqa: E402
 
 
 def _vol_config() -> dict:
-    return load_config("cabinets_expertise_comptable_vol", require_keys=False)
+    return load_config("cabinets_expertise_comptable_fresh_geo", require_keys=False)
 
 
 def test_vol_config_starts_commune_pass() -> None:

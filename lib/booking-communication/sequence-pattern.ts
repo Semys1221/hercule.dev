@@ -43,6 +43,12 @@ export const SEQUENCE_THREAD_FAMILIES: readonly BookingEmailType[][] = [
     "proposition_ludovic_rdv_reminder",
     "proposition_ludovic_rdv_final",
   ],
+  ["free_trial_1", "free_trial_2", "free_trial_3"],
+  [
+    "free_trial_started_1",
+    "free_trial_started_2",
+    "free_trial_started_3",
+  ],
   [
     "conference_invite",
     "conference_invite_24",

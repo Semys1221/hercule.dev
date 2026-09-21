@@ -68,6 +68,8 @@ export async function extraVarsForJob(
   profileVolume?: string;
   offerLabel?: string;
   amountLabel?: string;
+  billingPortalLink?: string;
+  checkoutTrialLink?: string;
 }> {
   const dashboardLink = dashboardLinkFor(lead) ?? "";
   const reservationAgenceLink = reservationAgenceLinkFor(lead);
@@ -80,6 +82,7 @@ export async function extraVarsForJob(
 
   const estimatedFromLead = estimatedFirstBookingDateFromLead(lead);
   const slug = lead.slug?.trim() ?? "";
+  const profile = (lead.profile ?? {}) as Record<string, unknown>;
   const acquisitionExtras =
     (job.email_type as BookingEmailType).startsWith("comptable_acquisition_")
       ? {
@@ -94,7 +97,6 @@ export async function extraVarsForJob(
     "proposition_ludovic_",
   )
     ? (() => {
-        const profile = (lead.profile ?? {}) as Record<string, unknown>;
         const payment = (profile.proposition_payment ?? {}) as Record<string, unknown>;
         return {
           trackingNumber: trackingNumberForSlug(slug),
@@ -104,6 +106,19 @@ export async function extraVarsForJob(
           amountLabel: String(payment.amountLabel ?? ""),
         };
       })()
+    : {};
+
+  const freeTrialExtras = (job.email_type as BookingEmailType).startsWith("free_trial")
+    ? {
+        checkoutTrialLink:
+          typeof profile.free_trial_checkout_link === "string"
+            ? profile.free_trial_checkout_link
+            : dashboardLink,
+        billingPortalLink:
+          typeof profile.free_trial_billing_portal_link === "string"
+            ? profile.free_trial_billing_portal_link
+            : dashboardLink,
+      }
     : {};
 
   const base = {
@@ -124,6 +139,8 @@ export async function extraVarsForJob(
     profileVolume: propositionLudovicExtras.profileVolume ?? "",
     offerLabel: propositionLudovicExtras.offerLabel ?? "",
     amountLabel: propositionLudovicExtras.amountLabel ?? "",
+    checkoutTrialLink: freeTrialExtras.checkoutTrialLink ?? "",
+    billingPortalLink: freeTrialExtras.billingPortalLink ?? "",
   };
 
   const emailType = job.email_type as BookingEmailType;

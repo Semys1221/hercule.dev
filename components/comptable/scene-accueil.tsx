@@ -16,7 +16,7 @@ import { Footer } from "./footer"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
 import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
-import { getMarketingCopy, MARKETING_CLIENT_CTA } from "@/lib/site/marketing-copy"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
 interface AccueilSceneProps {
   demandes: DemandeContrat[]
@@ -90,7 +90,6 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
               >
                 <MarketingBookingCta
                   href={CALENDLY_ENTREPRISE_URL}
-                  label={MARKETING_CLIENT_CTA}
                   className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
                 />
               </motion.div>
@@ -163,14 +162,14 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
             </div>
           </div>
 
-          <BandeStack />
-          <BandeProjets demandes={demandes} teaser={teaser} />
-          <PilierMatching />
-          <AuditLive />
-          <GrillePipeline demandes={demandes} />
-          <MethodeRadar />
-          <BlocGaranties />
-          <BandeAudit />
+          <BandeStack audience="comptable" />
+          <BandeProjets demandes={demandes} teaser={teaser} audience="comptable" />
+          <PilierMatching audience="comptable" />
+          <AuditLive audience="comptable" />
+          <GrillePipeline demandes={demandes} audience="comptable" />
+          <MethodeRadar audience="comptable" />
+          <BlocGaranties audience="comptable" />
+          <BandeAudit audience="comptable" />
           <Footer />
         </div>
       </section>

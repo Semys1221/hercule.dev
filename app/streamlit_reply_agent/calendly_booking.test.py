@@ -68,6 +68,34 @@ class CalendlyBookingTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "suggest_slots")
         self.assertEqual(payload["event"], "comptable")
 
+    @patch("calendly_booking.requests.post")
+    def test_resolve_international_1to1_context(
+        self,
+        post_mock: MagicMock,
+    ) -> None:
+        post_mock.return_value = MagicMock(
+            ok=True,
+            json=lambda: {
+                "ok": True,
+                "bookingContext": "Lien de planification unique (ne pas inventer) : https://calendly.com/d/abc/xyz",
+            },
+        )
+
+        context = resolve_booking_context(
+            campaign_id="camp-1",
+            niche_preset_id="cabinets_expertise_comptable",
+            inbound_text="J'accepte les tarifications.",
+            lead_email="achraf@duxcompta.be",
+            lead_name="Achraf",
+            thread_context="Tarif Hercule 1 499 USD/mois pour la Belgique. Acceptez ces tarifications.",
+        )
+
+        self.assertIsNotNone(context)
+        self.assertIn("calendly.com", (context or "").lower())
+        post_mock.assert_called_once()
+        payload = post_mock.call_args.kwargs["json"]
+        self.assertIn("international-1to1-link", post_mock.call_args.args[0])
+
     @patch("calendly_booking._auto_book_enabled", return_value=False)
     def test_resolve_booking_context_disabled(self, _enabled_mock: MagicMock) -> None:
         context = resolve_booking_context(

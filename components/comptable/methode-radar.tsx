@@ -3,11 +3,15 @@
 import { motion } from "framer-motion"
 import { ChevronRight } from "lucide-react"
 import { TerminalSignaux } from "./terminal-signaux"
-import { getMarketingCopy } from "@/lib/site/marketing-copy"
+import { getMarketingCopy, type MarketingAudience } from "@/lib/site/marketing-copy"
 
-const copy = getMarketingCopy("comptable")
+type MethodeRadarProps = {
+  audience?: MarketingAudience
+}
 
-export function MethodeRadar() {
+export function MethodeRadar({ audience = "comptable" }: MethodeRadarProps) {
+  const copy = getMarketingCopy(audience)
+
   return (
     <section id="methode" className="relative z-20 py-40 px-6 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div className="max-w-5xl mx-auto">

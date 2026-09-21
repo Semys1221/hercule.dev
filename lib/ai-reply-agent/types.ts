@@ -14,6 +14,8 @@ export type AiReplyMessageStatus =
   | "skipped_not_interested"
   | "skipped_waiting_e1"
   | "superseded_by_e1"
+  | "skipped_post_e1_ack"
+  | "skipped_calendly_system"
   | "skipped_recovery"
   | "manual_replied"
   | "manual_queued"

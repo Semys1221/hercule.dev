@@ -76,7 +76,7 @@ python -m bootstrap cleanup-empty-instantly --execute
 
 VPS install: `scripts/vps/install-scraper.sh` → systemd `hercule-scraper` + hourly heal cron per preset.
 
-Dual comptable on VPS: `cabinets_expertise_comptable` (`TARGET_MODE=instantly_pushed`, live list) + `cabinets_expertise_comptable_vol` (`TARGET_MODE=instantly_pushed_run`, 10K checkpoint, taxonomy gate, same Instantly list). Volume worker: `VPS_SCRAPER_SERVICE=hercule-scraper-comptable-vol SCRAPER_PRESET=cabinets_expertise_comptable_vol`.
+Single comptable VPS worker: `cabinets_expertise_comptable_fresh_geo` (`TARGET_MODE=instantly_pushed_run`, postal + INSEE communes, taxonomy gate, list `bfb0fc90-…`). Service: `VPS_SCRAPER_SERVICE=hercule-scraper-comptable-fresh-geo`.
 
 ## Taxonomy gate (volume pipeline)
 
@@ -102,6 +102,7 @@ When `TAXONOMY_GATE_ENABLED=true`, scrape accepts leads only if `TAXONOMY_INCLUD
 - `TARGET_MODE=instantly_pushed_run` → worker/UI target = **checkpoint** `instantly_pushed` in `scrape_state.json` (per-preset run; use when sharing a list with another worker)
 - Helpers: `target_progress_value`, `target_uses_live_list` in `scrape_state.py`
 - `worker_heartbeat.json` + `scrape.log` on disk; Scrape page reads remote files over SSH when `VPS_HOST` set
+- Fleet Grafana dashboard (VPS): `scripts/vps/install-monitoring.sh` → exporter `:9464` + Compose (Prometheus/Grafana/Loki/node_exporter). See README **Monitoring**. Code: `monitoring/exporter.py`.
 
 ## Resume invariants
 

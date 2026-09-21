@@ -194,7 +194,7 @@ export function FaqLiveInventory({ audience }: FaqLiveInventoryProps) {
                     <AlertDescription>
                       Les blocs FAQ des funnels affichent le master (moins les questions
                       masquées). L’édition ci-dessous met à jour{" "}
-                      <code>doc/legal-documentation/{selected.audience}/faq.json</code>.
+                      <code>content/legal-documentation/{selected.audience}/faq.json</code>.
                     </AlertDescription>
                   </Alert>
                 ) : null}

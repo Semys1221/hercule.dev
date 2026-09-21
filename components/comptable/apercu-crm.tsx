@@ -60,7 +60,7 @@ const timelineSteps = [
   { label: "Prise de contact", icon: MessageSquare, done: true },
   { label: "Qualification", icon: Phone, done: true },
   { label: "Rendez-vous confirmé", icon: Calendar, done: true },
-  { label: "Flux routé", icon: Send, done: false, current: true },
+  { label: "Projet attribué", icon: Send, done: false, current: true },
 ]
 
 const marieConversation = [
@@ -81,7 +81,7 @@ const marieConversation = [
   },
   {
     sender: "Système",
-    text: "Flux routé vers un cabinet partenaire",
+    text: "Projet attribué à un cabinet partenaire",
     variant: "system" as const,
   },
 ]
@@ -128,11 +128,11 @@ export function ApercuCrm() {
         <div className="p-3">
           <div className="flex items-center gap-2 px-2.5 py-1.5 bg-zinc-800/50 rounded-md text-zinc-500 text-xs">
             <Search className="size-3.5" />
-            <span>Rechercher un flux…</span>
+            <span>Rechercher un projet…</span>
           </div>
         </div>
         <div className="px-3 space-y-0.5">
-          <NavItem icon={Users} label="Flux routés" badge={12} active />
+          <NavItem icon={Users} label="Projets attribués" badge={12} active />
           <NavItem icon={Phone} label="En qualification" badge={3} />
           <NavItem icon={Calendar} label="Rendez-vous planifiés" badge={5} />
         </div>
@@ -174,7 +174,7 @@ export function ApercuCrm() {
 
       <motion.div className="flex-1 flex flex-col min-w-0" variants={panelVariants}>
         <div className="h-12 border-b border-zinc-800/50 flex items-center px-4 gap-4 shrink-0">
-          <span className="text-white font-medium">Plateforme de mise en relation</span>
+          <span className="text-white font-medium">Courtage de projets B2B</span>
           <span className="text-zinc-500 text-xs">Honoraires 2 400 € – 6 000 €/an</span>
         </div>
 

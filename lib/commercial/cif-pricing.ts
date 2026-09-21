@@ -1,36 +1,37 @@
-import {
-  OFFER_TYPES_COMPTABLE,
-  type OfferTypeComptable,
-} from "@/lib/commercial/constants";
+import { COMMERCIAL_HERCULE_HUBRIS } from "@/lib/commercial/constants";
 import { getPricingDocument } from "@/lib/site/pricing-data";
 import type { PricingPlan } from "@/lib/site/pricing-types";
 
-export const CIF_PLAN_IDS = {
-  lite: "plan-cif-lite",
-  starter: "plan-cif-starter",
-  pack3: "plan-cif-pack3",
+export const HUBRIS_PLAN_IDS = {
+  optionA: "plan-hubris-option-a",
+  optionB: "plan-hubris-option-b",
 } as const;
 
-export const COMPTABLE_PRICING_CTA = "Activer & Sécuriser mon calendrier";
-export const CIF_PRICING_CTA = COMPTABLE_PRICING_CTA;
+export const CIF_PRICING_CTA = "Activer & Sécuriser mon calendrier";
 
-const OFFER_TYPE_SET = new Set<string>(Object.values(OFFER_TYPES_COMPTABLE));
+export type HubrisOfferType =
+  | typeof COMMERCIAL_HERCULE_HUBRIS.offerTypeOptionA
+  | typeof COMMERCIAL_HERCULE_HUBRIS.offerTypeOptionB;
 
-export function isOfferTypeComptable(value: string): value is OfferTypeComptable {
-  return OFFER_TYPE_SET.has(value);
+const HUBRIS_OFFER_TYPES = new Set<string>([
+  COMMERCIAL_HERCULE_HUBRIS.offerTypeOptionA,
+  COMMERCIAL_HERCULE_HUBRIS.offerTypeOptionB,
+]);
+
+export function isHubrisOfferType(value: string): value is HubrisOfferType {
+  return HUBRIS_OFFER_TYPES.has(value);
 }
 
-export function offerTypeForPlan(plan: PricingPlan): OfferTypeComptable | null {
-  if (!plan.offerType || !isOfferTypeComptable(plan.offerType)) {
+export function offerTypeForPlan(plan: PricingPlan): HubrisOfferType | null {
+  if (!plan.offerType || !isHubrisOfferType(plan.offerType)) {
     return null;
   }
   return plan.offerType;
 }
 
 export function getCifPricingPlans(): {
-  lite: PricingPlan;
-  starter: PricingPlan;
-  pack3: PricingPlan;
+  optionA: PricingPlan;
+  optionB: PricingPlan;
   document: NonNullable<ReturnType<typeof getPricingDocument>>;
 } {
   const document = getPricingDocument("cif");
@@ -39,13 +40,12 @@ export function getCifPricingPlans(): {
   }
 
   const byId = new Map(document.plans.map((plan) => [plan.id, plan]));
-  const lite = byId.get(CIF_PLAN_IDS.lite);
-  const starter = byId.get(CIF_PLAN_IDS.starter);
-  const pack3 = byId.get(CIF_PLAN_IDS.pack3);
+  const optionA = byId.get(HUBRIS_PLAN_IDS.optionA);
+  const optionB = byId.get(HUBRIS_PLAN_IDS.optionB);
 
-  if (!lite || !starter || !pack3) {
-    throw new Error("CIF pricing plans are incomplete");
+  if (!optionA || !optionB) {
+    throw new Error("Hercule Hubris pricing plans are incomplete");
   }
 
-  return { lite, starter, pack3, document };
+  return { optionA, optionB, document };
 }

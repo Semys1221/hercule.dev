@@ -122,5 +122,5 @@ export function writeSequenceFile(document: SequenceFileDocument): void {
 }
 
 export function sequenceFileRelativePath(niche: Niche, slug: string): string {
-  return `doc/legal-documentation/${niche}/sequences/${slug}.md`;
+  return `content/legal-documentation/${niche}/sequences/${slug}.md`;
 }

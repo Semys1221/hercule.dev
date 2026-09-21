@@ -14,7 +14,7 @@ function FaqAnswer({ answer, cvgLink }: { answer: string; cvgLink?: boolean }) {
       {cvgLink && (
         <>
           {" "}
-          <Link href="/cvg/conseil-financier" className="text-zinc-300 hover:text-white underline underline-offset-2">
+          <Link href="/cvg#hubris" className="text-zinc-300 hover:text-white underline underline-offset-2">
             Voir les CGV
           </Link>
         </>
@@ -42,7 +42,8 @@ export function CifFaqPage() {
             Questions fréquentes
           </h1>
           <p className="text-zinc-500 text-sm leading-relaxed mb-10 max-w-2xl">
-            Réponses aux questions les plus courantes sur le service Hercule pour les cabinets CIF / CGP.
+            Réponses aux questions les plus courantes sur le courtage de projets patrimoniaux Hercule pour les
+            cabinets CIF / CGP.
           </p>
 
           <Accordion type="single" collapsible className="border border-zinc-800 rounded-xl px-4 sm:px-6">

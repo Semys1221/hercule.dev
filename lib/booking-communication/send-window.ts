@@ -24,6 +24,7 @@ const SEND_WINDOW_BYPASS_TYPES: BookingEmailType[] = [
   "product_calendly_welcome",
   "product_payment_welcome",
   "comptable_acquisition_welcome",
+  "free_trial_started_1",
   "role_seq_48",
   "role_seq_24",
   "modalites_ask",

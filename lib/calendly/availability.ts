@@ -38,6 +38,33 @@ const EVENT_TYPE_URI_ENV: Record<CalendlyBookingEvent, string> = {
 
 const eventTypeUriCache: Partial<Record<CalendlyBookingEvent, string>> = {};
 
+/** Shared DEC / IAS / CIF international 1:1 with Evan (single-use scheduling links). */
+export const INTERNATIONAL_1TO1_SCHEDULING_URL =
+  "https://calendly.com/hercule-connect/echange-avec-dirigeant";
+
+export const INTERNATIONAL_1TO1_EVENT_TYPE_URI_DEFAULT =
+  "https://api.calendly.com/event_types/30e899c0-9659-4dbd-ac30-04713f4711bd";
+
+let international1to1UriCache: string | null = null;
+
+export async function getInternational1to1EventTypeUri(): Promise<string> {
+  const fromEnv = process.env.CALENDLY_EVENT_TYPE_URI_INTERNATIONAL_1TO1?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  if (international1to1UriCache) {
+    return international1to1UriCache;
+  }
+  try {
+    international1to1UriCache = await resolveEventTypeUriBySchedulingUrl(
+      INTERNATIONAL_1TO1_SCHEDULING_URL,
+    );
+    return international1to1UriCache;
+  } catch {
+    return INTERNATIONAL_1TO1_EVENT_TYPE_URI_DEFAULT;
+  }
+}
+
 export type AvailabilityMessage = {
   prefix: string;
   fullFrom?: string;

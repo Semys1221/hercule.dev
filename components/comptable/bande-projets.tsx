@@ -8,17 +8,25 @@ import { cn } from "@/lib/utils"
 import { CALENDLY_ENTREPRISE_URL } from "@/lib/constants"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
 import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
-import { getMarketingCopy } from "@/lib/site/marketing-copy"
+import { getMarketingCopy, type MarketingAudience } from "@/lib/site/marketing-copy"
 
 const CARD_WIDTH = "w-[300px] sm:w-[320px]"
-const copy = getMarketingCopy("comptable")
 
 interface BandeProjetsProps {
   demandes: DemandeContrat[]
   teaser: DemandeTeaser | null
+  audience?: MarketingAudience
+  bookingHref?: string
 }
 
-export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
+export function BandeProjets({
+  demandes,
+  teaser,
+  audience = "comptable",
+  bookingHref = CALENDLY_ENTREPRISE_URL,
+}: BandeProjetsProps) {
+  const copy = getMarketingCopy(audience)
+
   return (
     <div id="demandes" className="relative z-20 py-40 scroll-mt-24" style={{ backgroundColor: "#09090B" }}>
       <div
@@ -117,7 +125,7 @@ export function BandeProjets({ demandes, teaser }: BandeProjetsProps) {
             className="mt-8"
           >
             <MarketingBookingCta
-              href={CALENDLY_ENTREPRISE_URL}
+              href={bookingHref}
               className="inline-flex px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
             />
           </motion.div>

@@ -1,6 +1,11 @@
 import { upsertLeadReply } from "./lead-replies";
 import { isAutoSendEnabled, isCampaignConfigReady, loadAiReplyConfig } from "./config";
-import { isHandledReplyAgentEvent, isOooReplyEvent } from "./events";
+import {
+  isCalendlySystemEmail,
+  isCaptchaOrBounceEmail,
+  isHandledReplyAgentEvent,
+  isOooReplyEvent,
+} from "./events";
 import { generateReplyDecision, interestLabelFromStatus } from "./grok";
 import { truncateInboundText } from "./inbound";
 import { buildKnowledgePack, hashKnowledgePack } from "./knowledge";
@@ -36,6 +41,7 @@ import {
   checkInterestedE1ReplyGate,
   resolveInboundEmailTimestamp,
 } from "./e1-reply-gate";
+import { evaluatePostE1InterestGate } from "./post-e1-gate";
 import { hasOutboundSinceInbound } from "./send-mutex";
 import { ensureInterestedE1IfMissing } from "@/lib/instantly-bypass/ensure-interested-e1";
 import {
@@ -205,8 +211,61 @@ export async function handleInstantlyReply(
     };
   }
 
+  if (isCalendlySystemEmail(inboundText)) {
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_calendly_system",
+      started,
+      "Notification Calendly système — aucune réponse requise",
+    );
+    return {
+      ok: true,
+      skipped: "calendly_system",
+      aiStatus: "skipped_calendly_system",
+      latencyMs,
+    };
+  }
+
+  if (isCaptchaOrBounceEmail(inboundText)) {
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_ooo",
+      started,
+      "Message technique (captcha / non-délivrance) — ignoré",
+    );
+    return {
+      ok: true,
+      skipped: "technical_delivery",
+      aiStatus: "skipped_ooo",
+      latencyMs,
+    };
+  }
+
   const recentCollision = await hasRecentHerculeCollision({ campaignId, leadEmail });
   const needsFollowUp = inboundNeedsFollowUp(inboundText);
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "51a42e",
+    },
+    body: JSON.stringify({
+      sessionId: "51a42e",
+      runId: "pre-fix",
+      hypothesisId: "A-B",
+      location: "handler.ts:collision-guard",
+      message: "Follow-up and collision evaluation",
+      data: {
+        leadEmail,
+        needsFollowUp,
+        recentCollision,
+        inboundPreview: inboundText.slice(0, 80),
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   if (recentCollision && !needsFollowUp) {
     const latencyMs = await finalizeInbound(
       inbound.id,
@@ -359,6 +418,25 @@ export async function handleInstantlyReply(
     };
   }
 
+  const postE1Gate = evaluatePostE1InterestGate({
+    e1ReplyGate,
+    inboundText,
+  });
+  if (postE1Gate.skip) {
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_post_e1_ack",
+      started,
+      postE1Gate.reason,
+    );
+    return {
+      ok: true,
+      skipped: "post_e1_pure_interest",
+      aiStatus: "skipped_post_e1_ack",
+      latencyMs,
+    };
+  }
+
   const conversationGate = await evaluateConversationGate({
     campaignId,
     leadEmail,
@@ -402,7 +480,30 @@ export async function handleInstantlyReply(
     replyFromEmail,
     leadName: resolveLeadDisplayName(lead, leadEmail),
     interestStatus,
+    threadContext,
   });
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "51a42e",
+    },
+    body: JSON.stringify({
+      sessionId: "51a42e",
+      runId: "pre-fix",
+      hypothesisId: "E",
+      location: "handler.ts:booking-context",
+      message: "Booking context resolved",
+      data: {
+        leadEmail,
+        hasBookingContext: Boolean(bookingContext),
+        bookingContextPreview: bookingContext?.slice(0, 120) ?? null,
+      },
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
+  // #endregion
   try {
     const groq = await generateReplyDecision({
       knowledgePack,

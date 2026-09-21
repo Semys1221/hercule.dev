@@ -1,15 +1,15 @@
 import type { Metadata } from "next"
 
-import { AccueilScene } from "@/components/comptable/scene-accueil"
+import { AccueilScene } from "@/components/home/scene-accueil"
 import {
   fetchComptableDemandeTeaser,
   fetchComptableDemandesForCarousel,
 } from "@/lib/comptable/demandes-repo"
 
 export const metadata: Metadata = {
-  title: "Acquérir le système Hercule — Expertise comptable",
+  title: "Hercule — Courtage de projets B2B",
   description:
-    "Déployez le système inbound Hercule sur votre zone : capture brandée, qualification et routage exclusif des flux PME vers votre cabinet.",
+    "Attribution exclusive de projets qualifiés (BNC, BIC, TNS) pour comptables, courtiers financiers et courtiers en assurance.",
 }
 
 export const revalidate = 60

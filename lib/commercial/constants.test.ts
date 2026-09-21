@@ -66,34 +66,34 @@ describe("COMMERCIAL constants", () => {
 });
 
 describe("COMMERCIAL_COMPTABLE constants", () => {
-  it("starterPriceCents is 179 900", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(179_900);
+  it("starterPriceCents aliases DEC monthly (Lite removed)", () => {
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(149_900);
   });
 
-  it("starterMissions is 5", () => {
-    expect(COMMERCIAL_COMPTABLE.starterMissions).toBe(5);
+  it("starterMissions aliases 10 crédits DEC", () => {
+    expect(COMMERCIAL_COMPTABLE.starterMissions).toBe(10);
   });
 
   it("growthMonthlyPriceCents equals monthlyPriceCents alias", () => {
-    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(219_900);
+    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(149_900);
     expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(
       COMMERCIAL_COMPTABLE.growthMonthlyPriceCents,
     );
   });
 
-  it("pack3TotalCents is 527 760 (2199 × 3 − 20 %, rounded)", () => {
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(527_760);
+  it("pack3TotalCents is 359 800 (1499 × 3 − 20 %)", () => {
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
   });
 
-  it("firstRdvDaysMin/Max is 20–25", () => {
-    expect(COMMERCIAL_COMPTABLE.firstRdvDaysMin).toBe(20);
+  it("firstRdvDaysMin/Max is 15–25 (warm-up post-paiement)", () => {
+    expect(COMMERCIAL_COMPTABLE.firstRdvDaysMin).toBe(15);
     expect(COMMERCIAL_COMPTABLE.firstRdvDaysMax).toBe(25);
   });
 
-  it("formatComptableFirstRdvLabel matches CGV article 9", () => {
-    expect(formatComptableFirstRdvLabel()).toBe("20 à 25 jours");
+  it("formatComptableFirstRdvLabel matches canon v2", () => {
+    expect(formatComptableFirstRdvLabel()).toBe("15 à 25 jours");
     expect(formatComptableFirstRdvAfterActivationLabel()).toBe(
-      "20 à 25 jours après activation",
+      "15 à 25 jours après activation",
     );
   });
 
@@ -101,18 +101,15 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.growthMissionsPerMonth).toBe(10);
   });
 
-  it("growth MRR guarantee is 3 000 € after 10 missions with 5 replacements", () => {
-    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents).toBe(300_000);
-    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements).toBe(5);
+  it("MRR guarantee removed in v2", () => {
+    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMrrCents).toBe(0);
+    expect(COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements).toBe(0);
   });
 
-  it("pack MRR guarantee is 9 000 € after 30 missions with 15 replacements", () => {
-    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMrrCents).toBe(900_000);
-    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(15);
+  it("pack MRR guarantee removed in v2", () => {
+    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMrrCents).toBe(0);
+    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(0);
     expect(COMMERCIAL_COMPTABLE.pack3MissionsTotal).toBe(30);
-    expect(COMMERCIAL_COMPTABLE.pack3GuaranteeMaxReplacements).toBe(
-      3 * COMMERCIAL_COMPTABLE.growthGuaranteeMaxReplacements,
-    );
   });
 
   it("honorairesAnnuelsMinCents is 240 000", () => {
@@ -123,32 +120,32 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.honorairesPonctuelMinCents).toBe(80_000);
   });
 
-  it("Foundation display prices are Core 1 700 € and Horizon 2 000 €", () => {
-    expect(COMMERCIAL_COMPTABLE.coreDisplayPriceCents).toBe(170_000);
-    expect(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents).toBe(200_000);
+  it("Display prices are Pack Expert-Comptable 1 499 €", () => {
+    expect(COMMERCIAL_COMPTABLE.coreDisplayPriceCents).toBe(149_900);
+    expect(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents).toBe(149_900);
   });
 
-  it("Horizon guarantee is 10 B2B RDV over 90 days", () => {
+  it("Horizon display maps to DEC monthly cadence", () => {
     expect(COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount).toBe(10);
-    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeMonths).toBe(3);
-    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeDays).toBe(90);
+    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeMonths).toBe(1);
+    expect(COMMERCIAL_COMPTABLE.horizonGuaranteeDays).toBe(30);
   });
 
-  it("Stripe charge amount for monthly1499 remains 2 199 €", () => {
-    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(219_900);
+  it("Stripe monthly1499 amount is 1 499 € (canon v2)", () => {
+    expect(COMMERCIAL_COMPTABLE.growthMonthlyPriceCents).toBe(149_900);
   });
 
-  it("foundationOfferLabel uses Core / Horizon names", () => {
+  it("foundationOfferLabel uses Pack Expert-Comptable", () => {
     const coreLabel = foundationOfferLabel(OFFER_TYPES_COMPTABLE.starter999_5);
     const horizonLabel = foundationOfferLabel(OFFER_TYPES_COMPTABLE.monthly1499);
 
-    expect(coreLabel).toMatch(/Core/);
+    expect(coreLabel).toMatch(/Expert-Comptable/);
     expect(coreLabel).not.toMatch(/Lite/i);
-    expect(horizonLabel).toMatch(/Horizon/);
+    expect(horizonLabel).toMatch(/Expert-Comptable/);
     expect(horizonLabel).not.toMatch(/Starter/i);
   });
 
-  it("FOUNDATION_PRICING_PLANS exposes Core and Horizon only", () => {
+  it("FOUNDATION_PRICING_PLANS exposes two DEC plans", () => {
     expect(FOUNDATION_PRICING_PLANS).toHaveLength(2);
     expect(FOUNDATION_PRICING_PLANS.map((plan) => plan.offerType)).toEqual([
       OFFER_TYPES_COMPTABLE.starter999_5,
@@ -192,17 +189,15 @@ describe("OFFER_TYPES_COMPTABLE", () => {
   });
 
   it("monthly1499 amount matches COMMERCIAL_COMPTABLE.monthlyPriceCents", () => {
-    // 2 199 € = 219 900 cents
-    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(219_900);
+    expect(COMMERCIAL_COMPTABLE.monthlyPriceCents).toBe(149_900);
   });
 
   it("pack3x1499 amount matches COMMERCIAL_COMPTABLE.pack3TotalCents", () => {
-    // 5 277,60 € = 527 760 cents (2199 × 3 − 20 %, rounded)
-    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(527_760);
+    expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
   });
 
-  it("starter999_5 amount matches COMMERCIAL_COMPTABLE.starterPriceCents", () => {
-    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(179_900);
+  it("starter999_5 amount matches COMMERCIAL_COMPTABLE.starterPriceCents (DEC alias)", () => {
+    expect(COMMERCIAL_COMPTABLE.starterPriceCents).toBe(149_900);
   });
 });
 

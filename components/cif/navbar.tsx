@@ -33,10 +33,16 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-4">
             <Link
-              href="/"
+              href="/comptable"
+              className="hidden lg:inline text-sm text-zinc-400 hover:text-white transition-colors"
+            >
+              Je suis comptable
+            </Link>
+            <Link
+              href="/courtier-assurance"
               className="hidden sm:inline text-sm text-zinc-400 hover:text-white transition-colors"
             >
-              Je suis un expert-comptable
+              Je suis courtier en assurance
             </Link>
             <CifMarketingPrimaryCta className="text-sm text-white bg-zinc-800 hover:bg-zinc-700 px-3.5 py-1.5 rounded-md border border-zinc-700 transition-colors" />
           </div>

@@ -28,16 +28,13 @@ export function Navbar() {
             <a href="#contact" className="text-sm text-zinc-400 hover:text-white transition-colors">
               Contact
             </a>
-            <Link href="/faq" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            <Link href="/comptable/faq" className="text-sm text-zinc-400 hover:text-white transition-colors">
               FAQ
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href="/conseil-financier"
-              className="hidden sm:inline text-sm text-zinc-400 hover:text-white transition-colors"
-            >
-              Je suis un conseiller financier
+            <Link href="/" className="hidden sm:inline text-sm text-zinc-400 hover:text-white transition-colors">
+              ← Accueil
             </Link>
             <MarketingBookingCta
               href={CALENDLY_ENTREPRISE_URL}

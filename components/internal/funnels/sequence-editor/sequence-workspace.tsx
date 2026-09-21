@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { SequenceDropdown, type SequenceEditorActions } from "./sequence-dropdown";
-import { SequenceHistoryTab } from "./sequence-history-tab";
 import { SequenceJobLogsSheet } from "./sequence-job-logs-sheet";
-import { SequenceTestDialog } from "./sequence-test-dialog";
+import { SequenceTestDebugPanel } from "./sequence-test-debug-panel";
 import type { SequenceEditorAdapter, SequenceStep } from "./types";
 
 type SequenceWorkspaceProps = {
@@ -16,6 +15,7 @@ type SequenceWorkspaceProps = {
   description?: string;
   adapter: SequenceEditorAdapter;
   campaignId?: string | null;
+  editorKind?: "booking" | "bypass" | "reply_agent" | string;
   defaultTestRecipientEmail?: string;
 };
 
@@ -24,14 +24,19 @@ export function SequenceWorkspace({
   description,
   adapter,
   campaignId,
+  editorKind = "booking",
   defaultTestRecipientEmail,
 }: SequenceWorkspaceProps) {
-  const [editorActions, setEditorActions] = useState<SequenceEditorActions | null>(null);
+  const [editorActions, setEditorActions] = useState<SequenceEditorActions | null>(
+    null,
+  );
   const [steps, setSteps] = useState<SequenceStep[]>([]);
-  const [testOpen, setTestOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"editor" | "ops">("editor");
   const [logsOpen, setLogsOpen] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<"resend" | "instantly">("resend");
+  const [selectedProvider, setSelectedProvider] = useState<"resend" | "instantly">(
+    "resend",
+  );
   const [historyRefresh, setHistoryRefresh] = useState(0);
 
   const handleRegisterActions = useCallback((actions: SequenceEditorActions) => {
@@ -56,7 +61,7 @@ export function SequenceWorkspace({
         ) : null}
         <p className="mt-2 text-xs text-muted-foreground">
           Fichier git :{" "}
-          <code>{`doc/legal-documentation/${adapter.niche}/sequences/${adapter.slug}.md`}</code>
+          <code>{`content/legal-documentation/${adapter.niche}/sequences/${adapter.slug}.md`}</code>
         </p>
       </div>
 
@@ -68,23 +73,23 @@ export function SequenceWorkspace({
         >
           {editorActions?.saving ? "Enregistrement…" : "Enregistrer"}
         </Button>
-        <Button type="button" variant="secondary" onClick={() => setTestOpen(true)}>
-          Tester
-        </Button>
         <Button
           type="button"
-          variant="outline"
-          disabled={!selectedJobId}
-          onClick={() => setLogsOpen(true)}
+          variant="secondary"
+          onClick={() => setActiveTab("ops")}
         >
-          Ouvrir les logs
+          Test &amp; Debug
         </Button>
       </div>
 
-      <Tabs defaultValue="editor" className="flex flex-col gap-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "editor" | "ops")}
+        className="flex flex-col gap-4"
+      >
         <TabsList>
           <TabsTrigger value="editor">Éditeur</TabsTrigger>
-          <TabsTrigger value="history">Historique</TabsTrigger>
+          <TabsTrigger value="ops">Test &amp; Debug</TabsTrigger>
         </TabsList>
         <TabsContent value="editor" className="mt-0">
           <SequenceDropdown
@@ -97,12 +102,18 @@ export function SequenceWorkspace({
             onStepsChange={setSteps}
           />
         </TabsContent>
-        <TabsContent value="history" className="mt-0">
-          <SequenceHistoryTab
+        <TabsContent value="ops" className="mt-0">
+          <SequenceTestDebugPanel
             slug={adapter.slug}
             niche={adapter.niche}
-            refreshToken={historyRefresh}
-            onSelectJob={(job) => {
+            provider={adapter.provider}
+            editorKind={editorKind}
+            campaignId={campaignId}
+            steps={steps}
+            defaultRecipientEmail={testRecipient}
+            historyRefresh={historyRefresh}
+            onHistoryRefresh={() => setHistoryRefresh((value) => value + 1)}
+            onOpenLogs={(job) => {
               setSelectedJobId(job.id);
               setSelectedProvider(job.provider);
               setLogsOpen(true);
@@ -110,18 +121,6 @@ export function SequenceWorkspace({
           />
         </TabsContent>
       </Tabs>
-
-      <SequenceTestDialog
-        open={testOpen}
-        onOpenChange={setTestOpen}
-        slug={adapter.slug}
-        niche={adapter.niche}
-        provider={adapter.provider}
-        campaignId={campaignId}
-        steps={steps}
-        defaultRecipientEmail={testRecipient}
-        onSent={() => setHistoryRefresh((value) => value + 1)}
-      />
 
       <SequenceJobLogsSheet
         open={logsOpen}

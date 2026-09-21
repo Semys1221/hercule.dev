@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { type KeyboardEvent, type ReactNode } from "react";
 
 import { PricingCard } from "@/components/funnels/widgets/pricing-card";
-import { PricingFlipCard } from "@/components/cif/pricing-flip-card";
-import type { OfferTypeComptable } from "@/lib/commercial/constants";
 import {
   CIF_PRICING_CTA,
   getCifPricingPlans,
   offerTypeForPlan,
+  type HubrisOfferType,
 } from "@/lib/commercial/cif-pricing";
 import type { PricingPlan } from "@/lib/site/pricing-types";
 import { PUBLIC_SITE_BOOKING_CLOSED } from "@/lib/constants";
@@ -20,15 +19,15 @@ import { cn } from "@/lib/utils";
 
 export type CifPricingGridProps = {
   variant?: "marketing" | "checkout";
-  selectedOffer?: OfferTypeComptable;
+  selectedOffer?: HubrisOfferType;
   ctaLabel?: string;
   ctaHref?: string;
   ctaLinkLabel?: string;
-  onSelectOffer?: (offerType: OfferTypeComptable) => void;
+  onSelectOffer?: (offerType: HubrisOfferType) => void;
   className?: string;
 };
 
-function isPlanSelected(plan: PricingPlan, selectedOffer?: OfferTypeComptable): boolean {
+function isPlanSelected(plan: PricingPlan, selectedOffer?: HubrisOfferType): boolean {
   if (!selectedOffer) {
     return false;
   }
@@ -82,36 +81,16 @@ export function CifPricingGrid({
   onSelectOffer,
   className,
 }: CifPricingGridProps) {
-  const { lite, starter, pack3, document } = getCifPricingPlans();
+  const { optionA, optionB, document } = getCifPricingPlans();
   const isCheckout = variant === "checkout";
 
   function handleSelect(planId: string) {
-    const plan = [lite, starter, pack3].find((entry) => entry.id === planId);
+    const plan = [optionA, optionB].find((entry) => entry.id === planId);
     if (!plan || !onSelectOffer) {
       return;
     }
     const offerType = offerTypeForPlan(plan);
     if (offerType) {
-      // #region agent log
-      if (isCheckout) {
-        fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Debug-Session-Id": "c39d02",
-          },
-          body: JSON.stringify({
-            sessionId: "c39d02",
-            runId: "post-fix",
-            hypothesisId: "pricing-ui",
-            location: "cif-pricing-grid.tsx:handleSelect",
-            message: "comptable pricing card selected",
-            data: { planId, offerType, previousOffer: selectedOffer ?? null },
-            timestamp: Date.now(),
-          }),
-        }).catch(() => {});
-      }
-      // #endregion
       onSelectOffer(offerType);
     }
   }
@@ -133,51 +112,28 @@ export function CifPricingGrid({
     ctaLinkLabel,
   };
 
-  const [flipCardShowingPack3, setFlipCardShowingPack3] = useState(false);
+  const optionASelected = isPlanSelected(optionA, selectedOffer);
+  const optionBSelected = isPlanSelected(optionB, selectedOffer);
 
-  const liteSelected = isPlanSelected(lite, selectedOffer);
-  const pack3Selected = isPlanSelected(pack3, selectedOffer);
-  const starterSelected = isPlanSelected(starter, selectedOffer);
-  const flipColumnSelected = liteSelected || pack3Selected;
-  const visibleFlipPlanId = flipCardShowingPack3 ? pack3.id : lite.id;
-
-  const flipCard = (
-    <PricingFlipCard
-      className="h-full"
-      onFlipChange={setFlipCardShowingPack3}
-      front={
-        <PricingCard
-          plan={{ ...lite, featured: isCheckout ? liteSelected : lite.featured }}
-          {...sharedCardProps}
-          ctaLabel={cardCtaLabel(lite)}
-          className="h-full transition-colors duration-200 group-hover/pricing-select:border-white/20"
-          onCtaClick={isCheckout ? () => handleSelect(lite.id) : undefined}
-        />
-      }
-      back={
-        <PricingCard
-          plan={{
-            ...pack3,
-            featured: isCheckout ? pack3Selected : true,
-          }}
-          {...sharedCardProps}
-          ctaLabel={cardCtaLabel(pack3)}
-          className="h-full transition-colors duration-200 group-hover/pricing-select:border-white/20"
-          showRecommendedBadge={false}
-          onCtaClick={isCheckout ? () => handleSelect(pack3.id) : undefined}
-        />
-      }
+  const optionACard = (
+    <PricingCard
+      plan={{ ...optionA, featured: isCheckout ? optionASelected : optionA.featured }}
+      index={0}
+      {...sharedCardProps}
+      ctaLabel={cardCtaLabel(optionA)}
+      className="h-full transition-colors duration-200 group-hover/pricing-select:border-white/20"
+      onCtaClick={isCheckout ? () => handleSelect(optionA.id) : undefined}
     />
   );
 
-  const starterCard = (
+  const optionBCard = (
     <PricingCard
-      plan={{ ...starter, featured: isCheckout ? starterSelected : starter.featured }}
+      plan={{ ...optionB, featured: isCheckout ? optionBSelected : optionB.featured }}
       index={1}
       {...sharedCardProps}
-      ctaLabel={cardCtaLabel(starter)}
+      ctaLabel={cardCtaLabel(optionB)}
       className="h-full transition-colors duration-200 group-hover/pricing-select:border-white/20"
-      onCtaClick={isCheckout ? () => handleSelect(starter.id) : undefined}
+      onCtaClick={isCheckout ? () => handleSelect(optionB.id) : undefined}
     />
   );
 
@@ -190,23 +146,23 @@ export function CifPricingGrid({
     >
       {isCheckout ? (
         <SelectablePricingShell
-          selected={flipColumnSelected}
-          onSelect={() => handleSelect(visibleFlipPlanId)}
+          selected={optionASelected}
+          onSelect={() => handleSelect(optionA.id)}
         >
-          {flipCard}
+          {optionACard}
         </SelectablePricingShell>
       ) : (
-        flipCard
+        optionACard
       )}
       {isCheckout ? (
         <SelectablePricingShell
-          selected={starterSelected}
-          onSelect={() => handleSelect(starter.id)}
+          selected={optionBSelected}
+          onSelect={() => handleSelect(optionB.id)}
         >
-          {starterCard}
+          {optionBCard}
         </SelectablePricingShell>
       ) : (
-        starterCard
+        optionBCard
       )}
     </div>
   );

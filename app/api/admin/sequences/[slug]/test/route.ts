@@ -71,24 +71,6 @@ export async function POST(
     }
 
     const category = resolveBookingCategory(sequence, parsed.data.niche);
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "cf0893",
-      },
-      body: JSON.stringify({
-        sessionId: "cf0893",
-        runId: "post-fix",
-        hypothesisId: "H5",
-        location: "app/api/admin/sequences/[slug]/test/route.ts:booking",
-        message: "booking sequence test category",
-        data: { slug, niche: parsed.data.niche, category },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     if (!isLeadCategory(category)) {
       return NextResponse.json({ error: "Unsupported category" }, { status: 400 });
     }
@@ -128,7 +110,7 @@ export async function POST(
         subject: parsed.data.subject,
         bodyHtml: parsed.data.body,
       });
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, jobId: null });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Test send failed";
       return NextResponse.json({ error: message }, { status: 500 });
@@ -147,7 +129,7 @@ export async function POST(
         recipientEmail: parsed.data.recipientEmail,
         promptSnapshot: parsed.data.body,
       });
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, jobId: null });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Test send failed";
       return NextResponse.json({ error: message }, { status: 500 });

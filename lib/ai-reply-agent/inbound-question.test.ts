@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   inboundClaimsBookingDone,
+  inboundIsPoliteProposalAcknowledgment,
   inboundIsPureAcknowledgment,
   inboundIsPureInterestSignal,
+  inboundLooksLikePartnerDueDiligence,
+  inboundLooksLikeProspectQualityObjection,
   inboundLooksLikePhoneRequest,
   inboundLooksLikeQuestion,
   inboundLooksLikeSchedulingAnswer,
@@ -149,6 +152,32 @@ describe("inboundShowsConfusion", () => {
   });
 });
 
+describe("inboundIsPoliteProposalAcknowledgment", () => {
+  it("detects merci pour cette proposition", () => {
+    expect(inboundIsPoliteProposalAcknowledgment("Merci pour cette proposition.")).toBe(
+      true,
+    );
+  });
+
+  it("returns false for explicit decline", () => {
+    expect(
+      inboundIsPoliteProposalAcknowledgment("Non merci, pas pour nous."),
+    ).toBe(false);
+  });
+
+  it("returns false when interest is explicit", () => {
+    expect(
+      inboundIsPoliteProposalAcknowledgment(
+        "Merci pour cette proposition, je suis intéressé.",
+      ),
+    ).toBe(false);
+  });
+
+  it("returns false for top merci without proposal mention", () => {
+    expect(inboundIsPoliteProposalAcknowledgment("Top merci")).toBe(false);
+  });
+});
+
 describe("inboundIsPureAcknowledgment", () => {
   it("detects top merci", () => {
     expect(inboundIsPureAcknowledgment("Top merci")).toBe(true);
@@ -178,6 +207,26 @@ describe("inboundNeedsFollowUp", () => {
     expect(inboundNeedsFollowUp("Jeudi 15h ou vendredi 16h")).toBe(true);
     expect(
       inboundNeedsFollowUp("Je vous invite à me contacter au 07 80 99 48 70."),
+    ).toBe(true);
+  });
+
+  it("allows grok path for polite proposal thank-you", () => {
+    expect(inboundNeedsFollowUp("Merci pour cette proposition.")).toBe(true);
+  });
+
+  it("allows grok path for partial-answer complaints", () => {
+    expect(
+      inboundNeedsFollowUp(
+        "Vous n'avez répondu qu'à une partie de mes interrogations.",
+      ),
+    ).toBe(true);
+  });
+
+  it("allows grok path for Calendly host mismatch", () => {
+    expect(
+      inboundNeedsFollowUp(
+        "J'annule car ce n'est pas vous mais Evan sur Calendly.",
+      ),
     ).toBe(true);
   });
 });
@@ -264,5 +313,41 @@ describe("inboundLooksLikeSchedulingAnswer", () => {
 
 > Merci pour votre message`;
     expect(inboundLooksLikeSchedulingAnswer(text)).toBe(true);
+  });
+});
+
+describe("inboundLooksLikeProspectQualityObjection", () => {
+  const PAPPERS_EXCERPT = `Lorsque vous indiquez que les restaurants sont des prospects identifiés et qualifiés via Pappers,
+pouvez-vous me confirmer qu'ils ont été contactés directement par Hercule et qu'ils ont expressément confirmé
+rechercher actuellement un nouveau cabinet d'expertise comptable, et qu'il ne s'agit pas uniquement d'entreprises
+identifiées à partir de signaux issus de Pappers/Sirene ?
+Pouvez-vous également me communiquer le tarif HT de votre offre, sans prise de rendez-vous préalable ?`;
+
+  it("detects Pappers / qualification skepticism", () => {
+    expect(inboundLooksLikeProspectQualityObjection(PAPPERS_EXCERPT)).toBe(
+      true,
+    );
+  });
+
+  it("ignores a single pricing question", () => {
+    expect(
+      inboundLooksLikeProspectQualityObjection("Quelle est votre commission ?"),
+    ).toBe(false);
+  });
+});
+
+describe("inboundLooksLikePartnerDueDiligence", () => {
+  it("detects a structured partnership questionnaire", () => {
+    const text = `Le projet peut m'intéresser. J'aurais besoin de précisions.
+Quel est le cadre réglementaire ? CIF ou ORIAS ?
+Comment sont organisées les mises en relation, sont-elles exclusives ?
+Quel est le modèle économique ?`;
+    expect(inboundLooksLikePartnerDueDiligence(text)).toBe(true);
+  });
+
+  it("ignores a single pricing question", () => {
+    expect(
+      inboundLooksLikePartnerDueDiligence("Quelle est votre commission ?"),
+    ).toBe(false);
   });
 });

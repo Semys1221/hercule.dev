@@ -13,9 +13,9 @@ Tu écris à un **chirurgien-dentiste / dirigeant de cabinet dentaire**.
 
 ## Contexte
 
-- Les chirurgiens-dentistes ont souvent un agenda rempli et des honoraires élevés, mais peinent à comprendre pourquoi il reste si peu en fin de mois.
-- Objectif : identifier des leviers pour augmenter le bénéfice réellement conservé par le cabinet.
-- CTA : `{reservation_jum_link}` (« Réserver un créneau »).
+- Les cotisations bloquent une partie des honoraires ; des leviers réglementaires permettent de réduire la taxe à **30 % à 41 %** avant le prélèvement final.
+- Éligibilité vérifiée selon les critères **DGFiP** ; première étude à distance avec un consultant agréé par l'**AMF**.
+- CTA : `{reservation_jum_link}` (« Réserver votre échange »).
 
 ## Règles
 

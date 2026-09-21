@@ -2,6 +2,7 @@ import {
   findLeadByEmailInCampaign,
   findLeadByEmailInList,
 } from "@/lib/instantly-bypass/client";
+import { resolveJumVerticalByCampaignId } from "@/lib/admin/niches/jum-verticals";
 import {
   createLinkTrackingClient,
   findLeadsByEmails,
@@ -96,10 +97,16 @@ export async function provisionLeadsByEmails(params: {
   listId: string;
   campaignId: string;
   category: LeadCategory;
+  jumSegment?: string | null;
 }): Promise<ProvisionLeadsByEmailsResult> {
   const listId = params.listId.trim();
   const campaignId = params.campaignId.trim();
   const category = params.category;
+  const jumSegment =
+    params.jumSegment?.trim() ||
+    (category === "jum"
+      ? resolveJumVerticalByCampaignId(campaignId)?.segment ?? null
+      : null);
   const normalizedEmails = normalizeProvisionEmails(params.emails);
   const apiKey = getInstantlyApiKey();
   const client = createLinkTrackingClient();
@@ -137,6 +144,7 @@ export async function provisionLeadsByEmails(params: {
     campaignId,
     category,
     fromCampaign: false,
+    jumSegment,
   });
 
   const customVariablesByEmail = { ...executed.customVariablesByEmail };
@@ -151,6 +159,15 @@ export async function provisionLeadsByEmails(params: {
       email,
       existing.lead.statut ?? "NOTBOOKED",
       category,
+      category === "jum"
+        ? {
+            jumSegment:
+              jumSegment ||
+              (typeof existing.lead.profile?.segment === "string"
+                ? existing.lead.profile.segment
+                : null),
+          }
+        : undefined,
     );
   }
 

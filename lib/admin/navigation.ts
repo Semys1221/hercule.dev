@@ -262,7 +262,7 @@ export function managementHref(niche: Niche): string {
   return `/internal/funnels/management/${niche}`;
 }
 
-/** @deprecated Legal docs live in doc/legal-documentation — redirects to bookings. */
+/** @deprecated Legal docs live in content/legal-documentation — redirects to bookings. */
 export function legalHref(niche: Niche, _doc?: LegalDocSegment): string {
   return bookingsSequencesHref(niche);
 }
@@ -348,4 +348,20 @@ export function databaseHref(): string {
 
 export function deliverabilityHref(): string {
   return "/internal/deliverability";
+}
+
+export function saasClientsHref(): string {
+  return "/internal/saas/clients";
+}
+
+export function saasInboxQueueHref(): string {
+  return "/internal/saas/inbox-queue";
+}
+
+export function saasPoolHref(): string {
+  return "/internal/saas/pool";
+}
+
+export function saasRouterHref(): string {
+  return "/internal/saas";
 }

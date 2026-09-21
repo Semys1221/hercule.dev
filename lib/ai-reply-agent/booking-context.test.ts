@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   formatPendingBookingConfirmationContext,
+  formatSoftRdvFollowUpContext,
   inboundNeedsBookingConfirmation,
   resolveBookingContext,
 } from "./booking-context";
@@ -93,5 +94,17 @@ describe("resolveBookingContext", () => {
     });
 
     expect(context).toBeNull();
+  });
+
+  it("returns soft RDV follow-up for polite proposal thank-you", async () => {
+    const context = await resolveBookingContext({
+      campaignId: "camp-1",
+      inboundText: "Merci pour cette proposition.",
+      leadEmail: "snpconseilsetaccompagnements@gmail.com",
+      leadName: "SNP Conseils",
+      interestStatus: 0,
+    });
+
+    expect(context).toBe(formatSoftRdvFollowUpContext());
   });
 });

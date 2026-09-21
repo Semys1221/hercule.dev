@@ -209,8 +209,108 @@ export type InstantlyCampaignStep = {
 export type InstantlyCampaign = {
   id?: string;
   name?: string;
+  status?: number;
   sequences?: Array<{ steps?: InstantlyCampaignStep[] }>;
 };
+
+export type InstantlyCampaignSummary = {
+  id?: string;
+  name?: string;
+  status?: number;
+};
+
+type CampaignListPage = {
+  items?: InstantlyCampaignSummary[];
+  next_starting_after?: string;
+};
+
+/** Instantly campaign status: 0=Draft, 1=Active, 2=Paused, 3=Completed */
+export const INSTANTLY_CAMPAIGN_STATUS_ACTIVE = 1;
+
+export async function listActiveCampaigns(
+  apiKey: string,
+  options: { maxPages?: number } = {},
+): Promise<InstantlyCampaignSummary[]> {
+  const maxPages = options.maxPages ?? 100;
+  const campaigns: InstantlyCampaignSummary[] = [];
+  let startingAfter: string | null = null;
+  let pages = 0;
+
+  while (pages < maxPages) {
+    pages += 1;
+    const params = new URLSearchParams({
+      limit: "100",
+      status: String(INSTANTLY_CAMPAIGN_STATUS_ACTIVE),
+    });
+    if (startingAfter) {
+      params.set("starting_after", startingAfter);
+    }
+
+    const page = await instantlyFetch<CampaignListPage>(
+      apiKey,
+      `/campaigns?${params.toString()}`,
+      { method: "GET" },
+    );
+
+    const items = page.items ?? [];
+    if (items.length === 0) break;
+
+    campaigns.push(...items);
+
+    const next =
+      page.next_starting_after ??
+      (items.length > 0 ? items[items.length - 1]?.id ?? null : null);
+    if (!next || items.length < 100) break;
+    startingAfter = next;
+  }
+
+  return campaigns;
+}
+
+export async function listActiveCampaignIds(apiKey: string): Promise<string[]> {
+  const campaigns = await listActiveCampaigns(apiKey);
+  return campaigns
+    .map((campaign) => campaign.id?.trim())
+    .filter((id): id is string => Boolean(id));
+}
+
+export async function pauseCampaign(
+  apiKey: string,
+  campaignId: string,
+): Promise<void> {
+  await instantlyFetch(apiKey, `/campaigns/${campaignId.trim()}/pause`, {
+    method: "POST",
+  });
+}
+
+export async function pauseCampaigns(
+  apiKey: string,
+  campaignIds: string[],
+): Promise<{ paused: string[]; errors: string[] }> {
+  const paused: string[] = [];
+  const errors: string[] = [];
+
+  for (const campaignId of campaignIds) {
+    try {
+      await pauseCampaign(apiKey, campaignId);
+      paused.push(campaignId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      errors.push(`${campaignId}: ${message}`);
+    }
+  }
+
+  return { paused, errors };
+}
+
+export async function activateCampaign(
+  apiKey: string,
+  campaignId: string,
+): Promise<void> {
+  await instantlyFetch(apiKey, `/campaigns/${campaignId.trim()}/activate`, {
+    method: "POST",
+  });
+}
 
 export async function fetchCampaign(
   apiKey: string,

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   CalendarCheck,
   LayoutDashboard,
+  Network,
   TrendingUp,
   Users2,
   type LucideIcon,
@@ -17,6 +18,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -29,6 +31,10 @@ import {
   clientsHubHref,
   managementHref,
   nicheFromPathname,
+  saasClientsHref,
+  saasInboxQueueHref,
+  saasPoolHref,
+  saasRouterHref,
   sessionHubHref,
   type Niche,
 } from "@/lib/admin/navigation";
@@ -66,6 +72,23 @@ const PARCOURS_MODULES: Array<{
     icon: LayoutDashboard,
     href: managementHref,
   },
+];
+
+const SAAS_MODULES: Array<{
+  id: string;
+  label: string;
+  href: string;
+  icon: LucideIcon;
+}> = [
+  { id: "saas-clients", label: "Clients", href: saasClientsHref(), icon: Users2 },
+  {
+    id: "saas-inbox",
+    label: "Inbox queue",
+    href: saasInboxQueueHref(),
+    icon: LayoutDashboard,
+  },
+  { id: "saas-pool", label: "Pool", href: saasPoolHref(), icon: Network },
+  { id: "saas-router", label: "Router", href: saasRouterHref(), icon: TrendingUp },
 ];
 
 function isPathActive(pathname: string, href: string): boolean {
@@ -187,6 +210,31 @@ export function InternalAppSidebar() {
                       tooltip={module.label}
                     >
                       <Link href={href}>
+                        <Icon className="size-4" />
+                        <span>{module.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>SaaS autonome</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {SAAS_MODULES.map((module) => {
+                const Icon = module.icon;
+                return (
+                  <SidebarMenuItem key={module.id}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isPathActive(pathname, module.href)}
+                      tooltip={module.label}
+                    >
+                      <Link href={module.href}>
                         <Icon className="size-4" />
                         <span>{module.label}</span>
                       </Link>

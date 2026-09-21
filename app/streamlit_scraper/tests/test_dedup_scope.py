@@ -18,7 +18,7 @@ from core_logic import (  # noqa: E402
 
 
 def test_vol_config_list_only_dedup() -> None:
-    config = load_config("cabinets_expertise_comptable_vol", require_keys=False)
+    config = load_config("cabinets_expertise_comptable_fresh_geo", require_keys=False)
     assert scrape_dedup_scope(config) == "list_only"
     assert scrape_dedup_list_ids(config)
     assert scrape_dedup_campaign_ids(config) == []

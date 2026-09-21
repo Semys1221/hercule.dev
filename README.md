@@ -10,7 +10,7 @@ Before editing Next.js code (`app/`, `components/`, `lib/`, `emails/`, `content/
 2. [`.cursor/skills/hercule-nextjs/SKILL.md`](.cursor/skills/hercule-nextjs/SKILL.md) (router)
 3. The domain sub-skill for your area (internal, marketing, sales-funnel, dashboard, crm, communication, product)
 
-Canon: [doc/README.md](doc/README.md) reading order for business rules. Streamlit tools: [hercule-streamlit](.cursor/skills/hercule-streamlit/SKILL.md).
+Canon: [.cursor/skills/hercule-tech-spec](.cursor/skills/hercule-tech-spec/SKILL.md) + Notion Hercule Canon. Streamlit tools: [hercule-streamlit](.cursor/skills/hercule-streamlit/SKILL.md).
 
 ## Development
 

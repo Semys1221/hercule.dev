@@ -64,10 +64,10 @@ def test_batch_duplicate_saturated() -> None:
     ) is False
 
 
-def test_vol_config_duplicate_rate_and_taxonomy() -> None:
+def test_fresh_geo_config_duplicate_rate_and_taxonomy() -> None:
     from config_loader import load_config
 
-    config = load_config("cabinets_expertise_comptable_vol", require_keys=False)
+    config = load_config("cabinets_expertise_comptable_fresh_geo", require_keys=False)
     assert config.get("DUPLICATE_GEO_ADVANCE_RATE") == 0.30
     assert "tax advisor" in (config.get("TAXONOMY_INCLUDED_KEYWORDS") or [])
     assert config.get("OUTSCRAPER_ENRICHMENT") == ["leads_n_contacts"]

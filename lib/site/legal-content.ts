@@ -3,18 +3,20 @@ import { join } from "path"
 
 import {
   cgvMarkdownPath,
+  getSharedCvgMarkdownPath,
   sharedLegalDocPath,
+  TECH_CONTENT_DIR,
   type LegalDocumentationNiche,
 } from "@/lib/legal-documentation/paths"
 
-const DOC_DIR = join(process.cwd(), "doc/tech-stack")
+const DOC_DIR = TECH_CONTENT_DIR
 
-export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif" | "jum"
+export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif" | "jum" | "assurance"
 
 export const CVG_DOC_FILES = {
   onboarding: "cvg_onboarding.md",
   "site-sync": "cvg_site-sync.md",
-  "sla-client": "capacity/03-sla-client.md",
+  "sla-client": "sla-client.md",
   "constants-commercial": "constants-commercial.md",
 } as const
 
@@ -55,7 +57,12 @@ export function getCvgDocMarkdown(slug: CvgDocSlug): string {
 }
 
 export function getCvgMarkdown(audience: LegalAudience = "comptable"): string {
-  return readFileSync(cgvMarkdownPath(audience as LegalDocumentationNiche), "utf-8")
+  // Canon v2: single shared CGV (sections #dec · #ias · #cif). Niche path kept for fallback.
+  try {
+    return readFileSync(getSharedCvgMarkdownPath(), "utf-8")
+  } catch {
+    return readFileSync(cgvMarkdownPath(audience as LegalDocumentationNiche), "utf-8")
+  }
 }
 
 export function getMentionsLegalesMarkdown(): string {
@@ -67,17 +74,32 @@ export function getConfidentialiteMarkdown(): string {
 }
 
 export {
+  isAssuranceNichePreset,
   isCifNichePreset,
   isComptableNichePreset,
   legalAudienceFromNichePreset,
 } from "@/lib/site/niche-preset"
 
+function withPartnerDueDiligence(
+  audience: LegalAudience,
+  body: string,
+): string {
+  if (audience !== "comptable" && audience !== "cif" && audience !== "assurance") {
+    return body
+  }
+  const shared = readDocFile("ai-reply-knowledge-partner-dd-shared.md")
+  return `${body.trim()}\n\n${shared.trim()}\n`
+}
+
 export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "comptable"): string {
   if (audience === "comptable") {
-    return readDocFile("ai-reply-knowledge-comptable.md")
+    return withPartnerDueDiligence(audience, readDocFile("ai-reply-knowledge-comptable.md"))
   }
   if (audience === "cif") {
-    return readDocFile("ai-reply-knowledge-cif.md")
+    return withPartnerDueDiligence(audience, readDocFile("ai-reply-knowledge-cif.md"))
+  }
+  if (audience === "assurance") {
+    return withPartnerDueDiligence(audience, readDocFile("ai-reply-knowledge-ias.md"))
   }
   if (audience === "jum") {
     return readDocFile("ai-reply-knowledge-jum.md")

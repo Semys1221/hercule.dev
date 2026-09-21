@@ -14,7 +14,8 @@ import { BlocGaranties } from "./bloc-garanties"
 import { BandeAudit } from "./bande-audit"
 import { Footer } from "./footer"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/demandes-data"
-import { getMarketingCopy, MARKETING_SECONDARY_CTA } from "@/lib/site/marketing-copy"
+import { getMarketingCopy } from "@/lib/site/marketing-copy"
+import { CifMarketingPrimaryCta } from "@/components/cif/cif-marketing-cta"
 
 interface AccueilSceneProps {
   demandes: DemandeContrat[]
@@ -86,12 +87,7 @@ export function AccueilScene({ demandes, teaser }: AccueilSceneProps) {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="mt-8 flex flex-wrap items-center gap-6"
               >
-                <a
-                  href="#demandes"
-                  className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm"
-                >
-                  {MARKETING_SECONDARY_CTA}
-                </a>
+                <CifMarketingPrimaryCta className="px-5 py-2.5 bg-white text-zinc-900 font-medium rounded-lg hover:bg-zinc-100 transition-colors text-sm" />
               </motion.div>
             </div>
           </div>

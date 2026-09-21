@@ -30,9 +30,25 @@ for (const niche of ALL_NICHES) {
 }
 
 assert.equal(clientsSequenceTabsForNiche("agence").length, 6);
-assert.equal(clientsSequenceTabsForNiche("comptable").length, 6);
+assert.equal(clientsSequenceTabsForNiche("comptable").length, 8);
 assert.equal(clientsSequenceTabsForNiche("cif").length, 6);
 assert.equal(clientsSequenceTabsForNiche("entreprise").length, 7);
+
+const freeTrial = CLIENTS_SEQUENCE_TABS.find((tab) => tab.id === "free-trial");
+assert.ok(freeTrial);
+assert.equal(isClientsSequenceTabLive(freeTrial, "comptable"), true);
+assert.equal(isClientsSequenceTabLive(freeTrial, "agence"), false);
+assert.equal(resolveClientsSequenceEntry(freeTrial, "comptable")?.slug, "free-trial");
+
+const freeTrialStarted = CLIENTS_SEQUENCE_TABS.find(
+  (tab) => tab.id === "free-trial-started",
+);
+assert.ok(freeTrialStarted);
+assert.equal(isClientsSequenceTabLive(freeTrialStarted, "comptable"), true);
+assert.equal(
+  resolveClientsSequenceEntry(freeTrialStarted, "comptable")?.slug,
+  "free-trial-started",
+);
 
 const onboarding = CLIENTS_SEQUENCE_TABS.find((tab) => tab.id === "onboarding");
 assert.ok(onboarding);

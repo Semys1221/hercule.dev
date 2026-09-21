@@ -63,7 +63,7 @@ function checkFiles(): CheckResult[] {
     "public/reservation-jum.html",
     "public/confirm-reservation-jum.html",
     "app/streamlit_reply_agent/prompts/jum_buyer.md",
-    "doc/tech-stack/ai-reply-knowledge-jum.md",
+    "content/tech/ai-reply-knowledge-jum.md",
     "content/faq/jum.json",
     "scripts/crm/provision_jum.py",
     "app/streamlit_scraper/configs/jum_advisory_config.py",
@@ -128,6 +128,11 @@ function checkSegmentResolver(): CheckResult[] {
     { segment: "restaurant", expected: "interested_email1_restaurant" },
     { segment: "b2b", expected: "interested_email1_b2b" },
     { segment: "dentiste", expected: "interested_email1_dentiste" },
+    { segment: "medecin", expected: "interested_email1_medecin" },
+    { segment: "kine", expected: "interested_email1_kine" },
+    { segment: "avocat", expected: "interested_email1_avocat" },
+    { segment: "architecte", expected: "interested_email1_architecte" },
+    { segment: "veterinaire", expected: "interested_email1_veterinaire" },
     { segment: "unknown", expected: "interested_email1" },
   ];
   const results: CheckResult[] = [];

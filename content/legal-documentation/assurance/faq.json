@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "audience": "assurance",
+  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "entries": [
+    {
+      "id": "faq-as-001",
+      "question": "D'où proviennent les demandes ?",
+      "answer": "Hercule détecte des signaux d'intention chez des dirigeants TPE/PME BTP (3–15 salariés) confrontés à des enjeux IFC, prévoyance lourde et protection sociale. Après qualification live, attribution exclusive au cabinet ORIAS compatible.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-002",
+      "question": "Qui peut rejoindre Hercule Assurance ?",
+      "answer": "Cabinets de courtage en assurance / prévoyance (ORIAS) avec bande passante pour absorber de nouveaux projets. Éligibilité confirmée à l'audit de compatibilité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-003",
+      "question": "Combien coûte Hercule ?",
+      "answer": "Hercule Hubris : Option A 4 000 € flat (trimestre) ou Option B 1 800 €/mois (engagement 3 mois) — 15 à 20 bilans lourds / trimestre, PME BTP 3–15 salariés ou BNC médicaux, visioconférence nationale, 0 % de commission. Aucune garantie de signature ni de commissions upfront. Détail : hercule.dev/cvg#hubris.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-004",
+      "question": "Comment se passe l'attribution ?",
+      "answer": "Après souscription, Calendly Pro et Zoom Pro sont provisionnés. Les crédits sont consommés à la planification du RDV.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-005",
+      "question": "Mon prospect ne s'est pas présenté (no-show)",
+      "answer": "L'attribution n'est pas consommée. Remplacement sous 14 jours ouvrés.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-006",
+      "question": "Qui êtes-vous ?",
+      "answer": "Hercule est un groupement d'entrepreneurs dirigé par Evan Sinclair. Mentions légales : hercule.dev/mentions-legales."
+    },
+    {
+      "id": "faq-as-007",
+      "question": "Y a-t-il une garantie de signature ?",
+      "answer": "Non. Obligation de moyens sur les crédits uniquement.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-008",
+      "question": "Les demandes sont-elles exclusives ?",
+      "answer": "Oui — une demande, un partenaire. Pas de marketplace.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-009",
+      "question": "Ai-je un délai de rétractation ?",
+      "answer": "4 jours calendaires tant que l'activation n'a pas démarré.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-010",
+      "question": "Retard de livraison — que faire ?",
+      "answer": "Délai de grâce 7 jours. Contacter contact@hercule.dev avant dispute Stripe.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-011",
+      "question": "Faut-il être ORIAS ou CIF ?",
+      "answer": "Cabinet de courtage immatriculé ORIAS (courtier COA). Le statut CIF n'est pas exigé. Hercule s'adresse aux courtiers indépendants, pas aux mandataires réseau.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-012",
+      "question": "Qui porte la responsabilité du conseil ?",
+      "answer": "Le courtier ORIAS, au titre de son devoir de conseil. Hercule ne sélectionne ni ne commercialise de contrats d'assurance.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-013",
+      "question": "Quels contrats sont concernés ?",
+      "answer": "Prévoyance, protection sociale, Madelin, IFC et santé collective, selon l'offre ORIAS du cabinet. Hercule n'impose aucun assureur ni aucun produit.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-014",
+      "question": "Comment les prospects sont-ils qualifiés ?",
+      "answer": "Signaux d'intention (passifs sociaux, prévoyance, protection sociale) puis Live Qualification, avant attribution exclusive.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-015",
+      "question": "Comment se déroule le premier rendez-vous ?",
+      "answer": "Visioconférence planifiée entre le dirigeant et le cabinet. Hercule n'est pas présent à cet échange de mission.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-016",
+      "question": "Y a-t-il une commission ou une rétrocession ?",
+      "answer": "Non. 0 % sur les honoraires et commissions produits. Le dirigeant ne paie rien à Hercule.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-017",
+      "question": "Faut-il signer une convention avant la mise en relation ?",
+      "answer": "La relation Hercule ↔ cabinet est régie par les CGV Hercule Hubris. La relation avec le dirigeant est le contrat du courtier. Présentation et conditions au briefing collectif.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-as-018",
+      "question": "Une assurance RC Pro est-elle exigée ?",
+      "answer": "La RC Pro relève de l'obligation professionnelle du courtier. Hercule ne souscrit pas de police pour le compte du partenaire.",
+      "cvgLink": false
+    }
+  ]
+}

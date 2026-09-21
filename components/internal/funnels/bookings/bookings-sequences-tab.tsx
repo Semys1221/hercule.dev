@@ -97,6 +97,7 @@ function SequenceTabPanel({
       description={tab.description ?? sequence.description}
       adapter={adapter}
       campaignId={campaignId}
+      editorKind={sequence.editorKind}
     />
   );
 }

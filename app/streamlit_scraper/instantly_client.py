@@ -1301,7 +1301,11 @@ async def push_csv_to_instantly(
 
     push_stats = await push_leads_to_list(api_key, list_id, rows, log_cb=log_cb)
 
-    if provision_config and provision_config.get("INSTANTLY_PROVISION_LINKS"):
+    if (
+        provision_config
+        and provision_config.get("INSTANTLY_PROVISION_LINKS")
+        and int(push_stats.get("pushed") or 0) > 0
+    ):
         batch_emails = [
             str(row.get("Email") or "").strip().lower()
             for row in rows

@@ -7,6 +7,7 @@ import {
   getComptablePaymentDetails,
 } from "@/lib/dashboard/payments";
 import { loadDeliveryContext } from "@/lib/dashboard/load-delivery-context";
+import { loadSaasDashboardKpi } from "@/lib/dashboard/load-saas-kpi";
 import { buildDashboardBleedContext } from "@/lib/dashboard/bleed-context";
 import { isFormSparse, resolvePreviewForm } from "@/lib/dashboard/resolve-preview-form";
 import { ensureSalesTestSessionLead } from "@/lib/admin/funnels/ensure-sales-test-session";
@@ -361,6 +362,8 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const timeline =
       milestones.length > 0 ? milestones : timelineFromProfile(profile);
 
+    const saasKpi = await loadSaasDashboardKpi(client, lead.id);
+
     return NextResponse.json({
       slug: lead.slug,
       email: lead.email,
@@ -385,6 +388,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
       paymentSchedule,
       retraction,
       bleedContext,
+      saasKpi,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Dashboard fetch failed";

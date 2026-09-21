@@ -71,6 +71,12 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "proposition_ludovic_config_ready",
   "proposition_ludovic_rdv_reminder",
   "proposition_ludovic_rdv_final",
+  "free_trial_1",
+  "free_trial_2",
+  "free_trial_3",
+  "free_trial_started_1",
+  "free_trial_started_2",
+  "free_trial_started_3",
 ];
 
 const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
@@ -132,7 +138,8 @@ export function isProductBookingEmailType(emailType: BookingEmailType): boolean 
     emailType === "payment_notification_client" ||
     emailType.startsWith("comptable_acquisition_") ||
     emailType.startsWith("proposition_ludovic_") ||
-    emailType.startsWith("conference_invite")
+    emailType.startsWith("conference_invite") ||
+    emailType.startsWith("free_trial")
   );
 }
 
@@ -289,6 +296,8 @@ export function buildBookingEmailVars(params: {
   trackingNumber?: string;
   rdvRangeLabel?: string;
   reservationCifLink?: string;
+  billingPortalLink?: string;
+  checkoutTrialLink?: string;
 }): Record<string, string> {
   const { date, heure } = formatMeetingDateTime(params.scheduledAt);
   const confirmUrl = params.confirmUrl.trim();
@@ -317,6 +326,8 @@ export function buildBookingEmailVars(params: {
     trackingNumber: params.trackingNumber?.trim() ?? "",
     rdvRangeLabel: params.rdvRangeLabel?.trim() ?? "",
     reservation_cif_link: params.reservationCifLink?.trim() ?? "",
+    billingPortalLink: params.billingPortalLink?.trim() ?? "",
+    checkoutTrialLink: params.checkoutTrialLink?.trim() ?? "",
   };
   if (params.emailType === "immediate") {
     delete vars.confirmUrl;
@@ -516,6 +527,8 @@ export async function renderCustomBookingEmail(params: {
   trackingNumber?: string;
   rdvRangeLabel?: string;
   reservationCifLink?: string;
+  billingPortalLink?: string;
+  checkoutTrialLink?: string;
 }): Promise<RenderedBookingEmail> {
   const vars = buildBookingEmailVars({
     firstName: params.firstName,
@@ -536,6 +549,8 @@ export async function renderCustomBookingEmail(params: {
     trackingNumber: params.trackingNumber,
     rdvRangeLabel: params.rdvRangeLabel,
     reservationCifLink: params.reservationCifLink,
+    billingPortalLink: params.billingPortalLink,
+    checkoutTrialLink: params.checkoutTrialLink,
   });
 
   const reservationLink = vars.reservation_cif_link?.trim() ?? "";

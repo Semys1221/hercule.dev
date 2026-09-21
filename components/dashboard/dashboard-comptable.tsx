@@ -18,10 +18,7 @@ import { ComptableOnboardingForm } from "./comptable-onboarding-form";
 import { OnboardingComptableWizard } from "./onboarding-comptable-wizard";
 import { StepEmbeddedCheckoutComptable } from "./steps/step-embedded-checkout-comptable";
 import { comptableOfferLabel } from "@/lib/commercial/comptable-pricing";
-import {
-  parseSlidersOfferQuery,
-  slidersOfferToOfferType,
-} from "@/lib/payments/cabinet-checkout";
+import { parseComptableCheckoutOfferQuery } from "@/lib/payments/cabinet-checkout";
 
 import { RetractionWaiverCard } from "./retraction-waiver-card";
 
@@ -40,11 +37,10 @@ export function DashboardComptable({
   checkoutQuery,
   offerQuery,
 }: DashboardComptableProps) {
-  const deepLinkOffer = parseSlidersOfferQuery(offerQuery);
-  const deepLinkCheckout = checkoutQuery === "1";
-  const preselectedOfferType = deepLinkOffer
-    ? slidersOfferToOfferType(deepLinkOffer)
-    : null;
+  const preselectedOfferType = parseComptableCheckoutOfferQuery(offerQuery);
+  const deepLinkCheckout =
+    checkoutQuery === "1" ||
+    preselectedOfferType === "monthly_1499_trial";
   const displayName = data.firstName ?? data.company ?? "votre cabinet";
   const offerType = data.comptable?.offerType ?? data.offerType;
 

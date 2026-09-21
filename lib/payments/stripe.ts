@@ -33,8 +33,8 @@ export function getStarterOfferType(): string {
 
 /**
  * Canonical Stripe price IDs for agence 50/50 checkout.
+ * @deprecated Canon v3 — these prices are archived (active:false) in live Stripe.
  * Lookup keys: agence_starter_998_{deposit|balance}, agence_growth_1498_{deposit|balance}.
- * Env vars override these defaults (see doc/tech-stack/modules/payments-stripe.md).
  */
 const AGENCE_STRIPE_PRICE_IDS = {
   starterDeposit: "price_1UDf2wBd01AMeiaQvafqpUoc",
@@ -72,18 +72,45 @@ export function getAgenceGrowthBalancePriceId(): string {
 }
 
 /**
- * Canonical Stripe price IDs for comptable checkout.
- * Lookup keys (recurring monthly, legacy names): comptable_lite_998_monthly, comptable_starter_1499_monthly.
- * Lookup key (one-shot, legacy name): comptable_pack3_3598 — Stripe dashboard prices must be updated to 1 799 / 2 199 / 5 277,60 €.
- * Env vars override these defaults (see doc/tech-stack/modules/payments-stripe.md).
+ * Stripe price IDs — Hercule Mercantile (DEC) + legacy comptable archived prices.
+ * Canon v3: product « Hercule Mercantile » · price trial `comptable_dec_1499_trial_14d`.
+ * Lite / Starter 2199 / Pack3 archived live (active:false) 2026-09-20.
  */
 const COMPTABLE_STRIPE_PRICE_IDS = {
+  /** @deprecated archived — Lite 1 799 */
   liteMonthly: "price_1UFE8oBd01AMeiaQV6PauMkI",
+  /** @deprecated archived — Starter 2 199 */
   starterMonthly: "price_1UFE8rBd01AMeiaQcfNXx6kC",
+  /** Hercule Mercantile — 1 499 €/mois after trial_period_days=14 */
+  monthly1499Trial: "price_1UHm2oBd01AMeiaQTHRKPwrj",
+  /** @deprecated archived — Pack 3 mois 5 277,60 */
   pack3: "price_1UFE8sBd01AMeiaQjwDBB5Ry",
 } as const;
 
-/** Hercule Libéral — 1 200 €/mois (pipeline agence). Override via STRIPE_PRICE_HERCULE_LIBERAL_MONTHLY. */
+/**
+ * Hercule Hubris (IAS + CIF) — live Stripe product `prod_VINFYw0GP6Vlbb`.
+ * Override via STRIPE_PRICE_HERCULE_HUBRIS_FLAT / STRIPE_PRICE_HERCULE_HUBRIS_MONTHLY.
+ */
+const HERCULE_HUBRIS_STRIPE_PRICE_IDS = {
+  optionAFlat: "price_1UHmVWBd01AMeiaQGmTPMCet",
+  optionBMonthly: "price_1UHmVXBd01AMeiaQKfS96ekn",
+} as const;
+
+export function getHerculeHubrisOptionAPriceId(): string {
+  return (
+    process.env.STRIPE_PRICE_HERCULE_HUBRIS_FLAT?.trim() ||
+    HERCULE_HUBRIS_STRIPE_PRICE_IDS.optionAFlat
+  );
+}
+
+export function getHerculeHubrisOptionBPriceId(): string {
+  return (
+    process.env.STRIPE_PRICE_HERCULE_HUBRIS_MONTHLY?.trim() ||
+    HERCULE_HUBRIS_STRIPE_PRICE_IDS.optionBMonthly
+  );
+}
+
+/** @deprecated Hercule Libéral — price archived live 2026-09-20. Override via STRIPE_PRICE_HERCULE_LIBERAL_MONTHLY. */
 const HERCULE_LIBERAL_STRIPE_PRICE_ID = "price_1UFzzcBd01AMeiaQfIcIAPHG";
 
 export function getHerculeLiberalPriceId(): string {
@@ -118,6 +145,14 @@ export function getComptableMonthlyPriceId(): string {
   return (
     process.env.STRIPE_PRICE_COMPTABLE_MONTHLY?.trim() ||
     COMPTABLE_STRIPE_PRICE_IDS.starterMonthly
+  );
+}
+
+/** DEC free trial — 1 499 €/mois after 14-day trial (Checkout trial_period_days). */
+export function getComptableMonthlyTrialPriceId(): string {
+  return (
+    process.env.STRIPE_PRICE_COMPTABLE_MONTHLY_TRIAL?.trim() ||
+    COMPTABLE_STRIPE_PRICE_IDS.monthly1499Trial
   );
 }
 

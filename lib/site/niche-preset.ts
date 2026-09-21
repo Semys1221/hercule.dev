@@ -7,6 +7,15 @@ export function legalAudienceFromNichePreset(presetId: string): LegalAudience {
     return "comptable";
   }
   if (
+    id.includes("prevoyance") ||
+    id.includes("courtiers") ||
+    id.includes("courtier") ||
+    id === "ias" ||
+    id.startsWith("ias_")
+  ) {
+    return "assurance";
+  }
+  if (
     id.includes("gestion_patrimoine") ||
     id.includes("conseiller") ||
     id === "cif" ||
@@ -18,7 +27,12 @@ export function legalAudienceFromNichePreset(presetId: string): LegalAudience {
     id.includes("jum") ||
     id.includes("restaurant") ||
     id.includes("terrassement") ||
-    id.includes("dentiste")
+    id.includes("dentiste") ||
+    id.includes("medecin") ||
+    id.includes("kine") ||
+    id.includes("avocat") ||
+    id.includes("architecte") ||
+    id.includes("veterinaire")
   ) {
     return "jum";
   }
@@ -31,6 +45,10 @@ export function isComptableNichePreset(presetId: string): boolean {
 
 export function isCifNichePreset(presetId: string): boolean {
   return legalAudienceFromNichePreset(presetId) === "cif";
+}
+
+export function isAssuranceNichePreset(presetId: string): boolean {
+  return legalAudienceFromNichePreset(presetId) === "assurance";
 }
 
 export function isJumNichePreset(presetId: string): boolean {

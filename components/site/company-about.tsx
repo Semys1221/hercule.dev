@@ -1,8 +1,8 @@
 import Image from "next/image"
 import Link from "next/link"
 
-import { Navbar } from "@/components/comptable/navbar"
-import { Footer } from "@/components/comptable/footer"
+import { Navbar } from "@/components/home/navbar"
+import { Footer } from "@/components/home/footer"
 import { TEAM_IMAGE_URL } from "@/lib/constants"
 
 const TEAM = [
@@ -12,7 +12,7 @@ const TEAM = [
   },
   {
     name: "Béatrice",
-    role: "Qualification des flux et relation avec les cabinets partenaires.",
+    role: "Qualification des projets et relation avec les cabinets partenaires.",
   },
   {
     name: "Thomas",
@@ -55,9 +55,9 @@ export function CompanyAbout() {
               de la plateforme.
             </p>
             <p>
-              Aujourd&apos;hui, nous déployons le système inbound Hercule pour les cabinets et agences partenaires :
-              capture brandée sur zone exclusive, qualification des flux et routage vers l&apos;infrastructure du
-              partenaire — pas une marketplace de leads.
+              Aujourd&apos;hui, nous réalisons du courtage de projets B2B pour les comptables, courtiers financiers et
+              courtiers en assurance : qualification des demandes des dirigeants TPE, PME et indépendants (BNC, BIC,
+              TNS) et attribution exclusive sur zone — pas une marketplace de leads.
             </p>
           </div>
 

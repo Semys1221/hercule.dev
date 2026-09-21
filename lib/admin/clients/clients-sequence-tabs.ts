@@ -26,6 +26,34 @@ export const CLIENTS_SEQUENCE_TABS: ClientsSequenceTabDef[] = [
     description: "Email post-paiement Stripe (product_payment_welcome).",
   },
   {
+    id: "free-trial",
+    label: "Free trial",
+    resolveSlug: () => "free-trial",
+    availability: {
+      agence: "empty",
+      comptable: "live",
+      entreprise: "empty",
+      cif: "empty",
+      jum: "empty",
+    },
+    description:
+      "Nurture pré-paiement essai 14j (J+1 → J+3). Stop reply/opt-out ou checkout trial.",
+  },
+  {
+    id: "free-trial-started",
+    label: "Free trial started",
+    resolveSlug: () => "free-trial-started",
+    availability: {
+      agence: "empty",
+      comptable: "live",
+      entreprise: "empty",
+      cif: "empty",
+      jum: "empty",
+    },
+    description:
+      "Post-paiement essai (remplace payment-welcome pour monthly_1499_trial).",
+  },
+  {
     id: "onboarding",
     label: "Onboarding",
     resolveSlug: (niche) =>

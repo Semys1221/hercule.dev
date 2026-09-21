@@ -39,18 +39,18 @@ Use MCP `user-instantly` for lead/thread ops; `plugin-supabase-supabase` for age
 
 | Niche | Condensed facts | FAQ |
 |-------|-----------------|-----|
-| Agence (default) | `doc/tech-stack/ai-reply-knowledge.md` | `content/faq/entreprise.json` |
-| Comptable (`*comptable*` preset) | `doc/tech-stack/ai-reply-knowledge-comptable.md` | `content/faq/comptable.json` |
+| Agence (default) | `content/tech/ai-reply-knowledge.md` | `content/faq/entreprise.json` |
+| Comptable (`*comptable*` preset) | `content/tech/ai-reply-knowledge-comptable.md` | `content/faq/comptable.json` |
 
-Plus `doc/tech-stack/00-overview.md` (truncated). **Do not** load full `cvg_comptable.md` at runtime — use condensed knowledge only.
+Plus `content/tech/00-overview.md` (truncated). **Do not** load full CGV at runtime — use condensed knowledge only.
 
 ## Niche comptable
 
 - Preset : `cabinets_expertise_comptable` (+ vol variant)
 - Prompts : `prompts/cabinets_expertise_comptable_buyer.md` / `_seller.md`
 - CTA : `{reservation_comptable_link}` (table `comptable`, colonne `reservation_comptable_link`)
-- Tarifs dans email : **interdit de chiffrer** → renvoyer `hercule.dev/cvg/comptable`
-- Pricing / CGV alignés : `content/pricing/comptable.json` · `doc/tech-stack/cvg_comptable.md`
+- Tarifs dans email : **interdit de chiffrer** → renvoyer `hercule.dev/cvg#dec`
+- Pricing / CGV alignés : `content/legal-documentation/comptable/pricing.json` · `content/legal-documentation/_shared/cgv.md`
 
 ## Preset discovery
 
@@ -98,8 +98,9 @@ pnpm configure-ai-reply-agent-reprocess-cron  # alert when skipped volume > thre
 
 ## Niche CIF + comptable — conference cutover
 
-- Knowledge : `doc/tech-stack/ai-reply-knowledge-cif.md` · `doc/tech-stack/ai-reply-knowledge-comptable.md`
-- FAQ : `doc/legal-documentation/cif/faq.json` · `doc/legal-documentation/comptable/faq.json`
+- Knowledge : `content/tech/ai-reply-knowledge-cif.md` · `content/tech/ai-reply-knowledge-comptable.md`
+- FAQ : `content/legal-documentation/cif/faq.json` · `content/legal-documentation/comptable/faq.json`
+- **International BE/CH/CA (DEC · IAS · CIF)** : tarifs 1 499 USD/mois + 400 USD/mois profils · acceptation explicite requise · lien Calendly unique (`CALENDLY_EVENT_TYPE_URI_INTERNATIONAL_1TO1`)
 - CTA `{reservation_cif_link}` / `{reservation_comptable_link}` → `reservation-conference.html`
 - Objection conférence : AER avec 2 500 € sur-mesure (seul prix autorisé dans l'email pour cette objection) + redirect conférence + « répondez à ce mail » pour 1:1 sur-mesure
 - Health cron : `/api/cron/ai-reply-agent-health` (failed + slow pending → `NOTIFICATION_OPS_EMAIL`)

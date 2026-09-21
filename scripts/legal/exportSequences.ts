@@ -1,5 +1,5 @@
 /**
- * Export Supabase sequence templates to doc/legal-documentation/{niche}/sequences/*.md
+ * Export Supabase sequence templates to content/legal-documentation/{niche}/sequences/*.md
  *
  * Usage:
  *   pnpm sequences:export
@@ -40,7 +40,12 @@ import type { Niche } from "@/lib/admin/navigation";
 const ALL_NICHES: Niche[] = ["agence", "entreprise", "comptable", "cif"];
 
 const PRODUCTION_SLUGS_BY_NICHE: Partial<Record<Niche, string[]>> = {
-  comptable: ["payment-welcome", "onboarding-sequence"],
+  comptable: [
+    "payment-welcome",
+    "onboarding-sequence",
+    "free-trial",
+    "free-trial-started",
+  ],
   cif: ["payment-welcome", "onboarding-sequence"],
 };
 

@@ -20,8 +20,8 @@ def main() -> int:
     )
     parser.add_argument(
         "--preset",
-        default="cabinets_expertise_comptable_vol",
-        help="Preset id (default: cabinets_expertise_comptable_vol)",
+        default="cabinets_expertise_comptable_fresh_geo",
+        help="Preset id (default: cabinets_expertise_comptable_fresh_geo)",
     )
     parser.add_argument(
         "--out-dir",

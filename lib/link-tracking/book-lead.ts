@@ -198,6 +198,13 @@ export async function bookLeadFromCalendly(
 
   const extra = await syncInstantlyForBookedLead(lookup);
 
+  try {
+    const { promoteSiblingCampaignLeads } = await import("./split-booking");
+    await promoteSiblingCampaignLeads(lookup);
+  } catch (err) {
+    console.error("[link-tracking] sibling booking promotion failed:", err);
+  }
+
   if (lookup.category === "cif") {
     await cancelConferenceInviteJobs(lookup.lead.id);
   }

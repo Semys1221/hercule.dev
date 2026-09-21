@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 
-import { ComptableFaqPage } from "@/components/site/comptable-faq-page"
+import { FaqHubPage } from "@/components/site/faq-hub-page"
 
 export const metadata: Metadata = {
-  title: "FAQ — Hercule Comptable",
-  description: "Questions fréquentes sur le service Hercule pour les cabinets d'expertise comptable.",
+  title: "FAQ — Courtage de projets B2B — Hercule",
+  description:
+    "Questions fréquentes sur le courtage de projets Hercule pour comptables, courtiers financiers et courtiers en assurance.",
 }
 
 export default function FaqPage() {
-  return <ComptableFaqPage />
+  return <FaqHubPage />
 }

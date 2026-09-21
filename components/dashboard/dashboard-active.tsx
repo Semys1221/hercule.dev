@@ -19,6 +19,7 @@ import { PostPaymentFaqLink } from "./post-payment-faq-link";
 import { BalancePaymentCard } from "./balance-payment-card";
 import { RdvStatusCard } from "./rdv-status-card";
 import { RetractionWaiverCard } from "./retraction-waiver-card";
+import { SaasRdvProgressCard } from "./saas-rdv-progress-card";
 
 /** Working-day offset helper — skips Sat/Sun from a reference date. */
 function addWorkingDays(from: Date, days: number): Date {
@@ -168,6 +169,9 @@ export function DashboardActive({ data, onRefresh }: DashboardActiveProps) {
       <RetractionWaiverCard data={data} onSuccess={onRefresh} />
 
       <NextStepBlock data={data} />
+      {data.saasKpi?.hasSlot ? (
+        <SaasRdvProgressCard saasKpi={data.saasKpi} />
+      ) : null}
       <RdvStatusCard data={data} />
       <BalancePaymentCard data={data} onRefresh={onRefresh ?? (() => {})} />
 

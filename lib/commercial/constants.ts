@@ -104,6 +104,8 @@ export const OFFER_TYPES = {
   starter1489_5: "starter_1489_5",
   monthly1489: "monthly_1489",
   pack989x3: "pack_989x3",
+  /** SaaS autonome — 10 RDV bookés / mois @ 30 inbox */
+  saasAutonome10rdv: "saas_autonome_10rdv",
 } as const;
 
 export type OfferType = (typeof OFFER_TYPES)[keyof typeof OFFER_TYPES];
@@ -211,10 +213,18 @@ export function isLegacyAgenceOfferType(offerType: string | null | undefined): b
 export const OFFER_TYPES_COMPTABLE = {
   starter999_5: "starter_999_5",
   monthly1499: "monthly_1499",
+  /** DEC monthly with Stripe trial_period_days=14 then 1 499 €/mois. */
+  monthly1499Trial: "monthly_1499_trial",
   pack3x1499: "pack_3x1499",
   /** Acquisition comptable — 1 489 €/mois, 10–15 RDV (Payment Link closer). */
   acquisition1489_1m: "comptable_acquisition_1489_1m",
 } as const;
+
+/** Checkout / webhook metadata.product for free-trial subscription. */
+export const FREE_TRIAL_STRIPE_PRODUCT = "free_trial" as const;
+
+/** Trial length in days for monthly_1499_trial checkout. */
+export const FREE_TRIAL_PERIOD_DAYS = 14 as const;
 
 export type OfferTypeComptable = (typeof OFFER_TYPES_COMPTABLE)[keyof typeof OFFER_TYPES_COMPTABLE];
 
@@ -242,30 +252,40 @@ export const FORBIDDEN_COPY = [
  * Stripe offer types: OFFER_TYPES_COMPTABLE (starter_999_5 / monthly_1499 / pack_3x1499).
  */
 export const COMMERCIAL_COMPTABLE = {
-  /** Hercule Lite — 1 799 €/mois, 5 missions/mois, aucune garantie MRR (offer type starter_999_5) */
-  starterPriceCents: 179_900,
-  liteMissionsPerMonth: 5,
-  /** @deprecated Use liteMissionsPerMonth */
-  starterMissions: 5,
+  /**
+   * Hercule Mercantile (DEC) — canon pricing v3.
+   * Notion DB Offres = master. Legacy Lite/Starter/MRR removed.
+   * Offer types Stripe retained for payment compatibility.
+   */
+  /** @deprecated Lite removed — alias to DEC monthly for legacy offer type starter_999_5 */
+  starterPriceCents: 149_900,
+  liteMissionsPerMonth: 10,
+  /** @deprecated Use growthMissionsPerMonth */
+  starterMissions: 10,
 
-  /** Hercule Starter — mensuel sans engagement — 2 199 €/mois, 10 missions (offer type monthly_1499) */
-  growthMonthlyPriceCents: 219_900,
-  /** Alias — même offre que growthMonthlyPriceCents */
-  monthlyPriceCents: 219_900,
+  /** Hercule Mercantile — 1 499 €/mois, engagement 3 mois, 10 crédits (offer type monthly_1499) */
+  growthMonthlyPriceCents: 149_900,
+  monthlyPriceCents: 149_900,
   growthMissionsPerMonth: 10,
-  growthGuaranteeMrrCents: 300_000,
-  growthGuaranteeMaxReplacements: 5,
+  /** Engagement trimestriel (canon v3) */
+  commitmentMonths: 3,
+  /** MRR garantie supprimée v2 */
+  growthGuaranteeMrrCents: 0,
+  growthGuaranteeMaxReplacements: 0,
 
-  /** Pack 3 mois Starter — 2 199 € × 3 − 20 %, arrondi (offer type pack_3x1499) */
-  pack3TotalCents: 527_760,
+  /**
+   * @deprecated Canon v3 — no discounted pack 3 mois; engagement is trimestriel at 1 499 €/mois.
+   * Kept for legacy payment rows / Stripe offer type pack_3x1499.
+   */
+  pack3TotalCents: 359_800,
   pack3MissionsTotal: 30,
-  pack3GuaranteeMrrCents: 900_000,
-  pack3GuaranteeMaxReplacements: 15,
+  pack3GuaranteeMrrCents: 0,
+  pack3GuaranteeMaxReplacements: 0,
 
   billingCycleDays: 30,
 
-  /** SLA premier RDV planifié (jours calendaires après activation) */
-  firstRdvDaysMin: 20,
+  /** SLA premier RDV — warm-up post-paiement (ne pas afficher sur slide prix) */
+  firstRdvDaysMin: 15,
   firstRdvDaysMax: 25,
 
   /** Acquisition 1 mois — Payment Link 1 489 €, livrable 10–15 RDV */
@@ -274,42 +294,79 @@ export const COMMERCIAL_COMPTABLE = {
   acquisition1489RdvMax: 15,
   acquisition1489FirstRdvCalendarDays: 25,
 
-  /** MRR par lettre de mission signée (3 600 € honoraires annuels / 12) */
-  mrrPerSignedMissionCents: 30_000,
+  /** Honoraires modèle client final DEC (stack Comptable Tech) */
+  mrrPerSignedMissionCents: 49_000,
 
-  /** Vitrine marketing — honoraires annuels typiques d'une mission de tenue */
   valueShowcaseAnnualHonorairesCents: 360_000,
   valueShowcaseAnnualHonorairesLabel: "3 600 €",
 
-  /** Plancher honoraires annuels lettre de mission (session + cards) */
   honorairesAnnuelsMinCents: 240_000,
   honorairesAnnuelsMinLabel: "2 400 €",
 
-  /** Plafond vitrine honoraires annuels (fourchette marketing) */
   honorairesAnnuelsMaxVitrineCents: 600_000,
   honorairesAnnuelsMaxVitrineLabel: "6 000 €",
 
-  /** Plancher honoraires mission ponctuelle (création, reprise, conseil) */
   honorairesPonctuelMinCents: 80_000,
   honorairesPonctuelMinLabel: "800 €",
 
-  /** Seuil d'éligibilité cabinet */
   minAssociatesOrCollaborators: 3,
 
-  /** No-show : recrédit + remplacement (aligné agence) */
   noshowReplaceWorkingDays: 14,
   honorMinutesMin: 15,
 
-  /** Display-only Foundation pricing — Stripe charge amounts unchanged until payment patch. */
-  coreDisplayName: "Hercule Core",
-  horizonDisplayName: "Hercule Horizon",
-  coreDisplayPriceCents: 170_000,
-  horizonDisplayPriceCents: 200_000,
+  /** Display names — canon v3 */
+  coreDisplayName: "Hercule Mercantile",
+  horizonDisplayName: "Hercule Mercantile",
+  coreDisplayPriceCents: 149_900,
+  horizonDisplayPriceCents: 149_900,
   horizonGuaranteeRdvCount: 10,
-  horizonGuaranteeMonths: 3,
-  horizonGuaranteeDays: 90,
-  coreTagline: "Bases du système + zone standard",
-  horizonTagline: "Capture max + exclusivité totale + profondeur de zone",
+  horizonGuaranteeMonths: 1,
+  horizonGuaranteeDays: 30,
+  coreTagline: "10 RDV qualifiés / mois · restaurants +3 sal. · engagement 3 mois",
+  horizonTagline: "10 RDV qualifiés / mois · restaurants BIC · engagement 3 mois · 0 % commission",
+} as const;
+
+/**
+ * Hercule Hubris — canon pricing v3 (IAS + CIF bundle).
+ * Replaces standalone IAS 1 999 €/mois and CIF 3 499 €/90j.
+ */
+export const COMMERCIAL_HERCULE_HUBRIS = {
+  optionAFlatCents: 400_000,
+  optionBMonthlyCents: 180_000,
+  commitmentMonths: 3,
+  creditsPerQuarterMin: 15,
+  creditsPerQuarterMax: 20,
+  noshowReplaceWorkingDays: 14,
+  honorMinutesMin: 15,
+  offerTypeOptionA: "hercule_hubris_4000_flat",
+  offerTypeOptionB: "hercule_hubris_1800_monthly",
+} as const;
+
+/** @deprecated Use COMMERCIAL_HERCULE_HUBRIS */
+export const COMMERCIAL_HUBRIS_IMPERIAL = COMMERCIAL_HERCULE_HUBRIS;
+
+/**
+ * @deprecated Canon v3 — IAS no longer listed alone. Use COMMERCIAL_HERCULE_HUBRIS.
+ * Values retained for legacy scripts / payment rows.
+ */
+export const COMMERCIAL_IAS = {
+  monthlyPriceCents: 199_900,
+  pack3TotalCents: 479_800,
+  creditsPerMonth: 10,
+  noshowReplaceWorkingDays: 14,
+  honorMinutesMin: 15,
+} as const;
+
+/**
+ * @deprecated Canon v3 — CIF no longer listed alone. Use COMMERCIAL_HERCULE_HUBRIS.
+ * Values retained for legacy scripts / payment rows.
+ */
+export const COMMERCIAL_CIF = {
+  pack90PriceCents: 349_900,
+  creditsPerPeriod: 20,
+  periodDays: 90,
+  noshowReplaceWorkingDays: 14,
+  honorMinutesMin: 15,
 } as const;
 
 /** Comptable — acquisition 1 mois via Payment Link (1 489 €/mois). */
@@ -384,7 +441,10 @@ export function foundationOfferLabel(
   if (offerType === OFFER_TYPES_COMPTABLE.starter999_5) {
     return `${COMMERCIAL_COMPTABLE.coreDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.coreDisplayPriceCents)}/mois`;
   }
-  if (offerType === OFFER_TYPES_COMPTABLE.monthly1499) {
+  if (
+    offerType === OFFER_TYPES_COMPTABLE.monthly1499 ||
+    offerType === OFFER_TYPES_COMPTABLE.monthly1499Trial
+  ) {
     return `${COMMERCIAL_COMPTABLE.horizonDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents)}/mois`;
   }
   return `${COMMERCIAL_COMPTABLE.horizonDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents)}/mois`;

@@ -20,8 +20,7 @@ class PresetSpec:
 
 
 DEFAULT_PRESET_SPECS: tuple[PresetSpec, ...] = (
-    PresetSpec("cabinets_expertise_comptable", "hercule-scraper"),
-    PresetSpec("cabinets_expertise_comptable_vol", "hercule-scraper-comptable-vol"),
+    PresetSpec("cabinets_expertise_comptable_fresh_geo", "hercule-scraper-comptable-fresh-geo"),
 )
 
 

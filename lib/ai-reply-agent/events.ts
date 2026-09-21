@@ -24,3 +24,48 @@ export function isOooReplyEvent(eventType: string): boolean {
 export function isHandledReplyAgentEvent(eventType: string): boolean {
   return HANDLED_REPLY_AGENT_EVENTS.has(eventType);
 }
+
+function normalizeInboundProbe(text: string): string {
+  return text.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Calendly notification emails (booking created/canceled, invite accepted). */
+export function isCalendlySystemEmail(text: string): boolean {
+  const probe = normalizeInboundProbe(text);
+  if (!probe || probe === "(empty body)") {
+    return false;
+  }
+
+  if (!probe.includes("calendly")) {
+    return (
+      probe.includes("accepted your invitation") ||
+      probe.includes("a accepté votre invitation")
+    );
+  }
+
+  return (
+    probe.includes("a new event has been scheduled") ||
+    probe.includes("the event below has been canceled") ||
+    probe.includes("accepted your invitation") ||
+    probe.includes("a accepté votre invitation") ||
+    probe.includes("nouvel événement") ||
+    probe.includes("nouvel evenement") ||
+    (probe.includes("hi hercule") && probe.includes("event type"))
+  );
+}
+
+/** Captcha challenges and non-delivery bounces — not a prospect reply. */
+export function isCaptchaOrBounceEmail(text: string): boolean {
+  const probe = normalizeInboundProbe(text);
+  if (!probe || probe === "(empty body)") {
+    return false;
+  }
+
+  return (
+    probe.includes("captcha") ||
+    probe.includes("non-délivrance") ||
+    probe.includes("non-delivrance") ||
+    probe.includes("message could not be delivered") ||
+    probe.includes("delivery status notification")
+  );
+}

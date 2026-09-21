@@ -1,0 +1,62 @@
+[
+  {
+    "message_id": "af9d8a7c-c365-4a71-992f-0bcf78f83b0c",
+    "lead_email": "contact@mpca-assurance.fr",
+    "old_status": "skipped_unsafe",
+    "old_reason": "Le prospect a déjà réservé le briefing collectif (confirmation Calendly reçue), pas de nouvelle question ni objection.",
+    "interest_status": 2,
+    "should_reply": false,
+    "recovery_confidence": 90,
+    "allow_reply": false,
+    "new_status": "skipped_unsafe",
+    "new_reason": "Le prospect a réservé le briefing via Calendly ; confirmation sans nouvelle question ni objection.",
+    "model": "grok-4-1-fast",
+    "draft_preview": "",
+    "action": "dry_run"
+  },
+  {
+    "message_id": "38d55e5d-bb23-447c-97ce-2048dccde35c",
+    "lead_email": "conciergerieetpatrimoine@gmail.com",
+    "old_status": "skipped_unsafe",
+    "old_reason": "Les questions du prospect portent sur des détails très spécifiques (produits financiers exacts, niveau d'optimisation fiscale, coordination avec expert-comptable, qualifications réglementaires précises) qui ne sont pas couverts par le pack de connaissances. Ne pas répondre.",
+    "interest_status": 1,
+    "should_reply": true,
+    "recovery_confidence": 90,
+    "allow_reply": true,
+    "new_status": "auto_replied",
+    "new_reason": "Email de due diligence partenaire couvert par le pack : réponse structurée en 4-8 paragraphes thématiques, should_reply true, recovery_confidence élevé car tag Interested et questions précises sur le modèle.",
+    "model": "grok-4-1-fast",
+    "draft_preview": "Bonjour,\n\nNous avons bien reçu votre message et votre intérêt pour la proposition. Nous allons répondre point par point à vos questions afin de clarifier le périmètre.\n\nLes dirigeants concernés sont d",
+    "action": "dry_run"
+  },
+  {
+    "message_id": "9853d4d0-7aa9-4bd6-a2d0-26899cd5d777",
+    "lead_email": "philippe.fatras@gmail.com",
+    "old_status": "skipped_unsafe",
+    "old_reason": "Le prospect décrit une activité de courtier en assurance (santé, PER, etc.) qui ne correspond pas au profil cible CIF/CGP pour les missions d'optimisation fiscale et patrimoniale des dentistes/vétérinaires ; pas couvert par le pack.",
+    "interest_status": null,
+    "should_reply": true,
+    "recovery_confidence": 85,
+    "allow_reply": true,
+    "new_status": "auto_replied",
+    "new_reason": "Présentation d'expertise alignée avec les besoins CIF/IAS ; réponse positive directe sans AER.",
+    "model": "grok-4-1-fast",
+    "draft_preview": "Votre proposition en santé, maintien de revenus, PER et assurance vie correspond parfaitement aux demandes transmises par Hercule.\n\nhttps://www.hercule.dev/reservation-conference.html/sGaY5X\n\nRépondez",
+    "action": "dry_run"
+  },
+  {
+    "message_id": "821c94fd-9082-4325-bca2-4861c43d8b77",
+    "lead_email": "bdmassurance@gmail.com",
+    "old_status": "skipped_unsafe",
+    "old_reason": "Refus définitif du prospect ('Non, nous ne proposons pas ce type d’accompagnement'), pas une objection rattrapable ni une question.",
+    "interest_status": -1,
+    "should_reply": false,
+    "recovery_confidence": 15,
+    "allow_reply": false,
+    "new_status": "skipped_unsafe",
+    "new_reason": "Refus définitif, pas notre cible.",
+    "model": "grok-4-1-fast",
+    "draft_preview": "",
+    "action": "dry_run"
+  }
+]

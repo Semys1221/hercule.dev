@@ -2,12 +2,17 @@
 
 import { motion } from "framer-motion"
 import { Inbox, Shield, ClipboardCheck } from "lucide-react"
-import { getMarketingCopy } from "@/lib/site/marketing-copy"
+import { getMarketingCopy, type MarketingAudience } from "@/lib/site/marketing-copy"
 
-const copy = getMarketingCopy("comptable")
 const icons = [Inbox, Shield, ClipboardCheck]
 
-export function PilierMatching() {
+type PilierMatchingProps = {
+  audience?: MarketingAudience
+}
+
+export function PilierMatching({ audience = "comptable" }: PilierMatchingProps) {
+  const copy = getMarketingCopy(audience)
+
   return (
     <div className="relative z-20 pt-16 pb-32" style={{ backgroundColor: "#09090B" }}>
       <div className="w-full flex justify-center px-6">

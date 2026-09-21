@@ -7,9 +7,9 @@ import {
 } from "@/lib/cif/demandes-repo"
 
 export const metadata: Metadata = {
-  title: "Acquérir le système Hercule — Conseil financier",
+  title: "Courtage de projets patrimoniaux — Courtier financier — Hercule",
   description:
-    "Déployez le système inbound Hercule sur votre zone : capture brandée, qualification et routage exclusif des flux patrimoniaux vers votre cabinet CIF.",
+    "Hercule attribue en exclusivité des projets patrimoniaux qualifiés pour dirigeants TPE, PME et indépendants (BNC, BIC, TNS) vers votre cabinet CIF.",
 }
 
 export const revalidate = 60

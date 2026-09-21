@@ -5,7 +5,7 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 PRESET_ID = "cabinets_conseiller_financier"
 PRESET_LABEL = "Cabinets conseiller financier (France)"
 
-_LIST_ID = "0f54a7a8-5bd0-4cc5-b018-1414fc7cc718"
+_LIST_ID = "4a616678-06a0-44d2-a27c-f9248a4c34bf"
 _CAMPAIGN_ID = "e3bdb573-fe9f-437d-bd96-4ceb52869dd4"
 _SUBSEQUENCE_ID = "d656122e-fb42-42ac-a8c9-324eb9a13b86"
 

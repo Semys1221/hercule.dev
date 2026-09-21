@@ -91,7 +91,7 @@ python main.py dry-run --preset <id>
 python main.py scrape --preset <id> --target 5000 --push-instantly --resume
 python main.py worker-loop --preset <id> --push-instantly   # loop until target progress ≥ TARGET_LEADS
 python main.py heal --preset <id>                           # cron watchdog (resume if stale)
-python main.py audit-filter --preset cabinets_expertise_comptable_vol   # analyze filter_audit.csv
+python main.py audit-filter --preset cabinets_expertise_comptable_fresh_geo   # analyze filter_audit.csv
 python main.py sirene-build --check
 ```
 
@@ -117,55 +117,47 @@ Pass 2+ expands communes via [`commune_passes.py`](commune_passes.py).
 
 Checkpoint `instantly_pushed` = pushes credited to **this preset run** only.
 
-### Dual pipeline comptable (VPS)
+### Pipeline comptable (VPS)
 
-Two workers can run in parallel on the same Instantly list:
+Single worker — postal + INSEE communes, taxonomy gate on Outscraper `type` / `category` / `subtypes`:
+
+| systemd unit | Preset | Target |
+|--------------|--------|--------|
+| `hercule-scraper-comptable-fresh-geo` | `cabinets_expertise_comptable_fresh_geo` | `instantly_pushed_run` (10K checkpoint) |
+
+List Instantly : `bfb0fc90-ec59-4d49-b266-3891f59d3ea8`. Tuning recommandé dans l'unité systemd : `OUTSCRAPER_CONCURRENCY=16`, `OUTSCRAPER_POLL_INITIAL_S=10`.
+
+```bash
+sudo VPS_SCRAPER_SERVICE=hercule-scraper-comptable-fresh-geo \
+     SCRAPER_PRESET=cabinets_expertise_comptable_fresh_geo \
+     bash scripts/vps/install-scraper.sh
+sudo systemctl start hercule-scraper-comptable-fresh-geo
+```
+
+### Courtiers prévoyance B2B (VPS)
 
 | systemd unit | Preset | Filtering | Target |
 |--------------|--------|-----------|--------|
-| `hercule-scraper` | `cabinets_expertise_comptable` | Website enrich + registry | `instantly_pushed` (live list) |
-| `hercule-scraper-comptable-vol` | `cabinets_expertise_comptable_vol` | Outscraper taxonomy only (`taxonomy_gate.py`) | `instantly_pushed_run` (10K checkpoint) |
-
-Volume preset filters métier on Outscraper columns **`type`**, **`category`**, **`subtypes`** (concatenated via `category_filter.taxonomy_text`). No BeautifulSoup, no effectif gate. Same `INSTANTLY_LIST_ID`; dedup via `INSTANTLY_DEDUP_LIST_IDS` + `INSTANTLY_SKIP_IF_IN_LIST`.
-
-Install volume worker:
+| `hercule-scraper-prevoyance` | `courtiers_prevoyance_b2b` | Taxonomy anti-retail / réseaux | `instantly_pushed` (10K live list) |
 
 ```bash
-sudo VPS_SCRAPER_SERVICE=hercule-scraper-comptable-vol \
-     SCRAPER_PRESET=cabinets_expertise_comptable_vol \
+sudo VPS_SCRAPER_SERVICE=hercule-scraper-prevoyance \
+     SCRAPER_PRESET=courtiers_prevoyance_b2b \
      bash scripts/vps/install-scraper.sh
-sudo systemctl start hercule-scraper-comptable-vol
+sudo systemctl start hercule-scraper-prevoyance
 ```
 
 Output is isolated per preset under `$HERCULE_DATA_ROOT/streamlit_scraper/output/{preset_id}/`. Heal cron is per-preset (`heal-{preset}.log`).
 
-#### Funnel vol — taux d'acceptation et taxonomy
-
-Le pipe vol peut afficher un **creux batch ~9–15%** (`accepted / (accepted + rejected)` dans `scrape.log`) alors que le **taux global** reste ~20–35%. Ce n'est en général **pas** un problème de taxonomy :
-
-| Rejet (typique vol) | Part du total | Cause |
-|---------------------|---------------|-------|
-| `duplicate company (domain) or email` | ~50–55% | Dedup scrape + chevauchement pipe A (même requêtes / même liste Instantly) |
-| `invalid or missing email` | ~15–20% | Données Google Maps incomplètes |
-| `taxonomy_mismatch` | **~3–5%** | Gate métier sur `type` / `category` / `subtypes` uniquement |
-| Autres | &lt;1% | Domaines exclus (Facebook, PagesJaunes…) |
-
-**Taxonomy gate** ([`taxonomy_gate.py`](taxonomy_gate.py)) : les **CAC seuls** (`Commissaire aux comptes` sans mot-clé EC) restent **exclus volontairement**. La majorité des `taxonomy_mismatch` sont du bruit (huissier, assurance, recrutement, école, avocat).
+#### Funnel comptable — taux d'acceptation et taxonomy
 
 Audit reproductible :
 
 ```bash
-python main.py audit-filter --preset cabinets_expertise_comptable_vol
-# → breakdown Reason, buckets taxonomy, taxonomy_review.csv (borderline), batch rates
+python main.py audit-filter --preset cabinets_expertise_comptable_fresh_geo
 ```
 
-Revue manuelle échantillon : [`docs/taxonomy_review_manual.md`](docs/taxonomy_review_manual.md).
-
-**Throughput (si creux batch persistant)** — leviers hors taxonomy :
-
-1. Laisser le vol avancer vers **pass communes** (`SCRAPE_START_QUERY_PASS: 2` → chunks `commune_passes`) pour réduire le chevauchement avec pipe A (pass 0–1).
-2. `INSTANTLY_SKIP_IF_IN_LIST: true` réduit le ratio pushed/scraped quand la liste est déjà peuplée par pipe A — comportement attendu avec liste partagée.
-3. Ne pas assouplir la taxonomy sur le **nom Google** ; les faux positifs recrutement / agence web restent fréquents.
+Rejet typique : `duplicate company (domain) or email` quand la geo est saturée → relancer un reload geo ou avancer de pass. Revue manuelle : [`docs/taxonomy_review_manual.md`](docs/taxonomy_review_manual.md).
 
 ## Resume / checkpoint
 
@@ -189,6 +181,75 @@ sudo systemctl start hercule-scraper
 From your Mac: open sidebar **Scrape** → **Continue / Start worker**. Progress uses Instantly live count and won't reset to 0 on rerun.
 
 Helper scripts: [`scripts/vps/install-scraper.sh`](../../scripts/vps/install-scraper.sh), `heal-scraper.sh`, `run-worker-loop.sh`.
+
+## Monitoring (Grafana fleet dashboard)
+
+Read-only observability for all scrapers on the VPS — **no control**, replaces SSH polling for the multi-scraper view. Streamlit Scrape page stays for start/stop.
+
+### Stack
+
+| Component | Role | Port (localhost) |
+|-----------|------|------------------|
+| `hercule-scraper-exporter` (systemd) | Reads `worker_heartbeat.json` + `scrape_state.json` → Prometheus metrics | `:9464` |
+| Prometheus | Time series (15d retention) | `:9090` |
+| Grafana | Dashboards | `:3000` |
+| Loki + Promtail | Tail `scrape.log` per preset | `:3100` |
+| node_exporter | CPU / RAM / disk | `:9100` |
+
+Code: [`monitoring/exporter.py`](monitoring/exporter.py) · Compose: [`scripts/vps/monitoring/`](../../scripts/vps/monitoring/)
+
+### Install (on VPS)
+
+Requires Docker Engine + Compose plugin.
+
+```bash
+export HERCULE_DATA_ROOT=/var/lib/hercule
+export VPS_REPO_ROOT=/root/hercule.dev   # if different
+sudo bash scripts/vps/install-monitoring.sh
+```
+
+This installs/enables `hercule-scraper-exporter`, generates a Grafana admin password at `/root/.hercule/grafana-admin-password`, and starts the Compose stack (bound to `127.0.0.1` only).
+
+### Access from your Mac
+
+```bash
+ssh -L 3000:127.0.0.1:3000 $VPS_USER@$VPS_HOST
+# password: ssh $VPS_USER@$VPS_HOST 'cat /root/.hercule/grafana-admin-password'
+open http://127.0.0.1:3000
+```
+
+Login: `admin` / password from the file above. Dashboard: **Hercule → Hercule Scraper Fleet**.
+
+### Metrics exposed
+
+```
+scraper_heartbeat_age_seconds{preset}
+scraper_worker_up{preset}                 # 1 if heartbeat age < 15 min
+scraper_status_info{preset,status}        # running|stalled|idle|complete|blocked
+scraper_target_leads / scraper_progress_leads / scraper_progress_ratio
+scraper_leads_saved / scraper_leads_enriched_* / scraper_instantly_pushed
+scraper_inflight_tasks / scraper_batch_* / scraper_query_pass
+scraper_systemd_active{service}
+```
+
+Progress uses checkpoint fields only (no Instantly live API) — same as `TARGET_MODE=instantly_pushed_run` semantics for shared lists.
+
+### Troubleshooting
+
+| Symptom | Check |
+|---------|--------|
+| Empty fleet table | `curl -s localhost:9464/metrics \| grep scraper_` — exporter up? presets under `$HERCULE_DATA_ROOT/streamlit_scraper/output/`? |
+| Exporter down | `journalctl -u hercule-scraper-exporter -n 50` · `systemctl restart hercule-scraper-exporter` |
+| No logs in Grafana | Promtail mounts data root — confirm `HERCULE_DATA_ROOT` matches install · `docker logs hercule-promtail` |
+| Disk gauge red | node_exporter — free space under `/` or `/var/lib/hercule` |
+| Restart stack | `cd scripts/vps/monitoring && HERCULE_DATA_ROOT=… GRAFANA_ADMIN_PASSWORD=$(cat /root/.hercule/grafana-admin-password) docker compose up -d` |
+
+Local smoke test (no Docker):
+
+```bash
+cd app/streamlit_scraper
+python -m monitoring.exporter --once --data-root /var/lib/hercule
+```
 
 ## Output per preset
 

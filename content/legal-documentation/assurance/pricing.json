@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "audience": "assurance",
+  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "hero": {
+    "eyebrow": "Tarification",
+    "title": "Hercule Hubris — IAS + CIF",
+    "intro": "15 à 20 bilans lourds / trimestre — PME BTP ou BNC médicaux, visioconférence nationale, 0 % de commission. Obligation de moyens — aucune garantie de signature."
+  },
+  "plans": [
+    {
+      "id": "plan-hubris-option-a",
+      "name": "Option A — Choix de l'Élite",
+      "label": "Canon v3",
+      "price": "4 000 €",
+      "priceSuffix": null,
+      "tagline": "Pack trimestriel global upfront · 15–20 bilans",
+      "summary": null,
+      "footer": "Paiement unique. Warm-up communiqué après paiement.",
+      "featured": true,
+      "profileOnly": false,
+      "highlight": null,
+      "offerType": "hercule_hubris_4000_flat",
+      "features": [
+        "15 à 20 bilans lourds / trimestre — PME BTP 3–15 salariés ou BNC médicaux.",
+        "Paiement flat 4 000 € (trimestre).",
+        "Visioconférence nationale · attribution exclusive.",
+        "Calendly Pro et Zoom Pro provisionnés.",
+        "0 % de commission.",
+        "No-show : recrédit + remplacement sous 14 jours ouvrés.",
+        "Aucune garantie de signature ni de commissions upfront."
+      ]
+    },
+    {
+      "id": "plan-hubris-option-b",
+      "name": "Option B — Flux Fractionné",
+      "label": "Engagement 3 mois",
+      "price": "1 800 €",
+      "priceSuffix": "/mois",
+      "tagline": "Engagement 3 mois · 15–20 bilans / trimestre",
+      "summary": null,
+      "footer": "Facturation mensuelle pendant 3 mois.",
+      "featured": false,
+      "profileOnly": false,
+      "highlight": null,
+      "offerType": "hercule_hubris_1800_monthly",
+      "features": [
+        "15 à 20 bilans lourds / trimestre — même volume que Option A.",
+        "1 800 € / mois · engagement 3 mois.",
+        "0 % de commission.",
+        "Calendly Pro et Zoom Pro provisionnés.",
+        "Aucune garantie de signature."
+      ]
+    }
+  ],
+  "gatedTeaserFeatures": [
+    "15–20 bilans lourds / trimestre.",
+    "0 % de commission.",
+    "Visioconférence nationale."
+  ],
+  "gatedGhostFeatures": [
+    "Garantie no-show 14 j ouvrés",
+    "Provisionnement Calendly / Zoom",
+    "Option A 4 000 € flat"
+  ],
+  "guaranteeSection": null
+}

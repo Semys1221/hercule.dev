@@ -4,6 +4,11 @@ const SEGMENT_TEMPLATE_KEYS: Record<string, string> = {
   restaurant: "interested_email1_restaurant",
   b2b: "interested_email1_b2b",
   dentiste: "interested_email1_dentiste",
+  medecin: "interested_email1_medecin",
+  kine: "interested_email1_kine",
+  avocat: "interested_email1_avocat",
+  architecte: "interested_email1_architecte",
+  veterinaire: "interested_email1_veterinaire",
 };
 
 type SegmentLead = {

@@ -144,11 +144,19 @@ def used_location_set(config: dict) -> set[str]:
     return used
 
 
+def commune_pool(config: dict) -> list[str]:
+    """Return the commune list for pass 2+ (override via COMMUNE_POOL)."""
+    custom = config.get("COMMUNE_POOL")
+    if custom:
+        return [str(item) for item in custom if str(item).strip()]
+    return list(FRENCH_EXTRA_COMMUNES)
+
+
 def unused_communes(config: dict) -> list[str]:
     used = used_location_set(config)
     pool: list[str] = []
     seen: set[str] = set()
-    for name in FRENCH_EXTRA_COMMUNES:
+    for name in commune_pool(config):
         norm = _normalize(name)
         if norm in used or norm in seen:
             continue
@@ -234,6 +242,13 @@ def skip_phase_enabled(config: dict) -> bool:
     return True
 
 
+def department_phase_enabled(config: dict) -> bool:
+    """Whether the 101-département sweep runs after city/skip phases."""
+    if "SCRAPE_DEPARTMENT_PHASE_ENABLED" in config:
+        return bool(config.get("SCRAPE_DEPARTMENT_PHASE_ENABLED"))
+    return True
+
+
 def next_geo_phase(
     config: dict,
     *,
@@ -248,16 +263,22 @@ def next_geo_phase(
             return GEO_PHASE_PASS, query_pass + 1, 0
         if skip_phase_enabled(config):
             return GEO_PHASE_SKIP, 0, 0
-        return GEO_PHASE_DEPARTMENT, 0, 0
+        if department_phase_enabled(config):
+            return GEO_PHASE_DEPARTMENT, 0, 0
+        return None
 
     if geo_phase == GEO_PHASE_SKIP:
         if not skip_phase_enabled(config):
-            return GEO_PHASE_DEPARTMENT, 0, 0
+            if department_phase_enabled(config):
+                return GEO_PHASE_DEPARTMENT, 0, 0
+            return None
         step = skip_places_step(limit_per_query)
         next_skip = skip_places + step
         if next_skip < max_skip_places(config):
             return GEO_PHASE_SKIP, query_pass, next_skip
-        return GEO_PHASE_DEPARTMENT, 0, 0
+        if department_phase_enabled(config):
+            return GEO_PHASE_DEPARTMENT, 0, 0
+        return None
 
     return None
 

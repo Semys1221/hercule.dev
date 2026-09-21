@@ -596,6 +596,77 @@ Il s'agit du dernier email automatique de cette séquence. Pour toute question :
 
 Béatrice Meyer`,
   },
+  free_trial_1: {
+    subject: "Votre premier rendez-vous visio — offert",
+    body: `{{firstNameLine}}
+
+Afin de rendre votre décision plus simple, nous allons vous offrir ce qu'aucun service d'acquisition ne fait : votre premier rendez-vous visio sous 7 jours est gratuit.
+
+Nous sommes confiants de la qualité — à l'issue, vous renouvellerez pour travailler avec nous.
+
+Démarrez votre essai gratuit 14 jours (puis 1 499 €/mois) :
+{{checkoutTrialLink}}
+
+Béatrice Meyer`,
+  },
+  free_trial_2: {
+    subject: "Rappel — premier rendez-vous offert",
+    body: `{{firstNameLine}}
+
+Petit rappel : votre premier rendez-vous visio sous 7 jours est offert pour simplifier votre décision.
+
+Essai 14 jours gratuits, puis 1 499 €/mois. Si vous n'êtes pas convaincu, vous arrêtez.
+
+Activer l'essai :
+{{checkoutTrialLink}}
+
+Béatrice Meyer`,
+  },
+  free_trial_3: {
+    subject: "Dernière relance — essai gratuit 14 jours",
+    body: `{{firstNameLine}}
+
+Dernière relance : démarrez l'essai gratuit de 14 jours. Votre premier rendez-vous visio est offert sous 7 jours.
+
+Ensuite : 1 499 €/mois. Sans engagement au-delà de l'essai — vous pouvez arrêter.
+
+{{checkoutTrialLink}}
+
+Béatrice Meyer`,
+  },
+  free_trial_started_1: {
+    subject: "Votre essai a commencé",
+    body: `{{firstNameLine}}
+
+Votre essai a commencé. Votre premier rendez-vous sera livré sous 14 jours.
+
+Si vous souhaitez vous désabonner ou ne pas renouveler, cliquez ici :
+{{billingPortalLink}}
+
+Tableau de bord : {{dashboardLink}}
+
+Béatrice Meyer`,
+  },
+  free_trial_started_2: {
+    subject: "Opérationnel OK",
+    body: `{{firstNameLine}}
+
+Opérationnel OK — votre espace essai tourne. Nous préparons votre premier rendez-vous.
+
+Tableau de bord : {{dashboardLink}}
+
+Béatrice Meyer`,
+  },
+  free_trial_started_3: {
+    subject: "Votre premier rendez-vous arrive sous 14 jours",
+    body: `{{firstNameLine}}
+
+Votre premier rendez-vous arrivera avant 14 jours — tenez-vous prêt !
+
+Tableau de bord : {{dashboardLink}}
+
+Béatrice Meyer`,
+  },
 };
 
 export const COMPTABLE_BOOKING_EMAIL_TEMPLATE_OVERRIDES: Partial<
@@ -804,7 +875,8 @@ export function buildFirstNameLine(
     emailType === "payment_notification_client" ||
     emailType === "modalites_ask" ||
     emailType === "modalites_cancel" ||
-    emailType.startsWith("comptable_acquisition_")
+    emailType.startsWith("comptable_acquisition_") ||
+    emailType.startsWith("free_trial")
   ) {
     return trimmed ? `Bonjour ${trimmed},` : "Bonjour,";
   }

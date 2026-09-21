@@ -37,9 +37,9 @@ Sur l'échantillon, **2/10 borderline sont de vrais cabinets EC** mal tagués pa
 
 ```bash
 cd app/streamlit_scraper
-python main.py audit-filter --preset cabinets_expertise_comptable_vol
+python main.py audit-filter --preset cabinets_expertise_comptable_fresh_geo
 # ou sur copie VPS :
-python scripts/audit_filter.py --preset cabinets_expertise_comptable_vol --out-dir /path/to/output --json
+python scripts/audit_filter.py --preset cabinets_expertise_comptable_fresh_geo --out-dir /path/to/output --json
 ```
 
 Génère `taxonomy_review.csv` (borderline) et affiche le breakdown Reason + batch acceptance depuis `scrape.log`.

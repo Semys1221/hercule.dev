@@ -1,16 +1,51 @@
+import React from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+
+function slugifyHeading(children: React.ReactNode): string | undefined {
+  const text = React.Children.toArray(children)
+    .map((child) => (typeof child === "string" ? child : ""))
+    .join("")
+    .trim()
+  if (!text) return undefined
+  const lower = text.toLowerCase()
+  if (lower.includes("hubris") || lower.includes("impérial") || lower.includes("imperial")) {
+    return "hubris"
+  }
+  if (lower.includes("(dec)") || lower.includes("mercantile") || lower.includes("expert-comptable")) {
+    return "dec"
+  }
+  if (lower.includes("(ias)") || lower.includes("assureur")) return "ias"
+  if (lower.includes("(cif)") || lower.includes("conseiller financier")) return "cif"
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\{#[^}]+\}/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+}
 
 const markdownComponents = {
   h1: ({ children }: { children?: React.ReactNode }) => (
     <h1 className="text-3xl md:text-4xl text-white font-medium tracking-tight mb-8">{children}</h1>
   ),
-  h2: ({ children }: { children?: React.ReactNode }) => (
-    <h2 className="text-xl text-white font-medium tracking-tight mt-10 mb-4">{children}</h2>
-  ),
-  h3: ({ children }: { children?: React.ReactNode }) => (
-    <h3 className="text-lg text-white font-medium mt-8 mb-3">{children}</h3>
-  ),
+  h2: ({ children }: { children?: React.ReactNode }) => {
+    const id = slugifyHeading(children)
+    return (
+      <h2 id={id} className="text-xl text-white font-medium tracking-tight mt-10 mb-4 scroll-mt-24">
+        {children}
+      </h2>
+    )
+  },
+  h3: ({ children }: { children?: React.ReactNode }) => {
+    const id = slugifyHeading(children)
+    return (
+      <h3 id={id} className="text-lg text-white font-medium mt-8 mb-3 scroll-mt-24">
+        {children}
+      </h3>
+    )
+  },
   p: ({ children }: { children?: React.ReactNode }) => (
     <p className="text-zinc-400 text-sm leading-relaxed mb-4">{children}</p>
   ),

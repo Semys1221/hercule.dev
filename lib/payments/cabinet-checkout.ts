@@ -96,6 +96,31 @@ export function parseSlidersOfferQuery(
   return null;
 }
 
+/** Resolve dashboard ?offer= into a Stripe checkout offer type (sliders + free trial). */
+export function parseComptableCheckoutOfferQuery(
+  offer: string | null | undefined,
+): OfferTypeComptable | null {
+  const raw = offer?.trim();
+  if (!raw) {
+    return null;
+  }
+  if (raw === OFFER_TYPES_COMPTABLE.monthly1499Trial) {
+    return OFFER_TYPES_COMPTABLE.monthly1499Trial;
+  }
+  const sliders = parseSlidersOfferQuery(raw);
+  if (sliders) {
+    return slidersOfferToOfferType(sliders);
+  }
+  if (
+    raw === OFFER_TYPES_COMPTABLE.starter999_5 ||
+    raw === OFFER_TYPES_COMPTABLE.monthly1499 ||
+    raw === OFFER_TYPES_COMPTABLE.pack3x1499
+  ) {
+    return raw;
+  }
+  return null;
+}
+
 export function buildCabinetCheckoutDashboardUrl(
   dashboardUrl: string,
   offer: SlidersOfferId,
@@ -103,6 +128,14 @@ export function buildCabinetCheckoutDashboardUrl(
   const url = new URL(dashboardUrl);
   url.searchParams.set("checkout", "1");
   url.searchParams.set("offer", offer);
+  return url.toString();
+}
+
+/** Deep-link to embedded checkout for free-trial nurture CTAs. */
+export function buildFreeTrialCheckoutDashboardUrl(dashboardUrl: string): string {
+  const url = new URL(dashboardUrl);
+  url.searchParams.set("checkout", "1");
+  url.searchParams.set("offer", OFFER_TYPES_COMPTABLE.monthly1499Trial);
   return url.toString();
 }
 

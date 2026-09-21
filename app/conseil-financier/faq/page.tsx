@@ -3,8 +3,9 @@ import type { Metadata } from "next"
 import { CifFaqPage } from "@/components/site/cif-faq-page"
 
 export const metadata: Metadata = {
-  title: "FAQ — Hercule CIF",
-  description: "Questions fréquentes sur le service Hercule pour les cabinets de conseil financier.",
+  title: "FAQ — Courtier financier — Hercule",
+  description:
+    "Questions fréquentes sur le courtage de projets patrimoniaux Hercule pour cabinets CIF / CGP (BNC, BIC, TNS).",
 }
 
 export default function ConseilFinancierFaqPage() {

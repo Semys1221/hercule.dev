@@ -26,11 +26,16 @@ COMPTABLE_CAMPAIGN_ID = "e4c58718-ca00-4e27-b714-68e522fe4db6"
 COMPTABLE_POSITIVE_MARKERS = (
     "cabinets partenaires",
     "proposer mon cabinet",
-    "entreprises de btp",
-    "approche a 360",
+    "restaurants",
+    "plus de 5 salaries",
+    "fort turnover",
+    "s etendre",
+    "rentables",
+    "ratio matiere",
+    "suivi des heures",
+    "tenue comptable",
+    "social / paie",
     "au minimum 2 associes",
-    "echanges entre cabinets et entreprise",
-    "19 septembre",
 )
 
 COMPTABLE_E1_MARKERS = COMPTABLE_POSITIVE_MARKERS + (

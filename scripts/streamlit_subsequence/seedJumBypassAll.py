@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seed JUM bypass templates for all three Instantly campaigns (vertical-specific E1)."""
+"""Seed JUM bypass templates for all Instantly campaigns (vertical-specific E1)."""
 
 from __future__ import annotations
 

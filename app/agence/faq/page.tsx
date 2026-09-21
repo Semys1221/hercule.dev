@@ -1,12 +1,6 @@
-import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 
-import { AgenceFaqPage } from "@/components/site/agence-faq-page"
-
-export const metadata: Metadata = {
-  title: "FAQ — Hercule Agence",
-  description: "Questions fréquentes sur le service Hercule pour les agences partenaires.",
-}
-
+/** Public agence FAQ retired — redirect to FAQ hub. */
 export default function AgenceFaqPageRoute() {
-  return <AgenceFaqPage />
+  redirect("/faq")
 }

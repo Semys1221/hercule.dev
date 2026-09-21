@@ -39,7 +39,7 @@ Niche presets are imported from `app/streamlit_scraper/config_loader.PRESET_LABE
 |------|--------|-----|
 | **buyer** | `prompts/conseillers_gestion_patrimoine_buyer.md` | `{reservation_cif_link}` → briefing collectif uniquement |
 
-Knowledge pack : `doc/tech-stack/ai-reply-knowledge-cif.md` + `doc/legal-documentation/cif/faq.json`.
+Knowledge pack : `content/tech/ai-reply-knowledge-cif.md` + `content/legal-documentation/cif/faq.json`.
 
 **Recovery + AER :** toutes les réponses `should_reply=true` suivent Acknowledge → Explain → Redirect. Tag Lead uniquement : gate 70 % ; envoi réussi → retag Instantly **Interested**. Tag Not interested : pas de lecture Grok.
 
@@ -53,7 +53,7 @@ pnpm resync-reply-agent-prompts
 
 ## Niche comptable (`cabinets_expertise_comptable`)
 
-Preset principal : `cabinets_expertise_comptable` (volume : `cabinets_expertise_comptable_vol`, même campagne Instantly).
+Preset principal : `cabinets_expertise_comptable_fresh_geo` (scraper VPS comptable, même campagne Instantly).
 
 | Rôle | Cible | Prompt | CTA variable |
 |------|-------|--------|--------------|
@@ -110,3 +110,5 @@ Sans cette étape, le webhook prod continue d'utiliser l'ancien texte en base.
 ## Environment
 
 Load API keys from repo root `.env` (Grok, Instantly, Supabase). See `config.py`.
+
+**International 1:1 (DEC · IAS · CIF, BE/CH/CA) :** après acceptation explicite des tarifs (1 499 USD/mois · 400 USD/mois profils), le webhook génère un lien Calendly à usage unique via l'event `hercule-connect/echange-avec-dirigeant`. Env optionnelle : `CALENDLY_EVENT_TYPE_URI_INTERNATIONAL_1TO1` (défaut : URI de l'event créé le 2026-09-21). Questions Calendly à configurer dans l'UI : IAS/DEC/CIF + téléphone.

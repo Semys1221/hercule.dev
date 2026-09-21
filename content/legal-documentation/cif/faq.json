@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "audience": "cif",
+  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "entries": [
+    {
+      "id": "faq-cif-001",
+      "question": "D'où proviennent les demandes ?",
+      "answer": "Hercule capte des signaux d'intention chez des praticiens BNC médicaux (trésorerie > 50 k€, pression fiscale). Après qualification live, attribution exclusive au cabinet CIF / CGP compatible.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-002",
+      "question": "Qui peut rejoindre Hercule CIF ?",
+      "answer": "Cabinets CIF / CGP avec bande passante pour des visioconférences qualifiantes. Éligibilité confirmée à l'audit de compatibilité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-003",
+      "question": "Combien coûte Hercule ?",
+      "answer": "Hercule Hubris : Option A 4 000 € flat (trimestre) ou Option B 1 800 €/mois (engagement 3 mois) — 15 à 20 bilans lourds / trimestre, BNC médicaux ou PME BTP, visioconférence nationale, 0 % de commission. Aucune garantie de signature. Détail : hercule.dev/cvg#hubris.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-004",
+      "question": "Comment se passe l'attribution ?",
+      "answer": "Après paiement et onboarding, Calendly Pro et Zoom Pro sont provisionnés. Les crédits sont consommés à la planification du RDV.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-005",
+      "question": "Y a-t-il une garantie de signature ?",
+      "answer": "Non. Obligation de moyens sur les crédits. Pas de garantie de signature ni de commissions produits.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-006",
+      "question": "Mon prospect ne s'est pas présenté (no-show)",
+      "answer": "Crédit recrédité. Remplacement sous 14 jours ouvrés.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-007",
+      "question": "Qui êtes-vous ?",
+      "answer": "Hercule est un groupement d'entrepreneurs dirigé par Evan Sinclair. Mentions légales : hercule.dev/mentions-legales."
+    },
+    {
+      "id": "faq-cif-008",
+      "question": "Ai-je un délai de rétractation ?",
+      "answer": "4 jours calendaires tant que l'activation n'a pas démarré.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-009",
+      "question": "Les demandes sont-elles exclusives ?",
+      "answer": "Oui — une demande, un partenaire.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-010",
+      "question": "Que se passe-t-il à l'échéance du trimestre ?",
+      "answer": "Reconduction tacite de Hercule Hubris (même formule Option A ou B). Crédits non consommés non convertis en cash à la résiliation.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-011",
+      "question": "Opérez-vous hors France ?",
+      "answer": "Modèle France par défaut. Belgique, Suisse et Canada : échange 1:1 sur mesure (IAS ou CIF) — tarification internationale exposée par email (1 499 USD/mois · profils 400 USD/mois min · 10/mois) avant lien de planification unique.",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cif-012",
+      "question": "Retard de livraison — que faire ?",
+      "answer": "Délai de grâce 7 jours. Contacter contact@hercule.dev avant dispute Stripe.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-013",
+      "question": "Qui porte la responsabilité du conseil ?",
+      "answer": "Le cabinet CIF / CGP, dans sa lettre de mission. Hercule ne conseille pas, ne sélectionne pas et ne commercialise pas de produits financiers.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-014",
+      "question": "Quels produits financiers sont concernés ?",
+      "answer": "Aucun catalogue imposé. Le cabinet CIF recommande, selon le profil du dirigeant et son statut AMF, les solutions adaptées (épargne, assurance-vie, SCPI, valeurs mobilières, etc.). Hercule ne prescrit aucun produit.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-015",
+      "question": "Comment les prospects sont-ils qualifiés ?",
+      "answer": "Signaux d'intention puis Live Qualification. Le dirigeant a manifesté un besoin compatible avant l'attribution exclusive. Ce n'est pas une liste froide.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-016",
+      "question": "Comment se déroule le premier rendez-vous ?",
+      "answer": "Visioconférence planifiée (Calendly et Zoom provisionnés) entre le dirigeant et le cabinet, sous 20 à 25 jours après activation. Hercule n'est pas présent à cet échange.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-017",
+      "question": "Y a-t-il une commission ou une rétrocession ?",
+      "answer": "Non. 0 % sur les honoraires et produits souscrits. Le dirigeant ne paie rien à Hercule. Le cabinet souscrit une formule pour recevoir des attributions qualifiées.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-018",
+      "question": "Faut-il signer une convention avant la mise en relation ?",
+      "answer": "La relation Hercule ↔ cabinet est régie par les CGV de la formule souscrite. La relation avec le dirigeant est la lettre de mission du cabinet. Présentation et conditions détaillées au briefing collectif — pas d'envoi automatique de convention type.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-019",
+      "question": "Une assurance RC Pro est-elle exigée ?",
+      "answer": "La RC Pro relève de l'obligation professionnelle du cabinet. Hercule ne souscrit pas de police pour le compte du partenaire.",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cif-020",
+      "question": "Faut-il être CIF ou ORIAS ?",
+      "answer": "Cabinet CIF / CGP en règle. L'immatriculation ORIAS n'est requise que si le cabinet distribue aussi de l'assurance. L'éligibilité opérationnelle se confirme à l'audit de compatibilité.",
+      "cvgLink": true
+    }
+  ]
+}

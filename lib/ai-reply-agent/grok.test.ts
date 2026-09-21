@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   buildConferenceObjectionRules,
   buildGlobalRules,
+  buildInternationalRules,
   DEFAULT_GROK_TEMPERATURE,
   parseGrokJson,
   resolveGrokTemperature,
@@ -22,11 +23,31 @@ describe("buildConferenceObjectionRules", () => {
     expect(rules).toContain("2 500 €");
     expect(rules).toContain("dentistes et vétérinaires");
     expect(rules).toContain("répondez à ce mail");
+    expect(rules).toContain("mercredi 23 septembre");
+    expect(rules).toContain("PAS d'option 1:1");
     expect(rules).not.toContain("pas d'audit 1:1");
   });
 
   it("returns null for agence preset", () => {
     expect(buildConferenceObjectionRules("agences_web")).toBeNull();
+  });
+});
+
+describe("buildInternationalRules", () => {
+  it("includes DEC international script for comptable preset", () => {
+    const rules = buildInternationalRules("cabinets_expertise_comptable");
+    expect(rules).toContain("International BE/CH/CA (DEC");
+    expect(rules).toContain("1 499 USD/mois");
+    expect(rules).toContain("400 USD/mois");
+    expect(rules).not.toContain("France uniquement");
+  });
+
+  it("includes IAS/CIF international script for CIF presets", () => {
+    const cif = buildInternationalRules("conseillers_gestion_patrimoine");
+    const ias = buildInternationalRules("courtiers_prevoyance_b2b");
+    expect(cif).toContain("IAS + CIF");
+    expect(ias).toContain("passifs sociaux");
+    expect(cif).toContain("dentistes et vétérinaires");
   });
 });
 
@@ -59,10 +80,40 @@ describe("buildGlobalRules", () => {
   it("embeds conference objection rules for comptable and CIF", () => {
     const comptable = buildGlobalRules(3, "cabinets_expertise_comptable");
     const cif = buildGlobalRules(3, "conseillers_gestion_patrimoine");
-    expect(comptable).toContain("Objection conférence (comptable");
-    expect(cif).toContain("Objection conférence (CIF");
+    expect(comptable).toContain("Objection conférence EXPLICITE (comptable");
+    expect(cif).toContain("Objection conférence EXPLICITE (CIF");
+    expect(comptable).toContain("mercredi 23 septembre");
+    expect(cif).toContain("PAS d'option 1:1");
     expect(comptable).toContain("2 500 € sur-mesure pour objection conférence");
     expect(comptable).not.toContain("pas d'audit 1:1");
+    expect(comptable).toContain("International BE/CH/CA (DEC");
+    expect(comptable).toContain("1 499 USD");
+  });
+
+  it("uses R2 prospect quality rules without perception reframe", () => {
+    const r2 = buildGlobalRules(3, "cabinets_expertise_comptable", false, true);
+    expect(r2).toContain("double verrou");
+    expect(r2).toContain("appel téléphonique");
+    expect(r2).toContain("retour par mail");
+    expect(r2).toContain("contrat signé");
+    expect(r2).toContain("4 à 5 paragraphes");
+    expect(r2).toContain("Interdit : reframe perception");
+  });
+
+  it("uses IAS conference rules and thematic paragraphs for due diligence", () => {
+    const ias = buildGlobalRules(3, "courtiers_prevoyance_b2b");
+    expect(ias).toContain("Objection conférence EXPLICITE (IAS");
+    expect(ias).toContain("https://hercule.dev/cvg/courtier-assurance");
+    const dueDiligence = buildGlobalRules(
+      2,
+      "conseillers_gestion_patrimoine",
+      true,
+    );
+    expect(dueDiligence).toContain("4 à 8 paragraphes");
+    expect(dueDiligence).toContain("recovery_confidence ≥ 85");
+    expect(dueDiligence).not.toContain(
+      "Maximum 2 phrases courtes dans reply_text",
+    );
   });
 });
 

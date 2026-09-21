@@ -10,7 +10,7 @@ Before editing, read:
 2. [`.cursor/skills/hercule-nextjs/SKILL.md`](../../.cursor/skills/hercule-nextjs/SKILL.md) (router)
 3. [`.cursor/skills/hercule-nextjs-dashboard/SKILL.md`](../../.cursor/skills/hercule-nextjs-dashboard/SKILL.md) (this domain)
 
-Canon: [doc/README.md](../../doc/README.md).
+Canon: [.cursor/skills/hercule-tech-spec](../../.cursor/skills/hercule-tech-spec/SKILL.md).
 
 ## Routes
 

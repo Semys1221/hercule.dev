@@ -27,7 +27,7 @@ export const FAQ_LIVE_INSTANCES: FaqLiveInstance[] = [
     location: "/faq",
     audience: "agence",
     kind: "master",
-    sourcePath: "doc/legal-documentation/agence/faq.json",
+    sourcePath: "content/legal-documentation/agence/faq.json",
   },
   {
     id: "master-entreprise",
@@ -36,7 +36,7 @@ export const FAQ_LIVE_INSTANCES: FaqLiveInstance[] = [
     location: "/faq",
     audience: "entreprise",
     kind: "master",
-    sourcePath: "doc/legal-documentation/entreprise/faq.json",
+    sourcePath: "content/legal-documentation/entreprise/faq.json",
   },
   {
     id: "master-comptable",
@@ -45,7 +45,7 @@ export const FAQ_LIVE_INSTANCES: FaqLiveInstance[] = [
     location: "/faq",
     audience: "comptable",
     kind: "master",
-    sourcePath: "doc/legal-documentation/comptable/faq.json",
+    sourcePath: "content/legal-documentation/comptable/faq.json",
   },
   {
     id: "funnel-faq-widget-comptable",

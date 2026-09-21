@@ -45,6 +45,34 @@ assert.equal(
   false,
 );
 
+// When both secrets are set, either Bearer token must be accepted.
+process.env.LINK_TRACKING_WEBHOOK_SECRET = "link-secret";
+process.env.CRON_SECRET = "cron-secret";
+assert.equal(
+  verifyProvisionLeadsSecret(
+    new Request("http://localhost/api/link-tracking/provision-leads", {
+      headers: { authorization: "Bearer link-secret" },
+    }),
+  ),
+  true,
+);
+assert.equal(
+  verifyProvisionLeadsSecret(
+    new Request("http://localhost/api/link-tracking/provision-leads", {
+      headers: { authorization: "Bearer cron-secret" },
+    }),
+  ),
+  true,
+);
+assert.equal(
+  verifyProvisionLeadsSecret(
+    new Request("http://localhost/api/link-tracking/provision-leads", {
+      headers: { authorization: "Bearer neither" },
+    }),
+  ),
+  false,
+);
+
 if (previousCron === undefined) {
   delete process.env.CRON_SECRET;
 } else {

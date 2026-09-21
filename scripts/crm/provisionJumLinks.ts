@@ -5,6 +5,7 @@
  *   pnpm provision-jum-links -- --vertical=restaurant
  *   pnpm provision-jum-links -- --vertical=btp
  *   pnpm provision-jum-links -- --vertical=dentiste
+ *   pnpm provision-jum-links -- --vertical=medecin
  *   pnpm provision-jum-links -- --all
  *   pnpm provision-jum-links -- --list-id=<uuid>   # auto-resolves vertical + campaign
  */

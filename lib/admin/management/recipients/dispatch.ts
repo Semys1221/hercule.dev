@@ -2,6 +2,8 @@ import { BOOKING_CONFIRMATION_DISABLED } from "@/lib/booking-communication/confi
 import { startConferenceInviteSequence } from "@/lib/cif-conference-sequence/orchestrator";
 import { startCloseIndecisSequence } from "@/lib/close-indecis-sequence/orchestrator";
 import { startComptableAcquisitionSequence } from "@/lib/comptable-acquisition-sequence/orchestrator";
+import { startFreeTrialSequence } from "@/lib/free-trial-sequence/orchestrator";
+import { startFreeTrialStartedSequence } from "@/lib/free-trial-started-sequence/orchestrator";
 import { startPropositionLudovicSequence } from "@/lib/proposition-ludovic-sequence/orchestrator";
 import { handleLeadInterested } from "@/lib/instantly-bypass/handler";
 import { executeBypassFlow } from "@/lib/instantly-bypass/send-flow";
@@ -190,6 +192,33 @@ export async function dispatchSequenceStart(params: {
         return { ok: false, error: "acquisition_not_started" };
       }
       return { ok: true, currentStep: "comptable_acquisition_welcome" };
+    }
+    case "free-trial": {
+      if (params.niche !== "comptable") {
+        return { ok: false, error: "free_trial_comptable_only" };
+      }
+      const result = await startFreeTrialSequence({
+        leadId: lead.id,
+        startsAt: params.scheduledAt ?? new Date(),
+      });
+      if (result.scheduledJobs === 0) {
+        return { ok: false, error: "free_trial_not_started" };
+      }
+      return { ok: true, currentStep: "free_trial_1" };
+    }
+    case "free-trial-started": {
+      if (params.niche !== "comptable") {
+        return { ok: false, error: "free_trial_started_comptable_only" };
+      }
+      const result = await startFreeTrialStartedSequence({
+        leadId: lead.id,
+        paymentAt: params.scheduledAt ?? new Date(),
+        stripeCheckoutSessionId: `management:${lead.id}`,
+      });
+      if (!result.welcomeSent && result.scheduledJobs === 0) {
+        return { ok: false, error: "free_trial_started_not_started" };
+      }
+      return { ok: true, currentStep: "free_trial_started_1" };
     }
     case "proposition-ludovic-post-payment": {
       // Manual replay — default to formule-test-15 if no offer metadata available

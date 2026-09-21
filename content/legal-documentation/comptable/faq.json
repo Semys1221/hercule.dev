@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "audience": "comptable",
+  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "entries": [
+    {
+      "id": "faq-cp-001",
+      "question": "D'où proviennent les demandes ?",
+      "answer": "Hercule détecte en continu des signaux d'intention chez les dirigeants TPE et indépendants (BIC restaurants). Après qualification live, le projet est attribué au cabinet partenaire le plus compatible — en exclusivité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-002",
+      "question": "Qui peut rejoindre Hercule Comptable ?",
+      "answer": "Les cabinets avec une bande passante suffisante pour absorber de nouvelles visioconférences qualifiantes. Le seuil de plus de 3 associés ou collaborateurs est un indicateur de capacité, pas un refus automatique. L'éligibilité est confirmée lors de l'audit de compatibilité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-003",
+      "question": "Combien coûte Hercule ?",
+      "answer": "Hercule Mercantile (DEC) : 1 499 €/mois — engagement trimestriel (3 mois), 10 rendez-vous qualifiés / mois, restaurants indépendants +3 salariés, visioconférence nationale, 0 % de commission. Aucune garantie de signature ni de MRR — obligation de moyens sur les crédits.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-004",
+      "question": "Comment se passe la mise en relation ?",
+      "answer": "Après souscription et onboarding, Calendly Pro et Zoom Pro sont provisionnés. Les rendez-vous sont planifiés dans votre agenda. Le warm-up technique est géré après paiement — pas affiché sur la slide prix.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-005",
+      "question": "Y a-t-il une garantie de signature ?",
+      "answer": "Non. Hercule s'engage sur le volume de crédits et la qualification. Aucune garantie de signature, de MRR ou de commissions. Vous restez seul responsable de la négociation et de la lettre de mission.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-006",
+      "question": "Comment fonctionnent les emails Hercule ?",
+      "answer": "Hercule utilise plusieurs adresses et domaines dédiés. Le domaine principal est hercule.dev."
+    },
+    {
+      "id": "faq-cp-007",
+      "question": "Mon prospect ne s'est pas présenté (no-show)",
+      "answer": "L'attribution n'est pas consommée. Un rendez-vous de remplacement est planifié sous 14 jours ouvrés.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-008",
+      "question": "Qui êtes-vous ?",
+      "answer": "Hercule est un groupement d'entrepreneurs dirigé par Evan Sinclair. Nous fournissons une infrastructure de mise en relation B2B pour cabinets partenaires. Mentions légales : hercule.dev/mentions-legales."
+    },
+    {
+      "id": "faq-cp-009",
+      "question": "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
+      "answer": "Vous disposez d'un délai de grâce de 7 jours en cas de retard de livraison. Au-delà, écrivez à contact@hercule.dev avant toute dispute Stripe.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-010",
+      "question": "Ai-je un délai de rétractation ?",
+      "answer": "Oui. 4 jours calendaires après souscription tant que l'activation n'a pas démarré. Renonciation possible à l'onboarding ou depuis le dashboard.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-011",
+      "question": "Je n'ai pas 3 collaborateurs — suis-je éligible ?",
+      "answer": "L'enjeu est la bande passante pour des visioconférences qualifiantes (Zoom provisionné), y compris via sous-traitance stable. Confirmez lors de l'audit de compatibilité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-012",
+      "question": "Les mensualités sont trop élevées — pouvez-vous expliquer ?",
+      "answer": "Hercule Mercantile (1 499 €/mois, engagement 3 mois) livre 10 rendez-vous qualifiés / mois sur des restaurants déjà prédisposés à acheter une stack à 490 €/mois. 0 % de commission. Détail : hercule.dev/cvg#dec.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-013",
+      "question": "Puis-je vous joindre par téléphone ?",
+      "answer": "Pour la cohorte en cours, Hercule organise un briefing collectif (visio). Pour un 1:1, répondez à l'email.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-014",
+      "question": "Rémunérez-vous les apporteurs d'affaires ?",
+      "answer": "Non. Hercule ne prélève aucune commission sur vos honoraires. Le dirigeant ne paie rien à Hercule.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-015",
+      "question": "Comment avez-vous eu mon contact ?",
+      "answer": "Campagne d'approche B2B ciblée sur les cabinets compatibles avec les projets en cours.",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cp-016",
+      "question": "Proposez-vous un audit de comptabilité ?",
+      "answer": "Non. L'audit de compatibilité vérifie zone, honoraires et bande passante pour recevoir des missions qualifiées.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-017",
+      "question": "Opérez-vous en Belgique ?",
+      "answer": "Modèle France par défaut. Belgique, Suisse et Canada : échange 1:1 sur mesure avec le dirigeant — tarification internationale exposée par email (1 499 USD/mois · profils 400 USD/mois min · 10/mois) avant lien de planification unique.",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cp-018",
+      "question": "Les demandes sont-elles exclusives ?",
+      "answer": "Oui — une demande, un partenaire. Pas de marketplace.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-019",
+      "question": "Qui porte la responsabilité de la mission ?",
+      "answer": "Le cabinet d'expertise comptable, dans sa lettre de mission. Hercule ne réalise pas la comptabilité, le social ni le conseil fiscal.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-020",
+      "question": "Quel est le besoin des dirigeants transmis ?",
+      "answer": "Restaurants indépendants de plus de 3 salariés : tenue comptable, social et paie, avec des enjeux de turnover, de suivi des heures et de ratio matière. Pas de recommandation de produits financiers.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-021",
+      "question": "Comment les prospects sont-ils qualifiés ?",
+      "answer": "Signaux d'intention puis Live Qualification. Le dirigeant a manifesté un besoin compatible avant l'attribution exclusive.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-022",
+      "question": "Comment se déroule le premier rendez-vous ?",
+      "answer": "Visioconférence planifiée entre le dirigeant et le cabinet, sous 20 à 25 jours après activation. Hercule n'est pas présent à cet échange.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-023",
+      "question": "Y a-t-il une commission ou une rétrocession ?",
+      "answer": "Non. 0 % sur les honoraires signés. Le dirigeant ne paie rien à Hercule. Le cabinet souscrit Hercule Mercantile pour recevoir des rendez-vous qualifiés.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-024",
+      "question": "Faut-il signer une convention avant la mise en relation ?",
+      "answer": "La relation Hercule ↔ cabinet est régie par les CGV. La relation avec le dirigeant est la lettre de mission du cabinet. Les conditions détaillées sont présentées au briefing collectif.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cp-025",
+      "question": "Une assurance RC Pro est-elle exigée ?",
+      "answer": "La RC Pro relève de l'obligation professionnelle du cabinet. Hercule ne souscrit pas de police pour le compte du partenaire.",
+      "cvgLink": false
+    },
+    {
+      "id": "faq-cp-026",
+      "question": "Quel statut est exigé ?",
+      "answer": "Cabinet d'expertise comptable en règle. Pas d'exigence de statut CIF ni d'immatriculation ORIAS pour cette verticale.",
+      "cvgLink": true
+    }
+  ]
+}

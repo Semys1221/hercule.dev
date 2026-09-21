@@ -11,6 +11,7 @@ import re
 import sys
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Callable
 
 import httpx
@@ -1246,6 +1247,70 @@ def _load_seen_from_csv() -> tuple[set[str], set[str]]:
     return seen_em, seen_domain
 
 
+def _agent_debug(hypothesis_id: str, location: str, message: str, data: dict[str, Any]) -> None:
+    # #region agent log
+    try:
+        import json as _json
+        import time as _time
+        import urllib.request as _urllib
+
+        payload = {
+            "sessionId": "b2bf79",
+            "runId": "prevoyance-backlog",
+            "hypothesisId": hypothesis_id,
+            "location": location,
+            "message": message,
+            "data": data,
+            "timestamp": int(_time.time() * 1000),
+        }
+        line = _json.dumps(payload, ensure_ascii=False) + "\n"
+        for path in (
+            Path("/Users/evqn/dev/hercule.dev/.cursor/debug-b2bf79.log"),
+            Path("/var/lib/hercule/streamlit_scraper/output/courtiers_prevoyance_b2b/debug-b2bf79.log"),
+        ):
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with path.open("a", encoding="utf-8") as handle:
+                    handle.write(line)
+            except OSError:
+                continue
+        req = _urllib.Request(
+            "http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d",
+            data=line.encode(),
+            headers={
+                "Content-Type": "application/json",
+                "X-Debug-Session-Id": "b2bf79",
+            },
+            method="POST",
+        )
+        _urllib.urlopen(req, timeout=1)
+    except Exception:
+        pass
+    # #endregion
+
+
+def _persist_workspace_seen_emails(
+    emails: set[str],
+    config: dict,
+    *,
+    cache_path: str,
+) -> None:
+    if not cache_path or not emails:
+        return
+    from instantly_client import save_workspace_email_cache
+
+    save_workspace_email_cache(
+        emails,
+        list_ids=list(config.get("INSTANTLY_DEDUP_LIST_IDS") or []),
+        campaign_ids=list(config.get("INSTANTLY_DEDUP_CAMPAIGN_IDS") or []),
+        complete=True,
+        cache_path=cache_path,
+    )
+
+
+_BACKLOG_SKIP_STREAK_ABORT = 2
+
+
 async def _flush_instantly_buffer(
     pending: list[dict[str, str]],
     config: dict,
@@ -1256,7 +1321,7 @@ async def _flush_instantly_buffer(
     from instantly_client import push_leads_to_list
 
     if not pending:
-        return {"pushed": 0, "skipped_duplicate": 0}
+        return {"pushed": 0, "skipped_duplicate": 0, "emails": []}
 
     if label:
         log_cb(f"Instantly flush ({label}) — {len(pending)} lead(s) in buffer")
@@ -1278,7 +1343,23 @@ async def _flush_instantly_buffer(
     pending.clear()
     _sync_mev_emails_sidecar(log_cb=log_cb)
 
-    should_provision = bool(batch_emails and config.get("INSTANTLY_PROVISION_LINKS"))
+    pushed = int(push_stats.get("pushed") or 0)
+    skipped = int(push_stats.get("skipped_duplicate") or 0)
+    should_provision = bool(
+        pushed > 0 and batch_emails and config.get("INSTANTLY_PROVISION_LINKS")
+    )
+    _agent_debug(
+        "H3",
+        "core_logic.py:_flush_instantly_buffer",
+        "instantly flush result",
+        {
+            "label": label,
+            "batch_emails": len(batch_emails),
+            "pushed": pushed,
+            "skipped": skipped,
+            "will_provision": should_provision,
+        },
+    )
 
     if should_provision:
         from link_provision_client import provision_leads_after_push
@@ -1288,10 +1369,13 @@ async def _flush_instantly_buffer(
             config=config,
             log_cb=log_cb,
         )
+    elif batch_emails and config.get("INSTANTLY_PROVISION_LINKS") and pushed <= 0:
+        log_cb("Link provision skipped — Instantly uploaded 0 lead(s)")
 
     return {
-        "pushed": push_stats["pushed"],
-        "skipped_duplicate": push_stats["skipped_duplicate"],
+        "pushed": pushed,
+        "skipped_duplicate": skipped,
+        "emails": batch_emails,
     }
 
 
@@ -1311,6 +1395,7 @@ async def _push_csv_backlog_if_needed(
     log_cb: Callable[[str], None],
     instantly_pushed: int,
     run_state: dict[str, Any] | None,
+    cache_path: str = "",
 ) -> tuple[int, int]:
     """Push CSV rows not yet on Instantly when backlog exceeds threshold."""
     if not os.path.isfile(csv_path):
@@ -1358,9 +1443,21 @@ async def _push_csv_backlog_if_needed(
         f"Backlog push — {len(backlog_rows)} CSV row(s) not yet on Instantly "
         f"(threshold {min_backlog})"
     )
+    _agent_debug(
+        "H1",
+        "core_logic.py:_push_csv_backlog_if_needed",
+        "backlog start",
+        {
+            "backlog_rows": len(backlog_rows),
+            "workspace_emails": len(workspace_emails),
+            "min_backlog": min_backlog,
+            "skip_if_in_campaign": bool(config.get("INSTANTLY_SKIP_IF_IN_CAMPAIGN", True)),
+        },
+    )
 
     total_pushed = 0
     total_skipped = 0
+    skip_streak = 0
     for offset in range(0, len(backlog_rows), push_every):
         batch = backlog_rows[offset : offset + push_every]
         pending = list(batch)
@@ -1370,8 +1467,57 @@ async def _push_csv_backlog_if_needed(
             log_cb=log_cb,
             label=f"backlog batch {offset // push_every + 1}",
         )
-        total_pushed += flush_stats["pushed"]
-        total_skipped += flush_stats["skipped_duplicate"]
+        pushed = int(flush_stats.get("pushed") or 0)
+        skipped = int(flush_stats.get("skipped_duplicate") or 0)
+        total_pushed += pushed
+        total_skipped += skipped
+        seen_emails = [
+            str(email).strip().lower()
+            for email in (flush_stats.get("emails") or [])
+            if "@" in str(email)
+        ]
+        if skipped > 0 and seen_emails:
+            workspace_emails.update(seen_emails)
+            _persist_workspace_seen_emails(
+                workspace_emails,
+                config,
+                cache_path=cache_path,
+            )
+        if pushed <= 0 and skipped > 0:
+            skip_streak += 1
+        else:
+            skip_streak = 0
+        if skip_streak >= _BACKLOG_SKIP_STREAK_ABORT:
+            remaining = backlog_rows[offset + push_every :]
+            remaining_emails = {
+                str(row.get("Email") or "").strip().lower()
+                for row in remaining
+                if "@" in str(row.get("Email") or "")
+            }
+            if remaining_emails:
+                workspace_emails.update(remaining_emails)
+                _persist_workspace_seen_emails(
+                    workspace_emails,
+                    config,
+                    cache_path=cache_path,
+                )
+            log_cb(
+                f"Backlog push abort — Instantly duplicate skip streak "
+                f"{skip_streak} (marked {len(remaining_emails)} remaining as seen)"
+            )
+            _agent_debug(
+                "H4",
+                "core_logic.py:_push_csv_backlog_if_needed",
+                "backlog abort after skip streak",
+                {
+                    "skip_streak": skip_streak,
+                    "remaining": len(remaining_emails),
+                    "workspace_emails": len(workspace_emails),
+                    "total_pushed": total_pushed,
+                    "total_skipped": total_skipped,
+                },
+            )
+            break
 
     instantly_pushed += total_pushed
 
@@ -2333,6 +2479,7 @@ async def run_scraper_pipeline(
             log_cb=log_cb,
             instantly_pushed=instantly_pushed,
             run_state=run_state,
+            cache_path=paths.workspace_cache,
         )
         if run_state is not None and _backlog_delta > 0:
             run_state["instantly_pushed"] = instantly_pushed

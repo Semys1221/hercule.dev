@@ -31,6 +31,11 @@ const KNOWN_CAMPAIGN_CATEGORY: Record<string, LeadCategory> = {
   "e4f11e76-717e-4be9-a6ad-c7f0a331afb7": "jum",
   "05bc06f8-4f60-4e6c-bae1-7afe30df38c7": "jum",
   "0f0b450a-e550-461c-96f6-1a7681678d67": "jum",
+  "5c142a13-fcdf-4d6d-92e7-2afbc1865a5a": "jum",
+  "581b9357-753e-4c6e-aa99-d8b36fefca2d": "jum",
+  "273473f0-b2f1-4462-a668-f0277f90d807": "jum",
+  "7ec0e211-9832-4baf-8803-e12ab93ee517": "jum",
+  "7300a1ce-9e55-4bfa-92fd-d25361a22a59": "jum",
 };
 
 export async function resolveCategoryForCampaign(

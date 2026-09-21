@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Typer CLI — provision JUM leads from Instantly lists (restaurant / Terrassement / dentiste)."""
+"""Typer CLI — provision JUM leads from Instantly lists (all verticals)."""
 
 from __future__ import annotations
 
@@ -23,9 +23,18 @@ from shared.instantly_client import InstantlyClient
 
 app = typer.Typer(help="JUM niche link provisioning from Instantly lists.", no_args_is_help=True)
 
-VALID_SEGMENTS = ("restaurant", "b2b", "dentiste")
+VALID_SEGMENTS = (
+    "restaurant",
+    "b2b",
+    "dentiste",
+    "medecin",
+    "kine",
+    "avocat",
+    "architecte",
+    "veterinaire",
+)
 
-# Mirrors lib/admin/niches/jum-verticals.ts (TEMP lists; Terrassement = BTP)
+# Mirrors lib/admin/niches/jum-verticals.ts
 JUM_VERTICALS = [
     {
         "key": "restaurant",
@@ -41,7 +50,7 @@ JUM_VERTICALS = [
         "key": "btp",
         "label": "Terrassement / BTP",
         "segment": "b2b",
-        "list_id": "ef52cbe1-e6cb-4076-85bc-55ead03cb4bd",
+        "list_id": "ea5818ff-e086-4ed3-aee7-87b614fc7432",
         "campaign_id": "05bc06f8-4f60-4e6c-bae1-7afe30df38c7",
         "list_name": "TEMP - TERRASSEMENT",
         "campaign_name": "Hercule — Terrassement / VRD (France)",
@@ -57,9 +66,59 @@ JUM_VERTICALS = [
         "campaign_name": "Hercule — Chirurgiens-dentistes (France)",
         "calendly_url": "https://calendly.com/jum-advisory/rendez-vous-comptable-dentiste",
     },
+    {
+        "key": "medecin",
+        "label": "Médecin généraliste",
+        "segment": "medecin",
+        "list_id": "7e3b619f-9823-4d64-bc50-31f01bb08e6d",
+        "campaign_id": "5c142a13-fcdf-4d6d-92e7-2afbc1865a5a",
+        "list_name": "Hercule — Médecins généralistes (France)",
+        "campaign_name": "Médecins (CIF)",
+        "calendly_url": "https://calendly.com/jum-advisory/rendez-vous-comptable-medecin",
+    },
+    {
+        "key": "kine",
+        "label": "Kinésithérapeute",
+        "segment": "kine",
+        "list_id": "2a45b863-c705-4116-acec-31f49857bbbb",
+        "campaign_id": "581b9357-753e-4c6e-aa99-d8b36fefca2d",
+        "list_name": "Hercule — Kinésithérapeutes (France)",
+        "campaign_name": "Hercule — Kinésithérapeutes (France)",
+        "calendly_url": "https://calendly.com/jum-advisory/rendez-vous-comptable-kinesitherapeute",
+    },
+    {
+        "key": "avocat",
+        "label": "Avocat",
+        "segment": "avocat",
+        "list_id": "d4993823-d593-4839-8d67-48aa32782998",
+        "campaign_id": "273473f0-b2f1-4462-a668-f0277f90d807",
+        "list_name": "Hercule — Avocats (France)",
+        "campaign_name": "Hercule — Avocats (France)",
+        "calendly_url": "https://calendly.com/jum-advisory/rendez-vous-comptable-avocat",
+    },
+    {
+        "key": "architecte",
+        "label": "Architecte DPLG",
+        "segment": "architecte",
+        "list_id": "44b49536-aa48-4acd-9d3b-117e331d41f3",
+        "campaign_id": "7ec0e211-9832-4baf-8803-e12ab93ee517",
+        "list_name": "Hercule — Architectes DPLG (France)",
+        "campaign_name": "Hercule — Architectes DPLG (France)",
+        "calendly_url": "https://calendly.com/jum-advisory/rendez-vous-comptable-architecte-dplg",
+    },
+    {
+        "key": "veterinaire",
+        "label": "Vétérinaire",
+        "segment": "veterinaire",
+        "list_id": "29a1ca36-9964-4ee8-bc20-7a8c840af21d",
+        "campaign_id": "7300a1ce-9e55-4bfa-92fd-d25361a22a59",
+        "list_name": "Hercule — Vétérinaires (France)",
+        "campaign_name": "Hercule — Vétérinaires (France)",
+        "calendly_url": "https://calendly.com/jum-advisory/rendez-vous-comptable-veterinaire",
+    },
 ]
 
-VERTICAL_BY_LIST_ID = {row["list_id"]: row for row in JUM_VERTICALS}
+VERTICAL_BY_LIST_ID = {row["list_id"]: row for row in JUM_VERTICALS if row["list_id"]}
 VERTICAL_BY_KEY = {row["key"]: row for row in JUM_VERTICALS}
 
 
@@ -90,7 +149,7 @@ def list_verticals_cmd() -> None:
     typer.echo("-" * 110)
     for row in JUM_VERTICALS:
         typer.echo(
-            f"{row['key']:<12} {row['segment']:<12} {row['list_id']:<38} {row['campaign_id']}"
+            f"{row['key']:<12} {row['segment']:<12} {row['list_id'] or '(pending)':<38} {row['campaign_id'] or '(pending)'}"
         )
 
 
@@ -123,7 +182,7 @@ def _run_provision(
     resolved = _resolve_vertical(vertical=vertical, list_id=list_id)
     if not resolved and not list_id:
         typer.secho(
-            "Unknown vertical or list — use list-verticals or pass --vertical=restaurant|btp|dentiste",
+            "Unknown vertical or list — use list-verticals or pass --vertical=<key>",
             fg=typer.colors.RED,
         )
         raise typer.Exit(code=1)
@@ -163,7 +222,7 @@ def provision_all_cmd(
     resync_all: bool = typer.Option(False, "--resync-all", help="Re-provision all leads"),
     list_only: bool = typer.Option(False, "--list-only", help="Provision from lists only"),
 ) -> None:
-    """Provision all three JUM verticals (restaurant, Terrassement/BTP, dentiste)."""
+    """Provision all JUM verticals."""
     args = ["pnpm", "provision-jum-links", "--", "--all"]
     if resync_all:
         args.append("--resync-all")
@@ -180,7 +239,7 @@ def provision_cmd(
     vertical: Optional[str] = typer.Option(
         None,
         "--vertical",
-        help="JUM vertical: restaurant, btp (Terrassement), dentiste",
+        help=f"JUM vertical: {', '.join(VALID_SEGMENTS)} (btp for Terrassement)",
     ),
     list_id: Optional[str] = typer.Option(None, "--list-id", help="Instantly list UUID"),
     list_only: bool = typer.Option(False, "--list-only", help="Provision from list only"),

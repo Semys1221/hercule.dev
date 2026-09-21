@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { inboundNeedsFollowUp } from "./inbound-question";
+import {
+  inboundComplainsPartialAnswer,
+  inboundCalendlyPersonMismatch,
+  inboundNeedsFollowUp,
+} from "./inbound-question";
 
 describe("collision guard follow-up bypass", () => {
   it("allows grok path for jomega eligibility follow-up after auto-reply", () => {
@@ -43,5 +47,25 @@ Votre message ne comporte pas d'en-tête ni de coordonnées permettant
 d'identifier clairement la société que vous représenter.
 Pouvez-vous me communiquer le nom complet de votre société ?`;
     expect(inboundNeedsFollowUp(inbound)).toBe(true);
+  });
+
+  it("allows grok path for polite proposal thank-you after E1", () => {
+    expect(inboundNeedsFollowUp("Merci pour cette proposition.")).toBe(true);
+  });
+
+  it("detects partial-answer complaints", () => {
+    expect(
+      inboundComplainsPartialAnswer(
+        "Vous n'avez répondu qu'à une partie de mes interrogations.",
+      ),
+    ).toBe(true);
+  });
+
+  it("detects Calendly person mismatch", () => {
+    expect(
+      inboundCalendlyPersonMismatch(
+        "J'annule car ce n'est pas vous mais Evan sur Calendly.",
+      ),
+    ).toBe(true);
   });
 });

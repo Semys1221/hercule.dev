@@ -6,12 +6,12 @@ import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
 const copy = getMarketingCopy("cif")
 
-const cabinetStack = [
-  { name: "Live Qualification", icon: ClipboardCheck },
+const partnerStack = [
+  { name: "Qualification live", icon: ClipboardCheck },
   { name: "Zone exclusive", icon: Shield },
   { name: "Calendly Pro", icon: Calendar },
   { name: "Zoom Pro", icon: Video },
-  { name: "Capture brandée", icon: Users },
+  { name: "Attribution exclusive", icon: Users },
 ]
 
 export function BandeStack() {
@@ -35,7 +35,7 @@ export function BandeStack() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg text-zinc-500 mb-16"
           >
-            Infrastructure live en 60 jours — fiscal, trésorerie, patrimoine.
+            {copy.bandeStack.subtext}
           </motion.p>
 
           <motion.div
@@ -45,7 +45,7 @@ export function BandeStack() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="grid grid-cols-2 md:grid-cols-5 gap-x-8 gap-y-6 items-center justify-items-center"
           >
-            {cabinetStack.map((item) => {
+            {partnerStack.map((item) => {
               const Icon = item.icon
               return (
                 <div key={item.name} className="text-zinc-200 font-semibold text-lg flex items-center gap-3">

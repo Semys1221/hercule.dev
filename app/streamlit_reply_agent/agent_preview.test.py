@@ -65,7 +65,9 @@ class BuildGlobalRulesTests(unittest.TestCase):
     def test_includes_recovery_and_aer_rules(self) -> None:
         rules = build_global_rules(max_sentences=2)
         self.assertIn("recovery_confidence", rules)
-        self.assertIn("Structure AER obligatoire", rules)
+        self.assertIn("Structure AER", rules)
+        self.assertIn("UNIQUEMENT pour les objections", rules)
+        self.assertIn("mercredi 23 septembre", rules)
         self.assertIn("briefing collectif", rules)
         self.assertNotIn("ne jamais relancer", rules)
 
@@ -75,7 +77,7 @@ class BuildGlobalRulesTests(unittest.TestCase):
             niche_preset_id="cabinets_expertise_comptable",
         )
         lower = rules.lower()
-        self.assertIn("objection conférence (comptable", lower)
+        self.assertIn("objection conférence explicite (comptable", lower)
         self.assertIn("2 500 €", rules)
         self.assertIn("bnc/bic/tns", lower)
         self.assertIn("répondez à ce mail", lower)
@@ -87,12 +89,44 @@ class BuildGlobalRulesTests(unittest.TestCase):
             niche_preset_id="conseillers_gestion_patrimoine",
         )
         lower = rules.lower()
-        self.assertIn("objection conférence (cif", lower)
+        self.assertIn("première réponse", lower)
+        self.assertIn("objection conférence explicite (cif", lower)
         self.assertIn("2 500 €", rules)
         self.assertIn("dentistes et vétérinaires", lower)
         self.assertIn("répondez à ce mail", lower)
+        self.assertIn("pas d'option 1:1", lower)
         self.assertNotIn("pas d'audit 1:1", lower)
 
+    def test_comptable_includes_international_rules(self) -> None:
+        rules = build_global_rules(
+            max_sentences=3,
+            niche_preset_id="cabinets_expertise_comptable",
+        )
+        lower = rules.lower()
+        self.assertIn("international be/ch/ca (dec", lower)
+        self.assertIn("1 499 usd", lower)
+        self.assertIn("400 usd", lower)
+
+    def test_cif_includes_international_rules(self) -> None:
+        rules = build_global_rules(
+            max_sentences=3,
+            niche_preset_id="conseillers_gestion_patrimoine",
+        )
+        lower = rules.lower()
+        self.assertIn("international be/ch/ca (ias + cif", lower)
+        self.assertIn("dentistes et vétérinaires", lower)
+
+    def test_courtiers_prevoyance_uses_ias_conference_rules(self) -> None:
+        rules = build_global_rules(
+            max_sentences=3,
+            niche_preset_id="courtiers_prevoyance_b2b",
+        )
+        lower = rules.lower()
+        self.assertIn("objection conférence explicite (ias", lower)
+        self.assertIn("2 500 €", rules)
+        self.assertIn("tns / libéraux", lower)
+        self.assertIn("reservation-conference.html", lower)
+        self.assertIn("international be/ch/ca", lower)
 
 class GrokTemperatureTests(unittest.TestCase):
     def test_defaults_to_half(self) -> None:
@@ -175,6 +209,84 @@ class AssembleSystemPromptTests(unittest.TestCase):
         self.assertIn("objection conférence", lower)
         self.assertIn("2 500 €", prompt)
         self.assertIn("je n'ai pas 3 collaborateurs", lower)
+
+
+class PartnerDueDiligencePromptTests(unittest.TestCase):
+    BORIS_EXCERPT = """
+Bonjour, le projet peut m'intéresser. J'aurais besoin de précisions.
+Quel est le cadre réglementaire ? Attendez-vous le statut CIF ou une immatriculation ORIAS ?
+Qui porte la responsabilité du conseil ? Comment les mises en relation sont-elles exclusives ?
+Quel est le modèle économique : commission ou rétrocession ?
+"""
+
+    def test_boris_excerpt_is_due_diligence(self) -> None:
+        from inbound_question import inbound_looks_like_partner_due_diligence
+
+        self.assertTrue(
+            inbound_looks_like_partner_due_diligence(self.BORIS_EXCERPT)
+        )
+
+    def test_short_question_is_not_due_diligence(self) -> None:
+        from inbound_question import inbound_looks_like_partner_due_diligence
+
+        self.assertFalse(
+            inbound_looks_like_partner_due_diligence("Quelle est votre commission ?")
+        )
+
+    PAPPERS_EXCERPT = """
+Lorsque vous indiquez que les restaurants sont des prospects identifiés et qualifiés via Pappers,
+pouvez-vous me confirmer qu'ils ont été contactés directement par Hercule et qu'ils ont expressément confirmé
+rechercher actuellement un nouveau cabinet d'expertise comptable, et qu'il ne s'agit pas uniquement d'entreprises
+identifiées à partir de signaux issus de Pappers/Sirene ?
+Pouvez-vous également me communiquer le tarif HT de votre offre, sans prise de rendez-vous préalable ?
+"""
+
+    def test_pappers_excerpt_is_prospect_quality_objection(self) -> None:
+        from inbound_question import inbound_looks_like_prospect_quality_objection
+
+        self.assertTrue(
+            inbound_looks_like_prospect_quality_objection(self.PAPPERS_EXCERPT)
+        )
+
+    def test_prospect_quality_rules_embed_r2(self) -> None:
+        rules = build_global_rules(
+            max_sentences=3,
+            niche_preset_id="cabinets_expertise_comptable",
+            prospect_quality_objection=True,
+        )
+        self.assertIn("double verrou", rules)
+        self.assertIn("appel téléphonique", rules)
+        self.assertIn("Interdit : reframe perception", rules)
+
+    def test_cif_pack_contains_due_diligence_anchors(self) -> None:
+        pack = build_knowledge_pack(
+            {
+                "niche_preset_id": "conseillers_gestion_patrimoine",
+                "target_type": "buyer",
+                "niche_metadata": {"angle": "CGP", "effectif_cible": "2+"},
+            }
+        )
+        for anchor in (
+            "placement des avoirs",
+            "responsabilité réglementaire",
+            "0 % de commission",
+            "une demande, un partenaire",
+        ):
+            with self.subTest(anchor=anchor):
+                self.assertIn(anchor, pack.lower() if anchor.islower() else pack)
+
+    def test_assurance_pack_uses_ias_not_cif_faq(self) -> None:
+        pack = build_knowledge_pack(
+            {
+                "niche_preset_id": "courtiers_prevoyance_b2b",
+                "target_type": "buyer",
+                "niche_metadata": {"angle": "IAS", "effectif_cible": ""},
+            }
+        )
+        self.assertIn("cabinet IAS / courtier ORIAS (Buyer)", pack)
+        self.assertIn("ORIAS", pack)
+        self.assertIn("FAQ IAS", pack)
+        self.assertNotIn("cabinet CIF (Buyer)", pack)
 
 
 class TruncateInboundTests(unittest.TestCase):

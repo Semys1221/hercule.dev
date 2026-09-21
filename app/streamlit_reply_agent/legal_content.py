@@ -8,8 +8,8 @@ from functools import lru_cache
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_LEGAL_DOC_ROOT = _REPO_ROOT / "doc" / "legal-documentation"
-_DOC_DIR = _REPO_ROOT / "doc" / "tech-stack"
+_LEGAL_DOC_ROOT = _REPO_ROOT / "content" / "legal-documentation"
+_DOC_DIR = _REPO_ROOT / "content" / "tech"
 
 
 def _read_text(path: Path) -> str:
@@ -29,6 +29,15 @@ def legal_audience_from_niche_preset(niche_preset_id: str) -> str:
     if "comptable" in ident:
         return "comptable"
     if (
+        "prevoyance" in ident
+        or "prévoyance" in ident
+        or "courtiers" in ident
+        or "courtier" in ident
+        or ident == "ias"
+        or ident.startswith("ias_")
+    ):
+        return "assurance"
+    if (
         "gestion_patrimoine" in ident
         or "conseiller" in ident
         or ident == "cif"
@@ -40,6 +49,11 @@ def legal_audience_from_niche_preset(niche_preset_id: str) -> str:
         or "restaurant" in ident
         or "terrassement" in ident
         or "dentiste" in ident
+        or "medecin" in ident
+        or "kine" in ident
+        or "avocat" in ident
+        or "architecte" in ident
+        or "veterinaire" in ident
     ):
         return "jum"
     return "agence"
@@ -53,14 +67,22 @@ def is_cif_niche_preset(niche_preset_id: str) -> bool:
     return legal_audience_from_niche_preset(niche_preset_id) == "cif"
 
 
+def is_assurance_niche_preset(niche_preset_id: str) -> bool:
+    return legal_audience_from_niche_preset(niche_preset_id) == "assurance"
+
+
 def is_jum_niche_preset(niche_preset_id: str) -> bool:
     return legal_audience_from_niche_preset(niche_preset_id) == "jum"
 
 
 def get_cvg_markdown(*, audience: str = "buyer") -> str:
     if audience == "seller":
-        return _read_text(_cgv_path("entreprise"))
-    return _read_text(_cgv_path("agence"))
+        path = _cgv_path("entreprise")
+    else:
+        path = _cgv_path("agence")
+    if not path.is_file():
+        path = _LEGAL_DOC_ROOT / "_shared" / "cgv.md"
+    return _read_text(path)
 
 
 def get_mentions_legales_markdown() -> str:
@@ -71,11 +93,26 @@ def get_confidentialite_markdown() -> str:
     return _read_text(_LEGAL_DOC_ROOT / "_shared" / "confidentialite.md")
 
 
+def _with_partner_due_diligence(audience: str, body: str) -> str:
+    if audience not in {"comptable", "cif", "assurance"}:
+        return body
+    shared = _read_text(_DOC_DIR / "ai-reply-knowledge-partner-dd-shared.md")
+    return f"{body.strip()}\n\n{shared.strip()}\n"
+
+
 def get_ai_reply_knowledge_markdown(*, audience: str = "agence") -> str:
     if audience == "comptable":
-        return _read_text(_DOC_DIR / "ai-reply-knowledge-comptable.md")
+        return _with_partner_due_diligence(
+            audience, _read_text(_DOC_DIR / "ai-reply-knowledge-comptable.md")
+        )
     if audience == "cif":
-        return _read_text(_DOC_DIR / "ai-reply-knowledge-cif.md")
+        return _with_partner_due_diligence(
+            audience, _read_text(_DOC_DIR / "ai-reply-knowledge-cif.md")
+        )
+    if audience == "assurance":
+        return _with_partner_due_diligence(
+            audience, _read_text(_DOC_DIR / "ai-reply-knowledge-ias.md")
+        )
     if audience == "jum":
         jum_path = _DOC_DIR / "ai-reply-knowledge-jum.md"
         if jum_path.is_file():
@@ -140,6 +177,12 @@ def _speaking_to_label(target_type: str, audience: str) -> str:
         return "cabinet EC (Buyer)" if target_type == "buyer" else "dirigeant TPE (Seller)"
     if audience == "cif":
         return "cabinet CIF (Buyer)" if target_type == "buyer" else "dirigeant PME (Seller)"
+    if audience == "assurance":
+        return (
+            "cabinet IAS / courtier ORIAS (Buyer)"
+            if target_type == "buyer"
+            else "dirigeant PME (Seller)"
+        )
     if audience == "jum":
         return "prospect JUM (restaurant, dirigeant, dentiste)"
     return "agence (Buyer)" if target_type == "buyer" else "entreprise (Seller)"
@@ -169,7 +212,7 @@ def _build_knowledge_pack_uncached(
 ) -> str:
     audience = legal_audience_from_niche_preset(niche_preset_id)
     pack_audience = (
-        audience if audience in {"comptable", "cif", "jum"} else "agence"
+        audience if audience in {"comptable", "cif", "assurance", "jum"} else "agence"
     )
     ai_reply_knowledge = get_ai_reply_knowledge_markdown(audience=pack_audience)
     overview = (_DOC_DIR / "00-overview.md").read_text(encoding="utf-8")
@@ -182,6 +225,10 @@ def _build_knowledge_pack_uncached(
         faq_section = format_faq_for_audience("cif")
         faq_heading = "## FAQ CIF (Buyer/Seller)"
         faq_fallback = "Cabinet CIF min. 2 associés. Dirigeant PME : service gratuit."
+    elif pack_audience == "assurance":
+        faq_section = format_faq_for_audience("assurance")
+        faq_heading = "## FAQ IAS / assurance (Buyer/Seller)"
+        faq_fallback = "Cabinet courtage ORIAS. Dirigeant : service gratuit."
     elif pack_audience == "jum":
         faq_section = format_faq_for_audience("jum")
         if not faq_section:
@@ -198,10 +245,13 @@ def _build_knowledge_pack_uncached(
         faq_heading = "## FAQ JUM Advisory"
         faq_fallback = "JUM Advisory — accompagnement comptable restaurants, BTP, dentistes."
     else:
-        deliverance = (_DOC_DIR / "deliverance" / "front-client.md").read_text(
-            encoding="utf-8"
-        )
-        faq_section = extract_entreprise_faq(deliverance)
+        deliverance_path = _DOC_DIR / "deliverance" / "front-client.md"
+        if deliverance_path.is_file():
+            faq_section = extract_entreprise_faq(
+                deliverance_path.read_text(encoding="utf-8")
+            )
+        else:
+            faq_section = format_faq_for_audience("entreprise")
         faq_heading = "## Entreprise FAQ (Seller)"
         faq_fallback = "Entreprise service is free. No commission. Calendly via email."
 

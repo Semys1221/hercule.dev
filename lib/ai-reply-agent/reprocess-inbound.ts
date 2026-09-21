@@ -32,6 +32,8 @@ import {
   checkInterestedE1ReplyGate,
   resolveInboundEmailTimestamp,
 } from "./e1-reply-gate";
+import { isCalendlySystemEmail, isCaptchaOrBounceEmail } from "./events";
+import { evaluatePostE1InterestGate } from "./post-e1-gate";
 import { detectOptOut } from "@/lib/lead-relances/opt-out";
 import { hasOutboundSinceInbound } from "./send-mutex";
 
@@ -47,6 +49,7 @@ const REPROCESSABLE_STATUSES = new Set<AiReplyMessageStatus>([
   "skipped_recovery",
   "skipped_unsafe",
   "skipped_collision",
+  "skipped_post_e1_ack",
 ]);
 
 const SKIP_REPROCESS_REASONS = new Set([
@@ -161,6 +164,32 @@ export async function reprocessInboundForLead(params: {
     return { ok: true, skipped: "opt_out" };
   }
 
+  if (isCalendlySystemEmail(inboundText)) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_calendly_system",
+      "Notification Calendly système — aucune réponse requise",
+      null,
+      null,
+      Date.now() - started,
+      null,
+    );
+    return { ok: true, skipped: "calendly_system", aiStatus: "skipped_calendly_system" };
+  }
+
+  if (isCaptchaOrBounceEmail(inboundText)) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_ooo",
+      "Message technique (captcha / non-délivrance) — ignoré",
+      null,
+      null,
+      Date.now() - started,
+      null,
+    );
+    return { ok: true, skipped: "technical_delivery", aiStatus: "skipped_ooo" };
+  }
+
   const apiKey = getInstantlyApiKey();
   const lead = await findLeadByEmailInCampaign(apiKey, campaignId, leadEmail);
   const interestStatus = lead?.lt_interest_status ?? null;
@@ -206,6 +235,27 @@ export async function reprocessInboundForLead(params: {
       ok: true,
       skipped: "waiting_for_post_e1",
       aiStatus: blockedStatus,
+    };
+  }
+
+  const postE1Gate = evaluatePostE1InterestGate({
+    e1ReplyGate,
+    inboundText,
+  });
+  if (postE1Gate.skip) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_post_e1_ack",
+      postE1Gate.reason,
+      null,
+      null,
+      Date.now() - started,
+      null,
+    );
+    return {
+      ok: true,
+      skipped: "post_e1_pure_interest",
+      aiStatus: "skipped_post_e1_ack",
     };
   }
 

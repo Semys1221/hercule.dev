@@ -24,7 +24,7 @@ export function FunnelLeafContent({
     return (
       <FunnelPlaceholder
         title="Contenu déplacé"
-        detail={`Éditez les fichiers sous doc/legal-documentation/${audience}/ dans le repo. Les séquences email sont dans Bookings → Séquences.`}
+        detail={`Éditez les fichiers sous content/legal-documentation/${audience}/ dans le repo. Les séquences email sont dans Bookings → Séquences.`}
       />
     );
   }

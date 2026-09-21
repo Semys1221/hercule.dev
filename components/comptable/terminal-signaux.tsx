@@ -13,13 +13,13 @@ type LogLine = {
 }
 
 const LOG_SEQUENCE: Omit<LogLine, "id">[] = [
-  { type: "scan", text: "[scan] 847 dirigeants PME monitorés en continu" },
-  { type: "signal", text: "[signal] création SASU détectée — btp-dupont.fr" },
-  { type: "signal", text: "[signal] changement expert-comptable — resto-martin.fr" },
+  { type: "scan", text: "[scan] 847 dirigeants TPE/PME/indépendants (BNC, BIC, TNS) monitorés" },
+  { type: "signal", text: "[signal] création SASU BNC détectée — btp-dupont.fr" },
+  { type: "signal", text: "[signal] changement expert-comptable BIC — resto-martin.fr" },
   { type: "signal", text: "[signal] échéance TVA T4 — ecom-boutique.com" },
   ...TERMINAL_SIGNAL_LINES.map((line) => ({ type: line.type as LogType, text: line.text })),
   { type: "scan", text: "[scan] analyse intentions en cours..." },
-  { type: "signal", text: "[signal] dépassement seuil micro — artisan-leroy.fr" },
+  { type: "signal", text: "[signal] dépassement seuil micro TNS — artisan-leroy.fr" },
   { type: "signal", text: "[signal] reprise comptabilité — services-pro.com" },
 ]
 
@@ -32,8 +32,8 @@ const TYPE_COLORS: Record<LogType, string> = {
 }
 
 const STATS = [
-  { label: "PME surveillées", value: "847+" },
-  { label: "Captures / jour", value: "12" },
+  { label: "TPE/PME surveillées", value: "847+" },
+  { label: "Projets / jour", value: "12" },
   { label: "Collecte", value: "24/7" },
 ]
 

@@ -1,6 +1,7 @@
-import agencePricingData from "@/doc/legal-documentation/agence/pricing.json";
-import cifPricingData from "@/doc/legal-documentation/cif/pricing.json";
-import comptablePricingData from "@/doc/legal-documentation/comptable/pricing.json";
+import agencePricingData from "@/content/legal-documentation/agence/pricing.json";
+import assurancePricingData from "@/content/legal-documentation/assurance/pricing.json";
+import cifPricingData from "@/content/legal-documentation/cif/pricing.json";
+import comptablePricingData from "@/content/legal-documentation/comptable/pricing.json";
 import type {
   PricingAudience,
   PricingComponentConfig,
@@ -13,6 +14,7 @@ const BUNDLED_PRICING: Record<PricingAudience, PricingDocument> = {
   agence: pricingDocumentSchema.parse(agencePricingData),
   comptable: pricingDocumentSchema.parse(comptablePricingData),
   cif: pricingDocumentSchema.parse(cifPricingData),
+  assurance: pricingDocumentSchema.parse(assurancePricingData),
 };
 
 export function getBundledPricingDocument(audience: PricingAudience): PricingDocument | null {

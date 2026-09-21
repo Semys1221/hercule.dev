@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "audience": "comptable",
+  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "hero": {
+    "eyebrow": "Tarification",
+    "title": "Hercule Mercantile — Expert-Comptable",
+    "intro": "10 rendez-vous qualifiés / mois sur restaurants BIC, visioconférence nationale, 0 % de commission. Engagement trimestriel. Obligation de moyens — aucune garantie de signature ni de MRR."
+  },
+  "plans": [
+    {
+      "id": "plan-comptable-dec",
+      "name": "Hercule Mercantile",
+      "label": "Canon v3",
+      "price": "1 499 €",
+      "priceSuffix": "/mois",
+      "tagline": "Engagement 3 mois · 10 rendez-vous qualifiés / mois",
+      "summary": null,
+      "footer": "Warm-up technique communiqué après paiement.",
+      "featured": true,
+      "profileOnly": false,
+      "highlight": null,
+      "offerType": "monthly_1499",
+      "features": [
+        "10 rendez-vous qualifiés / mois — restaurants indépendants +3 salariés.",
+        "Engagement trimestriel (3 mois).",
+        "Visioconférence nationale · attribution exclusive.",
+        "Calendly Pro et Zoom Pro provisionnés par Hercule.",
+        "0 % de commission sur vos honoraires signés.",
+        "No-show : recrédit + remplacement sous 14 jours ouvrés.",
+        "Aucune garantie de signature ni de MRR."
+      ]
+    }
+  ],
+  "gatedTeaserFeatures": [
+    "Capacité : 10 rendez-vous qualifiés / mois.",
+    "Engagement trimestriel.",
+    "0 % de commission — honoraires conservés."
+  ],
+  "gatedGhostFeatures": [
+    "Garantie no-show 14 j ouvrés",
+    "Provisionnement Calendly / Zoom",
+    "Visioconférence nationale"
+  ],
+  "guaranteeSection": null
+}

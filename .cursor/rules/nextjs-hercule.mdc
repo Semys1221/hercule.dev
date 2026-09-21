@@ -14,7 +14,7 @@ Si le chemin est sous `app/streamlit_*`, suivre [streamlit-tools.mdc](streamlit-
 
 1. Lire [`.cursor/skills/hercule-nextjs/SKILL.md`](../skills/hercule-nextjs/SKILL.md) (router).
 2. Lire le sub-skill du domaine concerné (table dans le router).
-3. Pour tout changement non trivial : respecter l'ordre de lecture de [doc/README.md](../../doc/README.md) — au minimum `00-decisions`, `02-state-machines`, `03-data-model`, étape courante du roadmap.
+3. Pour tout changement non trivial : lire [`.cursor/skills/hercule-tech-spec/SKILL.md`](../skills/hercule-tech-spec/SKILL.md) — interdits, verticales DEC/IAS/CIF, couches d'état. Legal runtime : `content/legal-documentation/`.
 
 ## UI
 

@@ -8,12 +8,18 @@ description: >-
 
 # Hercule Next.js
 
-Router for the Next.js codebase. Read this first, then the domain sub-skill. **Skills do not override** [doc/tech-stack](../../doc/tech-stack/) decisions.
+Router for the Next.js codebase. Read this first, then the domain sub-skill.
+
+**Tech/commercial canon:** [hercule-tech-spec](../hercule-tech-spec/SKILL.md) (replaces `doc/tech-stack`).  
+**Editorial master:** Notion Hercule Canon · runtime legal: `content/legal-documentation/`.
 
 ## Mandatory canon
 
-Before non-trivial changes, follow [doc/README.md](../../doc/README.md) reading order:
-`00-decisions` → `02-state-machines` → `03-data-model` → current roadmap step in `13-implementation-roadmap.md`.
+Before non-trivial changes:
+
+1. Read [hercule-tech-spec](../hercule-tech-spec/SKILL.md) (interdits, verticales DEC/IAS/CIF, state layers).
+2. Check `lib/commercial/constants.ts` and `pnpm legal:validate` when touching prices/CGV.
+3. Open the domain sub-skill below.
 
 ## Domain router
 

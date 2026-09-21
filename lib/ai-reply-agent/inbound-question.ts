@@ -173,6 +173,27 @@ const ACKNOWLEDGMENT_KEYWORDS = [
   "note",
 ];
 
+const POLITE_PROPOSAL_ACK_KEYWORDS = [
+  "proposition",
+  "offre",
+  "sollicitation",
+  "approche",
+  "votre message",
+  "cette proposition",
+  "votre proposition",
+];
+
+const POLITE_PROPOSAL_DECLINE_KEYWORDS = [
+  "non merci",
+  "pas intéressé",
+  "pas interesse",
+  "pas pour nous",
+  "ne correspond pas",
+  "sans suite",
+  "stop",
+  "ne plus me contacter",
+];
+
 const REQUEST_PHRASES = [
   "je veux",
   "j'ai besoin",
@@ -185,6 +206,39 @@ const REQUEST_PHRASES = [
   "envoyer",
   "transmettre",
   "transmettez",
+];
+
+/** At least this many distinct signals → partner due-diligence questionnaire. */
+const PARTNER_DUE_DILIGENCE_MIN_HITS = 3;
+
+const PARTNER_DUE_DILIGENCE_SIGNALS = [
+  "cadre réglementaire",
+  "cadre reglementaire",
+  "orias",
+  "conseiller en investissements",
+  "convention",
+  "mise en relation",
+  "mises en relation",
+  "modèle économique",
+  "modele economique",
+  "précisions",
+  "precisions",
+  "compatible avec mon activité",
+  "compatible avec mon activite",
+  "responsabilité",
+  "responsabilite",
+  "rc pro",
+  "responsabilité civile",
+  "responsabilite civile",
+  "conditions financières",
+  "conditions financieres",
+  "exclusiv",
+  "rétrocession",
+  "retrocession",
+  "produits financiers",
+  "placement des avoirs",
+  "pression fiscale",
+  "lettre de mission",
 ];
 
 function inboundProbe(text: string): string {
@@ -238,6 +292,64 @@ export function inboundLooksLikeQuestion(text: string): boolean {
   }
 
   return REQUEST_PHRASES.some((phrase) => probe.includes(phrase));
+}
+
+/** Prospect is interested but sends a structured partnership questionnaire. */
+export function inboundLooksLikePartnerDueDiligence(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  let hits = 0;
+  for (const signal of PARTNER_DUE_DILIGENCE_SIGNALS) {
+    if (probe.includes(signal)) {
+      hits += 1;
+      if (hits >= PARTNER_DUE_DILIGENCE_MIN_HITS) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** At least this many distinct signals → Pappers/Sirene prospect-quality objection. */
+const PROSPECT_QUALITY_OBJECTION_MIN_HITS = 2;
+
+const PROSPECT_QUALITY_OBJECTION_SIGNALS = [
+  "pappers",
+  "sirene",
+  "signal",
+  "qualifi",
+  "confirm",
+  "contacté",
+  "contacte",
+  "nouveau cabinet",
+  "expertise comptable",
+  "liste froide",
+  "besoin est réel",
+  "besoin reel",
+  "identifiés via",
+  "identifies via",
+  "identifié via",
+  "identifie via",
+];
+
+/** Cabinet questions whether transmitted prospects are truly qualified (vs Pappers-only). */
+export function inboundLooksLikeProspectQualityObjection(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  let hits = 0;
+  for (const signal of PROSPECT_QUALITY_OBJECTION_SIGNALS) {
+    if (probe.includes(signal)) {
+      hits += 1;
+      if (hits >= PROSPECT_QUALITY_OBJECTION_MIN_HITS) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /** Lead shares a callable phone number in the inbound body. */
@@ -297,6 +409,52 @@ export function inboundShowsConfusion(text: string): boolean {
   return CONFUSION_KEYWORDS.some((keyword) => probe.includes(keyword));
 }
 
+/**
+ * Polite thank-you for the outreach/proposal without clear yes, no, or question.
+ * e.g. « Merci pour cette proposition. » — warrants a soft RDV follow-up.
+ */
+export function inboundIsPoliteProposalAcknowledgment(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+
+  if (probe.includes("?")) {
+    return false;
+  }
+
+  if (
+    inboundLooksLikeQuestion(text) ||
+    inboundShowsConfusion(text) ||
+    inboundLooksLikePhoneRequest(text) ||
+    inboundLooksLikeSchedulingAnswer(text) ||
+    inboundRequestsVerification(text) ||
+    inboundClaimsBookingDone(text) ||
+    inboundShowsInterest(text)
+  ) {
+    return false;
+  }
+
+  if (POLITE_PROPOSAL_DECLINE_KEYWORDS.some((keyword) => probe.includes(keyword))) {
+    return false;
+  }
+
+  if (!ACKNOWLEDGMENT_KEYWORDS.some((keyword) => probe.includes(keyword))) {
+    return false;
+  }
+
+  if (!POLITE_PROPOSAL_ACK_KEYWORDS.some((keyword) => probe.includes(keyword))) {
+    return false;
+  }
+
+  const firstLine = probe.split("\n")[0]?.trim() ?? probe;
+  if (firstLine.length > 120) {
+    return false;
+  }
+
+  return true;
+}
+
 /** Short thank-you / closure without a new question or objection. */
 export function inboundIsPureAcknowledgment(text: string): boolean {
   const probe = inboundProbe(text);
@@ -347,6 +505,55 @@ function inboundIsShortRefusal(text: string): boolean {
   );
 }
 
+/** Lead says Hercule only answered part of their questions. */
+export function inboundComplainsPartialAnswer(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return (
+    probe.includes("partie de mes interrogations") ||
+    probe.includes("ne répondez qu'à") ||
+    probe.includes("ne repondez qu a") ||
+    probe.includes("pas répondu à") ||
+    probe.includes("pas repondu a") ||
+    probe.includes("n'avez répondu qu'à") ||
+    probe.includes("n avez repondu qu a") ||
+    probe.includes("ça ne répond pas à ma question") ||
+    probe.includes("ca ne repond pas a ma question")
+  );
+}
+
+/** Lead booked with wrong host (Evan vs Béatrice) or cancels Calendly. */
+export function inboundCalendlyPersonMismatch(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return (
+    (probe.includes("calendly") || probe.includes("annule")) &&
+    (probe.includes("evan") ||
+      probe.includes("pas vous") ||
+      probe.includes("quelqu'un d'autre") ||
+      probe.includes("quelqu un d autre"))
+  );
+}
+
+/** Lead raises bande-passante / <3 associates after qualification. */
+export function inboundMentionsLowAssociateCount(text: string): boolean {
+  const probe = inboundProbe(text);
+  if (!probe) {
+    return false;
+  }
+  return (
+    /pas\s+3\s+collaborateurs/.test(probe) ||
+    /moins de 3/.test(probe) ||
+    /pas 2 collaborateurs/.test(probe) ||
+    /n'ai pas 3/.test(probe) ||
+    /n ai pas 3/.test(probe)
+  );
+}
+
 /**
  * True when an inbound deserves a reply agent response even if Hercule
  * sent in-thread within the collision window.
@@ -357,11 +564,17 @@ export function inboundNeedsFollowUp(text: string): boolean {
   }
   return (
     inboundLooksLikeQuestion(text) ||
+    inboundLooksLikePartnerDueDiligence(text) ||
+    inboundLooksLikeProspectQualityObjection(text) ||
     inboundLooksLikePhoneRequest(text) ||
     inboundLooksLikeSchedulingAnswer(text) ||
     inboundProvidesPhoneNumber(text) ||
     inboundShowsInterest(text) ||
     inboundShowsConfusion(text) ||
-    inboundRequestsVerification(text)
+    inboundRequestsVerification(text) ||
+    inboundIsPoliteProposalAcknowledgment(text) ||
+    inboundComplainsPartialAnswer(text) ||
+    inboundCalendlyPersonMismatch(text) ||
+    inboundMentionsLowAssociateCount(text)
   );
 }

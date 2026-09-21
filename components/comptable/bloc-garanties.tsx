@@ -2,12 +2,21 @@
 
 import { motion } from "framer-motion"
 import { Check, Shield } from "lucide-react"
-
+import { getMarketingCopy, type MarketingAudience } from "@/lib/site/marketing-copy"
 import { getPricingDocument } from "@/lib/site/pricing-data"
 
-export function BlocGaranties() {
-  const document = getPricingDocument("comptable")
-  const guaranteeSection = document?.guaranteeSection
+type BlocGarantiesProps = {
+  audience?: MarketingAudience
+}
+
+export function BlocGaranties({ audience = "comptable" }: BlocGarantiesProps) {
+  const genericGaranties = getMarketingCopy("generic").garanties
+  const pricingAudience = audience === "cif" || audience === "assurance" ? "cif" : "comptable"
+  const document = audience === "generic" ? null : getPricingDocument(pricingAudience)
+  const guaranteeSection =
+    audience === "generic" && genericGaranties
+      ? genericGaranties
+      : document?.guaranteeSection
 
   if (!guaranteeSection) {
     return null

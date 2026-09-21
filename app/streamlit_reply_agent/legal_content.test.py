@@ -15,7 +15,7 @@ from legal_content import (
 
 class LegalContentTests(unittest.TestCase):
     REQUIRED_ANCHORS = [
-        "1 489 €",
+        "1 499 €",
         "14 jours ouvrés",
         "contact@hercule.dev",
         "Vercel",
@@ -40,7 +40,7 @@ class LegalContentTests(unittest.TestCase):
 
     def test_seller_legal_uses_entreprise_cvg(self) -> None:
         bundle = build_legal_knowledge_markdown(audience="seller")
-        self.assertIn("gratuit", bundle.lower())
+        self.assertIn("aucune commission", bundle.lower())
         self.assertNotIn("Renouvellement typique", bundle)
 
     def test_ai_reply_knowledge_is_condensed(self) -> None:
@@ -87,7 +87,7 @@ class LegalContentTests(unittest.TestCase):
             ">3",
         )
         self.assertIn("cvg/comptable", pack)
-        self.assertIn("5 remplacements", pack)
+        self.assertIn("Hercule Mercantile", pack)
         self.assertIn("cabinet EC (Buyer)", pack)
         reply_safe = pack.split("## Reply-safe facts (condensed)", 1)[1]
         self.assertIn("Hercule Comptable", reply_safe)
@@ -95,11 +95,13 @@ class LegalContentTests(unittest.TestCase):
         for anchor in (
             "groupement d'entrepreneurs",
             "Evan Sinclair",
-            "Qui êtes-vous ? De quelle structure dépendez-vous ?",
+            "responsabilité de la mission",
             "bande passante",
             "visioconférences",
             "Je n'ai pas 3 collaborateurs",
             "Rémunérez-vous les apporteurs",
+            "double verrou R2",
+            "signaux Pappers",
         ):
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, pack)
@@ -126,7 +128,11 @@ class LegalContentTests(unittest.TestCase):
             "bande passante",
             "visioconférence",
             "Je n'ai pas 2 collaborateurs",
-            "Rémunérez-vous les apporteurs",
+            "Apporteurs d'affaires",
+            "crédits lombards",
+            "correspond parfaitement",
+            "double verrou R2",
+            "pas une liste froide",
         ):
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, pack)
@@ -144,6 +150,10 @@ class LegalContentTests(unittest.TestCase):
             "placement des avoirs",
             "bande passante",
             "cvg/conseil-financier",
+            "crédits lombards",
+            "correspond parfaitement",
+            "qualification des dirigeants (r2)",
+            "tarif ht sans rdv",
         ):
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, body)
@@ -157,10 +167,13 @@ class LegalContentTests(unittest.TestCase):
         body = prompt_path.read_text(encoding="utf-8").lower()
         for anchor in (
             "bande passante",
-            "visioconférence",
-            "sous-traitance",
+            "briefing collectif",
+            "due diligence",
+            "reservation_comptable_link",
             "apporteur",
-            "à quelles heures",
+            "double verrou",
+            "pappers / sirene",
+            "tarif ht sans rdv",
         ):
             with self.subTest(anchor=anchor):
                 self.assertIn(anchor, body)

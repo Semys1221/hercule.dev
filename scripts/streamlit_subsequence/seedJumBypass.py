@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Initialize Supabase bypass config + JUM E1–E3 templates for a campaign.
 
-Seeds interested_email1 with the vertical-specific body (restaurant / b2b / dentiste)
+Seeds interested_email1 with the vertical-specific body (restaurant / b2b / dentiste / medecin)
 when --segment is provided; otherwise uses the generic interested_email1 body.
 Also stores segment-keyed templates for reference.
 """
@@ -27,6 +27,11 @@ SEGMENT_TO_E1_KEY = {
     "restaurant": "interested_email1_restaurant",
     "b2b": "interested_email1_b2b",
     "dentiste": "interested_email1_dentiste",
+    "medecin": "interested_email1_medecin",
+    "kine": "interested_email1_kine",
+    "avocat": "interested_email1_avocat",
+    "architecte": "interested_email1_architecte",
+    "veterinaire": "interested_email1_veterinaire",
 }
 
 
@@ -100,7 +105,7 @@ def main() -> None:
     parser.add_argument(
         "--segment",
         default=None,
-        help="restaurant | b2b | dentiste — seeds interested_email1 with vertical copy",
+        help="restaurant | b2b | dentiste | medecin — seeds interested_email1 with vertical copy",
     )
     args = parser.parse_args()
     seed_jum_bypass(
