@@ -14,10 +14,8 @@ import {
   h48SendAt,
   planRecoveryByMeetingWeekday,
 } from "@/lib/legacy/booking-communication/schedule";
-import {
-  sequenceKindForMeeting,
-  startSequenceForBookedLead,
-} from "@/lib/legacy/booking-communication/route-sequence";
+import { startSequenceForBookedLead } from "@/lib/legacy/booking-communication/route-sequence";
+import { sequenceKindForMeeting } from "@/lib/legacy/booking-communication/sequence-kind";
 import type { BookingEmailType } from "@/lib/legacy/booking-communication/types";
 import { formatParisSlot } from "@/lib/legacy/booking-communication/send-window";
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";

@@ -101,7 +101,7 @@ export function ClientDashboardActive({ data, onRefresh }: ClientDashboardActive
               <p className="text-sm text-muted-foreground">
                 Prospect absent au rendez-vous ou problème de livraison ?
               </p>
-              <ClientNoShowDialog slug={data.slug} />
+              <ClientNoShowDialog slug={data.slug} onSuccess={onRefresh} />
             </CardContent>
           </Card>
 

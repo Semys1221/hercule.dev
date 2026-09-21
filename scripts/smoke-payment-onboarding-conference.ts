@@ -1,7 +1,7 @@
 /**
  * Smoke: create a conference client row and start payment-onboarding E1 → contact@hercule.dev
  *
- * Usage: pnpm exec tsx scripts/smoke-payment-onboarding-conference.ts
+ * Usage: pnpm exec tsx --env-file=.env scripts/smoke-payment-onboarding-conference.ts
  */
 import { randomBytes } from "node:crypto";
 

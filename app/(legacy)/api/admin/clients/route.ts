@@ -34,6 +34,8 @@ const SELECT_FIELDS: Record<LeadCategory, string> = {
     "id, email, first_name, company, slug, product_statut, onboarding_completed_at, profile",
   jum:
     "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
+  client:
+    "id, email, first_name, slug, product_statut, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
 };
 
 function parseCategory(value: string | null): LeadCategory | null {

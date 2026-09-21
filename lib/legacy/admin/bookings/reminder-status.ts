@@ -1,6 +1,4 @@
-import {
-  sequenceKindForMeeting,
-} from "@/lib/legacy/booking-communication/route-sequence";
+import { sequenceKindForMeeting } from "@/lib/legacy/booking-communication/sequence-kind";
 import type { BookingEmailType, BookingJobStatus } from "@/lib/legacy/booking-communication/types";
 import type { BookingEmailJobSummary } from "@/lib/legacy/admin/bookings/email-jobs";
 import type { LeadCategory } from "@/lib/legacy/link-tracking/types";

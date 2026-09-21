@@ -2,30 +2,15 @@ import type { LeadCategory, LinkTrackingLead } from "@/lib/legacy/link-tracking/
 
 import { isLegacyAgenceLead } from "./legacy";
 import { startBookingSequence, startRoleRecoverySequence } from "./orchestrator";
+import { planRecoveryByMeetingWeekday } from "./schedule";
 import {
-  meetingWeekdayParis,
-  planRecoveryByMeetingWeekday,
-} from "./schedule";
+  sequenceKindForMeeting,
+  type SequenceKind,
+} from "./sequence-kind";
 import type { SequenceTriggeredBy } from "./types";
 
-export type SequenceKind = "main" | "recovery" | "none";
-
-export function sequenceKindForMeeting(
-  scheduledAt: string | null | undefined,
-  category: LeadCategory,
-): SequenceKind {
-  if (!scheduledAt?.trim()) {
-    return "none";
-  }
-  if (category !== "agence") {
-    return "main";
-  }
-  const weekday = meetingWeekdayParis(scheduledAt);
-  if (weekday === "Mon" || weekday === "Tue" || weekday === "Wed") {
-    return "recovery";
-  }
-  return "main";
-}
+export type { SequenceKind };
+export { sequenceKindForMeeting };
 
 export async function startSequenceForBookedLead(params: {
   category: LeadCategory;

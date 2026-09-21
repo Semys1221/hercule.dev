@@ -6,6 +6,11 @@ import {
   rdvCountForOffer,
   type ConferenceOfferType,
 } from "@/lib/commercial/conference-pricing";
+import { findClientById } from "@/lib/clients/supabase";
+import {
+  notifySubscriptionCancelled,
+  notifySubscriptionRenewed,
+} from "@/lib/clients/workflows/subscription-notify";
 import { insertCalendlySeatOnboardingForClient } from "@/lib/legacy/calendly-seat-onboarding/store";
 import { scheduleConferenceEmailSequence } from "@/lib/legacy/conference/post-payment";
 import { isConferenceOfferType } from "@/lib/legacy/payments/conference-offers";
@@ -30,6 +35,27 @@ function customerIdFromSession(session: Stripe.Checkout.Session): string | null 
     return session.customer;
   }
   return session.customer?.id ?? null;
+}
+
+function subscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
+  const legacy = (invoice as Stripe.Invoice & {
+    subscription?: string | { id: string } | null;
+  }).subscription;
+  if (typeof legacy === "string") {
+    return legacy;
+  }
+  if (legacy && typeof legacy === "object" && "id" in legacy) {
+    return legacy.id;
+  }
+
+  const parentSub = invoice.parent?.subscription_details?.subscription;
+  if (typeof parentSub === "string") {
+    return parentSub;
+  }
+  if (parentSub && typeof parentSub === "object" && "id" in parentSub) {
+    return parentSub.id;
+  }
+  return null;
 }
 
 function emailFromSession(session: Stripe.Checkout.Session): string | null {
@@ -189,11 +215,7 @@ export async function handleConferenceInvoicePaid(
     return false;
   }
 
-  const subscriptionId =
-    typeof invoice.subscription === "string"
-      ? invoice.subscription
-      : invoice.subscription?.id;
-
+  const subscriptionId = subscriptionIdFromInvoice(invoice);
   if (!subscriptionId) {
     return false;
   }
@@ -250,6 +272,22 @@ export async function handleConferenceInvoicePaid(
     .update({ rdv_used: 0, rdv_total: rdvTotal })
     .eq("id", anchorPayment.client_id);
 
+  const renewedClient = await findClientById(client, anchorPayment.client_id);
+  if (renewedClient) {
+    try {
+      await notifySubscriptionRenewed({
+        client: renewedClient,
+        rdvTotal,
+        stripeEventId,
+      });
+    } catch (error) {
+      console.error(
+        "[stripe/webhook-conference] renew notify failed:",
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
   return true;
 }
 
@@ -258,7 +296,9 @@ export async function handleConferenceSubscriptionDeleted(
   subscription: Stripe.Subscription,
 ): Promise<boolean> {
   const clientId = subscription.metadata?.client_id;
-  if (!clientId) {
+  let resolvedClientId = clientId?.trim() || null;
+
+  if (!resolvedClientId) {
     const { data: paymentRow } = await client
       .from("payments")
       .select("client_id")
@@ -266,20 +306,32 @@ export async function handleConferenceSubscriptionDeleted(
       .eq("status", "succeeded")
       .limit(1)
       .maybeSingle();
-    if (!paymentRow?.client_id) {
-      return false;
-    }
-    await client
-      .from("clients")
-      .update({ product_statut: "CANCELLED" })
-      .eq("id", paymentRow.client_id);
-    return true;
+    resolvedClientId = paymentRow?.client_id ?? null;
+  }
+
+  if (!resolvedClientId) {
+    return false;
   }
 
   await client
     .from("clients")
     .update({ product_statut: "CANCELLED" })
-    .eq("id", clientId);
+    .eq("id", resolvedClientId);
+
+  const cancelledClient = await findClientById(client, resolvedClientId);
+  if (cancelledClient) {
+    try {
+      await notifySubscriptionCancelled({
+        client: cancelledClient,
+        subscriptionId: subscription.id,
+      });
+    } catch (error) {
+      console.error(
+        "[stripe/webhook-conference] cancel notify failed:",
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
 
   return true;
 }

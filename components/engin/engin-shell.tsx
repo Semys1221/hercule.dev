@@ -1,37 +1,32 @@
+"use client";
+
 import { HerculeMark } from "@/components/hercule-mark";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+
+import { EnginClientsTable } from "./clients/engin-clients-table";
 
 export function EnginShell() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-12">
+    <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-8 px-6 py-12">
       <header className="flex items-center gap-3">
         <HerculeMark className="size-8 text-foreground" />
         <div>
           <p className="text-sm text-muted-foreground">Admin</p>
           <h1 className="text-2xl font-semibold tracking-tight">Engin</h1>
+          <p className="text-sm text-muted-foreground">
+            Orchestration clients conférence — crédits, onboarding, abonnements.
+          </p>
         </div>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tableau de bord admin</CardTitle>
-          <CardDescription>
-            Espace opérateur Hercule — modules backend et interfaces internes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-lg font-medium">Clients</h2>
           <p className="text-sm text-muted-foreground">
-            Les modules seront ajoutés ici au fur et à mesure de la migration depuis
-            l&apos;ancien espace internal.
+            Table Supabase <code className="text-xs">public.clients</code>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+        <EnginClientsTable />
+      </section>
     </main>
   );
 }

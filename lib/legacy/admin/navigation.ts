@@ -10,8 +10,8 @@ import {
 
 export type { LeadCategory };
 
-/** Transversal niche axis (spec §2.3). */
-export type Niche = LeadCategory;
+/** Transversal niche axis (spec §2.3). Conference dashboard `client` is not a niche. */
+export type Niche = Exclude<LeadCategory, "client">;
 
 /** @deprecated Use Niche — kept for transitional imports. */
 export type Audience = Niche;

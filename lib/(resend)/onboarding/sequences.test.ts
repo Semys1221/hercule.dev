@@ -1,12 +1,23 @@
 /** Unit tests for payment onboarding sequence markdown files. */
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { PAYMENT_ONBOARDING_EMAIL_TYPES, PAYMENT_ONBOARDING_VERTICALS } from "./constants";
+import { PAYMENT_ONBOARDING_MARKDOWN } from "./sequence-sources";
 import { readPaymentOnboardingSequence } from "./sequences";
 
 function main() {
+  const onboardingDir = join(process.cwd(), "lib/(resend)/onboarding");
   for (const vertical of PAYMENT_ONBOARDING_VERTICALS) {
+    const disk = readFileSync(join(onboardingDir, `${vertical}.md`), "utf-8");
+    assert.equal(
+      PAYMENT_ONBOARDING_MARKDOWN[vertical],
+      disk,
+      `sequence-sources.ts out of sync with ${vertical}.md — regenerate sources`,
+    );
+
     const doc = readPaymentOnboardingSequence(vertical);
     assert.equal(doc.slug, "payment-onboarding");
     assert.equal(doc.vertical, vertical);
