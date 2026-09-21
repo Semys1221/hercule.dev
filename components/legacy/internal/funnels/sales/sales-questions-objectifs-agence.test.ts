@@ -1,0 +1,42 @@
+/** Unit tests for agence linear bleed objectifs questions. */
+
+import assert from "node:assert/strict";
+
+import {
+  getSalesQuestions,
+  getSalesQuestionsForSection,
+} from "@/components/legacy/internal/funnels/sales/sales-questions";
+import { LINEAR_DIAGNOSTIC_MIRROR_TEMPLATE } from "@/lib/legacy/admin/funnels/sales-bleed-copy";
+
+function main() {
+  const questions = getSalesQuestionsForSection("objectifs", "agence");
+
+  assert.deepEqual(
+    questions.map((question) => question.id),
+    ["o2", "o3", "o4", "o5", "o6", "o1", "diagnostic_card"],
+  );
+
+  const o3 = questions.find((question) => question.id === "o3");
+  assert.ok(o3?.coachCue);
+  assert.match(o3?.coachCue ?? "", /\{business\}|\{cause\}/);
+
+  const o4 = questions.find((question) => question.id === "o4");
+  assert.match(o4?.prompt ?? "", /\{business\}/);
+
+  const o6 = questions.find((question) => question.id === "o6");
+  assert.deepEqual(o6?.showCoachCueWhen, ["major_gap", "significant_gap"]);
+
+  const diagnostic = questions.find((question) => question.id === "diagnostic_card");
+  assert.equal(diagnostic?.type, "diagnostic_card");
+  assert.equal(diagnostic?.mirrorTemplate, LINEAR_DIAGNOSTIC_MIRROR_TEMPLATE);
+
+  assert.ok(!questions.some((question) => question.id.startsWith("b")));
+
+  const q21 = getSalesQuestions("agence").find((question) => question.id === "q21");
+  assert.ok(q21);
+  assert.match(q21?.coachCue ?? "", /\{cause\}/);
+
+  console.log("OK components/internal/funnels/sales/sales-questions-objectifs-agence.test.ts");
+}
+
+main();

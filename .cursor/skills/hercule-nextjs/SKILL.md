@@ -3,7 +3,7 @@ name: hercule-nextjs
 description: >-
   Hercule.dev Next.js app — pages, API routes, lib orchestrators, internal admin,
   marketing, sales funnel, client dashboard, CRM, booking communication, Resend,
-  Stripe. Use when editing app/, components/, lib/, emails/, content/, or pnpm dev.
+  Stripe. Use when editing app/, components/, lib/, app/(marketing)/content/, app/(legacy)/content/, or pnpm dev.
 ---
 
 # Hercule Next.js
@@ -11,7 +11,7 @@ description: >-
 Router for the Next.js codebase. Read this first, then the domain sub-skill.
 
 **Tech/commercial canon:** [hercule-tech-spec](../hercule-tech-spec/SKILL.md) (replaces `doc/tech-stack`).  
-**Editorial master:** Notion Hercule Canon · runtime legal: `content/legal-documentation/`.
+**Editorial master:** Notion Hercule Canon · runtime legal: `app/(marketing)/content/legal-documentation/`.
 
 ## Mandatory canon
 
@@ -25,12 +25,12 @@ Before non-trivial changes:
 
 | Domain skill | Primary paths | Registry domains | MCP |
 |--------------|---------------|------------------|-----|
-| [hercule-nextjs-internal](hercule-nextjs-internal/SKILL.md) | `app/internal/**`, `components/internal/**`, `lib/admin/**`, `/api/admin/*` | `dashboard_internal`, `onboarding_funnel` | shadcn, Supabase |
-| [hercule-nextjs-marketing](hercule-nextjs-marketing/SKILL.md) | `app/page.tsx`, `app/entreprise`, legal pages, `components/agence/**`, `lib/site/**` | `marketing` | Supabase |
-| [hercule-nextjs-sales-funnel](hercule-nextjs-sales-funnel/SKILL.md) | `content/funnels/**`, funnel builder, sales session, `public/reservation*.html` | `sales_funnel` | Calendly, Supabase |
-| [hercule-nextjs-dashboard](hercule-nextjs-dashboard/SKILL.md) | `app/dashboard/**`, `app/survey/**`, `components/dashboard/**` | `dashboard_client` | Supabase |
+| [hercule-nextjs-internal](hercule-nextjs-internal/SKILL.md) | `app/(legacy)/internal/**`, `components/internal/**`, `lib/admin/**`, `/api/admin/*` | `dashboard_internal`, `onboarding_funnel` | shadcn, Supabase |
+| [hercule-nextjs-marketing](hercule-nextjs-marketing/SKILL.md) | `app/(marketing)/page.tsx`, `app/(marketing)/entreprise`, legal pages, `components/agence/**`, `lib/site/**` | `marketing` | Supabase |
+| [hercule-nextjs-sales-funnel](hercule-nextjs-sales-funnel/SKILL.md) | `app/(legacy)/content/funnels/**`, funnel builder, sales session, `public/reservation*.html` | `sales_funnel` | Calendly, Supabase |
+| [hercule-nextjs-dashboard](hercule-nextjs-dashboard/SKILL.md) | `app/(legacy)/dashboard/**`, `app/(legacy)/survey/**`, `components/dashboard/**` | `dashboard_client` | Supabase |
 | [hercule-nextjs-crm](hercule-nextjs-crm/SKILL.md) | `lib/link-tracking/**`, `/api/link-tracking/**`, Calendly/Instantly webhooks | `crm` | Instantly, Calendly, Supabase |
-| [hercule-nextjs-communication](hercule-nextjs-communication/SKILL.md) | `lib/booking-communication/**`, `lib/instantly-bypass/**`, `emails/**`, `/api/cron/**` | `communication` | Resend, Instantly, Supabase |
+| [hercule-nextjs-communication](hercule-nextjs-communication/SKILL.md) | `lib/booking-communication/**`, `lib/instantly-bypass/**`, `lib/emails/**`, `/api/cron/**` | `communication` | Resend, Instantly, Supabase |
 | [hercule-nextjs-product](hercule-nextjs-product/SKILL.md) | `lib/matching/**`, `lib/deliverance/**`, `lib/payments/**`, Stripe webhook | roadmap NEW | Stripe, Supabase |
 
 ## API route quick map

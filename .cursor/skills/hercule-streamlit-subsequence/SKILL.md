@@ -1,14 +1,14 @@
 ---
 name: hercule-streamlit-subsequence
 description: >-
-  Hercule.dev Instantly Interested follow-up CRM (app/streamlit_subsequence).
+  Hercule.dev Instantly Interested follow-up CRM (lib/backend/streamlit_subsequence).
   Use when editing subsequence, Interested leads, E1 E2 E3 templates, Unibox
   replies, instantly_bypass, lead_interested webhook, or pnpm streamlit-subsequence.
 ---
 
 # Streamlit Subsequence
 
-Operator dashboard for Instantly Interested follow-ups — CRM steps + Unibox reply sends. Human reference: [app/streamlit_subsequence/README.md](../../app/streamlit_subsequence/README.md).
+Operator dashboard for Instantly Interested follow-ups — CRM steps + Unibox reply sends. Human reference: [lib/backend/streamlit_subsequence/README.md](../../lib/backend/streamlit_subsequence/README.md).
 
 ## Quick start
 
@@ -71,7 +71,7 @@ Copy and webhook pause are **per campaign**. `instantly_bypass_settings` is glob
 | `pnpm bootstrap-streamlit-subsequence-pipeline` | Bootstrap from Unibox |
 | `pnpm verify-streamlit-subsequence-pipeline` | Verify bootstrap |
 | `pnpm backfill-streamlit-subsequence-step0` | Backfill step 0 E1 |
-| `scripts/streamlit_subsequence/*` | Export, classify, apply Unibox threads |
+| `lib/backend/scripts/streamlit_subsequence/*` | Export, classify, apply Unibox threads |
 
 ## Migrations
 

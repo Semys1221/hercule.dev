@@ -1,11 +1,11 @@
-import { createLinkTrackingClient } from "@/lib/link-tracking/supabase";
+import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import type {
   DemandeContrat,
   DemandeNiche,
   DemandeStatus,
   DemandeTeaser,
-} from "@/lib/demandes-data";
-import { withMarketingFetchFallback } from "@/lib/marketing/resilient-fetch";
+} from "@/lib/site/demandes-data";
+import { withMarketingFetchFallback } from "@/lib/site/marketing/resilient-fetch";
 
 interface AgenceDemandeRow {
   external_id: string;

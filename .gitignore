@@ -29,12 +29,6 @@ pnpm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Playwright
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-
 # Frontend audit CLI cache
 app/react_doctor/.cache/
 
@@ -57,20 +51,28 @@ coverage/
 # Python
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Local scratch
+.tmp/
+.sync-backup/
+.calendly-playwright-profile/
+.cache/
 
 # Streamlit local secrets
 **/.streamlit/secrets.toml
 
 # streamlit_clean pipeline artifacts (lead PII)
-app/streamlit_clean/data/*.csv
-app/streamlit_clean/data/*.json
+lib/backend/streamlit_clean/data/*.csv
+lib/backend/streamlit_clean/data/*.json
 
 # streamlit_scraper runtime output
-app/streamlit_scraper/output/
-app/streamlit_scraper/data/sirene.db
-app/streamlit_scraper/data/sirene.db.tmp
+**/streamlit_scraper/output/
+**/streamlit_scraper/data/sirene.db
+**/streamlit_scraper/data/sirene.db.tmp
 
 # Unibox export for CRM classification (PII)
-tmp/unibox_export/
+lib/backend/tmp/unibox_export/
+lib/backend/tmp/
 
 .env*

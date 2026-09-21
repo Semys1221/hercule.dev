@@ -1,0 +1,18 @@
+[
+  {
+    "message_id": "f97ed379-bcaa-4feb-a9b3-36f2e8fcb33d",
+    "lead_email": "alexandredabin@gmail.com",
+    "old_status": "skipped_not_interested",
+    "old_reason": "Lead not tagged Interested",
+    "interest_status": -1,
+    "should_reply": true,
+    "recovery_confidence": 80,
+    "allow_reply": true,
+    "new_status": "auto_replied",
+    "new_reason": "Objection conférence traitée selon le script AER autorisé ; tag Not interested mais rattrapable.",
+    "model": "grok-4-1-fast",
+    "draft_preview": "Je comprends que vous souhaitiez des échanges strictement personnalisés.\n\nUn accompagnement sur-mesure démarre à 2 500 € ; nous présentons l'offre clé en main en conférence pour la rendre accessible a",
+    "retagged_interested": true,
+    "action": "sent"
+  }
+]

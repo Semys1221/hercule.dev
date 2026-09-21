@@ -142,7 +142,7 @@ Hercule reads these from each place in `data`:
 | `phone` | Phone number |
 | SIRET-related | Extracted via `company_registry.siret_extract` when present |
 
-Email extraction logic: [`core_logic._extract_email`](../../app/streamlit_scraper/core_logic.py).
+Email extraction logic: [`core_logic._extract_email`](../../lib/backend/streamlit_scraper/core_logic.py).
 
 ---
 
@@ -205,7 +205,7 @@ Same async polling via `/requests/{id}` on either base URL.
 | `httpx.TimeoutException` | Backoff and retry |
 | Poll timeout (`OUTSCRAPER_POLL_TIMEOUT_S`) | Treat as failed batch; resume from checkpoint |
 
-Hercule implementation: `OutscraperClient._request_with_retry` in [`core_logic.py`](../../app/streamlit_scraper/core_logic.py).
+Hercule implementation: `OutscraperClient._request_with_retry` in [`core_logic.py`](../../lib/backend/streamlit_scraper/core_logic.py).
 
 ---
 
@@ -306,4 +306,4 @@ Hercule uses a thin `httpx` async client instead of the SDK.
 
 - API docs: https://app.outscraper.cloud/api-docs
 - Getting started: https://outscraper.com/google-maps-api/
-- Hercule scraper README: [`app/streamlit_scraper/README.md`](../../app/streamlit_scraper/README.md)
+- Hercule scraper README: [`lib/backend/streamlit_scraper/README.md`](../../lib/backend/streamlit_scraper/README.md)

@@ -1,0 +1,83 @@
+import { NextResponse } from "next/server";
+
+import {
+  isBookingEmailType,
+  verifyBookingCommunicationSecret,
+} from "@/lib/legacy/booking-communication/route-utils";
+import { renderBookingEmailPreview } from "@/lib/legacy/booking-communication/render-service";
+import { sendBookingEmail } from "@/lib/legacy/booking-communication/send";
+import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
+
+import { SALES_TEST_SESSION_EMAIL } from "@/lib/legacy/admin/funnels/sales-test-session-preset";
+
+const DEFAULT_TEST_TO = SALES_TEST_SESSION_EMAIL;
+
+function isCategory(value: unknown): value is LeadCategory {
+  return value === "agence" || value === "entreprise";
+}
+
+export async function POST(request: Request) {
+  if (!verifyBookingCommunicationSecret(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: {
+    category?: string;
+    email_type?: string;
+    subject?: string;
+    body?: string;
+    to?: string;
+    use_html?: boolean;
+  };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (
+    !isCategory(body.category) ||
+    !isBookingEmailType(body.email_type) ||
+    !body.subject?.trim() ||
+    !body.body?.trim()
+  ) {
+    return NextResponse.json(
+      { error: "category, email_type, subject, body required" },
+      { status: 400 },
+    );
+  }
+
+  const to = body.to?.trim() || DEFAULT_TEST_TO;
+  if (!to.includes("@")) {
+    return NextResponse.json({ error: "invalid to address" }, { status: 400 });
+  }
+
+  const rendered = await renderBookingEmailPreview({
+    category: body.category,
+    emailType: body.email_type,
+    subject: body.subject.trim(),
+    body: body.body,
+    useHtml: body.use_html,
+    sample: true,
+  });
+
+  const idempotencyKey = `test:${body.category}:${body.email_type}:${Date.now()}`;
+  const result = await sendBookingEmail({
+    to,
+    subject: `[TEST ${body.category}] ${rendered.subject}`,
+    text: rendered.text,
+    html: rendered.html,
+    idempotencyKey,
+  });
+
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: 502 });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    to,
+    resend_email_id: result.id,
+    subject: rendered.subject,
+  });
+}

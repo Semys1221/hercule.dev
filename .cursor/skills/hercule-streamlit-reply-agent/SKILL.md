@@ -1,14 +1,14 @@
 ---
 name: hercule-streamlit-reply-agent
 description: >-
-  Hercule.dev AI reply agent for Instantly pending leads (app/streamlit_reply_agent).
+  Hercule.dev AI reply agent for Instantly pending leads (lib/backend/streamlit_reply_agent).
   Use when editing reply agent, Grok prompts, buyer seller prompts, pending replies,
   Unibox threads, or pnpm streamlit-reply-agent.
 ---
 
 # Streamlit Reply Agent
 
-AI-assisted replies to Instantly pending leads. Human reference: [app/streamlit_reply_agent/README.md](../../app/streamlit_reply_agent/README.md).
+AI-assisted replies to Instantly pending leads. Human reference: [lib/backend/streamlit_reply_agent/README.md](../../lib/backend/streamlit_reply_agent/README.md).
 
 ## Quick start
 
@@ -39,10 +39,10 @@ Use MCP `user-instantly` for lead/thread ops; `plugin-supabase-supabase` for age
 
 | Niche | Condensed facts | FAQ |
 |-------|-----------------|-----|
-| Agence (default) | `content/tech/ai-reply-knowledge.md` | `content/faq/entreprise.json` |
-| Comptable (`*comptable*` preset) | `content/tech/ai-reply-knowledge-comptable.md` | `content/faq/comptable.json` |
+| Agence (default) | `app/(legacy)/content/tech/ai-reply-knowledge.md` | `app/(marketing)/content/legal-documentation/entreprise/faq.json` |
+| Comptable (`*comptable*` preset) | `app/(legacy)/content/tech/ai-reply-knowledge-comptable.md` | `app/(marketing)/content/legal-documentation/comptable/faq.json` |
 
-Plus `content/tech/00-overview.md` (truncated). **Do not** load full CGV at runtime — use condensed knowledge only.
+Plus `app/(legacy)/content/tech/00-overview.md` (truncated). **Do not** load full CGV at runtime — use condensed knowledge only.
 
 ## Niche comptable
 
@@ -50,7 +50,7 @@ Plus `content/tech/00-overview.md` (truncated). **Do not** load full CGV at runt
 - Prompts : `prompts/cabinets_expertise_comptable_buyer.md` / `_seller.md`
 - CTA : `{reservation_comptable_link}` (table `comptable`, colonne `reservation_comptable_link`)
 - Tarifs dans email : **interdit de chiffrer** → renvoyer `hercule.dev/cvg#dec`
-- Pricing / CGV alignés : `content/legal-documentation/comptable/pricing.json` · `content/legal-documentation/_shared/cgv.md`
+- Pricing / CGV alignés : `app/(marketing)/content/legal-documentation/comptable/pricing.json` · `app/(marketing)/content/legal-documentation/_shared/cgv.md`
 
 ## Preset discovery
 
@@ -98,8 +98,8 @@ pnpm configure-ai-reply-agent-reprocess-cron  # alert when skipped volume > thre
 
 ## Niche CIF + comptable — conference cutover
 
-- Knowledge : `content/tech/ai-reply-knowledge-cif.md` · `content/tech/ai-reply-knowledge-comptable.md`
-- FAQ : `content/legal-documentation/cif/faq.json` · `content/legal-documentation/comptable/faq.json`
+- Knowledge : `app/(legacy)/content/tech/ai-reply-knowledge-cif.md` · `app/(legacy)/content/tech/ai-reply-knowledge-comptable.md`
+- FAQ : `app/(marketing)/content/legal-documentation/cif/faq.json` · `app/(marketing)/content/legal-documentation/comptable/faq.json`
 - **International BE/CH/CA (DEC · IAS · CIF)** : tarifs 1 499 USD/mois + 400 USD/mois profils · acceptation explicite requise · lien Calendly unique (`CALENDLY_EVENT_TYPE_URI_INTERNATIONAL_1TO1`)
 - CTA `{reservation_cif_link}` / `{reservation_comptable_link}` → `reservation-conference.html`
 - Objection conférence : AER avec 2 500 € sur-mesure (seul prix autorisé dans l'email pour cette objection) + redirect conférence + « répondez à ce mail » pour 1:1 sur-mesure
@@ -107,8 +107,8 @@ pnpm configure-ai-reply-agent-reprocess-cron  # alert when skipped volume > thre
 
 ## Cross-links
 
-- Preset labels: `app/streamlit_scraper/config_loader.py`
-- Bootstrap prompts: scraper tab 6 (`app/streamlit_scraper/bootstrap/ui_tab_reply.py`)
+- Preset labels: `lib/backend/streamlit_scraper/config_loader.py`
+- Bootstrap prompts: scraper tab 6 (`lib/backend/streamlit_scraper/bootstrap/ui_tab_reply.py`)
 - After subsequence E1–E3, interested leads may flow here for AI replies
 - Prod webhook: `lib/ai-reply-agent/handler.ts` + `lib/ai-reply-agent/knowledge.ts`
 - Site sync checklist: `doc/tech-stack/cvg_site-sync.md`

@@ -1,4 +1,4 @@
-import type { PipelineDashboardMetrics } from "@/lib/calendly/pipeline-dashboard";
+import type { PipelineDashboardMetrics } from "@/lib/legacy/calendly/pipeline-dashboard";
 
 export type PipelineMetricsClientPayload = {
   metrics: PipelineDashboardMetrics;

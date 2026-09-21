@@ -1,0 +1,28 @@
+python-dotenv could not parse statement starting at line 57
+python-dotenv could not parse statement starting at line 57
+python-dotenv could not parse statement starting at line 57
+python-dotenv could not parse statement starting at line 57
+FAIL contact@freyafrance.com — thread_not_found
+SKIP contact@valto.pro — E1 already in thread
+OK nathalie.battaglia@symbiozexpert.com — sent
+SKIP contact@global-expertisecomptable.fr — E1 already in thread
+SKIP fr.chabert@fralxr.fr — E1 already in thread
+SKIP stephane@cabinet-sorroche.fr — E1 already in thread
+SKIP contact@duodecimal.fr — E1 already in thread
+SKIP cabinet@vedea-expertise.fr — E1 already in thread
+SKIP adrien.espie@octopuceexpertise.com — E1 already in thread
+SKIP contact@finexiaconseil.fr — E1 already in thread
+OK l.rozieres@consilium-associes.fr — sent
+OK contact@hsn-expertise.com — sent
+OK pierre.desarnaud@spinnakersconseil.com — sent
+OK antoninchandelier@partenaires-davenir.com — sent
+FAIL mgconseilspatrimoine@gmail.com — Instantly API 400 on /emails/reply: {"statusCode": 400, "error": "Bad Request", "message": "ACC_UNKNOWN_ERROR"}
+OK cautrusseau44@gmail.com — sent
+OK rbrunon@links-capital.com — sent
+OK contact@merlypatrimoine.com — sent
+OK e.lansac@gestionprivee541.fr — sent
+
+Done: sent=9 skipped=8 failed=2
+Errors:
+  - contact@freyafrance.com: thread_not_found
+  - mgconseilspatrimoine@gmail.com: Instantly API 400 on /emails/reply: {"statusCode": 400, "error": "Bad Request", "message": "ACC_UNKNOWN_ERROR"}

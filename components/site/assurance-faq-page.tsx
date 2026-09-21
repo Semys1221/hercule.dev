@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 
-import { Footer } from "@/components/courtier-assurance/footer"
-import { Navbar } from "@/components/courtier-assurance/navbar"
+import { Footer } from "@/components/site/courtier-assurance/footer"
+import { Navbar } from "@/components/site/courtier-assurance/navbar"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { getFaqEntries } from "@/lib/site/faq"
 

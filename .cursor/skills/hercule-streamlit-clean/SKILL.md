@@ -1,14 +1,14 @@
 ---
 name: hercule-streamlit-clean
 description: >-
-  Hercule.dev email list cleaner via MyEmailVerifier (app/streamlit_clean).
+  Hercule.dev email list cleaner via MyEmailVerifier (lib/backend/streamlit_clean).
   Use when editing streamlit_clean, email verification pipeline, bulk verify,
   Instantly list purge, checkpoint recovery, or pnpm streamlit-clean.
 ---
 
 # Streamlit Clean
 
-MyEmailVerifier → Instantly email cleaning pipeline. Human reference: [app/streamlit_clean/README.md](../../app/streamlit_clean/README.md).
+MyEmailVerifier → Instantly email cleaning pipeline. Human reference: [lib/backend/streamlit_clean/README.md](../../lib/backend/streamlit_clean/README.md).
 
 ## Quick start
 

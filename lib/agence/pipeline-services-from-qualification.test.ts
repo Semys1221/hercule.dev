@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { SALES_TEST_SESSION_CALENDLY_QUESTIONS } from "@/lib/admin/funnels/sales-test-session-preset";
+import { SALES_TEST_SESSION_CALENDLY_QUESTIONS } from "@/lib/legacy/admin/funnels/sales-test-session-preset";
 import {
   pipelineServicesFromCalendlyQuestions,
   pipelineServicesFromSessionQualification,

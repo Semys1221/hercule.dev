@@ -1,14 +1,14 @@
 ---
 name: hercule-streamlit-demands
 description: >-
-  Hercule.dev homepage carousel demandes editor (app/streamlit_demands).
+  Hercule.dev homepage carousel demandes editor (lib/backend/streamlit_demands).
   Use when editing streamlit_demands, agence_demandes, carousel cards,
   demande teaser, or pnpm streamlit-demands.
 ---
 
 # Streamlit Demands
 
-Streamlit editor for homepage carousel cards (`agence_demandes` table). Human reference: [app/streamlit_demands/README.md](../../app/streamlit_demands/README.md).
+Streamlit editor for homepage carousel cards (`agence_demandes` table). Human reference: [lib/backend/streamlit_demands/README.md](../../lib/backend/streamlit_demands/README.md).
 
 ## Quick start
 

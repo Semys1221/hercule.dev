@@ -1,14 +1,14 @@
 ---
 name: hercule-streamlit-booking-resend
 description: >-
-  Hercule.dev Calendly booking and Resend email sequences (app/streamlit_booking_resend).
+  Hercule.dev Calendly booking and Resend email sequences (lib/backend/streamlit_booking_resend).
   Use when editing booking resend, Calendly reservations, booking_email_jobs,
   role_seq templates, agence legacy, or pnpm streamlit-booking-resend.
 ---
 
 # Streamlit Booking Resend
 
-Calendly reservations and Resend email sequences. Human reference: [app/streamlit_booking_resend/README.md](../../app/streamlit_booking_resend/README.md).
+Calendly reservations and Resend email sequences. Human reference: [lib/backend/streamlit_booking_resend/README.md](../../lib/backend/streamlit_booking_resend/README.md).
 
 ## Quick start
 

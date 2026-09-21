@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 
-import { Footer } from "@/components/home/footer"
-import { Navbar } from "@/components/home/navbar"
+import { Footer } from "@/components/site/home/footer"
+import { Navbar } from "@/components/site/home/navbar"
 
 const PROFILE_FAQS = [
   {

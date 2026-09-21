@@ -1,14 +1,14 @@
 ---
 name: hercule-streamlit-links
 description: >-
-  Hercule.dev link tracking and Instantly provisioning CRM (app/streamlit_links).
+  Hercule.dev link tracking and Instantly provisioning CRM (lib/backend/streamlit_links).
   Use when editing streamlit_links, reservation links, Instantly custom variables,
   agence leads provisioning, Unibox import, or pnpm streamlit-links.
 ---
 
 # Streamlit Links
 
-Link tracking CRM — leads, Instantly provisioning, Unibox import. Human reference: [app/streamlit_links/README.md](../../app/streamlit_links/README.md).
+Link tracking CRM — leads, Instantly provisioning, Unibox import. Human reference: [lib/backend/streamlit_links/README.md](../../lib/backend/streamlit_links/README.md).
 
 ## Quick start
 
@@ -58,7 +58,7 @@ Tune via env: `SUPABASE_INSERT_BATCH_SIZE` (default 100, auto 50 when >1000), `S
 
 ## Cross-links
 
-- Booking sequences: `app/streamlit_booking_resend/` (dedicated Resend tool)
+- Booking sequences: `lib/backend/streamlit_booking_resend/` (dedicated Resend tool)
 - Copy reference: `doc/emails_booking`
 - Subsequence templates use `{{reservation_agence_link}}`
 

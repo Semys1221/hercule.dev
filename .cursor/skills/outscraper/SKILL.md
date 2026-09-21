@@ -20,7 +20,7 @@ Official docs source: [app.outscraper.cloud/api-docs](https://app.outscraper.clo
 - **`OUTSCRAPER_API_KEY`** — required in server-side code only (`process.env` / repo root `.env`)
 - Never hardcode keys, expose them in client components, or commit them to git
 
-Optional tuning (defaults in [`configs/_bases/common.py`](../../app/streamlit_scraper/configs/_bases/common.py)):
+Optional tuning (defaults in [`configs/_bases/common.py`](../../lib/backend/streamlit_scraper/configs/_bases/common.py)):
 
 | Variable | Default | Role |
 |----------|---------|------|
@@ -57,7 +57,7 @@ Results are available for **4 hours** after completion.
 
 ## Hercule integration pattern
 
-1. **Do not reimplement** — use `OutscraperClient` in [`core_logic.py`](../../app/streamlit_scraper/core_logic.py)
+1. **Do not reimplement** — use `OutscraperClient` in [`core_logic.py`](../../lib/backend/streamlit_scraper/core_logic.py)
 2. Pipeline workflow (scrape → enrich → SIRENE → Instantly) lives in [`hercule-streamlit-scraper`](../hercule-streamlit-scraper/SKILL.md)
 3. API key loaded via `config_loader.py` from repo `.env`
 4. Queries built as `"{keyword} in {location}, France"` with `language=fr`, `region=FR`
@@ -114,5 +114,5 @@ curl -X DELETE -H "X-API-KEY: $OUTSCRAPER_API_KEY" \
 ## Further reading
 
 - [reference.md](reference.md) — endpoints, params, response fields, error handling
-- Hercule client: [`app/streamlit_scraper/core_logic.py`](../../app/streamlit_scraper/core_logic.py) (`OutscraperClient`)
+- Hercule client: [`lib/backend/streamlit_scraper/core_logic.py`](../../lib/backend/streamlit_scraper/core_logic.py) (`OutscraperClient`)
 - Deploy / env: [`doc/render-outreach.md`](../../doc/render-outreach.md)

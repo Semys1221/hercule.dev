@@ -1,8 +1,8 @@
 import Image from "next/image"
 import Link from "next/link"
 
-import { Navbar } from "@/components/home/navbar"
-import { Footer } from "@/components/home/footer"
+import { Navbar } from "@/components/site/home/navbar"
+import { Footer } from "@/components/site/home/footer"
 import { TEAM_IMAGE_URL } from "@/lib/constants"
 
 const TEAM = [

@@ -21,7 +21,7 @@ EXTRA_ALLOWLIST = [
     "cd",
     "python3",
     "cd /Users/evqn/dev/hercule.dev",
-    "cd /Users/evqn/dev/hercule.dev/app/streamlit_scraper",
+    "cd /Users/evqn/dev/hercule.dev/lib/backend/streamlit_scraper",
     "cd /Users/evqn/dev/hercule.dev && python3",
     "python3 -",
     "python3 <<",

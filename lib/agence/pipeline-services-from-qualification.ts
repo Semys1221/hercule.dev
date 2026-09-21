@@ -1,6 +1,6 @@
-import { getSalesQuestions } from "@/components/internal/funnels/sales/sales-questions";
-import { formatQuestionAnswerValue } from "@/lib/admin/funnels/sales-qualification-display";
-import type { SalesQualificationValues } from "@/lib/admin/funnels/sales-qualification-schema";
+import { getSalesQuestions } from "@/components/legacy/internal/funnels/sales/sales-questions";
+import { formatQuestionAnswerValue } from "@/lib/legacy/admin/funnels/sales-qualification-display";
+import type { SalesQualificationValues } from "@/lib/legacy/admin/funnels/sales-qualification-schema";
 
 const CALENDLY_SERVICE_QUESTION_KEYS = [
   "service",

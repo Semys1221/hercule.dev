@@ -55,7 +55,7 @@ After `bundle`, attach every path in `skillsToAttach` plus shadcn MCP. Follow `a
 
 - `pnpm doctor` — proactive regression on changed files
 - `pnpm doctor:design` — design rules
-- `pnpm e2e:visual` — if internal/marketing/dashboard UI changed
+- Browser snapshot (MCP `cursor-ide-browser`) — if internal/marketing/dashboard UI changed
 
 ## Cross-links
 

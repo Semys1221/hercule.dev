@@ -1,7 +1,7 @@
 # React Doctor: security, performance, correctness, accessibility, bundle-size,
 # and architecture checks for React.
 #
-# Config: doctor.config.ts at repo root. Score gate: scripts/check-doctor-score.sh
+# Config: doctor.config.ts at repo root. Score gate: lib/backend/scripts/check-doctor-score.sh
 # Docs: https://www.react.doctor/ci
 
 name: React Doctor
@@ -65,4 +65,4 @@ jobs:
       - name: Enforce minimum health score
         env:
           REACT_DOCTOR_MIN_SCORE: "49"
-        run: bash scripts/check-doctor-score.sh
+        run: bash lib/backend/scripts/check-doctor-score.sh

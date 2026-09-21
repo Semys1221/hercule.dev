@@ -8,7 +8,7 @@ description: >-
 
 # Next.js CRM
 
-Link tracking + inbound webhooks for lead lifecycle. Human reference: [app/crm/doc.md](../../app/crm/doc.md).
+Link tracking + inbound webhooks for lead lifecycle. Human reference: [app/(legacy)/crm/doc.md](../../app/(legacy)/crm/doc.md).
 
 ## Link tracking lib
 

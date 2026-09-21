@@ -2,7 +2,7 @@
 name: hercule-nextjs-sales-funnel
 description: >-
   Hercule.dev sales funnel builder and live client session. Use when editing
-  funnel.json, funnel editor, sales session, content/funnels, reservation HTML,
+  funnel.json, funnel editor, sales session, app/(legacy)/content/funnels, reservation HTML,
   Calendly availability, or sales funnel settings.
 ---
 
@@ -15,10 +15,10 @@ Sales funnel CMS + live client session. Canon: [doc/tech-stack/modules/cms-funne
 ### 1. Funnel builder (admin edition)
 
 - Editor: `components/internal/funnels/builder/funnel-editor.tsx`
-- Content FS: `content/funnels/{audience}/**`
+- Content FS: `app/(legacy)/content/funnels/{audience}/**`
 - Publish: `POST /api/admin/funnels/[slug]/publish`
 - CRUD: `/api/admin/funnels/*`, `/api/admin/funnels/catalog`
-- Presets: `content/funnels/_system/presets-catalog.json`, `layouts-catalog.json`
+- Presets: `app/(legacy)/content/funnels/_system/presets-catalog.json`, `layouts-catalog.json`
 
 ### 2. Live sales session (client-facing, in-meeting)
 
@@ -27,7 +27,7 @@ Sales funnel CMS + live client session. Canon: [doc/tech-stack/modules/cms-funne
 | Item | Value |
 |------|-------|
 | Route | `/internal/funnels/{audience}/sales/funnel` |
-| Layout | `app/internal/funnels/[audience]/sales/funnel/layout.tsx` |
+| Layout | `app/(legacy)/internal/funnels/[audience]/sales/funnel/layout.tsx` |
 | Entry | Hub Session → **Ouvrir la session** (not in admin nav) |
 | Shell | `sales-funnel-module.tsx`, `sales-funnel-sidebar.tsx` |
 | Steps config | `sales-funnel-sections.ts` |
@@ -36,8 +36,8 @@ Sales funnel CMS + live client session. Canon: [doc/tech-stack/modules/cms-funne
 
 ## Session settings
 
-- `content/funnels/agence/sales/session-settings.json`
-- `content/funnels/entreprise/sales/session-settings.json`
+- `app/(legacy)/content/funnels/agence/sales/session-settings.json`
+- `app/(legacy)/content/funnels/entreprise/sales/session-settings.json`
 - API: `/api/admin/sales-session-settings/[audience]`
 
 ## Public Calendly embeds (vente family)

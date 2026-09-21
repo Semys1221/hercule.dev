@@ -9,11 +9,19 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     include: ["**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["node_modules", "e2e", ".next"],
+    exclude: ["node_modules", ".next"],
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "."),
-    },
+    alias: [
+      {
+        find: "@/site-content",
+        replacement: path.resolve(__dirname, "app/(marketing)/content"),
+      },
+      {
+        find: "@/legacy-content",
+        replacement: path.resolve(__dirname, "app/(legacy)/content"),
+      },
+      { find: "@", replacement: path.resolve(__dirname, ".") },
+    ],
   },
 });

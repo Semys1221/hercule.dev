@@ -1,7 +1,7 @@
 ---
 name: hercule-streamlit
 description: >-
-  Hercule.dev Streamlit operator tools under app/streamlit_*. Use when editing
+  Hercule.dev Streamlit operator tools under lib/backend/streamlit_*. Use when editing
   any streamlit app, running pnpm streamlit-* commands, CRM ops dashboards,
   Outscraper pipeline, Instantly subsequence, reply agent, link tracking,
   booking Resend, email cleaner, demands editor, or campaign stats.
@@ -9,7 +9,7 @@ description: >-
 
 # Hercule Streamlit Tools
 
-Router for all `app/streamlit_*` operator dashboards. Read this first, then the sub-skill for the app you are touching.
+Router for all `lib/backend/streamlit_*` operator dashboards. Read this first, then the sub-skill for the app you are touching.
 
 ## Tool router
 
@@ -40,11 +40,11 @@ Link tracking (`streamlit_links`) provisions Instantly variables before cold out
 
 - **Python setup:** `cd app/<app> && pip install -r requirements.txt`; load env from repo root `.env`.
 - **Next.js dependency:** `streamlit_links` and `streamlit_booking_resend` need `pnpm dev` for API calls (`CRM_BACKEND_URL`, default `http://localhost:3000`).
-- **Scripts:** `scripts/streamlit_*` belong to the matching sub-skill.
+- **Scripts:** `lib/backend/scripts/streamlit_*` belong to the matching sub-skill.
 - **Do not use:** personal `scrapping` skill (`apps/b2b-scraper/`), `smartlead` skill.
 - **Human docs:** each app's `README.md` is the source of truth for config tables; skills summarize agent workflows.
 
 ## Related repo docs
 
-- [app/crm/doc.md](../../app/crm/doc.md) — CRM overview
+- [app/(legacy)/crm/doc.md](../../app/(legacy)/crm/doc.md) — CRM overview
 - [lib/admin/architecture/components-registry.ts](../../lib/admin/architecture/components-registry.ts) — component IDs

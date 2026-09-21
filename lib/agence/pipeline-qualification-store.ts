@@ -1,17 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { buildPipelineIntroScript } from "@/lib/calendly/pipeline-intro-script";
+import { buildPipelineIntroScript } from "@/lib/legacy/calendly/pipeline-intro-script";
 import type {
   PipelineQualificationInput,
   PipelineQualificationStored,
-} from "@/lib/calendly/pipeline-qualification-schema";
+} from "@/lib/legacy/calendly/pipeline-qualification-schema";
 import {
   createLinkTrackingClient,
   findLeadByEmail,
   findLeadByLink,
   normalizeEmail,
-} from "@/lib/link-tracking/supabase";
-import type { LeadLookup } from "@/lib/link-tracking/types";
+} from "@/lib/legacy/link-tracking/supabase";
+import type { LeadLookup } from "@/lib/legacy/link-tracking/types";
 
 export type PipelineQualificationLookup = {
   slug: string;

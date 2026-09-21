@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 
-import { Footer } from "@/components/agence/footer"
-import { Navbar } from "@/components/agence/navbar"
+import { Footer } from "@/components/legacy/agence/footer"
+import { Navbar } from "@/components/legacy/agence/navbar"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { getFaqEntries } from "@/lib/site/faq"
 

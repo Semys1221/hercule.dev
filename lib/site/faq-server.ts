@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 
-import { faqJsonPath } from "@/lib/legal-documentation/paths";
-import { readJsonFile } from "@/lib/legal-documentation/read-json";
+import { faqJsonPath } from "@/lib/legacy/legal-documentation/paths";
+import { readJsonFile } from "@/lib/legacy/legal-documentation/read-json";
 import type { FaqAudience, FaqDocument } from "@/lib/site/faq-types";
 import { faqDocumentSchema } from "@/lib/site/faq-types";
 

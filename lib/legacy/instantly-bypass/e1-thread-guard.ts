@@ -1,0 +1,126 @@
+import { listEmails } from "./client";
+import { hasBypassEvent, interestedIdempotencyKey } from "./jobs";
+
+import type { InstantlyEmailRecord } from "./types";
+
+export type InterestedE1DeliveryState = {
+  bypassSent: boolean;
+  e1InThread: boolean;
+  delivered: boolean;
+};
+
+/** E1 counts as sent only when bypass audit is "sent" AND Unibox shows the E1 template. */
+export async function getInterestedE1DeliveryState(
+  apiKey: string,
+  params: { campaignId: string; leadEmail: string },
+): Promise<InterestedE1DeliveryState> {
+  const idempotencyKey = interestedIdempotencyKey(params.campaignId, params.leadEmail);
+  const bypassSent = await hasBypassEvent(idempotencyKey);
+  const e1InThread = await threadAlreadyHasE1(apiKey, params);
+  return {
+    bypassSent,
+    e1InThread,
+    delivered: bypassSent && e1InThread,
+  };
+}
+
+const PARTNER_CABINETS_MARKER = "cabinets partenaires";
+
+const E1_FINGERPRINTS = [
+  "voici plus de precisions",
+  "pour faire simple",
+  "cabinets partenaires",
+  "au minimum 2 associes",
+  "plus de 3 associes",
+  "proposer mon cabinet",
+  "mon cabinet est compatible",
+  "entreprises de btp",
+  "dentistes et veterinaires",
+  "approche a 360",
+  "echanges entre cabinets et entreprise",
+  PARTNER_CABINETS_MARKER,
+] as const;
+
+function stripAccents(text: string): string {
+  return text.normalize("NFD").replace(/\p{M}/gu, "");
+}
+
+export function normalizeEmailText(raw: string): string {
+  const withoutTags = raw.replace(/<[^>]+>/g, " ");
+  return stripAccents(withoutTags.replace(/\s+/g, " ").trim().toLowerCase());
+}
+
+export function isHerculeEmail(text: string): boolean {
+  const normalized = normalizeEmailText(text);
+  return normalized.includes("beatrice meyer") || normalized.includes("hercule.dev");
+}
+
+function extractEmailText(item: InstantlyEmailRecord & Record<string, unknown>): string {
+  const body = item.body;
+  if (body && typeof body === "object") {
+    const record = body as Record<string, unknown>;
+    for (const key of ["html", "text", "plain"]) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim()) {
+        return value;
+      }
+    }
+  }
+  for (const key of ["body_html", "html", "text"]) {
+    const value = item[key as keyof InstantlyEmailRecord];
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+  return String(item.subject ?? "");
+}
+
+function messageMatchesE1(text: string): boolean {
+  if (!isHerculeEmail(text)) {
+    return false;
+  }
+  const normalized = normalizeEmailText(text);
+  return E1_FINGERPRINTS.some((marker) => normalized.includes(marker));
+}
+
+export function countE1MarkersInSentEmails(items: InstantlyEmailRecord[]): number {
+  let count = 0;
+  for (const item of items) {
+    const text = extractEmailText(item as InstantlyEmailRecord & Record<string, unknown>);
+    if (messageMatchesE1(text)) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+export function countMandatairesInSentEmails(items: InstantlyEmailRecord[]): number {
+  let count = 0;
+  for (const item of items) {
+    const text = extractEmailText(item as InstantlyEmailRecord & Record<string, unknown>);
+    if (!isHerculeEmail(text)) {
+      continue;
+    }
+    if (normalizeEmailText(text).includes(PARTNER_CABINETS_MARKER)) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+export async function threadAlreadyHasE1(
+  apiKey: string,
+  params: { leadEmail: string; campaignId: string },
+): Promise<boolean> {
+  const sent = await listEmails(apiKey, {
+    search: params.leadEmail,
+    campaignId: params.campaignId,
+    emailType: "sent",
+    limit: 50,
+  });
+  return countE1MarkersInSentEmails(sent) >= 1;
+}
+
+export function isDuplicateE1Thread(sent: InstantlyEmailRecord[]): boolean {
+  return countMandatairesInSentEmails(sent) >= 2;
+}

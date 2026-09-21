@@ -27,8 +27,8 @@ Brand-specific UI layer on top of shadcn/ui. Read this before composing any Reac
 
 | Surface | Path | Styling |
 |---------|------|---------|
-| **Internal admin** | `app/internal/**`, `components/internal/**` | `.internal` class → semantic tokens only |
-| **Client dashboard** | `app/dashboard/**`, `components/dashboard/**` | Semantic tokens (inherits site theme) |
+| **Internal admin** | `app/(legacy)/internal/**`, `components/internal/**` | `.internal` class → semantic tokens only |
+| **Client dashboard** | `app/(legacy)/dashboard/**`, `components/dashboard/**` | Semantic tokens (inherits site theme) |
 | **Marketing** | `components/agence/**`, `components/entreprise/**`, `/`, `/entreprise` | Inline `#09090B` and existing marketing styles **OK** — do not refactor to tokens unless asked |
 
 ### Internal tokens (use these, never hardcode hex)
@@ -100,7 +100,7 @@ pnpm doctor:design   # focused UI/a11y/motion audit (marketing pages)
 After visible UI changes on `/internal`, `/dashboard`, or marketing routes:
 
 1. MCP `cursor-ide-browser` — navigate, `browser_snapshot`, screenshot hero sections if needed.
-2. Or `pnpm e2e:visual` — Playwright visual regression (`e2e/visual-snapshots.spec.ts`).
+2. Browser snapshot via MCP `cursor-ide-browser` on affected routes.
 
 ### Retroactive audit (legacy UI)
 

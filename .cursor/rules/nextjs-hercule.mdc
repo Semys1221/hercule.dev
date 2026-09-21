@@ -1,6 +1,6 @@
 ---
 description: Obligatoire pour tout travail Next.js Hercule (hors Streamlit)
-globs: "{app/api/**,app/internal/**,app/dashboard/**,app/survey/**,app/**/page.tsx,app/layout.tsx,app/globals.css,components/**,lib/**,emails/**,content/**}"
+globs: "{app/(legacy)/api/**,app/(legacy)/internal/**,app/(legacy)/dashboard/**,app/(legacy)/survey/**,app/(marketing)/**,app/**/page.tsx,app/layout.tsx,app/globals.css,components/**,lib/**,app/(marketing)/content/**,app/(legacy)/content/**}"
 alwaysApply: false
 ---
 
@@ -8,13 +8,13 @@ alwaysApply: false
 
 ## Exception Streamlit
 
-Si le chemin est sous `app/streamlit_*`, suivre [streamlit-tools.mdc](streamlit-tools.mdc) à la place.
+Si le chemin est sous `lib/backend/streamlit_*`, suivre [streamlit-tools.mdc](streamlit-tools.mdc) à la place.
 
 ## Avant toute modification
 
 1. Lire [`.cursor/skills/hercule-nextjs/SKILL.md`](../skills/hercule-nextjs/SKILL.md) (router).
 2. Lire le sub-skill du domaine concerné (table dans le router).
-3. Pour tout changement non trivial : lire [`.cursor/skills/hercule-tech-spec/SKILL.md`](../skills/hercule-tech-spec/SKILL.md) — interdits, verticales DEC/IAS/CIF, couches d'état. Legal runtime : `content/legal-documentation/`.
+3. Pour tout changement non trivial : lire [`.cursor/skills/hercule-tech-spec/SKILL.md`](../skills/hercule-tech-spec/SKILL.md) — interdits, verticales DEC/IAS/CIF, couches d'état. Legal runtime : `app/(marketing)/content/legal-documentation/`.
 
 ## UI
 
@@ -39,7 +39,7 @@ Si le chemin est sous `app/streamlit_*`, suivre [streamlit-tools.mdc](streamlit-
 - Inngest / n8n — pas de nouveau runtime job.
 - Second design system — shadcn uniquement dans Next.
 - Boutons/inputs HTML bruts dans Next — shadcn rule.
-- Login admin sur `/internal` — voir [app/internal/README.md](../../app/internal/README.md).
+- Login admin sur `/internal` — voir [app/(legacy)/internal/README.md](../../app/(legacy)/internal/README.md).
 
 ## Orchestrateurs
 

@@ -1,9 +1,9 @@
-import agenceFaqData from "@/content/legal-documentation/agence/faq.json";
-import jumFaqData from "@/content/faq/jum.json";
-import assuranceFaqData from "@/content/legal-documentation/assurance/faq.json";
-import cifFaqData from "@/content/legal-documentation/cif/faq.json";
-import comptableFaqData from "@/content/legal-documentation/comptable/faq.json";
-import entrepriseFaqData from "@/content/legal-documentation/entreprise/faq.json";
+import agenceFaqData from "@/site-content/legal-documentation/agence/faq.json";
+import jumFaqData from "@/site-content/faq/jum.json";
+import assuranceFaqData from "@/site-content/legal-documentation/assurance/faq.json";
+import cifFaqData from "@/site-content/legal-documentation/cif/faq.json";
+import comptableFaqData from "@/site-content/legal-documentation/comptable/faq.json";
+import entrepriseFaqData from "@/site-content/legal-documentation/entreprise/faq.json";
 import type { FaqAudience, FaqComponentConfig, FaqDocument, FaqEntry } from "@/lib/site/faq-types";
 import { faqDocumentSchema } from "@/lib/site/faq-types";
 

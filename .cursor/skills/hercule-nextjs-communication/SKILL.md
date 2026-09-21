@@ -2,7 +2,7 @@
 name: hercule-nextjs-communication
 description: >-
   Hercule.dev booking emails, Resend templates, Instantly bypass, crons, React Email,
-  AI reply jobs. Use when editing booking-communication, instantly-bypass, emails/,
+  AI reply jobs. Use when editing booking-communication, instantly-bypass, lib/emails/,
   /api/cron, Resend webhook, or email sequence editors.
 ---
 
@@ -78,9 +78,9 @@ Webhooks: `/api/webhooks/instantly` (interested), `/api/webhooks/instantly/reply
 
 | File | Role |
 |------|------|
-| `emails/booking-html-email.tsx` | Main booking email component |
-| `emails/components/booking-email-layout.tsx` | Layout wrapper |
-| `emails/components/email-signature.tsx` | Signature block |
+| `lib/emails/booking-html-email.tsx` | Main booking email component |
+| `lib/emails/components/booking-email-layout.tsx` | Layout wrapper |
+| `lib/emails/components/email-signature.tsx` | Signature block |
 
 ## Sequence editors (internal UI)
 

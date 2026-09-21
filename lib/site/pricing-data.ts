@@ -1,7 +1,7 @@
-import agencePricingData from "@/content/legal-documentation/agence/pricing.json";
-import assurancePricingData from "@/content/legal-documentation/assurance/pricing.json";
-import cifPricingData from "@/content/legal-documentation/cif/pricing.json";
-import comptablePricingData from "@/content/legal-documentation/comptable/pricing.json";
+import agencePricingData from "@/site-content/legal-documentation/agence/pricing.json";
+import assurancePricingData from "@/site-content/legal-documentation/assurance/pricing.json";
+import cifPricingData from "@/site-content/legal-documentation/cif/pricing.json";
+import comptablePricingData from "@/site-content/legal-documentation/comptable/pricing.json";
 import type {
   PricingAudience,
   PricingComponentConfig,

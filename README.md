@@ -4,7 +4,7 @@ Site Hercule (landing agence/entreprise) + CRM backend (link tracking, Calendly,
 
 ## AI agents
 
-Before editing Next.js code (`app/`, `components/`, `lib/`, `emails/`, `content/`), read:
+Before editing Next.js code (`app/`, `components/`, `lib/`, `app/(marketing)/content/`, `app/(legacy)/content/`), read:
 
 1. [`.cursor/rules/nextjs-hercule.mdc`](.cursor/rules/nextjs-hercule.mdc) (enforced when matching paths are open)
 2. [`.cursor/skills/hercule-nextjs/SKILL.md`](.cursor/skills/hercule-nextjs/SKILL.md) (router)

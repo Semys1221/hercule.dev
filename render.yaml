@@ -24,14 +24,14 @@ services:
     name: hercule-scraper-worker
     runtime: python
     plan: starter
-    buildCommand: pip install -r requirements-outreach.txt
-    startCommand: bash scripts/render/worker-entrypoint.sh
+    buildCommand: pip install -r lib/backend/requirements-outreach.txt
+    startCommand: bash lib/backend/scripts/render/worker-entrypoint.sh
     envVars:
       - fromGroup: hercule-outreach
       - key: HERCULE_DATA_ROOT
         value: /var/data
       - key: PYTHONPATH
-        value: /opt/render/project/src
+        value: /opt/render/project/src/lib/backend:/opt/render/project/src
       - key: WORKER_CRONTAB
         value: scraper-crontab
       - key: SCRAPER_PRESET
@@ -49,14 +49,14 @@ services:
     name: hercule-clean-worker
     runtime: python
     plan: starter
-    buildCommand: pip install -r requirements-outreach.txt
-    startCommand: bash scripts/render/worker-entrypoint.sh
+    buildCommand: pip install -r lib/backend/requirements-outreach.txt
+    startCommand: bash lib/backend/scripts/render/worker-entrypoint.sh
     envVars:
       - fromGroup: hercule-outreach
       - key: HERCULE_DATA_ROOT
         value: /var/data
       - key: PYTHONPATH
-        value: /opt/render/project/src
+        value: /opt/render/project/src/lib/backend:/opt/render/project/src
       - key: WORKER_CRONTAB
         value: clean-crontab
       - key: CLEAN_MODE
@@ -75,9 +75,9 @@ services:
     name: hercule-outreach-ui
     runtime: python
     plan: starter
-    buildCommand: pip install -r requirements-outreach.txt
+    buildCommand: pip install -r lib/backend/requirements-outreach.txt
     startCommand: >-
-      bash -c 'cd app/${STREAMLIT_APP:-streamlit_scraper} &&
+      bash -c 'cd lib/backend/${STREAMLIT_APP:-streamlit_scraper} &&
       streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
       --server.headless=true'
     envVars:
@@ -85,7 +85,7 @@ services:
       - key: HERCULE_DATA_ROOT
         value: /var/data
       - key: PYTHONPATH
-        value: /opt/render/project/src
+        value: /opt/render/project/src/lib/backend:/opt/render/project/src
       - key: STREAMLIT_APP
         value: streamlit_scraper
     disk:

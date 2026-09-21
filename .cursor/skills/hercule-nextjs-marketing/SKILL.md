@@ -14,8 +14,8 @@ Public marketing surfaces. Canon: [doc/tech-stack/09-surfaces.md](../../doc/tech
 
 | Route | File |
 |-------|------|
-| `/` | `app/page.tsx` |
-| `/entreprise` | `app/entreprise/page.tsx` |
+| `/` | `app/(marketing)/page.tsx` |
+| `/entreprise` | `app/(marketing)/entreprise/page.tsx` |
 | `/faq` | `app/faq/page.tsx` |
 | `/cvg` | `app/cvg/page.tsx` |
 | `/a-propos` | `app/a-propos/page.tsx` |
@@ -29,7 +29,7 @@ Public marketing surfaces. Canon: [doc/tech-stack/09-surfaces.md](../../doc/tech
 | `components/agence/*` | Landing agence sections (scene, audit, CRM preview, carousel) |
 | `components/entreprise/*` | Landing entreprise |
 | `components/site/*` | Shared markdown document renderer |
-| `components/demandes/*` | Carousel flip cards (`demande-flip-card.tsx`) |
+| `components/site/demandes/*` | Carousel flip cards (`demande-flip-card.tsx`) |
 
 ## Content libs
 

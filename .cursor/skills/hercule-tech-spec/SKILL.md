@@ -9,7 +9,7 @@ description: >-
 # Hercule tech spec (post-`/doc` migration)
 
 **Editorial master (commercial/legal):** Notion [Hercule Canon](https://app.notion.com/p/3e130179aa978187a2d9c4f2bc4733fc)  
-**Runtime legal copy:** `content/legal-documentation/`  
+**Runtime legal copy:** `app/(marketing)/content/legal-documentation/`  
 **Commercial cents:** `lib/commercial/constants.ts`  
 **Canon pricing v3:** DEC Mercantile **1 499 €/mois** (engagement 3 mois) · Hercule Hubris **4 000 €** flat / **1 800 €/mois × 3**  
 **Validate:** `pnpm legal:validate` · `pnpm legal:export`
@@ -42,10 +42,10 @@ IAS and CIF are **not** sold as standalone packs (1 999 €/mois and 3 499 €/9
 ## Ordre de lecture agent (remplace doc/README)
 
 1. This skill + Notion Offres / Règles transversales
-2. `lib/commercial/constants.ts` + `content/legal-documentation/_shared/cgv.md`
+2. `lib/commercial/constants.ts` + `app/(marketing)/content/legal-documentation/_shared/cgv.md`
 3. Domain sub-skill under `hercule-nextjs*`
 4. For CRM: `lib/link-tracking/*`, Instantly/Calendly webhooks
-5. State/data: existing migrations under `supabase/migrations/` — do not invent PAID/MEETING_n on `lead_statut`
+5. State/data: existing migrations under `lib/backend/supabase/migrations/` — do not invent PAID/MEETING_n on `lead_statut`
 
 ## Machines d'état (résumé)
 
@@ -60,17 +60,17 @@ Quatre couches distinctes (ne pas fusionner) :
 
 - Unique page `/cvg` with anchors `#dec` · `#hubris`
 - Redirects: `/cvg/comptable` → `#dec`, `/cvg/conseil-financier` → `#hubris`, `/cvg/courtier-assurance` → `#hubris`
-- Source: `content/legal-documentation/_shared/cgv.md`
+- Source: `app/(marketing)/content/legal-documentation/_shared/cgv.md`
 
 ## Export Notion → git
 
 ```bash
-pnpm legal:export    # asserts content/ mirrors canon v3
+pnpm legal:export    # asserts app/(marketing)/content/ mirrors canon v3
 pnpm legal:validate  # prices ↔ constants
 ```
 
 ## Legacy
 
-- Agence / entreprise copy: archived under Notion 99 Legacy + `content/legal-documentation/{agence,entreprise}` stubs
+- Agence / entreprise copy: archived under Notion 99 Legacy + `app/(marketing)/content/legal-documentation/{agence,entreprise}` stubs
 - Former `doc/tech-stack/*` removed — this skill + domain skills are the replacement
 - `COMMERCIAL_IAS` / `COMMERCIAL_CIF` marked `@deprecated` — prefer `COMMERCIAL_HERCULE_HUBRIS`

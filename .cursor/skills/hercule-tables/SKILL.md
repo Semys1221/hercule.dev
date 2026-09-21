@@ -93,7 +93,7 @@ Secondary references:
 
 ```bash
 pnpm doctor
-pnpm e2e:internal-ops   # hub + bookings smoke
+pnpm smoke-cockpit-admin-e2e   # API smoke for internal cockpit flows
 ```
 
 ## Cross-links

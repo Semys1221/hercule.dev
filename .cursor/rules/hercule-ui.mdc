@@ -1,6 +1,6 @@
 ---
 description: UI Hercule — lire hercule-ui skill + shadcn MCP avant tout composant React
-globs: "{components/**,app/**/page.tsx,app/**/layout.tsx,app/**/loading.tsx,app/**/error.tsx,emails/**,hooks/**}"
+globs: "{components/**,app/**/page.tsx,app/**/layout.tsx,app/**/loading.tsx,app/**/error.tsx,lib/emails/**,hooks/**}"
 alwaysApply: false
 ---
 
@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Exceptions
 
-- `app/streamlit_*` — Python Streamlit, pas de shadcn
+- `lib/backend/streamlit_*` — Python Streamlit, pas de shadcn
 - Ne pas refactorer `components/agence/*` / `components/entreprise/*` vers tokens sans demande explicite
 
 ## Avant toute UI React

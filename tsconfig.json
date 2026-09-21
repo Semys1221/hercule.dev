@@ -25,6 +25,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@/site-content/*": [
+        "./app/(marketing)/content/*"
+      ],
+      "@/legacy-content/*": [
+        "./app/(legacy)/content/*"
       ]
     }
   },
@@ -36,7 +42,6 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "crm"
+    "node_modules"
   ]
 }

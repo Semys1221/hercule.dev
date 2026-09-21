@@ -1,0 +1,253 @@
+import { createLinkTrackingClient, findLeadById } from "@/lib/legacy/link-tracking/supabase";
+import { scheduleLeadEmailJobs } from "@/lib/legacy/booking-communication/product-send";
+import { estimatedFirstBookingDateFromLead } from "@/lib/legacy/booking-communication/product-vars";
+import { formatMeetingDateTime } from "@/lib/legacy/booking-communication/templates";
+import type { BookingEmailType } from "@/lib/legacy/booking-communication/types";
+import type { LeadCategory, LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
+import { retractionAppliesTo } from "@/lib/legacy/retraction/applies";
+
+export const ONBOARDING_REMINDER_CATEGORIES: LeadCategory[] = [
+  "agence",
+  "comptable",
+];
+
+export function listOnboardingReminderCategories(): LeadCategory[] {
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/onboarding-sequence/orchestrator.ts:listOnboardingReminderCategories",
+      message: "onboarding reminder categories",
+      data: {
+        categories: ONBOARDING_REMINDER_CATEGORIES,
+        includesCif: ONBOARDING_REMINDER_CATEGORIES.includes("cif"),
+        hypothesisId: "B",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "B",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
+  return ONBOARDING_REMINDER_CATEGORIES;
+}
+
+function parisWallTime(base: Date, hour: number, dayOffset: number): Date {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(base);
+  const get = (type: string) => Number(parts.find((part) => part.type === type)?.value ?? "1");
+  const date = new Date(Date.UTC(get("year"), get("month") - 1, get("day") + dayOffset, hour, 0, 0));
+  const shown = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Paris",
+      hour: "2-digit",
+      hourCycle: "h23",
+    }).format(date),
+  );
+  return new Date(date.getTime() + (hour - shown) * 60 * 60 * 1000);
+}
+
+function estimatedAtFromLead(lead: LinkTrackingLead): Date | null {
+  const profile = (lead.profile ?? {}) as Record<string, unknown>;
+  const dashboard = (profile.dashboard ?? {}) as Record<string, unknown>;
+  const raw =
+    (typeof dashboard.estimated_first_booking_at === "string"
+      ? dashboard.estimated_first_booking_at
+      : null) ??
+    (typeof profile.estimated_first_booking_at === "string"
+      ? profile.estimated_first_booking_at
+      : null);
+  if (!raw) return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+export async function startOnboardingRetractionHold(
+  category: LeadCategory,
+  leadId: string,
+): Promise<{ started: boolean; reason?: string }> {
+  if (!retractionAppliesTo(category)) {
+    return { started: false, reason: "not_applicable" };
+  }
+
+  const client = createLinkTrackingClient();
+  const lead = await findLeadById(client, category, leadId);
+  if (!lead) {
+    return { started: false, reason: "lead_not_found" };
+  }
+
+  const now = new Date();
+  const { inserted } = await scheduleLeadEmailJobs({
+    category,
+    leadId: lead.id,
+    triggeredBy: "onboarding_complete",
+    jobs: [
+      {
+        emailType: "onboarding_retraction_hold",
+        scheduledFor: now,
+        idempotencyKey: `onboarding:retraction_hold:${category}:${leadId}`,
+      },
+    ],
+  });
+
+  return inserted > 0 ? { started: true } : { started: false, reason: "no_jobs_inserted" };
+}
+
+export async function startOnboardingSequence(
+  categoryOrAgenceId: LeadCategory | string,
+  leadId?: string,
+): Promise<{ started: boolean; reason?: string }> {
+  const category: LeadCategory =
+    leadId === undefined ? "agence" : (categoryOrAgenceId as LeadCategory);
+  const resolvedLeadId = leadId ?? (categoryOrAgenceId as string);
+
+  const client = createLinkTrackingClient();
+  const lead = await findLeadById(client, category, resolvedLeadId);
+  if (!lead) {
+    return { started: false, reason: "lead_not_found" };
+  }
+
+  const now = new Date();
+  const jobs: Array<{
+    emailType: BookingEmailType;
+    scheduledFor: Date;
+    idempotencyKey: string;
+  }> = [
+    {
+      emailType: "onboarding_j0",
+      scheduledFor: now,
+      idempotencyKey: `onboarding:j0:${category}:${resolvedLeadId}`,
+    },
+    {
+      emailType: "onboarding_j0_bis",
+      scheduledFor: parisWallTime(now, 17, 0),
+      idempotencyKey: `onboarding:j0bis:${category}:${resolvedLeadId}`,
+    },
+    {
+      emailType: "onboarding_j1",
+      scheduledFor: parisWallTime(now, 8, 1),
+      idempotencyKey: `onboarding:j1:${category}:${resolvedLeadId}`,
+    },
+  ];
+
+  const estimated = estimatedAtFromLead(lead);
+  if (estimated) {
+    const day = 24 * 60 * 60 * 1000;
+    jobs.push(
+      {
+        emailType: "onboarding_reminder_m10",
+        scheduledFor: new Date(estimated.getTime() - 10 * day),
+        idempotencyKey: `onboarding:m10:${category}:${resolvedLeadId}`,
+      },
+      {
+        emailType: "onboarding_reminder_m5",
+        scheduledFor: new Date(estimated.getTime() - 5 * day),
+        idempotencyKey: `onboarding:m5:${category}:${resolvedLeadId}`,
+      },
+      {
+        emailType: "onboarding_reminder_p5",
+        scheduledFor: new Date(estimated.getTime() + 5 * day),
+        idempotencyKey: `onboarding:p5:${category}:${resolvedLeadId}`,
+      },
+    );
+  }
+
+  const { inserted } = await scheduleLeadEmailJobs({
+    category,
+    leadId: lead.id,
+    triggeredBy: "onboarding_sequence",
+    jobs,
+  });
+
+  return inserted > 0 ? { started: true } : { started: false, reason: "no_jobs_inserted" };
+}
+
+export async function scheduleOnboardingReminders(): Promise<{
+  processed: number;
+  scheduled: number;
+}> {
+  const client = createLinkTrackingClient();
+  let scheduled = 0;
+  let processed = 0;
+
+  // #region agent log
+  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "8b6caf",
+    },
+    body: JSON.stringify({
+      sessionId: "8b6caf",
+      location: "lib/onboarding-sequence/orchestrator.ts:scheduleOnboardingReminders",
+      message: "onboarding reminder categories",
+      data: {
+        categories: ONBOARDING_REMINDER_CATEGORIES,
+        includesCif: ONBOARDING_REMINDER_CATEGORIES.includes("cif"),
+        hypothesisId: "B",
+      },
+      timestamp: Date.now(),
+      hypothesisId: "B",
+      runId: "pre-fix",
+    }),
+  }).catch(() => {});
+  // #endregion
+  for (const category of listOnboardingReminderCategories()) {
+    const { data, error } = await client
+      .from(category)
+      .select("*")
+      .not("onboarding_completed_at", "is", null)
+      .in("retraction_status", ["waived", "expired", "n_a"]);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    processed += (data ?? []).length;
+
+    for (const row of data ?? []) {
+      const lead = row as LinkTrackingLead;
+      const estimated = estimatedAtFromLead(lead);
+      if (!estimated) continue;
+      const day = 24 * 60 * 60 * 1000;
+      const { inserted } = await scheduleLeadEmailJobs({
+        category,
+        leadId: lead.id,
+        triggeredBy: "onboarding_sequence",
+        jobs: [
+          {
+            emailType: "onboarding_reminder_m10",
+            scheduledFor: new Date(estimated.getTime() - 10 * day),
+            idempotencyKey: `onboarding:m10:${category}:${lead.id}`,
+          },
+          {
+            emailType: "onboarding_reminder_m5",
+            scheduledFor: new Date(estimated.getTime() - 5 * day),
+            idempotencyKey: `onboarding:m5:${category}:${lead.id}`,
+          },
+          {
+            emailType: "onboarding_reminder_p5",
+            scheduledFor: new Date(estimated.getTime() + 5 * day),
+            idempotencyKey: `onboarding:p5:${category}:${lead.id}`,
+          },
+        ],
+      });
+      scheduled += inserted;
+    }
+  }
+
+  return { processed, scheduled };
+}
+
+export function onboardingReminderLabel(lead: LinkTrackingLead): string {
+  return estimatedFirstBookingDateFromLead(lead) || formatMeetingDateTime(null).date;
+}

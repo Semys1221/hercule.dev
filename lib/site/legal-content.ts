@@ -1,15 +1,16 @@
 import { readFileSync } from "fs"
 import { join } from "path"
 
+import { LEGACY_TECH_DIR } from "@/app/(legacy)/content/paths"
 import {
   cgvMarkdownPath,
   getSharedCvgMarkdownPath,
   sharedLegalDocPath,
-  TECH_CONTENT_DIR,
+  SITE_TECH_DIR,
   type LegalDocumentationNiche,
-} from "@/lib/legal-documentation/paths"
+} from "@/lib/legacy/legal-documentation/paths"
 
-const DOC_DIR = TECH_CONTENT_DIR
+const DOC_DIR = SITE_TECH_DIR
 
 export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif" | "jum" | "assurance"
 
@@ -46,6 +47,10 @@ export const CVG_DOC_METADATA: Record<
 
 function readDocFile(filename: string): string {
   return readFileSync(join(DOC_DIR, filename), "utf-8")
+}
+
+function readLegacyTechFile(filename: string): string {
+  return readFileSync(join(LEGACY_TECH_DIR, filename), "utf-8")
 }
 
 export function isCvgDocSlug(value: string): value is CvgDocSlug {
@@ -87,24 +92,24 @@ function withPartnerDueDiligence(
   if (audience !== "comptable" && audience !== "cif" && audience !== "assurance") {
     return body
   }
-  const shared = readDocFile("ai-reply-knowledge-partner-dd-shared.md")
+  const shared = readLegacyTechFile("ai-reply-knowledge-partner-dd-shared.md")
   return `${body.trim()}\n\n${shared.trim()}\n`
 }
 
 export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "comptable"): string {
   if (audience === "comptable") {
-    return withPartnerDueDiligence(audience, readDocFile("ai-reply-knowledge-comptable.md"))
+    return withPartnerDueDiligence(audience, readLegacyTechFile("ai-reply-knowledge-comptable.md"))
   }
   if (audience === "cif") {
-    return withPartnerDueDiligence(audience, readDocFile("ai-reply-knowledge-cif.md"))
+    return withPartnerDueDiligence(audience, readLegacyTechFile("ai-reply-knowledge-cif.md"))
   }
   if (audience === "assurance") {
-    return withPartnerDueDiligence(audience, readDocFile("ai-reply-knowledge-ias.md"))
+    return withPartnerDueDiligence(audience, readLegacyTechFile("ai-reply-knowledge-ias.md"))
   }
   if (audience === "jum") {
-    return readDocFile("ai-reply-knowledge-jum.md")
+    return readLegacyTechFile("ai-reply-knowledge-jum.md")
   }
-  return readDocFile("ai-reply-knowledge.md")
+  return readLegacyTechFile("ai-reply-knowledge.md")
 }
 
 export function buildLegalKnowledgeMarkdown(audience: LegalAudience = "comptable"): string {

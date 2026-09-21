@@ -31,7 +31,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 ## Exceptions
 
 - `components/ui/` (primitives shadcn).
-- HTML statique `public/`, templates email, apps Streamlit (`app/streamlit_*`), scripts Python.
+- HTML statique `public/`, templates email, apps Streamlit (`lib/backend/streamlit_*`), scripts Python.
 - Balises sémantiques (`main`, `section`, `nav`) avec Tailwind — OK si elles wrappent des composants shadcn.
 
 ## Exemple

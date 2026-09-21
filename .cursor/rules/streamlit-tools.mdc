@@ -1,12 +1,12 @@
 ---
 description: Obligatoire pour tout travail sur les outils Streamlit Hercule
-globs: app/streamlit_*/**
+globs: lib/backend/streamlit_*/**
 alwaysApply: false
 ---
 
 # Streamlit tools — skill obligatoire
 
-Avant toute lecture, modification ou commande sous `app/streamlit_*/**` :
+Avant toute lecture, modification ou commande sous `lib/backend/streamlit_*/**` :
 
 1. Lire et suivre [`.cursor/skills/hercule-streamlit/SKILL.md`](../skills/hercule-streamlit/SKILL.md) (router).
 2. Lire le sub-skill de l'app concernée (table dans le router).

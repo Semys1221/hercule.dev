@@ -9,14 +9,14 @@ const config = {
   blocking: "error",
   ignore: {
     files: [
-      "app/streamlit_*/**",
-      "emails/**",
+      "lib/backend/streamlit_*/**",
+      "lib/emails/**",
       "**/*.py",
     ],
     overrides: [
       {
         // Marketing landings intentionally use inline #09090B — see hercule-ui skill.
-        files: ["components/agence/**", "components/comptable/**"],
+        files: ["components/legacy/agence/**", "components/site/comptable/**"],
         rules: [
           "react-doctor/no-low-contrast-inline-style",
           "react-doctor/no-decorative-blur-orb",

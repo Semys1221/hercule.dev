@@ -8,7 +8,7 @@ description: >-
 
 # Next.js Internal Admin
 
-Internal operator UI under `/internal`. Human reference: [app/internal/README.md](../../app/internal/README.md).
+Internal operator UI under `/internal`. Human reference: [app/(legacy)/internal/README.md](../../app/(legacy)/internal/README.md).
 
 ## Access policy (critical)
 
@@ -19,7 +19,7 @@ Internal operator UI under `/internal`. Human reference: [app/internal/README.md
 
 ## Layout and theme
 
-- `app/internal/layout.tsx` applies `className="internal"`
+- `app/(legacy)/internal/layout.tsx` applies `className="internal"`
 - Semantic tokens only: `bg-background`, `border-border`, etc. — see [internal-design.mdc](../../rules/internal-design.mdc)
 - **UI composition:** read [hercule-ui](../hercule-ui/SKILL.md) for tokens, exemplars, motion rules; shadcn plugin skill for Field/Card/Dialog patterns
 - shadcn MCP mandatory for all UI changes
@@ -30,7 +30,7 @@ Internal operator UI under `/internal`. Human reference: [app/internal/README.md
 |------|------|
 | `lib/admin/navigation.ts` | Nav tree, breadcrumbs, hub detection |
 | `lib/admin/funnels/routing.ts` | Workspace path parsing (hub, leaf, funnel editor, email sequences) |
-| `app/internal/(app-shell)/funnels/[audience]/(workspace)/[[...path]]/page.tsx` | Catch-all workspace |
+| `app/(legacy)/internal/(app-shell)/funnels/[audience]/(workspace)/[[...path]]/page.tsx` | Catch-all workspace |
 
 ## Key surfaces
 

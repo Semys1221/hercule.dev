@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { AgenceDemandeRow } from "@/lib/admin/demandes";
+import type { AgenceDemandeRow } from "@/lib/legacy/admin/demandes";
 import { mapDemandeRow } from "./demandes-repo";
 
 test("mapDemandeRow maps verso qualification fields from snake_case", () => {

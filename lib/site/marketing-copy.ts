@@ -1,4 +1,4 @@
-import { CONFERENCE_COHORT_SESSION } from "@/lib/cif-conference-sequence/constants";
+import { CONFERENCE_COHORT_SESSION } from "@/lib/legacy/cif-conference-sequence/constants";
 
 export type MarketingAudience = "generic" | "comptable" | "cif" | "assurance" | "agence";
 

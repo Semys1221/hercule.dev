@@ -1,13 +1,13 @@
 ---
 name: hercule-streamlit-stats
 description: >-
-  Hercule.dev legacy cold email campaign stats tracker (app/streamlit_stats).
+  Hercule.dev legacy cold email campaign stats tracker (lib/backend/streamlit_stats).
   Use when editing streamlit_stats, campaign_stats.json, or local email tracking.
 ---
 
 # Streamlit Stats
 
-Legacy local JSON tracker for cold email campaign stats. Human reference: [app/streamlit_stats/README.md](../../app/streamlit_stats/README.md).
+Legacy local JSON tracker for cold email campaign stats. Human reference: [lib/backend/streamlit_stats/README.md](../../lib/backend/streamlit_stats/README.md).
 
 ## Quick start
 
@@ -17,7 +17,7 @@ pnpm streamlit-stats
 
 ## Storage
 
-- Data file: `app/streamlit_stats/campaign_stats.json` (local, not Supabase)
+- Data file: `lib/backend/streamlit_stats/campaign_stats.json` (local, not Supabase)
 - Functions: `load_data()`, `save_data()` in `app.py`
 
 ## Scope
@@ -32,7 +32,7 @@ Simple Streamlit UI to manually track campaign performance metrics. **Prefer Ins
 ## When not to use
 
 - Production reporting → use Instantly MCP `user-instantly` analytics
-- Persistent team dashboards → use `app/internal/` admin tools
+- Persistent team dashboards → use `app/(legacy)/internal/` admin tools
 
 ## Do not
 

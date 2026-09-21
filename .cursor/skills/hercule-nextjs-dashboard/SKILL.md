@@ -17,7 +17,7 @@ Client-facing surfaces without login — auth via slug or survey token.
 | `/dashboard/[slug]` | Client onboarding + delivery tracking |
 | `/survey/[token]` | Post-RDV survey |
 
-Layouts: `app/dashboard/layout.tsx`
+Layouts: `app/(legacy)/dashboard/layout.tsx`
 
 ## Components
 

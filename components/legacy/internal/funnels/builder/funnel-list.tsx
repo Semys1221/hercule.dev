@@ -1,0 +1,233 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { InternalStatusAlert } from "@/components/legacy/internal/funnels/ui/internal-status-alert";
+import { FunnelOptionsMenu } from "@/components/legacy/internal/funnels/builder/funnel-options-menu";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { funnelApiUrl } from "@/lib/legacy/admin/funnels/client";
+import { funnelEditorHref } from "@/lib/legacy/admin/funnels/routing";
+import type { FunnelScope, FunnelSummary } from "@/lib/legacy/admin/funnels/schema";
+import {
+  PARCOURS_EMPTY_DESCRIPTION,
+  PARCOURS_EMPTY_TITLE,
+  PARCOURS_NAME_LABEL,
+  PARCOURS_NEW_CTA,
+  PARCOURS_NEW_DIALOG_DESCRIPTION,
+  PARCOURS_NEW_DIALOG_TITLE,
+  PARCOURS_PUBLISHED_MAX_HINT,
+} from "@/lib/legacy/admin/funnels/ui-copy";
+
+const createFormSchema = z.object({
+  displayName: z.string().max(120).optional(),
+});
+
+type CreateFormValues = z.infer<typeof createFormSchema>;
+
+type FunnelListProps = {
+  scope: FunnelScope;
+  navPath: string[];
+  title: string;
+};
+
+export function FunnelList({ scope, navPath, title }: FunnelListProps) {
+  const router = useRouter();
+  const [funnels, setFunnels] = useState<FunnelSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  const form = useForm<CreateFormValues>({
+    resolver: zodResolver(createFormSchema),
+    defaultValues: { displayName: "" },
+  });
+
+  const loadFunnels = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(funnelApiUrl("", scope));
+      const body = (await response.json()) as {
+        funnels?: FunnelSummary[];
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(body.error ?? "Erreur de chargement");
+      }
+      setFunnels(body.funnels ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    } finally {
+      setLoading(false);
+    }
+  }, [scope]);
+
+  useEffect(() => {
+    void loadFunnels();
+  }, [loadFunnels]);
+
+  async function handleCreate(values: CreateFormValues) {
+    setCreating(true);
+    setError(null);
+    try {
+      const response = await fetch(funnelApiUrl("", scope), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audience: scope.audience,
+          kind: scope.kind,
+          stage: scope.stage,
+          displayName: values.displayName?.trim() || undefined,
+        }),
+      });
+      const body = (await response.json()) as {
+        funnel?: { slug: string };
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(body.error ?? "Erreur de création");
+      }
+      setCreateOpen(false);
+      form.reset({ displayName: "" });
+      router.push(
+        funnelEditorHref(navPath, body.funnel?.slug ?? "", { phase: "layout" }),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-sm text-muted-foreground">
+            {PARCOURS_PUBLISHED_MAX_HINT}
+          </p>
+        </div>
+        <Button onClick={() => setCreateOpen(true)}>New</Button>
+      </div>
+
+      {error ? <InternalStatusAlert variant="error" message={error} /> : null}
+
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-36 w-full" />
+          <Skeleton className="h-36 w-full" />
+        </div>
+      ) : funnels.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{PARCOURS_EMPTY_TITLE}</CardTitle>
+            <CardDescription>
+              {PARCOURS_EMPTY_DESCRIPTION}
+              client plus tard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => setCreateOpen(true)}>{PARCOURS_NEW_CTA}</Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {funnels.map((funnel) => (
+            <Card key={funnel.slug}>
+              <CardHeader>
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base">{funnel.displayName}</CardTitle>
+                  <Badge variant={funnel.status === "published" ? "default" : "secondary"}>
+                    {funnel.status}
+                  </Badge>
+                </div>
+                <CardDescription>
+                  {funnel.stepCount} étape{funnel.stepCount === 1 ? "" : "s"} · {funnel.slug}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                <FunnelOptionsMenu
+                  context="list"
+                  scope={scope}
+                  navPath={navPath}
+                  slug={funnel.slug}
+                  displayName={funnel.displayName}
+                  status={funnel.status}
+                  onPublished={() => void loadFunnels()}
+                  onDeleted={() => void loadFunnels()}
+                  onError={setError}
+                />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{PARCOURS_NEW_DIALOG_TITLE}</DialogTitle>
+            <DialogDescription>{PARCOURS_NEW_DIALOG_DESCRIPTION}</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="displayName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{PARCOURS_NAME_LABEL}</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="my_funnel_1" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={creating}>
+                  Créer et enregistrer
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

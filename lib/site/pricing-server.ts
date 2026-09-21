@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 
-import { pricingJsonPath } from "@/lib/legal-documentation/paths";
-import { readJsonFile } from "@/lib/legal-documentation/read-json";
+import { pricingJsonPath } from "@/lib/legacy/legal-documentation/paths";
+import { readJsonFile } from "@/lib/legacy/legal-documentation/read-json";
 import type { PricingAudience, PricingDocument } from "@/lib/site/pricing-types";
 import { pricingDocumentSchema } from "@/lib/site/pricing-types";
 

@@ -1,0 +1,30 @@
+import { describe, expect, it } from "vitest";
+
+import cabinetExemple from "@/legacy-content/propositions/cabinet-exemple.json";
+import ludovic from "@/legacy-content/propositions/ludovic.json";
+import { parsePropositionConfig } from "@/lib/legacy/propositions/schema";
+import {
+  getPricingOptions,
+  resolveStripePaymentLinkUrl,
+} from "@/lib/legacy/propositions/resolve-payment";
+
+describe("resolveStripePaymentLinkUrl", () => {
+  const cabinetConfig = parsePropositionConfig(cabinetExemple);
+  const ludovicConfig = parsePropositionConfig(ludovic);
+
+  it("falls back to payment.stripePaymentLinkUrl when no options", () => {
+    expect(resolveStripePaymentLinkUrl(cabinetConfig, null)).toBe(
+      cabinetConfig.payment.stripePaymentLinkUrl,
+    );
+  });
+
+  it("uses selected pricing option URL when options exist", () => {
+    const options = getPricingOptions(ludovicConfig);
+    const growthOption = options?.find((option) => option.id === "formule-croissance-45");
+
+    expect(growthOption).toBeDefined();
+    expect(resolveStripePaymentLinkUrl(ludovicConfig, "formule-croissance-45")).toBe(
+      growthOption?.stripePaymentLinkUrl,
+    );
+  });
+});

@@ -1,14 +1,14 @@
 ---
 name: hercule-streamlit-scraper
 description: >-
-  Hercule.dev Outscraper lead pipeline (app/streamlit_scraper). Use when editing
+  Hercule.dev Outscraper lead pipeline (lib/backend/streamlit_scraper). Use when editing
   streamlit_scraper, presets, bootstrap, company_registry, Outscraper, enrich,
   SIRENE, scrape_state, push-instantly, onboarding tabs, VPS worker, or pnpm streamlit-scraper.
 ---
 
 # Streamlit Scraper
 
-Human reference: [app/streamlit_scraper/README.md](../../app/streamlit_scraper/README.md).
+Human reference: [lib/backend/streamlit_scraper/README.md](../../lib/backend/streamlit_scraper/README.md).
 
 ## Architecture
 
@@ -74,7 +74,7 @@ python -m bootstrap cleanup-empty-instantly          # dry-run
 python -m bootstrap cleanup-empty-instantly --execute
 ```
 
-VPS install: `scripts/vps/install-scraper.sh` → systemd `hercule-scraper` + hourly heal cron per preset.
+VPS install: `lib/backend/scripts/vps/install-scraper.sh` → systemd `hercule-scraper` + hourly heal cron per preset.
 
 Single comptable VPS worker: `cabinets_expertise_comptable_fresh_geo` (`TARGET_MODE=instantly_pushed_run`, postal + INSEE communes, taxonomy gate, list `bfb0fc90-…`). Service: `VPS_SCRAPER_SERVICE=hercule-scraper-comptable-fresh-geo`.
 
@@ -102,7 +102,7 @@ When `TAXONOMY_GATE_ENABLED=true`, scrape accepts leads only if `TAXONOMY_INCLUD
 - `TARGET_MODE=instantly_pushed_run` → worker/UI target = **checkpoint** `instantly_pushed` in `scrape_state.json` (per-preset run; use when sharing a list with another worker)
 - Helpers: `target_progress_value`, `target_uses_live_list` in `scrape_state.py`
 - `worker_heartbeat.json` + `scrape.log` on disk; Scrape page reads remote files over SSH when `VPS_HOST` set
-- Fleet Grafana dashboard (VPS): `scripts/vps/install-monitoring.sh` → exporter `:9464` + Compose (Prometheus/Grafana/Loki/node_exporter). See README **Monitoring**. Code: `monitoring/exporter.py`.
+- Fleet Grafana dashboard (VPS): `lib/backend/scripts/vps/install-monitoring.sh` → exporter `:9464` + Compose (Prometheus/Grafana/Loki/node_exporter). See README **Monitoring**. Code: `monitoring/exporter.py`.
 
 ## Resume invariants
 
