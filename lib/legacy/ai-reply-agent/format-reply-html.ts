@@ -16,7 +16,8 @@ import {
 
 export { BEATRICE_SIGNATURE, ensureBeatriceSignature } from "@/lib/legacy/outreach-email/signature";
 
-const RESERVATION_PATH_RE = /reservation(?:-entreprise)?\.html|\/r\/comptable\//i;
+const RESERVATION_PATH_RE =
+  /reservation(?:-\w+)?\.html|\/reservation\/|\/r\/comptable\//i;
 const URL_RE =
   /https?:\/\/[^\s<>]+|(?:www\.)?hercule\.dev[/\w\-.?=&%]*/gi;
 const HTTPS_ONLY_URL_RE = /https?:\/\/[^\s<>]+/gi;

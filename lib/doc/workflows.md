@@ -2,6 +2,8 @@
 
 Parcours prospect à travers l'engine. Les modules optionnels sont des **branches**, pas des forks du core.
 
+Workflows **gestion clientèle** (hors moteur) : §11. Contrat UI : [`frontend.md`](./frontend.md).
+
 ---
 
 ## 1. Workflow global (core obligatoire)
@@ -184,17 +186,21 @@ Détail : [`routing.md`](./routing.md).
 
 ---
 
-## 8. Workflow CRM Hercule (hors engine)
+## 8. Workflow CRM Hercule (W11 — trop étroit aujourd’hui)
+
+**EXISTANT conceptuel / À CONSTRUIRE.** Aujourd’hui le canon ne décrit que l’import **après paiement** (D16) :
 
 ```
 Prospect booke un event tenu par Hercule
   → RDV commercial Hercule
   → paiement Hercule (Stripe)
-  → INSERT/UPSERT table clients (À CONSTRUIRE)
+  → INSERT/UPSERT table clients
   → pipeline interne (onboarding, deliverance…)
 
 L'engine continue pour d'autres niches / clients sans référence à ce CRM.
 ```
+
+**Élargissement (gestion) :** W11 reste l’entrée **paiement destinataire = Hercule**. Un **second point d’entrée** est le formulaire d’onboarding (React) — W-G1. Coexistence des deux : **À DÉCIDER**. Le pipeline interne n’est plus un commentaire : voir §11 (W-G*).
 
 ---
 
@@ -219,3 +225,133 @@ L'engine continue pour d'autres niches / clients sans référence à ce CRM.
 | Workflow | Trigger book → Condition PB ON → Action enqueue h48 → State CONFIRMED |
 | Tool | Calendly, Instantly, Resend, Stripe |
 | Database | Persistance `lead_statut`, jobs, payments — pas le moteur métier |
+
+---
+
+## 11. Workflows de gestion clientèle (hors moteur, À CONSTRUIRE)
+
+Le moteur sait filtrer / pooler selon des **quotas de slots**. Il ne sait pas encore : créer un client depuis un formulaire, calculer le premier jour de livraison, n’envoyer des prospects qu’à partir de cette date, allouer des inboxes, générer les tâches ops.
+
+Contrat UI : [`frontend.md`](./frontend.md).  
+Réutiliser, **ne pas dupliquer** : `client_outreach_slots`, `inbox_pool`, `inbox_provision_queue`, pool-router. L’écart = **lifecycle client** au-dessus des slots.
+
+Chaîne cible (SoT backend ; le front n’affiche que l’état persisté) :
+
+```
+Client créé
+  → Date de livraison calculée (ex. signup + 20 j)
+  → Provisioning (infra, inboxes, tâches)
+  → Warm-up
+  → Éligible
+  → Entre dans le pool
+  → Reçoit des prospects
+```
+
+### W-G1 — Client Onboarding
+
+| | |
+|--|--|
+| **Statut** | **À CONSTRUIRE** |
+| **Trigger** | Soumission formulaire React (typer / fiche). Second trigger possible : W11 paiement Hercule |
+| **Entrée** | Payload validé (identité, niche, champs légaux minimaux) |
+| **Conditions** | Données valides ; niche ∈ actives (D11) |
+| **Étapes** | 1. Validation 2. INSERT `clients` 3. Sélection niche 4. Activation (statut created / onboarding) 5. Enchaîner W-G2, W-G5–W-G7 |
+| **Ancrage** | Table `clients` D1 ; W11 trop tardif s’il est le seul insert |
+| **Échecs** | Validation → pas de row ; double email **À DÉCIDER** |
+
+### W-G2 — Delivery Start / First Delivery
+
+| | |
+|--|--|
+| **Statut** | **Absent** (exemple métier : 1er RDV d’ici 20 jours) |
+| **Trigger** | Suite W-G1 (création) ; éventuellement patch admin de la date |
+| **Étapes** | 1. `delivery_start_at = signup_date + délai` 2. Persister 3. Déterminer l’instant d’éligibilité pool 4. Si changement de date : recalc W-G9 / W-G10 |
+| **À DÉCIDER** | Délai 20 j constant vs par offre / SKU |
+
+Le React **affiche** `delivery_start_at`. Il ne le calcule pas.
+
+### W-G3 — Client Eligibility
+
+| | |
+|--|--|
+| **Statut** | **À CONSTRUIRE** — distinct de `capacity_status` slot et de `inbox_pool.status` |
+| **États visés** | `pending` → `warming` → `eligible` → `active` → `paused` (et variantes, voir lifecycle W-G8) |
+| **Rôle** | Le moteur sait si **ce client** peut **actuellement** recevoir des prospects |
+
+Ne pas fusionner avec `lead_statut`.
+
+### W-G4 — Capacity / Allocation
+
+| | |
+|--|--|
+| **Statut** | Pool-router **EXISTANT** (slots `capacity_status=active` + budget sends) — **À CONSTRUIRE** : volume, fenêtre, quota **client**, prise en compte de `delivery_start_at` |
+| **Rôle** | Combien de prospects / RDV, **quand**, sur quelle période, selon quota **et** date d’éligibilité |
+
+### W-G5 — Email Inbox Provisioning
+
+| | |
+|--|--|
+| **Statut** | `inbox_pool` / `inbox_provision_queue` **EXISTANT** — **À CONSTRUIRE** : calcul du nombre, association client → inboxes, warmup lié au lifecycle, libération / réallocation |
+| **Étapes** | Calcul nb boîtes → attribution → création / config → association → warmup → release éventuelle |
+| **À DÉCIDER** | Formule du nombre de boîtes |
+
+### W-G6 — Client → Infrastructure provisioning
+
+| | |
+|--|--|
+| **Statut** | Fragmenté (seat Calendly **EXISTANT**, campagnes Instantly, links) — **À CONSTRUIRE** comme orchestrateur à l’entrée client |
+| **Rôle** | Quelles ressources créer : comptes, campagnes, domaines, inboxes, liens, séquences, event type Calendly (D17) |
+
+### W-G7 — Task Generation
+
+| | |
+|--|--|
+| **Statut** | Jobs email **EXISTANT** — **tâches ops client** absentes |
+| **Trigger** | Client créé (W-G1) et transitions W-G8 |
+| **Exemples** | provisioning, configuration, vérification, lancement, suivi |
+| **Chaque tâche** | état + deadline éventuelle |
+| **À DÉCIDER** | Table `client_tasks` vs réemploi des tables jobs |
+
+### W-G8 — Client Lifecycle
+
+| | |
+|--|--|
+| **Statut** | **À CONSTRUIRE** |
+| **Machine visée** | `created` → `onboarding` → `provisioning` → `warming` → `eligible` → `active` → `paused` → `cancelled` |
+| **Règle** | Chaque transition **déclenche** les actions backend (pas le front) |
+
+Détail des états : [`states.md`](./states.md) couche 5.
+
+### W-G9 — Quota / Pool Recalculation
+
+| | |
+|--|--|
+| **Statut** | Budget sends **EXISTANT** — **À CONSTRUIRE** : recalc à l’**entrée / sortie** d’un client |
+| **Rôle** | Pool **dynamique**. Le round-robin ne regarde pas seulement « qui existe », mais **qui est éligible** et **quelle capacité reste**. |
+
+### W-G10 — Priority / Queue
+
+| | |
+|--|--|
+| **Statut** | **Absent** |
+| **Rôle** | Un nouveau client n’est **pas** traité comme un actif J0. Il a une date d’éligibilité. À cette date il **entre dans la queue** / le pool. |
+
+### W-G11 — Client Status Synchronization
+
+| | |
+|--|--|
+| **Statut** | **À CONSTRUIRE** (contrat) |
+| **Rôle** | Le front affiche l’état. Le backend **possède** l’état réel. Pas de state machine parallèle dans React. |
+
+### À DÉCIDER (gestion — non tranchés)
+
+| Sujet | Options |
+|-------|---------|
+| Délai 1re livraison | 20 j constant vs par offre / SKU |
+| Enum lifecycle | Colonne dédiée vs mapping sur `capacity_status` (déconseillé : couches distinctes) |
+| Nombre d’inboxes | Formule (quota, niche, …) |
+| Tâches | `client_tasks` vs jobs existants |
+| Formulaire | Internal Hercule vs client-facing |
+| Double entrée `clients` | Form onboarding (W-G1) vs Stripe D16 (W11) — un, l’autre, ou les deux |
+
+Ces IDs ne sont **pas** des D1–D22. Ne pas les ajouter à [`build/decisions.md`](./build/decisions.md).

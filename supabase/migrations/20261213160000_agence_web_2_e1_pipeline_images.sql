@@ -1,8 +1,0 @@
--- Agence web 2 E1: inline pipeline screenshots (Instantly reply API has no attachments).
-
-UPDATE public.instantly_bypass_templates
-SET
-    body_html = 'Bonjour,<br/><br/>Les rendez-vous actuellement planifiés sont visibles ci-dessous.<br/><br/>Il s''agit de PME, de cabinets comptables et de conseillers financiers.<br/><br/>Nous générons actuellement 5 rendez-vous par jour, et 29 rendez-vous sont déjà planifiés.<br/><br/>L''accès illimité au pipeline est proposé à 1 200 € forfaitaires pour le premier mois.<br/><br/>Nous n''acceptons qu''une seule agence.<br/><br/>Pour postuler, répondez mercredi ou jeudi afin que nous puissions vous présenter le Calendly et le fonctionnement du pipeline lors d''un appel en visioconférence.<br/><br/><img src="https://www.hercule.dev/email/agence/pipeline/pipeline-1.png" alt="Aperçu pipeline 1" style="max-width:100%;display:block;margin:12px 0;" /><img src="https://www.hercule.dev/email/agence/pipeline/pipeline-2.png" alt="Aperçu pipeline 2" style="max-width:100%;display:block;margin:12px 0;" /><img src="https://www.hercule.dev/email/agence/pipeline/pipeline-3.png" alt="Aperçu pipeline 3" style="max-width:100%;display:block;margin:12px 0;" /><img src="https://www.hercule.dev/email/agence/pipeline/pipeline-4.png" alt="Aperçu pipeline 4" style="max-width:100%;display:block;margin:12px 0;" /><img src="https://www.hercule.dev/email/agence/pipeline/pipeline-5.png" alt="Aperçu pipeline 5" style="max-width:100%;display:block;margin:12px 0;" /><br/><br/>Cordialement,<br/>{{accountSignature}}',
-    updated_at = NOW()
-WHERE campaign_id = '6864f739-36ff-4406-89c5-9bee42b8fa21'
-  AND template_key = 'interested_email1';

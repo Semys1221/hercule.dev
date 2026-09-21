@@ -1,1 +1,0 @@
-export const CALENDLY_BOOKINGS_DAYS_BEHIND = 30;

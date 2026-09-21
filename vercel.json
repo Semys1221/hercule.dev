@@ -1,40 +1,60 @@
 {
   "redirects": [
     {
-      "source": "/reservation-cif.html",
-      "destination": "/reservation-conference.html",
-      "permanent": false
+      "source": "/reservation.html/:slug",
+      "destination": "/reservation/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/reservation-entreprise.html/:slug",
+      "destination": "/reservation/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/reservation-conference.html/:slug",
+      "destination": "/reservation/:slug",
+      "permanent": true
     },
     {
       "source": "/reservation-cif.html/:slug",
-      "destination": "/reservation-conference.html/:slug",
-      "permanent": false
+      "destination": "/reservation/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/reservation-jum.html/:slug",
+      "destination": "/reservation/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/reservation-cif.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/reservation.html",
+      "destination": "/agence",
+      "permanent": true
+    },
+    {
+      "source": "/reservation-entreprise.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/reservation-conference.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/reservation-jum.html",
+      "destination": "/",
+      "permanent": true
     }
   ],
   "rewrites": [
     {
-      "source": "/reservation.html/:slug",
-      "destination": "/reservation.html?code=:slug"
-    },
-    {
-      "source": "/reservation-entreprise.html/:slug",
-      "destination": "/reservation-entreprise.html?code=:slug"
-    },
-    {
-      "source": "/reservation-cif.html/:slug",
-      "destination": "/reservation-conference.html?code=:slug"
-    },
-    {
-      "source": "/reservation-conference.html/:slug",
-      "destination": "/reservation-conference.html?code=:slug"
-    },
-    {
       "source": "/confirm-reservation.html/:slug",
       "destination": "/confirm-reservation.html?code=:slug"
-    },
-    {
-      "source": "/reservation-jum.html/:slug",
-      "destination": "/reservation-jum.html?code=:slug"
     },
     {
       "source": "/confirm-reservation-jum.html/:slug",

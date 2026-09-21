@@ -181,6 +181,45 @@ export function getAppBaseUrl(): string {
   );
 }
 
+/**
+ * Conférence — live Stripe prices (lookup keys conference_*).
+ * Provisioned 2026-09-21 via Stripe MCP.
+ */
+const CONFERENCE_STRIPE_PRICE_IDS = {
+  decMonthly: "price_1UI7LMBd01AMeiaQn4CjBx5w",
+  decPack: "price_1UI7LMBd01AMeiaQGEyByfJU",
+  courtageMonthly: "price_1UI7LMBd01AMeiaQR1GrXhIW",
+  courtagePack: "price_1UI7LMBd01AMeiaQXWdKcbyY",
+} as const;
+
+export function getConferenceDecMonthlyPriceId(): string {
+  return (
+    process.env.STRIPE_PRICE_CONFERENCE_DEC_MONTHLY?.trim() ||
+    CONFERENCE_STRIPE_PRICE_IDS.decMonthly
+  );
+}
+
+export function getConferenceDecPackPriceId(): string {
+  return (
+    process.env.STRIPE_PRICE_CONFERENCE_DEC_PACK?.trim() ||
+    CONFERENCE_STRIPE_PRICE_IDS.decPack
+  );
+}
+
+export function getConferenceCourtageMonthlyPriceId(): string {
+  return (
+    process.env.STRIPE_PRICE_CONFERENCE_COURTAGE_MONTHLY?.trim() ||
+    CONFERENCE_STRIPE_PRICE_IDS.courtageMonthly
+  );
+}
+
+export function getConferenceCourtagePackPriceId(): string {
+  return (
+    process.env.STRIPE_PRICE_CONFERENCE_COURTAGE_PACK?.trim() ||
+    CONFERENCE_STRIPE_PRICE_IDS.courtagePack
+  );
+}
+
 /** Overrides legacy account business_profile.name (e.g. Montis Media) on embedded Checkout. */
 export function getCheckoutBrandingSettings(): Stripe.Checkout.SessionCreateParams.BrandingSettings {
   return { display_name: LEGAL_ENTITY.commercialName };

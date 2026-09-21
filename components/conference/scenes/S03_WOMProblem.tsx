@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { ChapterBadge } from "../shared/ChapterBadge";
 import { Person, PersonGroup } from "../shared/Person";
 import { RubiksCube }   from "../shared/RubiksCube";
 import { SceneLabel }   from "../shared/SceneLabel";
@@ -21,6 +22,7 @@ import { SceneShell }   from "../shared/SceneShell";
 export function S03_WOMProblem({ step }: SceneProps) {
   return (
     <SceneShell>
+      <ChapterBadge chapter="Le problème" beat="2/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 12 — rupture */}
@@ -117,26 +119,34 @@ export function S03_WOMProblem({ step }: SceneProps) {
           <motion.div
             key="b16"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col gap-4"
+            className="flex flex-col items-center gap-4"
           >
-            {/* row 1: particuliers */}
-            <div className="flex items-center gap-2">
-              {Array.from({ length: 9 }, (_, i) => (
-                <Person key={i} size={24} highlighted={false} delay={i * 0.04} />
-              ))}
-            </div>
-            {/* row 2: mix avec un pro */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {Array.from({ length: 7 }, (_, i) => (
-                <Person key={i} size={24} icon={i === 3 ? "briefcase" : "none"}
-                  highlighted={i === 3} delay={i * 0.04} />
+                <Person
+                  key={i}
+                  size={24}
+                  icon={i === 3 ? "briefcase" : "none"}
+                  highlighted={i === 3}
+                  delay={i * 0.04}
+                />
               ))}
             </div>
-            {/* door */}
+            <svg viewBox="0 0 100 64" className="h-16 w-28 text-zinc-600" aria-hidden>
+              <path
+                d="M10 0 L90 0 L70 60 L30 60 Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.2"
+              />
+            </svg>
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-              className="mx-auto mt-2 h-10 w-7 rounded-t border border-zinc-600/50 border-b-0"
-            />
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Person size={32} icon="briefcase" />
+            </motion.div>
           </motion.div>
         )}
 

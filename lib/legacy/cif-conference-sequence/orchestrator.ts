@@ -154,7 +154,7 @@ export async function ensureConferenceTestLead(): Promise<LinkTrackingLead> {
 
   const slug = `conf-test-${Date.now().toString(36)}`;
   const urls = {
-    reservation_cif_link: `https://www.hercule.dev/reservation-conference.html/${slug}`,
+    reservation_cif_link: `https://www.hercule.dev/reservation/${slug}`,
     dashboard_link: `https://www.hercule.dev/dashboard/${slug}`,
   };
 

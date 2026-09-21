@@ -6,7 +6,8 @@ export type CalendlySeatOnboardingStatus =
 
 export type CalendlySeatOnboardingRow = {
   id: string;
-  agence_id: string;
+  agence_id: string | null;
+  client_id: string | null;
   email: string;
   status: CalendlySeatOnboardingStatus;
   started_at: string;

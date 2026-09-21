@@ -5,8 +5,8 @@ import {
 
 import type { AiReplyTargetType } from "./types";
 
-const FALLBACK_BUYER = "https://www.hercule.dev/reservation.html";
-const FALLBACK_SELLER = "https://www.hercule.dev/reservation-entreprise.html";
+const FALLBACK_BUYER = "https://www.hercule.dev/reservation";
+const FALLBACK_SELLER = "https://www.hercule.dev/reservation";
 
 type CtaColumn = "reservation_agence_link" | "reservation_entreprise_link";
 

@@ -2,14 +2,16 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { ChapterBadge } from "../shared/ChapterBadge";
 import { Person, PersonGroup } from "../shared/Person";
+import { PhoneIcon } from "../shared/PhoneIcon";
 import { SceneLabel } from "../shared/SceneLabel";
 import { SceneShell } from "../shared/SceneShell";
 
 /**
  * S04 — Les leads froids  (steps 0-4, beats 19-23)
  *
- * 0 – Grande liste verticale + téléphone
+ * 0 – Fiche de leads (liste verticale) + téléphone
  * 1 – Personne n'a demandé
  * 2 – Appel → relance → relance
  * 3 – Fiche BUDGET✕ BESOIN✕ PROFIL✕
@@ -18,6 +20,7 @@ import { SceneShell } from "../shared/SceneShell";
 export function S04_ColdLeads({ step }: SceneProps) {
   return (
     <SceneShell>
+      <ChapterBadge chapter="Le problème" beat="3/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 19 — liste */}
@@ -25,8 +28,10 @@ export function S04_ColdLeads({ step }: SceneProps) {
           <motion.div
             key="b19"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex items-start gap-10"
+            className="flex flex-col items-center gap-8"
           >
+            <SceneLabel size="lg" animate={false}>FICHE DE LEADS</SceneLabel>
+            <div className="flex items-start gap-10">
             <div className="flex flex-col gap-1.5">
               {Array.from({ length: 14 }, (_, i) => (
                 <motion.div
@@ -41,19 +46,13 @@ export function S04_ColdLeads({ step }: SceneProps) {
                 </motion.div>
               ))}
             </div>
-            {/* phone */}
-            <motion.svg
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-              className="mt-4 size-10 text-zinc-400" aria-hidden
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+              className="mt-4 text-zinc-400"
             >
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6
-                19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72
-                12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91
-                a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45
-                12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z"
-                strokeLinecap="round" strokeLinejoin="round" />
-            </motion.svg>
+              <PhoneIcon size={40} />
+            </motion.div>
+            </div>
           </motion.div>
         )}
 
@@ -136,21 +135,10 @@ export function S04_ColdLeads({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-4"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-              className="size-12 text-zinc-600" aria-hidden>
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07
-                a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3
-                a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91
-                a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7
-                A2 2 0 0 1 22 16.92Z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <motion.p
-              animate={{ opacity: [1, 0] }}
-              transition={{ delay: 0.8, duration: 0.6 }}
-              className="text-sm text-zinc-500 tracking-widest uppercase"
-            >
+            <PhoneIcon size={48} className="text-zinc-600" />
+            <p className="text-sm tracking-widest text-zinc-500 uppercase">
               1 conversation = 0 €
-            </motion.p>
+            </p>
           </motion.div>
         )}
 

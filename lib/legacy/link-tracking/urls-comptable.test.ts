@@ -7,7 +7,7 @@ import {
 } from "./urls";
 
 const urls = buildComptableLeadUrls("abc123", "cab@test.fr");
-assert.ok(urls.reservation_comptable_link.includes("abc123"));
+assert.ok(urls.reservation_comptable_link.includes("/reservation/abc123"));
 assert.ok(urls.confirmation_comptable_link.includes("abc123"));
 assert.ok(urls.confirmation_comptable_link.includes("email="));
 assert.ok(urls.dashboard_link.includes("abc123"));

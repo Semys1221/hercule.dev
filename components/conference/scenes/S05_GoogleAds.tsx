@@ -2,7 +2,9 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { ChapterBadge } from "../shared/ChapterBadge";
 import { Person, PersonGroup } from "../shared/Person";
+import { PhoneIcon } from "../shared/PhoneIcon";
 import { SceneLabel } from "../shared/SceneLabel";
 import { SceneShell } from "../shared/SceneShell";
 
@@ -19,6 +21,7 @@ import { SceneShell } from "../shared/SceneShell";
 export function S05_GoogleAds({ step }: SceneProps) {
   return (
     <SceneShell>
+      <ChapterBadge chapter="Le problème" beat="4/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 24 — inversion */}
@@ -41,10 +44,7 @@ export function S05_GoogleAds({ step }: SceneProps) {
             >
               →
             </motion.span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-              className="size-8 text-zinc-400" aria-hidden>
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <PhoneIcon size={32} className="text-zinc-400" />
           </motion.div>
         )}
 
@@ -64,10 +64,7 @@ export function S05_GoogleAds({ step }: SceneProps) {
                 transition={{ duration: 1.4, delay: i * 0.28, repeat: Infinity, repeatDelay: 0.4 }}
               />
             ))}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-              className="z-10 size-10 text-zinc-300" aria-hidden>
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <PhoneIcon size={40} className="z-10 text-zinc-300" />
           </motion.div>
         )}
 
@@ -85,10 +82,10 @@ export function S05_GoogleAds({ step }: SceneProps) {
                 (label, i) => (
                   <motion.span
                     key={label}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ delay: i * 0.5, duration: 0.8 }}
-                    className="text-[10px] tracking-widest text-zinc-500 uppercase"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.35, duration: 0.4 }}
+                    className="text-[10px] tracking-widest text-zinc-400 uppercase"
                   >
                     {label}
                   </motion.span>
@@ -105,11 +102,11 @@ export function S05_GoogleAds({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-3"
           >
-            <PersonGroup count={16} size={22} />
+            <PersonGroup count={16} size={40} />
             <div className="flex h-6 w-48 items-center justify-center border border-zinc-700/50 bg-zinc-900/60">
               <span className="text-[9px] tracking-widest text-zinc-600 uppercase">Filtre</span>
             </div>
-            <PersonGroup count={3} size={22} />
+            <PersonGroup count={3} size={48} />
           </motion.div>
         )}
 
@@ -118,14 +115,14 @@ export function S05_GoogleAds({ step }: SceneProps) {
           <motion.div
             key="b28"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center gap-4"
           >
-            <PersonGroup count={20} size={20} className="max-w-xs" />
+            <PersonGroup count={20} size={40} />
             {/* funnel shape */}
-            <svg viewBox="0 0 120 80" className="h-16 w-28 text-zinc-700" aria-hidden>
+            <svg viewBox="0 0 120 80" className="h-20 w-40 text-zinc-700" aria-hidden>
               <path d="M10 0 L110 0 L80 80 L40 80 Z" fill="none" stroke="currentColor" strokeWidth="1" />
             </svg>
-            <PersonGroup count={2} size={24} />
+            <PersonGroup count={2} size={52} />
           </motion.div>
         )}
 

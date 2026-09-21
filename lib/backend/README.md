@@ -5,11 +5,11 @@ Ops tooling, Python shared libraries, database migrations, and Streamlit operato
 | Path | Purpose |
 |------|---------|
 | `lib/backend/scripts/` | CRM migrations, cron setup, smoke tests, VPS/Render deploy helpers |
-| `shared/` | Python clients shared by Streamlit apps and scripts |
-| `supabase/migrations/` | SQL migrations applied via `lib/backend/scripts/crm/*` |
-| `streamlit_*` | Operator dashboards (scraper, subsequence, reply agent, …) |
-| `outreach_data.py` | Persistent data path helpers (`HERCULE_DATA_ROOT`) |
-| `tmp/` | Local script outputs (gitignored) |
+| `lib/backend/shared/` | Python clients shared by Streamlit apps and scripts |
+| `lib/backend/supabase/migrations/` | SQL migrations applied via `lib/backend/scripts/crm/*` |
+| `lib/backend/streamlit_*` | Operator dashboards (scraper, subsequence, reply agent, …) |
+| `lib/backend/outreach_data.py` | Persistent data path helpers (`HERCULE_DATA_ROOT`) |
+| `lib/backend/tmp/` | Local script outputs (gitignored) |
 
 ## Environment
 

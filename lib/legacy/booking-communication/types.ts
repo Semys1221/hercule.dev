@@ -60,6 +60,15 @@ export const BOOKING_EMAIL_TYPE_VALUES = [
   "free_trial_started_1",
   "free_trial_started_2",
   "free_trial_started_3",
+  "payment_onboarding_1",
+  "payment_onboarding_2",
+  "payment_onboarding_3",
+  "payment_onboarding_4",
+  "payment_onboarding_5",
+  "payment_onboarding_6",
+  "payment_onboarding_7",
+  "payment_onboarding_8",
+  "payment_onboarding_9",
 ] as const;
 
 export type BookingEmailType = (typeof BOOKING_EMAIL_TYPE_VALUES)[number];
@@ -91,6 +100,7 @@ export const SEQUENCE_TRIGGERED_BY_VALUES = [
   "cif_conference_sequence",
   "free_trial_sequence",
   "free_trial_started_sequence",
+  "payment_onboarding_sequence",
 ] as const;
 
 export type SequenceTriggeredBy = (typeof SEQUENCE_TRIGGERED_BY_VALUES)[number];

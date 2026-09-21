@@ -1,15 +1,6 @@
 import type { LeadCategory, LinkTrackingLead } from "./types";
 
-const DEFAULT_TRACKING_BASE_AGENCE =
-  "https://www.hercule.dev/reservation.html";
-const DEFAULT_TRACKING_BASE_ENTREPRISE =
-  "https://www.hercule.dev/reservation-entreprise.html";
-const DEFAULT_TRACKING_BASE_COMPTABLE =
-  "https://www.hercule.dev/reservation-conference.html";
-const DEFAULT_TRACKING_BASE_CIF =
-  "https://www.hercule.dev/reservation-conference.html";
-const DEFAULT_TRACKING_BASE_JUM =
-  "https://www.hercule.dev/reservation-jum.html";
+const DEFAULT_TRACKING_BASE = "https://www.hercule.dev/reservation";
 const DEFAULT_CONFIRM_BASE =
   "https://www.hercule.dev/confirm-reservation.html";
 const DEFAULT_CONFIRM_BASE_JUM =
@@ -56,35 +47,34 @@ export type InstantlyCanonicalVariables = LeadUrls & {
 };
 
 export function getTrackingBaseUrl(category: LeadCategory): string {
-  if (category === "agence") {
-    return (
-      process.env.TRACKING_BASE_URL_AGENCE?.trim().replace(/\/$/, "") ??
-      process.env.TRACKING_BASE_URL?.trim().replace(/\/$/, "") ??
-      DEFAULT_TRACKING_BASE_AGENCE
-    );
-  }
-  if (category === "comptable") {
-    return (
-      process.env.TRACKING_BASE_URL_COMPTABLE?.trim().replace(/\/$/, "") ??
-      DEFAULT_TRACKING_BASE_COMPTABLE
-    );
-  }
-  if (category === "cif") {
-    return (
-      process.env.TRACKING_BASE_URL_CIF?.trim().replace(/\/$/, "") ??
-      DEFAULT_TRACKING_BASE_CIF
-    );
-  }
-  if (category === "jum") {
-    return (
-      process.env.TRACKING_BASE_URL_JUM?.trim().replace(/\/$/, "") ??
-      DEFAULT_TRACKING_BASE_JUM
-    );
-  }
+  const byCategory =
+    category === "agence"
+      ? process.env.TRACKING_BASE_URL_AGENCE
+      : category === "comptable"
+        ? process.env.TRACKING_BASE_URL_COMPTABLE
+        : category === "cif"
+          ? process.env.TRACKING_BASE_URL_CIF
+          : category === "jum"
+            ? process.env.TRACKING_BASE_URL_JUM
+            : category === "client"
+              ? process.env.TRACKING_BASE_URL_CLIENT
+              : process.env.TRACKING_BASE_URL_ENTREPRISE;
   return (
-    process.env.TRACKING_BASE_URL_ENTREPRISE?.trim().replace(/\/$/, "") ??
-    DEFAULT_TRACKING_BASE_ENTREPRISE
+    byCategory?.trim().replace(/\/$/, "") ??
+    process.env.TRACKING_BASE_URL?.trim().replace(/\/$/, "") ??
+    DEFAULT_TRACKING_BASE
   );
+}
+
+export function isCanonicalReservationUrl(url: string | null | undefined): boolean {
+  const trimmed = url?.trim();
+  if (!trimmed) return false;
+  try {
+    const pathname = new URL(trimmed, "https://www.hercule.dev").pathname;
+    return /^\/reservation\/[^/]+\/?$/.test(pathname);
+  } catch {
+    return false;
+  }
 }
 
 export function getConfirmBaseUrl(category?: LeadCategory): string {
@@ -223,6 +213,9 @@ export function dashboardLinkFor(
   if (stored) return stored;
   const slug = resolveLeadSlug(lead);
   if (!slug) return null;
+  if (lead.dashboard_link?.includes("/clients/")) {
+    return lead.dashboard_link;
+  }
   return buildDashboardUrl(slug);
 }
 

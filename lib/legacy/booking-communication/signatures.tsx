@@ -8,6 +8,10 @@ import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
 import type { MeetingActionLinks } from "./meeting-links";
 import { isSequenceRoot } from "./sequence-pattern";
 import type { BookingEmailType } from "./types";
+import {
+  PAYMENT_ONBOARDING_SIGNATURE_TAGLINE,
+  isPaymentOnboardingEmailType,
+} from "@/lib/(resend)/onboarding/constants";
 import { CONFERENCE_INVITE_EMAIL_TYPES } from "@/lib/legacy/cif-conference-sequence/constants";
 
 export const CONFERENCE_INVITE_SIGNATURE_TAGLINE = "Courtage contrat BNC/BIC";
@@ -21,6 +25,7 @@ export const SIGNATURE_TAGLINES: Record<LeadCategory, string> = {
   cif: "Conseil fiscal et trésorerie · cabinets CIF",
   entreprise: "Missions de tenue comptable · PME",
   jum: "JUM Advisory · expertise comptable",
+  client: "Courtage en projet BNC/BIC/TNS",
 };
 
 export function signatureTagline(category: LeadCategory): string {
@@ -39,6 +44,9 @@ export function signatureTaglineForEmail(
   category: LeadCategory,
   emailType: BookingEmailType,
 ): string {
+  if (isPaymentOnboardingEmailType(emailType)) {
+    return PAYMENT_ONBOARDING_SIGNATURE_TAGLINE;
+  }
   if (isConferenceInviteBookingEmail(emailType)) {
     return CONFERENCE_INVITE_SIGNATURE_TAGLINE;
   }
@@ -63,6 +71,9 @@ export function buildPlainSignatureForEmail(
 
 /** First email in each sequence uses plain text only; follow-ups use React HTML. */
 export function defaultUseHtml(emailType: BookingEmailType): boolean {
+  if (isPaymentOnboardingEmailType(emailType)) {
+    return false;
+  }
   return !isSequenceRoot(emailType);
 }
 

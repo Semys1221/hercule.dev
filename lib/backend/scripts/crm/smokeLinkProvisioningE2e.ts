@@ -98,12 +98,12 @@ function dryRunUrls(): void {
 
   assert(
     urls.reservation_agence_link ===
-      `https://www.hercule.dev/reservation.html/${slug}`,
+      `https://www.hercule.dev/reservation/${slug}`,
     `reservation_agence_link mismatch: ${urls.reservation_agence_link}`,
   );
   assert(
     urls.reservation_entreprise_link ===
-      `https://www.hercule.dev/reservation-entreprise.html/${slug}`,
+      `https://www.hercule.dev/reservation/${slug}`,
     `reservation_entreprise_link mismatch: ${urls.reservation_entreprise_link}`,
   );
   assert(
@@ -339,8 +339,8 @@ async function main(): Promise<void> {
     );
 
     const pages = [
-      `/reservation.html/${agenceSlug}`,
-      `/reservation-entreprise.html/${entrepriseSlug}`,
+      `/reservation/${agenceSlug}`,
+      `/reservation/${entrepriseSlug}`,
       `/confirm-reservation.html/${agenceSlug}?email=${encodeURIComponent(agenceEmail)}`,
     ];
     for (const path of pages) {

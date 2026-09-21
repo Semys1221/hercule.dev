@@ -73,7 +73,7 @@ def _round_trip(
 
 
 def test_booking_resend() -> RoundTripResult:
-    sys.path.insert(0, str(REPO_ROOT / "crm"))
+    sys.path.insert(0, str(REPO_ROOT / "lib/backend/crm"))
     from booking_templates import list_templates, save_template
 
     category = "agence"

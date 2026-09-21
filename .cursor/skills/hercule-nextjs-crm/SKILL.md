@@ -41,19 +41,19 @@ Link tracking + inbound webhooks for lead lifecycle. Human reference: [app/(lega
 
 Provisioned via Streamlit links (not Next):
 
-- `{{reservation_agence_link}}` → `/reservation.html/{slug}`
-- `{{reservation_entreprise_link}}` → `/reservation-entreprise.html/{slug}`
+- `{{reservation_agence_link}}` → `/reservation/{slug}`
+- `{{reservation_entreprise_link}}` → `/reservation/{slug}`
 - `{{confirmation_agence_link}}` → `/confirm-reservation.html/{slug}?email=`
 - `statut`
 
 Wipe legacy `{{link}}` / `{{confirm_link}}` on provision.
 
-## Public HTML (CRM-adjacent)
+## Public booking
 
 | File | Role |
 |------|------|
-| `public/confirm-reservation.html` | Presence confirmation |
-| `public/reservation.html` | Calendly embed (sales-funnel owns vente family) |
+| `public/confirm-reservation.html` | Presence confirmation (legacy) |
+| `app/reservation/[slug]/page.tsx` | Unified Calendly embed (all niches) |
 
 ## Calendly lib (read-only for admin)
 

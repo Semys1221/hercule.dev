@@ -19,7 +19,7 @@ Usage:
 Commands:
   scan      Full retroactive scan → JSON cache
   report    Human table or JSON summary from latest cache
-  plan      Write prioritized react-plans/ from latest cache
+  plan      Write prioritized react_doctor/plans/ from latest cache
   bundle    Agent manifest JSON (scan + skills + plans + verify)
   verify    Post-fix checklist (add --run to execute)
 

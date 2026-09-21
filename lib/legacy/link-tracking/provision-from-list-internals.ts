@@ -18,6 +18,7 @@ import {
   buildInstantlyCustomVariables,
   buildJumLeadUrls,
   buildLeadUrls,
+  isCanonicalReservationUrl,
   leadSlug,
 } from "@/lib/legacy/link-tracking/urls";
 
@@ -62,6 +63,11 @@ export function urlFieldsForCategory(
   if (category === "jum") {
     return buildJumLeadUrls(slug, email);
   }
+  if (category === "client") {
+    return {
+      dashboard_link: `${process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://www.hercule.dev"}/clients/${slug}`,
+    };
+  }
   return category === "entreprise"
     ? buildEntrepriseLeadUrls(slug, email)
     : buildLeadUrls(slug, email);
@@ -92,17 +98,20 @@ export function needsProvision(
     const reservationLink = row.reservation_comptable_link?.trim();
     const confirmLink = row.confirmation_comptable_link?.trim();
     if (!slug || !reservationLink || !confirmLink) return true;
+    if (isCanonicalReservationUrl(reservationLink)) return false;
     return reservationLink.includes("reservation-entreprise.html");
   }
   if (category === "cif") {
     const reservationLink = row.reservation_cif_link?.trim();
     if (!slug || !reservationLink) return true;
+    if (isCanonicalReservationUrl(reservationLink)) return false;
     return reservationLink.includes("reservation-cif.html");
   }
   if (category === "jum") {
     const reservationLink = row.reservation_jum_link?.trim();
     const confirmLink = row.confirmation_jum_link?.trim();
     if (!slug || !reservationLink || !confirmLink) return true;
+    if (isCanonicalReservationUrl(reservationLink)) return false;
     return !reservationLink.includes("reservation-jum.html");
   }
   const entrepriseLink = row.reservation_entreprise_link?.trim();

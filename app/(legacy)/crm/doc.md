@@ -21,8 +21,7 @@ pnpm dev
 
 Routes:
 
-- `GET /reservation.html/{slug}` — Calendly embed agence (`utm_content` = slug)
-- `GET /reservation-entreprise.html/{slug}` — Calendly embed entreprise
+- `GET /reservation/{slug}` — Calendly embed (agence / entreprise / conférence / JUM selon le lead)
 - `GET /confirm-reservation.html?code={slug}&email={email}` — presence confirm
 - `POST /api/webhooks/calendly` — `invitee.created`
 - `GET /api/cron/booking-emails` — every 15 minutes
@@ -68,8 +67,8 @@ Registers `invitee.created` → `https://www.hercule.dev/api/webhooks/calendly`.
 ## Instantly variables
 
 On the **Provisioning** tab, REPLACE Instantly `custom_variables` with:
-- `{{reservation_agence_link}}` — `https://www.hercule.dev/reservation.html/{slug}`
-- `{{reservation_entreprise_link}}` — `https://www.hercule.dev/reservation-entreprise.html/{slug}`
+- `{{reservation_agence_link}}` — `https://www.hercule.dev/reservation/{slug}`
+- `{{reservation_entreprise_link}}` — `https://www.hercule.dev/reservation/{slug}`
 - `{{confirmation_agence_link}}` — `https://www.hercule.dev/confirm-reservation.html/{slug}?email=`
 - `statut`
 

@@ -9,7 +9,7 @@ const REPO_ROOT = path.join(SCRIPT_DIR, "../../..");
 const MIGRATIONS_DIR = path.join(REPO_ROOT, "lib/backend/supabase/migrations");
 
 export function loadEnvFiles(): void {
-  for (const file of [".env", ".env.local", "crm/.env"]) {
+  for (const file of [".env", ".env.local", "lib/backend/crm/.env"]) {
     const envPath = path.join(REPO_ROOT, file);
     if (!fs.existsSync(envPath)) continue;
 

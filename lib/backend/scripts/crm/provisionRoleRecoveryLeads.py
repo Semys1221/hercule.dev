@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(ROOT / "crm"))
+sys.path.insert(0, str(ROOT / "lib/backend/crm"))
 
 from calendly_client import list_untracked_bookings  # noqa: E402
 from config import settings, temporary_base_url_for  # noqa: E402

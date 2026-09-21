@@ -5,6 +5,7 @@ import type { SceneProps } from "../presentation/types";
 import { FlowLine }    from "../shared/FlowLine";
 import { HerculeLogo } from "../shared/HerculeLogo";
 import { Person, PersonGroup } from "../shared/Person";
+import { ChapterBadge } from "../shared/ChapterBadge";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
 
@@ -22,6 +23,7 @@ import { SceneShell }  from "../shared/SceneShell";
 export function S01_Intro({ step }: SceneProps) {
   return (
     <SceneShell>
+      <ChapterBadge chapter="Le terrain" beat="1/4" />
       <AnimatePresence mode="wait">
 
         {/* ── beat 1 — noir ── */}
@@ -113,23 +115,20 @@ export function S01_Intro({ step }: SceneProps) {
           >
             <Person size={52} icon="briefcase" />
             <div className="flex flex-col items-center gap-3">
-              {["ENTREPRISE", "REVENUS"].map((label, i) => (
+              {[
+                { label: "ENTREPRISE", size: "sm" as const, muted: true, delay: 0 },
+                { label: "REVENUS", size: "sm" as const, muted: true, delay: 0.4 },
+                { label: "CAPACITÉ À INVESTIR", size: "xl" as const, muted: false, delay: 0.9 },
+              ].map(({ label, size, muted, delay }) => (
                 <motion.div
                   key={label}
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 0 }}
-                  transition={{ delay: 0.8 + i * 0.4, duration: 0.4 }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: muted ? 0.3 : 1, y: 0 }}
+                  transition={{ delay, duration: 0.4 }}
                 >
-                  <SceneLabel size="sm" muted animate={false}>{label}</SceneLabel>
+                  <SceneLabel size={size} muted={muted} animate={false}>{label}</SceneLabel>
                 </motion.div>
               ))}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.6 }}
-              >
-                <SceneLabel size="xl" animate={false}>CAPACITÉ À INVESTIR</SceneLabel>
-              </motion.div>
             </div>
           </motion.div>
         )}

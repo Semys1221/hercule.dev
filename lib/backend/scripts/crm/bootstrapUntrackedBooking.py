@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(ROOT / "crm"))
+sys.path.insert(0, str(ROOT / "lib/backend/crm"))
 
 from booking_bootstrap import BootstrapError, bootstrap_untracked_booking  # noqa: E402
 from crm_api import start_booking_sequence, start_role_recovery_sequence  # noqa: E402

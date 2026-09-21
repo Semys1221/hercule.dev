@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _APP_DIR = Path(__file__).resolve().parent
-_CRM_DIR = _REPO_ROOT / "crm"
+_CRM_DIR = _REPO_ROOT / "lib/backend/crm"
 _CRM_ENV = _CRM_DIR / ".env"
 _ROOT_ENV = _REPO_ROOT / ".env"
 _LOCAL_ENV = _APP_DIR / ".env"
@@ -60,14 +60,14 @@ class Settings:
     def tracking_base_url_agence(self) -> str:
         return env(
             "TRACKING_BASE_URL_AGENCE",
-            "https://www.hercule.dev/reservation.html",
+            "https://www.hercule.dev/reservation",
         ).rstrip("/")
 
     @property
     def tracking_base_url_entreprise(self) -> str:
         return env(
             "TRACKING_BASE_URL_ENTREPRISE",
-            "https://www.hercule.dev/reservation-entreprise.html",
+            "https://www.hercule.dev/reservation",
         ).rstrip("/")
 
 

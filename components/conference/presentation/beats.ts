@@ -11,16 +11,16 @@ const BLOCKS: SceneBlock[] = [
   { scene: "S06_Reframing", count: 5 },      // beats 30-34
   { scene: "S07_ThreeSolutions", count: 3 }, // beats 35-37
   { scene: "S08_Mechanism", count: 2 },      // beats 38-39
-  { scene: "S09_R2Reveal", count: 7 },       // beats 40-46
-  { scene: "S10_JohnDemo", count: 26 },      // beats 47-72
-  { scene: "S11_Installation", count: 10 },  // beats 73-82
-  { scene: "S12_OffersTransition", count: 2 },// beats 83-84
-  { scene: "S13_HerculeDEC", count: 12 },    // beats 85-96
-  { scene: "S14_HerculeCourtage", count: 13 },// beats 97-109
-  { scene: "S15_FAQ", count: 5 },            // beats 110-114
-  { scene: "S16_Urgency", count: 2 },        // beats 115-116
-  { scene: "S17_Close", count: 4 },          // beats 117-120
-  { scene: "S18_StaticOffers", count: 2 },   // beats 121-122
+  { scene: "S09_R2Reveal", count: 16 },      // beats 40-55
+  { scene: "S10_JohnDemo", count: 24 },      // beats 56-79
+  { scene: "S11_Installation", count: 10 },  // beats 80-89
+  { scene: "S12_OffersTransition", count: 2 },// beats 90-91
+  { scene: "S13_HerculeDEC", count: 12 },    // beats 92-103
+  { scene: "S14_HerculeCourtage", count: 13 },// beats 104-116
+  { scene: "S15_FAQ", count: 5 },            // beats 117-121
+  { scene: "S16_Urgency", count: 1 },        // beat 122
+  { scene: "S17_Close", count: 4 },          // beats 123-126
+  { scene: "S18_StaticOffers", count: 2 },   // beats 127-128
 ];
 
 export const BEATS: Beat[] = (() => {
@@ -35,4 +35,4 @@ export const BEATS: Beat[] = (() => {
   return beats;
 })();
 
-export const TOTAL_BEATS = BEATS.length; // 122
+export const TOTAL_BEATS = BEATS.length; // 128

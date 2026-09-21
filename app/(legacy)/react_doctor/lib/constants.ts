@@ -6,7 +6,7 @@ export const REPO_ROOT = path.resolve(import.meta.dirname, "../../../..");
 
 export const CACHE_DIR = path.join(REPO_ROOT, "app/(legacy)/react_doctor/.cache");
 
-export const PLANS_DIR = path.join(REPO_ROOT, "react-plans");
+export const PLANS_DIR = path.join(REPO_ROOT, "app/(legacy)/react_doctor/plans");
 
 export const SKILLS_DIR = path.join(REPO_ROOT, ".cursor/skills");
 

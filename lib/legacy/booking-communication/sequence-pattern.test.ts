@@ -25,6 +25,7 @@ function main() {
 
   const roots = new Set(sequenceRootTypes());
   assert.ok(roots.has("product_payment_welcome"));
+  assert.ok(roots.has("payment_onboarding_1"));
   assert.ok(roots.has("no_show_indecis_1"));
 
   const threaded = new Set(allThreadedEmailTypes());

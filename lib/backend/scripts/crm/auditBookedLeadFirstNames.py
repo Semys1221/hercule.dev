@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 ROOT = Path(__file__).resolve().parents[4]
-sys.path.insert(0, str(ROOT / "crm"))
+sys.path.insert(0, str(ROOT / "lib/backend/crm"))
 
 from calendly_client import _first_name, list_all_bookings  # noqa: E402
 from instantly_client import get_instantly_client, lead_to_row  # noqa: E402

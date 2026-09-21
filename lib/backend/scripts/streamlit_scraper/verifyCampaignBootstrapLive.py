@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _SCRAPER_DIR = _REPO_ROOT / "lib" / "backend" / "streamlit_scraper"
 _CLEAN_DIR = _REPO_ROOT / "lib" / "backend" / "streamlit_clean"
-_CRM_DIR = _REPO_ROOT / "crm"
+_CRM_DIR = _REPO_ROOT / "lib/backend/crm"
 _SUBSEQUENCE_DIR = _REPO_ROOT / "lib" / "backend" / "streamlit_subsequence"
 _REPLY_DIR = _REPO_ROOT / "lib" / "backend" / "streamlit_reply_agent"
 _PROMPTS_DIR = _REPLY_DIR / "prompts"

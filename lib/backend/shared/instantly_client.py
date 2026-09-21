@@ -14,7 +14,7 @@ import requests
 from dotenv import load_dotenv
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_CRM_ENV = _REPO_ROOT / "crm" / ".env"
+_CRM_ENV = _REPO_ROOT / "lib/backend/crm" / ".env"
 _ROOT_ENV = _REPO_ROOT / ".env"
 
 if _ROOT_ENV.is_file():

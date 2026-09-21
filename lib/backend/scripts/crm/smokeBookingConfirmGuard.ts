@@ -13,8 +13,9 @@ const ROOT = process.cwd();
 
 function assertNoConfirmOnBookingPages(): void {
   for (const file of [
-    "public/reservation.html",
-    "public/reservation-entreprise.html",
+    "components/booking/reservation/calendly-inline.tsx",
+    "components/booking/reservation/reservation-agence.tsx",
+    "components/booking/reservation/reservation-entreprise.tsx",
     "public/temporary-reservation.html",
   ]) {
     const content = fs.readFileSync(path.join(ROOT, file), "utf8");

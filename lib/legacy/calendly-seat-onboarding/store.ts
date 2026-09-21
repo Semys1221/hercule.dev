@@ -22,6 +22,29 @@ export async function findCalendlySeatOnboardingByAgenceId(
   return (data as CalendlySeatOnboardingRow | null) ?? null;
 }
 
+export async function findCalendlySeatOnboardingByClientId(
+  clientId: string,
+): Promise<CalendlySeatOnboardingRow | null> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from("calendly_seat_onboarding")
+    .select("*")
+    .eq("client_id", clientId)
+    .maybeSingle();
+
+  if (error) {
+    if (
+      error.message.includes("does not exist") ||
+      error.message.includes("schema cache")
+    ) {
+      return null;
+    }
+    throw new Error(error.message);
+  }
+
+  return (data as CalendlySeatOnboardingRow | null) ?? null;
+}
+
 export async function listActiveCalendlySeatOnboarding(
   limit = 100,
 ): Promise<CalendlySeatOnboardingRow[]> {
@@ -51,6 +74,33 @@ export async function insertCalendlySeatOnboarding(params: {
     .from("calendly_seat_onboarding")
     .insert({
       agence_id: params.agenceId,
+      email: normalizeEmail(params.email),
+      status: "awaiting_invite",
+      started_at: now,
+      welcome_sent_at: params.welcomeSentAt ?? null,
+      updated_at: now,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as CalendlySeatOnboardingRow;
+}
+
+export async function insertCalendlySeatOnboardingForClient(params: {
+  clientId: string;
+  email: string;
+  welcomeSentAt?: string | null;
+}): Promise<CalendlySeatOnboardingRow> {
+  const client = createLinkTrackingClient();
+  const now = new Date().toISOString();
+  const { data, error } = await client
+    .from("calendly_seat_onboarding")
+    .insert({
+      client_id: params.clientId,
       email: normalizeEmail(params.email),
       status: "awaiting_invite",
       started_at: now,

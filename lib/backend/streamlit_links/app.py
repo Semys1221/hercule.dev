@@ -14,7 +14,7 @@ import streamlit as st
 
 _APP_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _APP_DIR.parents[3]
-_CRM_DIR = _REPO_ROOT / "crm"
+_CRM_DIR = _REPO_ROOT / "lib/backend/crm"
 
 _env_spec = importlib.util.spec_from_file_location(
     "_streamlit_links_env", _APP_DIR / "config.py"

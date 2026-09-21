@@ -19,6 +19,13 @@ import { prepareThreadedSend } from "@/lib/legacy/booking-communication/threaded
 import { FREE_TRIAL_STRIPE_PRODUCT } from "@/lib/commercial/constants";
 import { FREE_TRIAL_EMAIL_TYPES } from "@/lib/legacy/free-trial-sequence/orchestrator";
 import { startFreeTrialStartedSequence } from "@/lib/legacy/free-trial-started-sequence/orchestrator";
+import {
+  isPaymentOnboardingOwner,
+  isPaymentOnboardingSequenceEnabled,
+  leadCategoryFromOwner,
+  resolveVerticalFromOwner,
+  startPaymentOnboardingSequence,
+} from "@/lib/(resend)/onboarding";
 import { buildDashboardUrl } from "@/lib/legacy/link-tracking/urls";
 import {
   isComptableFreeTrialOffer,
@@ -245,13 +252,49 @@ export async function handleComptableCheckoutCompleted(
       );
     }
   } else {
-    try {
-      await sendComptableWelcomeEmail(client, owner, leadId);
-    } catch (emailError) {
-      console.error(
-        "[stripe/webhook] comptable payment welcome email failed:",
-        emailError instanceof Error ? emailError.message : emailError,
-      );
+    const { data: leadRowForEmail } = await client
+      .from(ownerTable(owner))
+      .select("email")
+      .eq("id", leadId)
+      .maybeSingle();
+
+    if (
+      isPaymentOnboardingSequenceEnabled() &&
+      isPaymentOnboardingOwner(owner) &&
+      leadRowForEmail?.email
+    ) {
+      try {
+        await startPaymentOnboardingSequence({
+          vertical: resolveVerticalFromOwner(owner),
+          recipientEmail: String(leadRowForEmail.email),
+          leadId,
+          leadCategory: leadCategoryFromOwner(owner),
+          paymentAt: new Date(succeededAt),
+          stripeCheckoutSessionId: session.id,
+        });
+      } catch (sequenceError) {
+        console.error(
+          "[stripe/webhook] payment-onboarding sequence failed:",
+          sequenceError instanceof Error ? sequenceError.message : sequenceError,
+        );
+        try {
+          await sendComptableWelcomeEmail(client, owner, leadId);
+        } catch (emailError) {
+          console.error(
+            "[stripe/webhook] comptable payment welcome email failed:",
+            emailError instanceof Error ? emailError.message : emailError,
+          );
+        }
+      }
+    } else {
+      try {
+        await sendComptableWelcomeEmail(client, owner, leadId);
+      } catch (emailError) {
+        console.error(
+          "[stripe/webhook] comptable payment welcome email failed:",
+          emailError instanceof Error ? emailError.message : emailError,
+        );
+      }
     }
   }
 

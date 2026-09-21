@@ -1,0 +1,56 @@
+"use client"
+
+import { ReservationAgence } from "@/components/booking/reservation/reservation-agence"
+import { ReservationConference } from "@/components/booking/reservation/reservation-conference"
+import { ReservationEntreprise } from "@/components/booking/reservation/reservation-entreprise"
+import { ReservationJum } from "@/components/booking/reservation/reservation-jum"
+import type {
+  ConferenceNiche,
+  ReservationSurface,
+} from "@/lib/legacy/booking/reservation-surface"
+
+export type ReservationPageClientProps = {
+  slug: string
+  email: string
+  calendlyUrl: string
+  surface: ReservationSurface
+  conferenceNiche: ConferenceNiche | null
+}
+
+export function ReservationPageClient(props: ReservationPageClientProps) {
+  if (props.surface === "conference") {
+    return (
+      <ReservationConference
+        slug={props.slug}
+        email={props.email}
+        calendlyUrl={props.calendlyUrl}
+        niche={props.conferenceNiche ?? "cif"}
+      />
+    )
+  }
+  if (props.surface === "jum") {
+    return (
+      <ReservationJum
+        slug={props.slug}
+        email={props.email}
+        calendlyUrl={props.calendlyUrl}
+      />
+    )
+  }
+  if (props.surface === "agence") {
+    return (
+      <ReservationAgence
+        slug={props.slug}
+        email={props.email}
+        calendlyUrl={props.calendlyUrl}
+      />
+    )
+  }
+  return (
+    <ReservationEntreprise
+      slug={props.slug}
+      email={props.email}
+      calendlyUrl={props.calendlyUrl}
+    />
+  )
+}

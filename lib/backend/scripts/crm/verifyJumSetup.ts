@@ -60,7 +60,7 @@ function log(
 function checkFiles(): CheckResult[] {
   const required = [
     "lib/backend/supabase/migrations/20261118120000_jum_niche.sql",
-    "public/reservation-jum.html",
+    "app/reservation/[slug]/page.tsx",
     "public/confirm-reservation-jum.html",
     "lib/backend/streamlit_reply_agent/prompts/jum_buyer.md",
     "app/(legacy)/content/tech/ai-reply-knowledge-jum.md",
@@ -109,7 +109,7 @@ function checkUrlLogic(): CheckResult[] {
     jumSegment: "restaurant",
   });
   const ok =
-    urls.reservation_jum_link.includes("reservation-jum.html") &&
+    urls.reservation_jum_link.includes("/reservation/") &&
     urls.confirmation_jum_link.includes("confirm-reservation-jum.html") &&
     vars.jum_segment === "restaurant" &&
     isLeadCategory("jum");
@@ -153,12 +153,12 @@ function checkSegmentResolver(): CheckResult[] {
 function checkVercelRewrites(): CheckResult {
   const vercel = readFileSync(join(process.cwd(), "vercel.json"), "utf-8");
   const ok =
-    vercel.includes("reservation-jum.html/:slug") &&
+    vercel.includes("/reservation/:slug") &&
     vercel.includes("confirm-reservation-jum.html/:slug");
   return {
     id: "vercel:rewrites",
     ok,
-    detail: ok ? "slug rewrites present" : "missing JUM rewrites",
+    detail: ok ? "canonical reservation + JUM confirm rewrite present" : "missing reservation redirects",
   };
 }
 

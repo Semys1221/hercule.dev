@@ -72,9 +72,18 @@ export async function sendProductEmailNow(params: {
     return { ok: false, error: "lead_not_found" };
   }
 
+  const verticalOverride =
+    params.category === "client"
+      ? (() => {
+          const raw = lead.profile?.client_type;
+          return raw === "dec" || raw === "cif" || raw === "ias" ? raw : "dec";
+        })()
+      : undefined;
+
   const template = await resolveBookingEmailTemplate({
     category: params.category,
     emailType: params.emailType,
+    verticalOverride,
   });
 
   const jobVars = await extraVarsForJob(

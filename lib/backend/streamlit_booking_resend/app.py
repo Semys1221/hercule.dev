@@ -9,7 +9,7 @@ import streamlit as st
 
 _APP_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _APP_DIR.parents[3]
-_CRM_DIR = _REPO_ROOT / "crm"
+_CRM_DIR = _REPO_ROOT / "lib/backend/crm"
 
 for path in (_APP_DIR, _CRM_DIR):
     if str(path) not in sys.path:

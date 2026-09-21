@@ -2,10 +2,14 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { ChapterBadge } from "../shared/ChapterBadge";
 import { Person }       from "../shared/Person";
 import { RubiksCube }   from "../shared/RubiksCube";
 import { SceneLabel }   from "../shared/SceneLabel";
 import { SceneShell }   from "../shared/SceneShell";
+
+const ORBIT_R = 90;
+const ORBIT_WORDS = ["VOLUME", "QUALITÉ", "INTÉRÊT"] as const;
 
 /**
  * S06 — Reframing  (steps 0-4, beats 30-34)
@@ -19,6 +23,7 @@ import { SceneShell }   from "../shared/SceneShell";
 export function S06_Reframing({ step }: SceneProps) {
   return (
     <SceneShell>
+      <ChapterBadge chapter="Le reframing" beat="2/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 30 */}
@@ -39,21 +44,30 @@ export function S06_Reframing({ step }: SceneProps) {
             className="relative flex size-64 items-center justify-center"
           >
             <div className="absolute inset-0 rounded-full border border-zinc-800/60" />
-            {["VOLUME", "QUALITÉ", "INTÉRÊT"].map((word, i) => (
-              <motion.div
-                key={word}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 9, repeat: Infinity, ease: "linear", delay: i * 0 }}
-                style={{ position: "absolute" }}
-              >
+            {ORBIT_WORDS.map((word, i) => {
+              const baseAngle = (i * 120 - 90) * (Math.PI / 180);
+              return (
                 <motion.span
-                  style={{ display: "block", transform: `rotate(${i * 120}deg) translateY(-88px) rotate(${-(i * 120)}deg)` }}
-                  className="text-xs font-medium tracking-[0.22em] text-zinc-300 uppercase"
+                  key={word}
+                  className="absolute left-1/2 top-1/2 whitespace-nowrap text-xs font-medium tracking-[0.22em] text-zinc-300 uppercase"
+                  animate={{
+                    x: [
+                      Math.cos(baseAngle) * ORBIT_R,
+                      Math.cos(baseAngle + Math.PI) * ORBIT_R,
+                      Math.cos(baseAngle + 2 * Math.PI) * ORBIT_R,
+                    ],
+                    y: [
+                      Math.sin(baseAngle) * ORBIT_R,
+                      Math.sin(baseAngle + Math.PI) * ORBIT_R,
+                      Math.sin(baseAngle + 2 * Math.PI) * ORBIT_R,
+                    ],
+                  }}
+                  transition={{ duration: 9, repeat: Infinity, ease: "linear" }}
                 >
                   {word}
                 </motion.span>
-              </motion.div>
-            ))}
+              );
+            })}
           </motion.div>
         )}
 
@@ -92,12 +106,18 @@ export function S06_Reframing({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            <RubiksCube
-              state="scrambled"
-              size={96}
-              spin={false}
-              faceLabels={["VOLUME", "QUALITÉ", "INTÉRÊT"]}
-            />
+            <div className="relative flex size-64 items-center justify-center">
+              <div className="absolute opacity-[0.12]">
+                <RubiksCube state="scrambled" size={160} spin={false} />
+              </div>
+              <SceneLabel size="sm" animate={false}>VOLUME</SceneLabel>
+              <div className="absolute top-4 right-4">
+                <SceneLabel size="xs" muted animate={false}>QUALITÉ</SceneLabel>
+              </div>
+              <div className="absolute bottom-4 left-4">
+                <SceneLabel size="xs" muted animate={false}>INTÉRÊT</SceneLabel>
+              </div>
+            </div>
           </motion.div>
         )}
 

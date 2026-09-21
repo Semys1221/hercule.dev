@@ -302,6 +302,53 @@ Seuls les événements **trouvés dans le repo** ou **nécessaires au modèle** 
 
 ---
 
+## 8. Gestion clientèle (haut niveau, À CONSTRUIRE)
+
+Pas de contrats API figés. Le front **déclenche** ; le backend **émet** l’état. Détail : [`workflows.md`](./workflows.md) §11, [`frontend.md`](./frontend.md).
+
+### E25 — `client.created`
+
+| | |
+|--|--|
+| **Trigger** | Formulaire onboarding (W-G1) et/ou paiement Hercule (W11) |
+| **Condition** | Payload valide ; D16 si entrée Stripe |
+| **Action** | INSERT `clients` ; enchaîner W-G2, W-G5–W-G7 |
+| **New state** | `lifecycle_status=created` (puis onboarding) |
+| **Next** | First delivery, infra, tasks |
+| **Statut** | **À CONSTRUIRE** |
+
+### E26 — `client.delivery_start_set`
+
+| | |
+|--|--|
+| **Trigger** | Suite E25 ; patch admin de date |
+| **Action** | Persister `delivery_start_at` (ex. signup + 20 j) |
+| **New state** | Date écrite ; pas encore `eligible` si `now < delivery_start_at` |
+| **Next** | Queue W-G10 |
+| **Statut** | **À CONSTRUIRE** |
+
+### E27 — `client.eligible`
+
+| | |
+|--|--|
+| **Trigger** | Cron ou transition : `now >= delivery_start_at` + prérequis infra/warmup |
+| **Action** | Lifecycle → `eligible` ; client **entre** dans la queue pool |
+| **New state** | `eligible` |
+| **Next** | Pool-router (W10) peut le considérer |
+| **Statut** | **À CONSTRUIRE** |
+
+### E28 — `client.paused` / `client.resumed` / `client.cancelled`
+
+| | |
+|--|--|
+| **Trigger** | Commande front `pause_client` / `resume_client` / cancel |
+| **Action** | Transition lifecycle ; W-G9 recalc quotas ; stop ou reprise assigns |
+| **New state** | `paused` \| `active` (si autorisé) \| `cancelled` |
+| **Next** | Router ignore paused/cancelled |
+| **Statut** | **À CONSTRUIRE** |
+
+---
+
 ## Matrice Event → Module
 
 | Event | Scr | Cln | Pro | Snd | Bkg | PV | PB | PP | Nur |
@@ -319,3 +366,5 @@ Seuls les événements **trouvés dans le repo** ou **nécessaires au modèle** 
 | no-show | | | | | | | | | ● |
 | pool-router | | | ● | ● | | | | | |
 | nurturing cron | | | | | | | | | ● |
+
+Événements `client.*` (E25–E28) : **hors grille modules** — backend de gestion.

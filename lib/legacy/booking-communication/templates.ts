@@ -10,6 +10,7 @@ import {
   MODALITES_SUBJECT,
 } from "@/lib/legacy/modalites-campaign/copy";
 import { formatComptableFirstRdvAfterActivationLabel } from "@/lib/commercial/constants";
+import { paymentOnboardingDefaultTemplate } from "@/lib/(resend)/onboarding/templates";
 
 import type { BookingEmailType } from "./types";
 
@@ -667,6 +668,42 @@ Tableau de bord : {{dashboardLink}}
 
 Béatrice Meyer`,
   },
+  payment_onboarding_1: {
+    subject: "Votre accès Hercule est activé",
+    body: "{{dashboardLink}}",
+  },
+  payment_onboarding_2: {
+    subject: "Calendly Pro et Zoom Pro — invitation à venir",
+    body: "{{email}}\n{{dashboardLink}}",
+  },
+  payment_onboarding_3: {
+    subject: "Date estimée de votre premier rendez-vous",
+    body: "{{estimatedFirstRdvDate}}\n{{dashboardLink}}",
+  },
+  payment_onboarding_4: {
+    subject: "Protocole de déploiement Hercule",
+    body: "{{dashboardLink}}",
+  },
+  payment_onboarding_5: {
+    subject: "Configuration en cours",
+    body: "{{dashboardLink}}",
+  },
+  payment_onboarding_6: {
+    subject: "Qualification en cours",
+    body: "{{dashboardLink}}",
+  },
+  payment_onboarding_7: {
+    subject: "Vos créneaux Calendly arrivent",
+    body: "{{dashboardLink}}",
+  },
+  payment_onboarding_8: {
+    subject: "Première demande qualifiée identifiée",
+    body: "{{dashboardLink}}",
+  },
+  payment_onboarding_9: {
+    subject: "Votre premier rendez-vous arrive",
+    body: "{{dashboardLink}}",
+  },
 };
 
 export const COMPTABLE_BOOKING_EMAIL_TEMPLATE_OVERRIDES: Partial<
@@ -825,7 +862,16 @@ Béatrice Meyer`,
 export function defaultBookingEmailTemplate(
   category: LeadCategory,
   emailType: BookingEmailTemplateType,
+  verticalOverride?: "dec" | "cif" | "ias" | null,
 ): Omit<BookingEmailTemplateRecord, "email_type"> {
+  const paymentOnboarding = paymentOnboardingDefaultTemplate(
+    category,
+    emailType,
+    verticalOverride,
+  );
+  if (paymentOnboarding) {
+    return paymentOnboarding;
+  }
   if (category === "comptable") {
     const comptableOverride = COMPTABLE_BOOKING_EMAIL_TEMPLATE_OVERRIDES[emailType];
     if (comptableOverride) {

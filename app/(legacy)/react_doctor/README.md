@@ -34,7 +34,7 @@ pnpm frontend-audit:bundle --out /tmp/manifest.json
 
 - **scan** — Writes `app/react_doctor/.cache/audit-<sha>.json` and `latest.json`
 - **report** — Leverage-ordered table (`--json` for machine output)
-- **plan** — Creates `react-plans/NNN-*.md` using improve-react PLAN-TEMPLATE shape
+- **plan** — Creates `app/(legacy)/react_doctor/plans/NNN-*.md` using improve-react PLAN-TEMPLATE shape
 - **bundle** — JSON manifest: skills, MCP steps, top findings, verify commands, `agentPrompt`
 - **verify** — Prints checklist; `--run` executes `pnpm doctor`, lint, score
 
@@ -55,7 +55,7 @@ pnpm frontend-audit:bundle --out /tmp/manifest.json
 - [hercule-ui](../../.cursor/skills/hercule-ui/SKILL.md), [hercule-forms](../../.cursor/skills/hercule-forms/SKILL.md), [hercule-tables](../../.cursor/skills/hercule-tables/SKILL.md)
 - Surface routing → domain skills (internal, marketing, dashboard)
 - Canonical fix URLs from react.doctor
-- [react-plans/](../../react-plans/) output
+- [plans/](./plans/) output
 - Browser snapshot (MCP `cursor-ide-browser`) for visual routes in verify
 - [frontend.mdc](../../.cursor/rules/frontend.mdc) MCP checklist in bundle
 
@@ -67,4 +67,4 @@ pnpm frontend-audit:bundle --out /tmp/manifest.json
 
 ## Read-only
 
-This CLI does **not** edit source files. Agents execute `react-plans/` in a separate session.
+This CLI does **not** edit source files. Agents execute `plans/` in a separate session.

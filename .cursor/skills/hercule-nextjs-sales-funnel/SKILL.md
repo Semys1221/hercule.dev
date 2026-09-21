@@ -42,14 +42,13 @@ Sales funnel CMS + live client session. Canon: [doc/tech-stack/modules/cms-funne
 
 ## Public Calendly embeds (vente family)
 
-Per SUR-02: **keep as HTML**, do not rewrite to Next before parity.
+Per SUR-02: vente Calendly remains distinct from matching/delivery Calendly.
 
-| File | Audience |
-|------|----------|
-| `public/reservation.html` | Agence vente |
-| `public/reservation-entreprise.html` | Entreprise vente |
+| Route | Audience |
+|-------|----------|
+| `/reservation/[slug]` | All booking surfaces (agence, entreprise, conférence, JUM) |
 
-Slug tracking via `utm_content`. Separate from delivery/match Calendly event types.
+Legacy `public/reservation*.html` URLs 308 redirect to `/reservation/:slug`.
 
 ## Calendly availability
 

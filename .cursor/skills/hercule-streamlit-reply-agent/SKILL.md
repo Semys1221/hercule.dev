@@ -101,7 +101,7 @@ pnpm configure-ai-reply-agent-reprocess-cron  # alert when skipped volume > thre
 - Knowledge : `app/(legacy)/content/tech/ai-reply-knowledge-cif.md` · `app/(legacy)/content/tech/ai-reply-knowledge-comptable.md`
 - FAQ : `app/(marketing)/content/legal-documentation/cif/faq.json` · `app/(marketing)/content/legal-documentation/comptable/faq.json`
 - **International BE/CH/CA (DEC · IAS · CIF)** : tarifs 1 499 USD/mois + 400 USD/mois profils · acceptation explicite requise · lien Calendly unique (`CALENDLY_EVENT_TYPE_URI_INTERNATIONAL_1TO1`)
-- CTA `{reservation_cif_link}` / `{reservation_comptable_link}` → `reservation-conference.html`
+- CTA `{reservation_cif_link}` / `{reservation_comptable_link}` → `/reservation/{slug}`
 - Objection conférence : AER avec 2 500 € sur-mesure (seul prix autorisé dans l'email pour cette objection) + redirect conférence + « répondez à ce mail » pour 1:1 sur-mesure
 - Health cron : `/api/cron/ai-reply-agent-health` (failed + slow pending → `NOTIFICATION_OPS_EMAIL`)
 

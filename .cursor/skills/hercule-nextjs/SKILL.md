@@ -65,5 +65,5 @@ Before non-trivial changes:
 
 - Use personal `scrapping` or `smartlead` skills
 - Double-send Instantly from Next + Streamlit (LEG-02)
-- Rewrite `public/reservation*.html` to Next before parity (SUR-02)
+- Break vente vs matching Calendly (SUR-02)
 - Add admin login to `/internal`

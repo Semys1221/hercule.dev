@@ -87,26 +87,45 @@ Niches pool actuelles : `restaurant` | `sante` | `btp`.
 
 ---
 
-## Couche 5 — CRM Hercule (clients)
+## Couche 5 — CRM Hercule / lifecycle client
 
-**À CONSTRUIRE / À DÉCIDER.**
+**À CONSTRUIRE.** Système **séparé** de l'engine. Représente qui paie Hercule **et** s’il peut recevoir des prospects.
 
-Système **séparé** de l'engine. Représente qui paie Hercule.
+**Ne pas fusionner** avec `lead_statut`, `client_outreach_slots.capacity_status`, ni `inbox_pool.status`.
 
-États suggérés (non figés) :
+Machine visée (W-G8 — non figée, **À DÉCIDER** colonnes exactes) :
+
+```
+created → onboarding → provisioning → warming → eligible → active
+                                                      ↓
+                                              paused | cancelled
+paused → active (commande resume, si conditions : date, inboxes, quota)
+```
 
 | État proposé | Description |
 |--------------|-------------|
-| `lead` | En discussion commerciale Hercule |
-| `customer` | Payé / actif |
-| `churned` | Résilié |
-| `paused` | Pause capacité |
+| `created` | Row `clients` inséré (formulaire et/ou W11) |
+| `onboarding` | Données / niche en cours de validation |
+| `provisioning` | Infra, inboxes, event type, tâches ops |
+| `warming` | Inboxes / seat en warm-up ; **pas** encore dans le pool |
+| `eligible` | `now >= delivery_start_at` (et prérequis infra) ; peut entrer en queue |
+| `active` | Dans le pool ; reçoit des prospects selon quota restant |
+| `paused` | Plus d’assignations ; ressources conservées ou gelées (**À DÉCIDER**) |
+| `cancelled` | Sortie ; recalc quotas (W-G9) |
 
-Options à trancher :
+États d’éligibilité opérationnelle (W-G3), superposition possible de lecture : `pending` / `warming` / `eligible` / `active` / `paused`. Alignement 1:1 avec la machine ci-dessus : **À DÉCIDER**.
 
-1. Nouvelle table `clients` (recommandé métier)
+Champs temporels (proposition) : `delivery_start_at`, éventuellement `eligible_at`. Exemple : `delivery_start_at = signup_date + 20 jours` — constante vs offre **À DÉCIDER**.
+
+Ancien brouillon `lead | customer | paused | churned` : remplacé par cette machine. `churned` slot reste sur `capacity_status` (couche 4).
+
+Options table (inchangées) :
+
+1. Nouvelle table `clients` (recommandé métier, D1)
 2. Réutiliser `agence` deprecated (déconseillé)
-3. Étendre `client_outreach_slots` seulement (trop étroit — slots ≠ CRM)
+3. Étendre `client_outreach_slots` seulement (trop étroit — slots ≠ CRM / lifecycle)
+
+Gate pool (canon cible) : **éligible** **et** capacité restante **et** `now >= delivery_start_at`. Pas « le row existe ». Voir [`routing.md`](./routing.md) §5.
 
 ---
 
@@ -181,6 +200,6 @@ Config campaign : `not_initialized` | `waiting_for_replies` | `paused`
 | payments | Argent | ACTIF |
 | capacity/SaaS | Multi-client routing stock | ACTIF |
 | sales_calls | Outcome RDV commercial | ACTIF |
-| CRM clients | Clients Hercule | À CONSTRUIRE |
+| CRM / lifecycle clients | Clients Hercule ; éligibilité pool | À CONSTRUIRE |
 | product_statut / matches | Matching buyer-seller | DEPRECATED |
 | appointments | Delivery RDV | À DÉCIDER |

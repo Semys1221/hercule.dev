@@ -14,37 +14,37 @@ function main() {
 
   assert.equal(
     fallbackCtaLink("buyer"),
-    "https://www.hercule.dev/reservation.html",
+    "https://www.hercule.dev/reservation",
   );
   assert.equal(
     fallbackCtaLink("seller"),
-    "https://www.hercule.dev/reservation-entreprise.html",
+    "https://www.hercule.dev/reservation",
   );
 
   const buyerPrompt =
     "CTA: {reservation_agence_link} and {{reservation_agence_link}}";
-  const buyerUrl = "https://www.hercule.dev/reservation.html/abc123";
+  const buyerUrl = "https://www.hercule.dev/reservation/abc123";
   assert.equal(
     applyPromptLinkVariables(buyerPrompt, buyerUrl, "buyer"),
     `CTA: ${buyerUrl} and ${buyerUrl}`,
   );
 
   const sellerPrompt = "Book: {{reservation_entreprise_link}}";
-  const sellerUrl = "https://www.hercule.dev/reservation-entreprise.html/xyz";
+  const sellerUrl = "https://www.hercule.dev/reservation/xyz";
   assert.equal(
     applyPromptLinkVariables(sellerPrompt, sellerUrl, "seller"),
     `Book: ${sellerUrl}`,
   );
 
   const comptablePrompt = "Postuler: {reservation_comptable_link}";
-  const comptableUrl = "https://www.hercule.dev/r/comptable/abc123";
+  const comptableUrl = "https://www.hercule.dev/reservation/abc123";
   assert.equal(
     applyPromptLinkVariables(comptablePrompt, comptableUrl, "buyer", {
-      agenceLink: "https://www.hercule.dev/reservation.html",
-      entrepriseLink: "https://www.hercule.dev/reservation-entreprise.html",
+      agenceLink: "https://www.hercule.dev/reservation",
+      entrepriseLink: "https://www.hercule.dev/reservation",
       comptableLink: comptableUrl,
-      cifLink: "https://www.hercule.dev/reservation-conference.html",
-      jumLink: "https://www.hercule.dev/reservation-jum.html",
+      cifLink: "https://www.hercule.dev/reservation",
+      jumLink: "https://www.hercule.dev/reservation",
     }),
     `Postuler: ${comptableUrl}`,
   );

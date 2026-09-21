@@ -450,6 +450,14 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     job.lead_category,
   );
   const extra = await extraVarsForJob(job, lead);
+  const verticalFromProfile = lead.profile?.client_type;
+  const verticalOverride =
+    job.lead_category === "client" &&
+    (verticalFromProfile === "dec" ||
+      verticalFromProfile === "cif" ||
+      verticalFromProfile === "ias")
+      ? verticalFromProfile
+      : undefined;
   return renderEmailFromStore({
     category: job.lead_category,
     emailType: job.email_type,
@@ -457,6 +465,8 @@ async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
     scheduledAt: extra.scheduledAt ?? lead.scheduled_at,
     confirmUrl,
     useHtml,
+    verticalOverride,
+
     meetingActionLinks,
     dashboardLink: extra.dashboardLink,
     reservationAgenceLink: extra.reservationAgenceLink,

@@ -21,13 +21,16 @@ const ICON_PATHS: Record<Exclude<PersonIcon, "none">, string> = {
     "m15 12-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9m3 3 2-3.5-3-3L12 9m3 3-3-3M5 21l-1.5-1.5M9 3l3 3",
 };
 
-// ─── Silhouette geometry (viewBox 0 0 24 28) ───────────────────
-const HEAD = { cx: 12, cy: 6.5, r: 3.8 };
+// ─── Silhouette geometry (viewBox 0 0 24 30) ───────────────────
+const HEAD = { cx: 12, cy: 5, r: 3.4 };
 const BODY =
-  "M 5.2 12.2 C 5.2 9.4 8 7.8 12 7.8 C 16 7.8 18.8 9.4 18.8 12.2 C 18.8 17.2 15.6 20.8 12 21.3 C 8.4 20.8 5.2 17.2 5.2 12.2 Z";
+  "M 5.2 14.9 C 5.2 12.1 8 10.5 12 10.5 C 16 10.5 18.8 12.1 18.8 14.9 C 18.8 19.9 15.6 23.5 12 24 C 8.4 23.5 5.2 19.9 5.2 14.9 Z";
 
 const VB_W = 24;
-const VB_H = 28;
+const VB_H = 30;
+const VB_PAD = 1.5;
+const MIN_READABLE_SIZE = 28;
+const MIN_STROKE_PX = 1.75;
 
 type SilhouetteSlot = {
   x: number;
@@ -57,10 +60,10 @@ const LAYOUTS: Record<1 | 2 | 3 | 4, SilhouetteSlot[]> = {
 };
 
 const CLUSTER_VB: Record<1 | 2 | 3 | 4, { w: number; h: number }> = {
-  1: { w: 24, h: 28 },
-  2: { w: 34, h: 28 },
-  3: { w: 44, h: 28 },
-  4: { w: 52, h: 30 },
+  1: { w: 24, h: 30 },
+  2: { w: 34, h: 30 },
+  3: { w: 44, h: 30 },
+  4: { w: 56, h: 32 },
 };
 
 function strokeColor(highlighted: boolean, dimmed: boolean) {
@@ -69,8 +72,9 @@ function strokeColor(highlighted: boolean, dimmed: boolean) {
   return "#71717a";
 }
 
-function strokeWidth(size: number) {
-  return Math.max(1.1, size * 0.055);
+function strokeWidth(renderWidthPx: number) {
+  const minInViewBox = MIN_STROKE_PX * (VB_W / renderWidthPx);
+  return Math.max(minInViewBox, 1.8);
 }
 
 type PersonSilhouetteProps = {
@@ -142,7 +146,7 @@ type PersonClusterSvgProps = {
 function PersonClusterSvg({ layoutSize, width, highlights }: PersonClusterSvgProps) {
   const slots = LAYOUTS[layoutSize];
   const vb = CLUSTER_VB[layoutSize];
-  const sw = strokeWidth(width / (layoutSize === 1 ? 1 : layoutSize * 0.85));
+  const sw = strokeWidth(width);
 
   const sorted = slots
     .map((slot, i) => ({ slot, i }))
@@ -150,9 +154,10 @@ function PersonClusterSvg({ layoutSize, width, highlights }: PersonClusterSvgPro
 
   return (
     <svg
-      viewBox={`0 0 ${vb.w} ${vb.h}`}
+      viewBox={`${-VB_PAD} ${-VB_PAD} ${vb.w + VB_PAD * 2} ${vb.h + VB_PAD * 2}`}
       width={width}
       height={width * (vb.h / vb.w)}
+      overflow="visible"
       aria-hidden
     >
       {sorted.map(({ slot, i }) => (
@@ -291,8 +296,10 @@ export function PersonGroup({
   size = 36,
 }: PersonGroupProps) {
   const clusters = decomposeCount(count);
-  const clusterScale = count > 4 ? 0.85 : 1;
-  const clusterW = size * clusterScale;
+  const effectiveSize = Math.max(size, MIN_READABLE_SIZE);
+  const clusterScale =
+    count > 4 ? Math.max(0.85, MIN_READABLE_SIZE / size) : 1;
+  const clusterW = effectiveSize * clusterScale;
   const gap = count >= 16 ? 3 : count >= 8 ? 4 : 6;
 
   let globalIdx = 0;
@@ -341,7 +348,7 @@ export function PersonGroup({
           strokeLinecap="round"
           strokeLinejoin="round"
           className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-zinc-500"
-          style={{ width: size * 0.32, height: size * 0.32 }}
+          style={{ width: effectiveSize * 0.32, height: effectiveSize * 0.32 }}
           aria-hidden
         >
           <path d={ICON_PATHS[icon]} />

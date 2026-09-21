@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { ChapterBadge } from "../shared/ChapterBadge";
 import { RubiksCube }  from "../shared/RubiksCube";
 import { Person }      from "../shared/Person";
 import { SceneLabel }  from "../shared/SceneLabel";
@@ -18,6 +19,7 @@ import { SceneShell }  from "../shared/SceneShell";
 export function S02_WordOfMouth({ step }: SceneProps) {
   return (
     <SceneShell>
+      <ChapterBadge chapter="Le problème" beat="1/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 8 — nouveau chapitre */}
@@ -72,13 +74,20 @@ export function S02_WordOfMouth({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-5"
           >
-            <motion.span
-              className="text-2xl"
-              animate={{ scale: [1, 1.3, 1], opacity: [0, 1, 0.8] }}
+            <motion.svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="size-8 text-zinc-400"
+              aria-hidden
+              animate={{ scale: [1, 1.25, 1], opacity: [0, 1, 0.85] }}
               transition={{ duration: 0.7 }}
             >
-              ♥
-            </motion.span>
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+            </motion.svg>
             <div className="flex gap-2">
               {Array.from({ length: 6 }, (_, i) => (
                 <Person key={i} size={30} delay={i * 0.06} />

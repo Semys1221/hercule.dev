@@ -7,12 +7,12 @@ import { RubiksCube }  from "../shared/RubiksCube";
 import { SceneShell }  from "../shared/SceneShell";
 
 /**
- * S17 — Close  (steps 0-3, beats 117-120)
+ * S17 — Close  (steps 0-3, beats 123-126)
  *
- * 0 – ZOOM / CHAT / PRIX disparaissent (beat 117)
- * 1 – Places limitées (beat 118)
- * 2 – LES DÉCISIONS DE DEMAIN SE PRENNENT MAINTENANT. (beat 119)
- * 3 – Logo Hercule + cube discret (beat 120)
+ * 0 – ZOOM / CHAT / PRIX disparaissent (beat 123)
+ * 1 – Places limitées (beat 124)
+ * 2 – LES DÉCISIONS DE DEMAIN SE PRENNENT MAINTENANT. (beat 125)
+ * 3 – Logo Hercule + cube discret (beat 126)
  */
 export function S17_Close({ step }: SceneProps) {
   return (

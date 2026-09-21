@@ -13,7 +13,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
-_CRM_DIR = _REPO_ROOT / "crm"
+_CRM_DIR = _REPO_ROOT / "lib/backend/crm"
 
 for path in (str(_REPO_ROOT), str(_CRM_DIR)):
     if path not in sys.path:

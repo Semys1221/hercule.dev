@@ -16,7 +16,7 @@ Read-only CLI that scans **all** TSX (not just changed files). Complements proac
 
 - User asks to audit, clean up, or modernize **existing** UI
 - Legacy `components/**` predates hercule-ui / shadcn Field patterns
-- Need agent manifest with skills, exemplars, and `react-plans/`
+- Need agent manifest with skills, exemplars, and `app/(legacy)/react_doctor/plans/`
 
 Do **not** use for pre-commit regression — use `pnpm doctor` instead.
 
@@ -60,5 +60,5 @@ After `bundle`, attach every path in `skillsToAttach` plus shadcn MCP. Follow `a
 ## Cross-links
 
 - [hercule-ui](../hercule-ui/SKILL.md)
-- [react-plans/](../../react-plans/README.md)
+- [react_doctor plans](../../app/(legacy)/react_doctor/plans/README.md)
 - [doctor.config.ts](../../doctor.config.ts)

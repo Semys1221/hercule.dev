@@ -5,6 +5,7 @@ import type { SceneProps } from "../presentation/types";
 import { FlowLine }    from "../shared/FlowLine";
 import { HerculeLogo } from "../shared/HerculeLogo";
 import { Person }      from "../shared/Person";
+import { PhoneIcon }   from "../shared/PhoneIcon";
 import { RubiksCube }  from "../shared/RubiksCube";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
@@ -30,36 +31,33 @@ export function S11_Installation({ step }: SceneProps) {
 
         {step === 0 && (
           <motion.div key="s11-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-6"
+            className="flex flex-col items-center gap-8"
           >
             <motion.span
-              animate={{ opacity: [0.3, 0.7, 0.3] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-              className="text-5xl font-thin text-zinc-500"
+              animate={{ opacity: [0.3, 0.8, 0.3] }}
+              transition={{ repeat: Infinity, duration: 2.2 }}
+              className="text-6xl font-thin text-zinc-400"
             >
               ?
             </motion.span>
-            {/* France dots */}
-            <svg viewBox="0 0 100 100" className="h-24 w-20 text-zinc-800" aria-hidden fill="none" stroke="currentColor" strokeWidth="0.6">
-              <path d="M20 20 Q35 10 55 15 Q70 12 80 25 Q90 38 85 55 Q88 70 75 80 Q60 92 45 88 Q30 90 18 75 Q8 62 12 45 Q10 32 20 20Z" />
-              {Array.from({ length: 30 }, (_, i) => (
-                <circle key={i} cx={20 + (i % 6) * 10} cy={25 + Math.floor(i / 6) * 12} r="0.8" fill="currentColor" className="text-zinc-600" />
-              ))}
-            </svg>
+            <p className="max-w-sm text-center text-sm tracking-[0.1em] text-zinc-600">
+              Comment se mettre en face de millions de professionnels ?
+            </p>
           </motion.div>
         )}
 
         {step === 1 && (
-          <motion.div key="s11-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }}
+          <motion.div key="s11-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex items-center justify-center"
           >
-            <motion.div
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={{ delay: 0.5, duration: 0.3 }}
+            <motion.p
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-3xl font-light tracking-[0.18em] text-zinc-300 uppercase"
             >
-              {/* France fades instantly */}
-            </motion.div>
+              Vous ne le faites pas.
+            </motion.p>
           </motion.div>
         )}
 
@@ -115,10 +113,7 @@ export function S11_Installation({ step }: SceneProps) {
           <motion.div key="s11-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-5"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-              className="size-9 text-zinc-400" aria-hidden>
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <PhoneIcon size={36} className="text-zinc-400" />
             <div className="flex gap-2">
               {[0, 1, 2].map((i) => (
                 <motion.div
@@ -170,16 +165,16 @@ export function S11_Installation({ step }: SceneProps) {
           <motion.div key="s11-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-3"
           >
-            <div className="grid grid-cols-5 gap-1">
+            <div className="grid grid-cols-5 gap-1.5">
               {Array.from({ length: 15 }, (_, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.07 }}
-                  className={`flex h-8 w-8 items-center justify-center border ${i < 10 ? "border-zinc-700/40 opacity-20" : "border-zinc-600/60 bg-zinc-800/50"}`}
+                  animate={{ opacity: i < 6 ? 0.1 : 1 }}
+                  transition={{ delay: i * 0.06 }}
+                  className={`flex h-14 w-14 items-center justify-center border ${i < 6 ? "border-zinc-800" : "border-zinc-600/60 bg-zinc-800/50"}`}
                 >
-                  {i >= 10 && <Person size={18} />}
+                  {i >= 6 && <div className="size-1.5 rounded-full bg-zinc-400" />}
                 </motion.div>
               ))}
             </div>
@@ -188,7 +183,7 @@ export function S11_Installation({ step }: SceneProps) {
 
         {step === 9 && (
           <motion.div key="s11-9" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-4"
+            className="flex items-center gap-16"
           >
             <div className="flex flex-col items-center gap-1">
               <SceneLabel size="sm" animate={false}>PROFIL QUALIFIÉ</SceneLabel>
@@ -199,10 +194,13 @@ export function S11_Installation({ step }: SceneProps) {
               <FlowLine dir="down" />
               <SceneLabel size="sm" animate={false}>OFFRE</SceneLabel>
             </div>
-            <div className="mt-4 flex gap-10">
-              <Person size={36} icon="briefcase" />
-              <Person size={40} icon="briefcase" checked delay={0.1} />
-            </div>
+            <motion.div
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Person size={56} icon="briefcase" checked />
+            </motion.div>
           </motion.div>
         )}
 

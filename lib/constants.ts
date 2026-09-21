@@ -1,7 +1,7 @@
-export const CALENDLY_AGENCE_URL = "/reservation.html"
-export const CALENDLY_ENTREPRISE_URL = "/reservation-entreprise.html"
-export const CALENDLY_CIF_URL = "/reservation-conference.html"
-export const CALENDLY_CIF_CONFERENCE_URL = "/reservation-conference.html"
+export const CALENDLY_AGENCE_URL = "/reservation"
+export const CALENDLY_ENTREPRISE_URL = "/reservation"
+export const CALENDLY_CIF_URL = "/reservation"
+export const CALENDLY_CIF_CONFERENCE_URL = "/reservation"
 
 /** When true, all public marketing site CTAs show « Sur invitation » with no booking link. */
 export const PUBLIC_SITE_BOOKING_CLOSED = true

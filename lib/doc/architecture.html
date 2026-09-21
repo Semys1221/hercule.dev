@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hercule — Architecture Backend</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --panel: #111113;
+      --panel-2: #18181b;
+      --border: #27272a;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --dim: #71717a;
+      --accent: #e4e4e7;
+      --on: #22c55e;
+      --on-dim: rgba(34, 197, 94, 0.15);
+      --opt: #eab308;
+      --opt-dim: rgba(234, 179, 8, 0.12);
+      --off: #3f3f46;
+      --build: #38bdf8;
+      --build-dim: rgba(56, 189, 248, 0.12);
+      --decide: #a78bfa;
+      --decide-dim: rgba(167, 139, 250, 0.12);
+      --deprecated: #ef4444;
+      --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+
+    header {
+      margin-bottom: 48px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 32px;
+    }
+
+    header .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 12px;
+      font-family: var(--mono);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 560;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--muted);
+      max-width: 640px;
+      font-size: 15px;
+    }
+
+    nav.toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    nav.toc a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-family: var(--mono);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--panel);
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    nav.toc a:hover {
+      color: var(--text);
+      border-color: var(--dim);
+    }
+
+    section {
+      margin-bottom: 56px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 560;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 20px;
+      max-width: 720px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.on { background: var(--on); box-shadow: 0 0 0 3px var(--on-dim); }
+    .dot.opt { background: var(--opt); box-shadow: 0 0 0 3px var(--opt-dim); }
+    .dot.off { background: var(--off); }
+    .dot.build { background: var(--build); box-shadow: 0 0 0 3px var(--build-dim); }
+    .dot.decide { background: var(--decide); box-shadow: 0 0 0 3px var(--decide-dim); }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .grid-scroll {
+      overflow-x: auto;
+    }
+
+    table.matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 720px;
+    }
+
+    table.matrix th,
+    table.matrix td {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 10px;
+      text-align: center;
+    }
+
+    table.matrix th {
+      color: var(--dim);
+      font-weight: 500;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: var(--panel-2);
+    }
+
+    table.matrix th.corner {
+      text-align: left;
+      color: var(--muted);
+    }
+
+    table.matrix td.niche {
+      text-align: left;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    table.matrix tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.matrix tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .cell {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s ease, opacity 0.12s;
+      background: transparent;
+    }
+
+    .cell:hover { transform: scale(1.12); }
+    .cell:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .cell .inner {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .cell[data-state="on"] .inner {
+      background: var(--on);
+      box-shadow: 0 0 0 4px var(--on-dim);
+    }
+
+    .cell[data-state="opt"] .inner {
+      background: var(--opt);
+      box-shadow: 0 0 0 4px var(--opt-dim);
+    }
+
+    .cell[data-state="off"] .inner {
+      background: var(--off);
+    }
+
+    .detail {
+      margin-top: 16px;
+      padding: 16px 18px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 52px;
+      font-family: var(--mono);
+    }
+
+    .detail strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+    }
+
+    .step {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--accent);
+    }
+
+    .step.core {
+      border-color: #3f3f46;
+    }
+
+    .step.optional {
+      border-color: #854d0e;
+      color: #fde68a;
+      background: var(--opt-dim);
+    }
+
+    .arrow {
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 14px;
+    }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .cols { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .card h3 {
+      font-size: 13px;
+      font-weight: 560;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    .card ol,
+    .card ul {
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .card li { margin-bottom: 6px; }
+
+    .card code {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--panel-2);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-family: var(--mono);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .tag.exist { background: var(--on-dim); color: var(--on); }
+    .tag.build { background: var(--build-dim); color: var(--build); }
+    .tag.decide { background: var(--decide-dim); color: var(--decide); }
+    .tag.depr { background: rgba(239, 68, 68, 0.15); color: var(--deprecated); }
+
+    .event-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .event:hover { border-color: var(--dim); }
+
+    .event .name {
+      font-family: var(--mono);
+      color: var(--accent);
+    }
+
+    .event .chain {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .event.open {
+      border-color: #52525b;
+      background: var(--panel-2);
+    }
+
+    .event .more {
+      display: none;
+      grid-column: 1 / -1;
+      color: var(--dim);
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    .event.open .more { display: block; }
+
+    .states {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .state-pill {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .state-arrow {
+      color: var(--dim);
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    .depr-box {
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.06);
+      border-radius: 10px;
+      padding: 16px 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .depr-box strong { color: #fca5a5; }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--dim);
+      font-family: var(--mono);
+    }
+
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Hercule.dev · Backend</div>
+      <h1>Architecture engine — grille Niches × Modules</h1>
+      <p>
+        Documentation visuelle du backend. Un moteur universel paramétré par niche.
+        Le lien Calendly injecté décide le destinataire du RDV. Pas de frontend produit.
+      </p>
+      <nav class="toc">
+        <a href="#grille">Grille</a>
+        <a href="#flow">Flow</a>
+        <a href="#routing">Routing</a>
+        <a href="#events">Events</a>
+        <a href="#states">States</a>
+        <a href="#deprecated">Deprecated</a>
+      </nav>
+    </header>
+
+    <section id="grille">
+      <h2>Grille universelle</h2>
+      <p class="section-desc">
+        Colonnes = modules. Lignes = niches. Cliquez une cellule pour le détail.
+        Cœur obligatoire (Scr→PV). Modules optionnels (PB, PP, Nur) ON/OFF indépendants.
+      </p>
+      <div class="legend">
+        <span><i class="dot on"></i> Obligatoire / ON</span>
+        <span><i class="dot opt"></i> Optionnel configurable</span>
+        <span><i class="dot off"></i> OFF (exemple)</span>
+        <span><i class="dot build"></i> À construire</span>
+        <span><i class="dot decide"></i> À décider</span>
+      </div>
+      <div class="panel">
+        <div class="grid-scroll">
+          <table class="matrix" id="matrix">
+            <thead>
+              <tr>
+                <th class="corner">Niche</th>
+                <th title="Scraping">Scr</th>
+                <th title="Cleaning">Cln</th>
+                <th title="Provisioning">Pro</th>
+                <th title="Sending">Snd</th>
+                <th title="Booking">Bkg</th>
+                <th title="Pré-vente">PV</th>
+                <th title="Post-booking">PB</th>
+                <th title="Post-payment">PP</th>
+                <th title="Nurturing">Nur</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="detail" id="cell-detail">Sélectionnez une cellule de la grille.</div>
+    </section>
+
+    <section id="flow">
+      <h2>Parcours obligatoire</h2>
+      <p class="section-desc">Toute niche traverse le core. Les trois derniers modules sont des branches optionnelles.</p>
+      <div class="panel">
+        <div class="flow">
+          <div class="step core">Scraping</div><span class="arrow">→</span>
+          <div class="step core">Cleaning</div><span class="arrow">→</span>
+          <div class="step core">Provisioning</div><span class="arrow">→</span>
+          <div class="step core">Sending</div><span class="arrow">→</span>
+          <div class="step core">Booking</div><span class="arrow">→</span>
+          <div class="step core">Pré-vente</div>
+          <span class="arrow">→</span>
+          <div class="step optional">Post-booking ?</div>
+          <div class="step optional">Post-payment ?</div>
+          <div class="step optional">Nurturing ?</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="routing">
+      <h2>Routing Calendly</h2>
+      <p class="section-desc">
+        Attribution prospect → client. Le lien déposé dans Instantly pointe vers un event type
+        de l'org Calendly Hercule. Multi-client par niche via pool router.
+      </p>
+      <div class="cols">
+        <div class="card">
+          <h3>Chaîne <span class="tag build">À construire partout</span></h3>
+          <ol>
+            <li>Prospect niche N</li>
+            <li>Pool router / round-robin</li>
+            <li>Client slot actif</li>
+            <li>Inject <code>calendly_scheduling_url</code></li>
+            <li>Sending E1–E3</li>
+            <li>Book → agenda client</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Séparé de l'engine <span class="tag decide">À décider schéma</span></h3>
+          <ul>
+            <li>CRM Hercule = table <code>clients</code></li>
+            <li>Import seulement si le RDV/paiement est <strong>vers Hercule</strong></li>
+            <li>Un restaurant booké chez un comptable ≠ client Hercule</li>
+            <li>Engine evergreen — coquille vide standardisée</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="events">
+      <h2>Events → workflows</h2>
+      <p class="section-desc">Cliquez un événement. Pattern : Trigger → Condition → Action → New state → Next.</p>
+      <div class="event-list" id="events"></div>
+    </section>
+
+    <section id="states">
+      <h2>Couches d'état</h2>
+      <p class="section-desc">Ne pas fusionner. Quatre couches actives + CRM à construire.</p>
+      <div class="cols">
+        <div class="card">
+          <h3>lead_statut <span class="tag exist">EXISTANT</span></h3>
+          <div class="states">
+            <span class="state-pill">NOTBOOKED</span><span class="state-arrow">→</span>
+            <span class="state-pill">CLICKED</span><span class="state-arrow">→</span>
+            <span class="state-pill">MEETING_BOOKED</span><span class="state-arrow">→</span>
+            <span class="state-pill">CONFIRMED</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>bypass pipeline <span class="tag exist">EXISTANT</span></h3>
+          <div class="states">
+            <span class="state-pill">step_0</span><span class="state-arrow">→</span>
+            <span class="state-pill">step_1</span><span class="state-arrow">→</span>
+            <span class="state-pill">step_2</span><span class="state-arrow">→</span>
+            <span class="state-pill">step_3</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>capacity / SaaS <span class="tag exist">EXISTANT</span></h3>
+          <div class="states">
+            <span class="state-pill">available</span><span class="state-arrow">→</span>
+            <span class="state-pill">assigned</span><span class="state-arrow">→</span>
+            <span class="state-pill">in_sequence</span><span class="state-arrow">→</span>
+            <span class="state-pill">booked</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>CRM clients <span class="tag build">À construire</span></h3>
+          <div class="states">
+            <span class="state-pill">lead</span><span class="state-arrow">→</span>
+            <span class="state-pill">customer</span><span class="state-arrow">→</span>
+            <span class="state-pill">paused / churned</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="deprecated">
+      <h2>Deprecated</h2>
+      <div class="depr-box">
+        <strong>Hors canon :</strong>
+        niches / tables <code>agence</code>, <code>entreprise</code>, <code>jum</code> ;
+        logique buyer / seller ;
+        table <code>matches</code> ;
+        niche « agence web ».
+        Les presets scrape JUM (médecin, kiné…) restent des <em>presets</em>, pas des niches.
+        Code live possible — ne plus étendre.
+      </div>
+    </section>
+
+    <footer>
+      Source : lib/doc/*.md · Stack : Next.js · Supabase · Streamlit · Instantly · Calendly · Resend · Stripe<br />
+      Orchestrateur : webhook → job row → cron (CRON_SECRET) ·
+      <a href="./architecture.md">architecture.md</a>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const MODULES = [
+        { id: "scr", label: "Scraping", required: true },
+        { id: "cln", label: "Cleaning", required: true },
+        { id: "pro", label: "Provisioning", required: true },
+        { id: "snd", label: "Sending", required: true },
+        { id: "bkg", label: "Booking", required: true },
+        { id: "pv", label: "Pré-vente", required: true },
+        { id: "pb", label: "Post-booking", required: false },
+        { id: "pp", label: "Post-payment", required: false },
+        { id: "nur", label: "Nurturing", required: false },
+      ];
+
+      const NICHES = [
+        {
+          id: "comptable",
+          name: "comptable",
+          // example optional config for illustration
+          opts: { pb: "opt", pp: "opt", nur: "opt" },
+        },
+        {
+          id: "cif",
+          name: "cif",
+          opts: { pb: "opt", pp: "opt", nur: "opt" },
+        },
+        {
+          id: "restaurant",
+          name: "restaurant",
+          opts: { pb: "off", pp: "opt", nur: "on" },
+        },
+        {
+          id: "sante",
+          name: "santé",
+          opts: { pb: "opt", pp: "off", nur: "opt" },
+        },
+        {
+          id: "btp",
+          name: "btp",
+          opts: { pb: "off", pp: "off", nur: "opt" },
+        },
+        {
+          id: "architect",
+          name: "architect",
+          opts: { pb: "opt", pp: "opt", nur: "off" },
+        },
+      ];
+
+      const NOTES = {
+        scr: "EXISTANT — streamlit_scraper + presets Outscraper.",
+        cln: "EXISTANT — streamlit_clean + MyEmailVerifier.",
+        pro: "EXISTANT partiel — slug + Instantly vars. Multi-client URL À CONSTRUIRE.",
+        snd: "EXISTANT — Instantly + bypass E1–E3 + AI reply.",
+        bkg: "EXISTANT partiel — webhook Calendly. Event type par client À CONSTRUIRE.",
+        pv: "EXISTANT fragmenté — à consolider (page auto présentation | wizard).",
+        pb: "EXISTANT — booking_email_jobs + Resend. Flag ON/OFF niche À DÉCIDER.",
+        pp: "EXISTANT Stripe Hercule. Paiement vers client tiers À DÉCIDER.",
+        nur: "EXISTANT fragmenté — unifier conditions / timings.",
+      };
+
+      const tbody = document.querySelector("#matrix tbody");
+      const detail = document.getElementById("cell-detail");
+
+      function stateFor(niche, mod) {
+        if (mod.required) return "on";
+        return niche.opts[mod.id] || "opt";
+      }
+
+      NICHES.forEach(function (niche) {
+        const tr = document.createElement("tr");
+        const tdName = document.createElement("td");
+        tdName.className = "niche";
+        tdName.textContent = niche.name;
+        tr.appendChild(tdName);
+
+        MODULES.forEach(function (mod) {
+          const td = document.createElement("td");
+          const btn = document.createElement("button");
+          const st = stateFor(niche, mod);
+          btn.className = "cell";
+          btn.type = "button";
+          btn.dataset.state = st;
+          btn.dataset.niche = niche.name;
+          btn.dataset.module = mod.label;
+          btn.dataset.modId = mod.id;
+          btn.title = niche.name + " × " + mod.label;
+          btn.setAttribute("aria-label", btn.title);
+          const inner = document.createElement("span");
+          inner.className = "inner";
+          btn.appendChild(inner);
+
+          btn.addEventListener("click", function () {
+            const req = mod.required ? "obligatoire" : "optionnel";
+            detail.innerHTML =
+              "<strong>" +
+              niche.name +
+              "</strong> × <strong>" +
+              mod.label +
+              "</strong> (" +
+              req +
+              ", état: " +
+              st +
+              ")<br/>" +
+              NOTES[mod.id];
+          });
+
+          // click cycles optional cells for illustration
+          if (!mod.required) {
+            btn.addEventListener("dblclick", function (e) {
+              e.preventDefault();
+              const order = ["opt", "on", "off"];
+              const i = order.indexOf(btn.dataset.state);
+              btn.dataset.state = order[(i + 1) % order.length];
+              btn.click();
+            });
+          }
+
+          td.appendChild(btn);
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      const EVENTS = [
+        {
+          name: "lead_interested",
+          chain: "Instantly webhook → E1 schedule → step_1 → Sending",
+          more: "Condition: campaign initialized + auto-send. Action: Unibox E1 with Calendly link. EXISTANT.",
+        },
+        {
+          name: "invitee.created",
+          chain: "Calendly → book-lead → MEETING_BOOKED → Pré-vente / PB",
+          more: "Resolve slug/utm_content. Sync Instantly. Enqueue booking emails if PB ON. EXISTANT.",
+        },
+        {
+          name: "invitee.canceled",
+          chain: "Calendly → cancel jobs → NOTBOOKED/CANCELLED → Nur?",
+          more: "Cancel pending Resend jobs. Instantly sync. EXISTANT.",
+        },
+        {
+          name: "checkout.session.completed",
+          chain: "Stripe → payments → Post-payment → CRM if Hercule",
+          more: "Offer_type + owner lead. Seat onboarding. Cancel conflicting nurture. EXISTANT.",
+        },
+        {
+          name: "pool-router cron",
+          chain: "Assign pool → client slot → provision URL → Sending",
+          more: "Fair-share active slots. EXISTANT for restaurant/santé/btp. Generalize = À CONSTRUIRE.",
+        },
+        {
+          name: "no-show (human)",
+          chain: "Admin/dashboard → sales_call no_show → Nurturing",
+          more: "No reliable Calendly no-show webhook (ORCH-01). EXISTANT.",
+        },
+      ];
+
+      const eventsEl = document.getElementById("events");
+      EVENTS.forEach(function (ev) {
+        const div = document.createElement("div");
+        div.className = "event";
+        div.innerHTML =
+          '<div class="name">' +
+          ev.name +
+          '</div><div class="chain">' +
+          ev.chain +
+          '</div><div class="more">' +
+          ev.more +
+          "</div>";
+        div.addEventListener("click", function () {
+          div.classList.toggle("open");
+        });
+        eventsEl.appendChild(div);
+      });
+    })();
+  </script>
+</body>
+</html>

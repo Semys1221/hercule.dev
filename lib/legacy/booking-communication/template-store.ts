@@ -77,6 +77,15 @@ const AGENCE_EMAIL_TYPES: BookingEmailType[] = [
   "free_trial_started_1",
   "free_trial_started_2",
   "free_trial_started_3",
+  "payment_onboarding_1",
+  "payment_onboarding_2",
+  "payment_onboarding_3",
+  "payment_onboarding_4",
+  "payment_onboarding_5",
+  "payment_onboarding_6",
+  "payment_onboarding_7",
+  "payment_onboarding_8",
+  "payment_onboarding_9",
 ];
 
 const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
@@ -107,6 +116,15 @@ const ENTREPRISE_EMAIL_TYPES: BookingEmailType[] = [
   "payment_notification_client",
   "modalites_ask",
   "modalites_cancel",
+  "payment_onboarding_1",
+  "payment_onboarding_2",
+  "payment_onboarding_3",
+  "payment_onboarding_4",
+  "payment_onboarding_5",
+  "payment_onboarding_6",
+  "payment_onboarding_7",
+  "payment_onboarding_8",
+  "payment_onboarding_9",
 ];
 
 const CIF_EMAIL_TYPES: BookingEmailType[] = [
@@ -114,11 +132,36 @@ const CIF_EMAIL_TYPES: BookingEmailType[] = [
   "conference_invite_24",
   "conference_invite_48",
   "conference_invite_72",
+  "payment_onboarding_1",
+  "payment_onboarding_2",
+  "payment_onboarding_3",
+  "payment_onboarding_4",
+  "payment_onboarding_5",
+  "payment_onboarding_6",
+  "payment_onboarding_7",
+  "payment_onboarding_8",
+  "payment_onboarding_9",
 ];
 
 function emailTypesForCategory(category: LeadCategory): BookingEmailType[] {
   if (category === "cif") return CIF_EMAIL_TYPES;
   if (category === "entreprise") return ENTREPRISE_EMAIL_TYPES;
+  if (category === "client") {
+    return [
+      "product_payment_welcome",
+      "payment_onboarding_1",
+      "payment_onboarding_2",
+      "payment_onboarding_3",
+      "payment_onboarding_4",
+      "payment_onboarding_5",
+      "payment_onboarding_6",
+      "payment_onboarding_7",
+      "payment_onboarding_8",
+      "payment_onboarding_9",
+      "product_calendly_welcome",
+      "product_calendly_reminder",
+    ] as BookingEmailType[];
+  }
   return AGENCE_EMAIL_TYPES;
 }
 
@@ -139,7 +182,8 @@ export function isProductBookingEmailType(emailType: BookingEmailType): boolean 
     emailType.startsWith("comptable_acquisition_") ||
     emailType.startsWith("proposition_ludovic_") ||
     emailType.startsWith("conference_invite") ||
-    emailType.startsWith("free_trial")
+    emailType.startsWith("free_trial") ||
+    emailType.startsWith("payment_onboarding_")
   );
 }
 
@@ -363,7 +407,7 @@ export function sampleBookingEmailVars(
     confirmUrl,
     emailType,
     dashboardLink: "https://www.hercule.dev/dashboard/exemple-slug",
-    reservationAgenceLink: "https://www.hercule.dev/reservation.html/exemple-slug",
+    reservationAgenceLink: "https://www.hercule.dev/reservation/exemple-slug",
     company: "Exemple SARL",
     email: "jean@example.com",
     surveyLink: "https://www.hercule.dev/survey/exemple-token",
@@ -375,7 +419,7 @@ export function sampleBookingEmailVars(
     trackingNumber: "HRC-exemple",
     rdvRangeLabel: "10 à 15",
     reservationCifLink:
-      "https://www.hercule.dev/reservation-conference.html/exemple-slug",
+      "https://www.hercule.dev/reservation/exemple-slug",
   });
   return vars;
 }
@@ -412,8 +456,13 @@ export function pickBookingEmailTemplate(params: {
   subject?: string;
   body?: string;
   stored?: Pick<StoredBookingEmailTemplate, "subject" | "body"> | null;
+  verticalOverride?: "dec" | "cif" | "ias" | null;
 }): { subject: string; body: string } {
-  const defaults = defaultBookingEmailTemplate(params.category, params.emailType);
+  const defaults = defaultBookingEmailTemplate(
+    params.category,
+    params.emailType,
+    params.verticalOverride,
+  );
   const editorSubject = params.subject?.trim() ?? "";
   const editorBody = params.body?.trim() ?? "";
 
@@ -439,6 +488,7 @@ export async function resolveBookingEmailTemplate(params: {
   emailType: BookingEmailType;
   subject?: string;
   body?: string;
+  verticalOverride?: "dec" | "cif" | "ias" | null;
 }): Promise<{ subject: string; body: string }> {
   const templates = await getBookingEmailTemplates(params.category);
   const stored = templates.find((row) => row.email_type === params.emailType);
@@ -448,6 +498,7 @@ export async function resolveBookingEmailTemplate(params: {
     subject: params.subject,
     body: params.body,
     stored: stored ?? null,
+    verticalOverride: params.verticalOverride,
   });
 }
 
@@ -472,10 +523,12 @@ export async function renderEmailFromStore(params: {
   trackingNumber?: string;
   rdvRangeLabel?: string;
   reservationCifLink?: string;
+  verticalOverride?: "dec" | "cif" | "ias" | null;
 }): Promise<RenderedBookingEmail> {
   const template = await resolveBookingEmailTemplate({
     category: params.category,
     emailType: params.emailType,
+    verticalOverride: params.verticalOverride,
   });
 
   return renderCustomBookingEmail({

@@ -36,8 +36,7 @@ Copy `.env.example` to `.env` and fill in Supabase, Instantly, Resend, and Calen
 
 - `/` — landing agence
 - `/entreprise` — landing entreprise
-- `/reservation.html` — Calendly agence (with optional slug tracking)
-- `/reservation-entreprise.html` — Calendly entreprise (with optional slug tracking)
+- `/reservation/[slug]` — unified Calendly booking (agence, entreprise, conférence, JUM)
 - `/confirm-reservation.html` — email confirmation page
 
 ## Scripts

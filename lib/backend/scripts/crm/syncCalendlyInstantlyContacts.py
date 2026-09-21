@@ -12,7 +12,7 @@ from typing import Any, Literal
 
 ROOT = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "crm"))
+sys.path.insert(0, str(ROOT / "lib/backend/crm"))
 
 from calendly_client import list_all_bookings  # noqa: E402
 from calendly_contacts import (  # noqa: E402

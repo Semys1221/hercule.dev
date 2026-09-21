@@ -8,8 +8,8 @@ from supabase_repo import get_client
 
 TargetType = Literal["buyer", "seller"]
 
-FALLBACK_BUYER = "https://www.hercule.dev/reservation.html"
-FALLBACK_SELLER = "https://www.hercule.dev/reservation-entreprise.html"
+FALLBACK_BUYER = "https://www.hercule.dev/reservation"
+FALLBACK_SELLER = "https://www.hercule.dev/reservation"
 
 _LEAD_TABLES = ("agence", "comptable", "entreprise", "cif")
 

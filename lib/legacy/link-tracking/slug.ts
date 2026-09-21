@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { LeadCategory } from "./types";
-import { ALL_LEAD_CATEGORIES } from "./types";
+import { ALL_LEAD_CATEGORIES, tableForLeadCategory } from "./types";
 
 const SLUG_ALPHABET =
   "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -28,7 +28,8 @@ export function generateSlug(): string {
 
 export async function loadSlugSet(client: SupabaseClient): Promise<Set<string>> {
   const slugs = new Set<string>();
-  for (const table of TABLES) {
+  for (const category of TABLES) {
+    const table = tableForLeadCategory(category);
     const { data, error } = await client.from(table).select("slug");
     if (error) {
       if (isMissingRelationError(error.message)) {

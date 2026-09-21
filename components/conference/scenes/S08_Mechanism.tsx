@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { ChapterBadge } from "../shared/ChapterBadge";
 import { FlowLine }   from "../shared/FlowLine";
 import { RubiksCube } from "../shared/RubiksCube";
 import { SceneLabel } from "../shared/SceneLabel";
@@ -11,11 +12,12 @@ import { SceneShell } from "../shared/SceneShell";
  * S08 — Le mécanisme  (steps 0-1, beats 38-39)
  *
  * 0 – Cube en train de se résoudre (face par face)
- * 1 – Cube résolu + trois blocs VOLUME → QUALIFICATION → RENDEZ-VOUS
+ * 1 – Cube résolu + trois blocs VOLUME → QUALIFICATION → INTÉRÊT
  */
 export function S08_Mechanism({ step }: SceneProps) {
   return (
     <SceneShell>
+      <ChapterBadge chapter="Le mécanisme" beat="3/4" />
       <AnimatePresence mode="wait">
 
         {step === 0 && (
@@ -46,7 +48,7 @@ export function S08_Mechanism({ step }: SceneProps) {
               <FlowLine dir="right" />
               <SceneLabel size="sm" animate={false}>QUALIFICATION</SceneLabel>
               <FlowLine dir="right" />
-              <SceneLabel size="sm" animate={false}>RENDEZ-VOUS</SceneLabel>
+              <SceneLabel size="sm" animate={false}>INTÉRÊT</SceneLabel>
             </motion.div>
           </motion.div>
         )}

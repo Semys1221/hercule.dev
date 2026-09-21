@@ -4,7 +4,14 @@ export const ALL_LEAD_CATEGORIES = [
   "entreprise",
   "cif",
   "jum",
+  "client",
 ] as const;
+
+/** Supabase table name for a lead category (`client` → `clients`). */
+export function tableForLeadCategory(category: LeadCategory): string {
+  if (category === "client") return "clients";
+  return category;
+}
 
 export type LeadCategory = (typeof ALL_LEAD_CATEGORIES)[number];
 

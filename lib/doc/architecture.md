@@ -1,7 +1,8 @@
 # Architecture Backend Hercule
 
-> Documentation technique du backend. Pas de frontend produit.
-> Dernière mise à jour : modèle révisé (engine universel, buyer/seller deprecated).
+> Documentation technique du **moteur**, du **backend de gestion**, et du **contrat** avec le front.  
+> Spec d’écrans (routes, composants) : **hors scope** — voir [`frontend.md`](./frontend.md).  
+> Dernière mise à jour : trois couches engine / gestion / UI.
 
 ## 1. Vue d'ensemble
 
@@ -92,31 +93,40 @@ Détail : [`modules.md`](./modules.md).
 
 ---
 
-## 5. Engine vs CRM Hercule
-
-Deux systèmes distincts :
+## 5. Trois couches : engine, gestion, front
 
 ```
+                    FRONT-END
+              (contrôle / visualisation)
+                        │
+              ┌─────────┴─────────┐
+              ↓                   ↓
+        Client Management    System Management
+              │                   │
+              └─────────┬─────────┘
+                        ↓
+┌─────────────────────────────────────────┐
+│  BACKEND GESTION                        │
+│  Table clients + lifecycle + allocation │
+│  Décide / calcule / persiste / exécute  │
+└─────────────────┬───────────────────────┘
+                  │ éligibilité, quotas, inboxes
+                  ▼
 ┌─────────────────────────────────────────┐
 │  ENGINE (grille niches × modules)       │
 │  scrape → clean → provision → send →    │
 │  book → pré-vente → [PB/PP/Nur]         │
 │  Agnostique. Standardisé. Evergreen.    │
-└─────────────────┬───────────────────────┘
-                  │ import quand un prospect
-                  │ devient client d'Hercule
-                  ▼
-┌─────────────────────────────────────────┐
-│  CRM HERCULE (table clients séparée)    │
-│  Qui paie Hercule. Pipeline interne.    │
-│  Indépendant de l'engine.               │
 └─────────────────────────────────────────┘
 ```
 
-- L'engine produit des RDV vers des calendriers (Hercule ou clients tiers).
-- Le CRM Hercule stocke **les clients d'Hercule** (ceux qui ont signé avec Hercule).
-- Un prospect qui signe avec un comptable tiers ne rentre pas dans le CRM Hercule ; il reste dans le CRM du comptable.
-- À DÉCIDER : schéma exact de la table `clients` Hercule (colonnes, statut, lien vers niche d'origine).
+Règle : Front = « je demande / je déclenche / j’affiche ». Backend gestion = « je décide / je calcule / je persiste / j’exécute ». Détail : [`frontend.md`](./frontend.md).
+
+- L'engine produit des RDV vers des calendriers (Hercule ou clients tiers). Il **ne** porte pas la date de première livraison ni le lifecycle commercial.
+- Le backend de gestion stocke **les clients d'Hercule**, calcule `delivery_start_at`, l’éligibilité au pool, l’allocation (quotas, inboxes, tâches). Le CRM n’est plus un simple UPSERT post-Stripe.
+- Un prospect qui signe avec un comptable tiers ne rentre pas dans `clients` Hercule ; il reste dans le CRM du comptable (D16 inchangé pour l’entrée paiement).
+- Deux **points d’entrée** possibles vers `clients` : formulaire d’onboarding (gestion) **et** import paiement destinataire = Hercule (W11). Coexistence : **À DÉCIDER**.
+- Schéma exact `clients` (colonnes, enum lifecycle) : [`data-model.md`](./data-model.md), [`states.md`](./states.md). Workflows : [`workflows.md`](./workflows.md) § gestion.
 
 ---
 
@@ -172,7 +182,8 @@ Pré-vente         Page auto (slug) — présentation ou wizard
 [Nurturing]       Relances J+n (si ON)
 ```
 
-Détail : [`workflows.md`](./workflows.md), [`routing.md`](./routing.md).
+Détail : [`workflows.md`](./workflows.md), [`routing.md`](./routing.md).  
+Gestion clientèle (hors cette chaîne) : [`workflows.md`](./workflows.md) § gestion, [`frontend.md`](./frontend.md).
 
 ---
 
@@ -206,15 +217,21 @@ Utilisée dans toute la doc :
 
 | Fichier | Contenu |
 |---------|---------|
-| [`architecture.md`](./architecture.md) | Ce fichier |
+| [`README.md`](./README.md) | Index + lien chantier |
+| [`architecture.md`](./architecture.md) | Ce fichier (canon conceptuel) |
 | [`modules.md`](./modules.md) | 9 modules détaillés |
-| [`workflows.md`](./workflows.md) | Parcours et branches |
+| [`workflows.md`](./workflows.md) | Parcours engine + workflows de gestion |
+| [`frontend.md`](./frontend.md) | Contrat Front / backend gestion (pas spec UI) |
 | [`events.md`](./events.md) | Catalogue d'événements |
 | [`states.md`](./states.md) | Machines d'état |
 | [`data-model.md`](./data-model.md) | Entités et schéma |
 | [`integrations.md`](./integrations.md) | Services externes |
 | [`routing.md`](./routing.md) | Prospect → client → calendrier |
-| [`implementation-plan.md`](./implementation-plan.md) | Phases de construction |
+| [`implementation-plan.md`](./implementation-plan.md) | Plan conceptuel — **exécutable = `build/`** |
 | [`architecture.html`](./architecture.html) | Illustration interactive |
+| [`build/KICKOFF.md`](./build/KICKOFF.md) | Message à coller : wipe local (-1) puis inventaire |
+| [`build/AGENT-PROMPT.md`](./build/AGENT-PROMPT.md) | Règlement : -1 → 0 → 15 |
+
+Chantier agent (catalogues précis + boucle Read→Verify) : [`build/`](./build/).
 
 Illustration HTML : ouvrir `architecture.html` dans un navigateur.

@@ -46,7 +46,7 @@ export function S12_OffersTransition({ step }: SceneProps) {
               <FlowLine dir="down" />
               <SceneLabel size="sm" animate={false}>QUALIFICATION</SceneLabel>
               <FlowLine dir="down" />
-              <SceneLabel size="sm" animate={false}>RENDEZ-VOUS</SceneLabel>
+              <SceneLabel size="sm" animate={false}>INTÉRÊT</SceneLabel>
             </motion.div>
           </motion.div>
         )}
