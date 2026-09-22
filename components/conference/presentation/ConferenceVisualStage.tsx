@@ -24,7 +24,6 @@ import { S09_R2Reveal } from "../scenes/S09_R2Reveal";
 import { S13_HerculeDEC } from "../scenes/S13_HerculeDEC";
 import { S14_HerculeCourtage } from "../scenes/S14_HerculeCourtage";
 import { S15_FAQ } from "../scenes/S15_FAQ";
-import { S16_Urgency } from "../scenes/S16_Urgency";
 import { S17_Close } from "../scenes/S17_Close";
 import { S18_StaticOffers } from "../scenes/S18_StaticOffers";
 import type { SceneId, SceneProps } from "./types";
@@ -38,12 +37,11 @@ const MIN_CARD_SIZE = 8;
 
 const CAROUSEL_SECTION: Partial<Record<SceneId, CardSection>> = {
   S10_JohnDemo: "S10",
-  S12_OffersTransition: "S12",
 };
 
 const OFFER_PAIR_SCENES = new Set<SceneId>(["S13_HerculeDEC", "S14_HerculeCourtage"]);
 
-/** Non-carousel scenes only — S10/S12 share a stable ChronologyBoard. */
+/** Non-carousel scenes only — S10 uses a stable ChronologyBoard. */
 const SCENES: Partial<Record<SceneId, ComponentType<SceneProps>>> = {
   S01_Intro,
   S02_WordOfMouth,
@@ -57,7 +55,6 @@ const SCENES: Partial<Record<SceneId, ComponentType<SceneProps>>> = {
   S13_HerculeDEC,
   S14_HerculeCourtage,
   S15_FAQ,
-  S16_Urgency,
   S17_Close,
   S18_StaticOffers,
 };

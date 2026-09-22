@@ -15,6 +15,8 @@ export type NicheScript = {
   niche: Niche;
   lines: QualificationLine[];
   verdict: string;
+  verdictHighlights?: string[];
+  stamp?: string;
 };
 
 /** First S09 step of the sequential qualification chats. */
@@ -33,7 +35,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "On fait notre comptabilité, mais on manque surtout de visibilité sur nos marges et notre rentabilité.",
+        text: "La compta tourne. Par contre on n’a pas de pilotage des marges, et c’est ça qu’on veut mettre en place.",
       },
       {
         speaker: "hercule",
@@ -41,15 +43,17 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, exactement.",
+        text: "Oui. On veut quelqu’un qui pilote avec nous, pas un prestataire de plus.",
       },
       {
         speaker: "hercule",
-        text: "Et votre établissement est actuellement suffisamment rentable pour envisager un accompagnement de ce type ?",
+        text: "Un accompagnement à 300 € par mois minimum, est-ce acceptable pour vous ?",
+        highlights: ["300 €"],
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, nous avons une activité stable et les moyens de mettre en place un véritable suivi.",
+        text: "Si le ROI est démontré, c’est ce que nous recherchons.",
+        highlights: ["ROI"],
       },
       {
         speaker: "hercule",
@@ -58,11 +62,13 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Est-ce que lundi à 13h est possible ?",
+        text: "Le 7 à 10h, je ne peux pas. Est-ce que lundi à 13h est possible ?",
         highlights: ["lundi à 13h"],
       },
     ],
     verdict: "Prospect qualifié : restaurant solvable + besoin de pilotage financier.",
+    verdictHighlights: ["restaurant solvable", "besoin de pilotage financier"],
+    stamp: "Solvabilité & Intérêt",
   },
   {
     niche: "IAS",
@@ -73,7 +79,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui. Nous avons notamment notre responsabilité civile professionnelle et nos locaux à assurer.",
+        text: "Oui. RC pro et locaux. L’activité a changé, il faut remettre les contrats à niveau.",
       },
       {
         speaker: "hercule",
@@ -82,7 +88,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, nous avons environ 80 000 € de trésorerie.",
+        text: "Oui. On est autour de 80 000 €, on peut avancer.",
         highlights: ["80 000 €"],
       },
       {
@@ -91,7 +97,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Non, pas vraiment. Notre activité a beaucoup évolué depuis leur mise en place.",
+        text: "Non. Rien n’a été repris depuis, et ça ne correspond plus à ce qu’on fait.",
       },
       {
         speaker: "hercule",
@@ -99,7 +105,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, tout à fait.",
+        text: "Oui. On veut des garanties à jour, pas un devis pour le principe.",
       },
       {
         speaker: "hercule",
@@ -108,7 +114,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, quel est le lien de la visio ?",
+        text: "D’accord pour le 7. Envoyez le lien de la visio, je prépare les contrats.",
         highlights: ["lien de la visio"],
       },
     ],
@@ -123,7 +129,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, j’ai environ 100 000 € disponibles et je réfléchis justement à différents placements.",
+        text: "Oui. J’ai environ 100 000 € à placer. Je veux une proposition sérieuse.",
         highlights: ["100 000 €"],
       },
       {
@@ -132,7 +138,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, je cherche surtout à savoir quelles solutions seraient adaptées.",
+        text: "Le montant est là. Ce qu’il me faut, c’est la solution adaptée, et qu’on la mette en place.",
       },
       {
         speaker: "hercule",
@@ -140,7 +146,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Oui, exactement.",
+        text: "Oui. Je veux être accompagné pour trancher.",
       },
       {
         speaker: "hercule",
@@ -149,7 +155,7 @@ export const SCRIPTS: NicheScript[] = [
       },
       {
         speaker: "entrepreneur",
-        text: "Est-ce que lundi à 13h est possible ?",
+        text: "Le 7 à 10h, je suis pris. Est-ce que lundi à 13h est possible ?",
         highlights: ["lundi à 13h"],
       },
     ],
@@ -183,6 +189,8 @@ export type NicheCardView = {
   niche: Niche;
   lines: QualificationLine[];
   verdict: string | null;
+  verdictHighlights: string[];
+  stamp: string | null;
   dimmed: boolean;
 };
 
@@ -215,6 +223,8 @@ export function qualificationView(step: number): QualificationView | null {
         niche: script.niche,
         lines: [],
         verdict: null,
+        verdictHighlights: [],
+        stamp: null,
         dimmed: false,
       });
     } else {
@@ -228,7 +238,9 @@ export function qualificationView(step: number): QualificationView | null {
         niche: script.niche,
         lines: script.lines.slice(0, lineCount),
         verdict: showVerdict ? script.verdict : null,
-        dimmed: finished,
+        verdictHighlights: showVerdict ? (script.verdictHighlights ?? []) : [],
+        stamp: showVerdict ? (script.stamp ?? null) : null,
+        dimmed: Boolean(script.stamp) && showVerdict,
       });
     }
 

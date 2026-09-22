@@ -13,12 +13,11 @@ import { SceneShell } from "./SceneShell";
 import { SilverHerculeMark } from "./SilverHerculeMark";
 import { StageCardDeck, type StageCardDeckItem } from "./StageCardDeck";
 
-const TIMELINE_NODE_COUNT = 3;
+const TIMELINE_NODE_COUNT = 2;
 
 const TIMELINE_FILLED: Record<string, number> = {
-  "s10-minutes": 1,
-  "s10-month": 2,
-  "s10-zoom": 3,
+  "s10-month": 1,
+  "s10-zoom": 2,
 };
 
 function TimelineTrack({ filled }: { filled: number }) {
@@ -145,7 +144,7 @@ type StageCardCarouselProps = {
 };
 
 /**
- * Shared 3D card deck for S10 and S12. Index is global across sections so
+ * Shared 3D card deck for S10. Index is global so
  * Space advances rotate horizontally around a vertical axis without remount.
  */
 export function StageCardCarousel({ section, step }: StageCardCarouselProps) {

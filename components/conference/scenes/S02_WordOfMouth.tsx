@@ -8,12 +8,11 @@ import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
 
 /**
- * S02 — Le bouche-à-oreille  (steps 0-3, beats 8-11)
+ * S02 — Le bouche-à-oreille  (steps 0-2)
  *
  * 0 – Cube mélangé → déplacement + carte BAO
  * 1 – Deux personnes reliées (confiance)
  * 2 – 5-6 profils, cœur qui pulse
- * 3 – Bulle + ✓ clôture
  */
 export function S02_WordOfMouth({ step }: SceneProps) {
   return (
@@ -91,36 +90,6 @@ export function S02_WordOfMouth({ step }: SceneProps) {
                 <Person key={i} size={30} delay={i * 0.06} />
               ))}
             </div>
-          </motion.div>
-        )}
-
-        {/* beat 11 — discussion / ✓ */}
-        {step === 3 && (
-          <motion.div
-            key="b11"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-6"
-          >
-            <div className="flex items-center gap-8">
-              <Person size={40} />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="rounded border border-zinc-600/50 px-3 py-2 text-xs text-zinc-500"
-              >
-                · · ·
-              </motion.div>
-              <Person size={40} delay={0.1} />
-            </div>
-            <motion.span
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-3xl text-zinc-300"
-            >
-              ✓
-            </motion.span>
           </motion.div>
         )}
 

@@ -44,6 +44,7 @@ function poseForRelative(rel: number, reduced: boolean, solo: boolean): SlotPose
 export type StageCardDeckItem = {
   id: string;
   node: ReactNode;
+  dimmed?: boolean;
 };
 
 type StageCardDeckProps = {
@@ -126,6 +127,7 @@ export function StageCardDeck({
                 className={cn(
                   "gap-3 border-zinc-800/50 bg-zinc-900/70 shadow-none backdrop-blur-sm supports-[backdrop-filter]:bg-zinc-900/50",
                   cardClassName,
+                  item.dimmed && "border-zinc-900 bg-zinc-950/80",
                   !isActive && "select-none",
                 )}
               >

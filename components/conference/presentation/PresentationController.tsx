@@ -145,6 +145,31 @@ export function PresentationController() {
 
   const beat = BEATS[beatIdx];
   const cue = CUES[beat.id];
+
+  useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "1ddaf6" },
+      body: JSON.stringify({
+        sessionId: "1ddaf6",
+        runId: "post-fix",
+        hypothesisId: "A",
+        location: "PresentationController.tsx:beat",
+        message: "active beat",
+        data: {
+          beatIdx,
+          beatId: beat.id,
+          scene: beat.scene,
+          step: beat.step,
+          cueLabel: cue?.label ?? null,
+          totalBeats: TOTAL_BEATS,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [beatIdx, beat.id, beat.scene, beat.step, cue?.label]);
   const nextBeat = BEATS[Math.min(beatIdx + 1, TOTAL_BEATS - 1)];
   const nextCue = CUES[nextBeat.id];
   const isLast = beatIdx === TOTAL_BEATS - 1;

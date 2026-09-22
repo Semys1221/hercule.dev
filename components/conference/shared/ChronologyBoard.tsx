@@ -100,7 +100,7 @@ type ChronologyBoardProps = {
   step: number;
 };
 
-/** Shared S10+S12 screen: one bar, captions accumulate with each beat. */
+/** S10 screen: one bar, captions accumulate with each beat. */
 export function ChronologyBoard({ section, step }: ChronologyBoardProps) {
   const activeIndex = globalCardIndex(section, step);
   const revealed = STAGE_CARDS.slice(0, activeIndex + 1);

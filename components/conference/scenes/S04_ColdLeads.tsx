@@ -2,59 +2,36 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { Person, PersonGroup } from "../shared/Person";
+import { ChapterDoor } from "../shared/ChapterDoor";
+import { PersonGroup } from "../shared/Person";
 import { PhoneIcon } from "../shared/PhoneIcon";
-import { SceneLabel } from "../shared/SceneLabel";
 import { SceneShell } from "../shared/SceneShell";
 
 /**
- * S04 — Les leads froids  (steps 0-4, beats 19-23)
+ * S04 — Les leads froids  (steps 0-3)
  *
- * 0 – Fiche de leads (liste verticale) + téléphone
+ * 0 – Cube + Fiche de lead
  * 1 – Personne n'a demandé
  * 2 – Appel → relance → relance
  * 3 – Fiche BUDGET✕ BESOIN✕ PROFIL✕
- * 4 – 1 conversation = 0 €
  */
 export function S04_ColdLeads({ step }: SceneProps) {
   return (
     <SceneShell>
       <AnimatePresence mode="wait">
 
-        {/* beat 19 — liste */}
         {step === 0 && (
           <motion.div
             key="b19"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-8"
           >
-            <SceneLabel size="lg" animate={false}>FICHE DE LEADS</SceneLabel>
-            <div className="flex items-start gap-10">
-            <div className="flex flex-col gap-1.5">
-              {Array.from({ length: 14 }, (_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                  className="flex items-center gap-2"
-                >
-                  <span className="text-[10px] text-zinc-600">○</span>
-                  <div className="h-px w-28 bg-zinc-800" />
-                </motion.div>
-              ))}
-            </div>
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-              className="mt-4 text-zinc-400"
-            >
-              <PhoneIcon size={40} />
-            </motion.div>
-            </div>
+            <ChapterDoor
+              label="FICHE DE LEAD"
+              icon={<PhoneIcon size={20} className="text-zinc-500" />}
+            />
           </motion.div>
         )}
 
-        {/* beat 20 — personne n'a demandé */}
         {step === 1 && (
           <motion.div
             key="b20"
@@ -71,7 +48,6 @@ export function S04_ColdLeads({ step }: SceneProps) {
           </motion.div>
         )}
 
-        {/* beat 21 — appel / relances */}
         {step === 2 && (
           <motion.div
             key="b21"
@@ -100,7 +76,6 @@ export function S04_ColdLeads({ step }: SceneProps) {
           </motion.div>
         )}
 
-        {/* beat 22 — mauvais profil */}
         {step === 3 && (
           <motion.div
             key="b22"
@@ -123,20 +98,6 @@ export function S04_ColdLeads({ step }: SceneProps) {
                 <span className={ok ? "text-zinc-300" : "text-zinc-600"}>✕</span>
               </motion.p>
             ))}
-          </motion.div>
-        )}
-
-        {/* beat 23 — conversation achetée */}
-        {step === 4 && (
-          <motion.div
-            key="b23"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-4"
-          >
-            <PhoneIcon size={48} className="text-zinc-600" />
-            <p className="text-sm tracking-widest text-zinc-500 uppercase">
-              1 conversation = 0 €
-            </p>
           </motion.div>
         )}
 

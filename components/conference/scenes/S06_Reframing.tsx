@@ -2,17 +2,16 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { Person }       from "../shared/Person";
-import { RubiksCube }   from "../shared/RubiksCube";
-import { SceneLabel }   from "../shared/SceneLabel";
-import { SceneShell }   from "../shared/SceneShell";
+import { Person } from "../shared/Person";
+import { RubiksCube } from "../shared/RubiksCube";
+import { SceneShell } from "../shared/SceneShell";
 import { StageSubtitle } from "../shared/StageSubtitle";
 
 const ORBIT_R = 90;
 const ORBIT_WORDS = ["VOLUME", "QUALITÉ", "INTÉRÊT"] as const;
 
 /**
- * S06 — Reframing  (steps 0-4)
+ * S06 — Reframing  (steps 0-3)
  *
  * 0 – Découragement — bonhomme + carte
  * 1 – Les trois mots orbitent
@@ -102,28 +101,6 @@ export function S06_Reframing({ step }: SceneProps) {
           >
             <RubiksCube state="scrambled" size={80} spin={false} />
             <StageSubtitle>Revoir les choses dans le bon ordre.</StageSubtitle>
-          </motion.div>
-        )}
-
-        {/* beat 34 — trois faces visibles */}
-        {step === 4 && (
-          <motion.div
-            key="b34"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-6"
-          >
-            <div className="relative flex size-64 items-center justify-center">
-              <div className="absolute opacity-[0.12]">
-                <RubiksCube state="scrambled" size={160} spin={false} />
-              </div>
-              <SceneLabel size="sm" animate={false}>VOLUME</SceneLabel>
-              <div className="absolute top-4 right-4">
-                <SceneLabel size="xs" muted animate={false}>QUALITÉ</SceneLabel>
-              </div>
-              <div className="absolute bottom-4 left-4">
-                <SceneLabel size="xs" muted animate={false}>INTÉRÊT</SceneLabel>
-              </div>
-            </div>
           </motion.div>
         )}
 

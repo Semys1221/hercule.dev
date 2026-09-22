@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { CardContent, CardHeader } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { SceneLabel } from "../shared/SceneLabel";
 import { StageCardDeck } from "../shared/StageCardDeck";
 import {
   qualificationView,
@@ -83,7 +84,15 @@ function DialogueBubble({
   );
 }
 
-function VerdictStamp({ label }: { label: string }) {
+function VerdictStamp({
+  label,
+  highlights,
+  stamp,
+}: {
+  label: string;
+  highlights: string[];
+  stamp: string | null;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -91,7 +100,20 @@ function VerdictStamp({ label }: { label: string }) {
       transition={{ duration: 0.35, ease: EASE }}
       className="border-t border-zinc-800 pt-3"
     >
-      <p className="text-xs leading-snug tracking-[0.02em] text-zinc-200">{label}</p>
+      <p className="text-xs leading-snug tracking-[0.02em] text-zinc-200">
+        <HighlightedText text={label} highlights={highlights} />
+      </p>
+      {stamp ? (
+        <div className="mt-3 flex items-center gap-3">
+          <span
+            aria-hidden
+            className="flex size-4 shrink-0 items-center justify-center border border-zinc-400 text-[11px] leading-none text-zinc-100"
+          >
+            ✓
+          </span>
+          <span className="text-sm tracking-[0.02em] text-zinc-200">{stamp}</span>
+        </div>
+      ) : null}
     </motion.div>
   );
 }
@@ -108,20 +130,32 @@ function NicheFace({ card, active }: { card: NicheCardView; active: boolean }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <CardHeader className="shrink-0 px-6 pt-0 pb-0">
-        <p className="text-[10px] tracking-[0.2em] text-zinc-500 uppercase">{card.niche}</p>
+      <CardHeader className={cn("shrink-0 px-6 pt-0 pb-0", card.dimmed && "opacity-40")}>
+        <CardTitle className="p-0">
+          <SceneLabel size="lg" animate={false}>
+            {card.niche}
+          </SceneLabel>
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col px-6 pt-4">
         <div ref={scrollerRef} data-qual-scroller className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-          {card.lines.map((line, index) => (
-            <DialogueBubble
-              key={`${card.niche}-${index}`}
-              speaker={line.speaker}
-              text={line.text}
-              highlights={line.highlights}
+          <div className={cn("flex flex-col gap-4", card.dimmed && "opacity-40")}>
+            {card.lines.map((line, index) => (
+              <DialogueBubble
+                key={`${card.niche}-${index}`}
+                speaker={line.speaker}
+                text={line.text}
+                highlights={line.highlights}
+              />
+            ))}
+          </div>
+          {card.verdict ? (
+            <VerdictStamp
+              label={card.verdict}
+              highlights={card.verdictHighlights}
+              stamp={card.stamp}
             />
-          ))}
-          {card.verdict ? <VerdictStamp label={card.verdict} /> : null}
+          ) : null}
         </div>
       </CardContent>
     </div>
@@ -135,6 +169,7 @@ export function QualificationBoard({ step }: { step: number }) {
 
   const items = view.cards.map((card, index) => ({
     id: card.niche,
+    dimmed: card.dimmed,
     node: <NicheFace card={card} active={index === view.activeIndex} />,
   }));
 

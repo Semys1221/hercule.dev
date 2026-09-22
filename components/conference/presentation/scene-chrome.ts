@@ -12,7 +12,6 @@ export const SCENE_TITLES: Record<SceneId, string> = {
   S08_Mechanism: "Ce qui tient les trois",
   S09_R2Reveal: "Des demandes qualifiées à vous",
   S10_JohnDemo: "Le flux qualifié dans l’agenda",
-  S12_OffersTransition: "Les infrastructures Hercule",
   S13_HerculeDEC: "Hercule DEC",
   S14_HerculeCourtage: "Hercule Courtage",
   S15_FAQ: "Questions",

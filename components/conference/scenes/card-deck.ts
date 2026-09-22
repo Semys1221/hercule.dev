@@ -1,4 +1,4 @@
-export type CardSection = "S10" | "S12";
+export type CardSection = "S10";
 
 export type StageCard = {
   id: string;
@@ -10,8 +10,7 @@ export type StageCard = {
 };
 
 export const SECTION_OFFSETS: Record<CardSection, number> = {
-  S10: 0, // 3 cards  (indices 0–2)
-  S12: 3, // 5 cards  (indices 3–7)
+  S10: 0,
 };
 
 export function globalCardIndex(section: CardSection, step: number): number {
@@ -19,15 +18,6 @@ export function globalCardIndex(section: CardSection, step: number): number {
 }
 
 export const STAGE_CARDS: StageCard[] = [
-  // ── S10 — Le temps (3) ────────────────────────────────
-  {
-    id: "s10-minutes",
-    section: "S10",
-    visual: "timeline",
-    kicker: "La question",
-    title: "Quelques minutes",
-    body: "Après la question, il prend rendez-vous.",
-  },
   {
     id: "s10-month",
     section: "S10",
@@ -44,81 +34,215 @@ export const STAGE_CARDS: StageCard[] = [
     title: "25–30",
     body: "Rendez-vous qualifiés.",
   },
-
-  // ── S12 — Infrastructures (5) ─────────────────────────
-  {
-    id: "s12-two",
-    section: "S12",
-    visual: "dual-mark",
-    kicker: "Infrastructures",
-    title: "Deux infrastructures",
-    body: "Disponibles aujourd’hui.",
-  },
-  {
-    id: "s12-markets",
-    section: "S12",
-    visual: "dual-mark",
-    kicker: "Marchés",
-    title: "DEC · Courtage",
-    body: "Deux marchés différents.",
-  },
-  {
-    id: "s12-principle",
-    section: "S12",
-    visual: "text",
-    kicker: "Principe",
-    title: "Identifier, qualifier, amener jusqu’à l’agenda",
-  },
-  {
-    id: "s12-params",
-    section: "S12",
-    visual: "text",
-    kicker: "Paramètres",
-    title: "Calendrier · Zoom Pro · Intégration",
-    body: "Tout est finalisé.",
-  },
-  {
-    id: "s12-ready",
-    section: "S12",
-    visual: "text",
-    kicker: "Déjà en place",
-    title: "Vous ouvrez Zoom",
-    body: "Vous auditez. Vous présentez.",
-  },
 ];
 
-export type OfferLine = {
+export type OfferEdition = "DEC" | "Courtage";
+
+export type OfferPhrase = {
   id: string;
-  theme: string;
+  kicker: string;
   text: string;
+  pills?: string[];
 };
 
-export const DEC_OFFER_LINES: OfferLine[] = [
-  { id: "dec-niche", theme: "Niche", text: "Restaurant" },
-  { id: "dec-problem", theme: "Problème", text: "Le chiffre d’affaires monte. La marge se contracte." },
-  { id: "dec-why", theme: "Pourquoi", text: "Le cabinet actuel ne traite pas ça." },
-  { id: "dec-value", theme: "Apport", text: "Ratio matière, pilotage, coûts, rentabilité." },
-  { id: "dec-budget", theme: "Budget", text: "300 € / mois" },
-  { id: "dec-rdv", theme: "Rendez-vous", text: "10 qualifiés / mois" },
-  { id: "dec-conversion", theme: "Conversion", text: "5 signatures · 50 %" },
-  { id: "dec-roi", theme: "ROI mensuel", text: "1 500 € / mois" },
-  { id: "dec-quarter", theme: "Trimestre", text: "4 500 €" },
-  { id: "dec-year", theme: "12 mois", text: "18 000 € / mois" },
-  { id: "dec-price", theme: "Prix", text: "1 499 € pour 1 mois" },
-  { id: "dec-diff", theme: "Différence", text: "1 499 € une fois. 1 500 € chaque mois ensuite." },
-];
+export type EquationTerm = {
+  id: string;
+  kicker: string;
+  value: string;
+  joiner?: "×" | "→" | "=";
+};
 
-export const COURTAGE_OFFER_LINES: OfferLine[] = [
-  { id: "courtage-niche", theme: "Niche", text: "Médecin" },
-  { id: "courtage-problem", theme: "Problème", text: "Pression fiscale. Les revenus sont là, l’impôt monte." },
-  { id: "courtage-why", theme: "Pourquoi", text: "Retraite, patrimoine, prévoyance, financement : tout est dispersé." },
-  { id: "courtage-value", theme: "Apport", text: "Architecture : PER, Lombard, SCPI, prévoyance." },
-  { id: "courtage-ticket", theme: "Ticket", text: "50 000 €" },
-  { id: "courtage-commission", theme: "Commission", text: "2 500 € · 5 %" },
-  { id: "courtage-rdv", theme: "Rendez-vous", text: "25 profils qualifiés / 3 mois" },
-  { id: "courtage-conversion", theme: "Conversion", text: "13 signatures · 50 %" },
-  { id: "courtage-roi", theme: "ROI 3 mois", text: "32 500 € · 13 × 2 500 €" },
-  { id: "courtage-price", theme: "Prix", text: "3 900 € pour 3 mois" },
-  { id: "courtage-diff", theme: "Différence", text: "32 500 € de commissions. 3 900 € une fois." },
-  { id: "courtage-retract", theme: "Rétractation", text: "4 jours" },
-];
+export type MrrColumn = {
+  id: string;
+  label: string;
+  amount: string;
+  caption: string;
+  weight: number;
+};
+
+export type StairStep = {
+  id: string;
+  label: string;
+  amount: string;
+  weight: number;
+};
+
+export type OfferStory = {
+  edition: OfferEdition;
+  title: string;
+  niche: string;
+  scoreReturn: string;
+  scorePrice: string;
+  caseBeats: OfferPhrase[];
+  equation: EquationTerm[];
+  curve:
+    | { kind: "mrr"; columns: MrrColumn[] }
+    | {
+        kind: "commission";
+        formula: string;
+        from: number;
+        to: number;
+        result: string;
+        caption: string;
+      };
+  contrast: {
+    kind: "stair";
+    steps: StairStep[];
+    priceLabel: string;
+    priceAmount: string;
+  } | {
+    kind: "bars";
+    gain: { label: string; amount: string; weight: number };
+    price: { label: string; amount: string; weight: number };
+  };
+};
+
+export const DEC_OFFER: OfferStory = {
+  edition: "DEC",
+  title: "DEC",
+  niche: "Restaurant",
+  scoreReturn: "18 000 € de MRR",
+  scorePrice: "1 499 € / mois",
+  caseBeats: [
+    { id: "dec-niche", kicker: "Niche", text: "Restaurant" },
+    {
+      id: "dec-problem",
+      kicker: "Problème",
+      text: "Le chiffre d’affaires monte. La marge se contracte.",
+    },
+    {
+      id: "dec-why",
+      kicker: "Pourquoi",
+      text: "Le cabinet actuel n’adresse pas cette problématique.",
+    },
+    {
+      id: "dec-value",
+      kicker: "Apport",
+      text: "Ce que vous apportez.",
+      pills: ["Ratio matière", "Pilotage des coûts", "Rentabilité"],
+    },
+  ],
+  equation: [
+    { id: "dec-budget", kicker: "Budget", value: "300 € / mois", joiner: "×" },
+    {
+      id: "dec-rdv",
+      kicker: "Rendez-vous",
+      value: "10 profils",
+      joiner: "→",
+    },
+    {
+      id: "dec-conversion",
+      kicker: "Conversion",
+      value: "5 signatures · 50 %",
+      joiner: "=",
+    },
+    { id: "dec-roi", kicker: "ROI mensuel", value: "1 500 € / mois" },
+  ],
+  curve: {
+    kind: "mrr",
+    columns: [
+      {
+        id: "dec-month",
+        label: "Mois",
+        amount: "1 500 €",
+        caption: "MRR",
+        weight: 1,
+      },
+      {
+        id: "dec-quarter",
+        label: "Trimestre",
+        amount: "4 500 €",
+        caption: "MRR",
+        weight: 3,
+      },
+      {
+        id: "dec-year",
+        label: "12e mois",
+        amount: "18 000 €",
+        caption: "MRR",
+        weight: 12,
+      },
+    ],
+  },
+  contrast: {
+    kind: "stair",
+    steps: [
+      { id: "m1", label: "Mois 1", amount: "1 500 €", weight: 1 },
+      { id: "m2", label: "Mois 2", amount: "3 000 €", weight: 2 },
+      { id: "m3", label: "Mois 3", amount: "4 500 €", weight: 3 },
+    ],
+    priceLabel: "Prix",
+    priceAmount: "1 499 € / mois",
+  },
+};
+
+export const COURTAGE_OFFER: OfferStory = {
+  edition: "Courtage",
+  title: "Courtage",
+  niche: "Médecin",
+  scoreReturn: "32 500 €",
+  scorePrice: "3 900 € / 3 mois",
+  caseBeats: [
+    { id: "courtage-niche", kicker: "Niche", text: "Médecin" },
+    {
+      id: "courtage-problem",
+      kicker: "Problème",
+      text: "Les revenus sont là. L’impôt monte.",
+    },
+    {
+      id: "courtage-why",
+      kicker: "Pourquoi",
+      text: "Retraite, patrimoine, prévoyance et financement dispersés.",
+    },
+    {
+      id: "courtage-value",
+      kicker: "Apport",
+      text: "Architecture patrimoniale.",
+      pills: ["PER", "Lombard", "SCPI", "Prévoyance"],
+    },
+  ],
+  equation: [
+    { id: "courtage-ticket", kicker: "Ticket", value: "50 000 €", joiner: "×" },
+    {
+      id: "courtage-commission",
+      kicker: "Commission",
+      value: "2 500 € · 5 %",
+      joiner: "→",
+    },
+    {
+      id: "courtage-rdv",
+      kicker: "Rendez-vous",
+      value: "25 profils / 3 mois",
+      joiner: "→",
+    },
+    {
+      id: "courtage-conversion",
+      kicker: "Conversion",
+      value: "13 signatures · 50 %",
+    },
+  ],
+  curve: {
+    kind: "commission",
+    formula: "13 × 2 500 €",
+    from: 0,
+    to: 32500,
+    result: "32 500 €",
+    caption: "Commissions sur 3 mois",
+  },
+  contrast: {
+    kind: "bars",
+    gain: {
+      label: "Commissions · 3 mois",
+      amount: "32 500 €",
+      weight: 325,
+    },
+    price: {
+      label: "Prix · une fois",
+      amount: "3 900 € / 3 mois",
+      weight: 39,
+    },
+  },
+};
+
+export const DEC_STEP_COUNT = 12;
+export const COURTAGE_STEP_COUNT = 11;
