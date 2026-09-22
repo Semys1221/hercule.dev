@@ -10,8 +10,6 @@ import {
   conferenceOfferLabel,
   CONFERENCE_CLIENT_TYPES,
 } from "@/lib/commercial/conference-pricing";
-import { retractionStatusLabel } from "@/lib/legacy/retraction/labels";
-
 type TrackingDossierProps = {
   data: ClientDashboardData;
   onRefresh?: () => void;
@@ -20,7 +18,7 @@ type TrackingDossierProps = {
 function calendlyLabel(seat: ClientCalendlySeat | null): string {
   if (!seat) return "Invitation en préparation";
   if (seat.invitationStatus === "accepted" || seat.status === "active") {
-    return "Agenda connecté";
+    return "Connecté";
   }
   if (seat.invitationStatus === "pending" || seat.status === "invite_pending") {
     return "Invitation envoyée";
@@ -64,17 +62,19 @@ export function TrackingDossier({ data, onRefresh }: TrackingDossierProps) {
               {data.rdvUsed} / {data.rdvTotal}
             </dd>
           </div>
-          <div className="flex items-baseline justify-between gap-3">
-            <dt className="text-muted-foreground">Rétractation</dt>
-            <dd>{data.retraction ? retractionStatusLabel(data.retraction.status) : "—"}</dd>
-          </div>
           <div className="flex items-center justify-between gap-3">
             <dt className="text-muted-foreground">Calendrier</dt>
             <dd>
-              <Badge variant={connected ? "default" : "secondary"}>
-                {calendlyLabel(data.calendlySeat)}
-              </Badge>
+              {connected ? (
+                <span className="font-medium">Connecté</span>
+              ) : (
+                <Badge variant="secondary">{calendlyLabel(data.calendlySeat)}</Badge>
+              )}
             </dd>
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <dt className="text-muted-foreground">Visioconférence</dt>
+            <dd className="text-right font-medium">Microsoft Teams</dd>
           </div>
         </dl>
         {data.billingPortal.available ? (

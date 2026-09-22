@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 
 import { ConferencePricingCards } from "@/components/conference/conference-pricing-cards";
-import { ConferenceSaleTimer } from "@/components/conference/conference-sale-timer";
 import { useConferenceSaleWindow } from "@/components/conference/use-conference-sale-window";
 import type { SceneProps } from "../presentation/types";
 import { SceneShell } from "../shared/SceneShell";
@@ -25,8 +24,6 @@ export function S18_StaticOffers({ step }: SceneProps) {
         >
           Les décisions qui façonne l&apos;avenir sont prise aujourd&apos;hui
         </motion.p>
-
-        <ConferenceSaleTimer running />
 
         <motion.div
           initial={{ opacity: 0, y: 18 }}
