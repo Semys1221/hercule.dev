@@ -32,8 +32,10 @@ export function parseClientVideoConference(
   return isClientVideoConference(raw) ? raw : null;
 }
 
+export const UNSET_VIDEO_CONFERENCE_LABEL = "Microsoft Teams — non défini";
+
 export function videoConferenceLabel(value: ClientVideoConference | null | undefined): string {
-  if (!value) return "En attente";
+  if (!value) return UNSET_VIDEO_CONFERENCE_LABEL;
   return VIDEO_CONFERENCE_LABELS[value];
 }
 

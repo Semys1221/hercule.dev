@@ -74,6 +74,7 @@ const testClient: ClientRow = {
   rdv_used: 0,
   first_lead_at: new Date().toISOString(),
   calendly_scheduling_url: null,
+  calendly_event_type_uri: null,
   stripe_customer_id: null,
   stripe_subscription_id: null,
   product_statut: "ONBOARDED",

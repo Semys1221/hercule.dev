@@ -14,6 +14,7 @@ import { findCalendlySeatOnboardingByClientId } from "@/lib/(resend)/calendly-se
 import { listClientAppointments, toPublicAppointment } from "./appointments/store";
 import { CLIENT_ACCOUNT_MANAGER } from "./account-manager";
 import type { ClientDashboardData, ClientMode, ClientRow } from "./types";
+import { isCalendarConnected } from "./dashboard-connections";
 import { parseClientVideoConference } from "./video-conference";
 
 function retractionCategoryForClient(
@@ -153,6 +154,7 @@ export async function loadClientDashboard(
           invitationStatus: calendlySeatRow.calendly_invitation_status,
         }
       : null,
+    calendarConnected: isCalendarConnected(row.profile),
     appointments,
     billingPortal: { available: billingPortalAvailable },
     faq,

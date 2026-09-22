@@ -35,6 +35,7 @@ import {
 } from "@/lib/clients/round-robin";
 
 import { EnginCalendlyDialog } from "./engin-calendly-dialog";
+import { EnginConnectionsDialog } from "./engin-connections-dialog";
 import { EnginCreditsDialog } from "./engin-credits-dialog";
 import { EnginOnboardingSheet } from "./engin-onboarding-sheet";
 
@@ -66,6 +67,7 @@ type RowActionsProps = {
   onAdjustCredits: (row: EnginClientRow, field: CreditField) => void;
   onViewOnboarding: (row: EnginClientRow) => void;
   onEditCalendly: (row: EnginClientRow) => void;
+  onEditConnections: (row: EnginClientRow) => void;
 };
 
 function RowActions({
@@ -73,6 +75,7 @@ function RowActions({
   onAdjustCredits,
   onViewOnboarding,
   onEditCalendly,
+  onEditConnections,
 }: RowActionsProps) {
   return (
     <DropdownMenu>
@@ -89,6 +92,9 @@ function RowActions({
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onAdjustCredits(row, "rdv_total")}>
           Ajuster quota RDV
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onEditConnections(row)}>
+          Connexions dashboard
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onEditCalendly(row)}>
           URL Calendly
@@ -116,6 +122,7 @@ function buildColumns(handlers: {
   onAdjustCredits: (row: EnginClientRow, field: CreditField) => void;
   onViewOnboarding: (row: EnginClientRow) => void;
   onEditCalendly: (row: EnginClientRow) => void;
+  onEditConnections: (row: EnginClientRow) => void;
 }): ColumnDef<EnginClientRow>[] {
   return [
     {
@@ -228,6 +235,7 @@ function buildColumns(handlers: {
           onAdjustCredits={handlers.onAdjustCredits}
           onViewOnboarding={handlers.onViewOnboarding}
           onEditCalendly={handlers.onEditCalendly}
+          onEditConnections={handlers.onEditConnections}
         />
       ),
     },
@@ -249,6 +257,9 @@ export function EnginClientsTable() {
     null,
   );
   const [calendlyTarget, setCalendlyTarget] = React.useState<EnginClientRow | null>(
+    null,
+  );
+  const [connectionsTarget, setConnectionsTarget] = React.useState<EnginClientRow | null>(
     null,
   );
 
@@ -321,6 +332,7 @@ export function EnginClientsTable() {
         onAdjustCredits: (client, field) => setCreditsTarget({ client, field }),
         onViewOnboarding: (client) => setOnboardingTarget(client),
         onEditCalendly: (client) => setCalendlyTarget(client),
+        onEditConnections: (client) => setConnectionsTarget(client),
       }),
     [],
   );
@@ -373,6 +385,17 @@ export function EnginClientsTable() {
         open={Boolean(creditsTarget)}
         onOpenChange={(open) => {
           if (!open) setCreditsTarget(null);
+        }}
+        onUpdated={(client) => {
+          setRows((prev) => mergeClient(prev, client));
+        }}
+      />
+
+      <EnginConnectionsDialog
+        client={connectionsTarget}
+        open={Boolean(connectionsTarget)}
+        onOpenChange={(open) => {
+          if (!open) setConnectionsTarget(null);
         }}
         onUpdated={(client) => {
           setRows((prev) => mergeClient(prev, client));

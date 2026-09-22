@@ -29,6 +29,7 @@ const baseClient: ClientRow = {
   rdv_used: 0,
   first_lead_at: "2026-01-01T00:00:00.000Z",
   calendly_scheduling_url: null,
+  calendly_event_type_uri: null,
   stripe_customer_id: null,
   stripe_subscription_id: null,
   product_statut: "ONBOARDED",
@@ -50,7 +51,7 @@ assert.equal(isClientVideoConference("skype"), false);
 assert.equal(parseClientVideoConference({ video_conference: "google_meet_pro" }), "google_meet_pro");
 assert.equal(parseClientVideoConference({ video_conference: "invalid" }), null);
 assert.equal(parseClientVideoConference(null), null);
-assert.equal(videoConferenceLabel(null), "En attente");
+assert.equal(videoConferenceLabel(null), "Microsoft Teams — non défini");
 
 assert.match(
   videoConferenceOpsAction("zoom_pro"),

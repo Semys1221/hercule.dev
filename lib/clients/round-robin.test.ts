@@ -31,6 +31,7 @@ function client(partial: Partial<ClientRow> = {}): ClientRow {
     rdv_used: 0,
     first_lead_at: "2020-01-01T00:00:00.000Z",
     calendly_scheduling_url: "https://calendly.com/cabinet-a/30min",
+    calendly_event_type_uri: null,
     stripe_customer_id: null,
     stripe_subscription_id: null,
     product_statut: "IN_DELIVERANCE",

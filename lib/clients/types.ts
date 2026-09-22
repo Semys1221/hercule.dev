@@ -27,6 +27,7 @@ export type ClientRow = {
   rdv_used: number;
   first_lead_at: string;
   calendly_scheduling_url: string | null;
+  calendly_event_type_uri: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   product_statut: string;
@@ -67,6 +68,7 @@ export type ClientDashboardData = {
   timeline: TimelineStep[];
   retraction: DashboardRetraction | null;
   calendlySeat: ClientCalendlySeat | null;
+  calendarConnected: boolean;
   appointments: ClientAppointmentPublic[];
   billingPortal: { available: boolean };
   faq: ClientFaqItem[];

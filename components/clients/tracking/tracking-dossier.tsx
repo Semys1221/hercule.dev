@@ -4,7 +4,7 @@ import { ClientAppointmentsCard } from "@/components/clients/client-appointments
 import { ClientRenewalInfoDialog } from "@/components/clients/client-renewal-info-dialog";
 import { ClientRetractionWaiverCard } from "@/components/clients/client-retraction-waiver-card";
 import { ClientBillingPortalButton } from "@/components/clients/client-subscription-card";
-import type { ClientCalendlySeat, ClientDashboardData } from "@/lib/clients/types";
+import type { ClientDashboardData } from "@/lib/clients/types";
 import {
   clientEngagementLabel,
   conferenceOfferLabel,
@@ -16,21 +16,8 @@ type TrackingDossierProps = {
   onRefresh?: () => void;
 };
 
-function calendlyLabel(seat: ClientCalendlySeat | null): string {
-  if (!seat) return "Invitation en préparation";
-  if (seat.invitationStatus === "accepted" || seat.status === "active") {
-    return "Connecté";
-  }
-  if (seat.invitationStatus === "pending" || seat.status === "invite_pending") {
-    return "Invitation envoyée";
-  }
-  if (seat.status === "reminder_sent") return "Rappel envoyé";
-  return "Invitation en cours";
-}
-
 export function TrackingDossier({ data, onRefresh }: TrackingDossierProps) {
-  const connected =
-    data.calendlySeat?.invitationStatus === "accepted" || data.calendlySeat?.status === "active";
+  const connected = data.calendarConnected;
   const formuleLabel = conferenceOfferLabel(data.offerType);
   const engagement = clientEngagementLabel({
     clientType: data.clientType,
@@ -69,7 +56,7 @@ export function TrackingDossier({ data, onRefresh }: TrackingDossierProps) {
               {connected ? (
                 <span className="font-medium">Connecté</span>
               ) : (
-                <Badge variant="secondary">{calendlyLabel(data.calendlySeat)}</Badge>
+                <Badge variant="secondary">Non connecté</Badge>
               )}
             </dd>
           </div>

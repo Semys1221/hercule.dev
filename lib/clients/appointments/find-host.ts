@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createLinkTrackingClient, normalizeEmail } from "@/lib/legacy/link-tracking/supabase";
 
+import { isCalendlyBookingsEnabled } from "../dashboard-connections";
 import type { ClientRow } from "../types";
 
 export async function findClientByEmail(
@@ -52,6 +53,37 @@ export async function findClientByEmail(
     throw new Error(error.message);
   }
   return (data as ClientRow | null) ?? null;
+}
+
+function isMissingClientsColumn(message: string): boolean {
+  return (
+    message.includes("does not exist") ||
+    message.includes("schema cache") ||
+    message.includes("calendly_event_type_uri")
+  );
+}
+
+export async function findClientByLinkedEventType(
+  eventTypeUri: string,
+  client: SupabaseClient = createLinkTrackingClient(),
+): Promise<ClientRow | null> {
+  const uri = eventTypeUri.trim();
+  if (!uri) return null;
+
+  const { data, error } = await client
+    .from("clients")
+    .select("*")
+    .eq("calendly_event_type_uri", uri)
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
+  if (error) {
+    if (isMissingClientsColumn(error.message)) return null;
+    throw new Error(error.message);
+  }
+
+  const rows = (data ?? []) as ClientRow[];
+  return rows.find((row) => isCalendlyBookingsEnabled(row.profile)) ?? null;
 }
 
 export async function findClientHostByEmails(

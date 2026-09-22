@@ -3,7 +3,7 @@ import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 
 import { resolveHostEmailsAndEventType } from "./calendly-event";
 import { incrementClientRdvUsed } from "./credits";
-import { findClientHostByEmails } from "./find-host";
+import { findClientByLinkedEventType, findClientHostByEmails } from "./find-host";
 import {
   eventUriFromScheduled,
   questionsFromPairs,
@@ -21,12 +21,17 @@ export async function tryBookClientDeliveryAppointment(params: {
     scheduled,
     eventUuid: params.invitee.eventUuid,
   });
-  if (hostEmails.length === 0) {
-    return { handled: false };
-  }
 
   const supabase = createLinkTrackingClient();
-  const clientRow = await findClientHostByEmails(hostEmails, supabase);
+  let clientRow = eventTypeUri
+    ? await findClientByLinkedEventType(eventTypeUri, supabase)
+    : null;
+  if (!clientRow) {
+    if (hostEmails.length === 0) {
+      return { handled: false };
+    }
+    clientRow = await findClientHostByEmails(hostEmails, supabase);
+  }
   if (!clientRow) {
     return { handled: false };
   }
