@@ -6,6 +6,7 @@ import type {
 import type { DashboardRetraction } from "@/lib/legacy/retraction";
 import type { TimelineStep } from "@/lib/legacy/dashboard/types";
 import type { ClientAppointmentPublic } from "./appointments/types";
+import type { ClientVideoConference } from "./video-conference";
 
 export type ClientMode =
   | "unavailable"
@@ -73,4 +74,5 @@ export type ClientDashboardData = {
   contactEmail: string;
   dashboardTitle: string;
   dashboardDescription: string;
+  videoConference: ClientVideoConference | null;
 };

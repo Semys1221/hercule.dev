@@ -10,6 +10,7 @@ import {
   conferenceOfferLabel,
   CONFERENCE_CLIENT_TYPES,
 } from "@/lib/commercial/conference-pricing";
+import { videoConferenceLabel } from "@/lib/clients/video-conference";
 type TrackingDossierProps = {
   data: ClientDashboardData;
   onRefresh?: () => void;
@@ -74,7 +75,9 @@ export function TrackingDossier({ data, onRefresh }: TrackingDossierProps) {
           </div>
           <div className="flex items-baseline justify-between gap-3">
             <dt className="text-muted-foreground">Visioconférence</dt>
-            <dd className="text-right font-medium">Microsoft Teams</dd>
+            <dd className="text-right font-medium">
+              {videoConferenceLabel(data.videoConference)}
+            </dd>
           </div>
         </dl>
         {data.billingPortal.available ? (

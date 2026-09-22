@@ -14,6 +14,7 @@ import { findCalendlySeatOnboardingByClientId } from "@/lib/(resend)/calendly-se
 import { listClientAppointments, toPublicAppointment } from "./appointments/store";
 import { CLIENT_ACCOUNT_MANAGER } from "./account-manager";
 import type { ClientDashboardData, ClientMode, ClientRow } from "./types";
+import { parseClientVideoConference } from "./video-conference";
 
 function retractionCategoryForClient(
   clientType: ConferenceClientType,
@@ -159,5 +160,6 @@ export async function loadClientDashboard(
     contactEmail: CLIENT_ACCOUNT_MANAGER.email,
     dashboardTitle: hubrisDashboardTitle(row),
     dashboardDescription: hubrisDashboardDescription(row),
+    videoConference: parseClientVideoConference(row.profile),
   };
 }

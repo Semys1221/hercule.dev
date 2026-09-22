@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { CLIENT_CGV_VERSION } from "@/lib/clients/cgv-onboarding";
+import { CLIENT_VIDEO_CONFERENCE_OPTIONS } from "@/lib/clients/video-conference";
 import { loadClientDashboard } from "@/lib/clients/load-client-dashboard";
 import {
   completeClientOnboarding,
@@ -42,6 +43,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
 const patchSchema = z.object({
   firstName: z.string().min(1).max(120).optional(),
+  videoConference: z.enum(CLIENT_VIDEO_CONFERENCE_OPTIONS).optional(),
   completeOnboarding: z.boolean().optional(),
   cgvVersion: z.string().min(1).max(32).optional(),
   waiveRetraction: z.boolean().optional(),
@@ -101,6 +103,10 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         );
       }
 
+      if (!parsed.data.videoConference) {
+        return NextResponse.json({ error: "videoConference required" }, { status: 400 });
+      }
+
       const { hasSucceededClientPayment } = await import(
         "@/lib/clients/load-client-dashboard"
       );
@@ -113,6 +119,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         client,
         row,
         firstName,
+        videoConference: parsed.data.videoConference,
         cgvVersion,
         waiveRetraction: parsed.data.waiveRetraction,
       });

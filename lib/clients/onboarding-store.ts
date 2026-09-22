@@ -3,11 +3,14 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import type { ClientVideoConference } from "@/lib/clients/video-conference";
+
 export type ClientOnboardingStep = "recap" | "cgv" | "welcome" | "done";
 
 export type ClientOnboardingSlugState = {
   step: ClientOnboardingStep;
   firstNameDraft: string;
+  videoConferenceDraft: ClientVideoConference | null;
   cgvAcceptedAt: string | null;
   welcomeSeenAt: string | null;
 };
@@ -19,6 +22,7 @@ type ClientOnboardingStore = {
   getForSlug: (slug: string) => ClientOnboardingSlugState;
   ensureSlug: (slug: string, firstName?: string | null) => void;
   setFirstNameDraft: (slug: string, value: string) => void;
+  setVideoConferenceDraft: (slug: string, value: ClientVideoConference) => void;
   setStep: (slug: string, step: ClientOnboardingStep) => void;
   markCgvAccepted: (slug: string) => void;
   markWelcomeSeen: (slug: string) => void;
@@ -29,6 +33,7 @@ const STORAGE_NAME = "hercule-client-onboarding";
 const DEFAULT_SLUG_STATE: ClientOnboardingSlugState = {
   step: "recap",
   firstNameDraft: "",
+  videoConferenceDraft: null,
   cgvAcceptedAt: null,
   welcomeSeenAt: null,
 };
@@ -83,6 +88,16 @@ export const useClientOnboardingStore = create<ClientOnboardingStore>()(
             ...state.bySlug,
             [slug]: mergeSlugState(state.bySlug[slug], {
               firstNameDraft: value,
+            }),
+          },
+        }));
+      },
+      setVideoConferenceDraft(slug, value) {
+        set((state) => ({
+          bySlug: {
+            ...state.bySlug,
+            [slug]: mergeSlugState(state.bySlug[slug], {
+              videoConferenceDraft: value,
             }),
           },
         }));

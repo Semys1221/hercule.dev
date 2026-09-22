@@ -4,6 +4,9 @@ import { CONFERENCE_CLIENT_TYPES, type ConferenceClientType } from "@/lib/commer
 import { computeRetractionEndsAt } from "@/lib/legacy/retraction/dates";
 import { syncProfileRetraction } from "@/lib/legacy/retraction/profile-sync";
 
+import { notifyOnboardingVideoConference } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
+
+import type { ClientVideoConference } from "./video-conference";
 import type { ClientRow } from "./types";
 
 function retractionAppliesToClient(clientType: ConferenceClientType): boolean {
@@ -18,6 +21,7 @@ export async function completeClientOnboarding(params: {
   client: SupabaseClient;
   row: ClientRow;
   firstName: string;
+  videoConference: ClientVideoConference;
   cgvVersion: string;
   waiveRetraction?: boolean;
 }): Promise<void> {
@@ -33,6 +37,7 @@ export async function completeClientOnboarding(params: {
   }
   profile.cgv_accepted_version = params.cgvVersion;
   profile.cgv_accepted_at = completedAt;
+  profile.video_conference = params.videoConference;
 
   const patch: Record<string, unknown> = {
     first_name: params.firstName.trim(),
@@ -57,6 +62,19 @@ export async function completeClientOnboarding(params: {
   if (error) {
     throw new Error(error.message);
   }
+
+  const updatedRow: ClientRow = {
+    ...params.row,
+    first_name: params.firstName.trim(),
+    profile,
+    onboarding_completed_at: completedAt,
+    product_statut: "ONBOARDED",
+  };
+
+  await notifyOnboardingVideoConference({
+    client: updatedRow,
+    videoConference: params.videoConference,
+  });
 }
 
 export async function waiveClientRetraction(params: {

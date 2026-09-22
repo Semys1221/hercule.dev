@@ -3,16 +3,25 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   conferenceOfferLabel,
   CONFERENCE_CLIENT_TYPES,
 } from "@/lib/commercial/conference-pricing";
 import type { ClientDashboardData } from "@/lib/clients/types";
+import {
+  CLIENT_VIDEO_CONFERENCE_OPTIONS,
+  type ClientVideoConference,
+  videoConferenceDescription,
+  videoConferenceLabel,
+} from "@/lib/clients/video-conference";
 
 type ClientOnboardingRecapProps = {
   data: ClientDashboardData;
   firstName: string;
+  videoConference: ClientVideoConference | null;
   onFirstNameChange: (value: string) => void;
+  onVideoConferenceChange: (value: ClientVideoConference) => void;
   onContinue: () => void;
   paidConfirmed?: boolean;
 };
@@ -37,11 +46,13 @@ function billingLabel(billing: ClientDashboardData["billing"]): string {
 export function ClientOnboardingRecap({
   data,
   firstName,
+  videoConference,
   onFirstNameChange,
+  onVideoConferenceChange,
   onContinue,
   paidConfirmed,
 }: ClientOnboardingRecapProps) {
-  const canContinue = firstName.trim().length > 0;
+  const canContinue = firstName.trim().length > 0 && videoConference !== null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,8 +62,8 @@ export function ClientOnboardingRecap({
           Bienvenue{firstName.trim() ? `, ${firstName.trim()}` : " chez Hercule"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Vérifiez vos paramètres. Ils sont fixés selon votre formule — seule la
-          confirmation du prénom est requise pour continuer.
+          Vérifiez vos paramètres. Indiquez votre prénom et votre outil de
+          visioconférence pour continuer.
         </p>
         {paidConfirmed ? (
           <p className="mt-3 text-sm text-muted-foreground">
@@ -117,6 +128,44 @@ export function ClientOnboardingRecap({
               disabled
             />
           </div>
+        </div>
+
+        <div className="space-y-3">
+          <Label>Visioconférence</Label>
+          <RadioGroup
+            value={videoConference ?? undefined}
+            onValueChange={(value) =>
+              onVideoConferenceChange(value as ClientVideoConference)
+            }
+            className="gap-3"
+          >
+            {CLIENT_VIDEO_CONFERENCE_OPTIONS.map((option) => {
+              const inputId = `onboarding-visio-${option}`;
+              return (
+                <div key={option} className="flex items-start gap-3">
+                  <RadioGroupItem
+                    value={option}
+                    id={inputId}
+                    className="mt-0.5"
+                  />
+                  <div className="space-y-0.5">
+                    <Label htmlFor={inputId} className="font-medium">
+                      {videoConferenceLabel(option)}
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {videoConferenceDescription(option)}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </RadioGroup>
+          {videoConference === "zoom_pro" ? (
+            <p className="text-xs text-muted-foreground">
+              Votre compte Zoom Pro sera provisionné sous 24 heures à{" "}
+              {data.email}.
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-2">

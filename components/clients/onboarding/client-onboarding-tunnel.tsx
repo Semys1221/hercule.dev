@@ -29,6 +29,9 @@ export function ClientOnboardingTunnel({
   const bySlug = useClientOnboardingStore((s) => s.bySlug);
   const ensureSlug = useClientOnboardingStore((s) => s.ensureSlug);
   const setFirstNameDraft = useClientOnboardingStore((s) => s.setFirstNameDraft);
+  const setVideoConferenceDraft = useClientOnboardingStore(
+    (s) => s.setVideoConferenceDraft,
+  );
   const setStep = useClientOnboardingStore((s) => s.setStep);
   const markCgvAccepted = useClientOnboardingStore((s) => s.markCgvAccepted);
 
@@ -46,14 +49,15 @@ export function ClientOnboardingTunnel({
     local.step === "recap" || local.step === "cgv" ? local.step : "cgv";
 
   const handleContinue = useCallback(() => {
-    if (!local.firstNameDraft.trim()) return;
+    if (!local.firstNameDraft.trim() || !local.videoConferenceDraft) return;
     setStep(slug, "cgv");
-  }, [local.firstNameDraft, setStep, slug]);
+  }, [local.firstNameDraft, local.videoConferenceDraft, setStep, slug]);
 
   const handleAccept = useCallback(async () => {
     const firstName = local.firstNameDraft.trim();
-    if (!firstName) {
-      setError("Indiquez votre prénom pour continuer.");
+    const videoConference = local.videoConferenceDraft;
+    if (!firstName || !videoConference) {
+      setError("Indiquez votre prénom et votre outil de visioconférence pour continuer.");
       setStep(slug, "recap");
       return;
     }
@@ -67,6 +71,7 @@ export function ClientOnboardingTunnel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           firstName,
+          videoConference,
           completeOnboarding: true,
           cgvVersion: CLIENT_CGV_VERSION,
         }),
@@ -82,7 +87,14 @@ export function ClientOnboardingTunnel({
     } finally {
       setSaving(false);
     }
-  }, [local.firstNameDraft, markCgvAccepted, onCompleted, setStep, slug]);
+  }, [
+    local.firstNameDraft,
+    local.videoConferenceDraft,
+    markCgvAccepted,
+    onCompleted,
+    setStep,
+    slug,
+  ]);
 
   if (!hydrated) {
     return (
@@ -100,7 +112,9 @@ export function ClientOnboardingTunnel({
           <ClientOnboardingRecap
             data={data}
             firstName={local.firstNameDraft}
+            videoConference={local.videoConferenceDraft}
             onFirstNameChange={(value) => setFirstNameDraft(slug, value)}
+            onVideoConferenceChange={(value) => setVideoConferenceDraft(slug, value)}
             onContinue={handleContinue}
             paidConfirmed={paidConfirmed}
           />
