@@ -80,7 +80,7 @@ export function ConferencePaymentCheckout({
           fetchClientSecret={fetchClientSecret}
         />
       ) : null}
-      <p className="text-center text-[11px] text-zinc-600">Powered by Stripe</p>
+      <p className="text-center text-[11px] text-zinc-600">Paiement sécurisé</p>
     </div>
   );
 }

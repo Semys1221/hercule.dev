@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { HerculeLogo } from "../shared/HerculeLogo";
 import { RubiksCube }  from "../shared/RubiksCube";
 import { SceneShell }  from "../shared/SceneShell";
 
@@ -12,7 +11,7 @@ import { SceneShell }  from "../shared/SceneShell";
  * 0 – ZOOM / CHAT / PRIX disparaissent (beat 123)
  * 1 – Places limitées (beat 124)
  * 2 – LES DÉCISIONS DE DEMAIN SE PRENNENT MAINTENANT. (beat 125)
- * 3 – Logo Hercule + cube discret (beat 126)
+ * 3 – Cube discret (beat 126)
  */
 export function S17_Close({ step }: SceneProps) {
   return (
@@ -23,7 +22,7 @@ export function S17_Close({ step }: SceneProps) {
           <motion.div key="s17-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-4"
           >
-            {["ZOOM", "CHAT", "PRIX"].map((label, i) => (
+            {["Présentation", "Questions", "Tarifs"].map((label, i) => (
               <motion.p key={label}
                 initial={{ opacity: 1 }}
                 animate={{ opacity: 0 }}
@@ -57,9 +56,9 @@ export function S17_Close({ step }: SceneProps) {
             className="max-w-xl px-8 text-center"
           >
             <p className="text-xl font-light leading-relaxed tracking-[0.12em] text-zinc-200 md:text-2xl">
-              LES DÉCISIONS DE DEMAIN
+              Les décisions qui façonne l&apos;avenir
               <br />
-              SE PRENNENT MAINTENANT.
+              sont prise aujourd&apos;hui
             </p>
           </motion.div>
         )}
@@ -73,9 +72,8 @@ export function S17_Close({ step }: SceneProps) {
               <RubiksCube state="solved" size={200} spin />
             </div>
             <p className="text-base tracking-[0.14em] text-zinc-500">
-              LES DÉCISIONS DE DEMAIN SE PRENNENT MAINTENANT.
+              Les décisions qui façonne l&apos;avenir sont prise aujourd&apos;hui
             </p>
-            <HerculeLogo size="xl" showName />
           </motion.div>
         )}
 

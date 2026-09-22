@@ -378,7 +378,7 @@ Pas d'enum dédié pré-vente aujourd'hui.
 
 ### A. Moteur universel (EXISTANT)
 
-`lib/legacy/booking-communication/` :
+`lib/(resend)/communication/` (shim: `lib/legacy/booking-communication/`) :
 
 Webhook book → `booking_email_jobs` → cron `/api/cron/booking-emails` → Resend.
 

@@ -100,6 +100,11 @@ const nextConfig = {
         destination: "/cvg/constants-commercial",
         permanent: true,
       },
+      {
+        source: "/conference/payment",
+        destination: "/conference/inscription",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {

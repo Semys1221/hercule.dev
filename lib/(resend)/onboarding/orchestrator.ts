@@ -1,12 +1,12 @@
-import { cancelPendingJobsForLead } from "@/lib/legacy/booking-communication/jobs";
+import { cancelPendingJobsForLead } from "@/lib/(resend)/communication/jobs";
 import {
   scheduleLeadEmailJobs,
   sendProductEmailNow,
-} from "@/lib/legacy/booking-communication/product-send";
-import type { BookingEmailType } from "@/lib/legacy/booking-communication/types";
+} from "@/lib/(resend)/communication/product-send";
+import type { BookingEmailType } from "@/lib/(resend)/communication/types";
 import { createLinkTrackingClient, findLeadById } from "@/lib/legacy/link-tracking/supabase";
 import { dashboardLinkFor } from "@/lib/legacy/link-tracking/urls";
-import { estimatedFirstBookingDateFromLead } from "@/lib/legacy/booking-communication/product-vars";
+import { estimatedFirstBookingDateFromLead } from "@/lib/(resend)/communication/product-vars";
 
 import {
   MS_DAY,

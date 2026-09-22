@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "updatedAt": "2026-09-22T12:00:00.000Z",
   "entries": [
     {
       "id": "faq-cp-001",
@@ -18,14 +18,16 @@
     {
       "id": "faq-cp-003",
       "question": "Combien coûte Hercule ?",
-      "answer": "Hercule Mercantile (DEC) : 1 499 €/mois — engagement trimestriel (3 mois), 10 rendez-vous qualifiés / mois, restaurants indépendants +3 salariés, visioconférence nationale, 0 % de commission. Aucune garantie de signature ni de MRR — obligation de moyens sur les crédits.",
+      "answer": "Hercule Mercantile (DEC) : 1 499 € pour 1 mois — 10 rendez-vous qualifiés garantis, 30 jours pour tester le dispositif, restaurants indépendants +3 salariés, visioconférence nationale, 0 % de commission. Si les 10 RDV ne sont pas générés pendant l'abonnement : +30 jours de prospection sans frais. Aucune garantie de signature ni de MRR — obligation de moyens sur les crédits.",
       "cvgLink": true
     },
     {
       "id": "faq-cp-004",
-      "question": "Comment se passe la mise en relation ?",
-      "answer": "Après souscription et onboarding, Calendly Pro et Zoom Pro sont provisionnés. Les rendez-vous sont planifiés dans votre agenda. Le warm-up technique est géré après paiement — pas affiché sur la slide prix.",
-      "cvgLink": true
+      "question": "Comment sont consommés mes crédits rendez-vous ?",
+      "answer": "Chaque rendez-vous planifié dans votre agenda consomme 1 crédit (compteur sur votre dashboard). Attribution exclusive, visioconférence nationale, 0 % de commission sur vos honoraires. Détail : [Conditions générales de vente](/cvg/comptable).",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 1
     },
     {
       "id": "faq-cp-005",
@@ -40,9 +42,11 @@
     },
     {
       "id": "faq-cp-007",
-      "question": "Mon prospect ne s'est pas présenté (no-show)",
-      "answer": "L'attribution n'est pas consommée. Un rendez-vous de remplacement est planifié sous 14 jours ouvrés.",
-      "cvgLink": true
+      "question": "Mon prospect ne s'est pas présenté (no-show) — que se passe-t-il ?",
+      "answer": "Signalez le no-show depuis votre dashboard sous 48 h. Le crédit est recrédité. Un remplacement est planifié sous 14 jours ouvrés. Un RDV est honoré si le dirigeant est présent au moins 15 minutes en visioconférence.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 3
     },
     {
       "id": "faq-cp-008",
@@ -51,15 +55,19 @@
     },
     {
       "id": "faq-cp-009",
-      "question": "Que se passe-t-il si je n'ai pas le compte de rendez-vous prévu ?",
-      "answer": "Vous disposez d'un délai de grâce de 7 jours en cas de retard de livraison. Au-delà, écrivez à contact@hercule.dev avant toute dispute Stripe.",
-      "cvgLink": true
+      "question": "Que se passe-t-il si je n'atteins pas les 10 rendez-vous garantis ?",
+      "answer": "Hercule s'engage sur une obligation de moyens (volume de crédits + qualification). Aucune garantie de signature ni de MRR. Si les 10 rendez-vous qualifiés ne sont pas générés pendant votre mois, Hercule poursuit la prospection 30 jours supplémentaires sans frais. En cas de retard de livraison, vous disposez de 7 jours de grâce — écrivez à contact@hercule.dev avant toute dispute Stripe.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 6
     },
     {
       "id": "faq-cp-010",
       "question": "Ai-je un délai de rétractation ?",
-      "answer": "Oui. 4 jours calendaires après souscription tant que l'activation n'a pas démarré. Renonciation possible à l'onboarding ou depuis le dashboard.",
-      "cvgLink": true
+      "answer": "Oui. 4 jours calendaires après souscription tant que l'activation n'a pas démarré. Vous pouvez renoncer à ce délai depuis votre dashboard pour lancer la recherche immédiatement. Passé ce délai ou après activation, la commande est ferme. Détail : [CGV §5](/cvg/comptable).",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 7
     },
     {
       "id": "faq-cp-011",
@@ -70,7 +78,7 @@
     {
       "id": "faq-cp-012",
       "question": "Les mensualités sont trop élevées — pouvez-vous expliquer ?",
-      "answer": "Hercule Mercantile (1 499 €/mois, engagement 3 mois) livre 10 rendez-vous qualifiés / mois sur des restaurants déjà prédisposés à acheter une stack à 490 €/mois. 0 % de commission. Détail : hercule.dev/cvg#dec.",
+      "answer": "Hercule Mercantile (1 499 € pour 1 mois) livre 10 rendez-vous qualifiés garantis sur des restaurants déjà prédisposés. Vous disposez de 30 jours pour tester le dispositif ; si l'objectif n'est pas atteint, Hercule poursuit la prospection 30 jours supplémentaires sans frais. 0 % de commission. Détail : hercule.dev/cvg#dec.",
       "cvgLink": true
     },
     {
@@ -129,9 +137,11 @@
     },
     {
       "id": "faq-cp-022",
-      "question": "Comment se déroule le premier rendez-vous ?",
-      "answer": "Visioconférence planifiée entre le dirigeant et le cabinet, sous 20 à 25 jours après activation. Hercule n'est pas présent à cet échange.",
-      "cvgLink": true
+      "question": "Combien de temps avant mon premier rendez-vous ?",
+      "answer": "Le premier rendez-vous est planifié entre 15 et 25 jours après votre activation (warm-up technique post-paiement). Il apparaît dans la carte Rendez-vous et dans la chronologie de votre dashboard. Hercule n'est pas présent à l'échange.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 2
     },
     {
       "id": "faq-cp-023",
@@ -156,6 +166,22 @@
       "question": "Quel statut est exigé ?",
       "answer": "Cabinet d'expertise comptable en règle. Pas d'exigence de statut CIF ni d'immatriculation ORIAS pour cette verticale.",
       "cvgLink": true
+    },
+    {
+      "id": "faq-cp-027",
+      "question": "Puis-je refuser un rendez-vous ?",
+      "answer": "Oui, depuis la carte Rendez-vous de votre dashboard. Le rendez-vous est annulé et le crédit consommé est recrédité.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 4
+    },
+    {
+      "id": "faq-cp-028",
+      "question": "Puis-je replanifier un rendez-vous ?",
+      "answer": "Oui, depuis la carte Rendez-vous. Hercule propose le prochain créneau disponible dans votre agenda Calendly — sans consommer un second crédit.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 5
     }
   ]
 }

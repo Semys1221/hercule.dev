@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "audience": "cif",
-  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "updatedAt": "2026-09-22T12:00:00.000Z",
   "entries": [
     {
       "id": "faq-cif-001",
@@ -23,21 +23,27 @@
     },
     {
       "id": "faq-cif-004",
-      "question": "Comment se passe l'attribution ?",
-      "answer": "Après paiement et onboarding, Calendly Pro et Zoom Pro sont provisionnés. Les crédits sont consommés à la planification du RDV.",
-      "cvgLink": true
+      "question": "Comment sont consommés mes crédits ?",
+      "answer": "Chaque rendez-vous planifié dans votre agenda consomme 1 crédit (compteur sur votre dashboard). Attribution exclusive, visioconférence nationale, 0 % de commission sur vos honoraires et produits. Détail : [Conditions générales de vente](/cvg/conseil-financier).",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 1
     },
     {
       "id": "faq-cif-005",
-      "question": "Y a-t-il une garantie de signature ?",
-      "answer": "Non. Obligation de moyens sur les crédits. Pas de garantie de signature ni de commissions produits.",
-      "cvgLink": true
+      "question": "Que se passe-t-il si le volume de bilans lourds n'est pas atteint ?",
+      "answer": "Hercule s'engage sur une obligation de moyens (volume de crédits + qualification). Aucune garantie de signature ni de commissions produits. Hercule Hubris vise 15 à 20 bilans lourds par trimestre. En cas de retard de livraison, vous disposez de 7 jours de grâce — écrivez à contact@hercule.dev avant toute dispute Stripe.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 6
     },
     {
       "id": "faq-cif-006",
-      "question": "Mon prospect ne s'est pas présenté (no-show)",
-      "answer": "Crédit recrédité. Remplacement sous 14 jours ouvrés.",
-      "cvgLink": true
+      "question": "Mon prospect ne s'est pas présenté (no-show) — que se passe-t-il ?",
+      "answer": "Signalez le no-show depuis votre dashboard sous 48 h. Le crédit est recrédité. Un remplacement est planifié sous 14 jours ouvrés. Un RDV est honoré si le dirigeant est présent au moins 15 minutes en visioconférence.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 3
     },
     {
       "id": "faq-cif-007",
@@ -47,8 +53,10 @@
     {
       "id": "faq-cif-008",
       "question": "Ai-je un délai de rétractation ?",
-      "answer": "4 jours calendaires tant que l'activation n'a pas démarré.",
-      "cvgLink": true
+      "answer": "Oui. 4 jours calendaires après souscription tant que l'activation n'a pas démarré. Vous pouvez renoncer à ce délai depuis votre dashboard pour lancer la recherche immédiatement. Passé ce délai ou après activation, la commande est ferme. Détail : [CGV §5](/cvg/conseil-financier).",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 7
     },
     {
       "id": "faq-cif-009",
@@ -94,9 +102,11 @@
     },
     {
       "id": "faq-cif-016",
-      "question": "Comment se déroule le premier rendez-vous ?",
-      "answer": "Visioconférence planifiée (Calendly et Zoom provisionnés) entre le dirigeant et le cabinet, sous 20 à 25 jours après activation. Hercule n'est pas présent à cet échange.",
-      "cvgLink": true
+      "question": "Combien de temps avant mon premier rendez-vous ?",
+      "answer": "Le premier rendez-vous est planifié entre 15 et 25 jours après votre activation (warm-up technique post-paiement). Il apparaît dans la carte Rendez-vous et dans la chronologie de votre dashboard. Hercule n'est pas présent à l'échange.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 2
     },
     {
       "id": "faq-cif-017",
@@ -120,6 +130,28 @@
       "id": "faq-cif-020",
       "question": "Faut-il être CIF ou ORIAS ?",
       "answer": "Cabinet CIF / CGP en règle. L'immatriculation ORIAS n'est requise que si le cabinet distribue aussi de l'assurance. L'éligibilité opérationnelle se confirme à l'audit de compatibilité.",
+      "cvgLink": true
+    },
+    {
+      "id": "faq-cif-021",
+      "question": "Puis-je refuser un rendez-vous ?",
+      "answer": "Oui, depuis la carte Rendez-vous de votre dashboard. Le rendez-vous est annulé et le crédit consommé est recrédité.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 4
+    },
+    {
+      "id": "faq-cif-022",
+      "question": "Puis-je replanifier un rendez-vous ?",
+      "answer": "Oui, depuis la carte Rendez-vous. Hercule propose le prochain créneau disponible dans votre agenda Calendly — sans consommer un second crédit.",
+      "cvgLink": true,
+      "paidClient": true,
+      "paidClientOrder": 5
+    },
+    {
+      "id": "faq-cif-023",
+      "question": "Y a-t-il une garantie de signature ?",
+      "answer": "Non. Obligation de moyens sur les crédits. Pas de garantie de signature ni de commissions produits.",
       "cvgLink": true
     }
   ]

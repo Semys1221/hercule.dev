@@ -109,6 +109,14 @@ html {
   --sidebar-ring: #52525b;
 }
 
+/* Client dashboard — scoped via app/clients/layout.tsx (.clients) */
+.clients {
+  --tracking: oklch(0.78 0.045 240);
+  --tracking-soft: oklch(0.68 0.032 240);
+  --tracking-muted: oklch(0.78 0.045 240 / 14%);
+  --tracking-border: oklch(0.78 0.045 240 / 28%);
+}
+
 /* Conference surface — scoped via app/conference/layout.tsx (.conference) */
 .conference {
   color-scheme: dark;
@@ -208,6 +216,10 @@ html {
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-tracking: var(--tracking);
+  --color-tracking-soft: var(--tracking-soft);
+  --color-tracking-muted: var(--tracking-muted);
+  --color-tracking-border: var(--tracking-border);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

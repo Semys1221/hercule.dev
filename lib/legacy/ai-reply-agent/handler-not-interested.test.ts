@@ -76,6 +76,12 @@ vi.mock("./lead-replies", () => ({
   upsertLeadReply: vi.fn(),
 }));
 
+vi.mock("./client-guard", () => ({
+  isReplyAgentProtectedClient: async () => false,
+  REPLY_AGENT_CLIENT_SKIP_REASON:
+    "Paying client (public.clients) — reply agent disabled",
+}));
+
 const baseConfig = {
   id: "cfg-1",
   campaign_id: "camp-1",

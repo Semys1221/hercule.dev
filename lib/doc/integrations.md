@@ -106,7 +106,7 @@ Pas de webhook no-show fiable.
 |--|--|
 | **Rôle** | Emails transactionnels booking / product / nurture |
 | **Auth** | `RESEND_API_KEY`, from `BOOKING_RESEND_FROM` / `RESEND_FROM` |
-| **Client** | `lib/resend.ts` |
+| **Client** | `lib/(resend)/client.ts` (shim: `lib/resend.ts`) |
 
 ### Flux
 

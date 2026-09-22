@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { Person }       from "../shared/Person";
 import { RubiksCube }   from "../shared/RubiksCube";
 import { SceneLabel }   from "../shared/SceneLabel";
@@ -23,7 +22,6 @@ const ORBIT_WORDS = ["VOLUME", "QUALITÉ", "INTÉRÊT"] as const;
 export function S06_Reframing({ step }: SceneProps) {
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le reframing" beat="2/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 30 */}

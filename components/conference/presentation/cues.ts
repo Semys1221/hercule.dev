@@ -22,13 +22,13 @@ export const CUES: Record<number, Cue> = {
   4:  { label: "Trois marchés",       phrase: "Comptabilité, courtage, assurance…",   next: "Capacité à investir" },
   5:  { label: "Capacité à investir", phrase: "Ce qui les distingue, c'est ça.",      next: "Evan / Hercule.dev" },
   6:  { label: "Evan",                phrase: "Je m'appelle Evan, voilà Hercule.",    next: "Promesse flux" },
-  7:  { label: "Promesse",            phrase: "Voici ce que je vais vous montrer.",   next: "Chapitre BAO" },
+  7:  { label: "Promesse",            phrase: "Voici ce que je vais vous montrer.",   next: "Bouche-à-oreille" },
 
   // ── S02 Bouche-à-oreille ──────────────────────────────────────
-  8:  { label: "BAO — titre",         phrase: "Commençons par le début : le bouche-à-oreille.", next: "Confiance" },
+  8:  { label: "Bouche-à-oreille — titre", phrase: "Commençons par le début : le bouche-à-oreille.", next: "Confiance" },
   9:  { label: "Confiance",           phrase: "Ça fonctionne parce que la confiance se transfère.", next: "Réseau" },
-  10: { label: "Réseau",              phrase: "Et ça crée un réseau organique.",      next: "Clôture BAO" },
-  11: { label: "Clôture BAO",         phrase: "C'est beau. Mais il y a un problème.", next: "Rupture ?" },
+  10: { label: "Réseau",              phrase: "Et ça crée un réseau organique.",      next: "Clôture bouche-à-oreille" },
+  11: { label: "Clôture bouche-à-oreille", phrase: "C'est efficace. Mais il reste des limites.", next: "Rupture ?" },
 
   // ── S03 Problème du BAO ───────────────────────────────────────
   12: { label: "Rupture",             phrase: "(pause)",                              next: "Volume ?" },
@@ -52,7 +52,7 @@ export const CUES: Record<number, Cue> = {
   26: { label: "Qui entre ?",         phrase: "Mais qui appelle ?",                   next: "Filtre saturé" },
   27: { label: "Filtre saturé",       phrase: "Vous êtes votre propre filtre.",       next: "Entonnoir" },
   28: { label: "Entonnoir",           phrase: "Et l'entonnoir est brutal.",           next: "BNC 50k€ ?" },
-  29: { label: "BNC 50k€ ?",          phrase: "Est-ce que le prospect a 50k€ de BNC ?", next: "Reframing" },
+  29: { label: "BNC 50k€ ?",          phrase: "Est-ce que le prospect a 50k€ de BNC ?", next: "Recadrage" },
 
   // ── S06 Reframing ────────────────────────────────────────────
   30: { label: "Découragement",       phrase: "(pause) Aucune de ces approches ne résout le vrai problème.", next: "Orbite des 3 mots" },
@@ -62,7 +62,7 @@ export const CUES: Record<number, Cue> = {
   34: { label: "Trois faces",         phrase: "Les trois sont nécessaires. Simultanément.", next: "Solution 1" },
 
   // ── S07 Trois solutions ──────────────────────────────────────
-  35: { label: "BAO — bilan",         phrase: "Le bouche-à-oreille donne de l'intérêt. Mais pas de volume.", next: "Leads — bilan" },
+  35: { label: "Bouche-à-oreille — bilan", phrase: "Le bouche-à-oreille donne de l'intérêt. Mais pas de volume.", next: "Leads — bilan" },
   36: { label: "Leads — bilan",       phrase: "Les leads donnent du volume et de la qualité. Mais pas d'intérêt.", next: "Ads — bilan" },
   37: { label: "Ads — bilan",         phrase: "Google Ads donne du volume et de l'intérêt. Mais pas de qualité.", next: "Mécanisme" },
 
@@ -86,11 +86,11 @@ export const CUES: Record<number, Cue> = {
   52: { label: "Souhaitez-vous un RDV ?", phrase: "S'ils souhaitent en discuter, ils prennent rendez-vous.", next: "Inversion" },
   53: { label: "Inversion ←",           phrase: "Vous ne cherchez plus votre prospect. Il vient vous chercher.", next: "Rendez-vous ✓" },
   54: { label: "Rendez-vous ✓",         phrase: "Ce qui donne un rendez-vous qualifié.", next: "Révélation complète" },
-  55: { label: "Révélation complète",   phrase: "Voilà le système dans son ensemble.",  next: "Démo John" },
+  55: { label: "Révélation complète",   phrase: "Voilà le système dans son ensemble.",  next: "Cas pratique" },
 
-  // ── S10 Démo John ────────────────────────────────────────────
-  56: { label: "John",                phrase: "Pour le concret, prenons John.",        next: "Objectif de John" },
-  57: { label: "Objectif",            phrase: "John veut des professionnels qualifiés.", next: "Carte France" },
+  // ── S10 Cas pratique ─────────────────────────────────────────
+  56: { label: "Cabinet exemple",     phrase: "Pour le concret, prenons un cabinet.",  next: "Objectif du cabinet" },
+  57: { label: "Objectif",            phrase: "Il souhaite des professionnels qualifiés.", next: "Carte France" },
   58: { label: "France régionale",    phrase: "Il est en Île-de-France.",              next: "Extension nationale" },
   59: { label: "Extension nationale", phrase: "Avec Hercule, toute la France.",        next: "Calendrier vide" },
   60: { label: "Calendrier vide",     phrase: "Au départ, son agenda est vide.",       next: "C'est normal" },
@@ -100,7 +100,7 @@ export const CUES: Record<number, Cue> = {
   64: { label: "Sélection",           phrase: "On filtre. On garde les bons.",         next: "Qualification conservée" },
   65: { label: "Qualification ✓",     phrase: "Ces profils sont maintenant qualifiés.", next: "Problème présenté" },
   66: { label: "Problème présenté",   phrase: "On leur présente leur problème précis.", next: "Compréhension" },
-  67: { label: "Compréhension ✓",     phrase: "Ils reconnaissent le problème.",        next: "Inversion JOHN ← PROS" },
+  67: { label: "Compréhension ✓",     phrase: "Ils reconnaissent le problème.",        next: "Inversion ←" },
   68: { label: "INVERSION ←",         phrase: "Et là… quelque chose change.",          next: "Prise de RDV" },
   69: { label: "Prise de RDV",        phrase: "C'est le prospect qui demande un rendez-vous.", next: "2 RDV / semaine" },
   70: { label: "2 RDV / semaine",     phrase: "Résultat : deux rendez-vous par semaine.", next: "Pas juste 2 RDV" },
@@ -137,12 +137,12 @@ export const CUES: Record<number, Cue> = {
   95: { label: "Votre cabinet",       phrase: "C'est là que vous intervenez.",         next: "Services" },
   96: { label: "Services DEC",        phrase: "Ratio matière, pilotage, coûts, rentabilité.", next: "300 €/mois" },
   97: { label: "300 €/mois",          phrase: "Tarification : 300 euros par mois.",    next: "10 restaurants" },
-  98: { label: "10 restaurants",      phrase: "Hercule vous apporte 10 restaurants qualifiés.", next: "3 signatures" },
-  99: { label: "3 signatures",        phrase: "Objectif : 3 signatures.",              next: "900 € MRR" },
-  100: { label: "900 € MRR",           phrase: "Soit 900 euros de revenus récurrents mensuels.", next: "12 mois" },
-  101: { label: "12 mois / 36 clients", phrase: "Sur 12 mois : 36 clients.",            next: "10 800 € MRR" },
+  98: { label: "10 restaurants",      phrase: "Hercule vous apporte 10 restaurants qualifiés.", next: "3 mandats" },
+  99: { label: "3 mandats",           phrase: "Objectif : 3 mandats.",                 next: "900 € / mois" },
+  100: { label: "900 € / mois",        phrase: "Soit 900 euros de revenus récurrents mensuels.", next: "12 mois" },
+  101: { label: "12 mois / 36 clients", phrase: "Sur 12 mois : 36 clients.",            next: "10 800 € / mois" },
   102: { label: "129 600 € annuel",    phrase: "Ce qui représente 129 600 euros annuels récurrents.", next: "Prix 1 499 €" },
-  103: { label: "Prix 1 499 €/mois",   phrase: "Prix Hercule DEC : 1 499 euros par mois.", next: "Hercule Courtage" },
+  103: { label: "Prix 1 499 € — 1 mois", phrase: "Prix Hercule DEC : 1 499 euros pour 1 mois — 10 rendez-vous qualifiés garantis.", next: "Hercule Courtage" },
 
   // ── S14 Hercule Courtage ─────────────────────────────────────
   104: { label: "Médecin",            phrase: "Deuxième offre : Hercule Courtage. Prenons un médecin.", next: "Profil collectif" },
@@ -153,8 +153,8 @@ export const CUES: Record<number, Cue> = {
   109: { label: "Solutions",          phrase: "PER, Lombard, SCPI, IFC…",              next: "50 000 € ticket" },
   110: { label: "50 000 €",           phrase: "Ticket moyen : 50 000 euros.",           next: "2 500 € commission" },
   111: { label: "2 500 € commission", phrase: "Commission : 5 % soit 2 500 euros.",    next: "25 profils / 3 mois" },
-  112: { label: "25 profils",         phrase: "Hercule vous apporte 25 médecins qualifiés en 3 mois.", next: "9 signatures" },
-  113: { label: "9 signatures",       phrase: "Objectif : 9 signatures.",              next: "450 000 € encours" },
+  112: { label: "25 profils",         phrase: "Hercule vous apporte 25 médecins qualifiés en 3 mois.", next: "9 mandats" },
+  113: { label: "9 mandats",          phrase: "Objectif : 9 mandats.",                   next: "450 000 € encours" },
   114: { label: "450 000 € encours",  phrase: "Soit 450 000 euros d'encours.",          next: "Prix 3 900 € / 3 mois" },
   115: { label: "Prix 3 900 € / 3 mois", phrase: "Prix Hercule Courtage : 3 900 euros pour 3 mois.", next: "Rétractation" },
   116: { label: "Rétractation 4j",    phrase: "Et vous avez 4 jours de rétractation.",  next: "FAQ" },
@@ -164,18 +164,18 @@ export const CUES: Record<number, Cue> = {
   118: { label: "Q : région ?",       phrase: "(répondre : oui, ciblage régional possible)", next: "Q2 : paiement mensuel" },
   119: { label: "Q : paiement mensuel ?", phrase: "(répondre)",                         next: "Q3 : visibilité client" },
   120: { label: "Q : visibilité ?",   phrase: "(répondre : non, vous restez invisible)", next: "Q4 : appels" },
-  121: { label: "Q : appels ?",       phrase: "(répondre : oui, Hercule appelle pour vous)", next: "Urgence" },
+  121: { label: "Q : appels ?",       phrase: "(répondre : oui, Hercule appelle pour vous)", next: "Inscription" },
 
-  // ── S16 Urgence ──────────────────────────────────────────────
-  122: { label: "Lien Stripe",        phrase: "Le lien de paiement est dans le chat.",  next: "Close" },
+  // ── S16 Inscription ────────────────────────────────────────────
+  122: { label: "Lien de paiement",   phrase: "Le lien de paiement est dans le chat.",  next: "Conclusion" },
 
-  // ── S17 Close ────────────────────────────────────────────────
-  123: { label: "ZOOM/CHAT/PRIX disparaît", phrase: "Oubliez tout ça.",               next: "Places limitées" },
-  124: { label: "Places limitées",    phrase: "Il y a 12 places. 9 sont prises.",       next: "Phrase finale" },
-  125: { label: "Phrase finale",      phrase: "(silence) Les décisions de demain se prennent maintenant.", next: "Logo final" },
+  // ── S17 Conclusion ─────────────────────────────────────────────
+  123: { label: "Éléments disparaissent", phrase: "Passons aux modalités concrètes.",   next: "Places limitées" },
+  124: { label: "Places limitées",    phrase: "Les places sont limitées.",              next: "Formulation finale" },
+  125: { label: "Formulation finale", phrase: "(silence) Les décisions qui façonne l'avenir sont prise aujourd'hui", next: "Logo final" },
   126: { label: "Logo final",         phrase: "(silence)",                             next: "Écran offres" },
 
   // ── S18 Offres statiques ─────────────────────────────────────
-  127: { label: "Offres — transition", phrase: "(laisser visible, répondre aux questions)", next: "Countdown 5 min" },
-  128: { label: "Countdown 5:00",     phrase: "Vous avez 5 minutes pour profiter des conditions présentées aujourd'hui.", next: "—" },
+  127: { label: "Offres — transition", phrase: "(laisser visible, répondre aux questions)", next: "Activer le lien" },
+  128: { label: "Inscription ouverte", phrase: "Le lien d'inscription est ouvert.", next: "—" },
 };

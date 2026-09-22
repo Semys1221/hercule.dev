@@ -41,6 +41,16 @@ async function handleInviteeCanceled(payload: unknown) {
     return NextResponse.json({ ok: true, ignored: "parse_failed" });
   }
 
+  const { tryCancelClientDeliveryAppointment } = await import(
+    "@/lib/clients/appointments/cancel-from-webhook"
+  );
+  const clientCancel = await tryCancelClientDeliveryAppointment({
+    inviteeUri: canceled.inviteeUri,
+  });
+  if (clientCancel.handled) {
+    return NextResponse.json({ ok: true, source: "client_appointment" });
+  }
+
   const client = createLinkTrackingClient();
   const lookup = await findLeadByEmail(client, canceled.email);
   if (!lookup) {
@@ -130,6 +140,27 @@ export async function POST(request: Request) {
   const matchId = invitee.utmContent.startsWith("match:")
     ? invitee.utmContent.slice("match:".length).trim()
     : null;
+  const { tryBookClientDeliveryAppointment } = await import(
+    "@/lib/clients/appointments/book"
+  );
+  try {
+    const clientBooking = await tryBookClientDeliveryAppointment({
+      invitee,
+      payload,
+    });
+    if (clientBooking.handled) {
+      return NextResponse.json({
+        ok: true,
+        source: "client_appointment",
+        appointmentId: clientBooking.appointmentId,
+      });
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[link-tracking/calendly] client appointment:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
   if (matchId) {
     try {
       const { handleMatchBooking } = await import("@/lib/legacy/matching/orchestrator");

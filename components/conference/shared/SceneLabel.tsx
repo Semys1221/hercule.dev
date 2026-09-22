@@ -12,7 +12,7 @@ type SceneLabelProps = {
   animate?: boolean;
 };
 
-/** Sizes tuned for 1280×720 design canvas (viewport scale handled by SceneShell). */
+/** Sizes tuned for the stage card (centered by SceneShell). */
 const sizes: Record<NonNullable<SceneLabelProps["size"]>, string> = {
   xs:  "text-sm    tracking-[0.18em]",
   sm:  "text-base  tracking-[0.22em]",

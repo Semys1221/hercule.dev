@@ -58,10 +58,10 @@ export function ClientRetractionWaiverCard({
   }
 
   return (
-    <Card className="mt-6 border-amber-500/30">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Clock className="size-4 text-amber-400" />
+          <Clock className="size-4 text-muted-foreground" />
           Délai de rétractation en cours
         </CardTitle>
         <CardDescription>

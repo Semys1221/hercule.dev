@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { createClientsClient } from "@/lib/clients/supabase";
-import { reportClientNoshow } from "@/lib/clients/workflows/report-noshow";
-import { getBookingFromAddress } from "@/lib/legacy/booking-communication/templates";
+import { reportClientNoshow } from "@/lib/(resend)/clients/workflows/report-noshow";
+import { getBookingFromAddress } from "@/lib/(resend)/communication/templates";
 
 type RouteParams = {
   params: Promise<{ slug: string }>;
@@ -17,14 +17,15 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   try {
     const body = (await request.json().catch(() => ({}))) as {
-      message?: unknown;
+      appointmentId?: unknown;
     };
-    const message = typeof body.message === "string" ? body.message : "";
+    const appointmentId =
+      typeof body.appointmentId === "string" ? body.appointmentId : "";
 
     const result = await reportClientNoshow({
       supabase: createClientsClient(),
       slug: normalizedSlug,
-      message,
+      appointmentId,
     });
 
     return NextResponse.json({
@@ -40,7 +41,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const status =
       message === "Client not found"
         ? 404
-        : message.includes("caractères")
+        : message.includes("required") || message.includes("introuvable")
           ? 400
           : 500;
     console.error("[api/clients/slug/noshow]", message);

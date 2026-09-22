@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { Person, PersonGroup } from "../shared/Person";
 import { RubiksCube }   from "../shared/RubiksCube";
 import { SceneLabel }   from "../shared/SceneLabel";
@@ -22,7 +21,6 @@ import { SceneShell }   from "../shared/SceneShell";
 export function S03_WOMProblem({ step }: SceneProps) {
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le problème" beat="2/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 12 — rupture */}

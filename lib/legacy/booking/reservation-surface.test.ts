@@ -81,6 +81,25 @@ assert.equal(conference.conferenceNiche, "comptable");
 assert.equal(conference.calendlyUrl, CIF_CONFERENCE_CALENDLY_URL);
 assert.equal(conference.theme, "hercule-dark");
 
+const assignedClientUrl = "https://calendly.com/cabinet-dupont/intro";
+const assigned = buildReservationSurfaceFromLookup(
+  lookup("comptable", { client_id: "client-1" }),
+  { calendly_scheduling_url: assignedClientUrl },
+);
+assert.equal(assigned.calendlyUrl, assignedClientUrl);
+assert.equal(
+  calendlyBaseUrlForLookup(lookup("comptable", { client_id: "client-1" }), {
+    calendly_scheduling_url: assignedClientUrl,
+  }),
+  assignedClientUrl,
+);
+assert.equal(
+  calendlyBaseUrlForLookup(lookup("comptable", { client_id: "client-1" }), {
+    calendly_scheduling_url: null,
+  }),
+  CIF_CONFERENCE_CALENDLY_URL,
+);
+
 const jum = buildReservationSurfaceFromLookup(
   lookup("jum", {
     instantly_campaign_id: "e4f11e76-717e-4be9-a6ad-c7f0a331afb7",

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
+import {
+  clientEligibility,
+  plannedShares,
+} from "@/lib/clients/round-robin";
 import { createClientsClient } from "@/lib/clients/supabase";
+import type { EnginClientRow } from "@/lib/clients/engin-types";
 import type { ClientRow } from "@/lib/clients/types";
 
 export async function GET() {
@@ -15,9 +20,15 @@ export async function GET() {
       throw new Error(error.message);
     }
 
-    return NextResponse.json({
-      clients: (data ?? []) as ClientRow[],
-    });
+    const rows = (data ?? []) as ClientRow[];
+    const shares = plannedShares(rows);
+    const clients: EnginClientRow[] = rows.map((row) => ({
+      ...row,
+      rrSharePct: shares.get(row.id)?.sharePct ?? 0,
+      eligibility: clientEligibility(row),
+    }));
+
+    return NextResponse.json({ clients });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to list clients";

@@ -7,12 +7,12 @@ import {
   type ConferenceOfferType,
 } from "@/lib/commercial/conference-pricing";
 import { findClientById } from "@/lib/clients/supabase";
+import { insertCalendlySeatOnboardingForClient } from "@/lib/(resend)/calendly-seat/client-store";
 import {
   notifySubscriptionCancelled,
   notifySubscriptionRenewed,
-} from "@/lib/clients/workflows/subscription-notify";
-import { insertCalendlySeatOnboardingForClient } from "@/lib/legacy/calendly-seat-onboarding/store";
-import { scheduleConferenceEmailSequence } from "@/lib/legacy/conference/post-payment";
+} from "@/lib/(resend)/clients/workflows/subscription-notify";
+import { scheduleConferenceEmailSequence } from "@/lib/(resend)/conference/post-payment";
 import { isConferenceOfferType } from "@/lib/legacy/payments/conference-offers";
 import { getStripeClient } from "@/lib/legacy/payments/stripe";
 
@@ -175,7 +175,7 @@ export async function handleConferenceCheckoutCompleted(
   const opsEmail = process.env.NOTIFICATION_OPS_EMAIL?.trim();
   if (opsEmail && email) {
     try {
-      const { getResendClient } = await import("@/lib/resend");
+      const { getResendClient } = await import("@/lib/(resend)/client");
       const { getBookingFromAddress } = await import(
         "@/lib/legacy/booking-communication/templates"
       );

@@ -1,24 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
 import type { ClientDashboardData } from "@/lib/clients/types";
+import {
+  selectSlugState,
+  useClientOnboardingStore,
+} from "@/lib/clients/onboarding-store";
 import { DashboardUnavailable } from "@/components/legacy/dashboard/dashboard-unavailable";
 import { DashboardBrandHeader, DashboardPageHeader } from "@/components/legacy/dashboard/brand-header";
 
+import { ClientBootScreen } from "./client-boot-screen";
 import { ClientDashboardActive } from "./client-dashboard-active";
-import { ClientOnboardingForm } from "./client-onboarding-form";
+import { ClientOnboardingTunnel } from "./onboarding/client-onboarding-tunnel";
 
 type ClientDashboardShellProps = {
   slug: string;
   paidQuery?: string | null;
   checkoutSessionId?: string | null;
 };
+
+type BootPhase = "loading" | "holding" | "exiting" | "done";
 
 const POST_PAYMENT_MODES = new Set<ClientDashboardData["clientMode"]>([
   "client_onboarding",
@@ -33,28 +39,74 @@ export function ClientDashboardShell({
   const [data, setData] = useState<ClientDashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [revealDashboard, setRevealDashboard] = useState(false);
+  const [bootPhase, setBootPhase] = useState<BootPhase>("loading");
+  const [bootProgress, setBootProgress] = useState(12);
+  const [showWelcomeOnBoot, setShowWelcomeOnBoot] = useState(false);
+  const bootHoldStartedRef = useRef(false);
 
-  const loadClient = useCallback(async (): Promise<ClientDashboardData | null> => {
-    setLoading(true);
-    setError(null);
+  const hydrated = useClientOnboardingStore((s) => s.hydrated);
+  const ensureSlug = useClientOnboardingStore((s) => s.ensureSlug);
+  const markWelcomeSeen = useClientOnboardingStore((s) => s.markWelcomeSeen);
+  const setHydrated = useClientOnboardingStore((s) => s.setHydrated);
 
-    try {
-      const response = await fetch(`/api/clients/${encodeURIComponent(slug)}`);
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body.error || "Impossible de charger le dashboard");
-      }
-      const nextData = body as ClientDashboardData;
-      setData(nextData);
-      return nextData;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur de chargement");
-      setData(null);
-      return null;
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    setRevealDashboard(false);
+    setBootPhase("loading");
+    setBootProgress(12);
+    setShowWelcomeOnBoot(false);
+    bootHoldStartedRef.current = false;
   }, [slug]);
+
+  useEffect(() => {
+    const unsub = useClientOnboardingStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+    if (useClientOnboardingStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+    return unsub;
+  }, [setHydrated]);
+
+  useEffect(() => {
+    if (data?.firstName !== undefined) {
+      ensureSlug(slug, data.firstName);
+    } else {
+      ensureSlug(slug);
+    }
+  }, [slug, data?.firstName, ensureSlug]);
+
+  const loadClient = useCallback(
+    async (opts?: { soft?: boolean }): Promise<ClientDashboardData | null> => {
+      if (!opts?.soft) {
+        setLoading(true);
+        setBootPhase("loading");
+        setBootProgress(12);
+        bootHoldStartedRef.current = false;
+      }
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/clients/${encodeURIComponent(slug)}`);
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body.error || "Impossible de charger le dashboard");
+        }
+        const nextData = body as ClientDashboardData;
+        setData(nextData);
+        return nextData;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erreur de chargement");
+        setData(null);
+        return null;
+      } finally {
+        if (!opts?.soft) {
+          setLoading(false);
+        }
+      }
+    },
+    [slug],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -103,80 +155,123 @@ export function ClientDashboardShell({
     };
   }, [loadClient, paidQuery, checkoutSessionId]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner className="size-6" />
-      </div>
-    );
+  useEffect(() => {
+    if (bootPhase !== "loading" || !loading || !hydrated) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setBootProgress((current) => Math.min(80, current + 1.2));
+    }, 40);
+
+    return () => window.clearInterval(intervalId);
+  }, [bootPhase, loading, hydrated]);
+
+  const dataReady = !loading && hydrated && Boolean(data) && !error;
+
+  useEffect(() => {
+    if (!dataReady || bootHoldStartedRef.current) {
+      return;
+    }
+
+    bootHoldStartedRef.current = true;
+    setBootProgress(100);
+
+    const local = selectSlugState(useClientOnboardingStore.getState().bySlug, slug);
+    const isFirstActiveVisit =
+      data?.clientMode === "client_active" && !local.welcomeSeenAt && !revealDashboard;
+
+    setShowWelcomeOnBoot(isFirstActiveVisit);
+    setBootPhase("holding");
+
+    const holdMs = isFirstActiveVisit ? 1200 : 200;
+    const holdTimer = window.setTimeout(() => {
+      if (isFirstActiveVisit) {
+        markWelcomeSeen(slug);
+        setRevealDashboard(true);
+      }
+      setBootPhase("exiting");
+    }, holdMs);
+
+    return () => window.clearTimeout(holdTimer);
+  }, [dataReady, data?.clientMode, slug, revealDashboard, markWelcomeSeen]);
+
+  useEffect(() => {
+    if (!loading && hydrated && error) {
+      setBootPhase("done");
+    }
+  }, [loading, hydrated, error]);
+
+  const showBootOverlay = bootPhase !== "done";
+
+  function renderContent() {
+    if (error || !data) {
+      return (
+        <div className="mx-auto max-w-3xl px-6 py-12">
+          <Alert variant="destructive">
+            <AlertDescription>{error || "Espace client introuvable"}</AlertDescription>
+          </Alert>
+        </div>
+      );
+    }
+
+    if (data.clientMode === "unavailable") {
+      return <DashboardUnavailable />;
+    }
+
+    if (data.clientMode === "client_pending") {
+      return (
+        <div className="min-h-screen bg-background text-foreground">
+          <DashboardBrandHeader />
+          <main className="mx-auto max-w-2xl px-6 py-12">
+            <DashboardPageHeader
+              eyebrow={data.dashboardTitle}
+              title="Finalisez votre paiement"
+              subtitle="Votre espace client sera disponible dès confirmation du paiement."
+            />
+            <Card className="mt-8">
+              <CardHeader>
+                <CardTitle className="text-base">Paiement requis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button asChild>
+                  <Link href="/conference/inscription">Accéder à la page de paiement</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
+      );
+    }
+
+    if (data.clientMode === "client_onboarding") {
+      return (
+        <ClientOnboardingTunnel
+          data={data}
+          paidConfirmed={paidQuery === "1"}
+          onCompleted={() => void loadClient({ soft: true })}
+        />
+      );
+    }
+
+    if (bootPhase !== "done") {
+      return null;
+    }
+
+    return <ClientDashboardActive data={data} onRefresh={() => void loadClient()} />;
   }
 
-  if (error || !data) {
-    return (
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <Alert variant="destructive">
-          <AlertDescription>{error || "Espace client introuvable"}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  if (data.clientMode === "unavailable") {
-    return <DashboardUnavailable />;
-  }
-
-  if (data.clientMode === "client_pending") {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <DashboardBrandHeader />
-        <main className="mx-auto max-w-2xl px-6 py-12">
-          <DashboardPageHeader
-            eyebrow={data.dashboardTitle}
-            title="Finalisez votre paiement"
-            subtitle="Votre espace client sera disponible dès confirmation du paiement."
-          />
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="text-base">Paiement requis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Button asChild>
-                <Link href="/conference/payment">Accéder à la page paiement</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    );
-  }
-
-  if (data.clientMode === "client_onboarding") {
-    return (
-      <div className="min-h-screen bg-background text-foreground">
-        <DashboardBrandHeader />
-        <main className="mx-auto max-w-2xl px-6 py-12">
-          <DashboardPageHeader
-            eyebrow={data.dashboardTitle}
-            title="Bienvenue chez Hercule"
-            subtitle="Indiquez votre prénom pour accéder à votre suivi de livraison."
-          />
-          {paidQuery === "1" ? (
-            <p className="mt-4 text-sm text-emerald-600 dark:text-emerald-400">
-              Paiement confirmé — complétez votre profil pour continuer.
-            </p>
-          ) : null}
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="text-base">Votre profil</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ClientOnboardingForm data={data} onSuccess={() => void loadClient()} />
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    );
-  }
-
-  return <ClientDashboardActive data={data} onRefresh={() => void loadClient()} />;
+  return (
+    <>
+      {showBootOverlay ? (
+        <ClientBootScreen
+          progress={bootProgress}
+          showWelcome={showWelcomeOnBoot}
+          exiting={bootPhase === "exiting"}
+          onExitComplete={() => setBootPhase("done")}
+        />
+      ) : null}
+      {renderContent()}
+    </>
+  );
 }

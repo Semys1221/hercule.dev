@@ -1,3 +1,4 @@
+import { assignClientsForProvision } from "@/lib/clients/round-robin";
 import {
   getInstantlyApiKey,
   patchLeadsCustomVariablesParallel,
@@ -285,6 +286,27 @@ export async function executeProvisionForSelectedLeads(params: {
 
     result.updated += 1;
     dbRowsByEmail.set(lead.email, data as LinkTrackingLead);
+  }
+
+  const needingAssign: string[] = [];
+  for (const row of dbRowsByEmail.values()) {
+    if (!row.client_id?.trim()) {
+      needingAssign.push(row.id);
+    }
+  }
+  if (needingAssign.length > 0) {
+    const assigned = await assignClientsForProvision({
+      supabase: client,
+      category,
+      leadIdsNeedingAssign: needingAssign,
+    });
+    for (const [leadId, clientId] of assigned) {
+      for (const [email, row] of dbRowsByEmail) {
+        if (row.id === leadId) {
+          dbRowsByEmail.set(email, { ...row, client_id: clientId });
+        }
+      }
+    }
   }
 
   const patchItems: Array<{ leadId: string; customVariables: Record<string, string> }> =

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import {
   defaultUseHtml,
   signatureTaglineForEmail,
-} from "@/lib/legacy/booking-communication/signatures";
+} from "@/lib/(resend)/communication/signatures";
 
 import {
   PAYMENT_ONBOARDING_EMAIL_TYPES,

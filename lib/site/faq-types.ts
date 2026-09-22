@@ -8,6 +8,10 @@ export const faqEntrySchema = z.object({
   question: z.string().min(1),
   answer: z.string().min(1),
   cvgLink: z.boolean().optional(),
+  /** Shown on paid client dashboard (`/clients/[slug]`). */
+  paidClient: z.boolean().optional(),
+  /** Sort order among paid-client entries (ascending). */
+  paidClientOrder: z.number().int().positive().optional(),
 });
 
 export type FaqEntry = z.infer<typeof faqEntrySchema>;

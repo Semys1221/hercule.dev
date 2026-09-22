@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { RubiksCube } from "../shared/RubiksCube";
 import { SceneLabel } from "../shared/SceneLabel";
 import { SceneShell } from "../shared/SceneShell";
@@ -31,7 +30,6 @@ export function S07_ThreeSolutions({ step }: SceneProps) {
 
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le reframing" beat="3/4" />
       <AnimatePresence mode="wait">
         <motion.div
           key={`b${35 + step}`}

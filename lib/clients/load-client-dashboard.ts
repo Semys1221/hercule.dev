@@ -4,14 +4,15 @@ import {
   clientDashboardDescription,
   clientDashboardTitle,
   CONFERENCE_CLIENT_TYPES,
-  conferenceCheckoutMode,
   type ConferenceClientType,
 } from "@/lib/commercial/conference-pricing";
-import { getOnboardingFaq } from "@/lib/legacy/dashboard/onboarding-faq";
+import { paidClientFaqToDashboardItems } from "@/lib/site/faq-data";
 import { buildDashboardRetractionFields } from "@/lib/legacy/dashboard/retraction-fields";
 import type { DashboardFaqAudience } from "@/lib/legacy/dashboard/types";
-import { findCalendlySeatOnboardingByClientId } from "@/lib/legacy/calendly-seat-onboarding/store";
+import { findCalendlySeatOnboardingByClientId } from "@/lib/(resend)/calendly-seat/client-store";
 
+import { listClientAppointments, toPublicAppointment } from "./appointments/store";
+import { CLIENT_ACCOUNT_MANAGER } from "./account-manager";
 import type { ClientDashboardData, ClientMode, ClientRow } from "./types";
 
 function retractionCategoryForClient(
@@ -25,6 +26,15 @@ function faqAudienceForClient(client: ClientRow): DashboardFaqAudience {
     return "comptable";
   }
   return "cif";
+}
+
+function clientDisplayName(client: ClientRow): string | null {
+  const fullName = client.profile?.full_name;
+  if (typeof fullName === "string" && fullName.trim()) {
+    return fullName.trim();
+  }
+  const firstName = client.first_name?.trim();
+  return firstName || null;
 }
 
 function hubrisDashboardTitle(client: ClientRow): string {
@@ -66,11 +76,10 @@ export async function getLatestClientPayment(
 ): Promise<{
   offer_type: string;
   succeeded_at: string | null;
-  stripe_subscription_id: string | null;
 } | null> {
   const { data, error } = await client
     .from("payments")
-    .select("offer_type, succeeded_at, stripe_subscription_id")
+    .select("offer_type, succeeded_at")
     .eq("client_id", clientId)
     .eq("status", "succeeded")
     .order("succeeded_at", { ascending: false })
@@ -112,18 +121,19 @@ export async function loadClientDashboard(
   });
 
   const calendlySeatRow = await findCalendlySeatOnboardingByClientId(row.id);
-  const faqConfig = getOnboardingFaq(faqAudienceForClient(row));
-  const faq = faqConfig.items.map((item) => ({ q: item.q, a: item.a }));
+  const appointments = (await listClientAppointments(row.id, client)).map(
+    toPublicAppointment,
+  );
+  const faq = paidClientFaqToDashboardItems(faqAudienceForClient(row));
 
   const billingPortalAvailable =
-    row.billing === "monthly" &&
-    Boolean(row.stripe_customer_id) &&
-    conferenceCheckoutMode(row.offer_type) === "subscription";
+    row.billing === "monthly" && Boolean(row.stripe_customer_id);
 
   return {
     slug: row.slug,
     email: row.email,
     firstName: row.first_name,
+    displayName: clientDisplayName(row),
     clientType: row.client_type,
     secondaryVertical: row.secondary_vertical,
     clientMode,
@@ -142,10 +152,11 @@ export async function loadClientDashboard(
           invitationStatus: calendlySeatRow.calendly_invitation_status,
         }
       : null,
+    appointments,
     billingPortal: { available: billingPortalAvailable },
     faq,
-    upsellUrl: "/conference/payment",
-    contactEmail: "contact@hercule.dev",
+    upsellUrl: `/clients/renewal/${row.slug}`,
+    contactEmail: CLIENT_ACCOUNT_MANAGER.email,
     dashboardTitle: hubrisDashboardTitle(row),
     dashboardDescription: hubrisDashboardDescription(row),
   };

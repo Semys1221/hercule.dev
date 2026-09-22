@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { FlowLine }   from "../shared/FlowLine";
 import { RubiksCube } from "../shared/RubiksCube";
 import { SceneLabel } from "../shared/SceneLabel";
@@ -17,7 +16,6 @@ import { SceneShell } from "../shared/SceneShell";
 export function S08_Mechanism({ step }: SceneProps) {
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le mécanisme" beat="3/4" />
       <AnimatePresence mode="wait">
 
         {step === 0 && (

@@ -1,4 +1,4 @@
-/** Validate alignment between legal-documentation (app/(marketing)/content/) and commercial constants (canon v3). */
+/** Validate alignment between legal-documentation (app/(marketing)/content/) and commercial constants (canon v4). */
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -28,7 +28,8 @@ assertContains(cvgBody, "4 000", "CGV Hubris Option A");
 assertContains(cvgBody, "1 800", "CGV Hubris Option B");
 assertContains(cvgBody, "Hubris", "CGV Hubris section");
 assertContains(cvgBody, "Mercantile", "CGV Mercantile section");
-assertContains(cvgBody, "Engagement", "CGV DEC engagement");
+assertContains(cvgBody, "30 jours", "CGV DEC test period");
+assertNotContains(cvgBody, "Trimestriel (3 mois)", "CGV DEC must not keep trimestriel engagement");
 assertNotContains(cvgBody, "3 598", "CGV must not list DEC pack 3 598");
 assertNotContains(cvgBody, "4 798", "CGV must not list IAS pack 4 798");
 assert.ok(!cvgBody.includes("1 799"), "CGV must not mention Lite 1 799");
@@ -57,7 +58,7 @@ const decPlan = comptablePricing!.plans.find((plan) => plan.offerType === "month
 assert.ok(decPlan, "comptable DEC monthly plan");
 assert.ok(decPlan!.price.includes("1 499"), "comptable DEC price label");
 assert.equal(COMMERCIAL_COMPTABLE.monthlyPriceCents, 149_900, "constants DEC monthly");
-assert.equal(COMMERCIAL_COMPTABLE.commitmentMonths, 3, "constants DEC commitment");
+assert.equal(COMMERCIAL_COMPTABLE.commitmentMonths, 1, "constants DEC commitment");
 
 const assurancePricing = getPricingDocument("assurance");
 assert.ok(assurancePricing, "assurance pricing.json must exist");
@@ -97,4 +98,4 @@ readFileSync(pricingJsonPath("comptable"), "utf-8");
 readFileSync(pricingJsonPath("cif"), "utf-8");
 readFileSync(pricingJsonPath("assurance"), "utf-8");
 
-console.log("validateLegalDocumentation.ts: ok (canon v3)");
+console.log("validateLegalDocumentation.ts: ok (canon v4)");

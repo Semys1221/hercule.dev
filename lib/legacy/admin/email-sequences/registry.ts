@@ -266,6 +266,7 @@ const EMAIL_SEQUENCES: EmailSequenceEntry[] = [
     ],
     editorKind: "booking",
     bookingCategory: "agence",
+    legacyDoc: "lib/legacy/calendly-seat-onboarding/ (agence) · lib/(resend)/calendly-seat/ (client)",
   },
   {
     id: "close-indecis",

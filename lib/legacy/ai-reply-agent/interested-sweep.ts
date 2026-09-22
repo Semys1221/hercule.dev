@@ -1,3 +1,7 @@
+import {
+  isReplyAgentProtectedClient,
+  REPLY_AGENT_CLIENT_SKIP_REASON,
+} from "./client-guard";
 import { reprocessInboundForLead } from "./reprocess-inbound";
 import { createAiReplyAgentClient } from "./supabase";
 import { ensureInterestedE1IfMissing } from "@/lib/legacy/instantly-bypass/ensure-interested-e1";
@@ -20,6 +24,7 @@ const SKIP_REASONS = new Set([
   "Lead marked No show in Instantly",
   "Lead marked Not interested in Instantly",
   "Opt-out détecté",
+  REPLY_AGENT_CLIENT_SKIP_REASON,
 ]);
 
 export type InterestedSweepResult = {
@@ -148,6 +153,11 @@ export async function sweepInterestedLeads(params: {
   );
 
   for (const { leadEmail } of replyCandidates) {
+    if (await isReplyAgentProtectedClient(leadEmail)) {
+      result.skipped += 1;
+      continue;
+    }
+
     const lead = await findLeadByEmailInCampaign(apiKey, params.campaignId, leadEmail);
     if (lead?.lt_interest_status !== INTERESTED_STATUS) {
       result.skipped += 1;

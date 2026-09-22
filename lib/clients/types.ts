@@ -5,6 +5,7 @@ import type {
 } from "@/lib/commercial/conference-pricing";
 import type { DashboardRetraction } from "@/lib/legacy/retraction";
 import type { TimelineStep } from "@/lib/legacy/dashboard/types";
+import type { ClientAppointmentPublic } from "./appointments/types";
 
 export type ClientMode =
   | "unavailable"
@@ -23,6 +24,8 @@ export type ClientRow = {
   offer_type: ConferenceOfferType;
   rdv_total: number;
   rdv_used: number;
+  first_lead_at: string;
+  calendly_scheduling_url: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   product_statut: string;
@@ -49,6 +52,7 @@ export type ClientDashboardData = {
   slug: string;
   email: string;
   firstName: string | null;
+  displayName: string | null;
   clientType: ConferenceClientType;
   secondaryVertical: "ias" | null;
   clientMode: ClientMode;
@@ -62,6 +66,7 @@ export type ClientDashboardData = {
   timeline: TimelineStep[];
   retraction: DashboardRetraction | null;
   calendlySeat: ClientCalendlySeat | null;
+  appointments: ClientAppointmentPublic[];
   billingPortal: { available: boolean };
   faq: ClientFaqItem[];
   upsellUrl: string;

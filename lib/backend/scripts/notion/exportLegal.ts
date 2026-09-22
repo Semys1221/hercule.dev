@@ -48,7 +48,7 @@ assert.ok(cgv.includes("1 800"), "Hubris Option B in CGV");
 assert.ok(cgv.includes("Hubris"), "Hubris section in CGV");
 assert.ok(cgv.includes("Mercantile"), "Mercantile section in CGV");
 assert.equal(COMMERCIAL_COMPTABLE.monthlyPriceCents, 149_900);
-assert.equal(COMMERCIAL_COMPTABLE.commitmentMonths, 3);
+assert.equal(COMMERCIAL_COMPTABLE.commitmentMonths, 1);
 assert.equal(COMMERCIAL_HERCULE_HUBRIS.optionAFlatCents, 400_000);
 assert.equal(COMMERCIAL_HERCULE_HUBRIS.optionBMonthlyCents, 180_000);
 

@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { Counter }     from "../shared/Counter";
 import { FlowLine }    from "../shared/FlowLine";
 import { Person, PersonGroup } from "../shared/Person";
@@ -49,7 +48,6 @@ import { SceneShell }  from "../shared/SceneShell";
 export function S10_JohnDemo({ step }: SceneProps) {
   return (
     <SceneShell>
-      <ChapterBadge chapter="La démonstration" beat="John" />
       <AnimatePresence mode="wait">
 
         {/* 0 — John */}
@@ -58,7 +56,7 @@ export function S10_JohnDemo({ step }: SceneProps) {
             className="flex flex-col items-center gap-5"
           >
             <Person size={52} icon="briefcase" />
-            <SceneLabel size="lg" animate={false}>JOHN · CABINET</SceneLabel>
+            <SceneLabel size="lg" animate={false}>CABINET · EXEMPLE</SceneLabel>
             <div className="flex gap-4 text-sm tracking-widest text-zinc-600 uppercase">
               <span>Comptabilité</span><span>IAS</span><span>CIF</span>
             </div>
@@ -169,7 +167,7 @@ export function S10_JohnDemo({ step }: SceneProps) {
           >
             <div className="flex flex-col items-center gap-2">
               <PersonGroup count={6} size={32} highlightCount={0} />
-              <p className="text-[9px] tracking-[0.2em] text-zinc-700 uppercase">Éliminés</p>
+              <p className="text-[9px] tracking-[0.2em] text-zinc-700 uppercase">Non retenus</p>
             </div>
             <div className="h-20 w-px bg-zinc-800" />
             <div className="flex flex-col items-center gap-2">
@@ -277,7 +275,7 @@ export function S10_JohnDemo({ step }: SceneProps) {
                 transition={{ delay: 2.7 }}
                 className="text-sm tracking-[0.28em] text-zinc-300 uppercase"
               >
-                C&apos;est lui qui vient vous chercher
+                Le professionnel vous contacte
               </motion.p>
             </motion.div>
           </motion.div>

@@ -263,12 +263,12 @@ export const COMMERCIAL_COMPTABLE = {
   /** @deprecated Use growthMissionsPerMonth */
   starterMissions: 10,
 
-  /** Hercule Mercantile — 1 499 €/mois, engagement 3 mois, 10 crédits (offer type monthly_1499) */
+  /** Hercule Mercantile — 1 499 € / 1 mois, 10 RDV garantis (offer type monthly_1499) */
   growthMonthlyPriceCents: 149_900,
   monthlyPriceCents: 149_900,
   growthMissionsPerMonth: 10,
-  /** Engagement trimestriel (canon v3) */
-  commitmentMonths: 3,
+  /** Durée formule mensuelle DEC (canon v4) */
+  commitmentMonths: 1,
   /** MRR garantie supprimée v2 */
   growthGuaranteeMrrCents: 0,
   growthGuaranteeMaxReplacements: 0,
@@ -285,7 +285,7 @@ export const COMMERCIAL_COMPTABLE = {
   billingCycleDays: 30,
 
   /** SLA premier RDV — warm-up post-paiement (ne pas afficher sur slide prix) */
-  firstRdvDaysMin: 15,
+  firstRdvDaysMin: 20,
   firstRdvDaysMax: 25,
 
   /** Acquisition 1 mois — Payment Link 1 489 €, livrable 10–15 RDV */
@@ -322,9 +322,16 @@ export const COMMERCIAL_COMPTABLE = {
   horizonGuaranteeRdvCount: 10,
   horizonGuaranteeMonths: 1,
   horizonGuaranteeDays: 30,
-  coreTagline: "10 RDV qualifiés / mois · restaurants +3 sal. · engagement 3 mois",
-  horizonTagline: "10 RDV qualifiés / mois · restaurants BIC · engagement 3 mois · 0 % commission",
+  coreTagline: "1 mois · 10 RDV garantis · 30 j de test · restaurants +3 sal.",
+  horizonTagline: "1 mois · 10 RDV garantis · 30 j de test · restaurants BIC · 0 % commission",
 } as const;
+
+/** Bullets canon — offre DEC mensuelle (conférence, CGV, marketing). */
+export const DEC_MONTHLY_OFFER_BULLETS = [
+  "10 rendez-vous qualifiés garantis.",
+  "Vous disposez de 30 jours pour tester le dispositif.",
+  "Si les 10 rendez-vous ne sont pas générés pendant votre abonnement, nous poursuivons la prospection pendant 30 jours supplémentaires, sans frais, afin de compléter les rendez-vous restants.",
+] as const;
 
 /**
  * Hercule Hubris — canon pricing v3 (IAS + CIF bundle).
@@ -433,7 +440,7 @@ export const FOUNDATION_PRICING_PLANS: readonly FoundationPricingPlan[] = [
 ] as const;
 
 export const FOUNDATION_HORIZON_GUARANTEE_COPY =
-  `Garantie contractuelle Horizon ${COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} mois. Déploiement complet du Moteur Hercule Foundation. Si, dans les ${COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} premiers mois suivant l'activation, le cabinet n'a pas reçu ${COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount} RDV B2B planifiés (dirigeants qualifiés) via Hercule, Hercule maintient l'infrastructure à ses frais jusqu'à l'atteinte de l'objectif. Le risque est sur notre bilan.`;
+  `${COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount} rendez-vous qualifiés garantis sur ${COMMERCIAL_COMPTABLE.horizonGuaranteeMonths} mois. Vous disposez de ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours pour tester le dispositif. Si les ${COMMERCIAL_COMPTABLE.horizonGuaranteeRdvCount} rendez-vous ne sont pas générés pendant votre abonnement, Hercule poursuit la prospection pendant ${COMMERCIAL_COMPTABLE.horizonGuaranteeDays} jours supplémentaires, sans frais, afin de compléter les rendez-vous restants.`;
 
 export function foundationOfferLabel(
   offerType: OfferTypeComptable | string | null | undefined,
@@ -445,7 +452,7 @@ export function foundationOfferLabel(
     offerType === OFFER_TYPES_COMPTABLE.monthly1499 ||
     offerType === OFFER_TYPES_COMPTABLE.monthly1499Trial
   ) {
-    return `${COMMERCIAL_COMPTABLE.horizonDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents)}/mois`;
+    return `${COMMERCIAL_COMPTABLE.horizonDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents)} / 1 mois`;
   }
   return `${COMMERCIAL_COMPTABLE.horizonDisplayName} — ${formatFoundationEuros(COMMERCIAL_COMPTABLE.horizonDisplayPriceCents)}/mois`;
 }

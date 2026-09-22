@@ -1,3 +1,5 @@
+import { OFFER_TYPES_COMPTABLE } from "@/lib/commercial/constants";
+
 export const CONFERENCE_CLIENT_TYPES = {
   dec: "dec",
   cif: "cif",
@@ -171,10 +173,13 @@ export function clientDashboardDescription(
   return "Suivi de votre déploiement Hercule IAS — projets de protection sociale qualifiés.";
 }
 
-export function conferenceOfferLabel(offerType: ConferenceOfferType): string {
+export function conferenceOfferLabel(offerType: string): string {
+  if (offerType === OFFER_TYPES_COMPTABLE.acquisition1489_1m) {
+    return "Hercule DEC";
+  }
   switch (offerType) {
     case OFFER_TYPES_CONFERENCE.decMonthly:
-      return "DEC — Abonnement mensuel (1 499 €/mois)";
+      return "DEC — 1 499 € / 1 mois (10 RDV garantis)";
     case OFFER_TYPES_CONFERENCE.decPack:
       return "DEC — Pack 30 RDV (3 000 €)";
     case OFFER_TYPES_CONFERENCE.cifMonthly:
@@ -188,4 +193,22 @@ export function conferenceOfferLabel(offerType: ConferenceOfferType): string {
     default:
       return offerType;
   }
+}
+
+export const CLIENT_DEC_ENGAGEMENT_LABEL = "Renouvellement optionnel";
+
+export const CLIENT_DEC_RENEWAL_INFO_BODY =
+  "Une semaine avant la fin de votre mois en cours, nous vous proposerons de renouveler pour le mois suivant. Si vous ne souhaitez pas, l'abonnement sera mis en pause et vous ne serez pas prélevé. Vous pourrez renouveler quand vous le souhaitez.";
+
+export function clientEngagementLabel(params: {
+  clientType: ConferenceClientType;
+  billing: ConferenceBilling;
+}): string {
+  if (params.clientType === CONFERENCE_CLIENT_TYPES.dec) {
+    return CLIENT_DEC_ENGAGEMENT_LABEL;
+  }
+  if (params.billing === "monthly") {
+    return "Abonnement mensuel sans engagement de pack";
+  }
+  return "Pack prépayé — pas d'abonnement récurrent";
 }

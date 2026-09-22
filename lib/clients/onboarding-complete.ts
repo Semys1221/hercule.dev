@@ -18,6 +18,7 @@ export async function completeClientOnboarding(params: {
   client: SupabaseClient;
   row: ClientRow;
   firstName: string;
+  cgvVersion: string;
   waiveRetraction?: boolean;
 }): Promise<void> {
   const now = new Date();
@@ -30,6 +31,8 @@ export async function completeClientOnboarding(params: {
   } else if (applies) {
     profile = syncProfileRetraction(profile, "pending");
   }
+  profile.cgv_accepted_version = params.cgvVersion;
+  profile.cgv_accepted_at = completedAt;
 
   const patch: Record<string, unknown> = {
     first_name: params.firstName.trim(),

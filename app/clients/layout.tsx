@@ -16,7 +16,7 @@ export default function ClientsLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="internal min-h-screen bg-background text-foreground">
+    <div className="internal clients min-h-screen bg-background text-foreground">
       {children}
       <Toaster />
     </div>

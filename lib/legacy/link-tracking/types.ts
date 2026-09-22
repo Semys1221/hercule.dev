@@ -71,6 +71,7 @@ export type LinkTrackingLead = {
   retraction_ends_at?: string | null;
   retraction_waived_at?: string | null;
   product_statut?: string | null;
+  client_id?: string | null;
   profile: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;

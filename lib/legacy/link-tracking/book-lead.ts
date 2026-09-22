@@ -1,6 +1,7 @@
+import { consumeRoundRobinQuota } from "@/lib/clients/round-robin";
 import type { ParsedCalendlyInvitee } from "@/lib/legacy/calendly";
-import { syncCalendlyMeetingLinks } from "@/lib/legacy/booking-communication/meeting-links";
 import { cancelConferenceInviteJobs } from "@/lib/legacy/booking-communication/jobs";
+import { syncCalendlyMeetingLinks } from "@/lib/legacy/booking-communication/meeting-links";
 import { upsertSalesCallFromBooking } from "@/lib/legacy/sales-calls/supabase";
 
 import { syncLeadMeetingBookedToInstantly } from "./instantly";
@@ -122,6 +123,24 @@ async function persistBookingSideEffects(
     });
   } catch (err) {
     console.error("[link-tracking] sales_calls upsert failed:", err);
+  }
+
+  try {
+    const nextProfile = await consumeRoundRobinQuota({
+      supabase: client,
+      category: lookup.category,
+      leadId: lookup.lead.id,
+      clientId: lookup.lead.client_id,
+      profile: lookup.lead.profile,
+    });
+    if (nextProfile !== lookup.lead.profile) {
+      return {
+        category: lookup.category,
+        lead: { ...lookup.lead, profile: nextProfile },
+      };
+    }
+  } catch (err) {
+    console.error("[link-tracking] round-robin quota consume failed:", err);
   }
 
   return lookup;

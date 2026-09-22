@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { HerculeMark } from "@/components/hercule-mark";
 import { FlowLine }    from "../shared/FlowLine";
-import { HerculeLogo } from "../shared/HerculeLogo";
 import { Person }      from "../shared/Person";
 import { PhoneIcon }   from "../shared/PhoneIcon";
 import { RubiksCube }  from "../shared/RubiksCube";
@@ -65,10 +65,10 @@ export function S11_Installation({ step }: SceneProps) {
           <motion.div key="s11-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative flex flex-col items-center gap-4"
           >
-            <HerculeLogo size="xl" showName />
-            <div className="absolute opacity-[0.07]">
-              <RubiksCube state="solved" size={160} spin />
-            </div>
+            <RubiksCube state="solved" size={96} spin />
+            <p className="text-sm tracking-[0.2em] text-zinc-500 uppercase">
+              Hercule s&apos;en charge
+            </p>
           </motion.div>
         )}
 
@@ -83,7 +83,7 @@ export function S11_Installation({ step }: SceneProps) {
               <path d="M16 2v4M8 2v4M3 10h18" strokeLinecap="round" />
             </svg>
             <FlowLine dir="right" />
-            <HerculeLogo size="sm" />
+            <HerculeMark variant="mono" className="size-8 text-foreground" />
             <FlowLine dir="right" />
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
               className="size-7 text-zinc-400" aria-hidden>
@@ -152,7 +152,7 @@ export function S11_Installation({ step }: SceneProps) {
           <motion.div key="s11-7" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative flex items-center justify-center"
           >
-            <HerculeLogo size="lg" showName />
+            <RubiksCube state="solved" size={72} spin={false} />
             <motion.div
               animate={{ opacity: [0.15, 0.35, 0.15] }}
               transition={{ repeat: Infinity, duration: 2.5 }}

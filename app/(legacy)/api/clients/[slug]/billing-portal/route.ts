@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { buildClientDashboardUrl, createClientsClient, findClientBySlug } from "@/lib/clients/supabase";
-import { conferenceCheckoutMode } from "@/lib/commercial/conference-pricing";
 import { createConferenceBillingPortalUrl } from "@/lib/legacy/payments/stripe-webhook-conference";
 
 type RouteParams = {
@@ -22,11 +21,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    if (
-      row.billing !== "monthly" ||
-      !row.stripe_customer_id ||
-      conferenceCheckoutMode(row.offer_type) !== "subscription"
-    ) {
+    if (row.billing !== "monthly" || !row.stripe_customer_id) {
       return NextResponse.json({ error: "Billing portal unavailable" }, { status: 400 });
     }
 

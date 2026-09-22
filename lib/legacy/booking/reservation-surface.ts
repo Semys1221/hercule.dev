@@ -1,3 +1,4 @@
+import { findClientById } from "@/lib/clients/supabase";
 import {
   calendlyUrlForJumSegment,
   defaultJumVertical,
@@ -185,7 +186,14 @@ export function pageCopyForSurface(params: {
   };
 }
 
-export function calendlyBaseUrlForLookup(lookup: LeadLookup): string {
+export function calendlyBaseUrlForLookup(
+  lookup: LeadLookup,
+  assignedClient?: { calendly_scheduling_url?: string | null } | null,
+): string {
+  const assigned = assignedClient?.calendly_scheduling_url?.trim();
+  if (lookup.lead.client_id?.trim() && assigned) {
+    return assigned;
+  }
   const surface = surfaceForCategory(lookup.category);
   if (surface === "jum") {
     return jumCalendlyUrlFromLead(lookup.lead);
@@ -201,6 +209,7 @@ export function calendlyBaseUrlForLookup(lookup: LeadLookup): string {
 
 export function buildReservationSurfaceFromLookup(
   lookup: LeadLookup,
+  assignedClient?: { calendly_scheduling_url?: string | null } | null,
 ): ReservationSurfaceResult {
   const surface = surfaceForCategory(lookup.category);
   const conferenceNiche: ConferenceNiche | null =
@@ -217,7 +226,7 @@ export function buildReservationSurfaceFromLookup(
     email: lookup.lead.email,
     surface,
     theme: themeForSurface(surface),
-    calendlyUrl: calendlyBaseUrlForLookup(lookup),
+    calendlyUrl: calendlyBaseUrlForLookup(lookup, assignedClient),
     conferenceNiche,
     jumSegment,
     copy,
@@ -232,5 +241,7 @@ export async function resolveReservationSurface(
   const client = createLinkTrackingClient();
   const lookup = await findLeadByLink(client, trimmed);
   if (!lookup) return null;
-  return buildReservationSurfaceFromLookup(lookup);
+  const clientId = lookup.lead.client_id?.trim();
+  const assigned = clientId ? await findClientById(client, clientId) : null;
+  return buildReservationSurfaceFromLookup(lookup, assigned);
 }

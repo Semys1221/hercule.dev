@@ -35,6 +35,10 @@ import {
 import { isCalendlySystemEmail, isCaptchaOrBounceEmail } from "./events";
 import { evaluatePostE1InterestGate } from "./post-e1-gate";
 import { detectOptOut } from "@/lib/legacy/lead-relances/opt-out";
+import {
+  isReplyAgentProtectedClient,
+  REPLY_AGENT_CLIENT_SKIP_REASON,
+} from "./client-guard";
 import { hasOutboundSinceInbound } from "./send-mutex";
 
 import type {
@@ -56,6 +60,7 @@ const SKIP_REPROCESS_REASONS = new Set([
   "Lead marked No show in Instantly",
   "Lead marked Not interested in Instantly",
   "Opt-out détecté",
+  REPLY_AGENT_CLIENT_SKIP_REASON,
 ]);
 
 type StoredInbound = {
@@ -188,6 +193,19 @@ export async function reprocessInboundForLead(params: {
       null,
     );
     return { ok: true, skipped: "technical_delivery", aiStatus: "skipped_ooo" };
+  }
+
+  if (await isReplyAgentProtectedClient(leadEmail)) {
+    await updateInboundStatus(
+      inbound.id,
+      "skipped_not_interested",
+      REPLY_AGENT_CLIENT_SKIP_REASON,
+      null,
+      null,
+      Date.now() - started,
+      null,
+    );
+    return { ok: true, skipped: "paying_client", aiStatus: "skipped_not_interested" };
   }
 
   const apiKey = getInstantlyApiKey();

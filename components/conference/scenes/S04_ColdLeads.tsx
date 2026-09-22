@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { Person, PersonGroup } from "../shared/Person";
 import { PhoneIcon } from "../shared/PhoneIcon";
 import { SceneLabel } from "../shared/SceneLabel";
@@ -20,7 +19,6 @@ import { SceneShell } from "../shared/SceneShell";
 export function S04_ColdLeads({ step }: SceneProps) {
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le problème" beat="3/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 19 — liste */}

@@ -55,8 +55,7 @@ export const COMPTABLE_OFFER_LABELS: Record<OfferTypeComptable, string> = {
   [OFFER_TYPES_COMPTABLE.monthly1499Trial]:
     "Essai gratuit 14 jours — puis 1 499 €/mois",
   [OFFER_TYPES_COMPTABLE.pack3x1499]: "Pack 3 mois Starter — 5 277,60 €",
-  [OFFER_TYPES_COMPTABLE.acquisition1489_1m]:
-    "Acquisition comptable — 1 489 €/mois",
+  [OFFER_TYPES_COMPTABLE.acquisition1489_1m]: "Hercule DEC",
 };
 
 export function comptableOfferLabel(offerType: string | null | undefined): string {

@@ -4,11 +4,10 @@ import { useState } from "react";
 
 import { SceneLabel } from "@/components/conference/shared/SceneLabel";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
+  CONFERENCE_BILLING,
   CONFERENCE_CLIENT_TYPES,
-  CONFERENCE_VERTICAL_COPY,
   type ConferenceBilling,
   type ConferenceCard,
   type ConferenceClientType,
@@ -31,74 +30,180 @@ export type ConferencePricingCardsProps = {
   variant: "static" | "checkout";
   className?: string;
   onCheckout?: (input: ConferenceCheckoutSelection) => void;
+  checkoutOpen?: boolean;
+  checkoutDisabledReason?: string;
+  decTaken?: number;
+  courtageTaken?: number;
 };
 
-function FeatureList({ items }: { items: string[] }) {
-  return (
-    <ul className="flex w-full flex-col gap-2 text-xs tracking-widest text-zinc-500 uppercase">
-      {items.map((item) => (
-        <li key={item} className="flex items-center justify-center gap-2">
-          <span className="size-1 shrink-0 bg-zinc-500" aria-hidden />
-          {item}
-        </li>
-      ))}
-    </ul>
-  );
-}
+type OfferDisplay = {
+  price: string;
+  period: string;
+  guarantee: string;
+  billing: ConferenceBilling;
+};
 
-function VerticalAnnouncement({ announcement }: { announcement: string }) {
+const DEC_OFFERS: Record<"monthly" | "pack", OfferDisplay> = {
+  monthly: {
+    price: "1 499 €",
+    period: "— 1 mois",
+    guarantee: "10 rendez-vous qualifiés ou 1 mois de service offert.",
+    billing: CONFERENCE_BILLING.monthly,
+  },
+  pack: {
+    price: "3 000 €",
+    period: "— 3 mois",
+    guarantee: "10 rendez-vous qualifiés ou 1 mois de service offert.",
+    billing: CONFERENCE_BILLING.pack,
+  },
+};
+
+const COURTAGE_OFFERS: Record<"monthly" | "pack", OfferDisplay> = {
+  pack: {
+    price: "3 900 €",
+    period: "/ 3 mois",
+    guarantee: "25 rendez-vous qualifiés ou 3 mois de service offert.",
+    billing: CONFERENCE_BILLING.pack,
+  },
+  monthly: {
+    price: "1 800 €",
+    period: "/ mois",
+    guarantee: "25 rendez-vous qualifiés ou 3 mois de service offert.",
+    billing: CONFERENCE_BILLING.monthly,
+  },
+};
+
+function SeatQuota({ taken }: { taken: number }) {
   return (
-    <p className="w-full rounded-lg border border-zinc-700/60 bg-zinc-900/50 px-4 py-3 text-left text-sm leading-relaxed text-zinc-400">
-      {announcement}
+    <p className="text-xs tracking-[0.18em] text-zinc-400 uppercase">
+      {taken} / 4
     </p>
   );
 }
 
-function VerticalCheckboxRow({
-  id,
-  label,
-  checked,
-  disabled,
-  onCheckedChange,
-}: {
-  id: string;
-  label: string;
-  checked: boolean;
-  disabled?: boolean;
-  onCheckedChange?: (checked: boolean) => void;
-}) {
+function GuaranteeLine({ text }: { text: string }) {
   return (
-    <div className="flex w-full items-start gap-3 text-left">
-      <Checkbox
-        id={id}
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={(value) => onCheckedChange?.(value === true)}
-        aria-readonly={disabled ? true : undefined}
-      />
-      <Label
-        htmlFor={id}
-        className={cn(
-          "text-sm leading-snug text-zinc-300",
-          disabled && "cursor-default opacity-80",
-        )}
-      >
-        {label}
-      </Label>
-    </div>
+    <p className="max-w-xs text-center text-sm leading-relaxed text-zinc-400">
+      {text}
+    </p>
   );
 }
 
-function CheckoutActions({
+function BillingToggleLink({
+  billing,
+  onSelectMonthly,
+  onSelectPack,
+}: {
+  billing: ConferenceBilling;
+  onSelectMonthly: () => void;
+  onSelectPack: () => void;
+}) {
+  if (billing === CONFERENCE_BILLING.monthly) {
+    return (
+      <button
+        type="button"
+        className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+        onClick={onSelectPack}
+      >
+        Obtenir une réduction 3 mois
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+      onClick={onSelectMonthly}
+    >
+      1 mois
+    </button>
+  );
+}
+
+function CourtageBillingToggleLink({
+  billing,
+  onSelectMonthly,
+  onSelectPack,
+}: {
+  billing: ConferenceBilling;
+  onSelectMonthly: () => void;
+  onSelectPack: () => void;
+}) {
+  if (billing === CONFERENCE_BILLING.pack) {
+    return (
+      <button
+        type="button"
+        className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+        onClick={onSelectMonthly}
+      >
+        Essayez 1 mois
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+      onClick={onSelectPack}
+    >
+      3 mois
+    </button>
+  );
+}
+
+function VerticalChoice({
+  value,
+  onChange,
+}: {
+  value: ConferenceClientType | null;
+  onChange: (selections: ConferenceVerticalSelections) => void;
+}) {
+  const selected =
+    value === CONFERENCE_CLIENT_TYPES.cif
+      ? "cif"
+      : value === CONFERENCE_CLIENT_TYPES.ias
+        ? "ias"
+        : "";
+
+  return (
+    <ToggleGroup
+      type="single"
+      value={selected}
+      onValueChange={(next) => {
+        if (next === "cif") {
+          onChange({ cif: true, ias: false });
+        } else if (next === "ias") {
+          onChange({ cif: false, ias: true });
+        }
+      }}
+      className="w-full"
+    >
+      <ToggleGroupItem
+        value="cif"
+        className="flex-1 border-zinc-600 data-[state=on]:bg-zinc-800"
+      >
+        CIF
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="ias"
+        className="flex-1 border-zinc-600 data-[state=on]:bg-zinc-800"
+      >
+        IAS
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+
+function CheckoutCta({
   disabled,
   disabledReason,
-  onMonthly,
-  onPack,
+  onSubscribe,
 }: {
   disabled: boolean;
   disabledReason?: string;
-  onMonthly: () => void;
-  onPack: () => void;
+  onSubscribe: () => void;
 }) {
   return (
     <div className="mt-2 flex w-full flex-col gap-2">
@@ -106,20 +211,10 @@ function CheckoutActions({
         type="button"
         className="w-full"
         disabled={disabled}
-        onClick={onMonthly}
+        onClick={onSubscribe}
         aria-disabled={disabled}
       >
-        Abonnement sans engagement
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full border-zinc-600 bg-transparent text-zinc-200 hover:bg-zinc-800/60"
-        disabled={disabled}
-        onClick={onPack}
-        aria-disabled={disabled}
-      >
-        Pack sans abonnement
+        S&apos;inscrire
       </Button>
       {disabled && disabledReason ? (
         <p className="text-center text-xs text-zinc-500">{disabledReason}</p>
@@ -131,60 +226,53 @@ function CheckoutActions({
 function DecCard({
   variant,
   onCheckout,
+  checkoutOpen,
+  taken,
+  windowClosedReason,
 }: {
   variant: "static" | "checkout";
   onCheckout?: (input: ConferenceCheckoutSelection) => void;
+  checkoutOpen: boolean;
+  taken: number;
+  windowClosedReason: string;
 }) {
-  const decCopy = CONFERENCE_VERTICAL_COPY.dec;
+  const [billing, setBilling] = useState<ConferenceBilling>(
+    CONFERENCE_BILLING.monthly,
+  );
   const isCheckout = variant === "checkout";
+  const offerKey = billing === CONFERENCE_BILLING.pack ? "pack" : "monthly";
+  const offer = DEC_OFFERS[offerKey];
+  const actionsDisabled = isCheckout && !checkoutOpen;
 
   return (
     <div className={CONFERENCE_CARD_CLASS}>
       <SceneLabel size="md" animate={false}>HERCULE DEC</SceneLabel>
-      <p className="text-5xl font-thin text-zinc-100">1 499 €</p>
-      <p className="text-sm text-zinc-500">/ mois · 10 RDV</p>
-      <p className="text-xl text-zinc-400">3 000 € / 3 mois</p>
-      <p className="text-sm text-zinc-500">30 RDV · pack sans abonnement</p>
-      <div className="mt-1 h-px w-full bg-gradient-to-r from-transparent via-zinc-600 to-transparent" />
+      {variant === "checkout" ? <SeatQuota taken={taken} /> : null}
+      <p className="text-5xl font-thin text-zinc-100">{offer.price}</p>
+      <p className="text-sm text-zinc-500">{offer.period}</p>
+      <GuaranteeLine text={offer.guarantee} />
 
       {isCheckout ? (
-        <div className="flex w-full flex-col gap-3">
-          <VerticalCheckboxRow
-            id="conference-dec-vertical"
-            label={decCopy.checkboxLabel}
-            checked
-            disabled
+        <div className="flex w-full flex-col items-center gap-3">
+          <BillingToggleLink
+            billing={billing}
+            onSelectMonthly={() => setBilling(CONFERENCE_BILLING.monthly)}
+            onSelectPack={() => setBilling(CONFERENCE_BILLING.pack)}
           />
-          <VerticalAnnouncement announcement={decCopy.announcement} />
-          <CheckoutActions
-            disabled={false}
-            onMonthly={() =>
+          <CheckoutCta
+            disabled={actionsDisabled}
+            disabledReason={windowClosedReason}
+            onSubscribe={() =>
               onCheckout?.({
                 card: "dec",
-                billing: "monthly",
-                selections: { cif: false, ias: false },
-                clientType: CONFERENCE_CLIENT_TYPES.dec,
-              })
-            }
-            onPack={() =>
-              onCheckout?.({
-                card: "dec",
-                billing: "pack",
+                billing: offer.billing,
                 selections: { cif: false, ias: false },
                 clientType: CONFERENCE_CLIENT_TYPES.dec,
               })
             }
           />
         </div>
-      ) : (
-        <FeatureList
-          items={[
-            "10 restaurants / mois",
-            "3 signatures visées",
-            "Rétractation 4 jours",
-          ]}
-        />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -192,95 +280,68 @@ function DecCard({
 function CourtageCard({
   variant,
   onCheckout,
+  checkoutOpen,
+  taken,
+  windowClosedReason,
 }: {
   variant: "static" | "checkout";
   onCheckout?: (input: ConferenceCheckoutSelection) => void;
+  checkoutOpen: boolean;
+  taken: number;
+  windowClosedReason: string;
 }) {
+  const [billing, setBilling] = useState<ConferenceBilling>(
+    CONFERENCE_BILLING.pack,
+  );
   const [selections, setSelections] = useState<ConferenceVerticalSelections>({
     cif: false,
     ias: false,
   });
 
   const isCheckout = variant === "checkout";
+  const offerKey = billing === CONFERENCE_BILLING.pack ? "pack" : "monthly";
+  const offer = COURTAGE_OFFERS[offerKey];
   const clientType = isCheckout
     ? resolveConferenceClientType({ card: "courtage", selections })
     : null;
-  const checkoutDisabled = isCheckout && clientType === null;
-
-  const activeVerticals = (
-    [
-      selections.cif ? CONFERENCE_CLIENT_TYPES.cif : null,
-      selections.ias ? CONFERENCE_CLIENT_TYPES.ias : null,
-    ] as const
-  ).filter((value): value is ConferenceClientType => value !== null);
+  const checkoutDisabled =
+    isCheckout && (clientType === null || !checkoutOpen);
 
   return (
     <div className={CONFERENCE_CARD_CLASS}>
       <SceneLabel size="md" animate={false}>HERCULE COURTAGE</SceneLabel>
-      <p className="text-5xl font-thin text-zinc-100">3 900 €</p>
-      <p className="text-sm text-zinc-500">/ 3 mois · 25 RDV</p>
-      <p className="text-xl text-zinc-400">1 800 € / mois</p>
-      <p className="text-sm text-zinc-500">10 RDV · sans engagement</p>
-      <div className="mt-1 h-px w-full bg-gradient-to-r from-transparent via-zinc-600 to-transparent" />
+      {variant === "checkout" ? <SeatQuota taken={taken} /> : null}
+      <p className="text-5xl font-thin text-zinc-100">{offer.price}</p>
+      <p className="text-sm text-zinc-500">{offer.period}</p>
+      <GuaranteeLine text={offer.guarantee} />
 
       {isCheckout ? (
-        <div className="flex w-full flex-col gap-3">
-          <VerticalCheckboxRow
-            id="conference-cif-vertical"
-            label={CONFERENCE_VERTICAL_COPY.cif.checkboxLabel}
-            checked={selections.cif}
-            onCheckedChange={(checked) =>
-              setSelections((current) => ({ ...current, cif: checked }))
-            }
+        <div className="flex w-full flex-col items-center gap-3">
+          <VerticalChoice value={clientType} onChange={setSelections} />
+          <CourtageBillingToggleLink
+            billing={billing}
+            onSelectMonthly={() => setBilling(CONFERENCE_BILLING.monthly)}
+            onSelectPack={() => setBilling(CONFERENCE_BILLING.pack)}
           />
-          <VerticalCheckboxRow
-            id="conference-ias-vertical"
-            label={CONFERENCE_VERTICAL_COPY.ias.checkboxLabel}
-            checked={selections.ias}
-            onCheckedChange={(checked) =>
-              setSelections((current) => ({ ...current, ias: checked }))
-            }
-          />
-
-          {activeVerticals.map((vertical) => (
-            <VerticalAnnouncement
-              key={vertical}
-              announcement={CONFERENCE_VERTICAL_COPY[vertical].announcement}
-            />
-          ))}
-
-          <CheckoutActions
+          <CheckoutCta
             disabled={checkoutDisabled}
-            disabledReason="Cochez CIF ou IAS pour continuer."
-            onMonthly={() => {
+            disabledReason={
+              !checkoutOpen
+                ? windowClosedReason
+                : "Choisissez CIF ou IAS pour continuer."
+            }
+            onSubscribe={() => {
               if (!clientType) return;
               onCheckout?.({
                 card: "courtage",
-                billing: "monthly",
-                selections,
-                clientType,
-              });
-            }}
-            onPack={() => {
-              if (!clientType) return;
-              onCheckout?.({
-                card: "courtage",
-                billing: "pack",
+                billing: offer.billing,
                 selections,
                 clientType,
               });
             }}
           />
         </div>
-      ) : (
-        <FeatureList
-          items={[
-            "25 médecins qualifiés",
-            "9 signatures visées",
-            "Rétractation 4 jours",
-          ]}
-        />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -289,11 +350,27 @@ export function ConferencePricingCards({
   variant,
   className,
   onCheckout,
+  checkoutOpen = true,
+  checkoutDisabledReason = "Les inscriptions sont closes.",
+  decTaken = 0,
+  courtageTaken = 0,
 }: ConferencePricingCardsProps) {
   return (
     <div className={cn("grid w-full grid-cols-1 gap-6 md:grid-cols-2", className)}>
-      <DecCard variant={variant} onCheckout={onCheckout} />
-      <CourtageCard variant={variant} onCheckout={onCheckout} />
+      <DecCard
+        variant={variant}
+        onCheckout={onCheckout}
+        checkoutOpen={checkoutOpen}
+        taken={decTaken}
+        windowClosedReason={checkoutDisabledReason}
+      />
+      <CourtageCard
+        variant={variant}
+        onCheckout={onCheckout}
+        checkoutOpen={checkoutOpen}
+        taken={courtageTaken}
+        windowClosedReason={checkoutDisabledReason}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
-import type { BookingEmailType } from "@/lib/legacy/booking-communication/types";
+import type { BookingEmailType } from "@/lib/(resend)/communication/types";
 
 import type { PaymentOnboardingVertical } from "./constants";
 import { isPaymentOnboardingEmailType } from "./constants";

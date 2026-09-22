@@ -15,7 +15,7 @@ Exported from Notion **Hercule Canon** (pricing **v3**). Do not treat as editori
 
 | Offre | Prix | Ancre `/cvg` |
 |-------|------|--------------|
-| Hercule Mercantile (DEC) | 1 499 €/mois · engagement 3 mois · 10 RDV/mois | `#dec` |
+| Hercule Mercantile (DEC) | 1 499 € — 1 mois · 10 RDV garantis · 30 j de test · +30 j gratuits | `#dec` |
 | Hercule Hubris (IAS + CIF) | Option A 4 000 € flat · Option B 1 800 €/mois × 3 · 15–20 bilans/trimestre | `#hubris` |
 
 Obsolete as standalone listings: IAS 1 999 €/mois · CIF 3 499 €/90j · DEC pack 3 598 € (−20 %).

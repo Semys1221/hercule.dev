@@ -31,6 +31,10 @@ vi.mock("@/lib/legacy/instantly-bypass/jobs", () => ({
   getBypassEventSentAt: (...args: unknown[]) => getBypassEventSentAt(...args),
 }));
 
+vi.mock("./client-guard", () => ({
+  isReplyAgentProtectedClient: async () => false,
+}));
+
 vi.mock("./handler", () => ({
   handleInstantlyReply: (...args: unknown[]) => handleInstantlyReply(...args),
 }));

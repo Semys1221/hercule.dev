@@ -3,7 +3,7 @@
 ```
 status: canonical
 audience: coding-agent
-version: 2026-09-20
+version: 2026-09-22
 verticals: DEC · Hercule Hubris (IAS + CIF)
 do_not:
   - Réintroduire Lite / Starter legacy / garantie MRR
@@ -12,7 +12,7 @@ do_not:
   - Garantir signature, MRR ou commissions upfront
 ```
 
-> **Version :** 2026-09-20  
+> **Version :** 2026-09-22  
 > **Prestataire :** Hercule — groupement d'entrepreneurs dirigé par **Evan Sinclair**  
 > Contact : contact@hercule.dev · Mentions : hercule.dev/mentions-legales
 
@@ -53,9 +53,11 @@ Prix en euros. Franchise en base de TVA (art. 293 B CGI).
 
 | Élément | Détail |
 |---------|--------|
-| **Prix** | **1 499 € / mois** |
-| **Engagement** | **Trimestriel (3 mois)** |
-| **Crédits** | **10 rendez-vous / mois** (cycle 30 jours) |
+| **Prix** | **1 499 €** |
+| **Durée** | **1 mois** |
+| **Crédits** | **10 rendez-vous qualifiés garantis** |
+| **Période de test** | **30 jours** |
+| **Garantie complémentaire** | Si les 10 RDV ne sont pas générés pendant l'abonnement : **+30 jours de prospection sans frais** pour compléter les RDV restants |
 | **Filtre garanti** | Restaurants indépendants **+3 salariés** · BIC |
 | **Garantie signature / MRR** | **Aucune** |
 
@@ -78,7 +80,7 @@ Remplace les anciennes offres listées seules IAS (1 999 €/mois) et CIF (3 499
 
 Commande ferme dès acceptation des CGV et réception du paiement (Stripe ou virement).
 
-- **Hercule Mercantile :** facturation mensuelle Stripe pendant l'engagement trimestriel ; reconduction tacite par période de 3 mois jusqu'à résiliation.
+- **Hercule Mercantile :** paiement unique ou abonnement Stripe pour **1 mois** à **1 499 €** ; pas de reconduction tacite sauf renouvellement explicite du Client.
 - **Hercule Hubris Option A :** paiement intégral 4 000 € à la souscription.
 - **Hercule Hubris Option B :** facturation mensuelle 1 800 € pendant l'engagement de 3 mois.
 - Impayé > **7 jours** : suspension possible.
@@ -104,6 +106,8 @@ Client professionnel — droit de rétractation consommateur non applicable.
 
 No-show (prospect absent malgré relance H-24) : crédit recrédité ; remplacement planifié sous 14 jours ouvrés.
 
+**Hercule Mercantile (DEC) :** le Client dispose de **30 jours** pour tester le dispositif. Si les **10 rendez-vous qualifiés** ne sont pas générés pendant l'abonnement, Hercule poursuit la prospection pendant **30 jours supplémentaires**, sans frais, afin de compléter les rendez-vous restants.
+
 Warm-up technique (~14 j) et premiers créneaux visibles (J+15) sont communiqués **après paiement** (email protocole) — jamais sur slide prix / checkout.
 
 ---
@@ -121,7 +125,7 @@ Warm-up technique (~14 j) et premiers créneaux visibles (J+15) sont communiqué
 
 ## 8. Durée et résiliation
 
-- **Hercule Mercantile :** engagement initial 3 mois ; reconduction tacite par périodes de 3 mois ; préavis Client **30 jours** avant la fin d'une période.
+- **Hercule Mercantile :** durée initiale **1 mois** ; fin de service à l'échéance sauf renouvellement explicite.
 - **Hercule Hubris :** jusqu'à échéance du trimestre (Option A) ou des 3 mensualités (Option B) ; reconduction tacite sauf résiliation.
 - Suspension sans préavis si impayé > 7 j ou manquement grave.
 - Crédits non consommés **supprimés** à la résiliation (pas de conversion cash).
@@ -144,3 +148,4 @@ Traitement RGPD — contact@hercule.dev — politique de confidentialité.
 |---------|------|-------------|
 | 2026-09-20 | 20 sept. 2026 | Canon v2 unique — DEC 1 499 · IAS 1 999 · CIF 3 499 · suppression Lite/Starter/MRR |
 | 2026-09-20 | 20 sept. 2026 | Canon v3 — DEC Mercantile engagement 3 mois · Hercule Hubris (4 000 / 1 800) remplace IAS/CIF listing seul |
+| 2026-09-22 | 22 sept. 2026 | Canon v4 — DEC Mercantile 1 499 € / 1 mois · 10 RDV garantis · 30 j de test · +30 j gratuits |

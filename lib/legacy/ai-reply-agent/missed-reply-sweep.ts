@@ -1,3 +1,4 @@
+import { isReplyAgentProtectedClient } from "./client-guard";
 import { handleInstantlyReply } from "./handler";
 import { createAiReplyAgentClient } from "./supabase";
 import { isAutomatedSenderEmail, resolveReplyFromEmail } from "./reply-from-email";
@@ -171,6 +172,10 @@ async function processReceivedRecord(params: {
     params.interestCache.set(leadEmail, interestStatus);
   }
   if (interestStatus !== INTERESTED_STATUS) {
+    return { outcome: "skipped_not_interested" };
+  }
+
+  if (await isReplyAgentProtectedClient(leadEmail)) {
     return { outcome: "skipped_not_interested" };
   }
 

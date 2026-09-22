@@ -45,6 +45,10 @@ import { evaluatePostE1InterestGate } from "./post-e1-gate";
 import { hasOutboundSinceInbound } from "./send-mutex";
 import { ensureInterestedE1IfMissing } from "@/lib/legacy/instantly-bypass/ensure-interested-e1";
 import {
+  isReplyAgentProtectedClient,
+  REPLY_AGENT_CLIENT_SKIP_REASON,
+} from "./client-guard";
+import {
   resolveReplyFromEmail,
   syncLeadReplyFromEmail,
 } from "./reply-from-email";
@@ -237,6 +241,21 @@ export async function handleInstantlyReply(
       ok: true,
       skipped: "technical_delivery",
       aiStatus: "skipped_ooo",
+      latencyMs,
+    };
+  }
+
+  if (await isReplyAgentProtectedClient(leadEmail)) {
+    const latencyMs = await finalizeInbound(
+      inbound.id,
+      "skipped_not_interested",
+      started,
+      REPLY_AGENT_CLIENT_SKIP_REASON,
+    );
+    return {
+      ok: true,
+      skipped: "paying_client",
+      aiStatus: "skipped_not_interested",
       latencyMs,
     };
   }

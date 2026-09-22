@@ -151,6 +151,7 @@ export function RubiksCube({
 
   return (
     <div
+      data-rubiks-cube
       className={cn("relative shrink-0", className)}
       style={{ width: size, height: size, perspective: size * 7 }}
       aria-hidden

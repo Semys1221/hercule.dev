@@ -36,3 +36,8 @@ export const BEATS: Beat[] = (() => {
 })();
 
 export const TOTAL_BEATS = BEATS.length; // 128
+
+/** Scene order for the audience step counter. One étape = one scene. */
+export const SCENE_ORDER: SceneId[] = BLOCKS.map((block) => block.scene);
+
+export const TOTAL_SCENES = SCENE_ORDER.length;

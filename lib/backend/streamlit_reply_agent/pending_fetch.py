@@ -15,7 +15,7 @@ from lead_tags import (
     lookup_lead_interest,
     tag_key_for_status,
 )
-from supabase_repo import list_blocklist
+from supabase_repo import list_blocklist, list_client_emails
 from unibox_thread import strip_quoted_reply
 
 # Instantly ue_type: 2 = Received (latest message awaiting our reply).
@@ -221,9 +221,15 @@ def enrich_pending_rows(
     campaign_id: str,
     rows: list[PendingReplyRow],
 ) -> list[PendingReplyRow]:
-    """Apply blocklist and Instantly interest tags (bulk index + per-lead fallback)."""
+    """Apply blocklist, paying clients, and Instantly interest tags."""
     blocklist = list_blocklist(campaign_id)
-    filtered = [row for row in rows if row.lead_email.lower() not in blocklist]
+    client_emails = list_client_emails()
+    filtered = [
+        row
+        for row in rows
+        if row.lead_email.lower() not in blocklist
+        and row.lead_email.lower() not in client_emails
+    ]
     if not filtered:
         return []
 

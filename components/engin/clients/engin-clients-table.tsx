@@ -26,8 +26,15 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { conferenceOfferLabel } from "@/lib/commercial/conference-pricing";
 import type { ClientRow } from "@/lib/clients/types";
-import type { CreditField } from "@/lib/clients/engin-types";
+import type { CreditField, EnginClientRow } from "@/lib/clients/engin-types";
+import {
+  ELIGIBILITY_LABELS,
+  clientEligibility,
+  plannedShares,
+  type RoundRobinEligibilityReason,
+} from "@/lib/clients/round-robin";
 
+import { EnginCalendlyDialog } from "./engin-calendly-dialog";
 import { EnginCreditsDialog } from "./engin-credits-dialog";
 import { EnginOnboardingSheet } from "./engin-onboarding-sheet";
 
@@ -44,13 +51,29 @@ function StatutBadge({ statut }: { statut: string }) {
   return <Badge variant={variant}>{statut}</Badge>;
 }
 
+function EligibilityBadge({ reason }: { reason: RoundRobinEligibilityReason }) {
+  const variant =
+    reason === "eligible"
+      ? "default"
+      : reason === "inactive" || reason === "quota_full"
+        ? "destructive"
+        : "secondary";
+  return <Badge variant={variant}>{ELIGIBILITY_LABELS[reason]}</Badge>;
+}
+
 type RowActionsProps = {
-  row: ClientRow;
-  onAdjustCredits: (row: ClientRow, field: CreditField) => void;
-  onViewOnboarding: (row: ClientRow) => void;
+  row: EnginClientRow;
+  onAdjustCredits: (row: EnginClientRow, field: CreditField) => void;
+  onViewOnboarding: (row: EnginClientRow) => void;
+  onEditCalendly: (row: EnginClientRow) => void;
 };
 
-function RowActions({ row, onAdjustCredits, onViewOnboarding }: RowActionsProps) {
+function RowActions({
+  row,
+  onAdjustCredits,
+  onViewOnboarding,
+  onEditCalendly,
+}: RowActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -66,6 +89,9 @@ function RowActions({ row, onAdjustCredits, onViewOnboarding }: RowActionsProps)
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onAdjustCredits(row, "rdv_total")}>
           Ajuster quota RDV
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => onEditCalendly(row)}>
+          URL Calendly
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onViewOnboarding(row)}>
           Voir onboarding
@@ -87,9 +113,10 @@ function RowActions({ row, onAdjustCredits, onViewOnboarding }: RowActionsProps)
 }
 
 function buildColumns(handlers: {
-  onAdjustCredits: (row: ClientRow, field: CreditField) => void;
-  onViewOnboarding: (row: ClientRow) => void;
-}): ColumnDef<ClientRow>[] {
+  onAdjustCredits: (row: EnginClientRow, field: CreditField) => void;
+  onViewOnboarding: (row: EnginClientRow) => void;
+  onEditCalendly: (row: EnginClientRow) => void;
+}): ColumnDef<EnginClientRow>[] {
   return [
     {
       accessorKey: "email",
@@ -140,6 +167,41 @@ function buildColumns(handlers: {
       ),
     },
     {
+      id: "rrShare",
+      header: "Part RR",
+      accessorFn: (row) => row.rrSharePct,
+      cell: ({ row }) => (
+        <span className="tabular-nums">
+          {row.original.rrSharePct.toLocaleString("fr-FR", {
+            maximumFractionDigits: 1,
+            minimumFractionDigits: 0,
+          })}
+          %
+        </span>
+      ),
+    },
+    {
+      id: "eligibility",
+      header: "Pool",
+      accessorFn: (row) => row.eligibility,
+      cell: ({ row }) => <EligibilityBadge reason={row.original.eligibility} />,
+    },
+    {
+      accessorKey: "first_lead_at",
+      header: "First lead",
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap text-sm text-muted-foreground">
+          {row.original.first_lead_at
+            ? new Date(row.original.first_lead_at).toLocaleDateString("fr-FR", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : "—"}
+        </span>
+      ),
+    },
+    {
       accessorKey: "product_statut",
       header: "Statut",
       cell: ({ row }) => <StatutBadge statut={row.original.product_statut} />,
@@ -165,6 +227,7 @@ function buildColumns(handlers: {
           row={row.original}
           onAdjustCredits={handlers.onAdjustCredits}
           onViewOnboarding={handlers.onViewOnboarding}
+          onEditCalendly={handlers.onEditCalendly}
         />
       ),
     },
@@ -172,19 +235,34 @@ function buildColumns(handlers: {
 }
 
 export function EnginClientsTable() {
-  const [rows, setRows] = React.useState<ClientRow[]>([]);
+  const [rows, setRows] = React.useState<EnginClientRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState("");
   const [vertical, setVertical] = React.useState<string>("all");
   const [nouveauxOnly, setNouveauxOnly] = React.useState(false);
 
   const [creditsTarget, setCreditsTarget] = React.useState<{
-    client: ClientRow;
+    client: EnginClientRow;
     field: CreditField;
   } | null>(null);
-  const [onboardingTarget, setOnboardingTarget] = React.useState<ClientRow | null>(
+  const [onboardingTarget, setOnboardingTarget] = React.useState<EnginClientRow | null>(
     null,
   );
+  const [calendlyTarget, setCalendlyTarget] = React.useState<EnginClientRow | null>(
+    null,
+  );
+
+  const mergeClient = React.useCallback((prev: EnginClientRow[], client: ClientRow) => {
+    const nextRows = prev.map((row) =>
+      row.id === client.id ? { ...row, ...client } : row,
+    );
+    const shares = plannedShares(nextRows);
+    return nextRows.map((row) => ({
+      ...row,
+      rrSharePct: shares.get(row.id)?.sharePct ?? 0,
+      eligibility: clientEligibility(row),
+    }));
+  }, []);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -196,7 +274,7 @@ export function EnginClientsTable() {
           typeof body.error === "string" ? body.error : "Échec du chargement",
         );
       }
-      setRows((body.clients ?? []) as ClientRow[]);
+      setRows((body.clients ?? []) as EnginClientRow[]);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -242,6 +320,7 @@ export function EnginClientsTable() {
       buildColumns({
         onAdjustCredits: (client, field) => setCreditsTarget({ client, field }),
         onViewOnboarding: (client) => setOnboardingTarget(client),
+        onEditCalendly: (client) => setCalendlyTarget(client),
       }),
     [],
   );
@@ -296,9 +375,18 @@ export function EnginClientsTable() {
           if (!open) setCreditsTarget(null);
         }}
         onUpdated={(client) => {
-          setRows((prev) =>
-            prev.map((row) => (row.id === client.id ? client : row)),
-          );
+          setRows((prev) => mergeClient(prev, client));
+        }}
+      />
+
+      <EnginCalendlyDialog
+        client={calendlyTarget}
+        open={Boolean(calendlyTarget)}
+        onOpenChange={(open) => {
+          if (!open) setCalendlyTarget(null);
+        }}
+        onUpdated={(client) => {
+          setRows((prev) => mergeClient(prev, client));
         }}
       />
 

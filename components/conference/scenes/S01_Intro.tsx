@@ -1,37 +1,34 @@
 "use client";
 
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import { TEAM_IMAGE_URL } from "@/lib/constants";
 import type { SceneProps } from "../presentation/types";
 import { FlowLine }    from "../shared/FlowLine";
-import { HerculeLogo } from "../shared/HerculeLogo";
 import { Person, PersonGroup } from "../shared/Person";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
 
 /**
  * S01 — Introduction  (steps 0-6, beats 1-7)
  *
- * 0 – Écran noir quasi vide
+ * 0 – Carte vide
  * 1 – Ligne + personnages dispersés
  * 2 – Carte PARTICULIERS vs PROFESSIONNELS
  * 3 – Trois marchés
  * 4 – CAPACITÉ À INVESTIR
  * 5 – Evan / HERCULE.DEV
- * 6 – Promesse : logo + flux
+ * 6 – Promesse : flux
  */
 export function S01_Intro({ step }: SceneProps) {
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le terrain" beat="1/4" />
       <AnimatePresence mode="wait">
 
-        {/* ── beat 1 — noir ── */}
         {step === 0 && (
           <motion.div
             key="b01"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-background"
           />
         )}
 
@@ -141,9 +138,14 @@ export function S01_Intro({ step }: SceneProps) {
             transition={{ duration: 0.9 }}
             className="flex flex-col items-center gap-5"
           >
-            {/* Avatar placeholder */}
-            <div className="flex size-24 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800">
-              <Person size={52} />
+            <div className="relative size-24 overflow-hidden rounded-full border border-zinc-700">
+              <Image
+                src={TEAM_IMAGE_URL}
+                alt="Evan — Fondateur Hercule"
+                fill
+                className="object-cover"
+                sizes="96px"
+              />
             </div>
             <SceneLabel size="lg" animate={false}>HERCULE.DEV</SceneLabel>
             <p className="text-sm text-zinc-700">Fondateur</p>
@@ -157,7 +159,6 @@ export function S01_Intro({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-8"
           >
-            <HerculeLogo size="lg" showName />
             <PersonGroup count={5} icon="briefcase" size={28} />
             <div className="flex flex-col items-center gap-1">
               <SceneLabel size="sm" delay={0.1} animate={false}>PROFESSIONNELS</SceneLabel>

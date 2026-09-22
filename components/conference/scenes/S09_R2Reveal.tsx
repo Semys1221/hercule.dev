@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { FlowLine }    from "../shared/FlowLine";
 import { HerculeLogo } from "../shared/HerculeLogo";
 import { Person, PersonGroup } from "../shared/Person";
@@ -10,22 +9,17 @@ import { PhoneIcon }   from "../shared/PhoneIcon";
 import { RubiksCube }  from "../shared/RubiksCube";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
+import { SceneTagCard, SceneTagGrid } from "../shared/SceneTagCard";
 
 const TARGETS = ["BNC", "BIC", "TNS"] as const;
 const CRITERIA = ["ACTIVITÉ", "BUDGET", "PATRIMOINE", "PROJET"] as const;
 
-function cubeAngle(step: number) {
-  if (step >= 10) return 180;
-  if (step >= 6) return 90;
-  return 0;
-}
-
 function ThemeTitle({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <h1 className="text-4xl font-medium tracking-[0.18em] text-foreground uppercase">
+      <p className="text-4xl font-medium tracking-[0.18em] text-foreground uppercase">
         {title}
-      </h1>
+      </p>
       <p className="text-[11px] tracking-[0.22em] text-zinc-600 uppercase">
         {subtitle}
       </p>
@@ -37,23 +31,8 @@ function ThemeTitle({ title, subtitle }: { title: string; subtitle: string }) {
  * S09 — Révélation HERCULE R2  (steps 0-15, beats 40-55)
  */
 export function S09_R2Reveal({ step }: SceneProps) {
-  const showCube = step >= 2;
-
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le mécanisme" beat="4/4" />
-
-      {showCube && (
-        <motion.div
-          className="pointer-events-none absolute opacity-[0.07]"
-          animate={{ rotateY: cubeAngle(step) }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          <RubiksCube state="solved" size={200} spin={false} />
-        </motion.div>
-      )}
-
       <AnimatePresence mode="wait">
 
         {step === 0 && (
@@ -166,19 +145,22 @@ export function S09_R2Reveal({ step }: SceneProps) {
           <motion.div
             key="b48"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="relative z-10 grid grid-cols-2 gap-3"
+            className="relative z-10"
           >
-            {CRITERIA.map((label, i) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="rounded border border-zinc-700/50 px-6 py-4 text-center"
-              >
-                <SceneLabel size="xs" animate={false}>{label}</SceneLabel>
-              </motion.div>
-            ))}
+            <SceneTagGrid cols={2} className="gap-3">
+              {CRITERIA.map((label, i) => (
+                <motion.div
+                  key={label}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <SceneTagCard className="border-zinc-700/50 px-6 py-4">
+                    <SceneLabel size="xs" animate={false} className="tracking-[0.12em]">{label}</SceneLabel>
+                  </SceneTagCard>
+                </motion.div>
+              ))}
+            </SceneTagGrid>
           </motion.div>
         )}
 
@@ -294,11 +276,10 @@ export function S09_R2Reveal({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center gap-8"
           >
-            <HerculeLogo size="lg" showName showR2 />
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.2 }}
               className="flex flex-col items-center gap-1"
             >
               <SceneLabel size="sm" animate={false}>VOLUME</SceneLabel>

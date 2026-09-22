@@ -76,6 +76,10 @@
     "smoke-booking-email-render": "tsx ./lib/backend/scripts/crm/smokeBookingEmailRender.ts",
     "prepare-meniaud-not-paid-preview": "tsx --env-file=.env ./lib/backend/scripts/crm/prepareMeniaudNotPaidPreview.ts",
     "send-meniaud-close-indecis": "tsx --env-file=.env ./lib/backend/scripts/crm/sendMeniaudCloseIndecis.ts",
+    "move-meniaud-to-client": "tsx --env-file=.env ./lib/backend/scripts/crm/moveMeniaudToClient.ts",
+    "provision-meniaud-dashboard": "tsx --env-file=.env ./lib/backend/scripts/crm/provisionMeniaudDashboard.ts",
+    "apply-meniaud-dashboard-migrations": "tsx --env-file=.env ./lib/backend/scripts/crm/applyMeniaudDashboardMigrations.ts",
+    "apply-meniaud-dashboard": "tsx --env-file=.env ./lib/backend/scripts/crm/applyMeniaudDashboard.ts",
     "test-resolve-sales-call-lead": "tsx ./lib/legacy/sales-calls/resolve-lead.test.ts",
     "test-comptable-not-paid-milestones": "tsx ./lib/legacy/dashboard/comptable-not-paid-milestones.test.ts",
     "smoke-product-email-render": "tsx ./lib/backend/scripts/crm/smokeProductEmailRender.ts",
@@ -89,6 +93,7 @@
     "test-ensure-booked-before-confirm": "tsx ./lib/legacy/link-tracking/ensure-booked.test.ts",
     "test-provision-by-emails": "tsx ./lib/legacy/link-tracking/provision-by-emails.test.ts",
     "test-provision-leads-route": "tsx ./lib/legacy/link-tracking/provision-leads-route.test.ts",
+    "test-round-robin": "tsx ./lib/clients/round-robin.test.ts && tsx ./lib/legacy/booking/reservation-surface.test.ts",
     "audit-email-templates": "tsx --env-file=.env ./lib/backend/scripts/audit/emailTemplateAudit.ts",
     "repair-stale-booking-templates": "tsx --env-file=.env ./lib/backend/scripts/audit/repairStaleBookingTemplates.ts",
     "repair-dated-bypass-e1": "tsx --env-file=.env ./lib/backend/scripts/audit/repairDatedBypassE1.ts",
@@ -145,6 +150,7 @@
     "generate-pipeline-dashboard-offline": "tsx ./lib/backend/scripts/crm/generateAgencePipelineDashboard.ts --offline",
     "provision-hercule-liberal-stripe": "tsx --env-file=.env ./lib/backend/scripts/crm/provisionHerculeLiberalStripe.ts",
     "provision-comptable-acquisition-1489-stripe": "tsx --env-file=.env ./lib/backend/scripts/crm/provisionComptableAcquisition1489Stripe.ts",
+    "provision-conference-payment-links-stripe": "tsx --env-file=.env ./lib/backend/scripts/crm/provisionConferencePaymentLinksStripe.ts",
     "test-pipeline-classify": "tsx ./lib/legacy/calendly/pipeline-classify.test.ts",
     "test-pipeline-calculator": "tsx ./lib/legacy/calendly/pipeline-calculator.test.ts",
     "test-pipeline-intro-script": "tsx ./lib/legacy/calendly/pipeline-intro-script.test.ts",
@@ -288,7 +294,8 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.186.0",
     "vaul": "^1.1.2",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",

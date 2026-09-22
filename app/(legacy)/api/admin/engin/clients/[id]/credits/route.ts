@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createClientsClient } from "@/lib/clients/supabase";
 import type { CreditField } from "@/lib/clients/engin-types";
-import { adjustClientCredits } from "@/lib/clients/workflows/adjust-credits";
+import { adjustClientCredits } from "@/lib/(resend)/clients/workflows/adjust-credits";
 
 type RouteParams = {
   params: Promise<{ id: string }>;

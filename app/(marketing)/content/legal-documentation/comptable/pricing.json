@@ -1,20 +1,20 @@
 {
   "schemaVersion": 1,
   "audience": "comptable",
-  "updatedAt": "2026-09-20T22:00:00.000Z",
+  "updatedAt": "2026-09-22T00:00:00.000Z",
   "hero": {
     "eyebrow": "Tarification",
     "title": "Hercule Mercantile — Expert-Comptable",
-    "intro": "10 rendez-vous qualifiés / mois sur restaurants BIC, visioconférence nationale, 0 % de commission. Engagement trimestriel. Obligation de moyens — aucune garantie de signature ni de MRR."
+    "intro": "1 499 € pour 1 mois — 10 rendez-vous qualifiés garantis sur restaurants BIC, visioconférence nationale, 0 % de commission. 30 jours pour tester le dispositif. Obligation de moyens — aucune garantie de signature ni de MRR."
   },
   "plans": [
     {
       "id": "plan-comptable-dec",
       "name": "Hercule Mercantile",
-      "label": "Canon v3",
+      "label": "Canon v4",
       "price": "1 499 €",
-      "priceSuffix": "/mois",
-      "tagline": "Engagement 3 mois · 10 rendez-vous qualifiés / mois",
+      "priceSuffix": "— 1 mois",
+      "tagline": "10 rendez-vous qualifiés garantis · 30 j de test",
       "summary": null,
       "footer": "Warm-up technique communiqué après paiement.",
       "featured": true,
@@ -22,8 +22,9 @@
       "highlight": null,
       "offerType": "monthly_1499",
       "features": [
-        "10 rendez-vous qualifiés / mois — restaurants indépendants +3 salariés.",
-        "Engagement trimestriel (3 mois).",
+        "10 rendez-vous qualifiés garantis — restaurants indépendants +3 salariés.",
+        "Vous disposez de 30 jours pour tester le dispositif.",
+        "Si les 10 RDV ne sont pas générés pendant l'abonnement : +30 jours de prospection sans frais.",
         "Visioconférence nationale · attribution exclusive.",
         "Calendly Pro et Zoom Pro provisionnés par Hercule.",
         "0 % de commission sur vos honoraires signés.",
@@ -33,8 +34,8 @@
     }
   ],
   "gatedTeaserFeatures": [
-    "Capacité : 10 rendez-vous qualifiés / mois.",
-    "Engagement trimestriel.",
+    "Capacité : 10 rendez-vous qualifiés garantis.",
+    "Durée : 1 mois · 30 jours pour tester.",
     "0 % de commission — honoraires conservés."
   ],
   "gatedGhostFeatures": [

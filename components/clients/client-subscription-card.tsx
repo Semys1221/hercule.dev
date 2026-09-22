@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { ClientDashboardData } from "@/lib/clients/types";
+import { clientEngagementLabel } from "@/lib/commercial/conference-pricing";
 
 type ClientBillingPortalButtonProps = {
   slug: string;
@@ -58,12 +59,10 @@ type ClientSubscriptionCardProps = {
 };
 
 export function ClientSubscriptionCard({ data }: ClientSubscriptionCardProps) {
-  const engagementLabel =
-    data.clientType === "dec" && data.billing === "monthly"
-      ? "Engagement 3 mois (DEC Mercantile)"
-      : data.billing === "monthly"
-        ? "Abonnement mensuel sans engagement pack"
-        : "Pack prépayé — pas d'abonnement récurrent";
+  const engagementLabel = clientEngagementLabel({
+    clientType: data.clientType,
+    billing: data.billing,
+  });
 
   return (
     <Card>

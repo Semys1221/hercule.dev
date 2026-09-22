@@ -88,7 +88,7 @@ Merci pour votre confiance. Votre paiement Hercule Hubris a bien été reçu et 
 L'équipe Hercule configure votre espace dans les prochaines 48 heures :
 - Provisionnement Calendly Pro
 - Provisionnement Zoom Pro
-- Premier rendez-vous dirigeant PME bâtiment planifié sous 15 à 25 jours après activation
+- Premier rendez-vous dirigeant PME bâtiment planifié sous 20 à 25 jours après activation
 
 Votre tableau de bord :
 {{dashboardLink}}
@@ -163,6 +163,6 @@ La qualification live des contacts démarre — vous serez informé dès qu'un r
 
 Votre premier rendez-vous dirigeant PME bâtiment arrive sous peu.
 
-Surveillez votre Calendly et votre boîte mail — visioconférence nationale, fenêtre habituelle 15 à 25 jours après activation.
+Surveillez votre Calendly et votre boîte mail — visioconférence nationale, fenêtre habituelle 20 à 25 jours après activation.
 
 Tableau de bord : {{dashboardLink}}

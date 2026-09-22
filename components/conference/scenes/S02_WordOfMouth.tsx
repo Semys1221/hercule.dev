@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterBadge } from "../shared/ChapterBadge";
 import { RubiksCube }  from "../shared/RubiksCube";
 import { Person }      from "../shared/Person";
 import { SceneLabel }  from "../shared/SceneLabel";
@@ -19,7 +18,6 @@ import { SceneShell }  from "../shared/SceneShell";
 export function S02_WordOfMouth({ step }: SceneProps) {
   return (
     <SceneShell>
-      <ChapterBadge chapter="Le problème" beat="1/4" />
       <AnimatePresence mode="wait">
 
         {/* beat 8 — nouveau chapitre */}

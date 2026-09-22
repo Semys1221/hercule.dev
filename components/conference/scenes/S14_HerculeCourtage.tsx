@@ -3,10 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
 import { Counter }     from "../shared/Counter";
-import { HerculeLogo } from "../shared/HerculeLogo";
 import { Person, PersonGroup } from "../shared/Person";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
+import { SceneTagCard, SceneTagGrid } from "../shared/SceneTagCard";
 
 /**
  * S14 — Hercule Courtage — Histoire  (steps 0-12, beats 97-109)
@@ -121,17 +121,18 @@ export function S14_HerculeCourtage({ step }: SceneProps) {
         )}
 
         {step === 5 && (
-          <motion.div key="s14-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="grid grid-cols-3 gap-2"
-          >
-            {["PER", "LOMBARD", "SCPI", "IFC", "PRÉVOYANCE", "ASSURANCE"].map((s, i) => (
-              <motion.div key={s}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}
-                className="rounded border border-zinc-800/70 px-2 py-1.5 text-center"
-              >
-                <SceneLabel size="xs" muted animate={false}>{s}</SceneLabel>
-              </motion.div>
-            ))}
+          <motion.div key="s14-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <SceneTagGrid cols={3}>
+              {["PER", "LOMBARD", "SCPI", "IFC", "PRÉVOYANCE", "ASSURANCE"].map((s, i) => (
+                <motion.div key={s}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}
+                >
+                  <SceneTagCard>
+                    <SceneLabel size="xs" muted animate={false} className="tracking-[0.12em]">{s}</SceneLabel>
+                  </SceneTagCard>
+                </motion.div>
+              ))}
+            </SceneTagGrid>
           </motion.div>
         )}
 
@@ -195,7 +196,6 @@ export function S14_HerculeCourtage({ step }: SceneProps) {
           <motion.div key="s14-11" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-4"
           >
-            <HerculeLogo size="md" showName />
             <p className="text-4xl font-thin text-zinc-200">3 900 €</p>
             <p className="text-base text-zinc-500">/ 3 mois</p>
             <motion.p

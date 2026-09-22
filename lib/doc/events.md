@@ -28,7 +28,7 @@ Seuls les événements **trouvés dans le repo** ou **nécessaires au modèle** 
 | | |
 |--|--|
 | **Trigger** | `POST /api/webhooks/instantly/reply` |
-| **Condition** | AI reply config active, not blocklisted, not unsafe/OOO |
+| **Condition** | AI reply config active, not blocklisted, not in `public.clients`, not unsafe/OOO |
 | **Action** | Enqueue `ai_reply_agent_jobs` ou auto-reply |
 | **New state** | `ai_reply_agent_messages.ai_status` |
 | **Next** | Sending / Booking |

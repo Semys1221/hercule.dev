@@ -208,6 +208,16 @@ def queue_manual_job(
     ).execute()
 
 
+def list_client_emails() -> set[str]:
+    resp = get_client().table("clients").select("email").execute()
+    rows = resp.data or []
+    return {
+        str(row.get("email") or "").strip().lower()
+        for row in rows
+        if row.get("email")
+    }
+
+
 def list_blocklist(campaign_id: str) -> set[str]:
     resp = (
         get_client()

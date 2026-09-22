@@ -20,6 +20,21 @@ export function getFaqEntries(audience: FaqAudience): FaqEntry[] {
   return getBundledFaqDocument(audience).entries;
 }
 
+export function getPaidClientFaqEntries(audience: FaqAudience): FaqEntry[] {
+  return getFaqEntries(audience)
+    .filter((entry) => entry.paidClient === true)
+    .sort((a, b) => (a.paidClientOrder ?? 0) - (b.paidClientOrder ?? 0));
+}
+
+export function paidClientFaqToDashboardItems(
+  audience: FaqAudience,
+): { q: string; a: string }[] {
+  return getPaidClientFaqEntries(audience).map((entry) => ({
+    q: entry.question,
+    a: entry.answer,
+  }));
+}
+
 export function getBundledFaqDocument(audience: FaqAudience): FaqDocument {
   return BUNDLED_FAQ[audience];
 }

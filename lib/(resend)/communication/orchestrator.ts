@@ -1,0 +1,535 @@
+import { renderComptaNovaApologyEmail, COMPTA_NOVA_APOLOGY_IDEMPOTENCY_KEY } from "@/lib/legacy/modalites-campaign/compta-nova-apology";
+import {
+  createLinkTrackingClient,
+  markLeadCancelled,
+} from "@/lib/legacy/link-tracking/supabase";
+import { enforceModalitesCancelForLead } from "@/lib/legacy/modalites-campaign/enforce-cancel";
+import { isConferenceInviteEmailType } from "@/lib/legacy/cif-conference-sequence/orchestrator";
+import type { LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
+import { isMeetingBookedStatus } from "@/lib/legacy/link-tracking/types";
+import {
+  cancelScheduledEvent,
+  extractEventUuidFromPayload,
+  parseEventAndInviteeUuids,
+} from "@/lib/legacy/calendly";
+import { syncLeadStatutToInstantly } from "@/lib/legacy/link-tracking/instantly";
+
+import {
+  cancelFollowUpJobs,
+  cancelJob,
+  hasRoleRecoverySequenceStarted,
+  hasSequenceStarted,
+  insertJob,
+  listDueJobs,
+  markJobFailed,
+  markJobSent,
+  rescheduleJob,
+} from "./jobs";
+import { extraVarsForJob } from "./product-vars";
+import { sendBookingEmail } from "./send";
+import { h20SendAt, h24SendAt, h48SendAt, planRoleRecoverySchedule } from "./schedule";
+import { renderEmailFromStore } from "./template-store";
+import { meetingActionLinksForRender, retryUnsyncedMeetingLinks } from "./meeting-links";
+import { buildTemporaryConfirmUrl, buildEntreprisePostBookingUrl } from "./templates";
+import { defaultUseHtml } from "./signatures";
+import { confirmationAgenceLinkFor, dashboardLinkFor } from "@/lib/legacy/link-tracking/urls";
+import { modalitesConfirmUrlFor } from "@/lib/legacy/modalites-campaign/urls";
+import { prepareThreadedSend } from "./threaded-send";
+import { bypassesSendWindow, isWithinSendWindow, nextSendSlot } from "./send-window";
+import {
+  BOOKING_CONFIRMATION_DISABLED,
+  isDisabledMeetingConfirmationType,
+} from "./confirmation-disabled";
+import type { BookingEmailJob, BookingEmailType, StartSequenceParams } from "./types";
+import type { RenderedBookingEmail } from "./types";
+
+const FOLLOW_UP_TYPES: BookingEmailType[] = [
+  "h48_confirm",
+  "h24_relance",
+  "h20_cancel",
+  "role_seq_24",
+  "modalites_cancel",
+  "modalites_enforce_cancel",
+];
+
+const MAIN_AGENCE_TYPES: BookingEmailType[] = [
+  "immediate",
+  "h48_confirm",
+  "h24_relance",
+];
+
+const CABINET_BOOKING_TYPES: BookingEmailType[] = [
+  "immediate",
+  "h48_confirm",
+  "h24_relance",
+];
+
+const ROLE_RECOVERY_TYPES: BookingEmailType[] = ["role_seq_48", "role_seq_24"];
+
+function allowedMainTypes(category: StartSequenceParams["category"]): BookingEmailType[] {
+  if (category === "entreprise" || category === "comptable" || category === "cif") {
+    return CABINET_BOOKING_TYPES;
+  }
+  return MAIN_AGENCE_TYPES;
+}
+
+function resolveMainEmailTypes(
+  category: StartSequenceParams["category"],
+  emailTypes?: BookingEmailType[],
+): BookingEmailType[] | { error: string } {
+  const allowed = allowedMainTypes(category);
+  if (!emailTypes?.length) {
+    return allowed;
+  }
+  const invalid = emailTypes.filter((type) => !allowed.includes(type));
+  if (invalid.length > 0) {
+    return { error: `invalid_email_types:${invalid.join(",")}` };
+  }
+  return emailTypes;
+}
+
+function resolveRoleRecoveryEmailTypes(
+  emailTypes?: BookingEmailType[],
+): BookingEmailType[] | { error: string } {
+  if (!emailTypes?.length) {
+    return ROLE_RECOVERY_TYPES;
+  }
+  const invalid = emailTypes.filter((type) => !ROLE_RECOVERY_TYPES.includes(type));
+  if (invalid.length > 0) {
+    return { error: `invalid_email_types:${invalid.join(",")}` };
+  }
+  return emailTypes;
+}
+
+function scheduledForMainType(
+  emailType: BookingEmailType,
+  params: StartSequenceParams,
+): Date | null {
+  const { lead, sequenceStartsAt } = params;
+  if (emailType === "immediate") {
+    return sequenceStartsAt ?? new Date();
+  }
+  if (!lead.scheduled_at) {
+    return null;
+  }
+  if (emailType === "h48_confirm") {
+    return h48SendAt(lead.scheduled_at);
+  }
+  if (emailType === "h24_relance") {
+    return h24SendAt(lead.scheduled_at);
+  }
+  if (emailType === "h20_cancel") {
+    return h20SendAt(lead.scheduled_at);
+  }
+  return null;
+}
+
+function jobKey(
+  leadId: string,
+  emailType: string,
+  inviteeUri: string | null,
+): string {
+  const suffix = inviteeUri?.trim() || "manual";
+  return `${leadId}:${emailType}:${suffix}`;
+}
+
+export async function startBookingSequence(
+  params: StartSequenceParams,
+): Promise<{ started: boolean; reason?: string }> {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return { started: false, reason: "confirmation_disabled" };
+  }
+
+  const { lead, category, triggeredBy } = params;
+
+  if (!params.partial && (await hasSequenceStarted(lead.id))) {
+    return { started: false, reason: "already_started" };
+  }
+
+  const resolved = resolveMainEmailTypes(category, params.emailTypes);
+  if ("error" in resolved) {
+    return { started: false, reason: resolved.error };
+  }
+
+  const inviteeUri = lead.calendly_invitee_uri;
+  let inserted = 0;
+
+  for (const emailType of resolved) {
+    const scheduledFor = scheduledForMainType(emailType, params);
+    if (!scheduledFor) {
+      continue;
+    }
+    const job = await insertJob({
+      category,
+      leadId: lead.id,
+      emailType,
+      scheduledFor,
+      triggeredBy,
+      idempotencyKey: jobKey(lead.id, emailType, inviteeUri),
+      useHtml: params.htmlByType?.[emailType] ?? null,
+    });
+    if (job) {
+      inserted += 1;
+    }
+  }
+
+  if (inserted === 0) {
+    return { started: false, reason: "no_jobs_inserted" };
+  }
+
+  await dispatchDueJobsForLead(lead.id);
+
+  return { started: true };
+}
+
+export async function startRoleRecoverySequence(
+  params: StartSequenceParams,
+): Promise<{ started: boolean; reason?: string }> {
+  if (BOOKING_CONFIRMATION_DISABLED) {
+    return { started: false, reason: "confirmation_disabled" };
+  }
+
+  const { lead, category, triggeredBy } = params;
+
+  if (category !== "agence") {
+    return { started: false, reason: "agence_only" };
+  }
+
+  if (!lead.scheduled_at) {
+    return { started: false, reason: "missing_scheduled_at" };
+  }
+
+  if (!params.partial && (await hasRoleRecoverySequenceStarted(lead.id))) {
+    return { started: false, reason: "already_started" };
+  }
+
+  const resolved = resolveRoleRecoveryEmailTypes(params.emailTypes);
+  if ("error" in resolved) {
+    return { started: false, reason: resolved.error };
+  }
+
+  const inviteeUri = lead.calendly_invitee_uri;
+  const schedule = params.recoverySchedule
+    ? {
+        roleSeq48: params.recoverySchedule.roleSeq48,
+        roleSeq24: params.recoverySchedule.roleSeq24,
+      }
+    : planRoleRecoverySchedule(lead.scheduled_at);
+  const scheduleByType: Record<"role_seq_48" | "role_seq_24", Date> = {
+    role_seq_48: schedule.roleSeq48,
+    role_seq_24: schedule.roleSeq24,
+  };
+
+  let inserted = 0;
+  for (const emailType of resolved) {
+    if (emailType !== "role_seq_48" && emailType !== "role_seq_24") {
+      continue;
+    }
+    const job = await insertJob({
+      category,
+      leadId: lead.id,
+      emailType,
+      scheduledFor: scheduleByType[emailType],
+      triggeredBy,
+      idempotencyKey: jobKey(lead.id, emailType, inviteeUri),
+      useHtml: params.htmlByType?.[emailType] ?? null,
+    });
+    if (job) {
+      inserted += 1;
+    }
+  }
+
+  if (inserted === 0) {
+    return { started: false, reason: "no_jobs_inserted" };
+  }
+
+  await dispatchDueJobsForLead(lead.id);
+
+  return { started: true };
+}
+
+export async function dispatchDueBookingEmails(limit = 50): Promise<{
+  processed: number;
+  sent: number;
+  failed: number;
+  linksRetry?: { attempted: number; synced: number; failed: number };
+}> {
+  const linksRetry = await retryUnsyncedMeetingLinks(20);
+  const jobs = await listDueJobs(limit);
+  let sent = 0;
+  let failed = 0;
+
+  for (const job of jobs) {
+    const ok = await processJob(job);
+    if (ok) sent += 1;
+    else failed += 1;
+  }
+
+  return { processed: jobs.length, sent, failed, linksRetry };
+}
+
+export async function dispatchDueJobsForLead(leadId: string): Promise<void> {
+  const jobs = (await listDueJobs(100)).filter((job) => job.lead_id === leadId);
+  for (const job of jobs) {
+    await processJob(job);
+  }
+}
+
+async function sendAndMarkJob(
+  job: BookingEmailJob,
+  lead: LinkTrackingLead,
+  rendered: RenderedBookingEmail,
+): Promise<boolean> {
+  const threaded = await prepareThreadedSend(job, rendered);
+  const result = await sendBookingEmail({
+    to: lead.email,
+    subject: threaded.subject,
+    text: rendered.text,
+    html: rendered.html,
+    idempotencyKey: job.idempotency_key,
+    headers: threaded.headers,
+  });
+
+  if (!result.ok) {
+    await markJobFailed(job.id, result.error);
+    return false;
+  }
+
+  await markJobSent(job.id, result.id, {
+    messageId: result.messageId,
+    threadSubject: threaded.threadSubject,
+  });
+  return true;
+}
+
+async function processJob(job: BookingEmailJob): Promise<boolean> {
+  const lead = await loadLead(job.lead_category, job.lead_id);
+  if (!lead) {
+    await markJobFailed(job.id, "lead_not_found");
+    return false;
+  }
+
+  if (lead.statut === "CANCELLED") {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  if (isDisabledMeetingConfirmationType(job.email_type)) {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  if (
+    isConferenceInviteEmailType(job.email_type) &&
+    isMeetingBookedStatus(lead.statut)
+  ) {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  if (
+    lead.statut === "CONFIRMED" &&
+    job.idempotency_key !== COMPTA_NOVA_APOLOGY_IDEMPOTENCY_KEY &&
+    FOLLOW_UP_TYPES.includes(job.email_type)
+  ) {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  if (!bypassesSendWindow(job.email_type) && !isWithinSendWindow()) {
+    await rescheduleJob(job.id, nextSendSlot());
+    return true;
+  }
+
+  if (job.email_type === "h20_cancel") {
+    return processH20CancelJob(job, lead);
+  }
+
+  if (job.email_type === "modalites_enforce_cancel") {
+    return processModalitesEnforceCancelJob(job, lead);
+  }
+
+  if (job.idempotency_key === COMPTA_NOVA_APOLOGY_IDEMPOTENCY_KEY) {
+    const rendered = await renderComptaNovaApologyEmail(lead);
+    return sendAndMarkJob(job, lead, rendered);
+  }
+
+  const rendered = await renderJobEmail(job, lead);
+  return sendAndMarkJob(job, lead, rendered);
+}
+
+async function executeCalendlyAutoCancel(
+  job: BookingEmailJob,
+  lead: LinkTrackingLead,
+  reason: string,
+): Promise<void> {
+  const eventUuid =
+    extractEventUuidFromPayload(lead.calendly_payload) ??
+    (lead.calendly_invitee_uri
+      ? parseEventAndInviteeUuids(lead.calendly_invitee_uri)?.eventUuid ?? null
+      : null);
+  if (eventUuid) {
+    try {
+      await cancelScheduledEvent(eventUuid, reason);
+    } catch (err) {
+      console.error("[booking-communication] Calendly cancel failed:", err);
+    }
+  } else {
+    console.warn(
+      `[booking-communication] No Calendly event UUID for lead ${lead.id}`,
+    );
+  }
+
+  const client = createLinkTrackingClient();
+  const lookup = { category: job.lead_category, lead };
+  const cancelled = await markLeadCancelled(client, lookup);
+  await cancelFollowUpJobs(cancelled.lead.id);
+
+  try {
+    await syncLeadStatutToInstantly(
+      cancelled.lead,
+      cancelled.category,
+      "CANCELLED",
+    );
+  } catch (err) {
+    console.error("[booking-communication] Instantly cancel sync failed:", err);
+  }
+}
+
+async function processModalitesEnforceCancelJob(
+  job: BookingEmailJob,
+  lead: LinkTrackingLead,
+): Promise<boolean> {
+  const result = await enforceModalitesCancelForLead({
+    category: job.lead_category,
+    lead,
+  });
+  if (
+    result === "skipped_confirmed" ||
+    result === "skipped_already_cancelled"
+  ) {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  await markJobSent(job.id, `modalites-enforce/${job.id}`);
+  return true;
+}
+
+async function processH20CancelJob(
+  job: BookingEmailJob,
+  lead: LinkTrackingLead,
+): Promise<boolean> {
+  if (lead.statut === "CONFIRMED" || lead.statut === "CANCELLED") {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  const rendered = await renderJobEmail(job, lead);
+  const sent = await sendAndMarkJob(job, lead, rendered);
+  if (!sent) {
+    return false;
+  }
+
+  await executeCalendlyAutoCancel(
+    job,
+    lead,
+    "Annulation automatique — absence de confirmation de présence.",
+  );
+
+  return true;
+}
+
+async function renderJobEmail(job: BookingEmailJob, lead: LinkTrackingLead) {
+  const confirmUrl = confirmUrlForJob(job, lead);
+  const useHtml = job.use_html ?? defaultUseHtml(job.email_type);
+  const meetingActionLinks = await meetingActionLinksForRender(
+    job.email_type,
+    lead,
+    false,
+    job.lead_category,
+  );
+  const extra = await extraVarsForJob(job, lead);
+  const verticalFromProfile = lead.profile?.client_type;
+  const verticalOverride =
+    job.lead_category === "client" &&
+    (verticalFromProfile === "dec" ||
+      verticalFromProfile === "cif" ||
+      verticalFromProfile === "ias")
+      ? verticalFromProfile
+      : undefined;
+  return renderEmailFromStore({
+    category: job.lead_category,
+    emailType: job.email_type,
+    firstName: lead.first_name,
+    scheduledAt: extra.scheduledAt ?? lead.scheduled_at,
+    confirmUrl,
+    useHtml,
+    verticalOverride,
+
+    meetingActionLinks,
+    dashboardLink: extra.dashboardLink,
+    reservationAgenceLink: extra.reservationAgenceLink,
+    company: extra.company ?? lead.company,
+    email: extra.email ?? lead.email,
+    surveyLink: extra.surveyLink,
+    agenceInfo: extra.agenceInfo,
+    entrepriseInfo: extra.entrepriseInfo,
+    calendlyLink: extra.calendlyLink,
+    estimatedFirstBookingDate: extra.estimatedFirstBookingDate,
+    estimatedFirstRdvDate: extra.estimatedFirstRdvDate,
+    trackingNumber: extra.trackingNumber,
+    rdvRangeLabel: extra.rdvRangeLabel,
+    reservationCifLink: extra.reservationCifLink,
+  });
+}
+
+function confirmUrlForJob(job: BookingEmailJob, lead: LinkTrackingLead): string {
+  if (job.email_type === "modalites_ask" || job.email_type === "modalites_cancel") {
+    return modalitesConfirmUrlFor(lead, { autoConfirm: true });
+  }
+  if (job.email_type === "role_seq_24") {
+    return buildTemporaryConfirmUrl(lead.slug, lead.email);
+  }
+  if (
+    (job.lead_category === "entreprise" ||
+      job.lead_category === "comptable" ||
+      job.lead_category === "cif") &&
+    job.email_type === "h48_confirm"
+  ) {
+    return buildEntreprisePostBookingUrl(lead.slug, lead.email);
+  }
+  if (
+    (job.lead_category === "entreprise" ||
+      job.lead_category === "comptable" ||
+      job.lead_category === "cif") &&
+    job.email_type === "h24_relance"
+  ) {
+    return "";
+  }
+  if (
+    job.email_type.startsWith("close_indecis_") &&
+    (job.lead_category === "comptable" || job.lead_category === "cif")
+  ) {
+    return dashboardLinkFor(lead) ?? "";
+  }
+  return confirmationAgenceLinkFor(lead);
+}
+
+async function loadLead(
+  category: BookingEmailJob["lead_category"],
+  leadId: string,
+): Promise<LinkTrackingLead | null> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from(category)
+    .select("*")
+    .eq("id", leadId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data as LinkTrackingLead | null) ?? null;
+}

@@ -22,13 +22,13 @@ export function S16_Urgency(_props: SceneProps) {
         <div className="rounded border border-zinc-700/60 px-6 py-4 text-sm text-zinc-500">
           Paiement
         </div>
-        <p className="text-2xl tracking-[0.3em] text-zinc-300 uppercase">STRIPE</p>
+        <p className="text-2xl tracking-[0.3em] text-zinc-300 uppercase">Paiement sécurisé</p>
         <motion.div
           initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
           transition={{ duration: 0.5 }}
           className="h-14 w-px origin-top bg-zinc-700"
         />
-        <p className="text-[10px] tracking-widest text-zinc-600">↓ dans le chat</p>
+        <p className="text-[10px] tracking-widest text-zinc-600">Lien dans le chat</p>
       </motion.div>
     </SceneShell>
   );

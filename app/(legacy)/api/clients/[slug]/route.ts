@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { CLIENT_CGV_VERSION } from "@/lib/clients/cgv-onboarding";
 import { loadClientDashboard } from "@/lib/clients/load-client-dashboard";
 import {
   completeClientOnboarding,
@@ -42,6 +43,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 const patchSchema = z.object({
   firstName: z.string().min(1).max(120).optional(),
   completeOnboarding: z.boolean().optional(),
+  cgvVersion: z.string().min(1).max(32).optional(),
   waiveRetraction: z.boolean().optional(),
 });
 
@@ -91,6 +93,14 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         return NextResponse.json({ error: "firstName required" }, { status: 400 });
       }
 
+      const cgvVersion = parsed.data.cgvVersion?.trim();
+      if (!cgvVersion || cgvVersion !== CLIENT_CGV_VERSION) {
+        return NextResponse.json(
+          { error: "cgvVersion required", expected: CLIENT_CGV_VERSION },
+          { status: 400 },
+        );
+      }
+
       const { hasSucceededClientPayment } = await import(
         "@/lib/clients/load-client-dashboard"
       );
@@ -103,6 +113,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         client,
         row,
         firstName,
+        cgvVersion,
         waiveRetraction: parsed.data.waiveRetraction,
       });
       return NextResponse.json({ ok: true });

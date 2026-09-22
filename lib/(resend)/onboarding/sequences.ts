@@ -25,25 +25,6 @@ function parseFrontmatter(raw: string): { meta: Record<string, unknown>; body: s
 export function readPaymentOnboardingSequence(
   vertical: PaymentOnboardingVertical,
 ): PaymentOnboardingSequenceDocument {
-  // #region agent log
-  fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "23e90c",
-    },
-    body: JSON.stringify({
-      sessionId: "23e90c",
-      runId: "post-fix",
-      hypothesisId: "H5",
-      location: "sequences.ts:readPaymentOnboardingSequence",
-      message: "readPaymentOnboardingSequence without node:fs",
-      data: { vertical, usesEmbeddedMarkdown: true },
-      timestamp: Date.now(),
-    }),
-  }).catch(() => {});
-  // #endregion
-
   const raw = PAYMENT_ONBOARDING_MARKDOWN[vertical];
   const { meta, body } = parseFrontmatter(raw);
   const stepBodies = body.split(STEP_SEPARATOR);

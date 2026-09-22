@@ -3,10 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
 import { Counter }     from "../shared/Counter";
-import { HerculeLogo } from "../shared/HerculeLogo";
 import { Person, PersonGroup } from "../shared/Person";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
+import { SceneTagCard, SceneTagGrid } from "../shared/SceneTagCard";
 
 /**
  * S13 — Hercule DEC — Histoire  (steps 0-11, beats 85-96)
@@ -22,7 +22,7 @@ import { SceneShell }  from "../shared/SceneShell";
  * 8  – 900 € MRR  (93)
  * 9  – 12 mois / 36 clients / 10 800 €  (94)
  * 10 – 129 600 €  (95)
- * 11 – Prix 1 499 € / mois  (96)
+ * 11 – Prix 1 499 € — 1 mois  (96)
  */
 export function S13_HerculeDEC({ step }: SceneProps) {
   return (
@@ -102,18 +102,19 @@ export function S13_HerculeDEC({ step }: SceneProps) {
         )}
 
         {step === 4 && (
-          <motion.div key="s13-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="grid grid-cols-2 gap-3"
-          >
-            {["RATIO MATIÈRE", "PILOTAGE", "COÛTS", "RENTABILITÉ"].map((s, i) => (
-              <motion.div key={s}
-                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.12 }}
-                className="rounded border border-zinc-700/50 px-4 py-3 text-center"
-              >
-                <SceneLabel size="xs" animate={false}>{s}</SceneLabel>
-              </motion.div>
-            ))}
+          <motion.div key="s13-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <SceneTagGrid cols={2} className="gap-3">
+              {["RATIO MATIÈRE", "PILOTAGE", "COÛTS", "RENTABILITÉ"].map((s, i) => (
+                <motion.div key={s}
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.12 }}
+                >
+                  <SceneTagCard className="border-zinc-700/50 px-4 py-3">
+                    <SceneLabel size="xs" animate={false} className="tracking-[0.12em]">{s}</SceneLabel>
+                  </SceneTagCard>
+                </motion.div>
+              ))}
+            </SceneTagGrid>
           </motion.div>
         )}
 
@@ -159,7 +160,7 @@ export function S13_HerculeDEC({ step }: SceneProps) {
               className="h-px w-24 bg-zinc-700"
             />
             <p className="text-4xl font-thin text-zinc-200">
-              <Counter to={900} /> € <span className="text-xl">MRR</span>
+              <Counter to={900} /> € <span className="text-xl">/ mois</span>
             </p>
           </motion.div>
         )}
@@ -170,7 +171,7 @@ export function S13_HerculeDEC({ step }: SceneProps) {
           >
             <p className="text-base text-zinc-500">12 mois · 36 clients</p>
             <p className="text-4xl font-thin text-zinc-200">
-              <Counter to={10800} /> € <span className="text-xl">MRR</span>
+              <Counter to={10800} /> € <span className="text-xl">/ mois</span>
             </p>
           </motion.div>
         )}
@@ -190,10 +191,9 @@ export function S13_HerculeDEC({ step }: SceneProps) {
           <motion.div key="s13-11" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="flex flex-col items-center gap-6"
           >
-            <HerculeLogo size="md" showName />
             <div className="text-center">
               <p className="text-5xl font-thin text-zinc-200">1 499 €</p>
-              <p className="mt-1 text-base text-zinc-500">/ mois</p>
+              <p className="mt-1 text-base text-zinc-500">— 1 mois</p>
             </div>
           </motion.div>
         )}

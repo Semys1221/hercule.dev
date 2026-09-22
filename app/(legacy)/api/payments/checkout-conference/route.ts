@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { z } from "zod";
 
+import { firstLeadAtFrom } from "@/lib/clients/round-robin";
 import {
   CONFERENCE_CARDS,
   hasSecondaryVertical,
@@ -12,6 +13,7 @@ import {
   resolveConferenceClientType,
   type ConferenceBilling,
 } from "@/lib/commercial/conference-pricing";
+import { assertConferenceCheckoutOpen } from "@/lib/conference/sale-window-store";
 import { buildCheckoutIntegrationIdentifier } from "@/lib/legacy/payments/agence-offers";
 import { checkoutErrorResponse } from "@/lib/legacy/payments/checkout-errors";
 import {
@@ -68,6 +70,21 @@ export async function POST(request: Request) {
 
   try {
     const client = createLinkTrackingClient();
+    try {
+      await assertConferenceCheckoutOpen(client);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.name === "ConferenceSaleClosedError" ||
+          error.message === "conference_sale_window_missing")
+      ) {
+        return NextResponse.json(
+          { error: "Le lien n'est pas actif." },
+          { status: 403 },
+        );
+      }
+      throw error;
+    }
     const existingSlugs = await loadSlugSet(client);
     const [slug] = allocateSlugs(existingSlugs, 1);
 
@@ -85,6 +102,7 @@ export async function POST(request: Request) {
         offer_type: offerType,
         rdv_total: rdvCount,
         rdv_used: 0,
+        first_lead_at: firstLeadAtFrom(new Date()),
       })
       .select("id")
       .single();

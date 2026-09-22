@@ -1,4 +1,4 @@
-import type { BookingEmailType } from "@/lib/legacy/booking-communication/types";
+import type { BookingEmailType } from "@/lib/(resend)/communication/types";
 
 export const PAYMENT_ONBOARDING_SIGNATURE_TAGLINE =
   "Courtage en projet BNC/BIC/TNS";

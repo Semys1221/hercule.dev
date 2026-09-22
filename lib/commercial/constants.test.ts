@@ -85,15 +85,15 @@ describe("COMMERCIAL_COMPTABLE constants", () => {
     expect(COMMERCIAL_COMPTABLE.pack3TotalCents).toBe(359_800);
   });
 
-  it("firstRdvDaysMin/Max is 15–25 (warm-up post-paiement)", () => {
-    expect(COMMERCIAL_COMPTABLE.firstRdvDaysMin).toBe(15);
+  it("firstRdvDaysMin/Max is 20–25 (warm-up post-paiement)", () => {
+    expect(COMMERCIAL_COMPTABLE.firstRdvDaysMin).toBe(20);
     expect(COMMERCIAL_COMPTABLE.firstRdvDaysMax).toBe(25);
   });
 
   it("formatComptableFirstRdvLabel matches canon v2", () => {
-    expect(formatComptableFirstRdvLabel()).toBe("15 à 25 jours");
+    expect(formatComptableFirstRdvLabel()).toBe("20 à 25 jours");
     expect(formatComptableFirstRdvAfterActivationLabel()).toBe(
-      "15 à 25 jours après activation",
+      "20 à 25 jours après activation",
     );
   });
 

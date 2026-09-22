@@ -16,6 +16,7 @@ import {
   buildJumLeadUrls,
   buildLeadUrls,
 } from "./urls";
+import { restoreRoundRobinQuota } from "@/lib/clients/round-robin";
 import { buildClientDashboardUrl } from "@/lib/clients/supabase";
 
 // Lookup order: agence → comptable → entreprise → cif → jum → client
@@ -774,6 +775,24 @@ export async function markLeadCancelled(
     return lookup;
   }
 
+  try {
+    const nextProfile = await restoreRoundRobinQuota({
+      supabase: client,
+      category: lookup.category,
+      leadId: lookup.lead.id,
+      clientId: lookup.lead.client_id,
+      profile: lookup.lead.profile,
+    });
+    if (nextProfile !== lookup.lead.profile) {
+      lookup = {
+        category: lookup.category,
+        lead: { ...lookup.lead, profile: nextProfile },
+      };
+    }
+  } catch (err) {
+    console.error("[link-tracking] round-robin quota restore failed:", err);
+  }
+
   const { data, error } = await client
     .from(lookup.category)
     .update({
@@ -783,6 +802,7 @@ export async function markLeadCancelled(
       calendly_cancel_url: null,
       calendly_links_synced_at: null,
       calendly_links_sync_error: null,
+      profile: lookup.lead.profile,
     })
     .eq("id", lookup.lead.id)
     .select("*")
