@@ -2,7 +2,6 @@
 
 import {
   memo,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -10,6 +9,9 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { RubiksCube } from "../shared/RubiksCube";
+import { ChronologyBoard } from "../shared/ChronologyBoard";
+import { OfferPair } from "../shared/OfferPair";
+import type { CardSection } from "../scenes/card-deck";
 import { S01_Intro } from "../scenes/S01_Intro";
 import { S02_WordOfMouth } from "../scenes/S02_WordOfMouth";
 import { S03_WOMProblem } from "../scenes/S03_WOMProblem";
@@ -19,9 +21,6 @@ import { S06_Reframing } from "../scenes/S06_Reframing";
 import { S07_ThreeSolutions } from "../scenes/S07_ThreeSolutions";
 import { S08_Mechanism } from "../scenes/S08_Mechanism";
 import { S09_R2Reveal } from "../scenes/S09_R2Reveal";
-import { S10_JohnDemo } from "../scenes/S10_JohnDemo";
-import { S11_Installation } from "../scenes/S11_Installation";
-import { S12_OffersTransition } from "../scenes/S12_OffersTransition";
 import { S13_HerculeDEC } from "../scenes/S13_HerculeDEC";
 import { S14_HerculeCourtage } from "../scenes/S14_HerculeCourtage";
 import { S15_FAQ } from "../scenes/S15_FAQ";
@@ -35,7 +34,17 @@ const STAGE_SIZE_TRANSITION = {
   ease: [0.22, 1, 0.36, 1] as const,
 };
 
-const SCENES: Record<SceneId, ComponentType<SceneProps>> = {
+const MIN_CARD_SIZE = 8;
+
+const CAROUSEL_SECTION: Partial<Record<SceneId, CardSection>> = {
+  S10_JohnDemo: "S10",
+  S12_OffersTransition: "S12",
+};
+
+const OFFER_PAIR_SCENES = new Set<SceneId>(["S13_HerculeDEC", "S14_HerculeCourtage"]);
+
+/** Non-carousel scenes only — S10/S12 share a stable ChronologyBoard. */
+const SCENES: Partial<Record<SceneId, ComponentType<SceneProps>>> = {
   S01_Intro,
   S02_WordOfMouth,
   S03_WOMProblem,
@@ -45,9 +54,6 @@ const SCENES: Record<SceneId, ComponentType<SceneProps>> = {
   S07_ThreeSolutions,
   S08_Mechanism,
   S09_R2Reveal,
-  S10_JohnDemo,
-  S11_Installation,
-  S12_OffersTransition,
   S13_HerculeDEC,
   S14_HerculeCourtage,
   S15_FAQ,
@@ -68,18 +74,47 @@ type ConferenceVisualStageProps = {
   revealed?: boolean;
 };
 
+function stageContentKey(scene: SceneId, carouselSection: CardSection | undefined): string {
+  if (OFFER_PAIR_SCENES.has(scene)) return "offer-pair";
+  if (carouselSection) return "stage-carousel";
+  return scene;
+}
+
+function StageBody({
+  scene,
+  step,
+  carouselSection,
+}: {
+  scene: SceneId;
+  step: number;
+  carouselSection: CardSection | undefined;
+}) {
+  if (carouselSection) {
+    return <ChronologyBoard section={carouselSection} step={step} />;
+  }
+  if (OFFER_PAIR_SCENES.has(scene)) {
+    return (
+      <OfferPair
+        edition={scene === "S14_HerculeCourtage" ? "Courtage" : "DEC"}
+        step={step}
+      />
+    );
+  }
+  const SceneComponent = SCENES[scene];
+  if (!SceneComponent) return null;
+  return <SceneComponent step={step} />;
+}
+
 export const ConferenceVisualStage = memo(function ConferenceVisualStage({
   scene,
   step,
   ghostAngle,
   revealed = true,
 }: ConferenceVisualStageProps) {
-  const SceneComponent = SCENES[scene];
-  const cardRef = useRef<HTMLDivElement>(null);
+  const carouselSection = CAROUSEL_SECTION[scene];
+  const stageKey = stageContentKey(scene, carouselSection);
   const measureRef = useRef<HTMLDivElement>(null);
-  const prevSizeRef = useRef<{ w: number; h: number } | null>(null);
-  const lastResizeTsRef = useRef(0);
-  const measureCountRef = useRef(0);
+  const seenSizeRef = useRef(false);
   const [cardSize, setCardSize] = useState({ width: 0, height: 0 });
   const [animateCardSize, setAnimateCardSize] = useState(false);
 
@@ -88,13 +123,22 @@ export const ConferenceVisualStage = memo(function ConferenceVisualStage({
     if (!el) return;
 
     const updateSize = () => {
-      const width = el.scrollWidth;
-      const height = el.offsetHeight;
-      measureCountRef.current += 1;
-      if (measureCountRef.current > 1) {
+      const width = el.offsetWidth;
+      const stageHost = el.closest("[data-stage-host]") as HTMLElement | null;
+      const maxHeight = stageHost?.clientHeight ?? Infinity;
+      const height = Math.min(el.offsetHeight, maxHeight);
+      if (width < MIN_CARD_SIZE || height < MIN_CARD_SIZE) return;
+      if (seenSizeRef.current) {
         setAnimateCardSize(true);
+      } else {
+        seenSizeRef.current = true;
       }
-      setCardSize({ width, height });
+      setCardSize((prev) => {
+        if (Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1) {
+          return prev;
+        }
+        return { width, height };
+      });
     };
 
     updateSize();
@@ -103,74 +147,16 @@ export const ConferenceVisualStage = memo(function ConferenceVisualStage({
     return () => ro.disconnect();
   }, [scene, step]);
 
-  // #region agent log
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-
-    const logLayout = (source: string) => {
-      const rect = el.getBoundingClientRect();
-      const prev = prevSizeRef.current;
-      const deltaW = prev ? Math.round(rect.width - prev.w) : 0;
-      const deltaH = prev ? Math.round(rect.height - prev.h) : 0;
-      const now = Date.now();
-      const frameDeltaMs = lastResizeTsRef.current
-        ? now - lastResizeTsRef.current
-        : 0;
-      lastResizeTsRef.current = now;
-      const cubeInCard = el.querySelector("[data-rubiks-cube]") !== null;
-      const cardChrome = el.querySelector("[data-stage-card]");
-      const cardOpacity = cardChrome
-        ? getComputedStyle(cardChrome).opacity
-        : null;
-
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "87a15d",
-        },
-        body: JSON.stringify({
-          sessionId: "87a15d",
-          runId: "post-fix",
-          hypothesisId: source.startsWith("scene") ? "B" : "A",
-          location: "ConferenceVisualStage.tsx:layout",
-          message: "card layout snapshot",
-          data: {
-            source,
-            scene,
-            step,
-            w: Math.round(rect.width),
-            h: Math.round(rect.height),
-            targetW: cardSize.width,
-            targetH: cardSize.height,
-            deltaW,
-            deltaH,
-            frameDeltaMs,
-            cubeInCard,
-            cardOpacity,
-            sizeAnimation: animateCardSize,
-          },
-          timestamp: now,
-        }),
-      }).catch(() => {});
-
-      prevSizeRef.current = { w: rect.width, h: rect.height };
-    };
-
-    logLayout("mount");
-    const ro = new ResizeObserver(() => logLayout("resize"));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [scene, step, cardSize.width, cardSize.height, animateCardSize]);
-  // #endregion
+  const sized =
+    cardSize.width >= MIN_CARD_SIZE && cardSize.height >= MIN_CARD_SIZE;
 
   return (
     <motion.div
       initial={revealed ? { opacity: 0, y: 24, scale: 0.97 } : false}
       animate={revealed ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 24, scale: 0.97 }}
       transition={STAGE_REVEAL}
-      className="relative mt-8 flex min-h-0 w-full flex-1 items-center justify-center overflow-y-auto"
+      data-stage-host
+      className="relative mt-8 flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden"
     >
       {ghostAngle !== null ? (
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
@@ -186,33 +172,32 @@ export const ConferenceVisualStage = memo(function ConferenceVisualStage({
       ) : null}
 
       <motion.div
-        ref={cardRef}
         initial={false}
-        animate={{ width: cardSize.width, height: cardSize.height }}
+        animate={sized ? { width: cardSize.width, height: cardSize.height } : false}
         transition={animateCardSize ? STAGE_SIZE_TRANSITION : { duration: 0 }}
-        className="relative z-[1] max-w-full overflow-visible has-[[data-rubiks-cube]]:[&_[data-stage-card]]:opacity-0"
+        className="relative z-[1] max-h-full max-w-full overflow-y-auto has-[[data-rubiks-cube]]:[&_[data-stage-card]]:opacity-0 has-[[data-stage-bare]]:[&_[data-stage-card]]:opacity-0"
       >
         {revealed ? (
           <div
             aria-hidden
             data-stage-card
-            className="pointer-events-none absolute inset-0 rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-md transition-opacity duration-[400ms] supports-[backdrop-filter]:bg-zinc-900/40"
+            className="pointer-events-none absolute inset-0 z-[1] rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-md transition-opacity duration-[400ms] supports-[backdrop-filter]:bg-zinc-900/40"
           />
         ) : null}
 
         <div
           ref={measureRef}
-          className="absolute top-0 left-0 w-max max-w-[min(56rem,calc(100vw-4rem))]"
+          className="relative z-[1] w-max max-w-[min(56rem,calc(100vw-4rem))]"
         >
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
             <motion.div
-              key={scene}
+              key={stageKey}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.38 }}
+              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
             >
-              <SceneComponent step={step} />
+              <StageBody scene={scene} step={step} carouselSection={carouselSection} />
             </motion.div>
           </AnimatePresence>
         </div>

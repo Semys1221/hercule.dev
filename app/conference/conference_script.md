@@ -780,19 +780,19 @@ L’infrastructure permet de présenter 10 restaurants par mois.
 
 
 
-L’objectif est d’obtenir environ 3 signatures par mois.
+L’objectif est d’obtenir environ 5 signatures par mois.
 
 
 
-À 300 € par mois, cela représente 900 € de nouveau MRR chaque mois.
+À 300 € par mois, cela représente 1 500 € de nouveau MRR chaque mois.
 
 
 
-Sur 12 mois, avec 36 restaurants acquis, cela représente 10 800 € de MRR supplémentaire.
+Sur 12 mois, avec 60 restaurants acquis, cela représente 18 000 € de MRR supplémentaire.
 
 
 
-Soit 129 600 € de chiffre d’affaires annuel récurrent.
+Soit 216 000 € de chiffre d’affaires annuel récurrent.
 
 
 
@@ -864,15 +864,15 @@ Sur trois mois, l’objectif est de présenter 25 médecins qualifiés.
 
 
 
-Et avec 9 signatures, cela représente :
+Et avec 13 signatures, cela représente :
 
 
 
-22 500 € de commissions.
+32 500 € de commissions.
 
 
 
-450 000 € d’encours.
+650 000 € d’encours.
 
 
 
@@ -952,7 +952,55 @@ Durant tout le processus, c’est Hercule qu’il voit par défaut.
 
 
 
-**7.5 — EST-CE QUE VOUS APPELEZ LES PROSPECTS ?**
+**7.5 — COMMENT SAVOIR SI LE PROFIL EST BIEN QUALIFIÉ ?**
+
+
+
+Un profil qualifié cumule trois validations — pas une seule.
+
+
+
+**Problème** — une douleur concrète, formulée par le dirigeant. Pas « je cherche un conseil » : marge qui se contracte, homme-clé non couvert, trésorerie qui dort. Validée niche par niche.
+
+
+
+**Budget** — les moyens pour la traiter. Le plancher est atteint avant transmission : 300 €/mois (DEC) ou 50 000 € de trésorerie (IAS/CIF).
+
+
+
+**Rendez-vous** — le prospect a choisi un créneau dans votre agenda connecté. C’est lui qui demande le lien visio — pas nous qui le relançons.
+
+
+
+Quand les trois sont cochés, le profil part. Sinon, il ne part pas.
+
+
+
+**7.6 — POURQUOI IAS ET CIF SONT DANS LA MÈME OFFRE ?**
+
+
+
+Le filtre est le même : 50 000 € de trésorerie. Sans ce plancher, le dossier ne part pas — la visioconférence ne se rentabilise pas.
+
+
+
+L’usage de ces 50 000 € change.
+
+
+
+IAS (ORIAS) : le dirigeant est le point de défaillance. Homme-clé, prévoyance dirigeant, santé collective — rien n’est couvert.
+
+
+
+CIF (AMF) : le cash dort, l’impôt monte. PER, SCPI, capitalisation — aucun placement structuré.
+
+
+
+Une infrastructure, parce que le tri est identique. La prescription ne se mélange pas.
+
+
+
+**7.7 — EST-CE QUE VOUS APPELEZ LES PROSPECTS ?**
 
 
 

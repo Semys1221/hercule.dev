@@ -5,12 +5,13 @@ import { AnimatePresence } from "framer-motion";
 import { ConferenceStageAmbient } from "../shared/ConferenceStageAmbient";
 import { FilmGrain } from "../shared/FilmGrain";
 import { BEATS, SCENE_ORDER, TOTAL_BEATS, TOTAL_SCENES } from "./beats";
+import { ConferenceBeatNavigator } from "./ConferenceBeatNavigator";
 import { ConferencePresenterOverlay } from "./ConferencePresenterOverlay";
 import { ConferenceSlideChrome } from "./ConferenceSlideChrome";
 import { ConferenceSplash } from "./ConferenceSplash";
 import { ConferenceVisualStage } from "./ConferenceVisualStage";
 import { CUES } from "./cues";
-import { s09GhostCubeAngle } from "./scene-chrome";
+import { ghostCubeAngle } from "./scene-chrome";
 
 const LOCK_MS = 320;
 const FLASH_VISIBLE_MS = 1100;
@@ -35,6 +36,20 @@ export function PresentationController() {
     setBeatIdx(FIRST_CONTENT_BEAT);
   }, []);
 
+  const goToBeat = useCallback(
+    (index: number) => {
+      if (phase !== "active") return;
+      const next = Math.max(FIRST_CONTENT_BEAT, Math.min(TOTAL_BEATS - 1, index));
+      if (next > beatIdx) {
+        setShowFlash(true);
+        if (flashTimer.current) clearTimeout(flashTimer.current);
+        flashTimer.current = setTimeout(() => setShowFlash(false), FLASH_VISIBLE_MS);
+      }
+      setBeatIdx(next);
+    },
+    [beatIdx, phase],
+  );
+
   const advance = useCallback((delta: 1 | -1) => {
     if (phase !== "active") return;
     if (locked.current) return;
@@ -44,7 +59,10 @@ export function PresentationController() {
       locked.current = false;
     }, LOCK_MS);
 
-    setBeatIdx((i) => Math.max(FIRST_CONTENT_BEAT, Math.min(TOTAL_BEATS - 1, i + delta)));
+    setBeatIdx((i) => {
+      const next = Math.max(FIRST_CONTENT_BEAT, Math.min(TOTAL_BEATS - 1, i + delta));
+      return next;
+    });
 
     if (delta === 1) {
       setShowFlash(true);
@@ -130,7 +148,7 @@ export function PresentationController() {
   const nextBeat = BEATS[Math.min(beatIdx + 1, TOTAL_BEATS - 1)];
   const nextCue = CUES[nextBeat.id];
   const isLast = beatIdx === TOTAL_BEATS - 1;
-  const ghostAngle = s09GhostCubeAngle(beat.scene, beat.step);
+  const ghostAngle = ghostCubeAngle(beat.scene, beat.step);
   const sceneIndex = SCENE_ORDER.indexOf(beat.scene);
   const progressValue = ((sceneIndex + 1) / TOTAL_SCENES) * 100;
   const nextLabel = isLast ? null : (nextCue?.label ?? nextBeat.scene);
@@ -146,6 +164,18 @@ export function PresentationController() {
       <AnimatePresence>
         {phase === "splash" ? <ConferenceSplash key="splash" /> : null}
       </AnimatePresence>
+
+      {phase === "active" ? (
+        <div className="pointer-events-none fixed top-4 left-4 z-[70]">
+          <div className="pointer-events-auto">
+            <ConferenceBeatNavigator
+              beatIdx={beatIdx}
+              beatId={beat.id}
+              onSelectBeat={goToBeat}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {phase === "active" ? (
         <div className="relative z-[2] mx-auto flex h-full w-full max-w-5xl flex-col px-6 pt-8 pb-8">

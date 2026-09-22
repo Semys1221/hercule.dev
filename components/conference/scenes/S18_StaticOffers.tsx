@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { ConferencePricingCards } from "@/components/conference/conference-pricing-cards";
 import { useConferenceSaleWindow } from "@/components/conference/use-conference-sale-window";
@@ -8,7 +8,7 @@ import type { SceneProps } from "../presentation/types";
 import { SceneShell } from "../shared/SceneShell";
 
 /**
- * S18 — Offres statiques finales  (steps 0-1, beats 127-128)
+ * S18 — Offres statiques finales  (steps 0-1, beats 150-151)
  */
 export function S18_StaticOffers({ step }: SceneProps) {
   const saleWindow = useConferenceSaleWindow({ poll: true });
@@ -37,11 +37,20 @@ export function S18_StaticOffers({ step }: SceneProps) {
           />
         </motion.div>
 
-        {step === 1 ? (
-          <p className="text-xs tracking-[0.18em] text-zinc-500 uppercase">
-            {saleWindow.checkoutOpen ? "Inscription ouverte" : "Inscription fermée"}
-          </p>
-        ) : null}
+        <AnimatePresence mode="popLayout">
+          {step === 1 ? (
+            <motion.p
+              key="inscription"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+              className="text-xs tracking-[0.18em] text-zinc-500 uppercase"
+            >
+              {saleWindow.checkoutOpen ? "Inscription ouverte" : "Inscription fermée"}
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
       </div>
     </SceneShell>
   );

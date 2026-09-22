@@ -4,7 +4,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { TEAM_IMAGE_URL } from "@/lib/constants";
 import type { SceneProps } from "../presentation/types";
-import { FlowLine }    from "../shared/FlowLine";
+import { FlowLine } from "../shared/FlowLine";
 import { Person, PersonGroup } from "../shared/Person";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
@@ -18,7 +18,7 @@ import { SceneShell }  from "../shared/SceneShell";
  * 3 – Trois marchés
  * 4 – CAPACITÉ À INVESTIR
  * 5 – Evan / HERCULE.DEV
- * 6 – Promesse : flux
+ * 6 – Promesse PROFESSIONNELS → QUALIFICATION → AGENDA
  */
 export function S01_Intro({ step }: SceneProps) {
   return (

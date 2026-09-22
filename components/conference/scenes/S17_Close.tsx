@@ -16,7 +16,7 @@ import { SceneShell }  from "../shared/SceneShell";
 export function S17_Close({ step }: SceneProps) {
   return (
     <SceneShell>
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout">
 
         {step === 0 && (
           <motion.div key="s17-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

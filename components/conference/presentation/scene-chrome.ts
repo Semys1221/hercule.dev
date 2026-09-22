@@ -12,8 +12,7 @@ export const SCENE_TITLES: Record<SceneId, string> = {
   S08_Mechanism: "Ce qui tient les trois",
   S09_R2Reveal: "Des demandes qualifiées à vous",
   S10_JohnDemo: "Le flux qualifié dans l’agenda",
-  S11_Installation: "Vous n’avez rien à construire",
-  S12_OffersTransition: "Deux formules",
+  S12_OffersTransition: "Les infrastructures Hercule",
   S13_HerculeDEC: "Hercule DEC",
   S14_HerculeCourtage: "Hercule Courtage",
   S15_FAQ: "Questions",
@@ -24,8 +23,16 @@ export const SCENE_TITLES: Record<SceneId, string> = {
 
 /** Ghost cube behind the card during the R2 reveal, after the lockup. */
 export function s09GhostCubeAngle(scene: SceneId, step: number): number | null {
-  if (scene !== "S09_R2Reveal" || step < 2) return null;
+  if (scene !== "S09_R2Reveal" || step < 2 || step >= 14) return null;
   if (step >= 10) return 180;
   if (step >= 6) return 90;
   return 0;
+}
+
+/**
+ * Faint unlabeled ghost (terrain de jeu).
+ */
+export function ghostCubeAngle(scene: SceneId, step: number): number | null {
+  if (scene === "S09_R2Reveal") return s09GhostCubeAngle(scene, step);
+  return null;
 }

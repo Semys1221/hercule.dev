@@ -6,11 +6,23 @@ import { cn } from "@/lib/utils";
 
 export type CubeState = "scrambled" | "solving" | "solved";
 
+export type CubeFaceKey = "front" | "back" | "right" | "left" | "top" | "bottom";
+
+export type CubeFaceLabels = Partial<Record<CubeFaceKey, string>>;
+
 type RubiksCubeProps = {
   state?: CubeState;
   size?: number;
-  /** Label text for up to 3 visible faces */
+  /** Legacy labels: front, back, right. Ignored when `presentation` is set. */
   faceLabels?: [string?, string?, string?];
+  /** Labels by face. Used with `presentation`. */
+  presentationLabels?: CubeFaceLabels;
+  /**
+   * Face pose inside the cube's perspective. No solved spin.
+   * Omits `data-rubiks-cube` so a glassy stage card can stay in front.
+   */
+  presentation?: boolean;
+  presentationPose?: { rotateX: number; rotateY: number };
   className?: string;
   spin?: boolean;
 };
@@ -78,9 +90,10 @@ function stickerStyle(level: GrayLevel): CSSProperties {
 type CubeFaceProps = {
   levels: GrayLevel[];
   label?: string;
+  labelSize: number;
 };
 
-function CubeFace({ levels, label }: CubeFaceProps) {
+function CubeFace({ levels, label, labelSize }: CubeFaceProps) {
   return (
     <div className="absolute inset-0 bg-background" style={{ backfaceVisibility: "hidden" }}>
       <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-px bg-background p-px">
@@ -89,8 +102,11 @@ function CubeFace({ levels, label }: CubeFaceProps) {
         ))}
       </div>
       {label && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
-          <span className="px-1 text-center text-[8px] font-medium leading-tight tracking-[0.14em] text-zinc-200 uppercase">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40 px-1">
+          <span
+            className="text-center font-medium leading-tight tracking-[0.08em] text-zinc-200 uppercase"
+            style={{ fontSize: labelSize }}
+          >
             {label}
           </span>
         </div>
@@ -98,6 +114,12 @@ function CubeFace({ levels, label }: CubeFaceProps) {
     </div>
   );
 }
+
+const LEGACY_LABEL_FACE: Partial<Record<CubeFaceKey, 0 | 1 | 2>> = {
+  front: 0,
+  back: 1,
+  right: 2,
+};
 
 function buildFaces(half: number) {
   return FACE_KEYS.map((key) => ({
@@ -125,12 +147,16 @@ export function RubiksCube({
   state = "scrambled",
   size = 80,
   faceLabels,
+  presentationLabels,
+  presentation = false,
+  presentationPose,
   className,
   spin = true,
 }: RubiksCubeProps) {
   const half = size / 2;
   const faces = buildFaces(half);
   const patterns = patternsForState(state);
+  const labelSize = presentation ? Math.min(13, Math.max(9, size / 13)) : 8;
 
   const targetRotation =
     state === "solving"
@@ -139,19 +165,25 @@ export function RubiksCube({
         ? solvedRotation
         : scrambledRotation;
 
-  const spinAnimation =
-    state === "solved" && spin
+  const spinAnimation = presentation
+    ? {
+        rotateX: presentationPose?.rotateX ?? 0,
+        rotateY: presentationPose?.rotateY ?? 0,
+        rotateZ: 0,
+      }
+    : state === "solved" && spin
       ? { rotateY: [solvedRotation.rotateY, solvedRotation.rotateY + 360] }
       : targetRotation;
 
-  const spinTransition =
-    state === "solved" && spin
+  const spinTransition = presentation
+    ? { duration: 0.9, ease: [0.22, 1, 0.36, 1] as const }
+    : state === "solved" && spin
       ? { duration: 12, ease: "linear" as const, repeat: Infinity }
       : { duration: 1.4, ease: [0.22, 1, 0.36, 1] as const };
 
   return (
     <div
-      data-rubiks-cube
+      {...(presentation ? {} : { "data-rubiks-cube": "" })}
       className={cn("relative shrink-0", className)}
       style={{ width: size, height: size, perspective: size * 7 }}
       aria-hidden
@@ -159,18 +191,24 @@ export function RubiksCube({
       <motion.div
         animate={spinAnimation}
         transition={spinTransition}
+        exit={{ transition: { duration: 0.01 } }}
         className="absolute inset-0"
         style={{ transformStyle: "preserve-3d" }}
       >
-        {faces.map(({ key, tx }, idx) => {
-          const label = faceLabels?.[idx < 3 ? idx : -1 as never];
+        {faces.map(({ key, tx }) => {
+          const legacyIndex = LEGACY_LABEL_FACE[key];
+          const label = presentation
+            ? presentationLabels?.[key]
+            : legacyIndex === undefined
+              ? undefined
+              : faceLabels?.[legacyIndex];
           return (
             <div
               key={key}
               className="absolute inset-0"
               style={{ transform: tx, transformStyle: "preserve-3d" }}
             >
-              <CubeFace levels={patterns[key]} label={label} />
+              <CubeFace levels={patterns[key]} label={label} labelSize={labelSize} />
             </div>
           );
         })}

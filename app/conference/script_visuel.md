@@ -1885,15 +1885,15 @@ Ils forment une ligne.
 
 **VOIX**
 
-L’objectif est d’obtenir environ 3 signatures par mois.
+L’objectif est d’obtenir environ 5 signatures par mois.
 
 **VISUEL**
 
-3 restaurants sortent du groupe.
+5 restaurants sortent du groupe.
 
 Ils avancent vers le cabinet.
 
-Les 7 autres restent en arrière-plan.
+Les 5 autres restent en arrière-plan.
 
 ---
 
@@ -1901,17 +1901,17 @@ Les 7 autres restent en arrière-plan.
 
 **VOIX**
 
-À 300 € par mois, cela représente 900 € de nouveau MRR chaque mois.
+À 300 € par mois, cela représente 1 500 € de nouveau MRR chaque mois.
 
 **VISUEL**
 
 ```text
-3 × 300 €
+5 × 300 €
     ↓
-900 € MRR
+1 500 € MRR
 ```
 
-Le `900 €` devient dominant.
+Le `1 500 €` devient dominant.
 
 ---
 
@@ -1919,21 +1919,21 @@ Le `900 €` devient dominant.
 
 **VOIX**
 
-Sur 12 mois, avec 36 restaurants acquis, cela représente 10 800 € de MRR supplémentaire.
+Sur 12 mois, avec 60 restaurants acquis, cela représente 18 000 € de MRR supplémentaire.
 
 **VISUEL**
 
 Timeline :
 
 ```text
-1 mois → 3 clients
-12 mois → 36 clients
+1 mois → 5 clients
+12 mois → 60 clients
 ```
 
 Puis :
 
 ```text
-10 800 € MRR
+18 000 € MRR
 ```
 
 ---
@@ -1942,14 +1942,14 @@ Puis :
 
 **VOIX**
 
-Soit 129 600 € de chiffre d’affaires annuel récurrent.
+Soit 216 000 € de chiffre d’affaires annuel récurrent.
 
 **VISUEL**
 
 Le nombre :
 
 ```text
-129 600 €
+216 000 €
 ```
 
 apparaît seul.
@@ -2146,38 +2146,42 @@ PROFILS QUALIFIÉS
 
 **VOIX**
 
-Et avec 9 signatures, cela représente 22 500 € de commissions.
+Et avec 13 signatures — 50 % de conversion — cela représente 32 500 € de commissions.
 
 **VISUEL**
 
 25 profils.
 
-9 se détachent.
+13 se détachent.
 
 Puis :
 
 ```text
-9 × 2 500 €
+13 × 2 500 €
       ↓
-22 500 €
+32 500 €
 ```
 
 ---
 
-## **Beat 107 — Encours**
+## **Beat 107 — ROI 3 mois**
 
 **VOIX**
 
-450 000 € d’encours.
+32 500 € de commissions sur 3 mois. Soit 650 000 € d’encours.
 
 **VISUEL**
 
-Les 9 profils deviennent une seule masse financière.
+Les 13 profils deviennent une seule masse financière.
 
 ```text
-450 000 €
-ENCOURS
+32 500 €
+ROI 3 MOIS
 ```
+
+Puis petit label :
+
+`650 000 € ENCOURS`
 
 ---
 

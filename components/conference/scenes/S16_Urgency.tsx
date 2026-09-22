@@ -2,10 +2,11 @@
 
 import { motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
+import { PaymentTrustBadges } from "../shared/PaymentTrustBadges";
 import { SceneShell } from "../shared/SceneShell";
 
 /**
- * S16 — Urgence  (step 0, beat 115)
+ * S16 — Urgence  (step 0, beat 114)
  *
  * 0 – Lien Stripe
  */
@@ -23,6 +24,13 @@ export function S16_Urgency(_props: SceneProps) {
           Paiement
         </div>
         <p className="text-2xl tracking-[0.3em] text-zinc-300 uppercase">Paiement sécurisé</p>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.45 }}
+        >
+          <PaymentTrustBadges />
+        </motion.div>
         <motion.div
           initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
           transition={{ duration: 0.5 }}

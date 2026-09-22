@@ -6,18 +6,18 @@ import { Person }       from "../shared/Person";
 import { RubiksCube }   from "../shared/RubiksCube";
 import { SceneLabel }   from "../shared/SceneLabel";
 import { SceneShell }   from "../shared/SceneShell";
+import { StageSubtitle } from "../shared/StageSubtitle";
 
 const ORBIT_R = 90;
 const ORBIT_WORDS = ["VOLUME", "QUALITÉ", "INTÉRÊT"] as const;
 
 /**
- * S06 — Reframing  (steps 0-4, beats 30-34)
+ * S06 — Reframing  (steps 0-4)
  *
- * 0 – Découragement — bonhomme seul
+ * 0 – Découragement — bonhomme + carte
  * 1 – Les trois mots orbitent
  * 2 – ? silence visuel
- * 3 – ? → cube mélangé
- * 4 – Trois faces du cube visibles + labels
+ * 3 – Cube mélangé
  */
 export function S06_Reframing({ step }: SceneProps) {
   return (
@@ -27,10 +27,16 @@ export function S06_Reframing({ step }: SceneProps) {
         {/* beat 30 */}
         {step === 0 && (
           <motion.div
-            key="b30"
+            key="discourage"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="flex items-center gap-8"
           >
             <Person size={52} />
+            <div className="rounded border border-zinc-700/60 px-6 py-4">
+              <p className="text-sm tracking-[0.08em] text-zinc-400">
+                Rien ne marche, perte de temps...
+              </p>
+            </div>
           </motion.div>
         )}
 
@@ -74,7 +80,7 @@ export function S06_Reframing({ step }: SceneProps) {
           <motion.div
             key="b32"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex items-center justify-center"
+            className="flex flex-col items-center gap-6"
           >
             <motion.span
               animate={{ opacity: [0.4, 0.8, 0.4] }}
@@ -83,6 +89,7 @@ export function S06_Reframing({ step }: SceneProps) {
             >
               ?
             </motion.span>
+            <StageSubtitle>Quelle solution ?</StageSubtitle>
           </motion.div>
         )}
 
@@ -91,9 +98,10 @@ export function S06_Reframing({ step }: SceneProps) {
           <motion.div
             key="b33"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="flex flex-col items-center gap-4"
+            className="flex flex-col items-center gap-6"
           >
             <RubiksCube state="scrambled" size={80} spin={false} />
+            <StageSubtitle>Revoir les choses dans le bon ordre.</StageSubtitle>
           </motion.div>
         )}
 
