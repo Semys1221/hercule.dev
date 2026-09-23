@@ -72,11 +72,5 @@
       "source": "/modalites-hercule.html/:slug",
       "destination": "/modalites-hercule.html"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron/gmail-client-inbox",
-      "schedule": "*/5 * * * *"
-    }
   ]
 }

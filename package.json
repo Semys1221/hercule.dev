@@ -168,6 +168,7 @@
     "configure-client-monthly-renewal-j7-cron": "tsx --env-file=.env ./lib/backend/scripts/crm/configureClientMonthlyRenewalJ7CronJob.ts",
     "configure-retraction-expire-cron": "tsx --env-file=.env ./lib/backend/scripts/crm/configureRetractionExpireCronJob.ts",
     "configure-post-rdv-surveys-cron": "tsx --env-file=.env ./lib/backend/scripts/crm/configurePostRdvSurveysCronJob.ts",
+    "configure-gmail-client-inbox-cron": "tsx --env-file=.env ./lib/backend/scripts/engin/configureGmailClientInboxCronJob.ts",
     "smoke-calendly-seat-onboarding": "tsx --env-file=.env ./lib/backend/scripts/crm/smokeCalendlySeatOnboardingE2e.ts",
     "smoke-comptable-acquisition-e2e": "tsx --env-file=.env ./lib/backend/scripts/crm/smokeComptableAcquisitionE2e.ts",
     "test-calendly-org": "tsx ./lib/legacy/calendly/org.test.ts",

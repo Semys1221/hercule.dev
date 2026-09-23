@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/admin/communication/sequences", label: "Séquences" },
   { href: "/admin/communication/notifications", label: "Notifications" },
-  { href: "/admin/communication/clients", label: "Clients" },
+  { href: "/admin/communication/clients", label: "Inbox" },
 ] as const;
 
 export function CommunicationSubNav() {
@@ -38,27 +38,37 @@ export function CommunicationSubNav() {
   }, []);
 
   return (
-    <nav className="flex flex-wrap gap-2 border-b border-border pb-4">
-      {LINKS.map((link) => {
-        const active = pathname.startsWith(link.href);
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors",
-              active
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            {link.label}
-            {link.href.endsWith("/clients") && needsReply > 0 ? (
-              <Badge variant="destructive">{needsReply}</Badge>
-            ) : null}
-          </Link>
-        );
-      })}
-    </nav>
+    <header className="border-b border-border bg-card">
+      <div className="flex flex-col gap-1 px-1 pb-0 pt-1">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">Communication</h2>
+        <p className="text-sm text-muted-foreground">
+          Séquences Resend, notifications et messagerie clients (Gmail).
+        </p>
+      </div>
+      <nav className="-mb-px flex gap-6 px-1" aria-label="Communication">
+        {LINKS.map((link) => {
+          const active = pathname.startsWith(link.href);
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "inline-flex items-center gap-2 border-b-2 py-3 text-sm font-medium transition-colors",
+                active
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
+              )}
+            >
+              {link.label}
+              {link.href.endsWith("/clients") && needsReply > 0 ? (
+                <Badge variant="destructive" className="h-5 min-w-5 px-1.5 text-xs">
+                  {needsReply}
+                </Badge>
+              ) : null}
+            </Link>
+          );
+        })}
+      </nav>
+    </header>
   );
 }

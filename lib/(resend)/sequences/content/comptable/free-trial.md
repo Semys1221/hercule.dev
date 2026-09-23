@@ -36,12 +36,12 @@
 
 Afin de rendre votre décision plus simple, nous vous offrons ce qu'aucun service d'acquisition ne fait : votre premier rendez-vous visio sous 7 jours est gratuit.
 
-Essai DEC 14 jours : carte enregistrée, 0 € aujourd'hui, un rendez-vous restaurant qualifié, puis 1 499 €/mois pour 10 rendez-vous si vous poursuivez.
+Essai DEC 14 jours : 0 € aujourd'hui, un rendez-vous restaurant qualifié, puis 1 499 €/mois pour 10 rendez-vous si vous poursuivez.
 
 Voir la proposition et démarrer l'essai :
 {{checkoutTrialLink}}
 
-Béatrice Meyer
+L'équipe Hercule
 
 ---step---
 
@@ -54,7 +54,7 @@ Essai 14 jours gratuits (0 €), puis 1 499 €/mois. Vous pouvez arrêter avant
 Activer l'essai :
 {{checkoutTrialLink}}
 
-Béatrice Meyer
+L'équipe Hercule
 
 ---step---
 
@@ -66,4 +66,4 @@ Ensuite : 1 499 €/mois. Sans engagement au-delà de l'essai — vous pouvez ar
 
 {{checkoutTrialLink}}
 
-Béatrice Meyer
+L'équipe Hercule

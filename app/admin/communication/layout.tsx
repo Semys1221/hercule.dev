@@ -6,9 +6,9 @@ export default function CommunicationLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="engin-communication flex min-h-0 flex-1 flex-col gap-0">
       <CommunicationSubNav />
-      {children}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
     </div>
   );
 }

@@ -25,6 +25,7 @@ const TARGETS = [
     path: "/api/cron/campaign-restaurant-switch",
     label: "campaign-restaurant-switch",
   },
+  { path: "/api/cron/gmail-client-inbox", label: "gmail-client-inbox" },
 ] as const;
 
 function env(name: string): string {
@@ -161,6 +162,7 @@ async function main(): Promise<void> {
       console.log("    pnpm configure-ai-reply-agent-reprocess-cron");
       console.log("    pnpm configure-ai-reply-agent-interested-sweep-cron");
       console.log("    pnpm configure-management-recipients-sync-cron");
+      console.log("    pnpm configure-gmail-client-inbox-cron");
     }
     if (!allHealthy) {
       console.log("- One or more endpoints failed. Check Vercel deploy + CRON_SECRET match.");

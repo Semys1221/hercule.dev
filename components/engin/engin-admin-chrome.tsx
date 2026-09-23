@@ -20,35 +20,32 @@ const NAV = [
   { href: "/admin/communication", label: "Communication" },
 ] as const;
 
+const COMMUNICATION_CRUMBS: { prefix: string; label: string }[] = [
+  { prefix: "/admin/communication/sequences", label: "Séquences" },
+  { prefix: "/admin/communication/notifications", label: "Notifications" },
+  { prefix: "/admin/communication/clients", label: "Inbox" },
+];
+
+function communicationLeafLabel(pathname: string): string | null {
+  const match = COMMUNICATION_CRUMBS.find((item) => pathname.startsWith(item.prefix));
+  return match?.label ?? null;
+}
+
 export function EnginAdminChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const clientDetailMatch = pathname.match(/^\/admin\/clients\/([^/]+)$/);
   const clientId = clientDetailMatch?.[1];
-
-  if (typeof window === "undefined") {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "cfad7b",
-      },
-      body: JSON.stringify({
-        sessionId: "cfad7b",
-        runId: "hydrate",
-        hypothesisId: "D",
-        location: "engin-admin-chrome.tsx:ssr",
-        message: "admin chrome ssr",
-        data: { pathname, hasClientBreadcrumb: Boolean(clientId) },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }
+  const isCommunication = pathname.startsWith("/admin/communication");
+  const communicationLeaf = isCommunication ? communicationLeafLabel(pathname) : null;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 px-6 py-10">
-      <header className="flex flex-col gap-4">
+    <div
+      className={cn(
+        "mx-auto flex min-h-screen flex-col gap-6 px-6 py-10",
+        isCommunication ? "max-w-[1600px]" : "max-w-7xl",
+      )}
+    >
+      <header className="flex shrink-0 flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <HerculeMark className="size-8 text-foreground" />
           <div>
@@ -56,7 +53,7 @@ export function EnginAdminChrome({ children }: { children: React.ReactNode }) {
             <h1 className="text-2xl font-semibold tracking-tight">Engin</h1>
           </div>
         </div>
-        <nav className="flex flex-wrap gap-2">
+        <nav className="flex flex-wrap gap-2" aria-label="Engin">
           {NAV.map((item) => {
             const active =
               item.href === "/admin"
@@ -93,8 +90,25 @@ export function EnginAdminChrome({ children }: { children: React.ReactNode }) {
             </BreadcrumbList>
           </Breadcrumb>
         ) : null}
+        {communicationLeaf ? (
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/admin/communication/sequences">Communication</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{communicationLeaf}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        ) : null}
       </header>
-      {children}
+      <div className={cn("flex min-h-0 flex-1 flex-col", isCommunication && "min-h-[calc(100vh-14rem)]")}>
+        {children}
+      </div>
     </div>
   );
 }

@@ -47,31 +47,6 @@ export async function listClientInboxThreads(
 
   const { data, error } = await query;
   if (error) {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "9a2b79",
-      },
-      body: JSON.stringify({
-        sessionId: "9a2b79",
-        runId: "pre-fix",
-        hypothesisId: "A-D",
-        location: "queries.ts:listClientInboxThreads",
-        message: "client_inbox_threads query error",
-        data: {
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          message: error.message,
-          filter,
-          limit,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     throw new Error(error.message);
   }
 

@@ -25,7 +25,7 @@ See root [`.env.example`](../../../.env.example):
 
 ## Operations
 
-- **Cron** (Vercel): `GET/POST /api/cron/gmail-client-inbox` every 5 min — incremental sync + watch renew.
+- **Cron** ([cron-job.org](https://cron-job.org)): `GET /api/cron/gmail-client-inbox` every 5 min (`Authorization: Bearer $CRON_SECRET`) — register with `pnpm configure-gmail-client-inbox-cron` (`CRON_JOB_ORG_API_KEY` + `CRON_SECRET` in `.env`). Do not add this schedule to `vercel.json` on Hobby.
 - **Webhook**: `POST /api/webhooks/gmail` — Pub/Sub push triggers sync.
 - **Backfill**: `pnpm backfill-client-inbox-from-gmail` (90 days, client-matched only).
 - **Unit tests**: `pnpm exec vitest run lib/engin/client-inbox/client-inbox.test.ts`
