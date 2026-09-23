@@ -14,6 +14,8 @@ import { OfferPair } from "../shared/OfferPair";
 import type { CardSection } from "../scenes/card-deck";
 import { S01_Intro } from "../scenes/S01_Intro";
 import { S02_WordOfMouth } from "../scenes/S02_WordOfMouth";
+import { S03_5_StartingPoint } from "../scenes/S03_5_StartingPoint";
+import { S03_6_BuildAudience } from "../scenes/S03_6_BuildAudience";
 import { S03_WOMProblem } from "../scenes/S03_WOMProblem";
 import { S04_ColdLeads } from "../scenes/S04_ColdLeads";
 import { S05_GoogleAds } from "../scenes/S05_GoogleAds";
@@ -24,6 +26,7 @@ import { S09_R2Reveal } from "../scenes/S09_R2Reveal";
 import { S13_HerculeDEC } from "../scenes/S13_HerculeDEC";
 import { S14_HerculeCourtage } from "../scenes/S14_HerculeCourtage";
 import { S15_FAQ } from "../scenes/S15_FAQ";
+import { S16_Urgency } from "../scenes/S16_Urgency";
 import { S17_Close } from "../scenes/S17_Close";
 import { S18_StaticOffers } from "../scenes/S18_StaticOffers";
 import type { SceneId, SceneProps } from "./types";
@@ -46,6 +49,8 @@ const SCENES: Partial<Record<SceneId, ComponentType<SceneProps>>> = {
   S01_Intro,
   S02_WordOfMouth,
   S03_WOMProblem,
+  S03_5_StartingPoint,
+  S03_6_BuildAudience,
   S04_ColdLeads,
   S05_GoogleAds,
   S06_Reframing,
@@ -55,6 +60,7 @@ const SCENES: Partial<Record<SceneId, ComponentType<SceneProps>>> = {
   S13_HerculeDEC,
   S14_HerculeCourtage,
   S15_FAQ,
+  S16_Urgency,
   S17_Close,
   S18_StaticOffers,
 };

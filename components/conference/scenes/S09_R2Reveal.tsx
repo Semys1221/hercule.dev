@@ -2,10 +2,11 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { FlowLine }    from "../shared/FlowLine";
+import { CourtageTagline } from "../shared/CourtageTagline";
 import { PersonGroup } from "../shared/Person";
 import { QualificationBoard } from "./QualificationBoard";
 import {
+  S09_COURTAGE_STEP,
   S09_LOGO_STEP,
   S09_QUAL_END,
   S09_QUAL_START,
@@ -40,22 +41,10 @@ const LITE_FILTERS = [
     niche: "CIF",
     items: [
       { label: "Trésorerie ≥ 50 k€" },
-      { label: "Projet de placement" },
+      { label: "Leviers" },
     ],
   },
 ] as const;
-
-function VolumeTimeline() {
-  return (
-    <div className="flex items-center gap-3">
-      <SceneLabel size="sm" animate={false}>Volume</SceneLabel>
-      <FlowLine dir="right" />
-      <SceneLabel size="sm" animate={false}>Qualification</SceneLabel>
-      <FlowLine dir="right" delay={0.15} />
-      <SceneLabel size="sm" animate={false}>Intérêt</SceneLabel>
-    </div>
-  );
-}
 
 function ThemeTitle({ title, subtitle }: { title: string; subtitle: string }) {
   return (
@@ -132,7 +121,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center gap-4"
           >
-            <ThemeTitle title="Le terrain de jeu" subtitle="Étape 1 — Volume" />
+            <ThemeTitle title="Construire une audience" subtitle="Étape 1 — Volume" />
           </motion.div>
         )}
 
@@ -142,7 +131,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center gap-8"
           >
-            <ThemeTitle title="Le terrain de jeu" subtitle="Étape 1 — Volume" />
+            <ThemeTitle title="Construire une audience" subtitle="Étape 1 — Volume" />
             <PersonGroup count={20} icon="briefcase" size={24} />
           </motion.div>
         )}
@@ -153,7 +142,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center gap-8"
           >
-            <ThemeTitle title="Le terrain de jeu" subtitle="Étape 1 — Volume" />
+            <ThemeTitle title="Construire une audience" subtitle="Étape 1 — Volume" />
             <div className="flex gap-4">
               {TARGETS.map((label, i) => (
                 <motion.div
@@ -176,7 +165,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex flex-col items-center gap-8"
           >
-            <ThemeTitle title="Le terrain de jeu" subtitle="Étape 1 — Volume" />
+            <ThemeTitle title="Construire une audience" subtitle="Étape 1 — Volume" />
             <PersonGroup count={20} icon="briefcase" size={24} />
             <p className="max-w-md text-center text-sm tracking-[0.12em] text-zinc-500">
               On construit le volume. Pas encore le filtre.
@@ -237,14 +226,26 @@ export function S09_R2Reveal({ step }: SceneProps) {
 
         {step === S09_LOGO_STEP && (
           <motion.div
-            key="r2-timeline"
+            key="r2-lockup"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             data-stage-bare=""
             className="flex flex-col items-center gap-10"
           >
             <R2Lockup />
-            <VolumeTimeline />
+          </motion.div>
+        )}
+
+        {step === S09_COURTAGE_STEP && (
+          <motion.div
+            key="r2-courtage"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            data-stage-bare=""
+            className="flex flex-col items-center gap-10"
+          >
+            <R2Lockup />
+            <CourtageTagline />
           </motion.div>
         )}
 

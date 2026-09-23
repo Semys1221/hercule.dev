@@ -5,6 +5,8 @@ export const SCENE_TITLES: Record<SceneId, string> = {
   S01_Intro: "BNC/BIC/TNS",
   S02_WordOfMouth: "La confiance qui se transfère",
   S03_WOMProblem: "Ce que le bouche-à-oreille ne pilote pas",
+  S03_5_StartingPoint: "Point de départ",
+  S03_6_BuildAudience: "Construire une audience",
   S04_ColdLeads: "Des noms sans demande",
   S05_GoogleAds: "Quand c’est vous le filtre",
   S06_Reframing: "Volume, qualité, intérêt — ensemble",

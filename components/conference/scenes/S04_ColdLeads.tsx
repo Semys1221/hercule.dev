@@ -2,18 +2,15 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import type { SceneProps } from "../presentation/types";
-import { ChapterDoor } from "../shared/ChapterDoor";
 import { PersonGroup } from "../shared/Person";
-import { PhoneIcon } from "../shared/PhoneIcon";
 import { SceneShell } from "../shared/SceneShell";
 
 /**
- * S04 — Les leads froids  (steps 0-3)
+ * S04 — Les leads froids  (steps 0-2)
  *
- * 0 – Cube + Fiche de lead
- * 1 – Personne n'a demandé
- * 2 – Appel → relance → relance
- * 3 – Fiche BUDGET✕ BESOIN✕ PROFIL✕
+ * 0 – Personne n'a demandé
+ * 1 – Appel → relance → relance
+ * 2 – Fiche BUDGET✕ BESOIN✕ PROFIL✕
  */
 export function S04_ColdLeads({ step }: SceneProps) {
   return (
@@ -21,18 +18,6 @@ export function S04_ColdLeads({ step }: SceneProps) {
       <AnimatePresence mode="wait">
 
         {step === 0 && (
-          <motion.div
-            key="b19"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          >
-            <ChapterDoor
-              label="FICHE DE LEAD"
-              icon={<PhoneIcon size={20} className="text-zinc-500" />}
-            />
-          </motion.div>
-        )}
-
-        {step === 1 && (
           <motion.div
             key="b20"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -48,7 +33,7 @@ export function S04_ColdLeads({ step }: SceneProps) {
           </motion.div>
         )}
 
-        {step === 2 && (
+        {step === 1 && (
           <motion.div
             key="b21"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -76,7 +61,7 @@ export function S04_ColdLeads({ step }: SceneProps) {
           </motion.div>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <motion.div
             key="b22"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}

@@ -1,43 +1,86 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FAKE_SEAT_CAPACITY } from "@/lib/conference/sale-window";
 import type { SceneProps } from "../presentation/types";
 import { PaymentTrustBadges } from "../shared/PaymentTrustBadges";
 import { SceneShell } from "../shared/SceneShell";
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const SALE_WINDOW_MINUTES = 5;
+
+type InscriptionBeat = {
+  kicker: string;
+  title: string;
+  body?: string;
+  badges?: boolean;
+};
+
+const INSCRIPTION_BEATS: InscriptionBeat[] = [
+  {
+    kicker: "Paiement",
+    title: "Le lien Stripe sera dans le chat",
+    badges: true,
+  },
+  {
+    kicker: "Places",
+    title: `${FAKE_SEAT_CAPACITY} places par accompagnement`,
+  },
+  {
+    kicker: "Fenêtre",
+    title: `${SALE_WINDOW_MINUTES} minutes`,
+    body: "Pour s’inscrire après l’ouverture.",
+  },
+];
+
 /**
- * S16 — Urgence  (step 0, beat 114)
+ * S16 — Inscription  (steps 0-2)
  *
- * 0 – Lien Stripe
+ * Une carte, une ligne nouvelle par beat.
  */
-export function S16_Urgency(_props: SceneProps) {
+export function S16_Urgency({ step }: SceneProps) {
+  const revealed = INSCRIPTION_BEATS.slice(0, step + 1);
+
   return (
     <SceneShell>
-      <motion.div
-        key="s16-0"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="flex flex-col items-center gap-6"
+      <Card
+        data-stage-bare
+        className="w-[min(36rem,calc(100vw-5rem))] gap-5 overflow-hidden border-zinc-800/50 bg-zinc-900/70 py-6 shadow-none"
       >
-        <div className="rounded border border-zinc-700/60 px-6 py-4 text-sm text-zinc-500">
-          Paiement
-        </div>
-        <p className="text-2xl tracking-[0.3em] text-zinc-300 uppercase">Paiement sécurisé</p>
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.45 }}
-        >
-          <PaymentTrustBadges />
-        </motion.div>
-        <motion.div
-          initial={{ scaleY: 0 }} animate={{ scaleY: 1 }}
-          transition={{ duration: 0.5 }}
-          className="h-14 w-px origin-top bg-zinc-700"
-        />
-        <p className="text-[10px] tracking-widest text-zinc-600">Lien dans le chat</p>
-      </motion.div>
+        <CardHeader className="px-6">
+          <CardTitle className="text-center text-sm font-medium tracking-[0.22em] text-zinc-100 uppercase">
+            Inscription
+          </CardTitle>
+          <CardDescription className="text-center text-zinc-500">
+            Modalités, dans l’ordre
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6 px-6">
+          {revealed.map((row, index) => (
+            <motion.div
+              key={row.kicker}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: EASE }}
+              className="flex flex-col items-center gap-3 text-center"
+            >
+              {index > 0 ? <div className="h-px w-16 bg-zinc-800" /> : null}
+              <p className="text-[10px] tracking-[0.2em] text-zinc-600 uppercase">
+                {row.kicker}
+              </p>
+              <p className="text-lg font-light tracking-wide text-zinc-300">
+                {row.title}
+              </p>
+              {row.body ? (
+                <p className="text-xs text-zinc-500">{row.body}</p>
+              ) : null}
+              {row.badges ? <PaymentTrustBadges /> : null}
+            </motion.div>
+          ))}
+        </CardContent>
+      </Card>
     </SceneShell>
   );
 }

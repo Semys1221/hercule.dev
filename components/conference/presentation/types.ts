@@ -2,6 +2,8 @@ export type SceneId =
   | "S01_Intro"
   | "S02_WordOfMouth"
   | "S03_WOMProblem"
+  | "S03_5_StartingPoint"
+  | "S03_6_BuildAudience"
   | "S04_ColdLeads"
   | "S05_GoogleAds"
   | "S06_Reframing"
@@ -30,6 +32,8 @@ export const SCENE_LABELS: Record<SceneId, string> = {
   S01_Intro: "Introduction",
   S02_WordOfMouth: "Bouche-à-oreille",
   S03_WOMProblem: "Limites du bouche-à-oreille",
+  S03_5_StartingPoint: "Point de départ",
+  S03_6_BuildAudience: "Construire une audience",
   S04_ColdLeads: "Prospection froide",
   S05_GoogleAds: "Google Ads",
   S06_Reframing: "Recadrage",

@@ -65,13 +65,41 @@ export type StairStep = {
   label: string;
   amount: string;
   weight: number;
+  caption?: string;
 };
+
+export const DEC_CUMULATIVE_3M = [
+  { id: "m1", label: "Mois 1", amount: "1 500 €", weight: 1.5 },
+  { id: "m2", label: "Mois 2", amount: "4 500 €", weight: 4.5 },
+  { id: "m3", label: "Mois 3", amount: "9 000 €", weight: 9 },
+] as const;
+
+export const DEC_CUMULATIVE_RETURN = "9 000 €";
+export const DEC_CUMULATIVE_CAPTION = "CA cumulé · 3 mois";
+export const DEC_ROI_LINE = `${DEC_CUMULATIVE_RETURN} de CA cumulé sur 3 mois`;
+
+export const COURTAGE_CUMULATIVE_RETURN = "32 500 €";
+export const COURTAGE_ROI_LINE = `${COURTAGE_CUMULATIVE_RETURN} de commissions sur 3 mois`;
+
+const DEC_CUMULATIVE_COLUMNS: MrrColumn[] = DEC_CUMULATIVE_3M.map((step) => ({
+  id: step.id,
+  label: step.label,
+  amount: step.amount,
+  caption: "CA cumulé",
+  weight: step.weight,
+}));
+
+const DEC_STAIR_STEPS: StairStep[] = DEC_CUMULATIVE_3M.map((step) => ({
+  ...step,
+  caption: "CA cumulé",
+}));
 
 export type OfferStory = {
   edition: OfferEdition;
   title: string;
   niche: string;
   scoreReturn: string;
+  scoreCaption?: string;
   scorePrice: string;
   caseBeats: OfferPhrase[];
   equation: EquationTerm[];
@@ -101,7 +129,8 @@ export const DEC_OFFER: OfferStory = {
   edition: "DEC",
   title: "DEC",
   niche: "Restaurant",
-  scoreReturn: "18 000 € de MRR",
+  scoreReturn: DEC_CUMULATIVE_RETURN,
+  scoreCaption: DEC_CUMULATIVE_CAPTION,
   scorePrice: "1 499 € / mois",
   caseBeats: [
     { id: "dec-niche", kicker: "Niche", text: "Restaurant" },
@@ -140,37 +169,11 @@ export const DEC_OFFER: OfferStory = {
   ],
   curve: {
     kind: "mrr",
-    columns: [
-      {
-        id: "dec-month",
-        label: "Mois",
-        amount: "1 500 €",
-        caption: "MRR",
-        weight: 1,
-      },
-      {
-        id: "dec-quarter",
-        label: "Trimestre",
-        amount: "4 500 €",
-        caption: "MRR",
-        weight: 3,
-      },
-      {
-        id: "dec-year",
-        label: "12e mois",
-        amount: "18 000 €",
-        caption: "MRR",
-        weight: 12,
-      },
-    ],
+    columns: DEC_CUMULATIVE_COLUMNS,
   },
   contrast: {
     kind: "stair",
-    steps: [
-      { id: "m1", label: "Mois 1", amount: "1 500 €", weight: 1 },
-      { id: "m2", label: "Mois 2", amount: "3 000 €", weight: 2 },
-      { id: "m3", label: "Mois 3", amount: "4 500 €", weight: 3 },
-    ],
+    steps: DEC_STAIR_STEPS,
     priceLabel: "Prix",
     priceAmount: "1 499 € / mois",
   },
@@ -180,7 +183,8 @@ export const COURTAGE_OFFER: OfferStory = {
   edition: "Courtage",
   title: "Courtage",
   niche: "Médecin",
-  scoreReturn: "32 500 €",
+  scoreReturn: COURTAGE_CUMULATIVE_RETURN,
+  scoreCaption: "Commissions · 3 mois",
   scorePrice: "3 900 € / 3 mois",
   caseBeats: [
     { id: "courtage-niche", kicker: "Niche", text: "Médecin" },
@@ -244,5 +248,6 @@ export const COURTAGE_OFFER: OfferStory = {
   },
 };
 
-export const DEC_STEP_COUNT = 12;
+export const DEC_CONTRAST_BEATS = 3;
+export const DEC_STEP_COUNT = 13;
 export const COURTAGE_STEP_COUNT = 11;

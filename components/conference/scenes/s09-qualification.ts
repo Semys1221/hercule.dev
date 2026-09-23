@@ -125,24 +125,25 @@ export const SCRIPTS: NicheScript[] = [
     lines: [
       {
         speaker: "hercule",
-        text: "Bonjour, pour bien comprendre votre situation, est-ce que vous avez actuellement une partie de votre trésorerie que vous envisagez de placer ?",
+        text: "Bonjour, pour bien comprendre votre situation, avez-vous une idée du montant d’impôt que vous payez ?",
       },
       {
         speaker: "entrepreneur",
-        text: "Oui. J’ai environ 100 000 € à placer. Je veux une proposition sérieuse.",
-        highlights: ["100 000 €"],
+        text: "Oui. On le voit chaque année, et on ne sait pas quoi en faire.",
       },
       {
         speaker: "hercule",
-        text: "D’accord. Vous avez donc déjà un montant disponible et un projet de placement identifié ?",
+        text: "D’accord. Et au niveau de votre trésorerie, vous disposez d’un minimum de 50 000 € pour activer des leviers ?",
+        highlights: ["50 000 €"],
       },
       {
         speaker: "entrepreneur",
-        text: "Le montant est là. Ce qu’il me faut, c’est la solution adaptée, et qu’on la mette en place.",
+        text: "Nous avons environ 100 000 €. Par contre, je veux une proposition sérieuse.",
+        highlights: ["100 000 €", "proposition sérieuse"],
       },
       {
         speaker: "hercule",
-        text: "Très bien. Vous souhaitez donc être accompagné pour étudier les différentes possibilités avant de prendre une décision ?",
+        text: "Très bien. Vous souhaitez donc être accompagné pour étudier les leviers adaptés avant de prendre une décision ?",
       },
       {
         speaker: "entrepreneur",
@@ -159,7 +160,7 @@ export const SCRIPTS: NicheScript[] = [
         highlights: ["lundi à 13h"],
       },
     ],
-    verdict: "Prospect qualifié : trésorerie ≥ 50 k€ + projet de placement identifié.",
+    verdict: "Prospect qualifié : trésorerie ≥ 50 k€ + leviers identifiés.",
   },
 ];
 
@@ -171,19 +172,14 @@ export const S09_QUAL_BEAT_COUNT = NICHE_BEAT_COUNTS.reduce((a, b) => a + b, 0);
 /** Last step of the qualification chats (inclusive). */
 export const S09_QUAL_END = S09_QUAL_START + S09_QUAL_BEAT_COUNT - 1;
 
-/** Logo + timeline after all three chats. */
+/** Logo after all three chats. */
 export const S09_LOGO_STEP = S09_QUAL_END + 1;
 
-/** S09 step when the CIF visio line is shown. */
-export const S09_CIF_VISIO_STEP =
-  S09_QUAL_START +
-  NICHE_BEAT_COUNTS[0] +
-  NICHE_BEAT_COUNTS[1] +
-  SCRIPTS[2].lines.length -
-  2;
+/** Lockup + Courtage tagline, immediately after the logo beat. */
+export const S09_COURTAGE_STEP = S09_LOGO_STEP + 1;
 
 /** Total S09 steps (0-indexed count). */
-export const S09_STEP_COUNT = S09_LOGO_STEP + 1;
+export const S09_STEP_COUNT = S09_COURTAGE_STEP + 1;
 
 export type NicheCardView = {
   niche: Niche;
@@ -240,7 +236,7 @@ export function qualificationView(step: number): QualificationView | null {
         verdict: showVerdict ? script.verdict : null,
         verdictHighlights: showVerdict ? (script.verdictHighlights ?? []) : [],
         stamp: showVerdict ? (script.stamp ?? null) : null,
-        dimmed: Boolean(script.stamp) && showVerdict,
+        dimmed: showVerdict,
       });
     }
 

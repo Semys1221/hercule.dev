@@ -12,7 +12,9 @@ import { cn } from "@/lib/utils";
 import {
   COURTAGE_OFFER,
   COURTAGE_STEP_COUNT,
+  DEC_CONTRAST_BEATS,
   DEC_OFFER,
+  DEC_ROI_LINE,
   type OfferStory,
 } from "../scenes/card-deck";
 import { Counter } from "./Counter";
@@ -48,6 +50,9 @@ function ScoreStrip({ story }: { story: OfferStory }) {
         <p className="text-lg font-light tabular-nums tracking-tight text-zinc-100">
           {story.scoreReturn}
         </p>
+        {story.scoreCaption ? (
+          <p className="text-xs text-zinc-500">{story.scoreCaption}</p>
+        ) : null}
         <p className="text-xs text-zinc-500">{story.scorePrice}</p>
       </CardContent>
     </Card>
@@ -165,7 +170,7 @@ function MrrCurve({
 }) {
   if (story.curve.kind !== "mrr") return null;
   const visible = story.curve.columns.slice(0, local === 0 ? 2 : 3);
-  const maxWeight = 12;
+  const maxWeight = story.curve.columns[story.curve.columns.length - 1]?.weight ?? 1;
 
   return (
     <div className="flex w-[36rem] flex-col gap-8">
@@ -242,57 +247,65 @@ function StairContrast({
   local: number;
 }) {
   if (story.contrast.kind !== "stair") return null;
-  const { steps, priceAmount, priceLabel } = story.contrast;
+  const { steps } = story.contrast;
   const filled = local === 0 ? 1 : steps.length;
   const maxWeight = steps[steps.length - 1]?.weight ?? 1;
 
   return (
     <div className="flex w-[38rem] flex-col gap-8">
-      <Ribbon story={story} phrase="18 000 € de MRR au 12e mois" />
-      <div className="flex items-end gap-10">
-        <div className="flex flex-1 items-end gap-4">
-          {steps.slice(0, filled).map((item) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: EASE }}
-              className="flex flex-1 flex-col items-center gap-3"
-            >
-              <p className="text-lg font-light tabular-nums text-zinc-100">
-                {item.amount}
+      <Ribbon
+        story={story}
+        phrase={local === 0 ? steps[0]?.amount ?? "" : DEC_ROI_LINE}
+      />
+      <div className="flex w-full items-end justify-start gap-8">
+        {steps.slice(0, filled).map((item) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="flex w-24 flex-col items-center gap-3"
+          >
+            <p className="text-lg font-light tabular-nums text-zinc-100">
+              {item.amount}
+            </p>
+            <div className="flex h-[132px] w-full items-end justify-center">
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{
+                  height: Math.max(12, (item.weight / maxWeight) * BAR_MAX_PX),
+                }}
+                transition={{ duration: 0.55, ease: EASE }}
+                className="w-10 rounded-sm bg-zinc-300"
+              />
+            </div>
+            <p className="text-[10px] tracking-[0.18em] text-zinc-500 uppercase">
+              {item.label}
+            </p>
+            {item.caption ? (
+              <p className="text-[10px] tracking-[0.16em] text-zinc-600 uppercase">
+                {item.caption}
               </p>
-              <div className="flex h-[132px] w-full items-end justify-center">
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{
-                    height: Math.max(12, (item.weight / maxWeight) * BAR_MAX_PX),
-                  }}
-                  transition={{ duration: 0.55, ease: EASE }}
-                  className="w-10 rounded-sm bg-zinc-300"
-                />
-              </div>
-              <p className="text-[10px] tracking-[0.18em] text-zinc-500 uppercase">
-                {item.label}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-        <div className="flex w-28 flex-col items-center gap-3">
-          <p className="text-lg font-light tabular-nums text-zinc-100">
-            {priceAmount.split(" /")[0]}
-          </p>
-          <div className="flex h-[132px] w-full items-end justify-center">
-            <div
-              className="w-10 rounded-sm bg-zinc-600"
-              style={{ height: (1 / maxWeight) * BAR_MAX_PX }}
-            />
-          </div>
-          <p className="text-center text-[10px] tracking-[0.18em] text-zinc-500 uppercase">
-            {priceLabel}
-          </p>
-          <p className="text-[10px] text-zinc-600">{priceAmount}</p>
-        </div>
+            ) : null}
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PriceReveal({ story }: { story: OfferStory }) {
+  if (story.contrast.kind !== "stair") return null;
+  const price = story.contrast.priceAmount;
+
+  return (
+    <div className="flex w-[28rem] flex-col gap-8">
+      <Ribbon story={story} phrase={DEC_ROI_LINE} />
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-3xl font-light tabular-nums tracking-tight text-zinc-100">
+          {price.split(" /")[0]}
+        </p>
+        <p className="text-xs text-zinc-500">/ mois</p>
       </div>
     </div>
   );
@@ -358,7 +371,11 @@ function OfferStoryBoard({ story, step }: { story: OfferStory; step: number }) {
             <CommissionCurve story={story} />
           ) : null}
           {act === 4 && story.contrast.kind === "stair" ? (
-            <StairContrast story={story} local={local} />
+            local === DEC_CONTRAST_BEATS - 1 ? (
+              <PriceReveal story={story} />
+            ) : (
+              <StairContrast story={story} local={local} />
+            )
           ) : null}
           {act === 4 && story.contrast.kind === "bars" ? (
             <BarContrast story={story} />

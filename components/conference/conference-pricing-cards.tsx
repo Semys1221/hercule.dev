@@ -3,6 +3,10 @@
 import { useState } from "react";
 
 import { SceneLabel } from "@/components/conference/shared/SceneLabel";
+import {
+  COURTAGE_ROI_LINE,
+  DEC_ROI_LINE,
+} from "@/components/conference/scenes/card-deck";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
@@ -79,6 +83,10 @@ function SeatQuota({ taken }: { taken: number }) {
       {taken} / 4
     </p>
   );
+}
+
+function RoiLine({ text }: { text: string }) {
+  return <p className="text-sm text-zinc-400">{text}</p>;
 }
 
 function GuaranteeLine({ text }: { text: string }) {
@@ -248,8 +256,11 @@ function DecCard({
     <div className={CONFERENCE_CARD_CLASS}>
       <SceneLabel size="md" animate={false}>HERCULE DEC</SceneLabel>
       {variant === "checkout" ? <SeatQuota taken={taken} /> : null}
-      <p className="text-5xl font-thin text-zinc-100">{offer.price}</p>
+      <p className="text-5xl font-thin tabular-nums tracking-tight text-zinc-100">
+        {offer.price}
+      </p>
       <p className="text-sm text-zinc-500">{offer.period}</p>
+      <RoiLine text={DEC_ROI_LINE} />
       <GuaranteeLine text={offer.guarantee} />
 
       {isCheckout ? (
@@ -311,8 +322,11 @@ function CourtageCard({
     <div className={CONFERENCE_CARD_CLASS}>
       <SceneLabel size="md" animate={false}>HERCULE COURTAGE</SceneLabel>
       {variant === "checkout" ? <SeatQuota taken={taken} /> : null}
-      <p className="text-5xl font-thin text-zinc-100">{offer.price}</p>
+      <p className="text-5xl font-thin tabular-nums tracking-tight text-zinc-100">
+        {offer.price}
+      </p>
       <p className="text-sm text-zinc-500">{offer.period}</p>
+      <RoiLine text={COURTAGE_ROI_LINE} />
       <GuaranteeLine text={offer.guarantee} />
 
       {isCheckout ? (

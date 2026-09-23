@@ -8,7 +8,6 @@ import { SceneLabel } from "../shared/SceneLabel";
 import { StageCardDeck } from "../shared/StageCardDeck";
 import {
   qualificationView,
-  S09_CIF_VISIO_STEP,
   type NicheCardView,
   type Speaker,
 } from "./s09-qualification";
@@ -183,13 +182,6 @@ export function QualificationBoard({ step }: { step: number }) {
         frameClassName="h-[min(30rem,calc(100dvh-22rem))] w-[28rem] overflow-hidden"
         cardClassName="flex h-full min-h-0 w-[22rem] flex-col overflow-hidden py-4"
       />
-      {step === S09_CIF_VISIO_STEP ? (
-        <p className="max-w-md shrink-0 text-center text-xs leading-relaxed tracking-[0.16em] text-zinc-500 uppercase">
-          Courtage de projet BNC/BIC/TNS
-          <br />
-          Patience et expertise métier.
-        </p>
-      ) : null}
     </div>
   );
 }
