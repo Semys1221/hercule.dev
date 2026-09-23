@@ -8,7 +8,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { sendBookingEmail } from "@/lib/(resend)/communication/send";
-import { DEFAULT_BOOKING_EMAIL_TEMPLATES } from "@/lib/(resend)/communication/templates";
+import {
+  DEFAULT_BOOKING_EMAIL_TEMPLATES,
+  getBookingFromAddress,
+} from "@/lib/(resend)/communication/templates";
 import { ENGIN_TEST_FROM, ENGIN_TEST_RECIPIENT } from "@/lib/engin/communication/constants";
 import { getAppBaseUrl } from "@/lib/legacy/payments/stripe";
 
@@ -49,20 +52,36 @@ const text = template.body
   .replace("{{checkoutTrialLink}}", propositionLink);
 
 async function main() {
-  const result = await sendBookingEmail({
+  const idempotencyKey = `free-trial-pitch-test:${recipient}:${Date.now()}`;
+  let from = ENGIN_TEST_FROM;
+  let result = await sendBookingEmail({
     to: recipient,
     subject: template.subject,
     text,
-    from: ENGIN_TEST_FROM,
-    idempotencyKey: `free-trial-pitch-test:${recipient}:${Date.now()}`,
+    from,
+    idempotencyKey,
   });
+
+  if (!result.ok && from !== getBookingFromAddress()) {
+    console.warn(
+      `[sendFreeTrialPitchTestEmail] ${from} failed (${result.error}); retrying with BOOKING_RESEND_FROM.`,
+    );
+    from = getBookingFromAddress();
+    result = await sendBookingEmail({
+      to: recipient,
+      subject: template.subject,
+      text,
+      from,
+      idempotencyKey: `${idempotencyKey}:fallback`,
+    });
+  }
 
   if (!result.ok) {
     console.error("Send failed:", result.error);
     process.exit(1);
   }
 
-  console.log(`Sent free_trial_1 test to ${recipient} (id=${result.id})`);
+  console.log(`Sent free_trial_1 test to ${recipient} from ${from} (id=${result.id})`);
 }
 
 main().catch((error) => {

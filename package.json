@@ -221,6 +221,9 @@
     "smoke-cockpit-admin-e2e": "tsx --env-file=.env ./lib/backend/scripts/crm/smokeCockpitAdminE2e.ts",
     "smoke-sales-funnel-e2e": "tsx --env-file=.env ./lib/backend/scripts/crm/smokeSalesFunnelE2e.ts",
     "smoke-client-dashboard-e2e": "tsx --env-file=.env ./lib/backend/scripts/crm/smokeClientDashboardE2e.ts",
+    "smoke-dec-trial-draft-e2e": "tsx --env-file=.env ./lib/backend/scripts/crm/smokeDecTrialDraftE2e.ts",
+    "verify-dec-trial-e2e": "tsx --env-file=.env ./lib/backend/scripts/crm/verifyDecTrialE2e.ts",
+    "test-dec-trial-webhook-integration": "tsx --env-file=.env ./lib/legacy/payments/stripe-webhook-dec-trial.integration.test.ts",
     "legal:export": "tsx ./lib/backend/scripts/notion/exportLegal.ts",
     "notion:export-legal": "tsx ./lib/backend/scripts/notion/exportLegal.ts"
   },

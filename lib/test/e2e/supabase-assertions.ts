@@ -207,6 +207,139 @@ export async function pollPaymentSucceeded(slug: string, timeoutMs = 45_000): Pr
   throw new Error(`Timed out waiting for payment succeeded for ${slug}`);
 }
 
+export type DecTrialClientRow = {
+  id: string;
+  slug: string;
+  email: string;
+  client_type: string;
+  offer_type: string;
+  product_statut: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+};
+
+export type DecTrialPaymentRow = {
+  id: string;
+  client_id: string;
+  status: string;
+  stripe_checkout_session_id: string | null;
+  succeeded_at: string | null;
+};
+
+export async function getClientIdBySlug(slug: string): Promise<string> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client.from("clients").select("id").eq("slug", slug).maybeSingle();
+  if (error || !data) {
+    throw new Error(`client not found for slug ${slug}: ${error?.message ?? "missing"}`);
+  }
+  return data.id as string;
+}
+
+export async function getDecTrialClientBySlug(slug: string): Promise<DecTrialClientRow> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from("clients")
+    .select(
+      "id, slug, email, client_type, offer_type, product_statut, stripe_customer_id, stripe_subscription_id",
+    )
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error || !data) {
+    throw new Error(`client lookup failed for ${slug}: ${error?.message ?? "missing"}`);
+  }
+  return data as DecTrialClientRow;
+}
+
+export async function getDecTrialPaymentBySessionId(
+  sessionId: string,
+): Promise<DecTrialPaymentRow> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from("payments")
+    .select("id, client_id, status, stripe_checkout_session_id, succeeded_at")
+    .eq("stripe_checkout_session_id", sessionId)
+    .maybeSingle();
+  if (error || !data) {
+    throw new Error(
+      `payment not found for session ${sessionId}: ${error?.message ?? "missing"}`,
+    );
+  }
+  return data as DecTrialPaymentRow;
+}
+
+export async function getDecTrialEmailJobs(clientId: string): Promise<
+  Array<{
+    id: string;
+    email_type: string;
+    status: string;
+    triggered_by: string;
+    idempotency_key: string;
+    sent_at: string | null;
+  }>
+> {
+  const client = createLinkTrackingClient();
+  const { data, error } = await client
+    .from("booking_email_jobs")
+    .select("id, email_type, status, triggered_by, idempotency_key, sent_at")
+    .eq("lead_category", "client")
+    .eq("lead_id", clientId)
+    .eq("email_type", "free_trial_started_1")
+    .order("created_at", { ascending: false });
+  if (error) {
+    throw new Error(`booking_email_jobs lookup failed: ${error.message}`);
+  }
+  return (data ?? []) as Array<{
+    id: string;
+    email_type: string;
+    status: string;
+    triggered_by: string;
+    idempotency_key: string;
+    sent_at: string | null;
+  }>;
+}
+
+export async function pollClientPaymentSucceeded(
+  clientId: string,
+  timeoutMs = 30_000,
+): Promise<DecTrialPaymentRow> {
+  const client = createLinkTrackingClient();
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const { data } = await client
+      .from("payments")
+      .select("id, client_id, status, stripe_checkout_session_id, succeeded_at")
+      .eq("client_id", clientId)
+      .eq("offer_type", "monthly_1499_trial")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data?.status === "succeeded") {
+      return data as DecTrialPaymentRow;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  throw new Error(`Timed out waiting for succeeded payment for client ${clientId}`);
+}
+
+export async function pollDecTrialStartedEmailJob(
+  clientId: string,
+  timeoutMs = 30_000,
+): Promise<{ status: string; idempotency_key: string }> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const jobs = await getDecTrialEmailJobs(clientId);
+    const sent = jobs.find((job) => job.status === "sent");
+    if (sent) {
+      return { status: sent.status, idempotency_key: sent.idempotency_key };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  const latest = await getDecTrialEmailJobs(clientId);
+  throw new Error(
+    `Timed out waiting for free_trial_started_1 sent job; latest: ${JSON.stringify(latest)}`,
+  );
+}
+
 export async function getSurveyTokenForLatestCompletedAppointment(
   agenceId: string,
 ): Promise<string> {
