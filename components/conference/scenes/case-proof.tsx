@@ -18,8 +18,8 @@ export function FirmMark({
     <div
       className={
         large
-          ? "flex size-24 items-center justify-center rounded-2xl bg-zinc-100 p-3"
-          : "flex h-11 w-full items-center justify-center rounded-md bg-zinc-100 px-2"
+          ? "flex size-24 items-center justify-center rounded-2xl bg-card p-3"
+          : "flex h-11 w-full items-center justify-center rounded-md bg-card px-2"
       }
     >
       {firm?.logo ? (
@@ -31,7 +31,7 @@ export function FirmMark({
           className={large ? "max-h-16 w-auto object-contain" : "max-h-7 w-auto object-contain"}
         />
       ) : (
-        <span className={large ? "text-lg text-zinc-400" : "text-[10px] text-zinc-400"}>
+        <span className={large ? "text-lg text-muted-foreground" : "text-[10px] text-muted-foreground"}>
           {firm?.name?.slice(0, 2).toUpperCase() ?? "—"}
         </span>
       )}
@@ -63,10 +63,10 @@ export function CaseNarrative({
     >
       <FirmMark firm={firm} />
       <div className="flex flex-col items-center gap-2">
-        <p className="text-center text-xl font-medium tracking-tight text-zinc-50">
+        <p className="text-center text-xl font-medium tracking-tight text-foreground">
           {firm?.name ?? "Cabinet indépendant"}
         </p>
-        <p className="text-[11px] tracking-[0.22em] text-zinc-500 uppercase">{activity}</p>
+        <p className="text-[11px] tracking-[0.22em] text-muted-foreground uppercase">{activity}</p>
       </div>
       <div className="flex w-full flex-col gap-4">
         {rows.map((row, index) => (
@@ -77,8 +77,8 @@ export function CaseNarrative({
             transition={{ delay: 0.08 * index, duration: 0.4, ease: EASE }}
             className="grid grid-cols-[7rem_1fr] items-baseline gap-4"
           >
-            <p className="text-[11px] tracking-[0.18em] text-zinc-500 uppercase">{row.k}</p>
-            <p className="text-sm leading-relaxed text-zinc-400">{row.v}</p>
+            <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">{row.k}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{row.v}</p>
           </motion.div>
         ))}
       </div>
@@ -107,13 +107,13 @@ export function ProofFigure({
       <p
         className={
           compact
-            ? "text-3xl font-medium tracking-tight text-zinc-50 tabular-nums"
-            : "text-5xl font-medium tracking-tight text-zinc-50 tabular-nums"
+            ? "text-3xl font-medium tracking-tight text-foreground tabular-nums"
+            : "text-5xl font-medium tracking-tight text-foreground tabular-nums"
         }
       >
         {value}
       </p>
-      <p className="text-center text-[11px] tracking-[0.16em] text-zinc-500 uppercase">{label}</p>
+      <p className="text-center text-[11px] tracking-[0.16em] text-muted-foreground uppercase">{label}</p>
     </motion.div>
   );
 }

@@ -31,8 +31,8 @@ export function S06_Reframing({ step }: SceneProps) {
             className="flex items-center gap-8"
           >
             <Person size={52} />
-            <div className="rounded border border-zinc-700/60 px-6 py-4">
-              <p className="text-sm tracking-[0.08em] text-zinc-400">
+            <div className="rounded border border-border px-6 py-4">
+              <p className="text-sm tracking-[0.08em] text-muted-foreground">
                 Rien ne marche, perte de temps...
               </p>
             </div>
@@ -46,13 +46,13 @@ export function S06_Reframing({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative flex size-64 items-center justify-center"
           >
-            <div className="absolute inset-0 rounded-full border border-zinc-800/60" />
+            <div className="absolute inset-0 rounded-full border border-border" />
             {ORBIT_WORDS.map((word, i) => {
               const baseAngle = (i * 120 - 90) * (Math.PI / 180);
               return (
                 <motion.span
                   key={word}
-                  className="absolute left-1/2 top-1/2 whitespace-nowrap text-xs font-medium tracking-[0.22em] text-zinc-300 uppercase"
+                  className="absolute left-1/2 top-1/2 whitespace-nowrap text-xs font-medium tracking-[0.22em] text-foreground uppercase"
                   animate={{
                     x: [
                       Math.cos(baseAngle) * ORBIT_R,
@@ -84,7 +84,7 @@ export function S06_Reframing({ step }: SceneProps) {
             <motion.span
               animate={{ opacity: [0.4, 0.8, 0.4] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className="text-6xl font-thin text-zinc-500"
+              className="text-6xl font-thin text-muted-foreground"
             >
               ?
             </motion.span>

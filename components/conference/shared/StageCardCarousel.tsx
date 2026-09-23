@@ -31,15 +31,15 @@ function TimelineTrack({ filled }: { filled: number }) {
               className={cn(
                 "size-2.5 shrink-0 rounded-full border",
                 active
-                  ? "border-zinc-300 bg-zinc-300"
-                  : "border-zinc-600 bg-transparent",
+                  ? "border-foreground bg-foreground"
+                  : "border-border bg-transparent",
               )}
             />
             {index < TIMELINE_NODE_COUNT - 1 ? (
               <span
                 className={cn(
                   "h-px w-full",
-                  index < filled - 1 ? "bg-zinc-400" : "bg-zinc-700",
+                  index < filled - 1 ? "bg-foreground/60" : "bg-foreground/20",
                 )}
               />
             ) : null}
@@ -58,24 +58,24 @@ function CardFace({ card }: { card: StageCard }) {
           {(["DEC", "Courtage"] as const).map((edition) => (
             <div key={edition} className="flex flex-col items-center gap-2">
               <SilverHerculeMark className="size-10" />
-              <p className="text-[10px] tracking-[0.2em] text-zinc-500 uppercase">
+              <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
                 {edition}
               </p>
             </div>
           ))}
         </div>
         {card.kicker ? (
-          <p className="text-[10px] tracking-[0.2em] text-zinc-600 uppercase">
+          <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
             {card.kicker}
           </p>
         ) : null}
         {card.title ? (
-          <CardTitle className="text-center text-base font-light tracking-wide text-zinc-300">
+          <CardTitle className="text-center text-base font-light tracking-wide text-foreground">
             {card.title}
           </CardTitle>
         ) : null}
         {card.body ? (
-          <p className="text-center text-sm text-zinc-500">{card.body}</p>
+          <p className="text-center text-sm text-muted-foreground">{card.body}</p>
         ) : null}
       </CardHeader>
     );
@@ -87,14 +87,14 @@ function CardFace({ card }: { card: StageCard }) {
       <CardContent className="flex h-full flex-col items-center justify-center gap-4 py-4 text-center">
         <TimelineTrack filled={filled} />
         {card.kicker ? (
-          <p className="text-[10px] tracking-[0.22em] text-zinc-600 uppercase">
+          <p className="text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
             {card.kicker}
           </p>
         ) : null}
         {card.title ? (
           <p
             className={cn(
-              "font-light tracking-tight text-zinc-300",
+              "font-light tracking-tight text-foreground",
               card.id === "s10-zoom"
                 ? "text-3xl tabular-nums"
                 : "max-w-xs text-lg tracking-wide",
@@ -106,7 +106,7 @@ function CardFace({ card }: { card: StageCard }) {
         {card.body ? (
           <p
             className={cn(
-              "text-zinc-500",
+              "text-muted-foreground",
               card.id === "s10-zoom"
                 ? "text-xs tracking-[0.16em] uppercase"
                 : "max-w-xs text-sm",
@@ -122,17 +122,17 @@ function CardFace({ card }: { card: StageCard }) {
   return (
     <CardContent className="flex flex-col items-center justify-center gap-3 py-4 text-center">
       {card.kicker ? (
-        <p className="text-[10px] tracking-[0.2em] text-zinc-600 uppercase">
+        <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
           {card.kicker}
         </p>
       ) : null}
       {card.title ? (
-        <p className="max-w-xs text-lg font-light tracking-wide text-zinc-300">
+        <p className="max-w-xs text-lg font-light tracking-wide text-foreground">
           {card.title}
         </p>
       ) : null}
       {card.body ? (
-        <p className="max-w-xs text-sm text-zinc-500">{card.body}</p>
+        <p className="max-w-xs text-sm text-muted-foreground">{card.body}</p>
       ) : null}
     </CardContent>
   );

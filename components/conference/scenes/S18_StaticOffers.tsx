@@ -20,7 +20,7 @@ export function S18_StaticOffers({ step }: SceneProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.35 }}
           transition={{ duration: 0.6 }}
-          className="text-sm tracking-[0.18em] text-zinc-600"
+          className="text-sm tracking-[0.18em] text-muted-foreground"
         >
           Les décisions qui façonne l&apos;avenir sont prise aujourd&apos;hui
         </motion.p>
@@ -45,7 +45,7 @@ export function S18_StaticOffers({ step }: SceneProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-              className="text-xs tracking-[0.18em] text-zinc-500 uppercase"
+              className="text-xs tracking-[0.18em] text-muted-foreground uppercase"
             >
               {saleWindow.checkoutOpen ? "Inscription ouverte" : "Inscription fermée"}
             </motion.p>

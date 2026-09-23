@@ -25,15 +25,15 @@ function ChronologyTrack({ filled, total }: { filled: number; total: number }) {
               className={cn(
                 "size-2.5 shrink-0 rounded-full border",
                 active
-                  ? "border-zinc-300 bg-zinc-300"
-                  : "border-zinc-600 bg-transparent",
+                  ? "border-foreground bg-foreground"
+                  : "border-border bg-transparent",
               )}
             />
             {index < total - 1 ? (
               <span
                 className={cn(
                   "h-px w-full",
-                  index < filled - 1 ? "bg-zinc-400" : "bg-zinc-700",
+                  index < filled - 1 ? "bg-foreground/60" : "bg-foreground/20",
                 )}
               />
             ) : null}
@@ -52,7 +52,7 @@ function LegendRow({ card, animate }: { card: StageCard; animate: boolean }) {
           {(["DEC", "Courtage"] as const).map((edition) => (
             <div key={edition} className="flex flex-col items-center gap-1">
               <SilverHerculeMark className="size-6" />
-              <p className="text-[9px] tracking-[0.18em] text-zinc-500 uppercase">
+              <p className="text-[9px] tracking-[0.18em] text-muted-foreground uppercase">
                 {edition}
               </p>
             </div>
@@ -60,14 +60,14 @@ function LegendRow({ card, animate }: { card: StageCard; animate: boolean }) {
         </div>
       ) : null}
       {card.kicker ? (
-        <p className="text-[10px] tracking-[0.2em] text-zinc-600 uppercase">
+        <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
           {card.kicker}
         </p>
       ) : null}
       {card.title ? (
         <p
           className={cn(
-            "font-light text-zinc-300",
+            "font-light text-foreground",
             card.id === "s10-zoom"
               ? "text-2xl tabular-nums tracking-tight"
               : "text-sm tracking-wide",
@@ -77,7 +77,7 @@ function LegendRow({ card, animate }: { card: StageCard; animate: boolean }) {
         </p>
       ) : null}
       {card.body ? (
-        <p className="text-xs text-zinc-500">{card.body}</p>
+        <p className="text-xs text-muted-foreground">{card.body}</p>
       ) : null}
     </div>
   );
@@ -109,7 +109,7 @@ export function ChronologyBoard({ section, step }: ChronologyBoardProps) {
     <SceneShell>
       <Card
         data-stage-bare
-        className="w-[min(40rem,calc(100vw-5rem))] gap-5 overflow-hidden border-zinc-800/50 bg-zinc-900/70 py-6 shadow-none"
+        className="w-[min(40rem,calc(100vw-5rem))] gap-5 overflow-hidden border-border bg-card/70 py-6 shadow-none"
       >
         <CardContent className="flex max-h-[min(28rem,calc(100dvh-22rem))] flex-col gap-6 overflow-hidden px-6">
           <ChronologyTrack filled={revealed.length} total={STAGE_CARDS.length} />

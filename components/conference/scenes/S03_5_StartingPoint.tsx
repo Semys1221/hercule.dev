@@ -24,7 +24,7 @@ export function S03_5_StartingPoint({ step }: SceneProps) {
             className="flex items-center gap-8"
           >
             <Person size={52} />
-            <div className="rounded border border-zinc-700/60 px-6 py-4">
+            <div className="rounded border border-border px-6 py-4">
               <StageSubtitle className="text-left">Point de départ</StageSubtitle>
             </div>
           </motion.div>

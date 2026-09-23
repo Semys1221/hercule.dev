@@ -82,21 +82,21 @@ export function S15_FAQ({ step }: SceneProps) {
           className="max-w-lg px-10 text-center"
         >
           {isIntro ? (
-            <p className="text-3xl font-light tracking-[0.28em] uppercase text-zinc-400 leading-relaxed">
+            <p className="text-3xl font-light tracking-[0.28em] uppercase text-muted-foreground leading-relaxed">
               QUESTIONS ?
             </p>
           ) : isRetraction ? (
-            <p className="text-sm tracking-[0.22em] text-zinc-500 uppercase">
+            <p className="text-sm tracking-[0.22em] text-muted-foreground uppercase">
               4 jours de rétractation
             </p>
           ) : isAnswer && item ? (
-            <ul className="mx-auto w-full max-w-md list-disc list-inside space-y-3 text-left text-lg font-light text-zinc-300 leading-relaxed">
+            <ul className="mx-auto w-full max-w-md list-disc list-inside space-y-3 text-left text-lg font-light text-foreground leading-relaxed">
               {item.answer.map((line) => (
                 <li key={line}>{line}</li>
               ))}
             </ul>
           ) : item ? (
-            <p className="text-2xl font-light text-zinc-300 leading-relaxed">
+            <p className="text-2xl font-light text-foreground leading-relaxed">
               {item.question}
             </p>
           ) : null}

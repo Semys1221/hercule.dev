@@ -38,7 +38,7 @@ export function SceneLabel({
       className={cn(
         "font-medium uppercase leading-none",
         sizes[size],
-        muted ? "text-zinc-500" : "text-foreground",
+        muted ? "text-muted-foreground" : "text-foreground",
         className,
       )}
     >

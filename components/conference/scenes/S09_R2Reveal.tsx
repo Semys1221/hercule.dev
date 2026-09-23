@@ -52,7 +52,7 @@ function ThemeTitle({ title, subtitle }: { title: string; subtitle: string }) {
       <p className="text-4xl font-medium tracking-[0.18em] text-foreground uppercase">
         {title}
       </p>
-      <p className="text-[11px] tracking-[0.22em] text-zinc-600 uppercase">
+      <p className="text-[11px] tracking-[0.22em] text-muted-foreground uppercase">
         {subtitle}
       </p>
     </div>
@@ -109,7 +109,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
             className="flex flex-col items-center gap-8"
           >
             <R2Lockup />
-            <p className="text-[11px] tracking-[0.22em] text-zinc-500 uppercase">
+            <p className="text-[11px] tracking-[0.22em] text-muted-foreground uppercase">
               Volume · Qualification · Intérêt
             </p>
           </motion.div>
@@ -150,7 +150,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.12 }}
-                  className="rounded border border-zinc-700/50 px-6 py-4"
+                  className="rounded border border-border px-6 py-4"
                 >
                   <SceneLabel size="sm" animate={false}>{label}</SceneLabel>
                 </motion.div>
@@ -167,7 +167,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
           >
             <ThemeTitle title="Construire une audience" subtitle="Étape 1 — Volume" />
             <PersonGroup count={20} icon="briefcase" size={24} />
-            <p className="max-w-md text-center text-sm tracking-[0.12em] text-zinc-500">
+            <p className="max-w-md text-center text-sm tracking-[0.12em] text-muted-foreground">
               On construit le volume. Pas encore le filtre.
             </p>
           </motion.div>
@@ -189,7 +189,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="relative z-10 flex items-center justify-center"
           >
-            <PhoneIcon size={48} className="text-zinc-400" />
+            <PhoneIcon size={48} className="text-muted-foreground" />
           </motion.div>
         )}
 

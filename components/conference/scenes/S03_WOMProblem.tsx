@@ -34,7 +34,7 @@ export function S03_WOMProblem({ step }: SceneProps) {
               initial={{ opacity: 0, scale: 1.6 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="text-7xl font-thin text-zinc-400"
+              className="text-7xl font-thin text-muted-foreground"
             >
               ?
             </motion.span>
@@ -51,10 +51,10 @@ export function S03_WOMProblem({ step }: SceneProps) {
             <motion.div
               animate={{ x: [0, 3, -3, 0] }}
               transition={{ repeat: 3, duration: 0.25 }}
-              className="rounded border border-zinc-600/60 px-8 py-5 text-center"
+              className="rounded border border-border px-8 py-5 text-center"
             >
               <SceneLabel size="xl" animate={false}>VOLUME</SceneLabel>
-              <p className="mt-2 text-3xl text-zinc-500">?</p>
+              <p className="mt-2 text-3xl text-muted-foreground">?</p>
             </motion.div>
             <PersonGroup count={6} size={24} />
           </motion.div>
@@ -70,17 +70,17 @@ export function S03_WOMProblem({ step }: SceneProps) {
             <motion.div
               initial={{ x: 0 }} animate={{ x: -30, opacity: 0.3 }}
               transition={{ duration: 0.5 }}
-              className="rounded border border-zinc-700/40 px-5 py-4 text-center"
+              className="rounded border border-border px-5 py-4 text-center"
             >
               <SceneLabel size="xs" muted animate={false}>VOLUME ?</SceneLabel>
             </motion.div>
-            <div className="rounded border border-zinc-600/60 px-8 py-5 text-center">
+            <div className="rounded border border-border px-8 py-5 text-center">
               <SceneLabel size="xl" animate={false}>MOMENT</SceneLabel>
-              <p className="mt-2 text-3xl text-zinc-500">?</p>
+              <p className="mt-2 text-3xl text-muted-foreground">?</p>
               {/* clock */}
               <motion.svg
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-                className="mx-auto mt-3 size-7 text-zinc-600"
+                className="mx-auto mt-3 size-7 text-muted-foreground"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: 2, ease: "linear" }}
                 aria-hidden
@@ -103,9 +103,9 @@ export function S03_WOMProblem({ step }: SceneProps) {
               <SceneLabel size="xs" muted animate={false}>VOLUME ?</SceneLabel>
               <SceneLabel size="xs" muted animate={false}>MOMENT ?</SceneLabel>
             </div>
-            <div className="rounded border border-zinc-600/60 px-8 py-5 text-center">
+            <div className="rounded border border-border px-8 py-5 text-center">
               <SceneLabel size="xl" animate={false}>PROFIL</SceneLabel>
-              <p className="mt-2 text-3xl text-zinc-500">?</p>
+              <p className="mt-2 text-3xl text-muted-foreground">?</p>
             </div>
           </motion.div>
         )}

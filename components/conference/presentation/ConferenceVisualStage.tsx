@@ -132,6 +132,7 @@ export const ConferenceVisualStage = memo(function ConferenceVisualStage({
     if (!el) return;
 
     const updateSize = () => {
+      el.style.maxWidth = "";
       const width = el.offsetWidth;
       const stageHost = el.closest("[data-stage-host]") as HTMLElement | null;
       const maxHeight = stageHost?.clientHeight ?? Infinity;
@@ -170,7 +171,7 @@ export const ConferenceVisualStage = memo(function ConferenceVisualStage({
       {ghostAngle !== null ? (
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
           <motion.div
-            className="opacity-[0.07]"
+            className="opacity-[0.16]"
             animate={{ rotateY: ghostAngle }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
             style={{ transformStyle: "preserve-3d" }}
@@ -190,17 +191,13 @@ export const ConferenceVisualStage = memo(function ConferenceVisualStage({
           <div
             aria-hidden
             data-stage-card
-            className="pointer-events-none absolute inset-0 z-[1] rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-md transition-opacity duration-[400ms] supports-[backdrop-filter]:bg-zinc-900/40"
+            className="pointer-events-none absolute inset-0 z-[1] rounded-2xl border border-[rgba(26,26,26,0.14)] bg-card/80 shadow-[0_18px_40px_-24px_rgba(26,22,18,0.18)] backdrop-blur-md transition-opacity duration-[400ms]"
           />
         ) : null}
 
         <div
           ref={measureRef}
-          className={
-            scene === "S12_SocialProof"
-              ? "relative z-[1] w-max max-w-[min(72rem,calc(100vw-4rem))]"
-              : "relative z-[1] w-max max-w-[min(56rem,calc(100vw-4rem))]"
-          }
+          className="relative z-[1] w-max max-w-[min(56rem,calc(100vw-4rem))]"
         >
           <AnimatePresence mode="popLayout">
             <motion.div

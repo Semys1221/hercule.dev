@@ -16,7 +16,7 @@ export function Countdown({ seconds = 300, className }: CountdownProps) {
   const m = Math.floor(secs / 60).toString().padStart(2, "0");
   const s = (secs % 60).toString().padStart(2, "0");
   return (
-    <p className={className ?? "font-mono text-5xl font-thin tabular-nums tracking-widest text-zinc-200"}>
+    <p className={className ?? "font-mono text-5xl font-thin tabular-nums tracking-widest text-foreground"}>
       {m}:{s}
     </p>
   );

@@ -53,7 +53,7 @@ function CheckRow({
           aria-hidden
           className={cn(
             "flex size-4 shrink-0 items-center justify-center border text-[11px] leading-none",
-            checked ? "border-zinc-400 text-zinc-100" : "border-zinc-700 text-transparent",
+            checked ? "border-foreground/40 text-foreground" : "border-border text-transparent",
           )}
         >
           {checked ? "✓" : ""}
@@ -61,7 +61,7 @@ function CheckRow({
         <span
           className={cn(
             "text-sm tracking-[0.02em]",
-            checked ? "text-zinc-200" : "text-zinc-500 line-through",
+            checked ? "text-foreground" : "text-muted-foreground line-through",
           )}
         >
           {label}
@@ -93,7 +93,7 @@ export function QualificationChecklist({
         {niche}
       </SceneLabel>
       {problem ? (
-        <p className="max-w-lg text-sm tracking-[0.04em] text-zinc-400">{problem}</p>
+        <p className="max-w-lg text-sm tracking-[0.04em] text-muted-foreground">{problem}</p>
       ) : null}
       <div className={cn(compact ? "flex items-center gap-5" : "flex flex-col")}>
         {items.map((item, index) => (
@@ -110,7 +110,7 @@ export function QualificationChecklist({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: delay + items.length * STAGGER, duration: 0.4 }}
-          className="text-[11px] tracking-[0.14em] text-zinc-500 uppercase"
+          className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase"
         >
           {footnote}
         </motion.p>

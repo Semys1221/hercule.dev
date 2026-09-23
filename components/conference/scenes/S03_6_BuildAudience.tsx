@@ -24,7 +24,7 @@ export function S03_6_BuildAudience({ step }: SceneProps) {
           >
             <ChapterDoor
               label="CONSTRUIRE UNE AUDIENCE"
-              icon={<PhoneIcon size={20} className="text-zinc-500" />}
+              icon={<PhoneIcon size={20} className="text-muted-foreground" />}
             />
           </motion.div>
         )}

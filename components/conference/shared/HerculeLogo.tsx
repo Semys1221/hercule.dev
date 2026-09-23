@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { HerculeMark } from "@/components/hercule-mark";
+import { SilverHerculeMark } from "./SilverHerculeMark";
 
 type HerculeLogoProps = {
   size?: "sm" | "md" | "lg" | "xl";
@@ -16,7 +16,14 @@ const sizes: Record<NonNullable<HerculeLogoProps["size"]>, string> = {
   sm: "size-8",
   md: "size-14",
   lg: "size-20",
-  xl: "size-28",
+  xl: "size-48",
+};
+
+const wordSizes: Record<NonNullable<HerculeLogoProps["size"]>, string> = {
+  sm: "text-xs tracking-[0.28em]",
+  md: "text-base tracking-[0.3em] md:text-lg",
+  lg: "text-lg tracking-[0.3em] md:text-xl",
+  xl: "text-3xl tracking-[0.34em] md:text-4xl",
 };
 
 export function HerculeLogo({
@@ -33,10 +40,7 @@ export function HerculeLogo({
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
       className={cn("flex flex-col items-center gap-4", className)}
     >
-      <HerculeMark
-        variant="mono"
-        className={cn(sizesPx[size], "text-foreground")}
-      />
+      <SilverHerculeMark className={sizesPx[size]} />
 
       {(showName || showR2) && (
         <motion.div
@@ -45,7 +49,7 @@ export function HerculeLogo({
           transition={{ duration: 0.4, delay: delay + 0.25 }}
           className="flex flex-col items-center gap-1"
         >
-          <span className="text-base font-medium tracking-[0.3em] text-foreground md:text-lg">
+          <span className={cn("font-medium text-foreground", wordSizes[size])}>
             HERCULE
           </span>
           {showR2 && (
@@ -53,7 +57,7 @@ export function HerculeLogo({
               initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: delay + 0.45 }}
-              className="text-4xl font-thin leading-none text-zinc-400 md:text-5xl"
+              className="text-4xl font-thin leading-none text-muted-foreground md:text-5xl"
             >
               R2
             </motion.span>

@@ -21,7 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const CONFERENCE_CARD_CLASS =
-  "flex flex-col items-center gap-3 rounded-xl border border-zinc-600/50 bg-gradient-to-b from-zinc-800/30 to-zinc-900/70 px-8 py-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]";
+  "flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-8 py-9 shadow-[0_18px_40px_-24px_rgba(26,22,18,0.18)]";
 
 export type ConferenceCheckoutSelection = {
   card: ConferenceCard;
@@ -79,19 +79,19 @@ const COURTAGE_OFFERS: Record<"monthly" | "pack", OfferDisplay> = {
 
 function SeatQuota({ taken }: { taken: number }) {
   return (
-    <p className="text-xs tracking-[0.18em] text-zinc-400 uppercase">
+    <p className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
       {taken} / 4
     </p>
   );
 }
 
 function RoiLine({ text }: { text: string }) {
-  return <p className="text-sm text-zinc-400">{text}</p>;
+  return <p className="text-sm text-muted-foreground">{text}</p>;
 }
 
 function GuaranteeLine({ text }: { text: string }) {
   return (
-    <p className="max-w-xs text-center text-sm leading-relaxed text-zinc-400">
+    <p className="max-w-xs text-center text-sm leading-relaxed text-muted-foreground">
       {text}
     </p>
   );
@@ -110,7 +110,7 @@ function BillingToggleLink({
     return (
       <button
         type="button"
-        className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+        className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         onClick={onSelectPack}
       >
         Obtenir une réduction 3 mois
@@ -121,7 +121,7 @@ function BillingToggleLink({
   return (
     <button
       type="button"
-      className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+      className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       onClick={onSelectMonthly}
     >
       1 mois
@@ -142,7 +142,7 @@ function CourtageBillingToggleLink({
     return (
       <button
         type="button"
-        className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+        className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         onClick={onSelectMonthly}
       >
         Essayez 1 mois
@@ -153,7 +153,7 @@ function CourtageBillingToggleLink({
   return (
     <button
       type="button"
-      className="text-xs text-zinc-500 underline-offset-4 hover:text-zinc-300 hover:underline"
+      className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       onClick={onSelectPack}
     >
       3 mois
@@ -190,13 +190,13 @@ function VerticalChoice({
     >
       <ToggleGroupItem
         value="cif"
-        className="flex-1 border-zinc-600 data-[state=on]:bg-zinc-800"
+        className="flex-1 border-border data-[state=on]:bg-foreground data-[state=on]:text-primary-foreground"
       >
         CIF
       </ToggleGroupItem>
       <ToggleGroupItem
         value="ias"
-        className="flex-1 border-zinc-600 data-[state=on]:bg-zinc-800"
+        className="flex-1 border-border data-[state=on]:bg-foreground data-[state=on]:text-primary-foreground"
       >
         IAS
       </ToggleGroupItem>
@@ -225,7 +225,7 @@ function CheckoutCta({
         S&apos;inscrire
       </Button>
       {disabled && disabledReason ? (
-        <p className="text-center text-xs text-zinc-500">{disabledReason}</p>
+        <p className="text-center text-xs text-muted-foreground">{disabledReason}</p>
       ) : null}
     </div>
   );
@@ -256,10 +256,10 @@ function DecCard({
     <div className={CONFERENCE_CARD_CLASS}>
       <SceneLabel size="md" animate={false}>HERCULE DEC</SceneLabel>
       {variant === "checkout" ? <SeatQuota taken={taken} /> : null}
-      <p className="text-5xl font-thin tabular-nums tracking-tight text-zinc-100">
+      <p className="text-5xl font-thin tabular-nums tracking-tight text-foreground">
         {offer.price}
       </p>
-      <p className="text-sm text-zinc-500">{offer.period}</p>
+      <p className="text-sm text-muted-foreground">{offer.period}</p>
       <RoiLine text={DEC_ROI_LINE} />
       <GuaranteeLine text={offer.guarantee} />
 
@@ -322,10 +322,10 @@ function CourtageCard({
     <div className={CONFERENCE_CARD_CLASS}>
       <SceneLabel size="md" animate={false}>HERCULE COURTAGE</SceneLabel>
       {variant === "checkout" ? <SeatQuota taken={taken} /> : null}
-      <p className="text-5xl font-thin tabular-nums tracking-tight text-zinc-100">
+      <p className="text-5xl font-thin tabular-nums tracking-tight text-foreground">
         {offer.price}
       </p>
-      <p className="text-sm text-zinc-500">{offer.period}</p>
+      <p className="text-sm text-muted-foreground">{offer.period}</p>
       <RoiLine text={COURTAGE_ROI_LINE} />
       <GuaranteeLine text={offer.guarantee} />
 

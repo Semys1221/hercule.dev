@@ -1,0 +1,143 @@
+{
+  "generated_by": "lib/backend/scripts/conference/fetch_site_branding.py",
+  "logo_format": "webp",
+  "max_height_px": 128,
+  "sites": [
+    {
+      "input": "c2rpatrimoine.monsitemedia.fr",
+      "slug": "c2rpatrimoine-monsitemedia-fr",
+      "website": "https://c2rpatrimoine.monsitemedia.fr/",
+      "company_name": "Hugues REIX, Dirigeant, C2R Patrimoine, PERIGUEUX, Accueil",
+      "logo_source_url": "https://mppproductions3.s3.eu-west-1.amazonaws.com/touyfpirxbyh7c1pdhre63rrxptk",
+      "logo_file": "logos/c2rpatrimoine-monsitemedia-fr.webp",
+      "logo_width": 128,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": [
+        "fetch_failed:https://www.c2rpatrimoine.monsitemedia.fr:HTTPSConnectionPool(host='www.c2rpatrimoine.monsitemedia.fr', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLCertVerificationError(1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'www.c2rpatrimoine.monsitemedia.fr'. (_ssl.c:1010)\")))"
+      ]
+    },
+    {
+      "input": "arpegespatrimoine.fr",
+      "slug": "arpegespatrimoine-fr",
+      "website": "https://www.arpegespatrimoine.fr/",
+      "company_name": "ArpÃ¨ges Patrimoine",
+      "logo_source_url": "https://www.arpegespatrimoine.fr/svg/logo-header-white.svg",
+      "logo_file": "logos/arpegespatrimoine-fr.webp",
+      "logo_width": 445,
+      "logo_height": 66,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "kinousassur.com",
+      "slug": "kinousassur-com",
+      "website": "https://www.kinousassur.com/",
+      "company_name": "Kinousassur",
+      "logo_source_url": "https://www.kinousassur.com/wordpress/wp-content/themes/kinouassur/assets/images/kinousassur-logo.png",
+      "logo_file": "logos/kinousassur-com.webp",
+      "logo_width": 120,
+      "logo_height": 54,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "asorae.fr",
+      "slug": "asorae-fr",
+      "website": "https://asorae.fr/",
+      "company_name": "Asorae Courtage",
+      "logo_source_url": "https://asorae.fr/wp-content/uploads/2026/08/Design-sans-titre-1-300x300.png",
+      "logo_file": "logos/asorae-fr.webp",
+      "logo_width": 128,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "expat-assurance.com",
+      "slug": "expat-assurance-com",
+      "website": "https://expat-assurance.com/fr/",
+      "company_name": "Expat Assurance",
+      "logo_source_url": "https://expat-assurance.com/wp-content/uploads/2024/03/expat-logo-footer.svg",
+      "logo_file": "logos/expat-assurance-com.webp",
+      "logo_width": 152,
+      "logo_height": 43,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "patrimoinefinancement.fr",
+      "slug": "patrimoinefinancement-fr",
+      "website": "https://www.patrimoinefinancement.fr/",
+      "company_name": "Patrimoine et Financement |",
+      "logo_source_url": "https://www.patrimoinefinancement.fr/wp-content/uploads/2025/04/Logo-Patrimoine-et-Financement.png",
+      "logo_file": null,
+      "logo_width": null,
+      "logo_height": null,
+      "format": "webp",
+      "max_height": 128,
+      "ok": false,
+      "notes": [
+        "fetch_failed:https://www.patrimoinefinancement.fr:HTTPSConnectionPool(host='www.patrimoinefinancement.fr', port=443): Read timed out. (read timeout=20)",
+        "logo_store_failed:HTTPSConnectionPool(host='www.patrimoinefinancement.fr', port=443): Read timed out."
+      ]
+    },
+    {
+      "input": "oxygen-patrimoine.com",
+      "slug": "oxygen-patrimoine-com",
+      "website": "https://oxygen-patrimoine.com/",
+      "company_name": "Oxygen Patrimoine",
+      "logo_source_url": "https://oxygen-patrimoine.com/wp-content/uploads/2026/03/logo-oxygen-patrimoine.png",
+      "logo_file": "logos/oxygen-patrimoine-com.webp",
+      "logo_width": 401,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "avenircourtage.fr",
+      "slug": "avenircourtage-fr",
+      "website": "https://avenircourtage.fr/",
+      "company_name": "Avenir courtage",
+      "logo_source_url": "http://avenircourtage.fr/wp-content/uploads/2015/01/Logoavenircourtage.jpg",
+      "logo_file": "logos/avenircourtage-fr.webp",
+      "logo_width": 272,
+      "logo_height": 83,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "gaconseils.net",
+      "slug": "gaconseils-net",
+      "website": "https://www.gaconseils.net/",
+      "company_name": "courtier en assurances Nantes et sud Loire",
+      "logo_source_url": "https://www.gaconseils.net/images/charte/logo-header.png",
+      "logo_file": null,
+      "logo_width": null,
+      "logo_height": null,
+      "format": "webp",
+      "max_height": 128,
+      "ok": false,
+      "notes": [
+        "fetch_failed:https://www.gaconseils.net:HTTPSConnectionPool(host='www.gaconseils.net', port=443): Read timed out. (read timeout=20)",
+        "fetch_failed:https://gaconseils.net:HTTPSConnectionPool(host='www.gaconseils.net', port=443): Read timed out. (read timeout=10)",
+        "fetch_failed:http://www.gaconseils.net:HTTPSConnectionPool(host='www.gaconseils.net', port=443): Read timed out. (read timeout=20)",
+        "logo_store_failed:HTTPSConnectionPool(host='www.gaconseils.net', port=443): Read timed out. (read timeout=20)"
+      ]
+    }
+  ]
+}

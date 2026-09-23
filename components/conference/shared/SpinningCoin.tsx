@@ -8,7 +8,7 @@ type SpinningCoinProps = {
 };
 
 const faceClass =
-  "absolute inset-0 flex items-center justify-center rounded-full border border-zinc-500 text-[11px] tracking-[0.22em] text-zinc-200";
+  "absolute inset-0 flex items-center justify-center rounded-full border border-border text-[11px] tracking-[0.22em] text-foreground";
 
 const SPIN_STYLE_ID = "conference-coin-spin";
 
@@ -37,13 +37,13 @@ export function SpinningCoin({ className }: SpinningCoinProps) {
         }}
       >
         <div
-          className={cn(faceClass, "bg-zinc-900")}
+          className={cn(faceClass, "bg-card")}
           style={{ backfaceVisibility: "hidden" }}
         >
           PILE
         </div>
         <div
-          className={cn(faceClass, "bg-zinc-800")}
+          className={cn(faceClass, "bg-muted")}
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           FACE

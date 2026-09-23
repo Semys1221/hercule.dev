@@ -1,0 +1,183 @@
+{
+  "generated_by": "lib/backend/scripts/conference/fetch_site_branding.py",
+  "logo_format": "webp",
+  "max_height_px": 128,
+  "sites": [
+    {
+      "input": "cdvpatrimoine.com",
+      "slug": "cdvpatrimoine-com",
+      "website": "https://cdvpatrimoine.com/",
+      "company_name": "CDV Patrimoine & Assurance",
+      "logo_source_url": "https://cdvpatrimoine.com/wp-content/uploads/2023/07/logo-cdv-patrimoine.svg",
+      "logo_file": "logos/cdvpatrimoine-com.webp",
+      "logo_width": 166,
+      "logo_height": 48,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "fundora.fr",
+      "slug": "fundora-fr",
+      "website": "https://www.fundora.fr/",
+      "company_name": "Fundora",
+      "logo_source_url": "https://cdn.prod.website-files.com/698c5c937f84f8b56aecc794/69b927564fc655483973b530_F%20Podium%20Noir%20(1)%202.avif",
+      "logo_file": "logos/fundora-fr.webp",
+      "logo_width": 83,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "renaud-conseil.fr",
+      "slug": "renaud-conseil-fr",
+      "website": "https://www.renaud-conseil.fr/",
+      "company_name": "Gildas Renaud Conseil",
+      "logo_source_url": "https://le-cdn.website-editor.net/s/ce0496c3fe2f4ed688f02df61982df55/dms3rep/multi/opt/logoGRC-1920w.jpg?Expires=1792424850&Signature=HWRSUfAU~BmBhxyNqw-5-lhASJqq1VYCEb1prdHgXhZfaDVneq6NJPFLinEWUjZ8VZw08SMdHQp1cETmCzIqOER~mpLnmHt8ddksjEnD6YIBaqr0QpoaIrAaBI6Clu3bfP5GlmWIBJgHiWB7C3rCT~TjJOCynYa~gFq-oczyL4O7j50x05wpM3md~75V1Rzafl0pOjqgOtClTwjjbM1XBMtMQMSw-z44eRPKvEDYbPgbF7CM8cIZb2JiRhhsm-QH9Y8pcm3rgiNlQVmQ1nav0ZSKC0MhwvpRyukFa-7oiuJGCjGWabEBLG-3tn4N3P3XfP12WciL148j8OEjvOALeQ__&Key-Pair-Id=K2NXBXLF010TJW",
+      "logo_file": "logos/renaud-conseil-fr.webp",
+      "logo_width": 107,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "apsconsult.fr",
+      "slug": "apsconsult-fr",
+      "website": "https://www.apsconsult.fr/",
+      "company_name": "APS Consult",
+      "logo_source_url": "https://www.apsconsult.fr/wp-content/uploads/2026/04/logo-APSConsult-removebg-preview.png",
+      "logo_file": "logos/apsconsult-fr.webp",
+      "logo_width": 192,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "mynvest.fr",
+      "slug": "mynvest-fr",
+      "website": "https://www.mynvest.fr/",
+      "company_name": "Bastien Guilloux Â· Conseil en gestion de patrimoine",
+      "logo_source_url": null,
+      "logo_file": null,
+      "logo_width": null,
+      "logo_height": null,
+      "format": "webp",
+      "max_height": 128,
+      "ok": false,
+      "notes": [
+        "logo_not_found"
+      ]
+    },
+    {
+      "input": "fiscalitedufrontalier.com",
+      "slug": "fiscalitedufrontalier-com",
+      "website": null,
+      "company_name": null,
+      "logo_source_url": null,
+      "logo_file": null,
+      "logo_width": null,
+      "logo_height": null,
+      "format": "webp",
+      "max_height": 128,
+      "ok": false,
+      "notes": [
+        "404:https://www.fiscalitedufrontalier.com",
+        "404:https://fiscalitedufrontalier.com",
+        "404:http://www.fiscalitedufrontalier.com",
+        "404:http://fiscalitedufrontalier.com"
+      ]
+    },
+    {
+      "input": "apollux-patrimoine.com",
+      "slug": "apollux-patrimoine-com",
+      "website": "https://www.apollux-patrimoine.com/",
+      "company_name": "Apollux Patrimoine",
+      "logo_source_url": "https://cdn.prod.website-files.com/68cbcf1d9169b9107903f446/68cd678467d844000eea36be_hero-image-square-logo-yellow.avif",
+      "logo_file": "logos/apollux-patrimoine-com.webp",
+      "logo_width": 117,
+      "logo_height": 117,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "lhconseils.fr",
+      "slug": "lhconseils-fr",
+      "website": "https://lhconseils.fr/",
+      "company_name": "LH Conseils",
+      "logo_source_url": "https://lhconseils.fr/wp-content/uploads/2025/03/cropped-WhatsApp-Image-2025-03-11-a-13.03.18_53e02f9f-e1741695252923.jpg",
+      "logo_file": "logos/lhconseils-fr.webp",
+      "logo_width": 315,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": []
+    },
+    {
+      "input": "etpatrimoine.com",
+      "slug": "etpatrimoine-com",
+      "website": null,
+      "company_name": null,
+      "logo_source_url": null,
+      "logo_file": null,
+      "logo_width": null,
+      "logo_height": null,
+      "format": "webp",
+      "max_height": 128,
+      "ok": false,
+      "notes": [
+        "404:https://www.etpatrimoine.com",
+        "fetch_failed:https://etpatrimoine.com:HTTPSConnectionPool(host='etpatrimoine.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, '[SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1010)')))",
+        "404:http://www.etpatrimoine.com",
+        "fetch_failed:http://etpatrimoine.com:HTTPSConnectionPool(host='etpatrimoine.com', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, '[SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1010)')))"
+      ]
+    },
+    {
+      "input": "financierematignon.com",
+      "slug": "financierematignon-com",
+      "website": null,
+      "company_name": null,
+      "logo_source_url": null,
+      "logo_file": null,
+      "logo_width": null,
+      "logo_height": null,
+      "format": "webp",
+      "max_height": 128,
+      "ok": false,
+      "notes": [
+        "404:https://www.financierematignon.com",
+        "404:https://financierematignon.com",
+        "404:http://www.financierematignon.com",
+        "404:http://financierematignon.com"
+      ]
+    },
+    {
+      "input": "yvescastel.com",
+      "slug": "yvescastel-com",
+      "website": "https://yvescastel.fr/",
+      "company_name": "Yves Castel",
+      "logo_source_url": "https://framerusercontent.com/assets/CgOkYhXPJ4Qy8tYAeCrC8xgfmE.png",
+      "logo_file": "logos/yvescastel-com.webp",
+      "logo_width": 128,
+      "logo_height": 128,
+      "format": "webp",
+      "max_height": 128,
+      "ok": true,
+      "notes": [
+        "fetch_failed:https://www.yvescastel.com:HTTPSConnectionPool(host='www.yvescastel.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='www.yvescastel.com', port=443): Failed to resolve 'www.yvescastel.com' ([Errno 8] nodename nor servname provided, or not known)\"))",
+        "fetch_failed:https://yvescastel.com:HTTPSConnectionPool(host='yvescastel.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='yvescastel.com', port=443): Failed to resolve 'yvescastel.com' ([Errno 8] nodename nor servname provided, or not known)\"))",
+        "fetch_failed:http://www.yvescastel.com:HTTPConnectionPool(host='www.yvescastel.com', port=80): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPConnection(host='www.yvescastel.com', port=80): Failed to resolve 'www.yvescastel.com' ([Errno 8] nodename nor servname provided, or not known)\"))",
+        "fetch_failed:http://yvescastel.com:HTTPConnectionPool(host='yvescastel.com', port=80): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPConnection(host='yvescastel.com', port=80): Failed to resolve 'yvescastel.com' ([Errno 8] nodename nor servname provided, or not known)\"))"
+      ]
+    }
+  ]
+}

@@ -28,7 +28,7 @@ export function SceneTagCard({ children, className }: SceneTagCardProps) {
   return (
     <div
       className={cn(
-        "rounded border border-zinc-800/70 px-3 py-1.5 text-center whitespace-nowrap",
+        "rounded border border-border/70 px-3 py-1.5 text-center whitespace-nowrap",
         className,
       )}
     >

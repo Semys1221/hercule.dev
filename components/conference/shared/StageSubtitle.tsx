@@ -19,7 +19,7 @@ export const StageSubtitle = forwardRef<HTMLParagraphElement, StageSubtitleProps
         exit={{ opacity: 0, y: -4 }}
         transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-          "max-w-lg text-center text-sm tracking-[0.1em] text-zinc-500",
+          "max-w-lg text-center text-sm tracking-[0.1em] text-muted-foreground",
           className,
         )}
       >

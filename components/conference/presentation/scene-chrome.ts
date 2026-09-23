@@ -15,7 +15,7 @@ export const SCENE_TITLES: Record<SceneId, string> = {
   S09_R2Reveal: "Des demandes qualifiées à vous",
   S11_CaseBrokerage: "Ils utilisent déjà Hercule",
   S11_CaseAccounting: "Ils utilisent déjà Hercule",
-  S12_SocialProof: "Cabinets déjà accompagnés",
+  S12_SocialProof: "Les saisons précédentes",
   S10_JohnDemo: "Le flux qualifié dans l’agenda",
   S13_HerculeDEC: "Hercule DEC",
   S14_HerculeCourtage: "Hercule Courtage",

@@ -125,9 +125,9 @@ export function StageCardDeck({
             >
               <Card
                 className={cn(
-                  "gap-3 border-zinc-800/50 bg-zinc-900/70 shadow-none backdrop-blur-sm supports-[backdrop-filter]:bg-zinc-900/50",
+                  "gap-3 border-border bg-card/70 shadow-none backdrop-blur-sm supports-[backdrop-filter]:bg-white/70",
                   cardClassName,
-                  item.dimmed && "border-zinc-900 bg-zinc-950/80",
+                  item.dimmed && "border-border bg-card/80",
                   !isActive && "select-none",
                 )}
               >

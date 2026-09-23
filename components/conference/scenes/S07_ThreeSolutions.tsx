@@ -50,7 +50,7 @@ export function S07_ThreeSolutions({ step }: SceneProps) {
                     initial={{ opacity: 0, x: 8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 + (k === "VOLUME" ? 0 : k === "QUALITÉ" ? 0.12 : 0.24) }}
-                    className={ok ? "text-zinc-200" : "text-zinc-600"}
+                    className={ok ? "text-foreground" : "text-muted-foreground"}
                   >
                     {k} {ok ? "✓" : "?"}
                   </motion.p>

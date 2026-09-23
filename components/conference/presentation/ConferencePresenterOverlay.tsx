@@ -43,7 +43,7 @@ export const ConferencePresenterOverlay = memo(function ConferencePresenterOverl
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-none absolute bottom-4 right-5 z-[60] font-mono text-[11px] tabular-nums text-zinc-500"
+            className="pointer-events-none absolute bottom-4 right-5 z-[60] font-mono text-[11px] tabular-nums text-muted-foreground"
           >
             {beatId} / {TOTAL_BEATS}
           </motion.div>
@@ -60,23 +60,23 @@ export const ConferencePresenterOverlay = memo(function ConferencePresenterOverl
             transition={{ duration: 0.3 }}
             className="pointer-events-none absolute bottom-0 left-0 right-0 z-[61] flex flex-col items-center gap-2 bg-gradient-to-t from-black/80 to-transparent px-8 pb-6 pt-10 text-center"
           >
-            <p className="font-mono text-sm tracking-widest text-zinc-500">
+            <p className="font-mono text-sm tracking-widest text-muted-foreground">
               Point {beatId} / {TOTAL_BEATS} · {sceneLabel}
             </p>
-            <p className="text-base font-medium tracking-widest text-zinc-300 uppercase">
+            <p className="text-base font-medium tracking-widest text-foreground uppercase">
               {cue.label}
             </p>
             {cue.phrase ? (
-              <p className="max-w-2xl text-lg italic leading-relaxed text-zinc-400">
+              <p className="max-w-2xl text-lg italic leading-relaxed text-muted-foreground">
                 « {cue.phrase} »
               </p>
             ) : null}
             {isLast ? (
-              <p className="mt-1 font-mono text-sm tracking-widest text-zinc-600 uppercase">
+              <p className="mt-1 font-mono text-sm tracking-widest text-muted-foreground uppercase">
                 Fin de présentation
               </p>
             ) : (
-              <p className="mt-1 font-mono text-sm text-zinc-500">→ {nextLabel}</p>
+              <p className="mt-1 font-mono text-sm text-muted-foreground">→ {nextLabel}</p>
             )}
           </motion.div>
         ) : null}
@@ -92,42 +92,42 @@ export const ConferencePresenterOverlay = memo(function ConferencePresenterOverl
             transition={{ duration: 0.25 }}
             className="pointer-events-none absolute bottom-6 left-1/2 z-[62] -translate-x-1/2"
           >
-            <div className="w-80 rounded border border-zinc-700/60 bg-zinc-950/90 px-5 py-4 shadow-2xl backdrop-blur-sm">
-              <div className="mb-3 flex items-center justify-between border-b border-zinc-800 pb-2">
-                <span className="font-mono text-[10px] tracking-widest text-zinc-600">
+            <div className="w-80 rounded border border-border bg-card/90 px-5 py-4 shadow-2xl backdrop-blur-sm">
+              <div className="mb-3 flex items-center justify-between border-b border-border pb-2">
+                <span className="font-mono text-[10px] tracking-widest text-muted-foreground">
                   Point {beatId} / {TOTAL_BEATS}
                 </span>
-                <span className="text-[10px] tracking-widest text-zinc-500 uppercase">
+                <span className="text-[10px] tracking-widest text-muted-foreground uppercase">
                   {sceneLabel}
                 </span>
               </div>
 
               {cue ? (
-                <p className="mb-2 text-xs font-medium tracking-widest text-zinc-300 uppercase">
+                <p className="mb-2 text-xs font-medium tracking-widest text-foreground uppercase">
                   {cue.label}
                 </p>
               ) : null}
 
               {cue?.phrase ? (
-                <p className="mb-3 text-[11px] italic leading-relaxed text-zinc-500">
+                <p className="mb-3 text-[11px] italic leading-relaxed text-muted-foreground">
                   « {cue.phrase} »
                 </p>
               ) : null}
 
               {isLast ? (
-                <p className="text-center text-[10px] tracking-widest text-zinc-600 uppercase">
+                <p className="text-center text-[10px] tracking-widest text-muted-foreground uppercase">
                   FIN DE PRÉSENTATION
                 </p>
               ) : (
-                <div className="rounded bg-zinc-900/70 px-3 py-2">
-                  <p className="mb-0.5 text-[9px] tracking-widest text-zinc-600 uppercase">
+                <div className="rounded bg-card/70 px-3 py-2">
+                  <p className="mb-0.5 text-[9px] tracking-widest text-muted-foreground uppercase">
                     [ESPACE] →
                   </p>
-                  <p className="text-[11px] text-zinc-400">{nextLabel}</p>
+                  <p className="text-[11px] text-muted-foreground">{nextLabel}</p>
                 </div>
               )}
 
-              <p className="mt-3 border-t border-zinc-800 pt-2 text-center text-[8px] tracking-widest text-zinc-700">
+              <p className="mt-3 border-t border-border pt-2 text-center text-[8px] tracking-widest text-muted-foreground">
                 H fermer · ⌘Espace entraînement · T bascule · F plein écran
               </p>
             </div>
@@ -138,7 +138,7 @@ export const ConferencePresenterOverlay = memo(function ConferencePresenterOverl
       {!trainingMode && !presenterMode ? (
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-3 left-4 z-[60] text-[10px] tracking-widest text-zinc-800 uppercase"
+          className="pointer-events-none absolute bottom-3 left-4 z-[60] text-[10px] tracking-widest text-muted-foreground uppercase"
         >
           {sceneLabel} · {beatId}
         </div>

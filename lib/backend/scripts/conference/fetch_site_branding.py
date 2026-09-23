@@ -3,15 +3,21 @@
 
 from __future__ import annotations
 
+import argparse
 import base64
 import json
 import re
 import sys
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import unquote, urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
+
+try:
+    import pillow_avif  # noqa: F401  # registers AVIF with Pillow
+except ImportError:
+    pass
 
 _REPO = Path(__file__).resolve().parents[4]
 _BACKEND = _REPO / "lib" / "backend"
@@ -28,9 +34,14 @@ from conference_clients.logos import (  # noqa: E402
     pick_logo_url,
 )
 
-OUTPUT_DIR = _REPO / "doc" / "fetch"
-LOGO_DIR = OUTPUT_DIR / "logos"
-MANIFEST = OUTPUT_DIR / "manifest.json"
+DEFAULT_OUTPUT_DIR = _REPO / "doc" / "fetch"
+
+EXTRA_URL_CANDIDATES: dict[str, list[str]] = {
+    "yvescastel.com": [
+        "https://yvescastel.fr",
+        "https://www.yvescastel.fr",
+    ],
+}
 
 SITES = [
     "cdvpatrimoine.com",
@@ -111,6 +122,11 @@ def pick_logo_url_extended(html: str, page_url: str) -> str | None:
             if url:
                 return url
 
+    for img in scoped.find_all("img"):
+        src = str(img.get("src") or img.get("data-src") or "")
+        if src.startswith("data:image/") and len(src) > 500:
+            return src
+
     for link in soup.find_all("link", rel=True):
         rel = " ".join(link.get("rel") or []).lower()
         if "apple-touch-icon" in rel:
@@ -134,16 +150,48 @@ def pick_logo_url_extended(html: str, page_url: str) -> str | None:
     return None
 
 
+def _parse_site_input(raw: str) -> tuple[str, str]:
+    """Return (host without www, path including leading slash or empty)."""
+    text = unquote(raw.strip())
+    if "?" in text:
+        text = text.split("?", 1)[0]
+    if text.startswith("http://") or text.startswith("https://"):
+        parsed = urlparse(text)
+        host = parsed.netloc.lower().removeprefix("www.")
+        path = parsed.path or ""
+        return host, path
+    if "/" in text:
+        host_part, rest = text.split("/", 1)
+        host = host_part.lower().removeprefix("www.")
+        path = "/" + rest.strip("/") if rest.strip("/") else ""
+        return host, path
+    host = text.lower().removeprefix("www.")
+    return host, ""
+
+
 def _url_candidates(domain: str) -> list[str]:
     raw = domain.strip()
     if raw.startswith("http://") or raw.startswith("https://"):
-        return [raw]
-    host = raw.removeprefix("www.")
-    return [
-        f"https://{host}",
-        f"https://www.{host}",
-        f"http://{host}",
+        return [unquote(raw.split("?", 1)[0])]
+    host, path = _parse_site_input(raw)
+    urls = [
+        f"https://www.{host}{path}",
+        f"https://{host}{path}",
+        f"http://www.{host}{path}",
+        f"http://{host}{path}",
     ]
+    urls.extend(EXTRA_URL_CANDIDATES.get(host, []))
+    return urls
+
+
+def load_sites_from_file(path: Path) -> list[str]:
+    sites: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        sites.append(line)
+    return sites
 
 
 def _decode_data_url(url: str) -> bytes | None:
@@ -207,7 +255,7 @@ def fetch_page(session: requests.Session, domain: str) -> tuple[requests.Respons
     return None, notes
 
 
-def process_site(domain: str, session: requests.Session) -> dict:
+def process_site(domain: str, session: requests.Session, *, logo_dir: Path) -> dict:
     slug = slug_from_input(domain)
     row: dict = {
         "input": domain,
@@ -248,8 +296,8 @@ def process_site(domain: str, session: requests.Session) -> dict:
         try:
             raw = download_logo_bytes(logo_url, session)
             webp = _to_webp(raw)
-            LOGO_DIR.mkdir(parents=True, exist_ok=True)
-            logo_path = LOGO_DIR / f"{slug}.webp"
+            logo_dir.mkdir(parents=True, exist_ok=True)
+            logo_path = logo_dir / f"{slug}.webp"
             logo_path.write_bytes(webp)
 
             from PIL import Image
@@ -266,16 +314,41 @@ def process_site(domain: str, session: requests.Session) -> dict:
 
 
 def main() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(description="Fetch company names and logos for websites.")
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=DEFAULT_OUTPUT_DIR,
+        help="Output directory (manifest.json + logos/). Default: doc/fetch",
+    )
+    parser.add_argument(
+        "--sites-file",
+        type=Path,
+        default=None,
+        help="Text file with one site per line (default: built-in SITES list)",
+    )
+    args = parser.parse_args()
+
+    output_dir = args.output if args.output.is_absolute() else _REPO / args.output
+    logo_dir = output_dir / "logos"
+    manifest_path = output_dir / "manifest.json"
+
+    if args.sites_file:
+        sites_path = args.sites_file if args.sites_file.is_absolute() else _REPO / args.sites_file
+        sites = load_sites_from_file(sites_path)
+    else:
+        sites = SITES
+
+    output_dir.mkdir(parents=True, exist_ok=True)
     session = requests.Session()
-    results = [process_site(site, session) for site in SITES]
+    results = [process_site(site, session, logo_dir=logo_dir) for site in sites]
     manifest = {
         "generated_by": "lib/backend/scripts/conference/fetch_site_branding.py",
         "logo_format": "webp",
         "max_height_px": MAX_HEIGHT,
         "sites": results,
     }
-    MANIFEST.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(manifest, indent=2, ensure_ascii=False))
 
 

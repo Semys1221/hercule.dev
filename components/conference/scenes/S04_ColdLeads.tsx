@@ -26,7 +26,7 @@ export function S04_ColdLeads({ step }: SceneProps) {
             <PersonGroup count={8} size={28} />
             <motion.p
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-              className="text-sm text-zinc-600 tracking-widest uppercase"
+              className="text-sm text-muted-foreground tracking-widest uppercase"
             >
               Personne n&apos;a demandé à vous parler
             </motion.p>
@@ -45,7 +45,7 @@ export function S04_ColdLeads({ step }: SceneProps) {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.3 }}
-                className="text-sm tracking-[0.22em] text-zinc-400 uppercase"
+                className="text-sm tracking-[0.22em] text-muted-foreground uppercase"
               >
                 {label}
                 {i < 2 && (
@@ -53,7 +53,7 @@ export function S04_ColdLeads({ step }: SceneProps) {
                     initial={{ scaleY: 0 }}
                     animate={{ scaleY: 1 }}
                     transition={{ delay: i * 0.3 + 0.15, duration: 0.2 }}
-                    className="mx-auto mt-1 mb-1 h-4 w-px origin-top bg-zinc-700"
+                    className="mx-auto mt-1 mb-1 h-4 w-px origin-top bg-foreground/20"
                   />
                 )}
               </motion.div>
@@ -65,7 +65,7 @@ export function S04_ColdLeads({ step }: SceneProps) {
           <motion.div
             key="b22"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="rounded border border-zinc-700/60 px-8 py-6 font-mono text-sm"
+            className="rounded border border-border px-8 py-6 font-mono text-sm"
           >
             {[
               { label: "BUDGET", ok: false },
@@ -79,8 +79,8 @@ export function S04_ColdLeads({ step }: SceneProps) {
                 transition={{ delay: i * 0.2 }}
                 className="mb-2 flex gap-4"
               >
-                <span className="w-20 text-zinc-500">{label}</span>
-                <span className={ok ? "text-zinc-300" : "text-zinc-600"}>✕</span>
+                <span className="w-20 text-muted-foreground">{label}</span>
+                <span className={ok ? "text-foreground" : "text-muted-foreground"}>✕</span>
               </motion.p>
             ))}
           </motion.div>

@@ -22,7 +22,7 @@ export function FlowLine({ dir = "down", className, delay = 0, label }: FlowLine
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay, duration: 0.3 }}
-          className="text-[9px] tracking-widest text-zinc-600 uppercase"
+          className="text-[9px] tracking-widest text-muted-foreground uppercase"
         >
           {label}
         </motion.span>
@@ -33,7 +33,7 @@ export function FlowLine({ dir = "down", className, delay = 0, label }: FlowLine
         transition={{ duration: 0.4, delay, ease: "easeOut" }}
         style={{ originX: isDown ? undefined : 0, originY: isDown ? 0 : undefined }}
         className={cn(
-          "bg-zinc-600",
+          "bg-foreground/35",
           isDown ? "h-6 w-px" : "h-px w-6",
         )}
       />
@@ -42,7 +42,7 @@ export function FlowLine({ dir = "down", className, delay = 0, label }: FlowLine
         animate={{ opacity: 1 }}
         transition={{ delay: delay + 0.3, duration: 0.2 }}
         className={cn(
-          "text-zinc-500",
+          "text-muted-foreground",
           isDown ? "text-xs leading-none" : "text-[10px] leading-none",
         )}
       >

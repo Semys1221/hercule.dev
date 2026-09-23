@@ -1,5 +1,5 @@
 const COURTAGE_TAGLINE_CLASS =
-  "max-w-md shrink-0 text-center text-xs leading-relaxed tracking-[0.16em] text-zinc-500 uppercase";
+  "max-w-md shrink-0 text-center text-xs leading-relaxed tracking-[0.16em] text-muted-foreground uppercase";
 
 export function CourtageTagline() {
   return (

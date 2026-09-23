@@ -38,21 +38,21 @@ function actFor(story: OfferStory, step: number): { act: Act; local: number } {
 
 function ScoreStrip({ story }: { story: OfferStory }) {
   return (
-    <Card className="w-72 gap-3 border-zinc-800/60 bg-zinc-950/80 py-4 shadow-none">
+    <Card className="w-72 gap-3 border-border bg-card/80 py-4 shadow-none">
       <CardHeader className="px-5">
-        <CardTitle className="text-sm font-medium tracking-[0.22em] text-zinc-100 uppercase">
+        <CardTitle className="text-sm font-medium tracking-[0.22em] text-foreground uppercase">
           {story.title}
         </CardTitle>
-        <CardDescription className="text-zinc-500">{story.niche}</CardDescription>
+        <CardDescription className="text-muted-foreground">{story.niche}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-1 px-5">
-        <p className="text-lg font-light tabular-nums tracking-tight text-zinc-100">
+        <p className="text-lg font-light tabular-nums tracking-tight text-foreground">
           {story.scoreReturn}
         </p>
         {story.scoreCaption ? (
-          <p className="text-xs text-zinc-500">{story.scoreCaption}</p>
+          <p className="text-xs text-muted-foreground">{story.scoreCaption}</p>
         ) : null}
-        <p className="text-xs text-zinc-500">{story.scorePrice}</p>
+        <p className="text-xs text-muted-foreground">{story.scorePrice}</p>
       </CardContent>
     </Card>
   );
@@ -61,11 +61,11 @@ function ScoreStrip({ story }: { story: OfferStory }) {
 function Ribbon({ story, phrase }: { story: OfferStory; phrase: string }) {
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-[10px] tracking-[0.22em] text-zinc-500 uppercase">
+      <p className="text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
         {story.title} · {story.niche}
       </p>
       {phrase ? (
-        <p className="text-xs text-zinc-600">{phrase}</p>
+        <p className="text-xs text-muted-foreground">{phrase}</p>
       ) : null}
     </div>
   );
@@ -86,7 +86,7 @@ function CaseAct({ story, local }: { story: OfferStory; local: number }) {
         transition={{ duration: 0.35, ease: EASE }}
         className="flex flex-col gap-4"
       >
-        <p className="text-[10px] tracking-[0.2em] text-zinc-600 uppercase">
+        <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
           {beat.kicker}
         </p>
         {beat.pills ? (
@@ -94,7 +94,7 @@ function CaseAct({ story, local }: { story: OfferStory; local: number }) {
             {beat.pills.map((pill) => (
               <span
                 key={pill}
-                className="rounded-md border border-zinc-800 bg-zinc-900/80 px-3 py-1.5 text-sm text-zinc-200"
+                className="rounded-md border border-border bg-card/80 px-3 py-1.5 text-sm text-foreground"
               >
                 {pill}
               </span>
@@ -103,7 +103,7 @@ function CaseAct({ story, local }: { story: OfferStory; local: number }) {
         ) : (
           <p
             className={cn(
-              "font-light text-zinc-100",
+              "font-light text-foreground",
               local === 0 ? "text-2xl tracking-tight" : "text-lg leading-snug",
             )}
           >
@@ -135,22 +135,22 @@ function EquationAct({ story, local }: { story: OfferStory; local: number }) {
               className="flex items-end gap-3"
             >
               <div className="flex flex-col gap-1">
-                <p className="text-[10px] tracking-[0.18em] text-zinc-600 uppercase">
+                <p className="text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
                   {term.kicker}
                 </p>
                 <p
                   className={cn(
-                    "tabular-nums text-zinc-100",
+                    "tabular-nums text-foreground",
                     isResult
                       ? "text-2xl font-light tracking-tight"
-                      : "text-sm text-zinc-300",
+                      : "text-sm text-foreground",
                   )}
                 >
                   {term.value}
                 </p>
               </div>
               {term.joiner && index < terms.length - 1 ? (
-                <span className="mb-0.5 text-sm text-zinc-600">{term.joiner}</span>
+                <span className="mb-0.5 text-sm text-muted-foreground">{term.joiner}</span>
               ) : null}
             </motion.div>
           );
@@ -183,7 +183,7 @@ function MrrCurve({
             transition={{ duration: 0.35, ease: EASE }}
             className="flex flex-1 flex-col items-center gap-3"
           >
-            <p className="text-lg font-light tabular-nums text-zinc-100">
+            <p className="text-lg font-light tabular-nums text-foreground">
               {column.amount}
             </p>
             <div className="flex h-[132px] w-full items-end justify-center">
@@ -193,14 +193,14 @@ function MrrCurve({
                   height: Math.max(10, (column.weight / maxWeight) * BAR_MAX_PX),
                 }}
                 transition={{ duration: 0.55, ease: EASE }}
-                className="w-12 rounded-sm bg-zinc-300"
+                className="w-12 rounded-sm bg-foreground"
               />
             </div>
             <div className="flex flex-col items-center gap-0.5">
-              <p className="text-[10px] tracking-[0.18em] text-zinc-500 uppercase">
+              <p className="text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
                 {column.label}
               </p>
-              <p className="text-[10px] tracking-[0.16em] text-zinc-600 uppercase">
+              <p className="text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
                 {column.caption}
               </p>
             </div>
@@ -219,10 +219,10 @@ function CommissionCurve({ story }: { story: OfferStory }) {
     <div className="flex w-[28rem] flex-col gap-6">
       <Ribbon story={story} phrase="13 signatures · 50 %" />
       <div className="flex flex-col gap-2">
-        <p className="text-[10px] tracking-[0.18em] text-zinc-600 uppercase">
+        <p className="text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
           {curve.formula}
         </p>
-        <p className="text-2xl font-light tabular-nums tracking-tight text-zinc-100">
+        <p className="text-2xl font-light tabular-nums tracking-tight text-foreground">
           <Counter
             from={curve.from}
             to={curve.to}
@@ -232,7 +232,7 @@ function CommissionCurve({ story }: { story: OfferStory }) {
             }
           />
         </p>
-        <p className="text-xs text-zinc-500">{curve.caption}</p>
+        <p className="text-xs text-muted-foreground">{curve.caption}</p>
       </div>
     </div>
   );
@@ -246,10 +246,10 @@ function PriceReveal({ story }: { story: OfferStory }) {
     <div className="flex w-[28rem] flex-col gap-8">
       <Ribbon story={story} phrase={DEC_ROI_LINE} />
       <div className="flex flex-col items-center gap-2">
-        <p className="text-3xl font-light tabular-nums tracking-tight text-zinc-100">
+        <p className="text-3xl font-light tabular-nums tracking-tight text-foreground">
           {price.split(" /")[0]}
         </p>
-        <p className="text-xs text-zinc-500">/ mois</p>
+        <p className="text-xs text-muted-foreground">/ mois</p>
       </div>
     </div>
   );
@@ -266,12 +266,12 @@ function BarContrast({ story }: { story: OfferStory }) {
       <div className="flex items-end gap-12">
         {(
           [
-            { ...gain, fill: "bg-zinc-300" },
-            { ...price, fill: "bg-zinc-600" },
+            { ...gain, fill: "bg-foreground" },
+            { ...price, fill: "bg-foreground/35" },
           ] as const
         ).map((bar) => (
           <div key={bar.label} className="flex flex-1 flex-col items-center gap-3">
-            <p className="text-lg font-light tabular-nums text-zinc-100">
+            <p className="text-lg font-light tabular-nums text-foreground">
               {bar.amount.split(" /")[0]}
             </p>
             <div className="flex h-[132px] w-full items-end justify-center">
@@ -284,7 +284,7 @@ function BarContrast({ story }: { story: OfferStory }) {
                 className={cn("w-14 rounded-sm", bar.fill)}
               />
             </div>
-            <p className="text-center text-[10px] tracking-[0.16em] text-zinc-500 uppercase">
+            <p className="text-center text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
               {bar.label}
             </p>
           </div>
@@ -298,7 +298,7 @@ function OfferStoryBoard({ story, step }: { story: OfferStory; step: number }) {
   const { act, local } = actFor(story, step);
 
   return (
-    <Card className="gap-0 border-zinc-800/60 bg-zinc-950/80 py-6 shadow-none">
+    <Card className="gap-0 border-border bg-card/80 py-6 shadow-none">
       <CardContent className="px-8 py-2">
         <motion.div
           key={

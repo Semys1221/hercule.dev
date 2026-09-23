@@ -51,7 +51,7 @@ export function S11_CaseBrokerage({ step }: SceneProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.36, duration: 0.4, ease: EASE }}
-              className="max-w-md text-center text-sm leading-relaxed text-zinc-400"
+              className="max-w-md text-center text-sm leading-relaxed text-muted-foreground"
             >
               {copy.resultLine}
             </motion.p>

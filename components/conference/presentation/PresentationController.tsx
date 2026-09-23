@@ -15,8 +15,12 @@ import { ghostCubeAngle } from "./scene-chrome";
 
 const LOCK_MS = 320;
 const FLASH_VISIBLE_MS = 1100;
-/** Beat index of the first visible S01 content (line + person icons). Index 0 is the empty "Noir" step. */
-const FIRST_CONTENT_BEAT = 1;
+/**
+ * Beat index of the first visible content.
+ * The ConferenceSplash (logo Hercule) replaces the "noir" step — start at 0
+ * so S11_CaseBrokerage step 0 (CaseNarrative) is the first visible slide.
+ */
+const FIRST_CONTENT_BEAT = 0;
 
 type PresentationPhase = "splash" | "active";
 
@@ -180,8 +184,7 @@ export function PresentationController() {
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-hidden text-zinc-100"
-      style={{ backgroundColor: "#09090B" }}
+      className="fixed inset-0 z-50 overflow-hidden bg-background text-foreground"
     >
       <ConferenceStageAmbient />
       <FilmGrain />

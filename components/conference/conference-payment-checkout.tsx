@@ -80,7 +80,7 @@ export function ConferencePaymentCheckout({
           fetchClientSecret={fetchClientSecret}
         />
       ) : null}
-      <p className="text-center text-[11px] text-zinc-600">Paiement sécurisé</p>
+      <p className="text-center text-[11px] text-muted-foreground">Paiement sécurisé</p>
     </div>
   );
 }

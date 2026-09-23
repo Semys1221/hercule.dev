@@ -47,13 +47,13 @@ export function S16_Urgency({ step }: SceneProps) {
     <SceneShell>
       <Card
         data-stage-bare
-        className="w-[min(36rem,calc(100vw-5rem))] gap-5 overflow-hidden border-zinc-800/50 bg-zinc-900/70 py-6 shadow-none"
+        className="w-[min(36rem,calc(100vw-5rem))] gap-5 overflow-hidden border-border bg-card/70 py-6 shadow-none"
       >
         <CardHeader className="px-6">
-          <CardTitle className="text-center text-sm font-medium tracking-[0.22em] text-zinc-100 uppercase">
+          <CardTitle className="text-center text-sm font-medium tracking-[0.22em] text-foreground uppercase">
             Inscription
           </CardTitle>
-          <CardDescription className="text-center text-zinc-500">
+          <CardDescription className="text-center text-muted-foreground">
             Modalités, dans l’ordre
           </CardDescription>
         </CardHeader>
@@ -66,15 +66,15 @@ export function S16_Urgency({ step }: SceneProps) {
               transition={{ duration: 0.35, ease: EASE }}
               className="flex flex-col items-center gap-3 text-center"
             >
-              {index > 0 ? <div className="h-px w-16 bg-zinc-800" /> : null}
-              <p className="text-[10px] tracking-[0.2em] text-zinc-600 uppercase">
+              {index > 0 ? <div className="h-px w-16 bg-muted" /> : null}
+              <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
                 {row.kicker}
               </p>
-              <p className="text-lg font-light tracking-wide text-zinc-300">
+              <p className="text-lg font-light tracking-wide text-foreground">
                 {row.title}
               </p>
               {row.body ? (
-                <p className="text-xs text-zinc-500">{row.body}</p>
+                <p className="text-xs text-muted-foreground">{row.body}</p>
               ) : null}
               {row.badges ? <PaymentTrustBadges /> : null}
             </motion.div>

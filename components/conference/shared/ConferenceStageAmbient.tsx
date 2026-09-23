@@ -1,16 +1,11 @@
-/** Indigo radial glow — matches proposition-scene.tsx ambient layer. */
+/** Warm paper vignette — keeps the ivory stage from reading as a flat sheet. */
 export function ConferenceStageAmbient() {
   return (
     <div
-      className="pointer-events-none absolute"
+      className="pointer-events-none absolute inset-0"
       style={{
-        top: "20%",
-        left: "50%",
-        transform: "translate(-50%, -30%)",
-        width: "900px",
-        height: "600px",
         background:
-          "radial-gradient(ellipse at center, rgba(99, 102, 241, 0.08) 0%, transparent 70%)",
+          "radial-gradient(ellipse at center, transparent 46%, rgba(26, 22, 18, 0.045) 100%)",
       }}
       aria-hidden
     />

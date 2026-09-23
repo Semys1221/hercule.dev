@@ -26,7 +26,7 @@ export default function ConferencePaymentPage() {
     <div className="flex min-h-screen w-full flex-col items-center gap-8 px-6 py-12">
       <HerculeLogo size="md" showName />
 
-      <p className="text-center text-sm tracking-[0.18em] text-zinc-600">
+      <p className="text-center text-sm tracking-[0.18em] text-muted-foreground">
         Les décisions qui façonne l&apos;avenir sont prise aujourd&apos;hui
       </p>
 
@@ -34,7 +34,7 @@ export default function ConferencePaymentPage() {
         <ConferenceSaleTimer running={saleWindow.phase === "open"} />
       ) : null}
 
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-muted-foreground">
         {saleWindow.inactiveMessage}
       </p>
 
@@ -44,7 +44,7 @@ export default function ConferencePaymentPage() {
           <Button
             type="button"
             variant="ghost"
-            className="text-zinc-500 hover:text-zinc-300"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => setCheckoutSelection(null)}
           >
             Choisir une autre formule

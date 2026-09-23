@@ -27,10 +27,10 @@ export function S02_WordOfMouth({ step }: SceneProps) {
             className="flex items-center gap-14"
           >
             <RubiksCube state="scrambled" size={72} spin={false} />
-            <div className="flex flex-col gap-2 rounded border border-zinc-700/50 px-6 py-4">
+            <div className="flex flex-col gap-2 rounded border border-border px-6 py-4">
               {/* ear icon SVG */}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-                className="size-5 text-zinc-500 mb-1" aria-hidden>
+                className="size-5 text-muted-foreground mb-1" aria-hidden>
                 <path d="M6 12a6 6 0 1 1 12 0c0 3.5-2.5 6-6 6h-1" strokeLinecap="round" />
                 <path d="M10 12a2 2 0 1 0 4 0 2 2 0 0 0-4 0" strokeLinecap="round" />
               </svg>
@@ -49,13 +49,13 @@ export function S02_WordOfMouth({ step }: SceneProps) {
             <Person size={44} />
             <div className="flex flex-col items-center gap-1">
               <motion.div
-                className="h-px bg-zinc-600"
+                className="h-px bg-foreground/35"
                 initial={{ width: 0 }} animate={{ width: 80 }}
                 transition={{ duration: 0.6 }}
               />
               {/* pulse dot */}
               <motion.div
-                className="size-1.5 rounded-full bg-zinc-500"
+                className="size-1.5 rounded-full bg-foreground/35"
                 animate={{ x: [0, 80, 0] }}
                 transition={{ duration: 1.6, repeat: 2, ease: "easeInOut" }}
               />
@@ -78,7 +78,7 @@ export function S02_WordOfMouth({ step }: SceneProps) {
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="size-8 text-zinc-400"
+              className="size-8 text-muted-foreground"
               aria-hidden
               animate={{ scale: [1, 1.25, 1], opacity: [0, 1, 0.85] }}
               transition={{ duration: 0.7 }}

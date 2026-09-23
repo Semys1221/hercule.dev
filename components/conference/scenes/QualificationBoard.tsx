@@ -35,7 +35,7 @@ function HighlightedText({
     highlights.includes(part) ? (
       <span
         key={`${part}-${index}`}
-        className="rounded-sm bg-zinc-800 px-0.5 text-zinc-50"
+        className="rounded-sm bg-secondary px-0.5 text-foreground"
       >
         {part}
       </span>
@@ -66,7 +66,7 @@ function DialogueBubble({
       <p
         className={cn(
           "text-[10px] tracking-[0.18em] uppercase",
-          isHercule ? "text-zinc-600" : "text-zinc-500",
+          isHercule ? "text-muted-foreground" : "text-muted-foreground",
         )}
       >
         {isHercule ? "Hercule" : "Client"}
@@ -74,7 +74,7 @@ function DialogueBubble({
       <p
         className={cn(
           "max-w-[92%] text-sm leading-snug",
-          isHercule ? "text-left text-zinc-400" : "text-right text-zinc-100",
+          isHercule ? "text-left text-muted-foreground" : "text-right text-foreground",
         )}
       >
         <HighlightedText text={text} highlights={highlights} />
@@ -97,20 +97,20 @@ function VerdictStamp({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: EASE }}
-      className="border-t border-zinc-800 pt-3"
+      className="border-t border-border pt-3"
     >
-      <p className="text-xs leading-snug tracking-[0.02em] text-zinc-200">
+      <p className="text-xs leading-snug tracking-[0.02em] text-foreground">
         <HighlightedText text={label} highlights={highlights} />
       </p>
       {stamp ? (
         <div className="mt-3 flex items-center gap-3">
           <span
             aria-hidden
-            className="flex size-4 shrink-0 items-center justify-center border border-zinc-400 text-[11px] leading-none text-zinc-100"
+            className="flex size-4 shrink-0 items-center justify-center border border-foreground/40 text-[11px] leading-none text-foreground"
           >
             ✓
           </span>
-          <span className="text-sm tracking-[0.02em] text-zinc-200">{stamp}</span>
+          <span className="text-sm tracking-[0.02em] text-foreground">{stamp}</span>
         </div>
       ) : null}
     </motion.div>

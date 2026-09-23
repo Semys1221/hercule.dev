@@ -3,23 +3,18 @@
     "brokerage": {
       "slug": "",
       "situation": "Cabinet indépendant. Activité IAS et CIF.",
-      "action": "Un flux de profils qualifiés arrive dans l’agenda.",
-      "resultLine": "En 90 jours : 42 rendez-vous, 54 % de conversion, 2 500 € de chiffre d’affaires moyen par profil."
+      "action": "Un flux de profils qualifiés arrive dans l'agenda.",
+      "resultLine": "En 90 jours : 42 rendez-vous, 54 % de conversion, 2 500 € de chiffre d'affaires moyen par profil."
     },
     "accounting": {
       "slug": "",
-      "situation": "Cabinet d’expertise comptable indépendant.",
+      "situation": "Cabinet d'expertise comptable indépendant.",
       "action": "Des rendez-vous qualifiés, chaque mois.",
-      "resultLine": "9 000 € de chiffre d’affaires cumulé sur 3 mois."
+      "resultLine": "9 000 € de chiffre d'affaires cumulé sur 3 mois."
     }
   },
   "metrics": {
-    "brokerage": {
-      "days": 90,
-      "meetings": 42,
-      "conversionPct": 54,
-      "avgRevenueEur": 2500
-    },
+    "brokerage": { "days": 90, "meetings": 42, "conversionPct": 54, "avgRevenueEur": 2500 },
     "accounting": {
       "monthProfiles": [11, 13, 13],
       "conversionPct": 63,
@@ -28,5 +23,38 @@
       "cumulativeRevenueEur": 9000
     }
   },
-  "firms": []
+  "firms": [
+    { "slug": "cdvpatrimoine-com", "name": "CDV Patrimoine", "category": "brokerage", "website": "https://cdvpatrimoine.com/", "logo": "/conference/clients/cdvpatrimoine-com.webp" },
+    { "slug": "fundora-fr", "name": "Fundora", "category": "brokerage", "website": "https://www.fundora.fr/", "logo": "/conference/clients/fundora-fr.webp" },
+    { "slug": "renaud-conseil-fr", "name": "Gildas Renaud Conseil", "category": "brokerage", "website": "https://www.renaud-conseil.fr/", "logo": "/conference/clients/renaud-conseil-fr.webp" },
+    { "slug": "apsconsult-fr", "name": "APS Consult", "category": "brokerage", "website": "https://www.apsconsult.fr/", "logo": "/conference/clients/apsconsult-fr.webp" },
+    { "slug": "apollux-patrimoine-com", "name": "Apollux Patrimoine", "category": "brokerage", "website": "https://www.apollux-patrimoine.com/", "logo": "/conference/clients/apollux-patrimoine-com.webp" },
+    { "slug": "lhconseils-fr", "name": "LH Conseils", "category": "brokerage", "website": "https://lhconseils.fr/", "logo": "/conference/clients/lhconseils-fr.webp" },
+    { "slug": "yvescastel-com", "name": "Yves Castel", "category": "brokerage", "website": "https://yvescastel.fr/", "logo": "/conference/clients/yvescastel-com.webp" },
+    { "slug": "accompta-net", "name": "Accompta", "category": "accounting", "website": "", "logo": "/conference/clients/accompta-net.webp" },
+    { "slug": "acf-europe-fr", "name": "ACF Europe", "category": "accounting", "website": "", "logo": "/conference/clients/acf-europe-fr.webp" },
+    { "slug": "acti-compta-conseil-fr", "name": "Acti Compta Conseil", "category": "accounting", "website": "", "logo": "/conference/clients/acti-compta-conseil-fr.webp" },
+    { "slug": "audit-experts-fr", "name": "Audit Experts", "category": "accounting", "website": "", "logo": "/conference/clients/audit-experts-fr.webp" },
+    { "slug": "cabinet-sanner-fr", "name": "Cabinet Sanner", "category": "accounting", "website": "", "logo": "/conference/clients/cabinet-sanner-fr.webp" },
+    { "slug": "cabinetaec-co", "name": "Cabinet AEC", "category": "accounting", "website": "", "logo": "/conference/clients/cabinetaec-co.webp" },
+    { "slug": "data-compta-com", "name": "Data Compta", "category": "accounting", "website": "", "logo": "/conference/clients/data-compta-com.webp" },
+    { "slug": "dmsconsulting-fr", "name": "DMS Consulting", "category": "accounting", "website": "", "logo": "/conference/clients/dmsconsulting-fr.webp" },
+    { "slug": "hodl-consulting-com", "name": "Hodl Consulting", "category": "accounting", "website": "", "logo": "/conference/clients/hodl-consulting-com.webp" },
+    { "slug": "liberize-fr", "name": "Liberize", "category": "accounting", "website": "", "logo": "/conference/clients/liberize-fr.webp" },
+    { "slug": "mb2p-eu", "name": "MB2P", "category": "accounting", "website": "", "logo": "/conference/clients/mb2p-eu.webp" },
+    { "slug": "performanceconseil-ec-fr", "name": "Performance Conseil EC", "category": "accounting", "website": "", "logo": "/conference/clients/performanceconseil-ec-fr.webp" },
+    { "slug": "primaexp-com", "name": "Prima Exp", "category": "accounting", "website": "", "logo": "/conference/clients/primaexp-com.webp" },
+    { "slug": "sassi-avocats-com", "name": "Sassi Avocats", "category": "accounting", "website": "https://www.sassi-avocats.com/", "logo": "/conference/clients/sassi-avocats-com.webp" },
+    { "slug": "sebacc-fr", "name": "Sebacc", "category": "accounting", "website": "", "logo": "/conference/clients/sebacc-fr.webp" },
+    { "slug": "softec-fr", "name": "Softec", "category": "accounting", "website": "", "logo": "/conference/clients/softec-fr.webp" },
+    { "slug": "wipea-fr", "name": "Wipea", "category": "accounting", "website": "", "logo": "/conference/clients/wipea-fr.webp" },
+    { "slug": "zefyr-net", "name": "Zefyr", "category": "accounting", "website": "", "logo": "/conference/clients/zefyr-net.webp" },
+    { "slug": "arpegespatrimoine-fr", "name": "Arpèges Patrimoine", "category": "brokerage", "website": "https://www.arpegespatrimoine.fr/", "logo": "/conference/clients/arpegespatrimoine-fr.webp" },
+    { "slug": "asorae-fr", "name": "Asorae Courtage", "category": "brokerage", "website": "https://asorae.fr/", "logo": "/conference/clients/asorae-fr.webp" },
+    { "slug": "avenircourtage-fr", "name": "Avenir Courtage", "category": "brokerage", "website": "https://avenircourtage.fr/", "logo": "/conference/clients/avenircourtage-fr.webp" },
+    { "slug": "c2rpatrimoine-monsitemedia-fr", "name": "C2R Patrimoine", "category": "brokerage", "website": "https://c2rpatrimoine.monsitemedia.fr/", "logo": "/conference/clients/c2rpatrimoine-monsitemedia-fr.webp" },
+    { "slug": "expat-assurance-com", "name": "Expat Assurance", "category": "brokerage", "website": "https://expat-assurance.com/", "logo": "/conference/clients/expat-assurance-com.webp" },
+    { "slug": "kinousassur-com", "name": "Kinousassur", "category": "brokerage", "website": "https://www.kinousassur.com/", "logo": "/conference/clients/kinousassur-com.webp" },
+    { "slug": "oxygen-patrimoine-com", "name": "Oxygen Patrimoine", "category": "brokerage", "website": "https://oxygen-patrimoine.com/", "logo": "/conference/clients/oxygen-patrimoine-com.webp" }
+  ]
 }

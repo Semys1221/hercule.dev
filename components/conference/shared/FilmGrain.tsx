@@ -5,7 +5,7 @@ export function FilmGrain() {
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0 z-[1]"
-      style={{ opacity: 0.028 }}
+      style={{ opacity: 0.018, mixBlendMode: "multiply" }}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

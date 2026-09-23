@@ -39,7 +39,7 @@ export function ConferenceSaleTimer({
   return (
     <p
       className={cn(
-        "font-mono text-sm tracking-[0.2em] text-zinc-500 tabular-nums uppercase",
+        "font-mono text-sm tracking-[0.2em] text-muted-foreground tabular-nums uppercase",
         className,
       )}
       aria-live={running ? "polite" : "off"}

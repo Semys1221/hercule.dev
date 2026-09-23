@@ -48,19 +48,19 @@ export function S11_CaseAccounting({ step }: SceneProps) {
                   transition={{ delay: 0.08 * index, duration: 0.45, ease: EASE }}
                   className="flex flex-col items-center gap-3"
                 >
-                  <p className="text-3xl font-medium tabular-nums text-zinc-50">{count}</p>
+                  <p className="text-3xl font-medium tabular-nums text-foreground">{count}</p>
                   <div className="flex h-24 w-full items-end justify-center">
                     <motion.div
-                      className="w-10 rounded-t bg-zinc-100"
+                      className="w-10 rounded-t bg-foreground"
                       initial={{ height: 0 }}
                       animate={{ height: `${Math.round((count / max) * 100)}%` }}
                       transition={{ delay: 0.12 + index * 0.08, duration: 0.55, ease: EASE }}
                     />
                   </div>
-                  <p className="text-[11px] tracking-[0.16em] text-zinc-500 uppercase">
+                  <p className="text-[11px] tracking-[0.16em] text-muted-foreground uppercase">
                     {MONTHS[index]}
                   </p>
-                  <p className="text-[11px] tracking-[0.12em] text-zinc-600 uppercase">Profils</p>
+                  <p className="text-[11px] tracking-[0.12em] text-muted-foreground uppercase">Profils</p>
                 </motion.div>
               ))}
             </div>

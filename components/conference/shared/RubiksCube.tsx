@@ -31,10 +31,10 @@ type GrayLevel = 0 | 1 | 2 | 3 | 4;
 
 const GRAY: Record<GrayLevel, string> = {
   0: "#1a1a1a",
-  1: "#3f3f46",
-  2: "#71717a",
-  3: "#d4d4d8",
-  4: "#fafafa",
+  1: "#8a847c",
+  2: "#c4bfb6",
+  3: "#e7e2da",
+  4: "#fffcf8",
 };
 
 const FACE_KEYS = ["front", "back", "right", "left", "top", "bottom"] as const;
@@ -79,9 +79,9 @@ function patternsForState(state: CubeState): Record<FaceKey, GrayLevel[]> {
 function stickerStyle(level: GrayLevel): CSSProperties {
   const base = GRAY[level];
   const highlight =
-    level >= 3 ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.12)";
+    level >= 3 ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.28)";
   const shadow =
-    level <= 1 ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.25)";
+    level <= 1 ? "rgba(26,22,18,0.28)" : "rgba(26,22,18,0.1)";
   return {
     background: `linear-gradient(145deg, ${highlight} 0%, ${base} 45%, ${shadow} 100%)`,
   };
@@ -104,7 +104,7 @@ function CubeFace({ levels, label, labelSize }: CubeFaceProps) {
       {label && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40 px-1">
           <span
-            className="text-center font-medium leading-tight tracking-[0.08em] text-zinc-200 uppercase"
+            className="text-center font-medium leading-tight tracking-[0.08em] text-foreground uppercase"
             style={{ fontSize: labelSize }}
           >
             {label}

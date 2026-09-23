@@ -25,7 +25,7 @@ const PAYMENT_LOGOS = [
 ] as const;
 
 const CHIP_CLASS =
-  "flex h-10 items-center justify-center rounded-md border border-zinc-700/60 bg-zinc-900/40 px-3";
+  "flex h-10 items-center justify-center rounded-md border border-border bg-card/40 px-3";
 
 export function PaymentTrustBadges({ className }: PaymentTrustBadgesProps) {
   const retractionLabel = `${COMMERCIAL.retractationDays} jours de rétractation`;
@@ -45,7 +45,7 @@ export function PaymentTrustBadges({ className }: PaymentTrustBadgesProps) {
       </div>
       <div className={cn(CHIP_CLASS, "gap-2")}>
         <RefundShieldLogo />
-        <span className="text-[10px] font-medium tracking-[0.16em] text-zinc-300 uppercase">
+        <span className="text-[10px] font-medium tracking-[0.16em] text-foreground uppercase">
           {retractionLabel}
         </span>
       </div>

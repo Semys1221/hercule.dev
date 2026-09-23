@@ -41,7 +41,7 @@ export function S01_Intro({ step }: SceneProps) {
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.12, duration: 0.4 }}
-                  className="flex flex-col items-center gap-3 rounded border border-zinc-700/50 px-5 py-4"
+                  className="flex flex-col items-center gap-3 rounded border border-border px-5 py-4"
                 >
                   <SceneLabel size="xs" animate={false}>{label}</SceneLabel>
                   <PersonGroup count={3} icon="briefcase" size={24} />
@@ -58,7 +58,7 @@ export function S01_Intro({ step }: SceneProps) {
             transition={{ duration: 0.9 }}
             className="flex flex-col items-center gap-5"
           >
-            <div className="relative size-24 overflow-hidden rounded-full border border-zinc-700">
+            <div className="relative size-24 overflow-hidden rounded-full border border-border">
               <Image
                 src={TEAM_IMAGE_URL}
                 alt="Evan — Fondateur Hercule"
@@ -68,7 +68,7 @@ export function S01_Intro({ step }: SceneProps) {
               />
             </div>
             <SceneLabel size="lg" animate={false}>HERCULE.DEV</SceneLabel>
-            <p className="text-sm text-zinc-700">Fondateur</p>
+            <p className="text-sm text-muted-foreground">Fondateur</p>
           </motion.div>
         )}
 
@@ -77,7 +77,7 @@ export function S01_Intro({ step }: SceneProps) {
             key="b07"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.45 }}
-            className="flex flex-col items-center gap-3 rounded border border-zinc-700/50 px-5 py-4"
+            className="flex flex-col items-center gap-3 rounded border border-border px-5 py-4"
           >
             <SceneLabel size="xs" animate={false}>Cabinet</SceneLabel>
             <Person size={28} highlighted={false} />

@@ -15,7 +15,7 @@ export function ChapterDoor({ label, icon, labelSize = "sm" }: ChapterDoorProps)
   return (
     <div className="flex items-center gap-14">
       <RubiksCube state="scrambled" size={72} spin={false} />
-      <div className="flex flex-col gap-2 rounded border border-zinc-700/50 px-6 py-4">
+      <div className="flex flex-col gap-2 rounded border border-border px-6 py-4">
         {icon}
         <SceneLabel size={labelSize} animate={false}>
           {label}

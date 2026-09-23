@@ -27,7 +27,7 @@ export function S17_Close(_props: SceneProps) {
             presentationPose={{ rotateX: -18, rotateY: 32 }}
           />
         </div>
-        <p className="max-w-md text-center text-base tracking-[0.14em] text-zinc-500">
+        <p className="max-w-md text-center text-base tracking-[0.14em] text-muted-foreground">
           Les décisions qui façonne l&apos;avenir sont prise aujourd&apos;hui
         </p>
       </motion.div>

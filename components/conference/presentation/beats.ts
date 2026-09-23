@@ -5,6 +5,11 @@ import type { Beat, SceneId } from "./types";
 type SceneBlock = { scene: SceneId; count: number };
 
 const BLOCKS: SceneBlock[] = [
+  // Séquence preuve sociale — immédiatement après le splash logo Hercule
+  { scene: "S11_CaseBrokerage", count: 2 },
+  { scene: "S11_CaseAccounting", count: 2 },
+  { scene: "S12_SocialProof", count: 1 },
+  // Suite de la présentation (ordre original inchangé)
   { scene: "S01_Intro", count: 4 },
   { scene: "S02_WordOfMouth", count: 3 },
   { scene: "S03_WOMProblem", count: 5 },
@@ -16,9 +21,6 @@ const BLOCKS: SceneBlock[] = [
   { scene: "S07_ThreeSolutions", count: 3 },
   { scene: "S08_Mechanism", count: 1 },
   { scene: "S09_R2Reveal", count: S09_STEP_COUNT },
-  { scene: "S11_CaseBrokerage", count: 2 },
-  { scene: "S11_CaseAccounting", count: 2 },
-  { scene: "S12_SocialProof", count: 1 },
   { scene: "S10_JohnDemo", count: 2 },
   { scene: "S13_HerculeDEC", count: DEC_STEP_COUNT },
   { scene: "S14_HerculeCourtage", count: COURTAGE_STEP_COUNT },

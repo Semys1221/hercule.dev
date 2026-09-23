@@ -45,7 +45,7 @@ export const SCENE_LABELS: Record<SceneId, string> = {
   S09_R2Reveal: "Dispositif Hercule",
   S11_CaseBrokerage: "Cas conseil",
   S11_CaseAccounting: "Cas comptable",
-  S12_SocialProof: "Preuve sociale",
+  S12_SocialProof: "Saisons précédentes",
   S10_JohnDemo: "Cas pratique",
   S13_HerculeDEC: "Hercule DEC",
   S14_HerculeCourtage: "Hercule Courtage",

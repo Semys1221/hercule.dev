@@ -67,9 +67,9 @@ const CLUSTER_VB: Record<1 | 2 | 3 | 4, { w: number; h: number }> = {
 };
 
 function strokeColor(highlighted: boolean, dimmed: boolean) {
-  if (dimmed) return "#3f3f46";
-  if (highlighted) return "#e4e4e7";
-  return "#71717a";
+  if (dimmed) return "#c4bfb6";
+  if (highlighted) return "#1a1a1a";
+  return "#6b6560";
 }
 
 function strokeWidth(renderWidthPx: number) {
@@ -106,13 +106,13 @@ function PersonSilhouette({
             cy={HEAD.cy}
             r={HEAD.r}
             fill="none"
-            stroke="#09090b"
+            stroke="#F4F1EB"
             strokeWidth={maskW}
           />
           <path
             d={BODY}
             fill="none"
-            stroke="#09090b"
+            stroke="#F4F1EB"
             strokeWidth={maskW}
             strokeLinejoin="round"
           />
@@ -226,10 +226,10 @@ export function Person({
   className,
 }: PersonProps) {
   const colorClass = dimmed
-    ? "text-zinc-700"
+    ? "text-muted-foreground"
     : highlighted
-      ? "text-zinc-200"
-      : "text-zinc-500";
+      ? "text-foreground"
+      : "text-muted-foreground";
 
   const isHighlight = highlighted && !dimmed;
 
@@ -268,7 +268,7 @@ export function Person({
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: delay + 0.15 }}
-          className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full border border-zinc-500 bg-zinc-900 text-[7px] text-zinc-300"
+          className="absolute -right-1 -top-1 flex size-3 items-center justify-center rounded-full border border-foreground bg-foreground text-[7px] text-primary-foreground"
         >
           ✓
         </motion.div>
@@ -347,7 +347,7 @@ export function PersonGroup({
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-zinc-500"
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-muted-foreground"
           style={{ width: effectiveSize * 0.32, height: effectiveSize * 0.32 }}
           aria-hidden
         >
@@ -359,7 +359,7 @@ export function PersonGroup({
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute -right-1 top-0 flex size-3 items-center justify-center rounded-full border border-zinc-500 bg-zinc-900 text-[7px] text-zinc-300"
+          className="absolute -right-1 top-0 flex size-3 items-center justify-center rounded-full border border-foreground bg-foreground text-[7px] text-primary-foreground"
         >
           ✓
         </motion.div>
