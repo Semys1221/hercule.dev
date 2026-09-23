@@ -203,6 +203,9 @@ export function conferenceOfferLabel(offerType: string): string {
   if (offerType === OFFER_TYPES_COMPTABLE.acquisition1489_1m) {
     return "Hercule DEC";
   }
+  if (offerType === OFFER_TYPES_COMPTABLE.monthly1499Trial) {
+    return "Essai gratuit 14 jours — puis 1 499 €/mois (10 RDV)";
+  }
   switch (offerType) {
     case OFFER_TYPES_CONFERENCE.decMonthly:
       return "DEC — 1 499 € / 1 mois (10 RDV garantis)";
@@ -224,7 +227,7 @@ export function conferenceOfferLabel(offerType: string): string {
 export const CLIENT_DEC_ENGAGEMENT_LABEL = "Renouvellement optionnel";
 
 export const CLIENT_DEC_RENEWAL_INFO_BODY =
-  "Une semaine avant la fin de votre mois en cours, nous vous proposerons de renouveler pour le mois suivant. Si vous ne souhaitez pas, l'abonnement sera mis en pause et vous ne serez pas prélevé. Vous pourrez renouveler quand vous le souhaitez.";
+  "Une seule fois, une semaine avant votre deuxième mensualité, nous vous demandons si vous poursuivez. Si vous validez, l'abonnement reste inchangé. Si vous vous arrêtez, l'abonnement est mis en pause et vous n'êtes pas prélevé : les rendez-vous déjà dus continuent d'être livrés.";
 
 export function clientEngagementLabel(params: {
   clientType: ConferenceClientType;

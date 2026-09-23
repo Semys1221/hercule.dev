@@ -1,14 +1,9 @@
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import type { LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
-import {
-  scheduleLeadEmailJobs,
-  sendProductEmailNow,
-} from "@/lib/legacy/booking-communication/product-send";
+import { sendProductEmailNow } from "@/lib/legacy/booking-communication/product-send";
 import type { BookingEmailType } from "@/lib/legacy/booking-communication/types";
 import { dashboardLinkFor } from "@/lib/legacy/link-tracking/urls";
 import { getAppBaseUrl, getStripeClient } from "@/lib/legacy/payments/stripe";
-
-const MS_DAY = 24 * 60 * 60 * 1000;
 
 export const FREE_TRIAL_STARTED_EMAIL_TYPES: BookingEmailType[] = [
   "free_trial_started_1",
@@ -23,6 +18,16 @@ export type StartFreeTrialStartedSequenceParams = {
   stripeCustomerId?: string | null;
 };
 
+export type StartFreeTrialStartedSequenceForClientParams = {
+  clientId: string;
+  slug: string;
+  email: string;
+  firstName: string | null;
+  paymentAt: Date;
+  stripeCheckoutSessionId: string;
+  stripeCustomerId?: string | null;
+};
+
 export type StartFreeTrialStartedSequenceResult = {
   welcomeSent: boolean;
   scheduledJobs: number;
@@ -31,8 +36,10 @@ export type StartFreeTrialStartedSequenceResult = {
 async function resolveBillingPortalLink(params: {
   stripeCustomerId?: string | null;
   leadSlug: string;
+  returnPath?: string;
 }): Promise<string> {
-  const fallback = `${getAppBaseUrl()}/dashboard/${params.leadSlug}`;
+  const fallback =
+    params.returnPath?.trim() || `${getAppBaseUrl()}/dashboard/${params.leadSlug}`;
   const customerId = params.stripeCustomerId?.trim();
   if (!customerId) {
     return fallback;
@@ -101,30 +108,6 @@ export async function startFreeTrialStartedSequence(
     extra: extras,
   });
 
-  const jobs: Array<{
-    emailType: BookingEmailType;
-    scheduledFor: Date;
-    idempotencyKey: string;
-  }> = [
-    {
-      emailType: "free_trial_started_2",
-      scheduledFor: new Date(paymentAt.getTime() + 2 * MS_DAY),
-      idempotencyKey: `${idempotencyPrefix}:2`,
-    },
-    {
-      emailType: "free_trial_started_3",
-      scheduledFor: new Date(paymentAt.getTime() + 3 * MS_DAY),
-      idempotencyKey: `${idempotencyPrefix}:3`,
-    },
-  ];
-
-  const { inserted } = await scheduleLeadEmailJobs({
-    category: "comptable",
-    leadId: params.leadId,
-    triggeredBy: "free_trial_started_sequence",
-    jobs,
-  });
-
   const { syncClientSequenceStarted } = await import(
     "@/lib/legacy/admin/management/recipients/hooks"
   );
@@ -138,6 +121,70 @@ export async function startFreeTrialStartedSequence(
 
   return {
     welcomeSent: welcome.ok,
-    scheduledJobs: inserted,
+    scheduledJobs: 0,
+  };
+}
+
+/** DEC free trial on public.clients — dashboard /clients/[slug], category client. */
+export async function startFreeTrialStartedSequenceForClient(
+  params: StartFreeTrialStartedSequenceForClientParams,
+): Promise<StartFreeTrialStartedSequenceResult> {
+  const client = createLinkTrackingClient();
+  const paymentAt = params.paymentAt;
+  const idempotencyPrefix = `free-trial-started:client:${params.stripeCheckoutSessionId}`;
+  const dashboardLink = `${getAppBaseUrl()}/clients/${params.slug}`;
+  const billingPortalLink = await resolveBillingPortalLink({
+    stripeCustomerId: params.stripeCustomerId,
+    leadSlug: params.slug,
+    returnPath: dashboardLink,
+  });
+
+  const { data: row } = await client
+    .from("clients")
+    .select("profile")
+    .eq("id", params.clientId)
+    .maybeSingle();
+
+  const profile = ((row?.profile ?? {}) as Record<string, unknown>) || {};
+  await client
+    .from("clients")
+    .update({
+      profile: {
+        ...profile,
+        free_trial_billing_portal_link: billingPortalLink,
+      },
+    })
+    .eq("id", params.clientId);
+
+  const extras = {
+    dashboardLink,
+    billingPortalLink,
+  };
+
+  const welcome = await sendProductEmailNow({
+    category: "client",
+    leadId: params.clientId,
+    emailType: "free_trial_started_1",
+    triggeredBy: "stripe_payment",
+    idempotencyKey: `${idempotencyPrefix}:1`,
+    extra: extras,
+  });
+
+  if (params.email) {
+    const { syncClientSequenceStarted } = await import(
+      "@/lib/legacy/admin/management/recipients/hooks"
+    );
+    syncClientSequenceStarted({
+      niche: "comptable",
+      leadEmail: params.email,
+      leadId: params.clientId,
+      sequenceSlug: "free-trial-started",
+      currentStep: "free_trial_started_1",
+    });
+  }
+
+  return {
+    welcomeSent: welcome.ok,
+    scheduledJobs: 0,
   };
 }

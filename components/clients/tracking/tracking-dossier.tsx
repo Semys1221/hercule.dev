@@ -39,7 +39,8 @@ export function TrackingDossier({ data, onRefresh }: TrackingDossierProps) {
             <dt className="text-muted-foreground">Engagement</dt>
             <dd className="flex items-center justify-end gap-1 text-right">
               <span>{engagement}</span>
-              {data.clientType === CONFERENCE_CLIENT_TYPES.dec ? (
+              {data.clientType === CONFERENCE_CLIENT_TYPES.dec &&
+              data.onboardingVariant !== "dec_free_trial" ? (
                 <ClientRenewalInfoDialog />
               ) : null}
             </dd>
@@ -63,7 +64,9 @@ export function TrackingDossier({ data, onRefresh }: TrackingDossierProps) {
           <div className="flex items-baseline justify-between gap-3">
             <dt className="text-muted-foreground">Visioconférence</dt>
             <dd className="text-right font-medium">
-              {videoConferenceLabel(data.videoConference)}
+              {data.onboardingVariant === "dec_free_trial"
+                ? "Sur votre Calendly"
+                : videoConferenceLabel(data.videoConference)}
             </dd>
           </div>
         </dl>

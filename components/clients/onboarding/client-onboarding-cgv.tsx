@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   CLIENT_CGV_BODY,
+  CLIENT_CGV_FREE_TRIAL_BODY,
+  CLIENT_CGV_FREE_TRIAL_VERSION,
   CLIENT_CGV_VERSION,
   clientCgvHighlights,
+  clientFreeTrialCgvHighlights,
 } from "@/lib/clients/cgv-onboarding";
 import type { ClientDashboardData } from "@/lib/clients/types";
 
@@ -16,6 +19,7 @@ type ClientOnboardingCgvProps = {
   saving: boolean;
   error: string | null;
   onAccept: () => void;
+  variant?: ClientDashboardData["onboardingVariant"];
 };
 
 export function ClientOnboardingCgv({
@@ -24,20 +28,26 @@ export function ClientOnboardingCgv({
   saving,
   error,
   onAccept,
+  variant = "standard",
 }: ClientOnboardingCgvProps) {
-  const highlights = clientCgvHighlights({
-    clientType: data.clientType,
-    secondaryVertical: data.secondaryVertical,
-    billing: data.billing,
-    startNow,
-    rdvTotal: data.rdvTotal,
-  });
+  const freeTrial = variant === "dec_free_trial";
+  const highlights = freeTrial
+    ? clientFreeTrialCgvHighlights()
+    : clientCgvHighlights({
+        clientType: data.clientType,
+        secondaryVertical: data.secondaryVertical,
+        billing: data.billing,
+        startNow,
+        rdvTotal: data.rdvTotal,
+      });
+  const cgvVersion = freeTrial ? CLIENT_CGV_FREE_TRIAL_VERSION : CLIENT_CGV_VERSION;
+  const cgvBody = freeTrial ? CLIENT_CGV_FREE_TRIAL_BODY : CLIENT_CGV_BODY;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5">
       <div>
         <p className="text-sm text-muted-foreground">
-          Conditions générales · version {CLIENT_CGV_VERSION}
+          Conditions générales · version {cgvVersion}
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           Voici comment on travaille ensemble
@@ -59,7 +69,7 @@ export function ClientOnboardingCgv({
 
       <ScrollArea className="h-[min(55vh,28rem)] rounded-lg border border-border">
         <pre className="whitespace-pre-wrap px-4 py-4 font-sans text-xs leading-relaxed text-muted-foreground sm:text-sm">
-          {CLIENT_CGV_BODY}
+          {cgvBody}
         </pre>
       </ScrollArea>
 

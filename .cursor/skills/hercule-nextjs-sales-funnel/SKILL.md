@@ -74,14 +74,14 @@ Legacy `public/reservation*.html` URLs 308 redirect to `/reservation/:slug`.
 | Components | `components/internal/funnels/sales/agence-revente/*` |
 | Metrics API | `GET /api/admin/agence/pipeline-metrics` |
 | Qualification API | `POST /api/admin/agence/pipeline-qualification` (body + `slug` from selected lead) |
-| Checkout | `/api/payments/checkout-hercule-liberal` |
+| Checkout | `/conference/inscription` → `/api/payments/conference-payment-link` → Stripe Payment Link |
 | Lib | `lib/calendly/load-pipeline-metrics.ts`, `pipeline-calculator.ts`, `pipeline-qualification-schema.ts` |
 
 Flow: select lead on **Session** (Rendez-vous) → **Revente** → wizard → product page (live metrics + calculator) → Stripe checkout.
 
 Developer mode: **Passer au pipeline** skips the wizard with mock qualification.
 
-Public `public/email/agence/pipeline/dashboard.html` is deprecated (static message only). Email assets `pipeline-*.png` unchanged. Offline metrics snapshot: `pnpm generate-pipeline-dashboard-offline`.
+Conference Payment Links: `pnpm provision-conference-payment-links-stripe`. Return URL: `/api/payments/conference-return`. Email assets `pipeline-*.png` unchanged. Offline metrics snapshot: `pnpm generate-pipeline-dashboard-offline`.
 
 ## Test session (developer mode)
 

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { OFFER_TYPES_CONFERENCE } from "@/lib/commercial/conference-pricing";
 import { loadPipelineMetrics } from "@/lib/legacy/calendly/load-pipeline-metrics";
 import { PIPELINE_PRODUCT_PRICE_EUR } from "@/lib/legacy/calendly/pipeline-dashboard";
-import { HERCULE_LIBERAL } from "@/lib/commercial/constants";
-import { paymentLinkUrlForHerculeLiberal } from "@/lib/legacy/payments/hercule-liberal-offers";
+import { CONFERENCE_PAYMENT_LINK_URLS } from "@/lib/legacy/payments/conference-payment-links";
 
 export async function GET() {
   try {
@@ -12,9 +12,11 @@ export async function GET() {
       {
         metrics,
         product: {
-          name: HERCULE_LIBERAL.productName,
+          name: "Hercule DEC — conférence",
           priceEur: PIPELINE_PRODUCT_PRICE_EUR,
-          paymentLinkUrl: paymentLinkUrlForHerculeLiberal(),
+          paymentLinkUrl:
+            CONFERENCE_PAYMENT_LINK_URLS[OFFER_TYPES_CONFERENCE.decMonthly],
+          inscriptionPath: "/conference/inscription",
         },
       },
       {

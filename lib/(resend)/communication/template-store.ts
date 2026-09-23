@@ -315,6 +315,22 @@ export async function upsertBookingEmailTemplates(
   }
 }
 
+export async function deleteBookingEmailTemplates(
+  category: LeadCategory,
+  emailTypes: BookingEmailType[],
+): Promise<void> {
+  if (emailTypes.length === 0) return;
+  const client = createLinkTrackingClient();
+  const { error } = await client
+    .from("booking_email_templates")
+    .delete()
+    .eq("category", category)
+    .in("email_type", emailTypes);
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 const SAMPLE_CONFIRM_URL =
   "https://www.hercule.dev/confirm-reservation.html/exemple-slug?email=jean@example.com";
 const SAMPLE_TEMPORARY_URL =

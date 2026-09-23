@@ -25,11 +25,12 @@ export async function sendBookingEmail(params: {
   html?: string;
   idempotencyKey: string;
   headers?: Record<string, string>;
+  from?: string;
 }): Promise<SendBookingEmailResult> {
   const resend = getResendClient();
   const { data, error } = await resend.emails.send(
     {
-      from: getBookingFromAddress(),
+      from: params.from?.trim() || getBookingFromAddress(),
       to: [params.to],
       subject: params.subject,
       text: params.text,

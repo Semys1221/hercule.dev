@@ -4,8 +4,6 @@ import { scheduleLeadEmailJobs } from "@/lib/legacy/booking-communication/produc
 import type { BookingEmailType } from "@/lib/legacy/booking-communication/types";
 import { dashboardLinkFor } from "@/lib/legacy/link-tracking/urls";
 import { getAppBaseUrl } from "@/lib/legacy/payments/stripe";
-import { buildFreeTrialCheckoutDashboardUrl } from "@/lib/legacy/payments/cabinet-checkout";
-import { OFFER_TYPES_COMPTABLE } from "@/lib/commercial/constants";
 
 const MS_DAY = 24 * 60 * 60 * 1000;
 
@@ -25,17 +23,9 @@ export type StartFreeTrialSequenceResult = {
   scheduledJobs: number;
 };
 
-function checkoutTrialLinkFor(lead: LinkTrackingLead): string {
-  const base = dashboardLinkFor(lead)?.replace(/\/$/, "") ?? "";
-  if (!base) {
-    return `${getAppBaseUrl()}/comptable?offer=${OFFER_TYPES_COMPTABLE.monthly1499Trial}`;
-  }
-  try {
-    return buildFreeTrialCheckoutDashboardUrl(base);
-  } catch {
-    const sep = base.includes("?") ? "&" : "?";
-    return `${base}${sep}checkout=1&offer=${OFFER_TYPES_COMPTABLE.monthly1499Trial}`;
-  }
+function checkoutTrialLinkFor(_lead: LinkTrackingLead): string {
+  const base = getAppBaseUrl().replace(/\/$/, "");
+  return `${base}/proposition#essai`;
 }
 
 export async function startFreeTrialSequence(

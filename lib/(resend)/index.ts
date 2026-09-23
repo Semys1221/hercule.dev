@@ -16,3 +16,5 @@ export {
   startPaymentOnboardingSequence,
 } from "./onboarding";
 export { scheduleConferenceEmailSequence } from "./conference/post-payment";
+export { listResendBookingSequences, getResendSequence } from "./sequences/registry";
+export { NOTIFICATION_CATALOG } from "./notifications/catalog";

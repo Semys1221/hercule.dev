@@ -14,6 +14,7 @@ export async function sendSequenceTestEmail(params: {
   recipientEmail: string;
   subject?: string;
   body?: string;
+  from?: string;
 }): Promise<{ ok: true; resendEmailId: string; jobId: string | null; subject: string }> {
   const recipient = params.recipientEmail.trim().toLowerCase();
   if (!recipient) {
@@ -60,6 +61,7 @@ export async function sendSequenceTestEmail(params: {
     html: rendered.html,
     idempotencyKey,
     headers: threaded.headers,
+    from: params.from,
   });
 
   if (!result.ok) {

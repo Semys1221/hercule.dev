@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ConferenceClientType } from "@/lib/commercial/conference-pricing";
 import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
 
-import type { ClientRow } from "./types";
+import type { ClientProductStatut, ClientRow } from "./types";
 
 export const FIRST_LEAD_DELAY_DAYS = 20;
 
@@ -25,7 +25,7 @@ export type RoundRobinShare = {
   sharePct: number;
 };
 
-const INACTIVE_STATUTS = new Set(["CANCELLED", "ARCHIVED"]);
+const INACTIVE_STATUTS = new Set<ClientProductStatut>(["CANCELLED", "ARCHIVED"]);
 
 export function firstLeadAtFrom(createdAt: Date): string {
   const next = new Date(createdAt.getTime());

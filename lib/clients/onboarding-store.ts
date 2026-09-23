@@ -13,6 +13,7 @@ export type ClientOnboardingSlugState = {
   videoConferenceDraft: ClientVideoConference | null;
   unavailabilityDraft: string;
   startNowDraft: boolean | null;
+  calendlyUrlDraft: string;
   cgvAcceptedAt: string | null;
   welcomeSeenAt: string | null;
 };
@@ -27,6 +28,7 @@ type ClientOnboardingStore = {
   setVideoConferenceDraft: (slug: string, value: ClientVideoConference) => void;
   setUnavailabilityDraft: (slug: string, value: string) => void;
   setStartNowDraft: (slug: string, value: boolean) => void;
+  setCalendlyUrlDraft: (slug: string, value: string) => void;
   setStep: (slug: string, step: ClientOnboardingStep) => void;
   markCgvAccepted: (slug: string) => void;
   markWelcomeSeen: (slug: string) => void;
@@ -40,6 +42,7 @@ const DEFAULT_SLUG_STATE: ClientOnboardingSlugState = {
   videoConferenceDraft: null,
   unavailabilityDraft: "",
   startNowDraft: null,
+  calendlyUrlDraft: "",
   cgvAcceptedAt: null,
   welcomeSeenAt: null,
 };
@@ -114,6 +117,16 @@ export const useClientOnboardingStore = create<ClientOnboardingStore>()(
             ...state.bySlug,
             [slug]: mergeSlugState(state.bySlug[slug], {
               unavailabilityDraft: value,
+            }),
+          },
+        }));
+      },
+      setCalendlyUrlDraft(slug, value) {
+        set((state) => ({
+          bySlug: {
+            ...state.bySlug,
+            [slug]: mergeSlugState(state.bySlug[slug], {
+              calendlyUrlDraft: value,
             }),
           },
         }));

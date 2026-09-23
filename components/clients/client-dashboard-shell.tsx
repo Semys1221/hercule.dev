@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isDecFreeTrialOffer } from "@/lib/clients/dec-free-trial";
 import type { ClientDashboardData } from "@/lib/clients/types";
 import {
   selectSlugState,
@@ -16,6 +17,7 @@ import { DashboardBrandHeader, DashboardPageHeader } from "@/components/legacy/d
 
 import { ClientBootScreen } from "./client-boot-screen";
 import { ClientDashboardActive } from "./client-dashboard-active";
+import { ClientMonthlyRenewalDialog } from "./client-monthly-renewal-dialog";
 import { ClientOnboardingTunnel } from "./onboarding/client-onboarding-tunnel";
 
 type ClientDashboardShellProps = {
@@ -235,7 +237,15 @@ export function ClientDashboardShell({
               </CardHeader>
               <CardContent>
                 <Button asChild>
-                  <Link href="/conference/inscription">Accéder à la page de paiement</Link>
+                  <Link
+                    href={
+                      isDecFreeTrialOffer(data.offerType)
+                        ? "/dec/essai"
+                        : "/conference/inscription"
+                    }
+                  >
+                    Accéder à la page de paiement
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -258,7 +268,16 @@ export function ClientDashboardShell({
       return null;
     }
 
-    return <ClientDashboardActive data={data} onRefresh={() => void loadClient()} />;
+    return (
+      <>
+        <ClientDashboardActive data={data} onRefresh={() => void loadClient()} />
+        <ClientMonthlyRenewalDialog
+          slug={slug}
+          announcement={data.monthlyRenewalAnnouncement}
+          onResolved={() => void loadClient({ soft: true })}
+        />
+      </>
+    );
   }
 
   return (

@@ -50,7 +50,7 @@ export function DashboardComptable({
         data={data}
         onRefresh={onRefresh}
         deepLinkCheckout={deepLinkCheckout}
-        deepLinkOffer={preselectedOfferType}
+        deepLinkOffer={preselectedOfferType ?? undefined}
       />
     );
   }

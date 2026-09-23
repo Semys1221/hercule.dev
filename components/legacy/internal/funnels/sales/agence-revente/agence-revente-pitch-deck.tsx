@@ -119,6 +119,7 @@ export function AgenceReventePitchDeck({
         <AgenceReventePitchCapacite
           metrics={metrics}
           qualification={qualification}
+          productName={productName}
           productPriceEur={productPriceEur}
           paymentLinkUrl={paymentLinkUrl}
           revealIndex={currentStep.revealIndex}

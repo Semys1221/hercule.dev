@@ -1,10 +1,6 @@
 import { BOOKING_CONFIRMATION_DISABLED } from "@/lib/legacy/booking-communication/confirmation-disabled";
 import { startConferenceInviteSequence } from "@/lib/legacy/cif-conference-sequence/orchestrator";
 import { startCloseIndecisSequence } from "@/lib/legacy/close-indecis-sequence/orchestrator";
-import { startComptableAcquisitionSequence } from "@/lib/legacy/comptable-acquisition-sequence/orchestrator";
-import { startFreeTrialSequence } from "@/lib/legacy/free-trial-sequence/orchestrator";
-import { startFreeTrialStartedSequence } from "@/lib/legacy/free-trial-started-sequence/orchestrator";
-import { startPropositionLudovicSequence } from "@/lib/legacy/proposition-ludovic-sequence/orchestrator";
 import { handleLeadInterested } from "@/lib/legacy/instantly-bypass/handler";
 import { executeBypassFlow } from "@/lib/legacy/instantly-bypass/send-flow";
 import { getOutreachConfigView } from "@/lib/legacy/admin/niches/outreach-config";
@@ -182,62 +178,11 @@ export async function dispatchSequenceStart(params: {
       }
       return { ok: true, currentStep: "upsell_email_1" };
     }
-    case "comptable-acquisition-post-payment": {
-      const result = await startComptableAcquisitionSequence({
-        leadId: lead.id,
-        paymentAt: params.scheduledAt ?? new Date(),
-        stripeCheckoutSessionId: `management:${lead.id}`,
-      });
-      if (!result.welcomeSent && result.scheduledJobs === 0) {
-        return { ok: false, error: "acquisition_not_started" };
-      }
-      return { ok: true, currentStep: "comptable_acquisition_welcome" };
-    }
-    case "free-trial": {
-      if (params.niche !== "comptable") {
-        return { ok: false, error: "free_trial_comptable_only" };
-      }
-      const result = await startFreeTrialSequence({
-        leadId: lead.id,
-        startsAt: params.scheduledAt ?? new Date(),
-      });
-      if (result.scheduledJobs === 0) {
-        return { ok: false, error: "free_trial_not_started" };
-      }
-      return { ok: true, currentStep: "free_trial_1" };
-    }
-    case "free-trial-started": {
-      if (params.niche !== "comptable") {
-        return { ok: false, error: "free_trial_started_comptable_only" };
-      }
-      const result = await startFreeTrialStartedSequence({
-        leadId: lead.id,
-        paymentAt: params.scheduledAt ?? new Date(),
-        stripeCheckoutSessionId: `management:${lead.id}`,
-      });
-      if (!result.welcomeSent && result.scheduledJobs === 0) {
-        return { ok: false, error: "free_trial_started_not_started" };
-      }
-      return { ok: true, currentStep: "free_trial_started_1" };
-    }
-    case "proposition-ludovic-post-payment": {
-      // Manual replay — default to formule-test-15 if no offer metadata available
-      const result = await startPropositionLudovicSequence({
-        leadId: lead.id,
-        paymentAt: params.scheduledAt ?? new Date(),
-        stripeCheckoutSessionId: `management:${lead.id}`,
-        payment: {
-          offerId: "formule-test-15",
-          offerLabel: "Formule Test — 15 profils",
-          profileVolume: 15,
-          amountLabel: "1 489 € / mois",
-        },
-      });
-      if (!result.welcomeSent && result.scheduledJobs === 0) {
-        return { ok: false, error: "proposition_ludovic_not_started" };
-      }
-      return { ok: true, currentStep: "proposition_ludovic_welcome" };
-    }
+    case "comptable-acquisition-post-payment":
+    case "free-trial":
+    case "free-trial-started":
+    case "proposition-ludovic-post-payment":
+      return { ok: false, error: "sequence_retired_use_conference_checkout" };
     default:
       return { ok: false, error: `unsupported_sequence:${params.sequenceSlug}` };
   }

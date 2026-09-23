@@ -75,6 +75,7 @@ export type TrackingScriptInput = {
   appointments: ClientAppointmentPublic[];
   slug: string;
   now: Date;
+  calendarConnected: boolean;
 };
 
 const NICHE_LABEL: Record<ConferenceClientType, string> = {
@@ -218,6 +219,7 @@ export function buildTrackingScript(input: TrackingScriptInput): TrackingScript 
       rdvTotal: input.rdvTotal,
       slug: input.slug,
       clientType: input.clientType,
+      calendarConnected: input.calendarConnected,
     });
     applyRealAppointment(scans, input.appointments, now);
   }
@@ -251,6 +253,7 @@ export function buildTrackingScript(input: TrackingScriptInput): TrackingScript 
       rdvTotal: input.rdvTotal,
       heroWhen,
       retraction: input.retraction,
+      calendarConnected: input.calendarConnected,
     }),
   };
 }
@@ -278,6 +281,7 @@ function heroCopy(params: {
   rdvTotal: number;
   heroWhen: Date;
   retraction: TrackingScriptInput["retraction"];
+  calendarConnected: boolean;
 }): { heroTitle: string; heroDetail: string } {
   if (params.frozen) {
     const ends = parseInstant(params.retraction?.endsAt ?? null);
@@ -307,7 +311,9 @@ function heroCopy(params: {
 
   const phaseDetail: Record<TrackingStationId, string> = {
     commande: "Confirmation du dossier en cours.",
-    installation: "Agendas Calendly liés et premiers tests lancés.",
+    installation: params.calendarConnected
+      ? "Agendas Calendly liés et premiers tests lancés."
+      : "Finalisation de la liaison de votre agenda Calendly.",
     volume: "Les algorithmes identifient des entrepreneurs dans nos bases.",
     qualification: "Tri des profils selon vos critères sectoriels.",
     solvabilite: "Appels de qualification et matchmaking en cours.",
@@ -320,6 +326,28 @@ function heroCopy(params: {
   };
 }
 
+function installDay0Situation(
+  template: string,
+  calendarConnected: boolean,
+  niche?: string,
+): string {
+  if (template === "Agendas Calendly liés" && !calendarConnected) {
+    return "Liaison agenda Calendly en cours";
+  }
+  if (!calendarConnected) {
+    if (template === "Premiers tests lancés") {
+      return "Invitation Calendly — en attente de connexion";
+    }
+    if (template === "Disponibilités relevées") {
+      return "Agenda en attente de liaison";
+    }
+  }
+  if (template === "Critères secteur enregistrés" && niche) {
+    return `${template} — ${niche}`;
+  }
+  return template;
+}
+
 function appendOperations(params: {
   scans: TrackingScan[];
   activation: Date;
@@ -330,14 +358,16 @@ function appendOperations(params: {
   rdvTotal: number;
   slug: string;
   clientType: ConferenceClientType;
+  calendarConnected: boolean;
 }) {
   const day0Ymd = nextWorkingYmd(params.activationYmd);
 
   INSTALL_DAY0.forEach((slot, index) => {
-    const situation =
-      slot.situation === "Critères secteur enregistrés"
-        ? `${slot.situation} — ${params.niche}`
-        : slot.situation;
+    const situation = installDay0Situation(
+      slot.situation,
+      params.calendarConnected,
+      slot.situation === "Critères secteur enregistrés" ? params.niche : undefined,
+    );
     pushAtClock(params.scans, params.activation, {
       id: `install-${index}`,
       ymd: day0Ymd,

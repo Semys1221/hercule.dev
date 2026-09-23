@@ -1,25 +1,13 @@
-import { notFound, redirect } from "next/navigation";
-
-import { getProposition } from "@/lib/legacy/propositions/registry";
-import { resolveStripePaymentLinkUrl } from "@/lib/legacy/propositions/resolve-payment";
+import { redirect } from "next/navigation";
 
 type PropositionPaymentPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ option?: string }>;
 };
 
+/** Legacy proposition checkout — conference Payment Links only. */
 export default async function PropositionPaymentPage({
   params,
-  searchParams,
 }: PropositionPaymentPageProps) {
-  const { slug } = await params;
-  const { option } = await searchParams;
-
-  const config = getProposition(slug);
-  if (!config) {
-    notFound();
-  }
-
-  const stripePaymentLinkUrl = resolveStripePaymentLinkUrl(config, option ?? null);
-  redirect(stripePaymentLinkUrl);
+  await params;
+  redirect("/conference/inscription");
 }

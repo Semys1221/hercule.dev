@@ -1,20 +1,13 @@
 "use client";
 
-import { ExternalLink, MoreHorizontal } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 
 import type { ColumnDef } from "@/components/legacy/internal/architecture/architecture-data-table";
 import { ArchitectureDataTable } from "@/components/legacy/internal/architecture/architecture-data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -24,26 +17,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { renewalAdminLabel } from "@/lib/clients/monthly-renewal-announcement";
 import { conferenceOfferLabel } from "@/lib/commercial/conference-pricing";
-import type { ClientRow } from "@/lib/clients/types";
-import type { CreditField, EnginClientRow } from "@/lib/clients/engin-types";
+import type { EnginClientRow } from "@/lib/clients/engin-types";
 import {
   ELIGIBILITY_LABELS,
-  clientEligibility,
-  plannedShares,
   type RoundRobinEligibilityReason,
 } from "@/lib/clients/round-robin";
-
-import { EnginCalendlyDialog } from "./engin-calendly-dialog";
-import { EnginConnectionsDialog } from "./engin-connections-dialog";
-import { EnginCreditsDialog } from "./engin-credits-dialog";
-import { EnginOnboardingSheet } from "./engin-onboarding-sheet";
 
 const NEW_CLIENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function StatutBadge({ statut }: { statut: string }) {
   const variant =
-    statut === "IN_DELIVERANCE" || statut === "SOLD" || statut === "MEETING_BOOKED"
+    statut === "IN_DELIVERANCE" ||
+    statut === "SOLD" ||
+    statut === "MEETING_BOOKED" ||
+    statut === "FREE_TRIAL"
       ? "default"
       : statut === "CANCELLED" || statut === "ARCHIVED"
         ? "destructive"
@@ -62,236 +51,131 @@ function EligibilityBadge({ reason }: { reason: RoundRobinEligibilityReason }) {
   return <Badge variant={variant}>{ELIGIBILITY_LABELS[reason]}</Badge>;
 }
 
-type RowActionsProps = {
-  row: EnginClientRow;
-  onAdjustCredits: (row: EnginClientRow, field: CreditField) => void;
-  onViewOnboarding: (row: EnginClientRow) => void;
-  onEditCalendly: (row: EnginClientRow) => void;
-  onEditConnections: (row: EnginClientRow) => void;
-};
-
-function RowActions({
-  row,
-  onAdjustCredits,
-  onViewOnboarding,
-  onEditCalendly,
-  onEditConnections,
-}: RowActionsProps) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8">
-          <MoreHorizontal className="size-4" />
-          <span className="sr-only">Actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem onSelect={() => onAdjustCredits(row, "rdv_used")}>
-          Ajuster crédits utilisés
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onAdjustCredits(row, "rdv_total")}>
-          Ajuster quota RDV
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onEditConnections(row)}>
-          Connexions dashboard
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onEditCalendly(row)}>
-          URL Calendly
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => onViewOnboarding(row)}>
-          Voir onboarding
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a
-            href={`/clients/${encodeURIComponent(row.slug)}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <ExternalLink className="mr-2 size-4" />
-            Ouvrir dashboard
-          </a>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+function clientHref(id: string) {
+  return `/admin/clients/${encodeURIComponent(id)}`;
 }
 
-function buildColumns(handlers: {
-  onAdjustCredits: (row: EnginClientRow, field: CreditField) => void;
-  onViewOnboarding: (row: EnginClientRow) => void;
-  onEditCalendly: (row: EnginClientRow) => void;
-  onEditConnections: (row: EnginClientRow) => void;
-}): ColumnDef<EnginClientRow>[] {
-  return [
-    {
-      accessorKey: "email",
-      header: "Email",
-      cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-medium">{row.original.email}</span>
-          <span className="text-xs text-muted-foreground">{row.original.slug}</span>
-        </div>
-      ),
-    },
-    {
-      accessorKey: "first_name",
-      header: "Prénom",
-      cell: ({ row }) => row.original.first_name ?? "—",
-    },
-    {
-      accessorKey: "client_type",
-      header: "Vertical",
-      cell: ({ row }) => (
-        <Badge variant="outline">{row.original.client_type.toUpperCase()}</Badge>
-      ),
-    },
-    {
-      accessorKey: "billing",
-      header: "Billing",
-      cell: ({ row }) =>
-        row.original.billing === "monthly" ? "Mensuel" : "Pack",
-    },
-    {
-      accessorKey: "offer_type",
-      header: "Offre",
-      cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {conferenceOfferLabel(row.original.offer_type)}
-        </span>
-      ),
-    },
-    {
-      id: "credits",
-      header: "Crédits",
-      accessorFn: (row) => `${row.rdv_used}/${row.rdv_total}`,
-      cell: ({ row }) => (
-        <span className="tabular-nums">
-          {row.original.rdv_used}
-          <span className="text-muted-foreground"> / {row.original.rdv_total}</span>
-        </span>
-      ),
-    },
-    {
-      id: "rrShare",
-      header: "Part RR",
-      accessorFn: (row) => row.rrSharePct,
-      cell: ({ row }) => (
-        <span className="tabular-nums">
-          {row.original.rrSharePct.toLocaleString("fr-FR", {
-            maximumFractionDigits: 1,
-            minimumFractionDigits: 0,
-          })}
-          %
-        </span>
-      ),
-    },
-    {
-      id: "eligibility",
-      header: "Pool",
-      accessorFn: (row) => row.eligibility,
-      cell: ({ row }) => <EligibilityBadge reason={row.original.eligibility} />,
-    },
-    {
-      accessorKey: "first_lead_at",
-      header: "First lead",
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap text-sm text-muted-foreground">
-          {row.original.first_lead_at
-            ? new Date(row.original.first_lead_at).toLocaleDateString("fr-FR", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-            : "—"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "product_statut",
-      header: "Statut",
-      cell: ({ row }) => <StatutBadge statut={row.original.product_statut} />,
-    },
-    {
-      accessorKey: "created_at",
-      header: "Créé le",
-      cell: ({ row }) => (
-        <span className="whitespace-nowrap text-sm text-muted-foreground">
-          {new Date(row.original.created_at).toLocaleDateString("fr-FR", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })}
-        </span>
-      ),
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <RowActions
-          row={row.original}
-          onAdjustCredits={handlers.onAdjustCredits}
-          onViewOnboarding={handlers.onViewOnboarding}
-          onEditCalendly={handlers.onEditCalendly}
-          onEditConnections={handlers.onEditConnections}
-        />
-      ),
-    },
-  ];
-}
+const columns: ColumnDef<EnginClientRow>[] = [
+  {
+    accessorKey: "email",
+    header: "Email",
+    cell: ({ row }) => (
+      <div className="flex flex-col gap-0.5">
+        <Link
+          href={clientHref(row.original.id)}
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+          onClick={(event) => event.stopPropagation()}
+        >
+          {row.original.email}
+        </Link>
+        <Link
+          href={clientHref(row.original.id)}
+          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+          onClick={(event) => event.stopPropagation()}
+        >
+          {row.original.slug}
+        </Link>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "first_name",
+    header: "Prénom",
+    cell: ({ row }) => row.original.first_name ?? "—",
+  },
+  {
+    accessorKey: "client_type",
+    header: "Vertical",
+    cell: ({ row }) => (
+      <Badge variant="outline">{row.original.client_type.toUpperCase()}</Badge>
+    ),
+  },
+  {
+    accessorKey: "billing",
+    header: "Billing",
+    cell: ({ row }) => (row.original.billing === "monthly" ? "Mensuel" : "Pack"),
+  },
+  {
+    accessorKey: "offer_type",
+    header: "Offre",
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground">
+        {conferenceOfferLabel(row.original.offer_type)}
+      </span>
+    ),
+  },
+  {
+    id: "credits",
+    header: "Crédits",
+    accessorFn: (row) => `${row.rdv_used}/${row.rdv_total}`,
+    cell: ({ row }) => (
+      <span className="tabular-nums">
+        {row.original.rdv_used}
+        <span className="text-muted-foreground"> / {row.original.rdv_total}</span>
+      </span>
+    ),
+  },
+  {
+    id: "eligibility",
+    header: "Pool",
+    accessorFn: (row) => row.eligibility,
+    cell: ({ row }) => <EligibilityBadge reason={row.original.eligibility} />,
+  },
+  {
+    accessorKey: "product_statut",
+    header: "Statut",
+    cell: ({ row }) => <StatutBadge statut={row.original.product_statut} />,
+  },
+  {
+    id: "renewal",
+    header: "Renouvellement",
+    accessorFn: (row) => renewalAdminLabel(row),
+    cell: ({ row }) => (
+      <span className="text-sm">{renewalAdminLabel(row.original)}</span>
+    ),
+  },
+  {
+    accessorKey: "created_at",
+    header: "Créé le",
+    cell: ({ row }) => (
+      <span className="whitespace-nowrap text-sm text-muted-foreground">
+        {new Date(row.original.created_at).toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}
+      </span>
+    ),
+  },
+];
 
 export function EnginClientsTable() {
+  const router = useRouter();
+  const reactId = React.useId();
   const [rows, setRows] = React.useState<EnginClientRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState("");
   const [vertical, setVertical] = React.useState<string>("all");
   const [nouveauxOnly, setNouveauxOnly] = React.useState(false);
-
-  const [creditsTarget, setCreditsTarget] = React.useState<{
-    client: EnginClientRow;
-    field: CreditField;
-  } | null>(null);
-  const [onboardingTarget, setOnboardingTarget] = React.useState<EnginClientRow | null>(
-    null,
-  );
-  const [calendlyTarget, setCalendlyTarget] = React.useState<EnginClientRow | null>(
-    null,
-  );
-  const [connectionsTarget, setConnectionsTarget] = React.useState<EnginClientRow | null>(
-    null,
-  );
-
-  const mergeClient = React.useCallback((prev: EnginClientRow[], client: ClientRow) => {
-    const nextRows = prev.map((row) =>
-      row.id === client.id ? { ...row, ...client } : row,
-    );
-    const shares = plannedShares(nextRows);
-    return nextRows.map((row) => ({
-      ...row,
-      rrSharePct: shares.get(row.id)?.sharePct ?? 0,
-      eligibility: clientEligibility(row),
-    }));
-  }, []);
+  const [needsOpsOnly, setNeedsOpsOnly] = React.useState(false);
+  const [trialOnly, setTrialOnly] = React.useState(false);
+  const [filtersMounted, setFiltersMounted] = React.useState(false);
 
   const load = React.useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/admin/engin/clients");
-      const body = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(
-          typeof body.error === "string" ? body.error : "Échec du chargement",
-        );
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(typeof body.error === "string" ? body.error : "Échec du chargement");
       }
-      setRows((body.clients ?? []) as EnginClientRow[]);
+      const body = (await response.json()) as { clients?: EnginClientRow[] };
+      setRows(body.clients ?? []);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Impossible de charger les clients",
-        description:
-          error instanceof Error ? error.message : "Une erreur est survenue.",
+        description: error instanceof Error ? error.message : "Une erreur est survenue.",
       });
     } finally {
       setLoading(false);
@@ -302,40 +186,77 @@ export function EnginClientsTable() {
     void load();
   }, [load]);
 
+  React.useEffect(() => {
+    setFiltersMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "cfad7b",
+      },
+      body: JSON.stringify({
+        sessionId: "cfad7b",
+        runId: "hydrate",
+        hypothesisId: "B",
+        location: "engin-clients-table.tsx:useEffect",
+        message: "client mounted",
+        data: {
+          loading,
+          vertical,
+          rowCount: rows.length,
+          reactId,
+          filtersMounted,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [loading, rows.length, vertical, reactId, filtersMounted]);
+
+  if (typeof window === "undefined") {
+    // #region agent log
+    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "cfad7b",
+      },
+      body: JSON.stringify({
+        sessionId: "cfad7b",
+        runId: "hydrate",
+        hypothesisId: "A",
+        location: "engin-clients-table.tsx:ssr",
+        message: "ssr render",
+        data: { loading, vertical, reactId },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }
+
   const filtered = React.useMemo(() => {
     const needle = search.trim().toLowerCase();
     const now = Date.now();
     return rows.filter((row) => {
-      if (vertical !== "all" && row.client_type !== vertical) {
-        return false;
-      }
+      if (vertical !== "all" && row.client_type !== vertical) return false;
+      if (needsOpsOnly && !row.needsOps) return false;
+      if (trialOnly && !row.product_statut.startsWith("FREE_TRIAL")) return false;
       if (nouveauxOnly) {
         const created = new Date(row.created_at).getTime();
-        if (Number.isNaN(created) || now - created > NEW_CLIENT_WINDOW_MS) {
-          return false;
-        }
+        if (Number.isNaN(created) || now - created > NEW_CLIENT_WINDOW_MS) return false;
       }
-      if (!needle) {
-        return true;
-      }
+      if (!needle) return true;
       return (
         row.email.toLowerCase().includes(needle) ||
         row.slug.toLowerCase().includes(needle) ||
         (row.first_name ?? "").toLowerCase().includes(needle)
       );
     });
-  }, [rows, search, vertical, nouveauxOnly]);
-
-  const columns = React.useMemo(
-    () =>
-      buildColumns({
-        onAdjustCredits: (client, field) => setCreditsTarget({ client, field }),
-        onViewOnboarding: (client) => setOnboardingTarget(client),
-        onEditCalendly: (client) => setCalendlyTarget(client),
-        onEditConnections: (client) => setConnectionsTarget(client),
-      }),
-    [],
-  );
+  }, [rows, search, vertical, nouveauxOnly, needsOpsOnly, trialOnly]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -346,17 +267,40 @@ export function EnginClientsTable() {
           onChange={(event) => setSearch(event.target.value)}
           className="max-w-sm"
         />
-        <Select value={vertical} onValueChange={setVertical}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Vertical" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tous</SelectItem>
-            <SelectItem value="dec">DEC</SelectItem>
-            <SelectItem value="cif">CIF</SelectItem>
-            <SelectItem value="ias">IAS</SelectItem>
-          </SelectContent>
-        </Select>
+        {filtersMounted ? (
+          <Select value={vertical} onValueChange={setVertical}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Vertical" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="dec">DEC</SelectItem>
+              <SelectItem value="cif">CIF</SelectItem>
+              <SelectItem value="ias">IAS</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <div
+            className="flex h-9 w-[140px] items-center rounded-md border border-input px-3 text-sm text-muted-foreground"
+            aria-hidden
+          >
+            Tous
+          </div>
+        )}
+        <Button
+          type="button"
+          variant={needsOpsOnly ? "default" : "outline"}
+          onClick={() => setNeedsOpsOnly((value) => !value)}
+        >
+          À traiter
+        </Button>
+        <Button
+          type="button"
+          variant={trialOnly ? "default" : "outline"}
+          onClick={() => setTrialOnly((value) => !value)}
+        >
+          Essais
+        </Button>
         <Button
           type="button"
           variant={nouveauxOnly ? "default" : "outline"}
@@ -376,55 +320,9 @@ export function EnginClientsTable() {
           columns={columns}
           data={filtered}
           getRowId={(row) => row.id}
+          onRowClick={(row) => router.push(clientHref(row.id))}
         />
       )}
-
-      <EnginCreditsDialog
-        client={creditsTarget?.client ?? null}
-        field={creditsTarget?.field ?? null}
-        open={Boolean(creditsTarget)}
-        onOpenChange={(open) => {
-          if (!open) setCreditsTarget(null);
-        }}
-        onUpdated={(client) => {
-          setRows((prev) => mergeClient(prev, client));
-        }}
-      />
-
-      <EnginConnectionsDialog
-        client={connectionsTarget}
-        open={Boolean(connectionsTarget)}
-        onOpenChange={(open) => {
-          if (!open) setConnectionsTarget(null);
-        }}
-        onUpdated={(client) => {
-          setRows((prev) => mergeClient(prev, client));
-        }}
-      />
-
-      <EnginCalendlyDialog
-        client={calendlyTarget}
-        open={Boolean(calendlyTarget)}
-        onOpenChange={(open) => {
-          if (!open) setCalendlyTarget(null);
-        }}
-        onUpdated={(client) => {
-          setRows((prev) => mergeClient(prev, client));
-        }}
-      />
-
-      <EnginOnboardingSheet
-        clientId={onboardingTarget?.id ?? null}
-        clientLabel={
-          onboardingTarget
-            ? `${onboardingTarget.email} (${onboardingTarget.slug})`
-            : null
-        }
-        open={Boolean(onboardingTarget)}
-        onOpenChange={(open) => {
-          if (!open) setOnboardingTarget(null);
-        }}
-      />
     </div>
   );
 }

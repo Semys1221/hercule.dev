@@ -75,46 +75,6 @@ export function DashboardShell({
         return;
       }
 
-      if (checkoutSessionId) {
-        try {
-          const syncResponse = await fetch("/api/payments/sync-comptable-checkout", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionId: checkoutSessionId }),
-          });
-          const syncBody = (await syncResponse.json()) as {
-            synced?: boolean;
-            reason?: string;
-          };
-
-          // #region agent log
-          fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Debug-Session-Id": "454528",
-            },
-            body: JSON.stringify({
-              sessionId: "454528",
-              runId: "post-payment-sync",
-              hypothesisId: "A,C",
-              location: "dashboard-shell.tsx:bootstrapAfterPayment",
-              message: "client sync after Stripe return",
-              data: {
-                slug,
-                hasCheckoutSessionId: Boolean(checkoutSessionId),
-                synced: syncBody.synced ?? null,
-                reason: syncBody.reason ?? null,
-              },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
-        } catch (syncError) {
-          console.error("[dashboard-shell] comptable checkout sync failed:", syncError);
-        }
-      }
-
       let latest = await loadDashboard();
       let attempts = 0;
       while (
@@ -133,28 +93,6 @@ export function DashboardShell({
         latest = await loadDashboard();
       }
 
-      // #region agent log
-      fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "454528",
-        },
-        body: JSON.stringify({
-          sessionId: "454528",
-          runId: "post-payment-sync",
-          hypothesisId: "D",
-          location: "dashboard-shell.tsx:bootstrapAfterPayment:done",
-          message: "dashboard loaded after payment return",
-          data: {
-            slug,
-            dashboardMode: latest?.dashboardMode ?? null,
-            attempts,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
     }
 
     void bootstrapAfterPayment();

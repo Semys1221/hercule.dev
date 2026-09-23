@@ -13,8 +13,11 @@ import { findCalendlySeatOnboardingByClientId } from "@/lib/(resend)/calendly-se
 
 import { listClientAppointments, toPublicAppointment } from "./appointments/store";
 import { CLIENT_ACCOUNT_MANAGER } from "./account-manager";
+import { evaluateClientRenewalPrompt } from "./load-monthly-renewal";
+import { volumeEndLabelForAnnouncement } from "./monthly-renewal-announcement";
 import type { ClientDashboardData, ClientMode, ClientRow } from "./types";
-import { isCalendarConnected } from "./dashboard-connections";
+import { isClientCalendarConnected } from "./dashboard-connections";
+import { isDecFreeTrialClient, isFreeTrialProductStatut } from "./dec-free-trial";
 import { parseClientVideoConference } from "./video-conference";
 
 function retractionCategoryForClient(
@@ -123,6 +126,12 @@ export async function loadClientDashboard(
   });
 
   const calendlySeatRow = await findCalendlySeatOnboardingByClientId(row.id);
+  const calendlySeat = calendlySeatRow
+    ? {
+        status: calendlySeatRow.status,
+        invitationStatus: calendlySeatRow.calendly_invitation_status,
+      }
+    : null;
   const appointments = (await listClientAppointments(row.id, client)).map(
     toPublicAppointment,
   );
@@ -130,6 +139,20 @@ export async function loadClientDashboard(
 
   const billingPortalAvailable =
     row.billing === "monthly" && Boolean(row.stripe_customer_id);
+
+  const onboardingVariant =
+    isDecFreeTrialClient(row) && isFreeTrialProductStatut(row.product_statut)
+      ? "dec_free_trial"
+      : "standard";
+
+  const monthlyRenewalAnnouncement =
+    clientMode === "client_active" && onboardingVariant !== "dec_free_trial"
+      ? await loadMonthlyRenewalAnnouncement(client, row, {
+          succeededAt: payment?.succeeded_at ?? null,
+          retraction,
+          appointments,
+        })
+      : null;
 
   return {
     slug: row.slug,
@@ -141,6 +164,8 @@ export async function loadClientDashboard(
     clientMode,
     isPaid,
     offerType: row.offer_type,
+    onboardingVariant,
+    calendlySchedulingUrl: row.calendly_scheduling_url,
     billing: row.billing,
     rdvTotal: row.rdv_total,
     rdvUsed: row.rdv_used,
@@ -148,13 +173,11 @@ export async function loadClientDashboard(
     onboardingCompleted: Boolean(row.onboarding_completed_at),
     timeline: milestones,
     retraction,
-    calendlySeat: calendlySeatRow
-      ? {
-          status: calendlySeatRow.status,
-          invitationStatus: calendlySeatRow.calendly_invitation_status,
-        }
-      : null,
-    calendarConnected: isCalendarConnected(row.profile),
+    calendlySeat,
+    calendarConnected: isClientCalendarConnected({
+      profile: row.profile,
+      calendlySeat,
+    }),
     appointments,
     billingPortal: { available: billingPortalAvailable },
     faq,
@@ -163,5 +186,45 @@ export async function loadClientDashboard(
     dashboardTitle: hubrisDashboardTitle(row),
     dashboardDescription: hubrisDashboardDescription(row),
     videoConference: parseClientVideoConference(row.profile),
+    monthlyRenewalAnnouncement,
+  };
+}
+
+async function loadMonthlyRenewalAnnouncement(
+  client: SupabaseClient,
+  row: ClientRow,
+  context: {
+    succeededAt: string | null;
+    retraction: ClientDashboardData["retraction"];
+    appointments: ClientDashboardData["appointments"];
+  },
+): Promise<ClientDashboardData["monthlyRenewalAnnouncement"]> {
+  const evaluation = await evaluateClientRenewalPrompt(client, row);
+  if (evaluation.status !== "show" || !evaluation.periodEnd) {
+    return null;
+  }
+
+  return {
+    show: true,
+    periodEnd: evaluation.periodEnd.toISOString(),
+    rdvRemaining: Math.max(0, row.rdv_total - row.rdv_used),
+    volumeEndLabel: volumeEndLabelForAnnouncement({
+      succeededAt: context.succeededAt,
+      retraction: context.retraction
+        ? {
+            activationAt: context.retraction.activationAt,
+            status: context.retraction.status,
+            endsAt: context.retraction.endsAt,
+          }
+        : null,
+      clientType: row.client_type,
+      offerType: row.offer_type,
+      rdvTotal: row.rdv_total,
+      appointments: context.appointments.filter(
+        (appointment) => appointment.status === "scheduled",
+      ),
+      slug: row.slug,
+      calendarConnected: Boolean(row.calendly_scheduling_url),
+    }),
   };
 }

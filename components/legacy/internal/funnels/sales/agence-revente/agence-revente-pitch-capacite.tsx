@@ -12,7 +12,7 @@ import {
   computePipelineStockPotentialCa,
   formatRoiAssumptionsHint,
 } from "@/lib/legacy/calendly/pipeline-roi-calculator";
-import { HERCULE_LIBERAL_PRODUCT_NAME } from "@/lib/legacy/payments/hercule-liberal-offers";
+import { HERCULE_LIBERAL } from "@/lib/commercial/constants";
 import { cn } from "@/lib/utils";
 
 import {
@@ -164,7 +164,7 @@ function BuyHerculeLiberalButton({ paymentLinkUrl }: { paymentLinkUrl: string })
   return (
     <Button type="button" className="w-full sm:w-auto" onClick={handleCopyPaymentLink}>
       <Copy className="mr-2 size-4" />
-      Acheter {HERCULE_LIBERAL_PRODUCT_NAME}
+      Acheter {HERCULE_LIBERAL.productName}
     </Button>
   );
 }

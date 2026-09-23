@@ -2,10 +2,16 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { CLIENT_CGV_VERSION } from "@/lib/clients/cgv-onboarding";
+import {
+  CLIENT_CGV_FREE_TRIAL_VERSION,
+  isCalendlySchedulingUrl,
+  isDecFreeTrialClient,
+} from "@/lib/clients/dec-free-trial";
 import { CLIENT_VIDEO_CONFERENCE_OPTIONS } from "@/lib/clients/video-conference";
 import { loadClientDashboard } from "@/lib/clients/load-client-dashboard";
 import {
   completeClientOnboarding,
+  completeDecFreeTrialOnboarding,
   updateClientFirstName,
   waiveClientRetraction,
 } from "@/lib/clients/onboarding-complete";
@@ -48,6 +54,7 @@ const patchSchema = z.object({
   completeOnboarding: z.boolean().optional(),
   cgvVersion: z.string().min(1).max(32).optional(),
   waiveRetraction: z.boolean().optional(),
+  calendlySchedulingUrl: z.string().min(1).max(500).optional(),
 });
 
 export async function PATCH(request: Request, { params }: RouteParams) {
@@ -86,6 +93,52 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         client,
         row,
         firstName: parsed.data.firstName,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    if (parsed.data.completeOnboarding && isDecFreeTrialClient(row)) {
+      const firstName = parsed.data.firstName?.trim() || row.first_name?.trim();
+      if (!firstName) {
+        return NextResponse.json({ error: "firstName required" }, { status: 400 });
+      }
+
+      const cgvVersion = parsed.data.cgvVersion?.trim();
+      if (!cgvVersion || cgvVersion !== CLIENT_CGV_FREE_TRIAL_VERSION) {
+        return NextResponse.json(
+          { error: "cgvVersion required", expected: CLIENT_CGV_FREE_TRIAL_VERSION },
+          { status: 400 },
+        );
+      }
+
+      const calendlySchedulingUrl = parsed.data.calendlySchedulingUrl?.trim() ?? "";
+      if (!isCalendlySchedulingUrl(calendlySchedulingUrl)) {
+        return NextResponse.json(
+          { error: "Lien Calendly https://calendly.com/… requis" },
+          { status: 400 },
+        );
+      }
+
+      const unavailability = parsed.data.unavailability?.trim();
+      if (!unavailability) {
+        return NextResponse.json({ error: "unavailability required" }, { status: 400 });
+      }
+
+      const { hasSucceededClientPayment } = await import(
+        "@/lib/clients/load-client-dashboard"
+      );
+      const isPaid = await hasSucceededClientPayment(client, row.id);
+      if (!isPaid) {
+        return NextResponse.json({ error: "Payment required" }, { status: 403 });
+      }
+
+      await completeDecFreeTrialOnboarding({
+        client,
+        row,
+        firstName,
+        calendlySchedulingUrl,
+        unavailability,
+        cgvVersion,
       });
       return NextResponse.json({ ok: true });
     }

@@ -15,31 +15,6 @@ type RouteParams = {
   params: Promise<{ id: string }>;
 };
 
-function parseSchedulingUrl(raw: string): { url: string | null } | { error: string } {
-  if (!raw) return { url: null };
-  let parsed: URL;
-  try {
-    parsed = new URL(raw);
-  } catch {
-    return { error: "URL Calendly invalide" };
-  }
-  if (parsed.protocol !== "https:") {
-    return { error: "L’URL Calendly doit être en https" };
-  }
-  if (!parsed.hostname.endsWith("calendly.com")) {
-    return { error: "L’URL doit être un lien calendly.com" };
-  }
-  return { url: raw };
-}
-
-function parseEventTypeUri(raw: string): { uri: string | null } | { error: string } {
-  if (!raw) return { uri: null };
-  if (!raw.startsWith("https://api.calendly.com/event_types/")) {
-    return { error: "URI d’event type Calendly invalide" };
-  }
-  return { uri: raw };
-}
-
 export async function PATCH(request: Request, { params }: RouteParams) {
   const { id } = await params;
   const clientId = id.trim();
@@ -52,8 +27,6 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       calendarConnected?: unknown;
       videoConference?: unknown;
       calendlyBookingsEnabled?: unknown;
-      calendlyEventTypeUri?: unknown;
-      calendlySchedulingUrl?: unknown;
     };
 
     if (typeof body.calendarConnected !== "boolean") {
@@ -80,35 +53,23 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       videoConference = body.videoConference;
     }
 
-    const schedulingRaw =
-      typeof body.calendlySchedulingUrl === "string"
-        ? body.calendlySchedulingUrl.trim()
-        : "";
-    const eventTypeRaw =
-      typeof body.calendlyEventTypeUri === "string"
-        ? body.calendlyEventTypeUri.trim()
-        : "";
-
-    const scheduling = parseSchedulingUrl(schedulingRaw);
-    if ("error" in scheduling) {
-      return NextResponse.json({ error: scheduling.error }, { status: 400 });
-    }
-    const eventType = parseEventTypeUri(eventTypeRaw);
-    if ("error" in eventType) {
-      return NextResponse.json({ error: eventType.error }, { status: 400 });
-    }
-
-    if (body.calendlyBookingsEnabled && (!scheduling.url || !eventType.uri)) {
-      return NextResponse.json(
-        { error: "Choisissez un event Calendly pour activer les réservations" },
-        { status: 400 },
-      );
-    }
-
     const supabase = createClientsClient();
     const existing = await findClientById(supabase, clientId);
     if (!existing) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    if (
+      body.calendlyBookingsEnabled &&
+      !existing.calendly_scheduling_url?.trim()
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Confirmez Calendly avec un lien de réservation avant d’activer les réservations",
+        },
+        { status: 400 },
+      );
     }
 
     const profile: Record<string, unknown> = { ...(existing.profile ?? {}) };
@@ -122,11 +83,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     const { data, error } = await supabase
       .from("clients")
-      .update({
-        profile,
-        calendly_scheduling_url: scheduling.url,
-        calendly_event_type_uri: eventType.uri,
-      })
+      .update({ profile })
       .eq("id", clientId)
       .select("*")
       .maybeSingle();

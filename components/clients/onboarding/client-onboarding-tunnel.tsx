@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { DashboardBrandHeader } from "@/components/legacy/dashboard/brand-header";
-import { CLIENT_CGV_VERSION } from "@/lib/clients/cgv-onboarding";
+import { CLIENT_CGV_VERSION, CLIENT_CGV_FREE_TRIAL_VERSION } from "@/lib/clients/cgv-onboarding";
+import { isCalendlySchedulingUrl } from "@/lib/clients/dec-free-trial";
 import {
   selectSlugState,
   useClientOnboardingStore,
@@ -12,6 +13,7 @@ import type { ClientDashboardData } from "@/lib/clients/types";
 
 import { ClientOnboardingCgv } from "./client-onboarding-cgv";
 import { ClientOnboardingRecap } from "./client-onboarding-recap";
+import { ClientOnboardingRecapFreeTrial } from "./client-onboarding-recap-free-trial";
 
 type ClientOnboardingTunnelProps = {
   data: ClientDashboardData;
@@ -36,6 +38,7 @@ export function ClientOnboardingTunnel({
     (s) => s.setUnavailabilityDraft,
   );
   const setStartNowDraft = useClientOnboardingStore((s) => s.setStartNowDraft);
+  const setCalendlyUrlDraft = useClientOnboardingStore((s) => s.setCalendlyUrlDraft);
   const setStep = useClientOnboardingStore((s) => s.setStep);
   const markCgvAccepted = useClientOnboardingStore((s) => s.markCgvAccepted);
 
@@ -47,13 +50,17 @@ export function ClientOnboardingTunnel({
   }, [slug, data.firstName, ensureSlug]);
 
   const local = selectSlugState(bySlug, slug);
+  const freeTrial = data.onboardingVariant === "dec_free_trial";
 
   // Server still onboarding: never trust a local welcome/done skip of CGV.
-  const readyForCgv =
-    local.startNowDraft !== null &&
-    local.firstNameDraft.trim().length > 0 &&
-    local.videoConferenceDraft !== null &&
-    local.unavailabilityDraft.trim().length > 0;
+  const readyForCgv = freeTrial
+    ? local.firstNameDraft.trim().length > 0 &&
+      isCalendlySchedulingUrl(local.calendlyUrlDraft) &&
+      local.unavailabilityDraft.trim().length > 0
+    : local.startNowDraft !== null &&
+      local.firstNameDraft.trim().length > 0 &&
+      local.videoConferenceDraft !== null &&
+      local.unavailabilityDraft.trim().length > 0;
   const step = readyForCgv && local.step !== "recap" ? "cgv" : "recap";
 
   const handleContinue = useCallback(() => {
@@ -65,7 +72,14 @@ export function ClientOnboardingTunnel({
     const firstName = local.firstNameDraft.trim();
     const videoConference = local.videoConferenceDraft;
     const unavailability = local.unavailabilityDraft.trim();
-    if (!firstName || !videoConference || !unavailability || local.startNowDraft === null) {
+    const calendlyUrl = local.calendlyUrlDraft.trim();
+    if (freeTrial) {
+      if (!firstName || !isCalendlySchedulingUrl(calendlyUrl) || !unavailability) {
+        setError("Indiquez votre prénom, votre lien Calendly et vos indisponibilités.");
+        setStep(slug, "recap");
+        return;
+      }
+    } else if (!firstName || !videoConference || !unavailability || local.startNowDraft === null) {
       setError("Complétez le formulaire, y compris la rétractation, avant les conditions.");
       setStep(slug, "recap");
       return;
@@ -78,14 +92,24 @@ export function ClientOnboardingTunnel({
       const response = await fetch(`/api/clients/${encodeURIComponent(slug)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          videoConference,
-          unavailability,
-          completeOnboarding: true,
-          cgvVersion: CLIENT_CGV_VERSION,
-          waiveRetraction: local.startNowDraft,
-        }),
+        body: JSON.stringify(
+          freeTrial
+            ? {
+                firstName,
+                unavailability,
+                calendlySchedulingUrl: calendlyUrl,
+                completeOnboarding: true,
+                cgvVersion: CLIENT_CGV_FREE_TRIAL_VERSION,
+              }
+            : {
+                firstName,
+                videoConference,
+                unavailability,
+                completeOnboarding: true,
+                cgvVersion: CLIENT_CGV_VERSION,
+                waiveRetraction: local.startNowDraft,
+              },
+        ),
       });
       const body = await response.json();
       if (!response.ok) {
@@ -102,7 +126,9 @@ export function ClientOnboardingTunnel({
     local.firstNameDraft,
     local.startNowDraft,
     local.unavailabilityDraft,
+    local.calendlyUrlDraft,
     local.videoConferenceDraft,
+    freeTrial,
     markCgvAccepted,
     onCompleted,
     setStep,
@@ -122,19 +148,33 @@ export function ClientOnboardingTunnel({
       <DashboardBrandHeader />
       <main className="mx-auto flex max-w-2xl flex-col px-6 py-12">
         {step === "recap" ? (
-          <ClientOnboardingRecap
-            data={data}
-            firstName={local.firstNameDraft}
-            videoConference={local.videoConferenceDraft}
-            unavailability={local.unavailabilityDraft}
-            startNow={local.startNowDraft}
-            onFirstNameChange={(value) => setFirstNameDraft(slug, value)}
-            onVideoConferenceChange={(value) => setVideoConferenceDraft(slug, value)}
-            onUnavailabilityChange={(value) => setUnavailabilityDraft(slug, value)}
-            onStartNowChange={(value) => setStartNowDraft(slug, value)}
-            onContinue={handleContinue}
-            paidConfirmed={paidConfirmed}
-          />
+          freeTrial ? (
+            <ClientOnboardingRecapFreeTrial
+              data={data}
+              firstName={local.firstNameDraft}
+              calendlyUrl={local.calendlyUrlDraft}
+              unavailability={local.unavailabilityDraft}
+              onFirstNameChange={(value) => setFirstNameDraft(slug, value)}
+              onCalendlyUrlChange={(value) => setCalendlyUrlDraft(slug, value)}
+              onUnavailabilityChange={(value) => setUnavailabilityDraft(slug, value)}
+              onContinue={handleContinue}
+              paidConfirmed={paidConfirmed}
+            />
+          ) : (
+            <ClientOnboardingRecap
+              data={data}
+              firstName={local.firstNameDraft}
+              videoConference={local.videoConferenceDraft}
+              unavailability={local.unavailabilityDraft}
+              startNow={local.startNowDraft}
+              onFirstNameChange={(value) => setFirstNameDraft(slug, value)}
+              onVideoConferenceChange={(value) => setVideoConferenceDraft(slug, value)}
+              onUnavailabilityChange={(value) => setUnavailabilityDraft(slug, value)}
+              onStartNowChange={(value) => setStartNowDraft(slug, value)}
+              onContinue={handleContinue}
+              paidConfirmed={paidConfirmed}
+            />
+          )
         ) : (
           <ClientOnboardingCgv
             data={data}
@@ -142,6 +182,7 @@ export function ClientOnboardingTunnel({
             saving={saving}
             error={error}
             onAccept={() => void handleAccept()}
+            variant={data.onboardingVariant}
           />
         )}
       </main>

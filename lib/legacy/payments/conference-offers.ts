@@ -3,7 +3,6 @@ import {
   OFFER_TYPES_CONFERENCE,
   type ConferenceOfferType,
 } from "@/lib/commercial/conference-pricing";
-import { stripeCheckoutModeForComptablePrice } from "@/lib/legacy/payments/comptable-offers";
 import {
   getConferenceCourtageMonthlyPriceId,
   getConferenceCourtagePackPriceId,
@@ -61,5 +60,5 @@ export function amountCentsForConferenceOffer(
 export function stripeCheckoutModeForConferencePrice(
   price: Pick<Stripe.Price, "type">,
 ): "subscription" | "payment" {
-  return stripeCheckoutModeForComptablePrice(price);
+  return price.type === "recurring" ? "subscription" : "payment";
 }

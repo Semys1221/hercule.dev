@@ -25,7 +25,6 @@ import {
   type ClosingCommitLevel,
   type ClosingFitLevel,
 } from "@/lib/legacy/dashboard/onboarding-faq";
-import { requestCabinetCheckoutClientSecret } from "@/lib/legacy/payments/cabinet-checkout";
 import type { DashboardClosingState, DashboardData } from "@/lib/legacy/dashboard/types";
 import { cn } from "@/lib/utils";
 
@@ -82,11 +81,8 @@ export function OnboardingComptableWizard({
   );
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryAngle, setRecoveryAngle] = useState<RecoveryPitchAngle>(1);
-  const [checkoutClientSecret, setCheckoutClientSecret] = useState<string | null>(null);
-  const [checkoutPreloadError, setCheckoutPreloadError] = useState<string | null>(null);
   const [skipLoading, setSkipLoading] = useState(false);
   const [skipError, setSkipError] = useState<string | null>(null);
-  const checkoutPreloadStartedRef = useRef(false);
   const developerModeEnabled = useSyncExternalStore(
     subscribeDashboardDeveloperModeEnabled,
     getDashboardDeveloperModeEnabledSnapshot,
@@ -129,44 +125,6 @@ export function OnboardingComptableWizard({
     },
     [persistDashboard],
   );
-
-  const preloadCheckout = useCallback(async () => {
-    if (checkoutPreloadStartedRef.current) {
-      return;
-    }
-    checkoutPreloadStartedRef.current = true;
-
-    try {
-      const checkoutAudience = data.audience === "cif" ? "cif" : "comptable";
-      const clientSecret = await requestCabinetCheckoutClientSecret(
-        checkoutAudience,
-        data.slug,
-        selectedOffer,
-      );
-      setCheckoutClientSecret(clientSecret);
-      setCheckoutPreloadError(null);
-    } catch (checkoutError) {
-      checkoutPreloadStartedRef.current = false;
-      setCheckoutPreloadError(
-        checkoutError instanceof Error ? checkoutError.message : "Paiement indisponible",
-      );
-      setCheckoutClientSecret(null);
-    }
-  }, [data.audience, data.slug, selectedOffer]);
-
-  useEffect(() => {
-    checkoutPreloadStartedRef.current = false;
-    setCheckoutClientSecret(null);
-    setCheckoutPreloadError(null);
-  }, [data.slug, selectedOffer]);
-
-  useEffect(() => {
-    if (step < 4) {
-      return;
-    }
-
-    void preloadCheckout();
-  }, [step, preloadCheckout]);
 
   const goNext = useCallback(() => {
     if (isFaqStep && faqStepComplete && closingFit) {
@@ -304,8 +262,8 @@ export function OnboardingComptableWizard({
             commitView={commitView}
             stripeRevealed={stripeRevealed}
             recoveryAngle={recoveryAngle}
-            checkoutClientSecret={checkoutClientSecret}
-            checkoutPreloadError={checkoutPreloadError}
+            checkoutClientSecret={null}
+            checkoutPreloadError={null}
             showRecovery={showRecovery}
             onTieDownChange={setTieDownAccepted}
             onClosingFitChange={setClosingFit}

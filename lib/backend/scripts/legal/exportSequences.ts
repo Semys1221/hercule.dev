@@ -1,5 +1,7 @@
 /**
- * Export Supabase sequence templates to app/(marketing)/content/legal-documentation/{niche}/sequences/*.md
+ * Export sequence templates.
+ * Resend booking copies land in lib/(resend)/sequences/content/{niche}/{slug}.md.
+ * Instantly / bypass / reply-agent stay under legal-documentation.
  *
  * Usage:
  *   pnpm sequences:export

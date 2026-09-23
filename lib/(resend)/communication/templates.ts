@@ -601,11 +601,11 @@ Béatrice Meyer`,
     subject: "Votre premier rendez-vous visio — offert",
     body: `{{firstNameLine}}
 
-Afin de rendre votre décision plus simple, nous allons vous offrir ce qu'aucun service d'acquisition ne fait : votre premier rendez-vous visio sous 7 jours est gratuit.
+Afin de rendre votre décision plus simple, nous vous offrons ce qu'aucun service d'acquisition ne fait : votre premier rendez-vous visio sous 7 jours est gratuit.
 
-Nous sommes confiants de la qualité — à l'issue, vous renouvellerez pour travailler avec nous.
+Essai DEC 14 jours : carte enregistrée, 0 € aujourd'hui, un rendez-vous restaurant qualifié, puis 1 499 €/mois pour 10 rendez-vous si vous poursuivez.
 
-Démarrez votre essai gratuit 14 jours (puis 1 499 €/mois) :
+Voir la proposition et démarrer l'essai :
 {{checkoutTrialLink}}
 
 Béatrice Meyer`,
@@ -616,7 +616,7 @@ Béatrice Meyer`,
 
 Petit rappel : votre premier rendez-vous visio sous 7 jours est offert pour simplifier votre décision.
 
-Essai 14 jours gratuits, puis 1 499 €/mois. Si vous n'êtes pas convaincu, vous arrêtez.
+Essai 14 jours gratuits (0 €), puis 1 499 €/mois. Vous pouvez arrêter avant la fin de l'essai.
 
 Activer l'essai :
 {{checkoutTrialLink}}
@@ -629,7 +629,7 @@ Béatrice Meyer`,
 
 Dernière relance : démarrez l'essai gratuit de 14 jours. Votre premier rendez-vous visio est offert sous 7 jours.
 
-Ensuite : 1 499 €/mois. Sans engagement au-delà de l'essai — vous pouvez arrêter.
+Ensuite : 1 499 €/mois. Sans engagement au-delà de l'essai — vous pouvez arrêter depuis le portail de facturation.
 
 {{checkoutTrialLink}}
 
@@ -639,9 +639,9 @@ Béatrice Meyer`,
     subject: "Votre essai a commencé",
     body: `{{firstNameLine}}
 
-Votre essai a commencé. Votre premier rendez-vous sera livré sous 14 jours.
+Votre essai de 14 jours a commencé. Votre premier rendez-vous sera livré pendant cette période.
 
-Si vous souhaitez vous désabonner ou ne pas renouveler, cliquez ici :
+Rappel : 0 € aujourd'hui. Si vous ne souhaitez pas poursuivre, annulez avant la fin des 14 jours :
 {{billingPortalLink}}
 
 Tableau de bord : {{dashboardLink}}

@@ -6,6 +6,18 @@ export type CreditField = "rdv_used" | "rdv_total";
 export type EnginClientRow = ClientRow & {
   rrSharePct: number;
   eligibility: RoundRobinEligibilityReason;
+  hasSucceededPayment: boolean;
+  needsOps: boolean;
+};
+
+export type ClientOpsTask = {
+  id: string;
+  client_id: string;
+  title: string;
+  due_at: string | null;
+  status: "open" | "done";
+  done_at: string | null;
+  created_at: string;
 };
 
 export type OnboardingStepStatus = {

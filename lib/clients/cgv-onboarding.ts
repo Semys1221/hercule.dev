@@ -4,7 +4,11 @@ import type {
 } from "@/lib/commercial/conference-pricing";
 import { CONFERENCE_CLIENT_TYPES } from "@/lib/commercial/conference-pricing";
 
+import { CLIENT_CGV_FREE_TRIAL_VERSION } from "@/lib/clients/dec-free-trial";
+
 export const CLIENT_CGV_VERSION = "2026-09-23";
+
+export { CLIENT_CGV_FREE_TRIAL_VERSION };
 
 export function guaranteeMonthsLabel(billing: ConferenceBilling): string {
   return billing === "monthly" ? "1 mois" : "3 mois";
@@ -62,6 +66,27 @@ export function clientCgvHighlights(params: {
   });
 
   return items;
+}
+
+export function clientFreeTrialCgvHighlights(): Array<{ title: string; body: string }> {
+  return [
+    {
+      title: "Essai de 14 jours",
+      body: "Vous recevez un rendez-vous avec un restaurant en problématique de rentabilité. Si vous poursuivez, l'abonnement passe à 1 499 €/mois pour 10 rendez-vous, sans action de votre part tant que l'abonnement n'est pas annulé.",
+    },
+    {
+      title: "Votre agenda",
+      body: "Pendant l'essai, Hercule n'ouvre pas de siège Calendly Pro ni Zoom Pro. Vous indiquez le lien Calendly qui porte déjà votre visioconférence.",
+    },
+    {
+      title: "Votre filtre",
+      body: "Restaurants indépendants, au moins 3 salariés, BIC. Le budget cible des honoraires est d'au moins 300 € — qualification opérée par Hercule.",
+    },
+    {
+      title: "Fin d'essai",
+      body: "Sans poursuite, l'accès à l'espace client s'arrête. Il n'y a pas de délai de rétractation de 4 jours sur l'essai : le montant dû à J+14 est celui de l'abonnement si vous ne l'avez pas annulé avant.",
+    },
+  ];
 }
 
 /** Plain-text CGV body for the onboarding scroll (canon 2026-09-23). */
@@ -176,3 +201,36 @@ Droit français. Tribunaux du ressort du siège.
 Traitement RGPD — contact@hercule.dev — politique de confidentialité.
 
 Document complet : hercule.dev/cvg`;
+
+export const CLIENT_CGV_FREE_TRIAL_BODY = `Conditions de l'essai gratuit DEC — Hercule
+Version : ${CLIENT_CGV_FREE_TRIAL_VERSION}
+Prestataire : Hercule — groupement d'entrepreneurs dirigé par Evan Sinclair
+Contact : contact@hercule.dev
+
+Les présentes conditions s'appliquent uniquement à l'essai gratuit Hercule Mercantile (DEC). Elles prévalent, pour la durée de l'essai, sur les CGV partenaires complètes.
+
+1. Objet
+
+Hercule met à disposition un essai de 14 jours : un rendez-vous qualifié avec un dirigeant de restaurant en problématique de rentabilité. Le budget cible des honoraires est d'au moins 300 €. Cette qualification est opérée par Hercule ; elle ne constitue pas une garantie de signature.
+
+2. Prix
+
+0 € pendant 14 jours, carte bancaire enregistrée via Stripe.
+À l'issue, sauf annulation avant la fin de l'essai : 1 499 €/mois, 10 rendez-vous qualifiés par mois.
+Le rendez-vous de l'essai ne consomme pas le quota du premier mois payant.
+
+3. Agenda
+
+Pendant l'essai, le Client fournit un lien Calendly déjà relié à une visioconférence. Hercule ne provisionne pas Calendly Pro ni Zoom Pro avant la conversion.
+
+4. Rétractation
+
+Client professionnel. Le délai commercial de 4 jours applicable aux formules payantes ne s'applique pas à cet essai. L'annulation se fait depuis le portail Stripe avant la fin des 14 jours. Passé ce délai, la mensualité de 1 499 € est due.
+
+5. Fin d'accès
+
+Si l'abonnement est annulé pendant l'essai, l'espace client devient inaccessible.
+
+6. Données
+
+Droit français. Contact : contact@hercule.dev.`;

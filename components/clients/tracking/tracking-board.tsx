@@ -70,10 +70,12 @@ export function TrackingBoard({ data, onRefresh }: TrackingBoardProps) {
         appointments: data.appointments.filter((appointment) => appointment.status === "scheduled"),
         slug: data.slug,
         now,
+        calendarConnected: data.calendarConnected,
       }),
     [
       appointmentKey,
       data.appointments,
+      data.calendarConnected,
       data.clientType,
       data.offerType,
       data.rdvTotal,

@@ -4,8 +4,10 @@ import { CONFERENCE_CLIENT_TYPES, type ConferenceClientType } from "@/lib/commer
 import { computeRetractionEndsAt } from "@/lib/legacy/retraction/dates";
 import { syncProfileRetraction } from "@/lib/legacy/retraction/profile-sync";
 
-import { notifyOnboardingAnswers } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
+import { notifyOnboardingAnswers, notifyDecFreeTrialOnboarding } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
 
+import { CALENDAR_CONNECTED_PROFILE_KEY } from "./dashboard-connections";
+import { PRODUCT_STATUT_FREE_TRIAL } from "./dec-free-trial";
 import type { ClientVideoConference } from "./video-conference";
 import type { ClientRow } from "./types";
 
@@ -15,6 +17,65 @@ function retractionAppliesToClient(clientType: ConferenceClientType): boolean {
     clientType === CONFERENCE_CLIENT_TYPES.cif ||
     clientType === CONFERENCE_CLIENT_TYPES.ias
   );
+}
+
+export function buildDecFreeTrialOnboardingPatch(params: {
+  row: ClientRow;
+  firstName: string;
+  calendlySchedulingUrl: string;
+  unavailability: string;
+  cgvVersion: string;
+  completedAt?: string;
+}): Record<string, unknown> {
+  const completedAt = params.completedAt ?? new Date().toISOString();
+  const profile = { ...(params.row.profile ?? {}) };
+  profile.cgv_accepted_version = params.cgvVersion;
+  profile.cgv_accepted_at = completedAt;
+  profile.unavailability = params.unavailability.trim();
+  profile[CALENDAR_CONNECTED_PROFILE_KEY] = true;
+
+  return {
+    first_name: params.firstName.trim(),
+    profile,
+    onboarding_completed_at: completedAt,
+    product_statut: PRODUCT_STATUT_FREE_TRIAL,
+    calendly_scheduling_url: params.calendlySchedulingUrl.trim(),
+    retraction_status: null,
+    retraction_ends_at: null,
+    retraction_waived_at: null,
+  };
+}
+
+export async function completeDecFreeTrialOnboarding(params: {
+  client: SupabaseClient;
+  row: ClientRow;
+  firstName: string;
+  calendlySchedulingUrl: string;
+  unavailability: string;
+  cgvVersion: string;
+}): Promise<void> {
+  const completedAt = new Date().toISOString();
+  const patch = buildDecFreeTrialOnboardingPatch({ ...params, completedAt });
+
+  const { error } = await params.client.from("clients").update(patch).eq("id", params.row.id);
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const updatedRow: ClientRow = {
+    ...params.row,
+    first_name: params.firstName.trim(),
+    profile: patch.profile as ClientRow["profile"],
+    onboarding_completed_at: completedAt,
+    product_statut: PRODUCT_STATUT_FREE_TRIAL,
+    calendly_scheduling_url: params.calendlySchedulingUrl.trim(),
+  };
+
+  await notifyDecFreeTrialOnboarding({
+    client: updatedRow,
+    calendlySchedulingUrl: params.calendlySchedulingUrl.trim(),
+    unavailability: params.unavailability.trim(),
+  });
 }
 
 export async function completeClientOnboarding(params: {

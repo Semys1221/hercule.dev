@@ -1,7 +1,8 @@
 import { formatSliderLabel } from "@/components/legacy/internal/funnels/sales/sales-questions";
 import type { SalesQualificationValues } from "@/lib/legacy/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/legacy/admin/navigation";
-import { COMPTABLE_ACQUISITION_STRIPE_PAYMENT_LINK_URL } from "@/lib/legacy/payments/comptable-acquisition-offers";
+import { OFFER_TYPES_CONFERENCE } from "@/lib/commercial/conference-pricing";
+import { CONFERENCE_PAYMENT_LINK_URLS } from "@/lib/legacy/payments/conference-payment-links";
 
 export const SLIDERS_SECTION_SUBTITLE =
   "Présentation share-screen — props ouvertes plein écran.";
@@ -112,41 +113,55 @@ export const SLIDERS_OFFER_HORIZON_BULLETS = [
   "10 RDV garantis sur 90 j",
 ] as const;
 
-/** Liens Stripe Payment Link — référence closer (non attribués client). */
+/** Liens Stripe Payment Link conférence — référence closer (inscription avec client_reference_id côté produit). */
 export const SLIDERS_STRIPE_PAYMENT_LINKS = [
   {
-    id: "lite",
-    name: "Hercule Lite",
-    offerType: "starter_999_5",
-    amountLabel: "1 700 €/mois",
+    id: "dec_monthly",
+    name: "DEC — 1 mois",
+    offerType: OFFER_TYPES_CONFERENCE.decMonthly,
+    amountLabel: "1 499 €/mois",
     mode: "Abonnement",
-    url: "https://buy.stripe.com/eVqfZg74x1mR4Ddacg3Je0i",
+    url: CONFERENCE_PAYMENT_LINK_URLS[OFFER_TYPES_CONFERENCE.decMonthly],
   },
   {
-    id: "starter",
-    name: "Hercule Starter",
-    offerType: "monthly_1499",
-    amountLabel: "2 000 €/mois",
-    mode: "Abonnement",
-    url: "https://buy.stripe.com/7sYeVcbkN3uZ6Ll2JO3Je0j",
-  },
-  {
-    id: "pack3",
-    name: "Pack 3 mois Starter",
-    offerType: "pack_3x1499",
-    amountLabel: "5 277,60 €",
+    id: "dec_pack",
+    name: "DEC — Pack 3 mois",
+    offerType: OFFER_TYPES_CONFERENCE.decPack,
+    amountLabel: "3 000 €",
     mode: "One-shot",
-    url: "https://buy.stripe.com/28E5kCagJghL3z9acg3Je0k",
+    url: CONFERENCE_PAYMENT_LINK_URLS[OFFER_TYPES_CONFERENCE.decPack],
   },
   {
-    id: "acquisition1489",
-    name: "Acquisition 1 mois",
-    offerType: "comptable_acquisition_1489_1m",
-    amountLabel: "1 489 €/mois",
+    id: "cif_monthly",
+    name: "CIF — 1 mois",
+    offerType: OFFER_TYPES_CONFERENCE.cifMonthly,
+    amountLabel: "1 800 €/mois",
     mode: "Abonnement",
-    url:
-      process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_COMPTABLE_ACQUISITION_1489?.trim() ??
-      COMPTABLE_ACQUISITION_STRIPE_PAYMENT_LINK_URL,
+    url: CONFERENCE_PAYMENT_LINK_URLS[OFFER_TYPES_CONFERENCE.cifMonthly],
+  },
+  {
+    id: "cif_pack",
+    name: "CIF — Pack 3 mois",
+    offerType: OFFER_TYPES_CONFERENCE.cifPack,
+    amountLabel: "3 900 €",
+    mode: "One-shot",
+    url: CONFERENCE_PAYMENT_LINK_URLS[OFFER_TYPES_CONFERENCE.cifPack],
+  },
+  {
+    id: "ias_monthly",
+    name: "IAS — 1 mois",
+    offerType: OFFER_TYPES_CONFERENCE.iasMonthly,
+    amountLabel: "1 800 €/mois",
+    mode: "Abonnement",
+    url: CONFERENCE_PAYMENT_LINK_URLS[OFFER_TYPES_CONFERENCE.iasMonthly],
+  },
+  {
+    id: "ias_pack",
+    name: "IAS — Pack 3 mois",
+    offerType: OFFER_TYPES_CONFERENCE.iasPack,
+    amountLabel: "3 900 €",
+    mode: "One-shot",
+    url: CONFERENCE_PAYMENT_LINK_URLS[OFFER_TYPES_CONFERENCE.iasPack],
   },
 ] as const;
 

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { sendBookingEmail } from "@/lib/(resend)/communication/send";
+import { renderNotification } from "@/lib/(resend)/notifications/file-io";
 
 import type { CreditField } from "@/lib/clients/engin-types";
 import { HERCULE_OPS_EMAIL, isCheckoutPlaceholderEmail } from "@/lib/clients/ops";
@@ -81,25 +82,22 @@ export async function adjustClientCredits(params: {
   const signedDelta = params.delta > 0 ? `+${params.delta}` : String(params.delta);
   const stamp = new Date().toISOString();
 
-  const opsSubject = `[Crédits] ${fieldLabel} ajustés — ${displayName}`;
-  const opsText = [
-    "Ajustement manuel des crédits client conférence.",
-    "",
-    `Nom : ${displayName}`,
-    `Email : ${updated.email}`,
-    `Slug : ${updated.slug}`,
-    `Champ : ${fieldLabel}`,
-    `Delta : ${signedDelta}`,
-    `Avant : ${previousUsed} / ${previousTotal}`,
-    `Après : ${nextUsed} / ${nextTotal}`,
-    ...(params.reason?.trim() ? [`Motif : ${params.reason.trim()}`] : []),
-    `Dashboard : ${dashboardLink}`,
-  ].join("\n");
+  const opsEmail = renderNotification("credits-adjusted-ops", {
+    fieldLabel,
+    displayName,
+    email: updated.email,
+    slug: updated.slug,
+    signedDelta,
+    before: `${previousUsed} / ${previousTotal}`,
+    after: `${nextUsed} / ${nextTotal}`,
+    reasonLine: params.reason?.trim() ? `Motif : ${params.reason.trim()}\n` : "",
+    dashboardLink,
+  });
 
   const opsResult = await sendBookingEmail({
     to: HERCULE_OPS_EMAIL,
-    subject: opsSubject,
-    text: opsText,
+    subject: opsEmail.subject,
+    text: opsEmail.text,
     idempotencyKey: `engin-credits-ops:${updated.id}:${params.field}:${stamp}`,
   });
   if (!opsResult.ok) {
@@ -108,23 +106,16 @@ export async function adjustClientCredits(params: {
 
   if (!isCheckoutPlaceholderEmail(updated.email)) {
     const remaining = Math.max(0, nextTotal - nextUsed);
-    const clientSubject = "Mise à jour de vos crédits rendez-vous";
-    const clientText = [
-      updated.first_name ? `Bonjour ${updated.first_name},` : "Bonjour,",
-      "",
-      "Votre solde de crédits rendez-vous a été mis à jour par notre équipe.",
-      "",
-      `Solde : ${nextUsed} utilisés / ${nextTotal} au total (${remaining} restants).`,
-      "",
-      `Suivre votre livraison : ${dashboardLink}`,
-      "",
-      "L'équipe Hercule",
-    ].join("\n");
+    const clientEmail = renderNotification("credits-adjusted-client", {
+      greeting: updated.first_name ? `Bonjour ${updated.first_name},` : "Bonjour,",
+      balance: `${nextUsed} utilisés / ${nextTotal} au total (${remaining} restants).`,
+      dashboardLink,
+    });
 
     const clientResult = await sendBookingEmail({
       to: updated.email,
-      subject: clientSubject,
-      text: clientText,
+      subject: clientEmail.subject,
+      text: clientEmail.text,
       idempotencyKey: `engin-credits-client:${updated.id}:${params.field}:${stamp}`,
     });
     if (!clientResult.ok) {

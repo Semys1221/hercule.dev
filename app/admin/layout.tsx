@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { EnginAdminChrome } from "@/components/engin/engin-admin-chrome";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function EnginLayout({
 }>) {
   return (
     <div className="internal min-h-screen bg-background text-foreground">
-      {children}
+      <EnginAdminChrome>{children}</EnginAdminChrome>
       <Toaster />
     </div>
   );

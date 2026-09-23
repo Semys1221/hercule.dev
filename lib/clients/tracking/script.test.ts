@@ -78,6 +78,7 @@ function input(partial: Partial<TrackingScriptInput> = {}): TrackingScriptInput 
     appointments: [],
     slug: "QxzohL",
     now: parisInstant("2026-10-20", "12:00"),
+    calendarConnected: true,
     ...partial,
   };
 }
@@ -128,6 +129,19 @@ assert.equal(
 
 const late = buildTrackingScript(input());
 const again = buildTrackingScript(input());
+const calendlyPending = buildTrackingScript(
+  input({ calendarConnected: false, now: parisInstant("2026-09-14", "10:00") }),
+);
+assert.equal(
+  calendlyPending.scans.some((scan) => scan.situation.includes("Agendas Calendly liés")),
+  false,
+);
+assert.ok(
+  calendlyPending.scans.some((scan) =>
+    scan.situation.includes("Liaison agenda Calendly en cours"),
+  ),
+);
+assert.match(calendlyPending.heroDetail, /liaison de votre agenda Calendly/);
 assert.ok(late.deliveryAt);
 assert.equal(late.deliveryAt?.toISOString(), again.deliveryAt?.toISOString());
 assert.equal(trackingDayOffset("QxzohL"), TRACKING_FIRST_RDV_DAYS);

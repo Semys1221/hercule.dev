@@ -8,6 +8,7 @@ import {
   startPaymentOnboardingSequence,
 } from "@/lib/(resend)/onboarding";
 import { sendBookingEmail } from "@/lib/(resend)/communication/send";
+import { renderNotification } from "@/lib/(resend)/notifications/file-io";
 
 export async function scheduleConferenceEmailSequence(params: {
   clientType: ConferenceClientType;
@@ -49,18 +50,13 @@ export async function scheduleConferenceEmailSequence(params: {
     }
   }
 
+  const welcome = renderNotification("conference-welcome-fallback", {
+    dashboardLink,
+  });
   await sendBookingEmail({
     to: recipientEmail,
-    subject: "Bienvenue chez Hercule — votre espace client est prêt",
-    text: [
-      "Bonjour,",
-      "",
-      "Votre paiement est confirmé. Vous recevrez une invitation Calendly pour connecter votre agenda.",
-      "",
-      `Suivez votre livraison ici : ${dashboardLink}`,
-      "",
-      "L'équipe Hercule",
-    ].join("\n"),
+    subject: welcome.subject,
+    text: welcome.text,
     idempotencyKey: `conference:welcome:${params.clientId}:${params.stripeCheckoutSessionId}`,
   });
 }

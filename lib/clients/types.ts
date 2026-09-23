@@ -14,6 +14,23 @@ export type ClientMode =
   | "client_onboarding"
   | "client_active";
 
+export type ClientOfferType = ConferenceOfferType | "monthly_1499_trial";
+
+export type ClientOnboardingVariant = "standard" | "dec_free_trial";
+
+export const CLIENT_PRODUCT_STATUTS = [
+  "NONE",
+  "PAID_PENDING_ONBOARDING",
+  "FREE_TRIAL_PENDING_ONBOARDING",
+  "FREE_TRIAL",
+  "ONBOARDED",
+  "IN_DELIVERANCE",
+  "ARCHIVED",
+  "CANCELLED",
+] as const;
+
+export type ClientProductStatut = (typeof CLIENT_PRODUCT_STATUTS)[number];
+
 export type ClientRow = {
   id: string;
   email: string;
@@ -22,7 +39,7 @@ export type ClientRow = {
   client_type: ConferenceClientType;
   secondary_vertical: "ias" | null;
   billing: ConferenceBilling;
-  offer_type: ConferenceOfferType;
+  offer_type: ClientOfferType;
   rdv_total: number;
   rdv_used: number;
   first_lead_at: string;
@@ -30,7 +47,10 @@ export type ClientRow = {
   calendly_event_type_uri: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
-  product_statut: string;
+  renewal_choice: "continue" | "pause" | null;
+  renewal_choice_at: string | null;
+  renewal_prompt_closed_at: string | null;
+  product_statut: ClientProductStatut;
   onboarding_completed_at: string | null;
   retraction_status: string | null;
   retraction_ends_at: string | null;
@@ -59,7 +79,9 @@ export type ClientDashboardData = {
   secondaryVertical: "ias" | null;
   clientMode: ClientMode;
   isPaid: boolean;
-  offerType: ConferenceOfferType;
+  offerType: ClientOfferType;
+  onboardingVariant: ClientOnboardingVariant;
+  calendlySchedulingUrl: string | null;
   billing: ConferenceBilling;
   rdvTotal: number;
   rdvUsed: number;
@@ -77,4 +99,10 @@ export type ClientDashboardData = {
   dashboardTitle: string;
   dashboardDescription: string;
   videoConference: ClientVideoConference | null;
+  monthlyRenewalAnnouncement: {
+    show: boolean;
+    periodEnd: string;
+    rdvRemaining: number;
+    volumeEndLabel: string;
+  } | null;
 };
