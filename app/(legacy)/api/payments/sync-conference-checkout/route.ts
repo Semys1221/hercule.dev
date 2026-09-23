@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { syncDecTrialCheckoutSession } from "@/lib/legacy/payments/dec-trial-checkout-session";
 import { syncConferenceCheckoutSession } from "@/lib/legacy/payments/sync-conference-checkout";
 
 const bodySchema = z.object({
@@ -21,8 +22,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await syncConferenceCheckoutSession(parsed.data.sessionId);
-    return NextResponse.json(result);
+    const conferenceResult = await syncConferenceCheckoutSession(parsed.data.sessionId);
+    if (conferenceResult.synced) {
+      return NextResponse.json(conferenceResult);
+    }
+    const decTrialResult = await syncDecTrialCheckoutSession(parsed.data.sessionId);
+    return NextResponse.json(decTrialResult);
   } catch (error) {
     const message = error instanceof Error ? error.message : "sync failed";
     console.error("[payments/sync-conference-checkout]", message);

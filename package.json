@@ -17,6 +17,7 @@
     "apply-crm-booking-communication-migration": "tsx --env-file=.env ./lib/backend/scripts/crm/applyCrmBookingCommunicationMigration.ts",
     "apply-bookings-patch-migrations": "tsx --env-file=.env ./lib/backend/scripts/crm/applyBookingsPatchMigrations.ts",
     "apply-deliverability-settings-migration": "tsx --env-file=.env ./lib/backend/scripts/crm/applyDeliverabilitySettingsMigration.ts",
+    "apply-client-inbox-gmail-migration": "tsx --env-file=.env ./lib/backend/scripts/crm/applyClientInboxGmailMigration.ts",
     "apply-retraction-waiver-migration": "tsx --env-file=.env ./lib/backend/scripts/crm/applyRetractionWaiverMigration.ts",
     "apply-booking-email-threading-migration": "tsx --env-file=.env ./lib/backend/scripts/crm/applyBookingEmailThreadingMigration.ts",
     "apply-calendly-meeting-links-migration": "tsx --env-file=.env ./lib/backend/scripts/crm/applyCalendlyMeetingLinksMigration.ts",

@@ -17,6 +17,11 @@ export const DEC_FREE_TRIAL_CONVERTED_RDV_TOTAL = 10;
 
 export const CLIENT_CGV_FREE_TRIAL_VERSION = "2026-09-23-ft";
 
+/** Stripe Checkout embedded — libellés FR (évite le produit live « Try Hercule DEC »). */
+export const DEC_TRIAL_CHECKOUT_PRODUCT_NAME = "Hercule DEC";
+export const DEC_TRIAL_CHECKOUT_PRODUCT_DESCRIPTION =
+  "Programme d'acquisition de clientèle pour cabinets d'expertise comptable : rendez-vous qualifiés avec des dirigeants de restaurants indépendants, en visioconférence. 0 % de commission sur les honoraires signés.";
+
 const FREE_TRIAL_STATUTS = new Set<string>([
   PRODUCT_STATUT_FREE_TRIAL_PENDING,
   PRODUCT_STATUT_FREE_TRIAL,

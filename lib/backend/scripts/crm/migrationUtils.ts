@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 const DEFAULT_PROJECT_REF = "sgituxpzobtucbsmwsmr";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.join(SCRIPT_DIR, "../../..");
+const REPO_ROOT = path.join(SCRIPT_DIR, "../../../..");
 const MIGRATIONS_DIR = path.join(REPO_ROOT, "lib/backend/supabase/migrations");
 
 export function loadEnvFiles(): void {

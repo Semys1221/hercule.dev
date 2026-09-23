@@ -154,6 +154,12 @@ html {
   --sidebar-ring: #6b6560;
 }
 
+/* Stripe embedded checkout on proposition — flush with conference page background */
+.conference .dec-trial-checkout [class*="EmbeddedCheckout"],
+.conference .dec-trial-checkout iframe {
+  background-color: var(--background) !important;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

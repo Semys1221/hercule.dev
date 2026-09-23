@@ -220,11 +220,23 @@ export function getConferenceCourtagePackPriceId(): string {
   );
 }
 
+/** Matches `.conference { --background }` in app/globals.css — proposition / conférence marketing. */
+export const CONFERENCE_SURFACE_BACKGROUND = "#f4f1eb";
+
 /** Overrides legacy account business_profile.name (e.g. Montis Media) on embedded Checkout. */
 export function getCheckoutBrandingSettings(): Stripe.Checkout.SessionCreateParams.BrandingSettings {
   return {
     display_name: LEGAL_ENTITY.commercialName,
     background_color: "#fffcf8",
+    button_color: "#1a1a1a",
+  };
+}
+
+/** Embedded checkout on `.conference` pages — same background as the page, not card ivory. */
+export function getConferenceCheckoutBrandingSettings(): Stripe.Checkout.SessionCreateParams.BrandingSettings {
+  return {
+    display_name: LEGAL_ENTITY.commercialName,
+    background_color: CONFERENCE_SURFACE_BACKGROUND,
     button_color: "#1a1a1a",
   };
 }

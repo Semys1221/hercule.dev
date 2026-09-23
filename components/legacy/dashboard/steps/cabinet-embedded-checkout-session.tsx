@@ -17,6 +17,8 @@ type CabinetEmbeddedCheckoutSessionProps = {
   providerOptions:
     | { clientSecret: string }
     | { fetchClientSecret: () => Promise<string> };
+  showPoweredBy?: boolean;
+  className?: string;
 };
 
 export function CabinetEmbeddedCheckoutSession({
@@ -26,11 +28,13 @@ export function CabinetEmbeddedCheckoutSession({
   error,
   canRenderCheckout,
   providerOptions,
+  showPoweredBy = true,
+  className,
 }: CabinetEmbeddedCheckoutSessionProps) {
   const displayError = error ?? stripeConfigError;
 
   return (
-    <div className="space-y-3">
+    <div className={className ?? "space-y-3"}>
       {displayError ? (
         <p className="text-sm text-destructive">{displayError}</p>
       ) : null}
@@ -44,9 +48,11 @@ export function CabinetEmbeddedCheckoutSession({
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
       ) : null}
-      <p className="text-center text-[11px] text-muted-foreground/50">
-        Powered by Stripe
-      </p>
+      {showPoweredBy ? (
+        <p className="text-center text-[11px] text-muted-foreground/50">
+          Powered by Stripe
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -3,12 +3,14 @@ import Stripe from "stripe";
 
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import { resolveConferenceCheckoutSession } from "@/lib/legacy/payments/conference-checkout-session";
+import { resolveDecTrialCheckoutSession } from "@/lib/legacy/payments/dec-trial-checkout-session";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/legacy/payments/stripe";
 import {
   handleConferenceCheckoutCompleted,
   handleConferenceInvoicePaid,
   handleConferenceSubscriptionDeleted,
 } from "@/lib/legacy/payments/stripe-webhook-conference";
+import { handleDecFreeTrialCheckoutCompleted } from "@/lib/legacy/payments/stripe-webhook-dec-trial";
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -50,6 +52,18 @@ export async function POST(request: Request) {
         );
         if (handled) {
           return NextResponse.json({ ok: true, product: "conference" });
+        }
+      }
+
+      const decTrialSession = await resolveDecTrialCheckoutSession(client, session);
+      if (decTrialSession) {
+        const handled = await handleDecFreeTrialCheckoutCompleted(
+          client,
+          decTrialSession,
+          event.id,
+        );
+        if (handled) {
+          return NextResponse.json({ ok: true, product: "dec_free_trial" });
         }
       }
 
