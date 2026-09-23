@@ -1,0 +1,11 @@
+{
+  "name": "hercule.dev",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "next-dev",
+      "command": "corepack pnpm dev"
+    }
+  ],
+  "ports": [3000]
+}

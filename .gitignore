@@ -76,3 +76,6 @@ lib/backend/tmp/unibox_export/
 lib/backend/tmp/
 
 .env*
+
+# Python virtualenv (Cloud Agent env-setup)
+.venv/
