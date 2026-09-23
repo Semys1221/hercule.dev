@@ -9,11 +9,12 @@ import { SceneLabel } from "../shared/SceneLabel";
 import { SceneShell } from "../shared/SceneShell";
 
 /**
- * S01 — Introduction  (steps 0-2)
+ * S01 — Introduction  (steps 0-3)
  *
  * 0 – Carte vide
  * 1 – Trois marchés
  * 2 – Evan / HERCULE.DEV
+ * 3 – Cabinet
  */
 export function S01_Intro({ step }: SceneProps) {
   return (
@@ -68,6 +69,18 @@ export function S01_Intro({ step }: SceneProps) {
             </div>
             <SceneLabel size="lg" animate={false}>HERCULE.DEV</SceneLabel>
             <p className="text-sm text-zinc-700">Fondateur</p>
+          </motion.div>
+        )}
+
+        {step === 3 && (
+          <motion.div
+            key="b07"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.45 }}
+            className="flex flex-col items-center gap-3 rounded border border-zinc-700/50 px-5 py-4"
+          >
+            <SceneLabel size="xs" animate={false}>Cabinet</SceneLabel>
+            <Person size={28} highlighted={false} />
           </motion.div>
         )}
 

@@ -119,6 +119,7 @@ export const SCRIPTS: NicheScript[] = [
       },
     ],
     verdict: "Prospect qualifié : trésorerie ≥ 50 k€ + besoin d’assurance identifié.",
+    stamp: "Solvabilité & Intérêt",
   },
   {
     niche: "CIF",
@@ -161,6 +162,7 @@ export const SCRIPTS: NicheScript[] = [
       },
     ],
     verdict: "Prospect qualifié : trésorerie ≥ 50 k€ + leviers identifiés.",
+    stamp: "Solvabilité & Intérêt",
   },
 ];
 
@@ -175,7 +177,7 @@ export const S09_QUAL_END = S09_QUAL_START + S09_QUAL_BEAT_COUNT - 1;
 /** Logo after all three chats. */
 export const S09_LOGO_STEP = S09_QUAL_END + 1;
 
-/** Lockup + Courtage tagline, immediately after the logo beat. */
+/** Courtage tagline fades in on the same lockup, then the client proofs. */
 export const S09_COURTAGE_STEP = S09_LOGO_STEP + 1;
 
 /** Total S09 steps (0-indexed count). */

@@ -1,0 +1,32 @@
+{
+  "featured": {
+    "brokerage": {
+      "slug": "",
+      "situation": "Cabinet indépendant. Activité IAS et CIF.",
+      "action": "Un flux de profils qualifiés arrive dans l’agenda.",
+      "resultLine": "En 90 jours : 42 rendez-vous, 54 % de conversion, 2 500 € de chiffre d’affaires moyen par profil."
+    },
+    "accounting": {
+      "slug": "",
+      "situation": "Cabinet d’expertise comptable indépendant.",
+      "action": "Des rendez-vous qualifiés, chaque mois.",
+      "resultLine": "9 000 € de chiffre d’affaires cumulé sur 3 mois."
+    }
+  },
+  "metrics": {
+    "brokerage": {
+      "days": 90,
+      "meetings": 42,
+      "conversionPct": 54,
+      "avgRevenueEur": 2500
+    },
+    "accounting": {
+      "monthProfiles": [11, 13, 13],
+      "conversionPct": 63,
+      "ticketMinEur": 300,
+      "ticketMaxEur": 450,
+      "cumulativeRevenueEur": 9000
+    }
+  },
+  "firms": []
+}

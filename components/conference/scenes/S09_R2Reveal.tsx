@@ -224,7 +224,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
           </motion.div>
         )}
 
-        {step === S09_LOGO_STEP && (
+        {(step === S09_LOGO_STEP || step === S09_COURTAGE_STEP) && (
           <motion.div
             key="r2-lockup"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -233,19 +233,15 @@ export function S09_R2Reveal({ step }: SceneProps) {
             className="flex flex-col items-center gap-10"
           >
             <R2Lockup />
-          </motion.div>
-        )}
-
-        {step === S09_COURTAGE_STEP && (
-          <motion.div
-            key="r2-courtage"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            data-stage-bare=""
-            className="flex flex-col items-center gap-10"
-          >
-            <R2Lockup />
-            <CourtageTagline />
+            {step === S09_COURTAGE_STEP ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6 }}
+              >
+                <CourtageTagline />
+              </motion.div>
+            ) : null}
           </motion.div>
         )}
 

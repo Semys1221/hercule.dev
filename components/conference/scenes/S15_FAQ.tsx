@@ -27,10 +27,10 @@ const FAQ_ITEMS: FaqItem[] = [
     ],
   },
   {
-    question: "Est-ce que le client voit mon entreprise ?",
+    question: "Est-ce que je peux changer les questions posées ?",
     answer: [
-      "Non avant la dernière étape",
-      "Hercule visible pendant tout le processus",
+      "Oui, vous pouvez changer les questions",
+      "Objectif : une qualification selon vos critères",
     ],
   },
   {
@@ -53,15 +53,21 @@ const FAQ_ITEMS: FaqItem[] = [
   },
 ];
 
+/** Secondary beat, right after the monthly payment answer. */
+const RETRACTION_STEP = 5;
+
 /**
- * S15 — FAQ  (steps 0-10, beats 84-94)
+ * S15 — FAQ
  * Intro, puis chaque question suivie d’une slide réponse en puces.
+ * Un beat secondaire de rétractation suit les options de paiement.
  */
 export function S15_FAQ({ step }: SceneProps) {
   const isIntro = step === 0;
-  const isQuestion = step > 0 && step % 2 === 1;
-  const isAnswer = step > 0 && step % 2 === 0;
-  const itemIndex = isQuestion ? (step - 1) / 2 : isAnswer ? (step - 2) / 2 : -1;
+  const isRetraction = step === RETRACTION_STEP;
+  const shifted = step > RETRACTION_STEP ? step - 1 : step;
+  const isQuestion = !isIntro && !isRetraction && shifted % 2 === 1;
+  const isAnswer = !isIntro && !isRetraction && shifted % 2 === 0;
+  const itemIndex = isQuestion ? (shifted - 1) / 2 : isAnswer ? (shifted - 2) / 2 : -1;
   const item = itemIndex >= 0 ? FAQ_ITEMS[itemIndex] : null;
 
   return (
@@ -78,6 +84,10 @@ export function S15_FAQ({ step }: SceneProps) {
           {isIntro ? (
             <p className="text-3xl font-light tracking-[0.28em] uppercase text-zinc-400 leading-relaxed">
               QUESTIONS ?
+            </p>
+          ) : isRetraction ? (
+            <p className="text-sm tracking-[0.22em] text-zinc-500 uppercase">
+              4 jours de rétractation
             </p>
           ) : isAnswer && item ? (
             <ul className="mx-auto w-full max-w-md list-disc list-inside space-y-3 text-left text-lg font-light text-zinc-300 leading-relaxed">

@@ -23,6 +23,9 @@ import { S06_Reframing } from "../scenes/S06_Reframing";
 import { S07_ThreeSolutions } from "../scenes/S07_ThreeSolutions";
 import { S08_Mechanism } from "../scenes/S08_Mechanism";
 import { S09_R2Reveal } from "../scenes/S09_R2Reveal";
+import { S11_CaseAccounting } from "../scenes/S11_CaseAccounting";
+import { S11_CaseBrokerage } from "../scenes/S11_CaseBrokerage";
+import { S12_SocialProof } from "../scenes/S12_SocialProof";
 import { S13_HerculeDEC } from "../scenes/S13_HerculeDEC";
 import { S14_HerculeCourtage } from "../scenes/S14_HerculeCourtage";
 import { S15_FAQ } from "../scenes/S15_FAQ";
@@ -57,6 +60,9 @@ const SCENES: Partial<Record<SceneId, ComponentType<SceneProps>>> = {
   S07_ThreeSolutions,
   S08_Mechanism,
   S09_R2Reveal,
+  S11_CaseBrokerage,
+  S11_CaseAccounting,
+  S12_SocialProof,
   S13_HerculeDEC,
   S14_HerculeCourtage,
   S15_FAQ,
@@ -190,7 +196,11 @@ export const ConferenceVisualStage = memo(function ConferenceVisualStage({
 
         <div
           ref={measureRef}
-          className="relative z-[1] w-max max-w-[min(56rem,calc(100vw-4rem))]"
+          className={
+            scene === "S12_SocialProof"
+              ? "relative z-[1] w-max max-w-[min(72rem,calc(100vw-4rem))]"
+              : "relative z-[1] w-max max-w-[min(56rem,calc(100vw-4rem))]"
+          }
         >
           <AnimatePresence mode="popLayout">
             <motion.div

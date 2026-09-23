@@ -102,6 +102,8 @@
     "smoke-streamlit-subsequence": "python3 ./lib/backend/scripts/streamlit_subsequence/smokeSendQueue.py",
     "bootstrap-streamlit-subsequence-pipeline": "python3 ./lib/backend/scripts/streamlit_subsequence/bootstrapPipelineFromUnibox.py",
     "verify-streamlit-subsequence-pipeline": "python3 ./lib/backend/scripts/streamlit_subsequence/verifyBootstrapPipeline.py",
+    "export-conference-reply-clients": "python3 ./lib/backend/scripts/conference/export_reply_clients.py",
+    "test-conference-clients": "PYTHONPATH=lib/backend python3 -m unittest conference_clients.test_reply_non conference_clients.test_select conference_clients.test_export_stop",
     "export-streamlit-unibox-threads": "python3 ./lib/backend/scripts/streamlit_subsequence/exportUniboxThreads.py",
     "classify-streamlit-unibox-threads": "python3 ./lib/backend/scripts/streamlit_subsequence/classifyExportedThreads.py",
     "apply-streamlit-unibox-classification": "python3 ./lib/backend/scripts/streamlit_subsequence/applyUniboxClassification.py",

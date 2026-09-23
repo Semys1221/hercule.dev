@@ -10,6 +10,9 @@ export type SceneId =
   | "S07_ThreeSolutions"
   | "S08_Mechanism"
   | "S09_R2Reveal"
+  | "S11_CaseBrokerage"
+  | "S11_CaseAccounting"
+  | "S12_SocialProof"
   | "S10_JohnDemo"
   | "S13_HerculeDEC"
   | "S14_HerculeCourtage"
@@ -40,6 +43,9 @@ export const SCENE_LABELS: Record<SceneId, string> = {
   S07_ThreeSolutions: "Trois solutions",
   S08_Mechanism: "Mécanisme",
   S09_R2Reveal: "Dispositif Hercule",
+  S11_CaseBrokerage: "Cas conseil",
+  S11_CaseAccounting: "Cas comptable",
+  S12_SocialProof: "Preuve sociale",
   S10_JohnDemo: "Cas pratique",
   S13_HerculeDEC: "Hercule DEC",
   S14_HerculeCourtage: "Hercule Courtage",

@@ -248,6 +248,5 @@ export const COURTAGE_OFFER: OfferStory = {
   },
 };
 
-export const DEC_CONTRAST_BEATS = 3;
-export const DEC_STEP_COUNT = 13;
+export const DEC_STEP_COUNT = 11;
 export const COURTAGE_STEP_COUNT = 11;

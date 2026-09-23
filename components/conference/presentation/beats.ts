@@ -5,7 +5,7 @@ import type { Beat, SceneId } from "./types";
 type SceneBlock = { scene: SceneId; count: number };
 
 const BLOCKS: SceneBlock[] = [
-  { scene: "S01_Intro", count: 3 },
+  { scene: "S01_Intro", count: 4 },
   { scene: "S02_WordOfMouth", count: 3 },
   { scene: "S03_WOMProblem", count: 5 },
   { scene: "S03_5_StartingPoint", count: 1 },
@@ -16,10 +16,13 @@ const BLOCKS: SceneBlock[] = [
   { scene: "S07_ThreeSolutions", count: 3 },
   { scene: "S08_Mechanism", count: 1 },
   { scene: "S09_R2Reveal", count: S09_STEP_COUNT },
+  { scene: "S11_CaseBrokerage", count: 2 },
+  { scene: "S11_CaseAccounting", count: 2 },
+  { scene: "S12_SocialProof", count: 1 },
   { scene: "S10_JohnDemo", count: 2 },
   { scene: "S13_HerculeDEC", count: DEC_STEP_COUNT },
   { scene: "S14_HerculeCourtage", count: COURTAGE_STEP_COUNT },
-  { scene: "S15_FAQ", count: 11 },
+  { scene: "S15_FAQ", count: 12 },
   { scene: "S16_Urgency", count: 3 },
   { scene: "S17_Close", count: 1 },
   { scene: "S18_StaticOffers", count: 2 },
