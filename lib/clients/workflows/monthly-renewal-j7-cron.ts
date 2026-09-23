@@ -5,6 +5,7 @@ import { listClientAppointments, toPublicAppointment } from "@/lib/clients/appoi
 import { volumeEndLabelForAnnouncement } from "@/lib/clients/monthly-renewal-announcement";
 import { closeRenewalPrompt } from "@/lib/clients/monthly-renewal-choice";
 import { getLatestClientPayment } from "@/lib/clients/load-client-dashboard";
+import { isClientResendAutoEmailsEnabled } from "@/lib/clients/resend-auto-emails";
 import { createClientsClient } from "@/lib/clients/supabase";
 import type { ClientRow } from "@/lib/clients/types";
 import { CONFERENCE_CLIENT_TYPES } from "@/lib/commercial/conference-pricing";
@@ -46,6 +47,11 @@ export async function runMonthlyRenewalJ7Cron(
 
   for (const row of rows) {
     try {
+      if (!isClientResendAutoEmailsEnabled(row.profile)) {
+        result.skipped += 1;
+        continue;
+      }
+
       const evaluation = await evaluateClientRenewalPrompt(db, row, now);
       if (evaluation.status === "expire") {
         const closed = await closeRenewalPrompt(db, row.id, now);

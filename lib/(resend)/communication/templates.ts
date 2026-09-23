@@ -601,7 +601,7 @@ Béatrice Meyer`,
     subject: "Votre premier rendez-vous visio — offert",
     body: `{{firstNameLine}}
 
-Afin de rendre votre décision plus simple, nous vous offrons ce qu'aucun service d'acquisition ne fait : votre premier rendez-vous visio sous 7 jours est gratuit.
+Afin de rendre votre décision plus simple, nous vous offrons ce qu'aucun service d'acquisition ne fait : votre premier rendez-vous visio sous 14 jours est gratuit.
 
 Essai DEC 14 jours : 0 € aujourd'hui, un rendez-vous restaurant qualifié, puis 1 499 €/mois pour 10 rendez-vous si vous poursuivez.
 
@@ -614,7 +614,7 @@ L'équipe Hercule`,
     subject: "Rappel — premier rendez-vous offert",
     body: `{{firstNameLine}}
 
-Petit rappel : votre premier rendez-vous visio sous 7 jours est offert pour simplifier votre décision.
+Petit rappel : votre premier rendez-vous visio sous 14 jours est offert pour simplifier votre décision.
 
 Essai 14 jours gratuits (0 €), puis 1 499 €/mois. Vous pouvez arrêter avant la fin de l'essai.
 
@@ -627,7 +627,7 @@ L'équipe Hercule`,
     subject: "Dernière relance — essai gratuit 14 jours",
     body: `{{firstNameLine}}
 
-Dernière relance : démarrez l'essai gratuit de 14 jours. Votre premier rendez-vous visio est offert sous 7 jours.
+Dernière relance : démarrez l'essai gratuit de 14 jours. Votre premier rendez-vous visio est offert sous 14 jours.
 
 Ensuite : 1 499 €/mois. Sans engagement au-delà de l'essai — vous pouvez arrêter depuis le portail de facturation.
 

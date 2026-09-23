@@ -1,3 +1,4 @@
+import { isClientResendAutoEmailsEnabled } from "@/lib/clients/resend-auto-emails";
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import type { LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
 import { sendProductEmailNow } from "@/lib/legacy/booking-communication/product-send";
@@ -146,6 +147,10 @@ export async function startFreeTrialStartedSequenceForClient(
     .maybeSingle();
 
   const profile = ((row?.profile ?? {}) as Record<string, unknown>) || {};
+  if (!isClientResendAutoEmailsEnabled(profile)) {
+    return { welcomeSent: false, scheduledJobs: 0 };
+  }
+
   await client
     .from("clients")
     .update({

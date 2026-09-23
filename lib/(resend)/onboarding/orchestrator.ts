@@ -4,6 +4,7 @@ import {
   sendProductEmailNow,
 } from "@/lib/(resend)/communication/product-send";
 import type { BookingEmailType } from "@/lib/(resend)/communication/types";
+import { isClientResendAutoEmailsEnabled } from "@/lib/clients/resend-auto-emails";
 import { createLinkTrackingClient, findLeadById } from "@/lib/legacy/link-tracking/supabase";
 import { dashboardLinkFor } from "@/lib/legacy/link-tracking/urls";
 import { estimatedFirstBookingDateFromLead } from "@/lib/(resend)/communication/product-vars";
@@ -44,6 +45,13 @@ export async function startPaymentOnboardingSequence(
   const lead = await findLeadById(client, params.leadCategory, params.leadId);
   if (!lead) {
     throw new Error("lead_not_found");
+  }
+
+  if (
+    params.leadCategory === "client" &&
+    !isClientResendAutoEmailsEnabled(lead.profile)
+  ) {
+    return { welcomeSent: false, scheduledJobs: 0 };
   }
 
   const sequence = readPaymentOnboardingSequence(params.vertical);

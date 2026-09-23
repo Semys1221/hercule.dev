@@ -2,7 +2,8 @@ import type {
   ConferenceClientType,
   ConferenceOfferType,
 } from "@/lib/commercial/conference-pricing";
-import { buildClientDashboardUrl } from "@/lib/clients/supabase";
+import { isClientResendAutoEmailsEnabled } from "@/lib/clients/resend-auto-emails";
+import { buildClientDashboardUrl, createClientsClient, findClientById } from "@/lib/clients/supabase";
 import {
   isPaymentOnboardingSequenceEnabled,
   startPaymentOnboardingSequence,
@@ -29,6 +30,12 @@ export async function scheduleConferenceEmailSequence(params: {
   }
 
   const dashboardLink = buildClientDashboardUrl(params.slug);
+
+  const db = createClientsClient();
+  const clientRow = await findClientById(db, params.clientId);
+  if (clientRow && !isClientResendAutoEmailsEnabled(clientRow.profile)) {
+    return;
+  }
 
   if (isPaymentOnboardingSequenceEnabled()) {
     try {

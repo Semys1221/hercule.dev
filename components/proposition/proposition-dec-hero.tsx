@@ -21,7 +21,7 @@ export function PropositionDecHero() {
         dirigeant restaurant qualifié. Continuez seulement si la qualité vous convainc.
       </p>
       <Button asChild size="lg">
-        <Link href="#essai">Démarrer l&apos;essai gratuit</Link>
+        <Link href="#proposition-essai">Démarrer l&apos;essai gratuit</Link>
       </Button>
     </header>
   );

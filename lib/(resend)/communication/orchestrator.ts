@@ -14,6 +14,7 @@ import {
   parseEventAndInviteeUuids,
 } from "@/lib/legacy/calendly";
 import { syncLeadStatutToInstantly } from "@/lib/legacy/link-tracking/instantly";
+import { isClientResendAutoEmailsEnabled } from "@/lib/clients/resend-auto-emails";
 
 import {
   cancelFollowUpJobs,
@@ -311,6 +312,14 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
   }
 
   if (lead.statut === "CANCELLED") {
+    await cancelJob(job.id);
+    return true;
+  }
+
+  if (
+    job.lead_category === "client" &&
+    !isClientResendAutoEmailsEnabled(lead.profile)
+  ) {
     await cancelJob(job.id);
     return true;
   }

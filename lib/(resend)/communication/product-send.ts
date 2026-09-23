@@ -1,6 +1,7 @@
 import { createLinkTrackingClient, findLeadById } from "@/lib/legacy/link-tracking/supabase";
 import { dashboardLinkFor, reservationAgenceLinkFor } from "@/lib/legacy/link-tracking/urls";
 import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
+import { isClientResendAutoEmailsEnabled } from "@/lib/clients/resend-auto-emails";
 
 import { insertJob, markJobFailed, markJobSent } from "./jobs";
 import { sendBookingEmail } from "./send";
@@ -24,6 +25,14 @@ export async function scheduleLeadEmailJobs(params: {
     idempotencyKey: string;
   }>;
 }): Promise<{ inserted: number }> {
+  if (params.category === "client") {
+    const client = createLinkTrackingClient();
+    const lead = await findLeadById(client, "client", params.leadId);
+    if (lead && !isClientResendAutoEmailsEnabled(lead.profile)) {
+      return { inserted: 0 };
+    }
+  }
+
   let inserted = 0;
   for (const job of params.jobs) {
     const row = await insertJob({
@@ -70,6 +79,13 @@ export async function sendProductEmailNow(params: {
   const lead = await findLeadById(client, params.category, params.leadId);
   if (!lead) {
     return { ok: false, error: "lead_not_found" };
+  }
+
+  if (
+    params.category === "client" &&
+    !isClientResendAutoEmailsEnabled(lead.profile)
+  ) {
+    return { ok: false, error: "client_resend_auto_disabled" };
   }
 
   const verticalOverride =
