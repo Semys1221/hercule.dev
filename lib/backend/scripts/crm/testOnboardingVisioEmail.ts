@@ -7,7 +7,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { notifyOnboardingVideoConference } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
+import { notifyOnboardingAnswers } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
 
 function loadEnvFromRepoRoot(): void {
   for (const file of [".env", ".env.local"]) {
@@ -88,10 +88,15 @@ const testClient: ClientRow = {
 };
 
 async function main(): Promise<void> {
-  await notifyOnboardingVideoConference({
-    client: testClient,
-    videoConference: "google_meet_pro",
-  });
+  await notifyOnboardingAnswers(
+    {
+      client: testClient,
+      videoConference: "google_meet_pro",
+      startNow: false,
+      unavailability: "Aucune",
+    },
+    { copyClient: false },
+  );
   console.log(`Test onboarding visio email sent to ${opsEmail}`);
 }
 

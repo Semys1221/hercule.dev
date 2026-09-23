@@ -6,7 +6,11 @@ import {
   isStaleAgenceCopyOnEntreprise,
   pickBookingEmailTemplate,
 } from "@/lib/(resend)/communication/template-store";
-import { defaultBookingEmailTemplate } from "@/lib/(resend)/communication/templates";
+import {
+  defaultBookingEmailTemplate,
+  renderTemplate,
+} from "@/lib/(resend)/communication/templates";
+import { buildClientDashboardUrl } from "@/lib/clients/supabase";
 
 const STALE_AGENCE_BODY = `{{firstNameLine}}
 
@@ -60,7 +64,7 @@ function main() {
     },
   });
 
-  assert.match(resolved.subject, /Préparez votre rendez-vous/i);
+  assert.match(resolved.subject, /Préparez votre audit de compatibilité/i);
   assert.match(resolved.body, /{{post_booking_link}}/);
   assert.doesNotMatch(resolved.body, /réattribué/i);
   assert.doesNotMatch(resolved.body, /confirmer votre présence/i);
@@ -74,7 +78,7 @@ function main() {
     },
   });
 
-  assert.match(resolvedH24.subject, /Rappel/i);
+  assert.match(resolvedH24.subject, /Votre audit Hercule approche/i);
   assert.match(resolvedH24.body, /{{date}}/);
   assert.doesNotMatch(resolvedH24.body, /réattribué/i);
 
@@ -90,6 +94,49 @@ function main() {
   });
   assert.equal(editorOverride.subject, "Objet custom");
   assert.equal(editorOverride.body, "Corps custom entreprise");
+
+  const stub = defaultBookingEmailTemplate("client", "payment_onboarding_1");
+  const fromStub = pickBookingEmailTemplate({
+    category: "client",
+    emailType: "payment_onboarding_1",
+    verticalOverride: "dec",
+    stored: stub,
+  });
+  assert.ok(fromStub.body.length > stub.body.length);
+  assert.match(fromStub.body, /\{\{dashboardLink\}\}/);
+
+  const slug = "suivi-test";
+  const dashboardLink = buildClientDashboardUrl(slug);
+  const rendered = renderTemplate(fromStub.body, {
+    dashboardLink,
+    email: "client@example.com",
+  });
+  assert.match(rendered, new RegExp(`/clients/${slug}`));
+  assert.equal(rendered.includes(`/dashboard/${slug}`), false);
+
+  const missingLink = pickBookingEmailTemplate({
+    category: "client",
+    emailType: "payment_onboarding_1",
+    verticalOverride: "cif",
+    stored: {
+      subject: "Sujet stocké sans lien",
+      body: "Bonjour, votre accès est actif.",
+    },
+  });
+  assert.match(missingLink.body, /\{\{dashboardLink\}\}/);
+  assert.notEqual(missingLink.subject, "Sujet stocké sans lien");
+
+  const customWithLink = pickBookingEmailTemplate({
+    category: "client",
+    emailType: "payment_onboarding_4",
+    verticalOverride: "ias",
+    stored: {
+      subject: "Sujet custom",
+      body: "Suivez ici : {{dashboardLink}}",
+    },
+  });
+  assert.equal(customWithLink.subject, "Sujet custom");
+  assert.equal(customWithLink.body, "Suivez ici : {{dashboardLink}}");
 
   console.log("entreprise template resolve tests passed");
 }

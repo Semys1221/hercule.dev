@@ -44,6 +44,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 const patchSchema = z.object({
   firstName: z.string().min(1).max(120).optional(),
   videoConference: z.enum(CLIENT_VIDEO_CONFERENCE_OPTIONS).optional(),
+  unavailability: z.string().min(1).max(2000).optional(),
   completeOnboarding: z.boolean().optional(),
   cgvVersion: z.string().min(1).max(32).optional(),
   waiveRetraction: z.boolean().optional(),
@@ -107,6 +108,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         return NextResponse.json({ error: "videoConference required" }, { status: 400 });
       }
 
+      const unavailability = parsed.data.unavailability?.trim();
+      if (!unavailability) {
+        return NextResponse.json({ error: "unavailability required" }, { status: 400 });
+      }
+
       const { hasSucceededClientPayment } = await import(
         "@/lib/clients/load-client-dashboard"
       );
@@ -120,6 +126,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         row,
         firstName,
         videoConference: parsed.data.videoConference,
+        unavailability,
         cgvVersion,
         waiveRetraction: parsed.data.waiveRetraction,
       });

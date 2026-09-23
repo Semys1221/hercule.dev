@@ -7,9 +7,10 @@ import { PhoneIcon } from "../shared/PhoneIcon";
 import { SceneShell } from "../shared/SceneShell";
 
 /**
- * S03.6 — Construire une audience  (step 0)
+ * S03.6 — Fiche de leads  (step 0)
  *
- * Transition : fiche + téléphone entre Point de départ et la prospection froide.
+ * Chapter card that opens the cold-lead sheet, right after the
+ * uncontrolled word-of-mouth. The phone sits beside the fiche.
  */
 export function S03_6_BuildAudience({ step }: SceneProps) {
   return (
@@ -23,7 +24,7 @@ export function S03_6_BuildAudience({ step }: SceneProps) {
             exit={{ opacity: 0 }}
           >
             <ChapterDoor
-              label="CONSTRUIRE UNE AUDIENCE"
+              label="FICHE DE LEADS"
               icon={<PhoneIcon size={20} className="text-muted-foreground" />}
             />
           </motion.div>

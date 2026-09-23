@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { PAYMENT_ONBOARDING_EMAIL_TYPES } from "@/lib/(resend)/onboarding/constants";
+import { readClientOnboardingAnswers } from "@/lib/clients/onboarding-answers";
 import type { OnboardingStepStatus } from "@/lib/clients/engin-types";
 import { createClientsClient, findClientById } from "@/lib/clients/supabase";
 
@@ -108,6 +109,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         firstName: client.first_name,
         slug: client.slug,
       },
+      answers: readClientOnboardingAnswers(client),
       steps,
     });
   } catch (error) {

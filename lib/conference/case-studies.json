@@ -1,26 +1,32 @@
 {
   "featured": {
     "brokerage": {
-      "slug": "",
+      "slug": "oxygen-patrimoine-com",
+      "sample": true,
+      "leader": "Julien Marceau, fondateur",
+      "headcount": "5 personnes dont 1 associé et 2 mandataires",
       "situation": "Cabinet indépendant. Activité IAS et CIF.",
       "action": "Un flux de profils qualifiés arrive dans l'agenda.",
-      "resultLine": "En 90 jours : 42 rendez-vous, 54 % de conversion, 2 500 € de chiffre d'affaires moyen par profil."
+      "resultLine": "En 83 jours : 31 profils, 54 % de conversion, 2 734 € de panier moyen par profil."
     },
     "accounting": {
-      "slug": "",
+      "slug": "cabinet-sanner-fr",
+      "sample": true,
+      "leader": "Thomas Lefèvre, expert-comptable",
+      "headcount": "8 collaborateurs dont 2 associés",
       "situation": "Cabinet d'expertise comptable indépendant.",
       "action": "Des rendez-vous qualifiés, chaque mois.",
-      "resultLine": "9 000 € de chiffre d'affaires cumulé sur 3 mois."
+      "resultLine": "53 % de conversion, 10 032 € de chiffre d'affaires cumulé sur 3 mois."
     }
   },
   "metrics": {
-    "brokerage": { "days": 90, "meetings": 42, "conversionPct": 54, "avgRevenueEur": 2500 },
+    "brokerage": { "days": 83, "profiles": 31, "conversionPct": 54, "avgBasketEur": 2734 },
     "accounting": {
       "monthProfiles": [11, 13, 13],
-      "conversionPct": 63,
+      "conversionPct": 53,
       "ticketMinEur": 300,
       "ticketMaxEur": 450,
-      "cumulativeRevenueEur": 9000
+      "cumulativeRevenueEur": 10032
     }
   },
   "firms": [
@@ -38,7 +44,6 @@
     { "slug": "cabinet-sanner-fr", "name": "Cabinet Sanner", "category": "accounting", "website": "", "logo": "/conference/clients/cabinet-sanner-fr.webp" },
     { "slug": "cabinetaec-co", "name": "Cabinet AEC", "category": "accounting", "website": "", "logo": "/conference/clients/cabinetaec-co.webp" },
     { "slug": "data-compta-com", "name": "Data Compta", "category": "accounting", "website": "", "logo": "/conference/clients/data-compta-com.webp" },
-    { "slug": "dmsconsulting-fr", "name": "DMS Consulting", "category": "accounting", "website": "", "logo": "/conference/clients/dmsconsulting-fr.webp" },
     { "slug": "hodl-consulting-com", "name": "Hodl Consulting", "category": "accounting", "website": "", "logo": "/conference/clients/hodl-consulting-com.webp" },
     { "slug": "liberize-fr", "name": "Liberize", "category": "accounting", "website": "", "logo": "/conference/clients/liberize-fr.webp" },
     { "slug": "mb2p-eu", "name": "MB2P", "category": "accounting", "website": "", "logo": "/conference/clients/mb2p-eu.webp" },
@@ -49,7 +54,6 @@
     { "slug": "softec-fr", "name": "Softec", "category": "accounting", "website": "", "logo": "/conference/clients/softec-fr.webp" },
     { "slug": "wipea-fr", "name": "Wipea", "category": "accounting", "website": "", "logo": "/conference/clients/wipea-fr.webp" },
     { "slug": "zefyr-net", "name": "Zefyr", "category": "accounting", "website": "", "logo": "/conference/clients/zefyr-net.webp" },
-    { "slug": "arpegespatrimoine-fr", "name": "Arpèges Patrimoine", "category": "brokerage", "website": "https://www.arpegespatrimoine.fr/", "logo": "/conference/clients/arpegespatrimoine-fr.webp" },
     { "slug": "asorae-fr", "name": "Asorae Courtage", "category": "brokerage", "website": "https://asorae.fr/", "logo": "/conference/clients/asorae-fr.webp" },
     { "slug": "avenircourtage-fr", "name": "Avenir Courtage", "category": "brokerage", "website": "https://avenircourtage.fr/", "logo": "/conference/clients/avenircourtage-fr.webp" },
     { "slug": "c2rpatrimoine-monsitemedia-fr", "name": "C2R Patrimoine", "category": "brokerage", "website": "https://c2rpatrimoine.monsitemedia.fr/", "logo": "/conference/clients/c2rpatrimoine-monsitemedia-fr.webp" },

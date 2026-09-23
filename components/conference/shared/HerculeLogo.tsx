@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { SilverHerculeMark } from "./SilverHerculeMark";
+import { GlassHerculeMark } from "./GlassHerculeMark";
 
 type HerculeLogoProps = {
   size?: "sm" | "md" | "lg" | "xl";
@@ -40,7 +40,7 @@ export function HerculeLogo({
       transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
       className={cn("flex flex-col items-center gap-4", className)}
     >
-      <SilverHerculeMark className={sizesPx[size]} />
+      <GlassHerculeMark className={sizesPx[size]} />
 
       {(showName || showR2) && (
         <motion.div

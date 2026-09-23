@@ -159,6 +159,7 @@
     "test-pipeline-dev-mode": "tsx ./lib/legacy/calendly/pipeline-dev-mode.test.ts",
     "test-load-pipeline-metrics": "tsx ./lib/legacy/calendly/load-pipeline-metrics.test.ts",
     "test-hercule-liberal-offers": "tsx ./lib/legacy/payments/hercule-liberal-offers.test.ts",
+    "test-conference-payment-links": "tsx ./lib/legacy/payments/conference-payment-links.test.ts",
     "smoke-comptable-flow-e2e": "tsx --env-file=.env ./lib/backend/scripts/streamlit_scraper/smokeComptableFlowE2e.ts",
     "clone-campaign-emails": "python3 ./lib/backend/scripts/streamlit_scraper/cloneCampaignEmails.py",
     "swap-subsequence-link-vars": "python3 ./lib/backend/scripts/streamlit_scraper/swapSubsequenceLinkVars.py",

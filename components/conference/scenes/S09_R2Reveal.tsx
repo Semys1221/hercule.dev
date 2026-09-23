@@ -17,7 +17,7 @@ import { QualificationChecklist } from "../shared/QualificationChecklist";
 import { SceneLabel }  from "../shared/SceneLabel";
 import { SceneShell }  from "../shared/SceneShell";
 import { R2Lockup } from "../shared/R2Lockup";
-import { SilverHerculeMark } from "../shared/SilverHerculeMark";
+import { GlassHerculeMark } from "../shared/GlassHerculeMark";
 import { StageSubtitle } from "../shared/StageSubtitle";
 
 const TARGETS = ["BNC", "BIC", "TNS"] as const;
@@ -93,7 +93,7 @@ export function S09_R2Reveal({ step }: SceneProps) {
                 transition={{ delay: 1.2, type: "spring", stiffness: 180, damping: 18 }}
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <SilverHerculeMark className="size-28" />
+                <GlassHerculeMark className="size-28" />
               </motion.div>
             </div>
             <StageSubtitle>Une solution qui résout ce vrai problème.</StageSubtitle>

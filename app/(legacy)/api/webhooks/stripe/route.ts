@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import { revalidateBookingsCache } from "@/lib/legacy/calendly/bookings-cache";
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import { dashboardLinkFor } from "@/lib/legacy/link-tracking/urls";
+import { resolveConferenceCheckoutSession } from "@/lib/legacy/payments/conference-checkout-session";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/legacy/payments/stripe";
 import {
   handleComptableCheckoutCompleted,
@@ -265,13 +266,15 @@ export async function POST(request: Request) {
       const entrepriseId = session.metadata?.entreprise_id;
       const cifId = session.metadata?.cif_id;
       const agenceId = session.metadata?.agence_id;
-      const conferenceClientId = session.metadata?.client_id;
-      const conferenceSource = session.metadata?.source;
+      const conferenceSession = await resolveConferenceCheckoutSession(
+        client,
+        session,
+      );
 
-      if (conferenceSource === "conference" && conferenceClientId) {
+      if (conferenceSession) {
         const handled = await handleConferenceCheckoutCompleted(
           client,
-          session,
+          conferenceSession,
           event.id,
         );
         if (handled) {

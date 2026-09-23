@@ -1,3 +1,4 @@
+import { isPaymentOnboardingEmailType } from "@/lib/(resend)/onboarding/constants";
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import { confirmationAgenceLinkFor } from "@/lib/legacy/link-tracking/urls";
 import { modalitesConfirmUrlFor } from "@/lib/legacy/modalites-campaign/urls";
@@ -474,13 +475,53 @@ export function pickBookingEmailTemplate(params: {
         updated_at: null,
       })
     : null;
-  const resolvedSubject = stored?.subject?.trim() || defaults.subject;
-  const resolvedBody = stored?.body?.trim() || defaults.body;
+  const storedSubject = stored?.subject?.trim() || "";
+  const storedBody = stored?.body?.trim() || "";
+  const preferred = preferPaymentOnboardingMarkdown({
+    category: params.category,
+    emailType: params.emailType,
+    verticalOverride: params.verticalOverride,
+    markdown: defaults,
+    storedSubject,
+    storedBody,
+  });
 
   return {
-    subject: editorSubject || resolvedSubject,
-    body: editorBody || resolvedBody,
+    subject: editorSubject || preferred.subject,
+    body: editorBody || preferred.body,
   };
+}
+
+/**
+ * Client rows synthesize payment-onboarding stubs without a vertical.
+ * Those stubs, and any stored body missing {{dashboardLink}}, must not
+ * replace the vertical markdown that carries the client dashboard URL.
+ */
+function preferPaymentOnboardingMarkdown(params: {
+  category: LeadCategory;
+  emailType: BookingEmailType;
+  verticalOverride?: "dec" | "cif" | "ias" | null;
+  markdown: { subject: string; body: string };
+  storedSubject: string;
+  storedBody: string;
+}): { subject: string; body: string } {
+  const fallback = {
+    subject: params.storedSubject || params.markdown.subject,
+    body: params.storedBody || params.markdown.body,
+  };
+  if (!params.verticalOverride || !isPaymentOnboardingEmailType(params.emailType)) {
+    return fallback;
+  }
+  if (!params.markdown.body.includes("{{dashboardLink}}")) {
+    return fallback;
+  }
+
+  const stub = defaultBookingEmailTemplate(params.category, params.emailType);
+  const body = params.storedBody;
+  if (!body || !body.includes("{{dashboardLink}}") || body === stub.body.trim()) {
+    return params.markdown;
+  }
+  return fallback;
 }
 
 export async function resolveBookingEmailTemplate(params: {

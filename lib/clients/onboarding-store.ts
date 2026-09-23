@@ -11,6 +11,8 @@ export type ClientOnboardingSlugState = {
   step: ClientOnboardingStep;
   firstNameDraft: string;
   videoConferenceDraft: ClientVideoConference | null;
+  unavailabilityDraft: string;
+  startNowDraft: boolean | null;
   cgvAcceptedAt: string | null;
   welcomeSeenAt: string | null;
 };
@@ -23,6 +25,8 @@ type ClientOnboardingStore = {
   ensureSlug: (slug: string, firstName?: string | null) => void;
   setFirstNameDraft: (slug: string, value: string) => void;
   setVideoConferenceDraft: (slug: string, value: ClientVideoConference) => void;
+  setUnavailabilityDraft: (slug: string, value: string) => void;
+  setStartNowDraft: (slug: string, value: boolean) => void;
   setStep: (slug: string, step: ClientOnboardingStep) => void;
   markCgvAccepted: (slug: string) => void;
   markWelcomeSeen: (slug: string) => void;
@@ -34,6 +38,8 @@ const DEFAULT_SLUG_STATE: ClientOnboardingSlugState = {
   step: "recap",
   firstNameDraft: "",
   videoConferenceDraft: null,
+  unavailabilityDraft: "",
+  startNowDraft: null,
   cgvAcceptedAt: null,
   welcomeSeenAt: null,
 };
@@ -102,6 +108,26 @@ export const useClientOnboardingStore = create<ClientOnboardingStore>()(
           },
         }));
       },
+      setUnavailabilityDraft(slug, value) {
+        set((state) => ({
+          bySlug: {
+            ...state.bySlug,
+            [slug]: mergeSlugState(state.bySlug[slug], {
+              unavailabilityDraft: value,
+            }),
+          },
+        }));
+      },
+      setStartNowDraft(slug, value) {
+        set((state) => ({
+          bySlug: {
+            ...state.bySlug,
+            [slug]: mergeSlugState(state.bySlug[slug], {
+              startNowDraft: value,
+            }),
+          },
+        }));
+      },
       setStep(slug, step) {
         set((state) => ({
           bySlug: {
@@ -148,5 +174,5 @@ export function selectSlugState(
   bySlug: Record<string, ClientOnboardingSlugState>,
   slug: string,
 ): ClientOnboardingSlugState {
-  return bySlug[slug] ?? DEFAULT_SLUG_STATE;
+  return { ...DEFAULT_SLUG_STATE, ...(bySlug[slug] ?? {}) };
 }

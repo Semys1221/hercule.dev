@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  CASE_FIGURES_STEP,
   CASE_STUDIES,
   firmBySlug,
   formatEur,
@@ -20,15 +21,16 @@ export function S11_CaseBrokerage({ step }: SceneProps) {
   return (
     <SceneShell>
       <AnimatePresence mode="wait">
-        {step === 0 && (
+        {step < CASE_FIGURES_STEP && (
           <CaseNarrative
             key="brokerage-story"
             firm={firm}
             activity="IAS · CIF"
             copy={copy}
+            reveal={step as 0 | 1 | 2 | 3}
           />
         )}
-        {step === 1 && (
+        {step === CASE_FIGURES_STEP && (
           <motion.div
             key="brokerage-figures"
             initial={{ opacity: 0 }}
@@ -39,11 +41,11 @@ export function S11_CaseBrokerage({ step }: SceneProps) {
           >
             <div className="grid w-full grid-cols-2 gap-x-16 gap-y-10">
               <ProofFigure value={String(metrics.days)} label="Jours" />
-              <ProofFigure value={String(metrics.meetings)} label="Rendez-vous" delay={0.08} />
+              <ProofFigure value={String(metrics.profiles)} label="Profils" delay={0.08} />
               <ProofFigure value={`${metrics.conversionPct} %`} label="Conversion" delay={0.16} />
               <ProofFigure
-                value={formatEur(metrics.avgRevenueEur)}
-                label="CA moyen / profil"
+                value={formatEur(metrics.avgBasketEur)}
+                label="Panier moyen / profil"
                 delay={0.24}
               />
             </div>

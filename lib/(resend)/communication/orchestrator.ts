@@ -1,6 +1,7 @@
 import { renderComptaNovaApologyEmail, COMPTA_NOVA_APOLOGY_IDEMPOTENCY_KEY } from "@/lib/legacy/modalites-campaign/compta-nova-apology";
 import {
   createLinkTrackingClient,
+  findLeadById,
   markLeadCancelled,
 } from "@/lib/legacy/link-tracking/supabase";
 import { enforceModalitesCancelForLead } from "@/lib/legacy/modalites-campaign/enforce-cancel";
@@ -521,15 +522,5 @@ async function loadLead(
   leadId: string,
 ): Promise<LinkTrackingLead | null> {
   const client = createLinkTrackingClient();
-  const { data, error } = await client
-    .from(category)
-    .select("*")
-    .eq("id", leadId)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return (data as LinkTrackingLead | null) ?? null;
+  return findLeadById(client, category, leadId);
 }

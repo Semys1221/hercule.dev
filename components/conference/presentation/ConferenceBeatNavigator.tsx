@@ -17,10 +17,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { BEATS } from "./beats";
-import { CUES } from "./cues";
+import { cueFor } from "./cues";
 import { SCENE_LABELS, type SceneId } from "./types";
-
-const FIRST_NAV_BEAT = 1;
 
 type BeatGroup = {
   scene: SceneId;
@@ -31,9 +29,7 @@ function buildBeatGroups(): BeatGroup[] {
   const groups: BeatGroup[] = [];
 
   BEATS.forEach((beat, beatIdx) => {
-    if (beatIdx < FIRST_NAV_BEAT) return;
-
-    const label = CUES[beat.id]?.label ?? beat.scene;
+    const label = cueFor(beat.scene, beat.step)?.label ?? beat.scene;
     const last = groups[groups.length - 1];
 
     if (last?.scene === beat.scene) {
@@ -64,7 +60,10 @@ export function ConferenceBeatNavigator({
   onSelectBeat,
 }: ConferenceBeatNavigatorProps) {
   const [open, setOpen] = useState(false);
-  const currentLabel = CUES[beatId]?.label ?? `Point ${beatId}`;
+  const beat = BEATS[beatIdx];
+  const currentLabel = beat
+    ? (cueFor(beat.scene, beat.step)?.label ?? `Point ${beatId}`)
+    : `Point ${beatId}`;
 
   const groups = useMemo(() => BEAT_GROUPS, []);
 

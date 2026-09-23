@@ -18,7 +18,7 @@ export function FirmMark({
     <div
       className={
         large
-          ? "flex size-24 items-center justify-center rounded-2xl bg-card p-3"
+          ? "flex h-24 min-w-24 max-w-64 items-center justify-center rounded-2xl bg-card px-4 py-3"
           : "flex h-11 w-full items-center justify-center rounded-md bg-card px-2"
       }
     >
@@ -26,9 +26,11 @@ export function FirmMark({
         <Image
           src={firm.logo}
           alt=""
-          width={large ? 80 : 72}
-          height={large ? 80 : 36}
-          className={large ? "max-h-16 w-auto object-contain" : "max-h-7 w-auto object-contain"}
+          width={large ? 224 : 72}
+          height={large ? 72 : 36}
+          className={
+            large ? "max-h-16 w-auto max-w-56 object-contain" : "max-h-7 w-auto object-contain"
+          }
         />
       ) : (
         <span className={large ? "text-lg text-muted-foreground" : "text-[10px] text-muted-foreground"}>
@@ -39,20 +41,37 @@ export function FirmMark({
   );
 }
 
+/** Dirigeant and effectif. Hidden when both strings are blank. */
+export function LeaderHeadcount({
+  leader,
+  headcount,
+}: {
+  leader: string;
+  headcount: string;
+}) {
+  const parts = [leader.trim(), headcount.trim()].filter((part) => part.length > 0);
+  if (parts.length === 0) return null;
+
+  return <p className="text-center text-sm text-muted-foreground">{parts.join(" · ")}</p>;
+}
+
 export function CaseNarrative({
   firm,
   activity,
   copy,
+  reveal,
 }: {
   firm: CaseFirm | undefined;
   activity: string;
   copy: FeaturedCase;
+  /** 0 identity, 1 + situation, 2 + action, 3 + résultat. */
+  reveal: 0 | 1 | 2 | 3;
 }) {
   const rows = [
     { k: "Situation", v: copy.situation },
     { k: "Action", v: copy.action },
     { k: "Résultat", v: copy.resultLine },
-  ];
+  ].slice(0, reveal);
 
   return (
     <motion.div
@@ -67,7 +86,9 @@ export function CaseNarrative({
           {firm?.name ?? "Cabinet indépendant"}
         </p>
         <p className="text-[11px] tracking-[0.22em] text-muted-foreground uppercase">{activity}</p>
+        <LeaderHeadcount leader={copy.leader} headcount={copy.headcount} />
       </div>
+      {rows.length > 0 ? (
       <div className="flex w-full flex-col gap-4">
         {rows.map((row, index) => (
           <motion.div
@@ -82,6 +103,7 @@ export function CaseNarrative({
           </motion.div>
         ))}
       </div>
+      ) : null}
     </motion.div>
   );
 }

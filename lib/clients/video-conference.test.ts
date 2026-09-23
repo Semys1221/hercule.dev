@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 
-import { buildOnboardingVideoConferenceEmailBody } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
+import { buildOnboardingAnswersEmailBody } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
 import {
   CONFERENCE_CLIENT_TYPES,
   OFFER_TYPES_CONFERENCE,
@@ -62,9 +62,12 @@ assert.match(
   /compte visio existant/,
 );
 
-const emailBody = buildOnboardingVideoConferenceEmailBody({
+const emailBody = buildOnboardingAnswersEmailBody({
   client: baseClient,
   videoConference: "zoom_pro",
+  startNow: false,
+  unavailability: "Aucune",
+  audience: "ops",
 });
 
 assert.match(emailBody, /Marie/);
@@ -72,5 +75,19 @@ assert.match(emailBody, /client@example.com/);
 assert.match(emailBody, /Zoom Pro/);
 assert.match(emailBody, /Provisionner un compte Zoom Pro/);
 assert.match(emailBody, /\/clients\/client-test/);
+assert.match(emailBody, /Démarrage immédiat : non/);
+assert.match(emailBody, /Verticale : [A-Z]/);
+
+const answers = buildOnboardingAnswersEmailBody({
+  client: baseClient,
+  videoConference: "zoom_pro",
+  startNow: true,
+  unavailability: "Jeudi après-midi",
+  audience: "client",
+});
+assert.match(answers, /Jeudi après-midi/);
+assert.match(answers, /Démarrage immédiat : oui/);
+assert.match(answers, /\/clients\/client-test/);
+assert.equal(answers.includes("Provisionner"), false);
 
 console.log("video-conference.test.ts: ok");

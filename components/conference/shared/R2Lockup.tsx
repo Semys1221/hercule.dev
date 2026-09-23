@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { SilverHerculeMark } from "./SilverHerculeMark";
+import { GlassHerculeMark } from "./GlassHerculeMark";
 
 type R2LockupProps = {
   markClassName?: string;
@@ -18,11 +18,11 @@ export function R2Lockup({ markClassName = "size-28", className }: R2LockupProps
     <div className={cn("flex flex-col items-center gap-8", className)}>
       <div style={{ perspective: 900 }}>
         <motion.div
-          animate={{ rotateY: [-8, 8, -8], y: [-4, 4, -4] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ rotateY: [-8, 8, -8] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
           style={{ transformStyle: "preserve-3d" }}
         >
-          <SilverHerculeMark className={markClassName} />
+          <GlassHerculeMark className={markClassName} />
         </motion.div>
       </div>
       <div className="flex flex-col items-center gap-3">

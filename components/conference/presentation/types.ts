@@ -36,7 +36,7 @@ export const SCENE_LABELS: Record<SceneId, string> = {
   S02_WordOfMouth: "Bouche-à-oreille",
   S03_WOMProblem: "Limites du bouche-à-oreille",
   S03_5_StartingPoint: "Point de départ",
-  S03_6_BuildAudience: "Construire une audience",
+  S03_6_BuildAudience: "Fiche de leads",
   S04_ColdLeads: "Prospection froide",
   S05_GoogleAds: "Google Ads",
   S06_Reframing: "Recadrage",

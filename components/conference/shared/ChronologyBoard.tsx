@@ -10,7 +10,7 @@ import {
   type StageCard,
 } from "../scenes/card-deck";
 import { SceneShell } from "./SceneShell";
-import { SilverHerculeMark } from "./SilverHerculeMark";
+import { GlassHerculeMark } from "./GlassHerculeMark";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -51,7 +51,7 @@ function LegendRow({ card, animate }: { card: StageCard; animate: boolean }) {
         <div className="flex items-center justify-center gap-6">
           {(["DEC", "Courtage"] as const).map((edition) => (
             <div key={edition} className="flex flex-col items-center gap-1">
-              <SilverHerculeMark className="size-6" />
+              <GlassHerculeMark className="size-6" />
               <p className="text-[9px] tracking-[0.18em] text-muted-foreground uppercase">
                 {edition}
               </p>

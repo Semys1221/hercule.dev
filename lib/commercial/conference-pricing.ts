@@ -151,6 +151,32 @@ export function conferenceCheckoutMode(
   return offerType.endsWith("_monthly") ? "subscription" : "payment";
 }
 
+export function clientTypeForConferenceOffer(
+  offerType: ConferenceOfferType,
+): ConferenceClientType {
+  if (
+    offerType === OFFER_TYPES_CONFERENCE.decMonthly ||
+    offerType === OFFER_TYPES_CONFERENCE.decPack
+  ) {
+    return CONFERENCE_CLIENT_TYPES.dec;
+  }
+  if (
+    offerType === OFFER_TYPES_CONFERENCE.cifMonthly ||
+    offerType === OFFER_TYPES_CONFERENCE.cifPack
+  ) {
+    return CONFERENCE_CLIENT_TYPES.cif;
+  }
+  return CONFERENCE_CLIENT_TYPES.ias;
+}
+
+export function billingForConferenceOffer(
+  offerType: ConferenceOfferType,
+): ConferenceBilling {
+  return conferenceCheckoutMode(offerType) === "subscription"
+    ? CONFERENCE_BILLING.monthly
+    : CONFERENCE_BILLING.pack;
+}
+
 export function clientDashboardTitle(clientType: ConferenceClientType): string {
   if (clientType === CONFERENCE_CLIENT_TYPES.dec) {
     return "Espace cabinet DEC";

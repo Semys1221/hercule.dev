@@ -5,21 +5,34 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   CLIENT_CGV_BODY,
-  CLIENT_CGV_HIGHLIGHTS,
   CLIENT_CGV_VERSION,
+  clientCgvHighlights,
 } from "@/lib/clients/cgv-onboarding";
+import type { ClientDashboardData } from "@/lib/clients/types";
 
 type ClientOnboardingCgvProps = {
+  data: ClientDashboardData;
+  startNow: boolean;
   saving: boolean;
   error: string | null;
   onAccept: () => void;
 };
 
 export function ClientOnboardingCgv({
+  data,
+  startNow,
   saving,
   error,
   onAccept,
 }: ClientOnboardingCgvProps) {
+  const highlights = clientCgvHighlights({
+    clientType: data.clientType,
+    secondaryVertical: data.secondaryVertical,
+    billing: data.billing,
+    startNow,
+    rdvTotal: data.rdvTotal,
+  });
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-5">
       <div>
@@ -27,16 +40,16 @@ export function ClientOnboardingCgv({
           Conditions générales · version {CLIENT_CGV_VERSION}
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-          Conditions d&apos;utilisation
+          Voici comment on travaille ensemble
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Lisez l&apos;intégralité des CGV ci-dessous, puis acceptez pour
-          accéder à votre espace.
+          Version courte d&apos;abord, texte complet ensuite. Acceptez pour
+          ouvrir votre espace.
         </p>
       </div>
 
       <ul className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 p-4">
-        {CLIENT_CGV_HIGHLIGHTS.map((item) => (
+        {highlights.map((item) => (
           <li key={item.title} className="text-sm">
             <p className="font-medium text-foreground">{item.title}</p>
             <p className="mt-0.5 text-muted-foreground">{item.body}</p>

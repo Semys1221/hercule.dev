@@ -32,6 +32,10 @@ export function ClientOnboardingTunnel({
   const setVideoConferenceDraft = useClientOnboardingStore(
     (s) => s.setVideoConferenceDraft,
   );
+  const setUnavailabilityDraft = useClientOnboardingStore(
+    (s) => s.setUnavailabilityDraft,
+  );
+  const setStartNowDraft = useClientOnboardingStore((s) => s.setStartNowDraft);
   const setStep = useClientOnboardingStore((s) => s.setStep);
   const markCgvAccepted = useClientOnboardingStore((s) => s.markCgvAccepted);
 
@@ -45,19 +49,24 @@ export function ClientOnboardingTunnel({
   const local = selectSlugState(bySlug, slug);
 
   // Server still onboarding: never trust a local welcome/done skip of CGV.
-  const step =
-    local.step === "recap" || local.step === "cgv" ? local.step : "cgv";
+  const readyForCgv =
+    local.startNowDraft !== null &&
+    local.firstNameDraft.trim().length > 0 &&
+    local.videoConferenceDraft !== null &&
+    local.unavailabilityDraft.trim().length > 0;
+  const step = readyForCgv && local.step !== "recap" ? "cgv" : "recap";
 
   const handleContinue = useCallback(() => {
-    if (!local.firstNameDraft.trim() || !local.videoConferenceDraft) return;
+    if (!readyForCgv) return;
     setStep(slug, "cgv");
-  }, [local.firstNameDraft, local.videoConferenceDraft, setStep, slug]);
+  }, [readyForCgv, setStep, slug]);
 
   const handleAccept = useCallback(async () => {
     const firstName = local.firstNameDraft.trim();
     const videoConference = local.videoConferenceDraft;
-    if (!firstName || !videoConference) {
-      setError("Indiquez votre prénom et votre outil de visioconférence pour continuer.");
+    const unavailability = local.unavailabilityDraft.trim();
+    if (!firstName || !videoConference || !unavailability || local.startNowDraft === null) {
+      setError("Complétez le formulaire, y compris la rétractation, avant les conditions.");
       setStep(slug, "recap");
       return;
     }
@@ -72,8 +81,10 @@ export function ClientOnboardingTunnel({
         body: JSON.stringify({
           firstName,
           videoConference,
+          unavailability,
           completeOnboarding: true,
           cgvVersion: CLIENT_CGV_VERSION,
+          waiveRetraction: local.startNowDraft,
         }),
       });
       const body = await response.json();
@@ -89,6 +100,8 @@ export function ClientOnboardingTunnel({
     }
   }, [
     local.firstNameDraft,
+    local.startNowDraft,
+    local.unavailabilityDraft,
     local.videoConferenceDraft,
     markCgvAccepted,
     onCompleted,
@@ -113,13 +126,19 @@ export function ClientOnboardingTunnel({
             data={data}
             firstName={local.firstNameDraft}
             videoConference={local.videoConferenceDraft}
+            unavailability={local.unavailabilityDraft}
+            startNow={local.startNowDraft}
             onFirstNameChange={(value) => setFirstNameDraft(slug, value)}
             onVideoConferenceChange={(value) => setVideoConferenceDraft(slug, value)}
+            onUnavailabilityChange={(value) => setUnavailabilityDraft(slug, value)}
+            onStartNowChange={(value) => setStartNowDraft(slug, value)}
             onContinue={handleContinue}
             paidConfirmed={paidConfirmed}
           />
         ) : (
           <ClientOnboardingCgv
+            data={data}
+            startNow={local.startNowDraft === true}
             saving={saving}
             error={error}
             onAccept={() => void handleAccept()}

@@ -12,6 +12,10 @@ export type CaseFirm = {
 
 export type FeaturedCase = {
   slug: string;
+  /** Leader and headcount are placeholders until checked with the firm. */
+  sample?: boolean;
+  leader: string;
+  headcount: string;
   situation: string;
   action: string;
   resultLine: string;
@@ -19,9 +23,9 @@ export type FeaturedCase = {
 
 export type BrokerageMetrics = {
   days: number;
-  meetings: number;
+  profiles: number;
   conversionPct: number;
-  avgRevenueEur: number;
+  avgBasketEur: number;
 };
 
 export type AccountingMetrics = {
@@ -47,6 +51,10 @@ type CaseStudiesFile = {
 const file = data as CaseStudiesFile;
 
 export const CASE_STUDIES = file;
+
+/** Case scene beats: identity, situation, action, résultat, then figures. */
+export const CASE_STEP_COUNT = 5;
+export const CASE_FIGURES_STEP = CASE_STEP_COUNT - 1;
 
 export function firmsByCategory(category: FirmCategory): CaseFirm[] {
   return file.firms.filter((firm) => firm.category === category);

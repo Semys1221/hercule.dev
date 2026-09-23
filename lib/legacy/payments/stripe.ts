@@ -222,5 +222,9 @@ export function getConferenceCourtagePackPriceId(): string {
 
 /** Overrides legacy account business_profile.name (e.g. Montis Media) on embedded Checkout. */
 export function getCheckoutBrandingSettings(): Stripe.Checkout.SessionCreateParams.BrandingSettings {
-  return { display_name: LEGAL_ENTITY.commercialName };
+  return {
+    display_name: LEGAL_ENTITY.commercialName,
+    background_color: "#fffcf8",
+    button_color: "#1a1a1a",
+  };
 }

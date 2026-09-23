@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  CASE_FIGURES_STEP,
   CASE_STUDIES,
   firmBySlug,
   formatEur,
@@ -22,15 +23,16 @@ export function S11_CaseAccounting({ step }: SceneProps) {
   return (
     <SceneShell>
       <AnimatePresence mode="wait">
-        {step === 0 && (
+        {step < CASE_FIGURES_STEP && (
           <CaseNarrative
             key="accounting-story"
             firm={firm}
             activity="Expertise comptable"
             copy={copy}
+            reveal={step as 0 | 1 | 2 | 3}
           />
         )}
-        {step === 1 && (
+        {step === CASE_FIGURES_STEP && (
           <motion.div
             key="accounting-figures"
             initial={{ opacity: 0 }}
@@ -51,9 +53,10 @@ export function S11_CaseAccounting({ step }: SceneProps) {
                   <p className="text-3xl font-medium tabular-nums text-foreground">{count}</p>
                   <div className="flex h-24 w-full items-end justify-center">
                     <motion.div
-                      className="w-10 rounded-t bg-foreground"
-                      initial={{ height: 0 }}
-                      animate={{ height: `${Math.round((count / max) * 100)}%` }}
+                      className="w-10 origin-bottom rounded-t bg-foreground"
+                      style={{ height: `${Math.round((count / max) * 100)}%` }}
+                      initial={{ scaleY: 0 }}
+                      animate={{ scaleY: 1 }}
                       transition={{ delay: 0.12 + index * 0.08, duration: 0.55, ease: EASE }}
                     />
                   </div>

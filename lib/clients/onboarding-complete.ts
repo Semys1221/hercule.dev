@@ -4,7 +4,7 @@ import { CONFERENCE_CLIENT_TYPES, type ConferenceClientType } from "@/lib/commer
 import { computeRetractionEndsAt } from "@/lib/legacy/retraction/dates";
 import { syncProfileRetraction } from "@/lib/legacy/retraction/profile-sync";
 
-import { notifyOnboardingVideoConference } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
+import { notifyOnboardingAnswers } from "@/lib/(resend)/clients/workflows/onboarding-video-conference";
 
 import type { ClientVideoConference } from "./video-conference";
 import type { ClientRow } from "./types";
@@ -22,6 +22,7 @@ export async function completeClientOnboarding(params: {
   row: ClientRow;
   firstName: string;
   videoConference: ClientVideoConference;
+  unavailability: string;
   cgvVersion: string;
   waiveRetraction?: boolean;
 }): Promise<void> {
@@ -38,6 +39,10 @@ export async function completeClientOnboarding(params: {
   profile.cgv_accepted_version = params.cgvVersion;
   profile.cgv_accepted_at = completedAt;
   profile.video_conference = params.videoConference;
+  const startNow = params.waiveRetraction === true;
+  const unavailability = params.unavailability.trim();
+  profile.start_now = startNow;
+  profile.unavailability = unavailability;
 
   const patch: Record<string, unknown> = {
     first_name: params.firstName.trim(),
@@ -71,9 +76,11 @@ export async function completeClientOnboarding(params: {
     product_statut: "ONBOARDED",
   };
 
-  await notifyOnboardingVideoConference({
+  await notifyOnboardingAnswers({
     client: updatedRow,
     videoConference: params.videoConference,
+    startNow,
+    unavailability,
   });
 }
 

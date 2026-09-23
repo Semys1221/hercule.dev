@@ -1,169 +1,207 @@
 /**
  * Cues de présentation — guidance pour chaque beat.
  *
- * Structure :
- *   label  : nom court du beat (affiché dans le HUD)
- *   phrase : courte phrase déclenchante (ce que le présentateur dit AVANT d'appuyer sur Space)
- *   next   : ce qui va apparaître APRÈS avoir appuyé (action visuelle)
+ * Indexées par scène puis par step : déplacer une scène dans `beats.ts`
+ * ne décale plus les libellés des autres scènes.
+ *
+ *   label  : nom court du beat (HUD, navigateur, « suivant »)
+ *   phrase : ce que le présentateur dit AVANT d'appuyer sur Espace
  */
+
+import type { SceneId } from "./types";
 
 export type Cue = {
   label: string;
   phrase?: string;
-  next?: string;
 };
 
-/** Mapping beat.id → Cue */
-export const CUES: Record<number, Cue> = {
-  // ── S01 Introduction ────────────────────────
-  1:  { label: "Noir", phrase: "(silence d'ouverture)", next: "Trois marchés" },
-  2:  { label: "Trois marchés", phrase: "Comptabilité, courtage, assurance…", next: "Evan / Hercule.dev" },
-  3:  { label: "Evan", phrase: "Je m'appelle Evan, voilà Hercule.", next: "Cabinet" },
-  4:  { label: "Cabinet", phrase: "Le cabinet.", next: "Bouche-à-oreille" },
+export const CUES: Record<SceneId, Cue[]> = {
+  S01_Intro: [
+    { label: "Noir", phrase: "(silence d'ouverture)" },
+    { label: "Trois marchés", phrase: "Comptabilité, courtage, assurance…" },
+    { label: "Evan", phrase: "Je m'appelle Evan, voilà Hercule." },
+    { label: "Cabinet", phrase: "Le cabinet." },
+  ],
 
-  // ── S02 Bouche-à-oreille ────────────────────
-  5:  { label: "Bouche-à-oreille — titre", phrase: "Commençons par le début : le bouche-à-oreille.", next: "Confiance" },
-  6:  { label: "Confiance", phrase: "Ça fonctionne parce que la confiance se transfère.", next: "Réseau" },
-  7:  { label: "Réseau", phrase: "Et ça crée un réseau organique.", next: "Rupture ?" },
+  S03_5_StartingPoint: [
+    { label: "Point de départ", phrase: "Commençons par le bon point de départ." },
+  ],
 
-  // ── S03 Problème du BAO ─────────────────────
-  8:  { label: "Rupture", phrase: "(pause)", next: "Volume ?" },
-  9:  { label: "Volume ?", phrase: "Combien de recommandations par mois ?", next: "Moment ?" },
-  10: { label: "Moment ?", phrase: "Et quand exactement ?", next: "Profil ?" },
-  11: { label: "Profil ?", phrase: "Et quel profil ?", next: "Système incontrôlable" },
-  12: { label: "Cube mélangé", phrase: "C'est un système incohérent.", next: "Point de départ" },
+  S02_WordOfMouth: [
+    { label: "Bouche-à-oreille — titre", phrase: "Commençons par le début : le bouche-à-oreille." },
+    { label: "Confiance", phrase: "Ça fonctionne parce que la confiance se transfère." },
+    { label: "Réseau", phrase: "Et ça crée un réseau organique." },
+  ],
 
-  // ── S03.5 Point de départ ───────────────────
-  13: { label: "Point de départ", phrase: "(pause)", next: "Construire une audience" },
+  S03_WOMProblem: [
+    { label: "Rupture", phrase: "(pause)" },
+    { label: "Volume ?", phrase: "Combien de recommandations par mois ?" },
+    { label: "Moment ?", phrase: "Et quand exactement ?" },
+    { label: "Profil ?", phrase: "Et quel profil ?" },
+    { label: "Cube mélangé", phrase: "C'est un système incohérent." },
+  ],
 
-  // ── S03.6 Construire une audience ───────────
-  14: { label: "Construire une audience", phrase: "Alors certains achètent des listes.", next: "Personne n'a demandé" },
+  S03_6_BuildAudience: [
+    { label: "Fiche de leads", phrase: "Alors certains achètent des listes." },
+  ],
 
-  // ── S04 Leads froids ────────────────────────
-  15: { label: "Personne n'a demandé", phrase: "Ces gens n'ont rien demandé.", next: "Appel / relances" },
-  16: { label: "Relances", phrase: "Appel, relance, relance…", next: "Mauvais profil" },
-  17: { label: "Profil ✕ ✕ ✕", phrase: "Et le profil ne correspond pas.", next: "Google Ads" },
+  S04_ColdLeads: [
+    { label: "Personne n'a demandé", phrase: "Ces gens n'ont rien demandé." },
+    { label: "Relances", phrase: "Appel, relance, relance…" },
+    { label: "Profil ✕ ✕ ✕", phrase: "Et le profil ne correspond pas." },
+  ],
 
-  // ── S05 Google Ads ──────────────────────────
-  18: { label: "Google Ads", phrase: "Alors… et si c'était eux qui venaient à vous ?", next: "Téléphone sonne" },
-  19: { label: "Téléphone sonne", phrase: "Avec Google Ads, le téléphone sonne.", next: "Qui entre ?" },
-  20: { label: "Qui entre ?", phrase: "Mais qui appelle ?", next: "Entonnoir" },
-  21: { label: "Entonnoir", phrase: "Et l'entonnoir est brutal.", next: "Recadrage" },
+  S05_GoogleAds: [
+    { label: "Google Ads", phrase: "Alors… et si c'était eux qui venaient à vous ?" },
+    { label: "Téléphone sonne", phrase: "Avec Google Ads, le téléphone sonne." },
+    { label: "Qui entre ?", phrase: "Mais qui appelle ?" },
+    { label: "Entonnoir", phrase: "Et l'entonnoir est brutal." },
+  ],
 
-  // ── S06 Reframing ───────────────────────────
-  22: { label: "Découragement", phrase: "(pause) Aucune de ces approches ne résout le vrai problème.", next: "Orbite des 3 mots" },
-  23: { label: "Volume / Qualité / Intérêt", phrase: "Volume, qualité, intérêt.", next: "Silence" },
-  24: { label: "Silence ?", phrase: "Lequel des trois manque selon vous ?", next: "Cube mélangé" },
-  25: { label: "Cube mélangé", phrase: "(silence)", next: "Solution 1" },
+  S06_Reframing: [
+    { label: "Découragement", phrase: "(pause) Aucune de ces approches ne résout le vrai problème." },
+    { label: "Volume / Qualité / Intérêt", phrase: "Volume, qualité, intérêt." },
+    { label: "Silence ?", phrase: "Lequel des trois manque selon vous ?" },
+    { label: "Cube mélangé", phrase: "(silence)" },
+  ],
 
-  // ── S07 Trois solutions ─────────────────────
-  26: { label: "Bouche-à-oreille — bilan", phrase: "Le bouche-à-oreille donne de l'intérêt. Mais pas de volume.", next: "Leads — bilan" },
-  27: { label: "Leads — bilan", phrase: "Les leads donnent du volume et de la qualité. Mais pas d'intérêt.", next: "Ads — bilan" },
-  28: { label: "Ads — bilan", phrase: "Google Ads donne du volume et de l'intérêt. Mais pas de qualité.", next: "Mécanisme" },
+  S07_ThreeSolutions: [
+    { label: "Bouche-à-oreille — bilan", phrase: "Le bouche-à-oreille donne de l'intérêt. Mais pas de volume." },
+    { label: "Leads — bilan", phrase: "Les leads donnent du volume et de la qualité. Mais pas d'intérêt." },
+    { label: "Ads — bilan", phrase: "Google Ads donne du volume et de l'intérêt. Mais pas de qualité." },
+  ],
 
-  // ── S08 Mécanisme ───────────────────────────
-  29: { label: "Flux VOLUME→INTÉRÊT", phrase: "Un système qui produit du volume qualifié avec intérêt.", next: "Révélation R2" },
+  S08_Mechanism: [
+    { label: "Flux VOLUME→INTÉRÊT", phrase: "Un système qui produit du volume qualifié avec intérêt." },
+  ],
 
-  // ── S09 Révélation R2 ───────────────────────
-  30: { label: "Cube → Logo", phrase: "Ce système, on l'appelle…", next: "HERCULE R2" },
-  31: { label: "HERCULE R2", phrase: "Hercule R2.", next: "Construire une audience" },
-  32: { label: "Audience — Volume", phrase: "Première étape : le volume.", next: "La liste se constitue" },
-  33: { label: "Liste de pros", phrase: "Nous identifions une large liste de professionnels.", next: "BNC / BIC / TNS" },
-  34: { label: "Profils cibles", phrase: "BNC, BIC, TNS — ou tout autre profil.", next: "Pas encore de filtre" },
-  35: { label: "Le terrain", phrase: "À ce stade, on construit le volume. Pas encore le filtre.", next: "Le filtre" },
-  36: { label: "FILTRE — Qualification", phrase: "Deuxième étape : la qualification.", next: "On prend contact" },
-  37: { label: "Contact", phrase: "Nous prenons contact avec les professionnels identifiés.", next: "Trois grilles" },
-  38: { label: "Trois grilles", phrase: "On ne pose pas les mêmes questions à tout le monde.", next: "DEC — suivi" },
-  39: { label: "DEC — suivi", phrase: "Comment se passe le suivi financier du restaurant ?", next: "Réponse marge" },
-  40: { label: "DEC — marges", phrase: "Pas de pilotage des marges, on veut le mettre en place.", next: "Pilotage" },
-  41: { label: "DEC — pilotage", phrase: "Un accompagnement au-delà de la comptabilité ?", next: "Pilote avec nous" },
-  42: { label: "DEC — confirmation", phrase: "Quelqu’un qui pilote avec nous, pas un prestataire de plus.", next: "300 € / mois" },
-  43: { label: "DEC — 300 €", phrase: "Un accompagnement à 300 € par mois minimum, est-ce acceptable ?", next: "ROI démontré" },
-  44: { label: "DEC — ROI", phrase: "Si le ROI est démontré, c’est ce que nous recherchons.", next: "Proposition visio" },
-  45: { label: "DEC — visio", phrase: "Seriez-vous disponible le 7 décembre à 10h ?", next: "Contre-proposition créneau" },
-  46: { label: "DEC — créneau", phrase: "Le 7 à 10h, je ne peux pas. Lundi à 13h ?", next: "DEC qualifié" },
-  47: { label: "DEC — qualifié", phrase: "Prospect qualifié : solvable + pilotage.", next: "IAS — assurance" },
-  48: { label: "IAS — assurance", phrase: "Avez-vous des besoins en assurance pour l’entreprise ?", next: "RC Pro / locaux" },
-  49: { label: "IAS — besoins", phrase: "RC pro et locaux. Il faut remettre les contrats à niveau.", next: "Trésorerie" },
-  50: { label: "IAS — trésorerie", phrase: "Plus de 50 000 € de trésorerie ?", next: "80 000 €" },
-  51: { label: "IAS — 80 k€", phrase: "Autour de 80 000 €, on peut avancer.", next: "Réévaluation" },
-  52: { label: "IAS — contrats", phrase: "Les contrats ont-ils été réévalués récemment ?", next: "Pas repris" },
-  53: { label: "IAS — activité", phrase: "Rien n’a été repris, ça ne correspond plus.", next: "Ouverture" },
-  54: { label: "IAS — couverture", phrase: "Ouvert à faire le point sur les garanties ?", next: "Garanties à jour" },
-  55: { label: "IAS — accord", phrase: "Des garanties à jour, pas un devis pour le principe.", next: "Proposition visio" },
-  56: { label: "IAS — visio", phrase: "Seriez-vous disponible le 7 décembre à 10h ?", next: "Demande du lien" },
-  57: { label: "IAS — lien", phrase: "D’accord pour le 7. Envoyez le lien de la visio.", next: "IAS qualifié" },
-  58: { label: "IAS — qualifié", phrase: "Prospect qualifié : 50 k€ + besoin d’assurance.", next: "CIF — impôt" },
-  59: { label: "CIF — impôt", phrase: "Avez-vous une idée du montant d’impôt que vous payez ?", next: "Impôt vu" },
-  60: { label: "CIF — impôt vu", phrase: "On le voit chaque année, on ne sait pas quoi en faire.", next: "50 000 €" },
-  61: { label: "CIF — 50 k€", phrase: "Un minimum de 50 000 € pour activer des leviers ?", next: "100 000 €" },
-  62: { label: "CIF — 100 k€", phrase: "Environ 100 000 €. Une proposition sérieuse.", next: "Leviers" },
-  63: { label: "CIF — leviers", phrase: "Étudier les leviers adaptés avant de décider ?", next: "Trancher" },
-  64: { label: "CIF — confirmation", phrase: "Oui. Je veux être accompagné pour trancher.", next: "Proposition visio" },
-  65: { label: "CIF — visio", phrase: "Seriez-vous disponible le 7 décembre à 10h ?", next: "Contre-proposition créneau" },
-  66: { label: "CIF — créneau", phrase: "Le 7 à 10h, je suis pris. Lundi à 13h ?", next: "CIF qualifié" },
-  67: { label: "CIF — qualifié", phrase: "Prospect qualifié : 50 k€ + leviers identifiés.", next: "Logo R2" },
-  68: { label: "Logo R2", phrase: "Voilà le système dans son ensemble.", next: "Courtage" },
-  69: { label: "Courtage de projet", phrase: "Courtage de projet BNC, BIC, TNS. Patience et expertise métier.", next: "Cas conseil" },
-  70: { label: "Cas conseil — situation", phrase: "Un cabinet indépendant, IAS et CIF.", next: "90 jours" },
-  71: { label: "Cas conseil — 90 jours", phrase: "42 rendez-vous. 54 % de conversion. 2 500 euros de CA moyen.", next: "Cas comptable" },
-  72: { label: "Cas comptable — situation", phrase: "Un cabinet d’expertise comptable indépendant.", next: "Trois mois" },
-  73: { label: "Cas comptable — 3 mois", phrase: "11, puis 13, puis 13 profils. 9 000 euros cumulés.", next: "Grille" },
-  74: { label: "Cabinets", phrase: "Et d’autres cabinets, déjà.", next: "30 jours" },
+  S09_R2Reveal: [
+    { label: "Cube → Logo", phrase: "Ce système, on l'appelle…" },
+    { label: "HERCULE R2", phrase: "Hercule R2." },
+    { label: "Audience — Volume", phrase: "Première étape : le volume." },
+    { label: "Liste de pros", phrase: "Nous identifions une large liste de professionnels." },
+    { label: "Profils cibles", phrase: "BNC, BIC, TNS — ou tout autre profil." },
+    { label: "Le terrain", phrase: "À ce stade, on construit le volume. Pas encore le filtre." },
+    { label: "FILTRE — Qualification", phrase: "Deuxième étape : la qualification." },
+    { label: "Contact", phrase: "Nous prenons contact avec les professionnels identifiés." },
+    { label: "Trois grilles", phrase: "On ne pose pas les mêmes questions à tout le monde." },
+    { label: "DEC — suivi", phrase: "Comment se passe le suivi financier du restaurant ?" },
+    { label: "DEC — marges", phrase: "Pas de pilotage des marges, on veut le mettre en place." },
+    { label: "DEC — pilotage", phrase: "Un accompagnement au-delà de la comptabilité ?" },
+    { label: "DEC — confirmation", phrase: "Quelqu'un qui pilote avec nous, pas un prestataire de plus." },
+    { label: "DEC — 300 €", phrase: "Un accompagnement à 300 € par mois minimum, est-ce acceptable ?" },
+    { label: "DEC — ROI", phrase: "Si le ROI est démontré, c'est ce que nous recherchons." },
+    { label: "DEC — visio", phrase: "Seriez-vous disponible le 7 décembre à 10h ?" },
+    { label: "DEC — créneau", phrase: "Le 7 à 10h, je ne peux pas. Lundi à 13h ?" },
+    { label: "DEC — qualifié", phrase: "Prospect qualifié : solvable + pilotage." },
+    { label: "IAS — assurance", phrase: "Avez-vous des besoins en assurance pour l'entreprise ?" },
+    { label: "IAS — besoins", phrase: "RC pro et locaux. Il faut remettre les contrats à niveau." },
+    { label: "IAS — trésorerie", phrase: "Plus de 50 000 € de trésorerie ?" },
+    { label: "IAS — 80 k€", phrase: "Autour de 80 000 €, on peut avancer." },
+    { label: "IAS — contrats", phrase: "Les contrats ont-ils été réévalués récemment ?" },
+    { label: "IAS — activité", phrase: "Rien n'a été repris, ça ne correspond plus." },
+    { label: "IAS — couverture", phrase: "Ouvert à faire le point sur les garanties ?" },
+    { label: "IAS — accord", phrase: "Des garanties à jour, pas un devis pour le principe." },
+    { label: "IAS — visio", phrase: "Seriez-vous disponible le 7 décembre à 10h ?" },
+    { label: "IAS — lien", phrase: "D'accord pour le 7. Envoyez le lien de la visio." },
+    { label: "IAS — qualifié", phrase: "Prospect qualifié : 50 k€ + besoin d'assurance." },
+    { label: "CIF — impôt", phrase: "Avez-vous une idée du montant d'impôt que vous payez ?" },
+    { label: "CIF — impôt vu", phrase: "On le voit chaque année, on ne sait pas quoi en faire." },
+    { label: "CIF — 50 k€", phrase: "Un minimum de 50 000 € pour activer des leviers ?" },
+    { label: "CIF — 100 k€", phrase: "Environ 100 000 €. Une proposition sérieuse." },
+    { label: "CIF — leviers", phrase: "Étudier les leviers adaptés avant de décider ?" },
+    { label: "CIF — confirmation", phrase: "Oui. Je veux être accompagné pour trancher." },
+    { label: "CIF — visio", phrase: "Seriez-vous disponible le 7 décembre à 10h ?" },
+    { label: "CIF — créneau", phrase: "Le 7 à 10h, je suis pris. Lundi à 13h ?" },
+    { label: "CIF — qualifié", phrase: "Prospect qualifié : 50 k€ + leviers identifiés." },
+    { label: "Logo R2", phrase: "Voilà le système dans son ensemble." },
+    { label: "Courtage de projet", phrase: "Courtage de projet BNC, BIC, TNS. Patience et expertise métier." },
+  ],
 
-  // ── S10 Le temps ────────────────────────────
-  75: { label: "30 jours", phrase: "Deux rendez-vous par semaine.", next: "Zoom 4 mois" },
-  76: { label: "25–30 rendez-vous", phrase: "Sur 4 mois : 25 à 30 rendez-vous.", next: "Hercule DEC" },
+  S10_JohnDemo: [
+    { label: "30 jours", phrase: "Deux rendez-vous par semaine." },
+    { label: "25–30 rendez-vous", phrase: "Sur 4 mois : 25 à 30 rendez-vous." },
+  ],
 
-  // ── S13 Hercule DEC ─────────────────────────
-  77: { label: "Restaurant", phrase: "Première offre : Hercule DEC. Prenons un restaurant.", next: "Leur problème" },
-  78: { label: "Leur problème", phrase: "Le chiffre d’affaires monte. La marge se contracte.", next: "Pourquoi ils changent" },
-  79: { label: "Pourquoi ils changent", phrase: "Le cabinet actuel ne traite pas ça.", next: "Ce que vous apportez" },
-  80: { label: "Ce que vous apportez", phrase: "Ratio matière, pilotage, coûts, rentabilité.", next: "Budget" },
-  81: { label: "Budget 300 €", phrase: "300 euros par mois.", next: "10 rendez-vous" },
-  82: { label: "10 rendez-vous", phrase: "10 rendez-vous qualifiés par mois.", next: "5 signatures" },
-  83: { label: "5 signatures", phrase: "5 signatures. 50 % de conversion.", next: "1 500 € / mois" },
-  84: { label: "1 500 € / mois", phrase: "1 500 euros de revenus récurrents par mois.", next: "Mois 1" },
-  85: { label: "Mois 1", phrase: "1 500 euros de CA pour un mois.", next: "Mois suivants" },
-  86: { label: "Mois suivants", phrase: "4 500 euros au deuxième mois. 9 000 euros cumulés sur 3 mois.", next: "Prix" },
-  87: { label: "Prix 1 499 €", phrase: "1 499 euros par mois.", next: "Hercule Courtage" },
+  S13_HerculeDEC: [
+    { label: "Restaurant", phrase: "Première offre : Hercule DEC. Prenons un restaurant." },
+    { label: "Leur problème", phrase: "Le chiffre d'affaires monte. La marge se contracte." },
+    { label: "Pourquoi ils changent", phrase: "Le cabinet actuel ne traite pas ça." },
+    { label: "Ce que vous apportez", phrase: "Ratio matière, pilotage, coûts, rentabilité." },
+    { label: "Budget 300 €", phrase: "300 euros par mois." },
+    { label: "10 rendez-vous", phrase: "10 rendez-vous qualifiés par mois." },
+    { label: "5 signatures", phrase: "5 signatures. 50 % de conversion." },
+    { label: "1 500 € / mois", phrase: "1 500 euros de revenus récurrents par mois." },
+    { label: "Mois 1", phrase: "1 500 euros de CA pour un mois." },
+    { label: "Mois suivants", phrase: "4 500 euros au deuxième mois. 9 000 euros cumulés sur 3 mois." },
+    { label: "Prix 1 499 €", phrase: "1 499 euros par mois." },
+  ],
 
-  // ── S14 Hercule Courtage ────────────────────
-  88: { label: "Médecin", phrase: "Deuxième offre : Hercule Courtage. Prenons un médecin.", next: "Leur problème" },
-  89: { label: "Pression fiscale", phrase: "Les revenus sont là. L’impôt monte.", next: "Pourquoi ils changent" },
-  90: { label: "Pourquoi ils changent", phrase: "Retraite, patrimoine, prévoyance, financement : tout est dispersé.", next: "Architecture" },
-  91: { label: "Architecture", phrase: "PER, Lombard, SCPI, prévoyance.", next: "Ticket" },
-  92: { label: "Ticket 50 000 €", phrase: "Ticket moyen : 50 000 euros.", next: "Commission" },
-  93: { label: "Commission 2 500 €", phrase: "5 %, soit 2 500 euros.", next: "25 profils" },
-  94: { label: "25 profils", phrase: "25 profils qualifiés en 3 mois.", next: "13 signatures" },
-  95: { label: "13 signatures", phrase: "13 signatures. 50 % de conversion.", next: "ROI 3 mois" },
-  96: { label: "ROI 3 mois", phrase: "32 500 euros de commissions sur 3 mois.", next: "Prix" },
-  97: { label: "Prix 3 900 €", phrase: "3 900 euros pour 3 mois.", next: "Différence" },
-  98: { label: "Différence", phrase: "32 500 euros de commissions. 3 900 euros une fois.", next: "FAQ" },
+  S14_HerculeCourtage: [
+    { label: "Médecin", phrase: "Deuxième offre : Hercule Courtage. Prenons un médecin." },
+    { label: "Pression fiscale", phrase: "Les revenus sont là. L'impôt monte." },
+    { label: "Pourquoi ils changent", phrase: "Retraite, patrimoine, prévoyance, financement : tout est dispersé." },
+    { label: "Architecture", phrase: "PER, Lombard, SCPI, prévoyance." },
+    { label: "Ticket 50 000 €", phrase: "Ticket moyen : 50 000 euros." },
+    { label: "Commission 2 500 €", phrase: "5 %, soit 2 500 euros." },
+    { label: "25 profils", phrase: "25 profils qualifiés en 3 mois." },
+    { label: "13 signatures", phrase: "13 signatures. 50 % de conversion." },
+    { label: "ROI 3 mois", phrase: "32 500 euros de commissions sur 3 mois." },
+    { label: "Prix 3 900 €", phrase: "3 900 euros pour 3 mois." },
+    { label: "Différence", phrase: "32 500 euros de commissions. 3 900 euros une fois." },
+  ],
 
-  // ── S15 FAQ ─────────────────────────────────
-  99: { label: "FAQ — intro", phrase: "Des questions ?", next: "Q1 : région" },
-  100: { label: "Q : région ?", phrase: "Les prospects sont-ils dans ma région ?", next: "R : région" },
-  101: { label: "R : région", phrase: "On priorise votre région si pertinent. Par défaut, France entière en visio. Le volume compense la conversion.", next: "Q2 : paiement mensuel" },
-  102: { label: "Q : paiement mensuel ?", phrase: "Puis-je payer au mois ?", next: "R : paiement" },
-  103: { label: "R : paiement", phrase: "Oui. 1 800 euros par mois, ou 3 900 euros pour 3 mois.", next: "4 jours" },
-  104: { label: "4 jours", phrase: "Quatre jours de rétractation.", next: "Q : questions" },
-  105: { label: "Q : questions ?", phrase: "Est-ce que je peux changer les questions posées ?", next: "R : questions" },
-  106: { label: "R : questions", phrase: "Oui, vous pouvez changer les questions. Objectif : une qualification selon vos critères.", next: "Q4 : qualification" },
-  107: { label: "Q : qualification ?", phrase: "Comment savoir si le profil est bien qualifié ?", next: "R : qualification" },
-  108: { label: "R : qualification", phrase: "Un profil qualifié cumule trois validations : problème concret validé niche par niche, budget avec plancher atteint, et rendez-vous — le prospect réserve lui-même dans votre agenda. Pas un nom sur une liste.", next: "Q5 : IAS + CIF" },
-  109: { label: "Q : IAS + CIF ?", phrase: "Pourquoi IAS et CIF sont dans la même offre ?", next: "R : IAS / CIF" },
-  110: { label: "R : IAS / CIF", phrase: "Le filtre est le même : 50 000 euros de trésorerie. L’usage change. IAS, ORIAS : le dirigeant est le point de défaillance, rien n’est couvert. CIF, AMF : le cash dort, l’impôt monte, aucun placement structuré. Une infrastructure, parce que le tri est identique. La prescription ne se mélange pas.", next: "Lien Stripe" },
+  S11_CaseBrokerage: [
+    { label: "Cas conseil — cabinet", phrase: "Nos meilleures réussites. Premier cabinet : Oxygen Patrimoine." },
+    { label: "Cas conseil — situation", phrase: "Un cabinet indépendant, IAS et CIF." },
+    { label: "Cas conseil — action", phrase: "Un flux de profils qualifiés arrive dans l'agenda." },
+    { label: "Cas conseil — résultat", phrase: "En 83 jours : 31 profils, 54 % de conversion." },
+    { label: "Cas conseil — chiffres", phrase: "2 734 euros de panier moyen par profil." },
+  ],
 
-  // ── S16 Inscription ─────────────────────────
-  111: { label: "Lien Stripe", phrase: "Le lien Stripe sera dans le chat.", next: "4 places" },
-  112: { label: "4 places", phrase: "Quatre places par accompagnement.", next: "5 minutes" },
-  113: { label: "5 minutes", phrase: "Cinq minutes pour s’inscrire.", next: "Cube final" },
+  S11_CaseAccounting: [
+    { label: "Cas comptable — cabinet", phrase: "Deuxième cabinet : Cabinet Sanner." },
+    { label: "Cas comptable — situation", phrase: "Un cabinet d'expertise comptable indépendant." },
+    { label: "Cas comptable — action", phrase: "Des rendez-vous qualifiés, chaque mois." },
+    { label: "Cas comptable — résultat", phrase: "10 032 euros de chiffre d'affaires cumulé sur 3 mois." },
+    { label: "Cas comptable — chiffres", phrase: "11, puis 13, puis 13 profils. 53 % de conversion." },
+  ],
 
-  // ── S17 Conclusion ──────────────────────────
-  114: { label: "Cube final", phrase: "(silence)", next: "Formules" },
+  S12_SocialProof: [
+    { label: "Saisons précédentes", phrase: "Et d'autres cabinets, déjà." },
+  ],
 
-  // ── S18 Offres statiques ────────────────────
-  115: { label: "Formules", phrase: "Les deux formules restent à l’écran.", next: "Inscription" },
-  116: { label: "Inscription", phrase: "L’inscription est ouverte, ou fermée.", next: "Fin" },
+  S15_FAQ: [
+    { label: "FAQ — intro", phrase: "Des questions ?" },
+    { label: "Q : région ?", phrase: "Les prospects sont-ils dans ma région ?" },
+    { label: "R : région", phrase: "On priorise votre région si pertinent. Par défaut, France entière en visio. Le volume compense la conversion." },
+    { label: "Q : paiement mensuel ?", phrase: "Puis-je payer au mois ?" },
+    { label: "R : paiement", phrase: "Oui. 1 800 euros par mois, ou 3 900 euros pour 3 mois." },
+    { label: "4 jours", phrase: "Quatre jours de rétractation." },
+    { label: "Q : questions ?", phrase: "Est-ce que je peux changer les questions posées ?" },
+    { label: "R : questions", phrase: "Oui, vous pouvez changer les questions. Objectif : une qualification selon vos critères." },
+    { label: "Q : qualification ?", phrase: "Comment savoir si le profil est bien qualifié ?" },
+    { label: "R : qualification", phrase: "Un profil qualifié cumule trois validations : problème concret validé niche par niche, budget avec plancher atteint, et rendez-vous — le prospect réserve lui-même dans votre agenda. Pas un nom sur une liste." },
+    { label: "Q : IAS + CIF ?", phrase: "Pourquoi IAS et CIF sont dans la même offre ?" },
+    { label: "R : IAS / CIF", phrase: "Le filtre est le même : 50 000 euros de trésorerie. L'usage change. IAS, ORIAS : le dirigeant est le point de défaillance, rien n'est couvert. CIF, AMF : le cash dort, l'impôt monte, aucun placement structuré. Une infrastructure, parce que le tri est identique. La prescription ne se mélange pas." },
+  ],
+
+  S16_Urgency: [
+    { label: "Lien Stripe", phrase: "Le lien Stripe sera dans le chat." },
+    { label: "4 places", phrase: "Quatre places par accompagnement." },
+    { label: "5 minutes", phrase: "Cinq minutes pour s'inscrire." },
+  ],
+
+  S17_Close: [
+    { label: "Cube final", phrase: "(silence)" },
+  ],
+
+  S18_StaticOffers: [
+    { label: "Formules", phrase: "Les deux formules restent à l'écran." },
+    { label: "Inscription", phrase: "L'inscription est ouverte, ou fermée." },
+  ],
 };
+
+export function cueFor(scene: SceneId, step: number): Cue | undefined {
+  return CUES[scene][step];
+}

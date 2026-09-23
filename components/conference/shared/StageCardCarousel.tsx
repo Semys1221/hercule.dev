@@ -10,7 +10,7 @@ import {
   type StageCard,
 } from "../scenes/card-deck";
 import { SceneShell } from "./SceneShell";
-import { SilverHerculeMark } from "./SilverHerculeMark";
+import { GlassHerculeMark } from "./GlassHerculeMark";
 import { StageCardDeck, type StageCardDeckItem } from "./StageCardDeck";
 
 const TIMELINE_NODE_COUNT = 2;
@@ -57,7 +57,7 @@ function CardFace({ card }: { card: StageCard }) {
         <div className="flex items-center gap-10">
           {(["DEC", "Courtage"] as const).map((edition) => (
             <div key={edition} className="flex flex-col items-center gap-2">
-              <SilverHerculeMark className="size-10" />
+              <GlassHerculeMark className="size-10" />
               <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
                 {edition}
               </p>

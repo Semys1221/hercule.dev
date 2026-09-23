@@ -9,7 +9,7 @@ import { StageSubtitle } from "../shared/StageSubtitle";
 /**
  * S03.5 — Point de départ  (step 0)
  *
- * Transition entre les limites du BAO et la prospection froide.
+ * Opens the bouche-à-oreille chapter, after the intro and before S02.
  */
 export function S03_5_StartingPoint({ step }: SceneProps) {
   return (

@@ -1,4 +1,7 @@
-import { sendBookingEmail } from "@/lib/(resend)/communication/send";
+import {
+  sendBookingEmail,
+  type SendBookingEmailResult,
+} from "@/lib/(resend)/communication/send";
 import { conferenceOfferLabel } from "@/lib/commercial/conference-pricing";
 import { buildClientDashboardUrl } from "@/lib/clients/supabase";
 import type { ClientRow } from "@/lib/clients/types";
@@ -8,50 +11,89 @@ import {
   videoConferenceOpsAction,
 } from "@/lib/clients/video-conference";
 
-export function buildOnboardingVideoConferenceEmailBody(params: {
+type OnboardingAnswersParams = {
   client: ClientRow;
   videoConference: ClientVideoConference;
-}): string {
-  const displayName = params.client.first_name?.trim() || params.client.email;
-  const dashboardLink = buildClientDashboardUrl(params.client.slug);
-  const visioLabel = videoConferenceLabel(params.videoConference);
+  startNow: boolean;
+  unavailability: string;
+};
 
-  return [
-    "Un client a complété son onboarding et a indiqué son choix de visioconférence.",
+function verticalLabel(client: ClientRow): string {
+  const primary = client.client_type.toUpperCase();
+  return client.secondary_vertical
+    ? `${primary} + ${client.secondary_vertical.toUpperCase()}`
+    : primary;
+}
+
+export function buildOnboardingAnswersEmailBody(
+  params: OnboardingAnswersParams & { audience: "ops" | "client" },
+): string {
+  const displayName = params.client.first_name?.trim() || params.client.email;
+  const lines = [
+    params.audience === "ops"
+      ? "Un client a complété son onboarding."
+      : "Voici la copie de vos réponses d'onboarding.",
     "",
     `Prénom : ${displayName}`,
     `Email : ${params.client.email}`,
-    `Slug : ${params.client.slug}`,
-    `Verticale : ${params.client.client_type}`,
+    `Numéro de suivi : ${params.client.slug}`,
+    `Verticale : ${verticalLabel(params.client)}`,
     `Formule : ${conferenceOfferLabel(params.client.offer_type)}`,
-    `Visioconférence : ${visioLabel}`,
-    "",
-    `Action : ${videoConferenceOpsAction(params.videoConference)}`,
-    "",
-    `Dashboard : ${dashboardLink}`,
-  ].join("\n");
-}
+    `Visioconférence : ${videoConferenceLabel(params.videoConference)}`,
+    `Démarrage immédiat : ${params.startNow ? "oui" : "non"}`,
+    `Indisponibilités : ${params.unavailability}`,
+  ];
 
-export async function notifyOnboardingVideoConference(params: {
-  client: ClientRow;
-  videoConference: ClientVideoConference;
-}): Promise<void> {
-  const opsEmail = process.env.NOTIFICATION_OPS_EMAIL?.trim();
-  if (!opsEmail) {
-    return;
+  if (params.audience === "ops") {
+    lines.push("", `Action : ${videoConferenceOpsAction(params.videoConference)}`);
   }
 
+  lines.push("", `Dashboard : ${buildClientDashboardUrl(params.client.slug)}`);
+  return lines.join("\n");
+}
+
+/** Best-effort: the onboarding is already saved, a failed email must not fail the request. */
+export async function notifyOnboardingAnswers(
+  params: OnboardingAnswersParams,
+  options: { copyClient?: boolean } = {},
+): Promise<void> {
   const displayName = params.client.first_name?.trim() || params.client.email;
-  const visioLabel = videoConferenceLabel(params.videoConference);
+  const opsEmail = process.env.NOTIFICATION_OPS_EMAIL?.trim();
+  const clientEmail = params.client.email.trim();
+  const sends: Array<Promise<SendBookingEmailResult>> = [];
 
-  const result = await sendBookingEmail({
-    to: opsEmail,
-    subject: `[Onboarding] Visioconférence — ${displayName} · ${visioLabel}`,
-    text: buildOnboardingVideoConferenceEmailBody(params),
-    idempotencyKey: `client-onboarding-visio-ops:${params.client.id}`,
-  });
+  if (opsEmail) {
+    sends.push(
+      sendBookingEmail({
+        to: opsEmail,
+        subject: `[Onboarding] Réponses — ${displayName}`,
+        text: buildOnboardingAnswersEmailBody({ ...params, audience: "ops" }),
+        idempotencyKey: `client-onboarding-answers-ops:${params.client.id}`,
+      }),
+    );
+  }
 
-  if (!result.ok) {
-    throw new Error(result.error);
+  if ((options.copyClient ?? true) && clientEmail && clientEmail !== opsEmail) {
+    sends.push(
+      sendBookingEmail({
+        to: clientEmail,
+        subject: "Vos réponses d'onboarding — Hercule",
+        text: buildOnboardingAnswersEmailBody({ ...params, audience: "client" }),
+        idempotencyKey: `client-onboarding-answers-client:${params.client.id}`,
+      }),
+    );
+  }
+
+  const results = await Promise.allSettled(sends);
+  for (const result of results) {
+    const error =
+      result.status === "rejected"
+        ? String(result.reason)
+        : result.value.ok
+          ? null
+          : result.value.error;
+    if (error) {
+      console.error("[onboarding-answers] email failed", params.client.slug, error);
+    }
   }
 }

@@ -1,23 +1,72 @@
-export const CLIENT_CGV_VERSION = "2026-09-22";
+import type {
+  ConferenceBilling,
+  ConferenceClientType,
+} from "@/lib/commercial/conference-pricing";
+import { CONFERENCE_CLIENT_TYPES } from "@/lib/commercial/conference-pricing";
 
-export const CLIENT_CGV_HIGHLIGHTS = [
-  {
-    title: "10 RDV garantis · 30 j de test",
-    body: "1 499 € pour 1 mois — 10 rendez-vous qualifiés garantis. Vous disposez de 30 jours pour tester le dispositif. Si l'objectif n'est pas atteint, Hercule poursuit la prospection 30 jours supplémentaires sans frais.",
-  },
-  {
-    title: "Rétractation 4 jours",
-    body: "Vous disposez de 4 jours calendaires après souscription pour vous rétracter (contact@hercule.dev), tant que l'Activation n'a pas démarré.",
-  },
-  {
-    title: "No-show recrédité",
-    body: "Prospect absent malgré relance H-24 : crédit recrédité, remplacement planifié sous 14 jours ouvrés. Signalement sous 48 h.",
-  },
-] as const;
+export const CLIENT_CGV_VERSION = "2026-09-23";
 
-/** Plain-text CGV body for the onboarding scroll (canon 2026-09-22). */
+export function guaranteeMonthsLabel(billing: ConferenceBilling): string {
+  return billing === "monthly" ? "1 mois" : "3 mois";
+}
+
+export function clientCgvHighlights(params: {
+  clientType: ConferenceClientType;
+  secondaryVertical: "ias" | null;
+  billing: ConferenceBilling;
+  startNow: boolean;
+  rdvTotal: number;
+}): Array<{ title: string; body: string }> {
+  const months = guaranteeMonthsLabel(params.billing);
+  const showIas =
+    params.clientType === CONFERENCE_CLIENT_TYPES.ias ||
+    params.secondaryVertical === "ias";
+  const showCif = params.clientType === CONFERENCE_CLIENT_TYPES.cif;
+  const showDec = params.clientType === CONFERENCE_CLIENT_TYPES.dec;
+
+  const items: Array<{ title: string; body: string }> = [
+    {
+      title: params.startNow ? "Vous démarrez maintenant" : "Vous gardez 4 jours",
+      body: params.startNow
+        ? `La rétractation de 4 jours est remplacée par une garantie de ${months} de service offert.`
+        : "Vous pouvez encore changer d'avis pendant 4 jours (contact@hercule.dev), tant que le service n'a pas démarré.",
+    },
+    {
+      title: `Garantie ${months}`,
+      body: `Si vos ${params.rdvTotal} rendez-vous ne sont pas livrés entre J+1 et J+60, on prolonge le service de ${months}, sans frais.`,
+    },
+  ];
+
+  if (showDec) {
+    items.push({
+      title: "Votre filtre",
+      body: "Restaurants indépendants, au moins 3 salariés, BIC.",
+    });
+  }
+  if (showIas) {
+    items.push({
+      title: "Votre exercice IAS",
+      body: "Vous confirmez un exercice de plus de 30 000 €, obtenu par téléphone, SMS, formulaire ou email.",
+    });
+  }
+  if (showCif) {
+    items.push({
+      title: "Votre exercice CIF",
+      body: "Vous confirmez un exercice de plus de 50 000 €, obtenu par téléphone, SMS, formulaire ou email.",
+    });
+  }
+
+  items.push({
+    title: "Absent au rendez-vous",
+    body: "S'il ne vient pas malgré la relance de la veille, le crédit revient et on replanifie sous 14 jours ouvrés. Dites-le-nous sous 48 h.",
+  });
+
+  return items;
+}
+
+/** Plain-text CGV body for the onboarding scroll (canon 2026-09-23). */
 export const CLIENT_CGV_BODY = `Conditions Générales de Vente — Hercule
-Version : 2026-09-22
+Version : 2026-09-23
 Prestataire : Hercule — groupement d'entrepreneurs dirigé par Evan Sinclair
 Contact : contact@hercule.dev · Mentions : hercule.dev/mentions-legales
 
@@ -51,7 +100,7 @@ Prix : 1 499 €
 Durée : 1 mois
 Crédits : 10 rendez-vous qualifiés garantis
 Période de test : 30 jours
-Garantie complémentaire : Si les 10 RDV ne sont pas générés pendant l'abonnement, Hercule poursuit la prospection pendant 30 jours supplémentaires, sans frais, pour compléter les RDV restants
+Garantie complémentaire : si les RDV du quota ne sont pas livrés entre J+1 et J+60, prolongation sans frais de 1 mois (mensuel) ou 3 mois (pack)
 Filtre garanti : Restaurants indépendants +3 salariés · BIC
 Garantie signature / MRR : Aucune
 
@@ -77,7 +126,9 @@ Impayé > 7 jours : suspension possible.
 
 Client professionnel — droit de rétractation consommateur non applicable.
 
-Politique commerciale : 4 jours calendaires après souscription pour se rétracter (email contact@hercule.dev), tant que l'Activation n'a pas démarré. Renonciation possible à l'onboarding / dashboard.
+Politique commerciale : 4 jours calendaires après souscription pour se rétracter (email contact@hercule.dev), tant que l'Activation n'a pas démarré.
+
+À l'onboarding, le Client peut choisir de démarrer tout de suite. Ce choix remplace ces 4 jours par la garantie de prolongation : 1 mois de service offert sur une formule mensuelle, 3 mois sur un pack.
 
 6. Délais, no-show et garanties opérationnelles
 
@@ -88,7 +139,15 @@ Grâce retard livraison : 7 jours — contacter contact@hercule.dev avant disput
 
 No-show (prospect absent malgré relance H-24) : crédit recrédité ; remplacement planifié sous 14 jours ouvrés.
 
-Hercule Mercantile (DEC) : le Client dispose de 30 jours pour tester le dispositif. Si les 10 rendez-vous qualifiés ne sont pas générés pendant l'abonnement, Hercule poursuit la prospection pendant 30 jours supplémentaires, sans frais, afin de compléter les rendez-vous restants.
+Garantie de prolongation : si les rendez-vous du quota ne sont pas livrés entre J+1 et J+60 après activation, Hercule prolonge le service sans frais — 1 mois pour une formule mensuelle, 3 mois pour un pack.
+
+Quota : celui de la formule souscrite (Hercule Mercantile : 10 rendez-vous qualifiés en mensuel, 30 en pack ; Hercule Hubris : quota indiqué à la souscription).
+
+Attestation de volume (IAS et CIF)
+
+En IAS, le Client confirme explicitement un exercice supérieur à 30 000 €, obtenu par téléphone, SMS, formulaire ou email.
+En CIF, le Client confirme explicitement un exercice supérieur à 50 000 €, obtenu par les mêmes canaux.
+Un Client CIF + IAS confirme les deux seuils.
 
 Warm-up technique (~14 j) et premiers créneaux visibles (J+15) sont communiqués après paiement (email protocole) — jamais sur slide prix / checkout.
 

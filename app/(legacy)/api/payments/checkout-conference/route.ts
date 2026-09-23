@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { z } from "zod";
 
-import { firstLeadAtFrom } from "@/lib/clients/round-robin";
 import {
   CONFERENCE_CARDS,
   hasSecondaryVertical,
@@ -21,10 +20,7 @@ import {
   priceIdForConferenceOffer,
   stripeCheckoutModeForConferencePrice,
 } from "@/lib/legacy/payments/conference-offers";
-import {
-  allocateSlugs,
-  loadSlugSet,
-} from "@/lib/legacy/link-tracking/slug";
+import { createConferenceClientDraft } from "@/lib/legacy/payments/conference-client-draft";
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import {
   getAppBaseUrl,
@@ -85,46 +81,15 @@ export async function POST(request: Request) {
       }
       throw error;
     }
-    const existingSlugs = await loadSlugSet(client);
-    const [slug] = allocateSlugs(existingSlugs, 1);
-
-    const placeholderEmail = `pending+${slug}@checkout.hercule.dev`;
     const secondaryVertical = hasSecondaryVertical(selections) ? "ias" : null;
 
-    const { data: clientRow, error: clientInsertError } = await client
-      .from("clients")
-      .insert({
-        email: placeholderEmail,
-        slug,
-        client_type: clientType,
-        secondary_vertical: secondaryVertical,
-        billing,
-        offer_type: offerType,
-        rdv_total: rdvCount,
-        rdv_used: 0,
-        first_lead_at: firstLeadAtFrom(new Date()),
-      })
-      .select("id")
-      .single();
-
-    if (clientInsertError || !clientRow) {
-      throw new Error(clientInsertError?.message ?? "Failed to create client row");
-    }
-
-    const { data: paymentRow, error: paymentError } = await client
-      .from("payments")
-      .insert({
-        client_id: clientRow.id,
-        offer_type: offerType,
-        amount_cents: amountCents,
-        status: "pending",
-      })
-      .select("id")
-      .single();
-
-    if (paymentError || !paymentRow) {
-      throw new Error(paymentError?.message ?? "Failed to create payment row");
-    }
+    const draft = await createConferenceClientDraft(client, {
+      clientType,
+      billing: billing as ConferenceBilling,
+      offerType,
+      secondaryVertical,
+    });
+    const { slug } = draft;
 
     const stripe = getStripeClient();
     const priceId = priceIdForConferenceOffer(offerType);
@@ -153,8 +118,8 @@ export async function POST(request: Request) {
 
     const metadata: Record<string, string> = {
       slug,
-      client_id: clientRow.id,
-      payment_id: paymentRow.id,
+      client_id: draft.clientId,
+      payment_id: draft.paymentId,
       client_type: clientType,
       offer_type: offerType,
       billing,
@@ -195,7 +160,7 @@ export async function POST(request: Request) {
     const { error: sessionLinkError } = await client
       .from("payments")
       .update({ stripe_checkout_session_id: session.id })
-      .eq("id", paymentRow.id);
+      .eq("id", draft.paymentId);
 
     if (sessionLinkError) {
       throw new Error(sessionLinkError.message);

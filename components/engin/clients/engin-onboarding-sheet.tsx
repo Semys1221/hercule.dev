@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import type { ClientOnboardingAnswers } from "@/lib/clients/onboarding-answers";
 import type { OnboardingStepStatus } from "@/lib/clients/engin-types";
 import { toast } from "@/hooks/use-toast";
 
@@ -54,6 +56,7 @@ export function EnginOnboardingSheet({
 }: EnginOnboardingSheetProps) {
   const [loading, setLoading] = React.useState(false);
   const [steps, setSteps] = React.useState<OnboardingStepStatus[]>([]);
+  const [answers, setAnswers] = React.useState<ClientOnboardingAnswers | null>(null);
 
   React.useEffect(() => {
     if (!open || !clientId) {
@@ -62,6 +65,8 @@ export function EnginOnboardingSheet({
 
     let cancelled = false;
     setLoading(true);
+    setSteps([]);
+    setAnswers(null);
 
     void (async () => {
       try {
@@ -78,10 +83,12 @@ export function EnginOnboardingSheet({
         }
         if (!cancelled) {
           setSteps((body.steps ?? []) as OnboardingStepStatus[]);
+          setAnswers((body.answers ?? null) as ClientOnboardingAnswers | null);
         }
       } catch (error) {
         if (!cancelled) {
           setSteps([]);
+          setAnswers(null);
           toast({
             variant: "destructive",
             title: "Onboarding indisponible",
@@ -110,6 +117,36 @@ export function EnginOnboardingSheet({
             {clientLabel ?? "Client"} — emails payment_onboarding_1…9
           </SheetDescription>
         </SheetHeader>
+
+        {answers ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3">
+            <p className="text-sm font-medium">Réponses</p>
+            <p className="text-sm text-muted-foreground">
+              Prénom : {answers.firstName ?? "—"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Visio : {answers.videoConference ?? "—"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Démarrage immédiat :{" "}
+              {answers.startNow === null ? "—" : answers.startNow ? "oui" : "non"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Indisponibilités : {answers.unavailability ?? "—"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              CGV : {answers.cgvVersion ?? "—"}
+              {answers.cgvAcceptedAt
+                ? ` · ${formatWhen(answers.cgvAcceptedAt)}`
+                : ""}
+            </p>
+            <Button variant="link" size="sm" className="h-auto justify-start px-0" asChild>
+              <a href={answers.dashboardPath} target="_blank" rel="noreferrer">
+                {answers.dashboardPath}
+              </a>
+            </Button>
+          </div>
+        ) : null}
 
         {loading ? (
           <p className="text-sm text-muted-foreground">Chargement…</p>

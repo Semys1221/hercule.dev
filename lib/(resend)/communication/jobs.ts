@@ -1,5 +1,5 @@
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
-import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
+import { tableForLeadCategory, type LeadCategory } from "@/lib/legacy/link-tracking/types";
 
 import type {
   BookingEmailEngagementEvent,
@@ -110,7 +110,7 @@ export async function markJobSent(
 
   if (job?.lead_id) {
     const { data: lead } = await client
-      .from(String(job.lead_category))
+      .from(tableForLeadCategory(job.lead_category as LeadCategory))
       .select("email")
       .eq("id", job.lead_id)
       .maybeSingle();

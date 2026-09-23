@@ -1,3 +1,4 @@
+import { CASE_STEP_COUNT } from "@/lib/conference/case-studies";
 import { DEC_STEP_COUNT, COURTAGE_STEP_COUNT } from "../scenes/card-deck";
 import { S09_STEP_COUNT } from "../scenes/s09-qualification";
 import type { Beat, SceneId } from "./types";
@@ -5,15 +6,10 @@ import type { Beat, SceneId } from "./types";
 type SceneBlock = { scene: SceneId; count: number };
 
 const BLOCKS: SceneBlock[] = [
-  // Séquence preuve sociale — immédiatement après le splash logo Hercule
-  { scene: "S11_CaseBrokerage", count: 2 },
-  { scene: "S11_CaseAccounting", count: 2 },
-  { scene: "S12_SocialProof", count: 1 },
-  // Suite de la présentation (ordre original inchangé)
   { scene: "S01_Intro", count: 4 },
+  { scene: "S03_5_StartingPoint", count: 1 },
   { scene: "S02_WordOfMouth", count: 3 },
   { scene: "S03_WOMProblem", count: 5 },
-  { scene: "S03_5_StartingPoint", count: 1 },
   { scene: "S03_6_BuildAudience", count: 1 },
   { scene: "S04_ColdLeads", count: 3 },
   { scene: "S05_GoogleAds", count: 4 },
@@ -24,6 +20,9 @@ const BLOCKS: SceneBlock[] = [
   { scene: "S10_JohnDemo", count: 2 },
   { scene: "S13_HerculeDEC", count: DEC_STEP_COUNT },
   { scene: "S14_HerculeCourtage", count: COURTAGE_STEP_COUNT },
+  { scene: "S11_CaseBrokerage", count: CASE_STEP_COUNT },
+  { scene: "S11_CaseAccounting", count: CASE_STEP_COUNT },
+  { scene: "S12_SocialProof", count: 1 },
   { scene: "S15_FAQ", count: 12 },
   { scene: "S16_Urgency", count: 3 },
   { scene: "S17_Close", count: 1 },

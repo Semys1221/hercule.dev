@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 
 import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 
+import { resolveConferenceCheckoutSession } from "./conference-checkout-session";
 import { getStripeClient } from "./stripe";
 import { handleConferenceCheckoutCompleted } from "./stripe-webhook-conference";
 
@@ -26,14 +27,15 @@ export async function syncConferenceCheckoutSession(
     return { synced: false, reason: "not_paid_yet" };
   }
 
-  if (session.metadata?.source !== "conference" || !session.metadata?.client_id) {
+  const client = createLinkTrackingClient();
+  const conferenceSession = await resolveConferenceCheckoutSession(client, session);
+  if (!conferenceSession) {
     return { synced: false, reason: "not_conference_checkout" };
   }
 
-  const client = createLinkTrackingClient();
   const synced = await handleConferenceCheckoutCompleted(
     client,
-    session,
+    conferenceSession,
     `sync:${session.id}`,
   );
 

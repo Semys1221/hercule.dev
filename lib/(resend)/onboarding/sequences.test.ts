@@ -31,6 +31,10 @@ function main() {
       assert.ok(step.subject.trim().length > 0, `missing subject step ${index + 1}`);
       assert.ok(step.body.trim().length > 0, `missing body step ${index + 1}`);
       assert.ok(
+        step.body.includes("{{dashboardLink}}"),
+        `${vertical} step ${index + 1} must include {{dashboardLink}}`,
+      );
+      assert.ok(
         !step.body.includes("{{firstNameLine}}"),
         `firstNameLine must not appear in ${vertical} step ${index + 1}`,
       );

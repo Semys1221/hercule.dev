@@ -10,15 +10,14 @@ import { ConferencePresenterOverlay } from "./ConferencePresenterOverlay";
 import { ConferenceSlideChrome } from "./ConferenceSlideChrome";
 import { ConferenceSplash } from "./ConferenceSplash";
 import { ConferenceVisualStage } from "./ConferenceVisualStage";
-import { CUES } from "./cues";
+import { cueFor } from "./cues";
 import { ghostCubeAngle } from "./scene-chrome";
 
 const LOCK_MS = 320;
 const FLASH_VISIBLE_MS = 1100;
 /**
  * Beat index of the first visible content.
- * The ConferenceSplash (logo Hercule) replaces the "noir" step — start at 0
- * so S11_CaseBrokerage step 0 (CaseNarrative) is the first visible slide.
+ * The splash plays before beat 1 (Noir). The deck then opens on the intro.
  */
 const FIRST_CONTENT_BEAT = 0;
 
@@ -148,34 +147,9 @@ export function PresentationController() {
   );
 
   const beat = BEATS[beatIdx];
-  const cue = CUES[beat.id];
-
-  useEffect(() => {
-    // #region agent log
-    fetch("http://127.0.0.1:7849/ingest/172cb84e-a8e1-4d83-b273-2b61310f5e7d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "1ddaf6" },
-      body: JSON.stringify({
-        sessionId: "1ddaf6",
-        runId: "post-fix",
-        hypothesisId: "A",
-        location: "PresentationController.tsx:beat",
-        message: "active beat",
-        data: {
-          beatIdx,
-          beatId: beat.id,
-          scene: beat.scene,
-          step: beat.step,
-          cueLabel: cue?.label ?? null,
-          totalBeats: TOTAL_BEATS,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [beatIdx, beat.id, beat.scene, beat.step, cue?.label]);
+  const cue = cueFor(beat.scene, beat.step);
   const nextBeat = BEATS[Math.min(beatIdx + 1, TOTAL_BEATS - 1)];
-  const nextCue = CUES[nextBeat.id];
+  const nextCue = cueFor(nextBeat.scene, nextBeat.step);
   const isLast = beatIdx === TOTAL_BEATS - 1;
   const ghostAngle = ghostCubeAngle(beat.scene, beat.step);
   const sceneIndex = SCENE_ORDER.indexOf(beat.scene);
