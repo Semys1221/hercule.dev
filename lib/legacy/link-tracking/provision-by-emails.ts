@@ -2,7 +2,7 @@ import {
   findLeadByEmailInCampaign,
   findLeadByEmailInList,
 } from "@/lib/legacy/instantly-bypass/client";
-import { resolveJumVerticalByCampaignId } from "@/lib/legacy/admin/niches/jum-verticals";
+import { resolveComptableDeliveryVerticalByCampaignId } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import {
   createLinkTrackingClient,
   findLeadsByEmails,
@@ -97,16 +97,24 @@ export async function provisionLeadsByEmails(params: {
   listId: string;
   campaignId: string;
   category: LeadCategory;
+  comptableDeliverySegment?: string | null;
+  /** @deprecated */
   jumSegment?: string | null;
 }): Promise<ProvisionLeadsByEmailsResult> {
   const listId = params.listId.trim();
   const campaignId = params.campaignId.trim();
   const category = params.category;
-  const jumSegment =
+  const comptableDeliverySegment =
+    params.comptableDeliverySegment?.trim() ||
     params.jumSegment?.trim() ||
-    (category === "jum"
-      ? resolveJumVerticalByCampaignId(campaignId)?.segment ?? null
+    (category === "comptable_delivery"
+      ? resolveComptableDeliveryVerticalByCampaignId(campaignId)?.segment ??
+        null
       : null);
+  const deliveryVertical =
+    category === "comptable_delivery"
+      ? resolveComptableDeliveryVerticalByCampaignId(campaignId)
+      : null;
   const normalizedEmails = normalizeProvisionEmails(params.emails);
   const apiKey = getInstantlyApiKey();
   const client = createLinkTrackingClient();
@@ -144,7 +152,9 @@ export async function provisionLeadsByEmails(params: {
     campaignId,
     category,
     fromCampaign: false,
-    jumSegment,
+    comptableDeliverySegment,
+    comptableDeliveryRouteSegment: deliveryVertical?.routeSegment ?? null,
+    jumSegment: comptableDeliverySegment,
   });
 
   const customVariablesByEmail = { ...executed.customVariablesByEmail };
@@ -159,13 +169,15 @@ export async function provisionLeadsByEmails(params: {
       email,
       existing.lead.statut ?? "NOTBOOKED",
       category,
-      category === "jum"
+      category === "comptable_delivery"
         ? {
-            jumSegment:
-              jumSegment ||
+            comptableDeliverySegment:
+              comptableDeliverySegment ||
               (typeof existing.lead.profile?.segment === "string"
                 ? existing.lead.profile.segment
                 : null),
+            comptableDeliveryRouteSegment: deliveryVertical?.routeSegment ?? null,
+            jumSegment: comptableDeliverySegment,
           }
         : undefined,
     );

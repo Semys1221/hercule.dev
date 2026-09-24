@@ -9,15 +9,17 @@ import {
   createLinkTrackingClient,
   normalizeEmail,
 } from "@/lib/legacy/link-tracking/supabase";
+import type { ComptableDeliveryRouteSegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
+import { routeSegmentForComptableDeliverySegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import { allocateSlugs, loadSlugSet } from "@/lib/legacy/link-tracking/slug";
 import type { LeadCategory, LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
 import {
   buildCifLeadUrls,
+  buildComptableDeliveryLeadUrls,
   buildComptableLeadUrls,
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
   buildInstantlyCustomVariables,
-  buildJumLeadUrls,
   buildLeadUrls,
   isCanonicalReservationUrl,
   leadSlug,
@@ -54,6 +56,9 @@ export function urlFieldsForCategory(
   category: LeadCategory,
   slug: string,
   email: string,
+  options?: {
+    comptableDeliveryRouteSegment?: ComptableDeliveryRouteSegment;
+  },
 ): Record<string, string> {
   if (category === "comptable") {
     return buildComptableLeadUrls(slug, email);
@@ -61,8 +66,10 @@ export function urlFieldsForCategory(
   if (category === "cif") {
     return buildCifLeadUrls(slug, email);
   }
-  if (category === "jum") {
-    return buildJumLeadUrls(slug, email);
+  if (category === "comptable_delivery") {
+    const routeSegment =
+      options?.comptableDeliveryRouteSegment ?? "restaurant";
+    return buildComptableDeliveryLeadUrls(slug, email, routeSegment);
   }
   if (category === "client") {
     return {
@@ -108,12 +115,15 @@ export function needsProvision(
     if (isCanonicalReservationUrl(reservationLink)) return false;
     return reservationLink.includes("reservation-cif.html");
   }
-  if (category === "jum") {
-    const reservationLink = row.reservation_jum_link?.trim();
-    const confirmLink = row.confirmation_jum_link?.trim();
+  if (category === "comptable_delivery") {
+    const reservationLink = row.reservation_comptable_delivery_link?.trim();
+    const confirmLink = row.confirmation_comptable_delivery_link?.trim();
     if (!slug || !reservationLink || !confirmLink) return true;
     if (isCanonicalReservationUrl(reservationLink)) return false;
-    return !reservationLink.includes("reservation-jum.html");
+    return (
+      reservationLink.includes("reservation-jum.html") ||
+      !reservationLink.includes("/reservation/")
+    );
   }
   const entrepriseLink = row.reservation_entreprise_link?.trim();
   const confirmLink = row.confirmation_agence_link?.trim();
@@ -128,8 +138,11 @@ export function buildRefreshPatch(
   category: LeadCategory,
   campaignId: string,
   instantlyLeadId: string | null,
+  options?: {
+    comptableDeliveryRouteSegment?: ComptableDeliveryRouteSegment;
+  },
 ): Record<string, unknown> {
-  const urls = urlFieldsForCategory(category, slug, lead.email);
+  const urls = urlFieldsForCategory(category, slug, lead.email, options);
   return {
     ...urls,
     dashboard_link: lead.dashboard_link?.trim() || buildDashboardUrl(slug),
@@ -178,7 +191,11 @@ export async function executeProvisionForSelectedLeads(params: {
   campaignId: string;
   category: LeadCategory;
   fromCampaign: boolean;
+  comptableDeliverySegment?: string | null;
+  /** @deprecated */
   jumSegment?: string | null;
+  comptableDeliveryRouteSegment?: ComptableDeliveryRouteSegment | null;
+  fixedClientId?: string | null;
 }): Promise<{
   created: number;
   updated: number;
@@ -187,7 +204,22 @@ export async function executeProvisionForSelectedLeads(params: {
   errors: string[];
   customVariablesByEmail: Record<string, Record<string, string>>;
 }> {
-  const { lookup, campaignId, category, fromCampaign, jumSegment } = params;
+  const {
+    lookup,
+    campaignId,
+    category,
+    fromCampaign,
+    fixedClientId,
+  } = params;
+  const comptableDeliverySegment =
+    params.comptableDeliverySegment?.trim() ||
+    params.jumSegment?.trim() ||
+    null;
+  const comptableDeliveryRouteSegment =
+    params.comptableDeliveryRouteSegment ??
+    (comptableDeliverySegment
+      ? routeSegmentForComptableDeliverySegment(comptableDeliverySegment)
+      : "restaurant");
   let selected = params.selected;
   const apiKey = getInstantlyApiKey();
   const client = createLinkTrackingClient();
@@ -219,10 +251,16 @@ export async function executeProvisionForSelectedLeads(params: {
       const chunk = toCreate.slice(start, start + INSERT_BATCH_SIZE);
       const rows = chunk.map((lead, index) => {
         const slug = newSlugs[start + index] ?? newSlugs[index];
-        const urls = urlFieldsForCategory(category, slug, lead.email);
+        const urls = urlFieldsForCategory(category, slug, lead.email, {
+          comptableDeliveryRouteSegment,
+        });
         const profile =
-          category === "jum" && jumSegment?.trim()
-            ? { segment: jumSegment.trim(), jum_segment: jumSegment.trim() }
+          category === "comptable_delivery" && comptableDeliverySegment
+            ? {
+                segment: comptableDeliverySegment,
+                jum_segment: comptableDeliverySegment,
+                comptable_delivery_segment: comptableDeliverySegment,
+              }
             : {};
         return {
           email: lead.email,
@@ -236,6 +274,7 @@ export async function executeProvisionForSelectedLeads(params: {
           company: lead.companyName,
           calendly_questions: {},
           profile,
+          ...(fixedClientId?.trim() ? { client_id: fixedClientId.trim() } : {}),
         };
       });
 
@@ -262,13 +301,17 @@ export async function executeProvisionForSelectedLeads(params: {
       continue;
     }
 
-    const patch = buildRefreshPatch(
-      existing.lead,
-      slug,
-      category,
-      campaignId,
-      lead.instantlyLeadId || null,
-    );
+    const patch = {
+      ...buildRefreshPatch(
+        existing.lead,
+        slug,
+        category,
+        campaignId,
+        lead.instantlyLeadId || null,
+        { comptableDeliveryRouteSegment },
+      ),
+      ...(fixedClientId?.trim() ? { client_id: fixedClientId.trim() } : {}),
+    };
     const { data, error } = await client
       .from(category)
       .update(patch)
@@ -294,7 +337,24 @@ export async function executeProvisionForSelectedLeads(params: {
       needingAssign.push(row.id);
     }
   }
-  if (needingAssign.length > 0) {
+  if (needingAssign.length > 0 && fixedClientId?.trim()) {
+    const { error } = await client
+      .from(category)
+      .update({ client_id: fixedClientId.trim() })
+      .in("id", needingAssign);
+    if (error) {
+      result.errors.push(`Fixed client assign failed: ${error.message}`);
+    } else {
+      for (const [email, row] of dbRowsByEmail) {
+        if (needingAssign.includes(row.id)) {
+          dbRowsByEmail.set(email, {
+            ...row,
+            client_id: fixedClientId.trim(),
+          });
+        }
+      }
+    }
+  } else if (needingAssign.length > 0) {
     const assigned = await assignClientsForProvision({
       supabase: client,
       category,
@@ -323,13 +383,17 @@ export async function executeProvisionForSelectedLeads(params: {
       lead.email,
       dbRow.statut ?? "NOTBOOKED",
       category,
-      category === "jum"
+      category === "comptable_delivery"
         ? {
-            jumSegment:
-              jumSegment?.trim() ||
-              (typeof dbRow.profile?.segment === "string"
-                ? dbRow.profile.segment
-                : null),
+            comptableDeliverySegment:
+              comptableDeliverySegment ||
+              (typeof dbRow.profile?.comptable_delivery_segment === "string"
+                ? dbRow.profile.comptable_delivery_segment
+                : typeof dbRow.profile?.segment === "string"
+                  ? dbRow.profile.segment
+                  : null),
+            comptableDeliveryRouteSegment,
+            jumSegment: comptableDeliverySegment,
           }
         : undefined,
     );

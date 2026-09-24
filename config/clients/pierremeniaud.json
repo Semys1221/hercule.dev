@@ -1,0 +1,28 @@
+{
+  "clientKey": "pierremeniaud",
+  "clientId": "b0ebed15-154c-441f-9e7d-3d842bc187cc",
+  "clientEmail": "pmeniaud@jum-advisory.com",
+  "verticals": {
+    "restaurant": {
+      "routeSegment": "restaurant",
+      "comptableDeliverySegment": "restaurant",
+      "instantlyCampaignId": "e4f11e76-717e-4be9-a6ad-c7f0a331afb7",
+      "calendlySchedulingUrl": "https://calendly.com/jum-advisory/rendez-vous-comptable-restaurant",
+      "enabled": true
+    },
+    "btp": {
+      "routeSegment": "btp",
+      "comptableDeliverySegment": "b2b",
+      "instantlyCampaignId": "05bc06f8-4f60-4e6c-bae1-7afe30df38c7",
+      "calendlySchedulingUrl": "https://calendly.com/jum-advisory/rendez-vous-comptable-btp",
+      "enabled": true
+    },
+    "chirurgien-dentiste": {
+      "routeSegment": "chirurgien-dentiste",
+      "comptableDeliverySegment": "dentiste",
+      "instantlyCampaignId": "0f0b450a-e550-461c-96f6-1a7681678d67",
+      "calendlySchedulingUrl": "https://calendly.com/jum-advisory/rendez-vous-comptable-dentiste",
+      "enabled": false
+    }
+  }
+}

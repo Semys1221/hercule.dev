@@ -12,7 +12,13 @@ import {
 
 const DOC_DIR = SITE_TECH_DIR
 
-export type LegalAudience = "agence" | "entreprise" | "comptable" | "cif" | "jum" | "assurance"
+export type LegalAudience =
+  | "agence"
+  | "entreprise"
+  | "comptable"
+  | "cif"
+  | "comptable_delivery"
+  | "assurance"
 
 export const CVG_DOC_FILES = {
   onboarding: "cvg_onboarding.md",
@@ -106,7 +112,7 @@ export function getAiReplyKnowledgeMarkdown(audience: LegalAudience = "comptable
   if (audience === "assurance") {
     return withPartnerDueDiligence(audience, readLegacyTechFile("ai-reply-knowledge-ias.md"))
   }
-  if (audience === "jum") {
+  if (audience === "comptable_delivery") {
     return readLegacyTechFile("ai-reply-knowledge-jum.md")
   }
   return readLegacyTechFile("ai-reply-knowledge.md")

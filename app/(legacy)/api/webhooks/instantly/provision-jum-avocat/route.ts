@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       emails: [email],
       listId: listId(),
       campaignId: expectedCampaign,
-      category: "jum",
+      category: "comptable_delivery",
       jumSegment: vertical.segment,
     });
     return NextResponse.json({

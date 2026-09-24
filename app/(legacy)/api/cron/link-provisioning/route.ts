@@ -51,7 +51,7 @@ export async function GET(request: Request) {
       nicheResults.push(
         await provisionLinksFromList({
           campaignId: vertical.campaignId,
-          category: "jum",
+          category: "comptable_delivery",
           fromCampaign: true,
           jumSegment: vertical.segment,
         }),
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
         await provisionLinksFromList({
           listId: vertical.listId,
           campaignId: vertical.campaignId,
-          category: "jum",
+          category: "comptable_delivery",
           jumSegment: vertical.segment,
         }),
       );

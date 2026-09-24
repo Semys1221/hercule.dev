@@ -5,7 +5,7 @@ export const salesSessionSettingsAudienceSchema = z.enum([
   "entreprise",
   "comptable",
   "cif",
-  "jum",
+  "comptable_delivery",
 ]);
 
 export const salesSessionSettingsDocumentSchema = z.object({

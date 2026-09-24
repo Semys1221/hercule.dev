@@ -10,7 +10,7 @@ export function resolveSupabaseColumn(key: string, niche: Niche): string | null 
   if (key === "confirmLink") {
     if (niche === "comptable") return "confirmation_comptable_link";
     if (niche === "cif") return null;
-    if (niche === "jum") return "confirmation_jum_link";
+    if (niche === "comptable_delivery") return "confirmation_jum_link";
     return "confirmation_agence_link";
   }
   if (key === "post_booking_link") {
@@ -55,7 +55,7 @@ export function resolveInstantlyKey(key: string, niche: Niche): string | null {
     return "confirmation_agence_link";
   }
   if (key === "confirmLink") {
-    if (niche === "jum") return "confirmation_jum_link";
+    if (niche === "comptable_delivery") return "confirmation_jum_link";
     return "confirmation_agence_link";
   }
   if (key === "confirmation_jum_link") {

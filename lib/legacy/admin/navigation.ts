@@ -28,7 +28,7 @@ export const NICHE_LABELS: Record<Niche, string> = {
   entreprise: "Leads",
   comptable: "Comptable",
   cif: "Conseiller financier",
-  jum: "JUM Advisory",
+  comptable_delivery: "Livraison comptable",
 };
 
 /** @deprecated Use NICHE_LABELS */
@@ -39,7 +39,7 @@ export const NICHE_ICONS: Record<Niche, string> = {
   entreprise: "🏭",
   comptable: "📊",
   cif: "💼",
-  jum: "📋",
+  comptable_delivery: "📋",
 };
 
 /** @deprecated Use NICHE_ICONS */
@@ -50,15 +50,23 @@ export const NICHE_CAPTIONS: Record<Niche, string> = {
   entreprise: "Seller — leads TPE qui recherchent une agence.",
   comptable: "Buyer — cabinets d'expertise comptable partenaires.",
   cif: "Buyer — cabinets CIF / CGP partenaires.",
-  jum: "Outreach JUM Advisory — secrétaire comptable Béatrice Meyer.",
+  comptable_delivery:
+    "Outreach livraison cabinet — prospects restaurant, BTP, dentiste, etc.",
 };
 
 /** @deprecated Use NICHE_CAPTIONS */
 export const AUDIENCE_CAPTIONS = NICHE_CAPTIONS;
 
-export const ALL_NICHES: Niche[] = ["agence", "entreprise", "comptable", "cif", "jum"];
+export const ALL_NICHES: Niche[] = [
+  "agence",
+  "entreprise",
+  "comptable",
+  "cif",
+  "comptable_delivery",
+];
 
-const NICHE_PATH_SEGMENT = "agence|comptable|entreprise|cif|jum";
+const NICHE_PATH_SEGMENT =
+  "agence|comptable|entreprise|cif|comptable_delivery";
 
 /** @deprecated Use ALL_NICHES */
 const ALL_AUDIENCES = ALL_NICHES;

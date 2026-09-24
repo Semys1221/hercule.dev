@@ -60,7 +60,7 @@ function log(
 function checkFiles(): CheckResult[] {
   const required = [
     "lib/backend/supabase/migrations/20261118120000_jum_niche.sql",
-    "app/reservation/[slug]/page.tsx",
+    "app/reservation/restaurant/[slug]/page.tsx",
     "public/confirm-reservation-jum.html",
     "lib/backend/streamlit_reply_agent/prompts/jum_buyer.md",
     "app/(legacy)/content/tech/ai-reply-knowledge-jum.md",
@@ -77,7 +77,8 @@ function checkFiles(): CheckResult[] {
 
 async function checkConfig(): Promise<CheckResult[]> {
   const envCampaign = process.env.INSTANTLY_CAMPAIGN_ID_JUM?.trim() ?? "";
-  const dbCampaign = (await resolveInstantlyCampaignId("jum"))?.trim() ?? "";
+  const dbCampaign =
+    (await resolveInstantlyCampaignId("comptable_delivery"))?.trim() ?? "";
   const placeholder =
     dbCampaign === "00000000-0000-0000-0000-000000000000" || !dbCampaign;
 
@@ -104,15 +105,23 @@ async function checkConfig(): Promise<CheckResult[]> {
 function checkUrlLogic(): CheckResult[] {
   const slug = "verify-jum";
   const email = "verify@example.com";
-  const urls = buildJumLeadUrls(slug, email);
-  const vars = buildInstantlyCustomVariables(slug, email, "NOTBOOKED", "jum", {
-    jumSegment: "restaurant",
-  });
+  const urls = buildJumLeadUrls(slug, email, "restaurant");
+  const vars = buildInstantlyCustomVariables(
+    slug,
+    email,
+    "NOTBOOKED",
+    "comptable_delivery",
+    {
+      comptableDeliverySegment: "restaurant",
+      comptableDeliveryRouteSegment: "restaurant",
+      jumSegment: "restaurant",
+    },
+  );
   const ok =
-    urls.reservation_jum_link.includes("/reservation/") &&
+    urls.reservation_jum_link.includes("/reservation/restaurant/") &&
     urls.confirmation_jum_link.includes("confirm-reservation-jum.html") &&
     vars.jum_segment === "restaurant" &&
-    isLeadCategory("jum");
+    isLeadCategory("comptable_delivery");
 
   return [
     {

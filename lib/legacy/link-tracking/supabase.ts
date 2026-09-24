@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
+import { routeSegmentForComptableDeliverySegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import {
   isMeetingBookedStatus,
   tableForLeadCategory,
@@ -13,19 +14,19 @@ import {
   buildComptableLeadUrls,
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
-  buildJumLeadUrls,
+  buildComptableDeliveryLeadUrls,
   buildLeadUrls,
 } from "./urls";
 import { restoreRoundRobinQuota } from "@/lib/clients/round-robin";
 import { buildClientDashboardUrl } from "@/lib/clients/supabase";
 
-// Lookup order: agence → comptable → entreprise → cif → jum → client
+// Lookup order: agence → comptable → entreprise → cif → comptable_delivery → client
 const TABLES: LeadCategory[] = [
   "agence",
   "comptable",
   "entreprise",
   "cif",
-  "jum",
+  "comptable_delivery",
   "client",
 ];
 
@@ -498,8 +499,23 @@ function buildBookingIdentityPatch(
         Object.assign(patch, buildComptableLeadUrls(slug, bookingEmail));
       } else if (lookup.category === "cif") {
         Object.assign(patch, buildCifLeadUrls(slug, bookingEmail));
-      } else if (lookup.category === "jum") {
-        Object.assign(patch, buildJumLeadUrls(slug, bookingEmail));
+      } else if (lookup.category === "comptable_delivery") {
+        const segment =
+          typeof lookup.lead.profile?.comptable_delivery_segment === "string"
+            ? lookup.lead.profile.comptable_delivery_segment
+            : typeof lookup.lead.profile?.jum_segment === "string"
+              ? lookup.lead.profile.jum_segment
+              : typeof lookup.lead.profile?.segment === "string"
+                ? lookup.lead.profile.segment
+                : null;
+        Object.assign(
+          patch,
+          buildComptableDeliveryLeadUrls(
+            slug,
+            bookingEmail,
+            routeSegmentForComptableDeliverySegment(segment),
+          ),
+        );
       } else if (lookup.category === "agence") {
         Object.assign(patch, buildLeadUrls(slug, bookingEmail));
       } else if (lookup.category === "entreprise") {
@@ -542,7 +558,7 @@ async function ensureDashboardLink(
     lookup.category !== "agence" &&
     lookup.category !== "comptable" &&
     lookup.category !== "cif" &&
-    lookup.category !== "jum"
+    lookup.category !== "comptable_delivery"
   ) {
     return lookup;
   }
@@ -631,7 +647,7 @@ export async function markLeadBooked(
     lookup.category === "agence" ||
     lookup.category === "comptable" ||
     lookup.category === "cif" ||
-    lookup.category === "jum"
+    lookup.category === "comptable_delivery"
   ) {
     patch.dashboard_link = buildDashboardUrl(lookup.lead.slug);
   }

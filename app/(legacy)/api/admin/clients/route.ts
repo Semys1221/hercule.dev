@@ -21,7 +21,13 @@ export type ClientRow = {
   retractionWaivedAt: string | null;
 };
 
-const CATEGORY_VALUES: LeadCategory[] = ["agence", "comptable", "entreprise", "cif", "jum"];
+const CATEGORY_VALUES: LeadCategory[] = [
+  "agence",
+  "comptable",
+  "entreprise",
+  "cif",
+  "comptable_delivery",
+];
 
 const SELECT_FIELDS: Record<LeadCategory, string> = {
   agence:

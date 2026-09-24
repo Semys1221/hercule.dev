@@ -599,7 +599,7 @@ const RAW_COMPONENTS: ComponentEntry[] = [
     domain: "sales_funnel",
     role: "trigger",
     actor: "client",
-    route: "app/reservation/[slug]",
+    route: "app/reservation/restaurant/[slug]",
     dataIn: "—",
     dataOut: "Calendly booking (vente)",
     sideEffects: "webhook-calendly",

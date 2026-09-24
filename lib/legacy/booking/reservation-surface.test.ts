@@ -54,7 +54,7 @@ assert.equal(surfaceForCategory("agence"), "agence");
 assert.equal(surfaceForCategory("entreprise"), "entreprise");
 assert.equal(surfaceForCategory("comptable"), "conference");
 assert.equal(surfaceForCategory("cif"), "conference");
-assert.equal(surfaceForCategory("jum"), "jum");
+assert.equal(surfaceForCategory("comptable_delivery"), "comptable_delivery");
 
 const cifCopy = conferenceCopy("cif");
 assert.match(cifCopy.pageTitle, /Conseil en gestion de patrimoine/);
@@ -100,14 +100,14 @@ assert.equal(
   CIF_CONFERENCE_CALENDLY_URL,
 );
 
-const jum = buildReservationSurfaceFromLookup(
-  lookup("jum", {
+const delivery = buildReservationSurfaceFromLookup(
+  lookup("comptable_delivery", {
     instantly_campaign_id: "e4f11e76-717e-4be9-a6ad-c7f0a331afb7",
   }),
 );
-assert.equal(jum.surface, "jum");
-assert.equal(jum.theme, "jum-light");
-assert.ok(jum.calendlyUrl.includes("restaurant"));
+assert.equal(delivery.surface, "comptable_delivery");
+assert.equal(delivery.theme, "jum-light");
+assert.ok(delivery.calendlyUrl.includes("restaurant"));
 
 assert.equal(
   calendlyBaseUrlForLookup(lookup("agence")),

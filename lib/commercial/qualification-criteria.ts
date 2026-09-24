@@ -122,12 +122,17 @@ export const CIF_DEMANDE_VERSO_CRITERIA = CIF_QUALIFICATION_CRITERIA.filter(
 );
 
 export function getEnterpriseQualificationCriteria(
-  audience: "agence" | "entreprise" | "comptable" | "cif" | "jum" = "agence",
+  audience:
+    | "agence"
+    | "entreprise"
+    | "comptable"
+    | "cif"
+    | "comptable_delivery" = "agence",
 ): readonly QualificationCriterion[] {
   if (audience === "cif") {
     return CIF_QUALIFICATION_CRITERIA;
   }
-  if (audience === "comptable" || audience === "jum") {
+  if (audience === "comptable" || audience === "comptable_delivery") {
     return COMPTABLE_QUALIFICATION_CRITERIA;
   }
   return ENTERPRISE_QUALIFICATION_CRITERIA;

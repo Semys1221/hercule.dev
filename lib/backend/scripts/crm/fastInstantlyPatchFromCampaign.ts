@@ -14,7 +14,7 @@ import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import type { LeadCategory, LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
 import { buildInstantlyCustomVariables, leadSlug } from "@/lib/legacy/link-tracking/urls";
 
-const category = (process.env.CATEGORY?.trim() || "jum") as LeadCategory;
+const category = (process.env.CATEGORY?.trim() || "comptable_delivery") as LeadCategory;
 const campaignId = process.env.CAMPAIGN_ID?.trim();
 const concurrency = Number.parseInt(
   process.env.INSTANTLY_PATCH_CONCURRENCY?.trim() || "24",
@@ -90,7 +90,7 @@ async function main(): Promise<void> {
       continue;
     }
     const jumSegment =
-      category === "jum" && typeof row.profile?.segment === "string"
+      category === "comptable_delivery" && typeof row.profile?.segment === "string"
         ? row.profile.segment
         : null;
     items.push({
@@ -100,7 +100,7 @@ async function main(): Promise<void> {
         row.email,
         row.statut ?? "NOTBOOKED",
         category,
-        category === "jum" ? { jumSegment } : undefined,
+        category === "comptable_delivery" ? { jumSegment } : undefined,
       ),
     });
     if (updateIds && row.instantly_lead_id !== leadId && row.id) {

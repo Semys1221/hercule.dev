@@ -30,7 +30,7 @@ async function provisionVertical(vertical: JumVertical): Promise<Record<string, 
   const segment = segmentOverride || vertical.segment;
   const listId = listIdOverride || vertical.listId;
   const campaignId = vertical.campaignId;
-  const category = "jum" as const;
+  const category = "comptable_delivery" as const;
 
   const results: Record<string, unknown> = {
     vertical: vertical.key,
@@ -45,6 +45,8 @@ async function provisionVertical(vertical: JumVertical): Promise<Record<string, 
       campaignId,
       category,
       resyncAll,
+      comptableDeliverySegment: segment,
+      comptableDeliveryRouteSegment: vertical.routeSegment,
       jumSegment: segment,
     });
     return results;
@@ -55,6 +57,8 @@ async function provisionVertical(vertical: JumVertical): Promise<Record<string, 
     category,
     fromCampaign: true,
     resyncAll,
+    comptableDeliverySegment: segment,
+    comptableDeliveryRouteSegment: vertical.routeSegment,
     jumSegment: segment,
   });
   results.list = await provisionLinksFromList({
@@ -62,6 +66,8 @@ async function provisionVertical(vertical: JumVertical): Promise<Record<string, 
     campaignId,
     category,
     resyncAll,
+    comptableDeliverySegment: segment,
+    comptableDeliveryRouteSegment: vertical.routeSegment,
     jumSegment: segment,
   });
 

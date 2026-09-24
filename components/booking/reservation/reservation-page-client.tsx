@@ -3,7 +3,7 @@
 import { ReservationAgence } from "@/components/booking/reservation/reservation-agence"
 import { ReservationConference } from "@/components/booking/reservation/reservation-conference"
 import { ReservationEntreprise } from "@/components/booking/reservation/reservation-entreprise"
-import { ReservationJum } from "@/components/booking/reservation/reservation-jum"
+import { ReservationComptableDelivery } from "@/components/booking/reservation/reservation-comptable-delivery"
 import type {
   ConferenceNiche,
   ReservationSurface,
@@ -28,9 +28,9 @@ export function ReservationPageClient(props: ReservationPageClientProps) {
       />
     )
   }
-  if (props.surface === "jum") {
+  if (props.surface === "comptable_delivery") {
     return (
-      <ReservationJum
+      <ReservationComptableDelivery
         slug={props.slug}
         email={props.email}
         calendlyUrl={props.calendlyUrl}

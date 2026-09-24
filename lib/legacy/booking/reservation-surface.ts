@@ -1,24 +1,24 @@
 import { findClientById } from "@/lib/clients/supabase";
 import {
-  calendlyUrlForJumSegment,
-  defaultJumVertical,
-  resolveJumVerticalByCampaignId,
-} from "@/lib/legacy/admin/niches/jum-verticals";
-import {
-  CIF_CONFERENCE_CALENDLY_URL,
-  CONFERENCE_COHORT_SESSION,
-} from "@/lib/legacy/cif-conference-sequence/constants";
+  calendlyUrlForComptableDeliverySegment,
+  defaultComptableDeliveryVertical,
+  resolveComptableDeliveryVerticalByCampaignId,
+} from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import {
   createLinkTrackingClient,
   findLeadByLink,
 } from "@/lib/legacy/link-tracking/supabase";
+import {
+  CIF_CONFERENCE_CALENDLY_URL,
+  CONFERENCE_COHORT_SESSION,
+} from "@/lib/legacy/cif-conference-sequence/constants";
 import type { LeadCategory, LeadLookup, LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
 
 export const RESERVATION_SURFACES = [
   "agence",
   "entreprise",
   "conference",
-  "jum",
+  "comptable_delivery",
 ] as const;
 
 export type ReservationSurface = (typeof RESERVATION_SURFACES)[number];
@@ -67,11 +67,14 @@ export function surfaceForCategory(category: LeadCategory): ReservationSurface {
   if (category === "comptable" || category === "cif") {
     return "conference";
   }
+  if (category === "comptable_delivery") {
+    return "comptable_delivery";
+  }
   return category;
 }
 
 export function themeForSurface(surface: ReservationSurface): ReservationTheme {
-  return surface === "jum" ? "jum-light" : "hercule-dark";
+  return surface === "comptable_delivery" ? "jum-light" : "hercule-dark";
 }
 
 export function conferenceCopy(niche: ConferenceNiche): ConferenceCopy {
@@ -124,12 +127,16 @@ export function buildCalendlySchedulingUrl(
   return url.toString();
 }
 
-export function readJumSegmentFromLead(
+export function readComptableDeliverySegmentFromLead(
   lead: Pick<LinkTrackingLead, "profile" | "instantly_campaign_id">,
 ): string | null {
   const profile = lead.profile;
   if (profile) {
-    for (const key of ["jum_segment", "segment"] as const) {
+    for (const key of [
+      "comptable_delivery_segment",
+      "jum_segment",
+      "segment",
+    ] as const) {
       const value = profile[key];
       if (typeof value === "string" && value.trim()) {
         return value.trim().toLowerCase();
@@ -137,24 +144,42 @@ export function readJumSegmentFromLead(
     }
   }
   if (lead.instantly_campaign_id?.trim()) {
-    const vertical = resolveJumVerticalByCampaignId(lead.instantly_campaign_id);
+    const vertical = resolveComptableDeliveryVerticalByCampaignId(
+      lead.instantly_campaign_id,
+    );
     if (vertical) return vertical.segment;
   }
   return null;
 }
 
+/** @deprecated */
+export function readJumSegmentFromLead(
+  lead: Pick<LinkTrackingLead, "profile" | "instantly_campaign_id">,
+): string | null {
+  return readComptableDeliverySegmentFromLead(lead);
+}
+
+export function comptableDeliveryCalendlyUrlFromLead(
+  lead: Pick<LinkTrackingLead, "profile" | "instantly_campaign_id">,
+): string {
+  const segment = readComptableDeliverySegmentFromLead(lead);
+  if (segment) {
+    return calendlyUrlForComptableDeliverySegment(segment);
+  }
+  if (lead.instantly_campaign_id?.trim()) {
+    const vertical = resolveComptableDeliveryVerticalByCampaignId(
+      lead.instantly_campaign_id,
+    );
+    if (vertical) return vertical.calendlySchedulingUrl;
+  }
+  return defaultComptableDeliveryVertical().calendlySchedulingUrl;
+}
+
+/** @deprecated */
 export function jumCalendlyUrlFromLead(
   lead: Pick<LinkTrackingLead, "profile" | "instantly_campaign_id">,
 ): string {
-  const segment = readJumSegmentFromLead(lead);
-  if (segment) {
-    return calendlyUrlForJumSegment(segment);
-  }
-  if (lead.instantly_campaign_id?.trim()) {
-    const vertical = resolveJumVerticalByCampaignId(lead.instantly_campaign_id);
-    if (vertical) return vertical.calendlySchedulingUrl;
-  }
-  return defaultJumVertical().calendlySchedulingUrl;
+  return comptableDeliveryCalendlyUrlFromLead(lead);
 }
 
 export function pageCopyForSurface(params: {
@@ -168,10 +193,10 @@ export function pageCopyForSurface(params: {
       confirmedTitle: copy.confirmedTitle,
     };
   }
-  if (params.surface === "jum") {
+  if (params.surface === "comptable_delivery") {
     return {
-      pageTitle: "Réserver un créneau · JUM Advisory",
-      confirmedTitle: "Rendez-vous confirmé · JUM Advisory",
+      pageTitle: "Réserver un créneau · Expert-comptable",
+      confirmedTitle: "Rendez-vous confirmé",
     };
   }
   if (params.surface === "agence") {
@@ -195,8 +220,8 @@ export function calendlyBaseUrlForLookup(
     return assigned;
   }
   const surface = surfaceForCategory(lookup.category);
-  if (surface === "jum") {
-    return jumCalendlyUrlFromLead(lookup.lead);
+  if (surface === "comptable_delivery") {
+    return comptableDeliveryCalendlyUrlFromLead(lookup.lead);
   }
   if (surface === "conference") {
     return CALENDLY_EVENT_URLS.conference;
@@ -217,7 +242,9 @@ export function buildReservationSurfaceFromLookup(
       ? lookup.category
       : null;
   const jumSegment =
-    surface === "jum" ? readJumSegmentFromLead(lookup.lead) : null;
+    surface === "comptable_delivery"
+      ? readComptableDeliverySegmentFromLead(lookup.lead)
+      : null;
   const copy = pageCopyForSurface({ surface, conferenceNiche });
 
   return {
@@ -245,3 +272,4 @@ export async function resolveReservationSurface(
   const assigned = clientId ? await findClientById(client, clientId) : null;
   return buildReservationSurfaceFromLookup(lookup, assigned);
 }
+

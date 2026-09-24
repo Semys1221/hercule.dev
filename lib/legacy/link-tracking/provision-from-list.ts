@@ -54,7 +54,7 @@ function readConfig(): {
     categoryRaw !== "comptable" &&
     categoryRaw !== "entreprise" &&
     categoryRaw !== "cif" &&
-    categoryRaw !== "jum"
+    categoryRaw !== "comptable_delivery"
   ) {
     throw new Error(`Invalid LINK_PROVISIONING_CATEGORY: ${categoryRaw}`);
   }
@@ -69,6 +69,12 @@ export async function provisionLinksFromList(
     maxLeads: number | null;
     resyncAll: boolean;
     fromCampaign: boolean;
+    comptableDeliverySegment: string | null;
+    comptableDeliveryRouteSegment:
+      | import("@/lib/legacy/admin/niches/comptable-delivery-verticals").ComptableDeliveryRouteSegment
+      | null;
+    fixedClientId: string | null;
+    /** @deprecated */
     jumSegment: string | null;
   }> = {},
 ): Promise<ProvisionFromListResult> {
@@ -145,6 +151,11 @@ export async function provisionLinksFromList(
     campaignId,
     category,
     fromCampaign,
+    comptableDeliverySegment:
+      overrides.comptableDeliverySegment ?? overrides.jumSegment ?? null,
+    comptableDeliveryRouteSegment:
+      overrides.comptableDeliveryRouteSegment ?? null,
+    fixedClientId: overrides.fixedClientId ?? null,
     jumSegment: overrides.jumSegment ?? null,
   });
 

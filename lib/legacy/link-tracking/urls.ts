@@ -1,3 +1,5 @@
+import type { ComptableDeliveryRouteSegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
+
 import type { LeadCategory, LinkTrackingLead } from "./types";
 
 const DEFAULT_TRACKING_BASE = "https://www.hercule.dev/reservation";
@@ -30,6 +32,13 @@ export type CifLeadUrls = {
   dashboard_link: string;
 };
 
+export type ComptableDeliveryLeadUrls = {
+  reservation_comptable_delivery_link: string;
+  confirmation_comptable_delivery_link: string;
+  dashboard_link: string;
+};
+
+/** @deprecated Use ComptableDeliveryLeadUrls */
 export type JumLeadUrls = {
   reservation_jum_link: string;
   confirmation_jum_link: string;
@@ -54,8 +63,9 @@ export function getTrackingBaseUrl(category: LeadCategory): string {
         ? process.env.TRACKING_BASE_URL_COMPTABLE
         : category === "cif"
           ? process.env.TRACKING_BASE_URL_CIF
-          : category === "jum"
-            ? process.env.TRACKING_BASE_URL_JUM
+          : category === "comptable_delivery"
+            ? process.env.TRACKING_BASE_URL_COMPTABLE_DELIVERY ??
+              process.env.TRACKING_BASE_URL_JUM
             : category === "client"
               ? process.env.TRACKING_BASE_URL_CLIENT
               : process.env.TRACKING_BASE_URL_ENTREPRISE;
@@ -71,15 +81,20 @@ export function isCanonicalReservationUrl(url: string | null | undefined): boole
   if (!trimmed) return false;
   try {
     const pathname = new URL(trimmed, "https://www.hercule.dev").pathname;
-    return /^\/reservation\/[^/]+\/?$/.test(pathname);
+    if (/^\/reservation\/[^/]+\/?$/.test(pathname)) return true;
+    return /^\/reservation\/[^/]+\/[^/]+\/?$/.test(pathname);
   } catch {
     return false;
   }
 }
 
 export function getConfirmBaseUrl(category?: LeadCategory): string {
-  if (category === "jum") {
+  if (category === "comptable_delivery") {
     return (
+      process.env.BOOKING_CONFIRM_BASE_URL_COMPTABLE_DELIVERY?.trim().replace(
+        /\/$/,
+        "",
+      ) ??
       process.env.BOOKING_CONFIRM_BASE_URL_JUM?.trim().replace(/\/$/, "") ??
       DEFAULT_CONFIRM_BASE_JUM
     );
@@ -112,6 +127,14 @@ export {
 
 export function buildTrackingUrl(slug: string, category: LeadCategory): string {
   return `${getTrackingBaseUrl(category)}/${slug}`;
+}
+
+export function buildComptableDeliveryTrackingUrl(
+  slug: string,
+  routeSegment: ComptableDeliveryRouteSegment,
+): string {
+  const base = getTrackingBaseUrl("comptable_delivery");
+  return `${base}/${routeSegment}/${slug}`;
 }
 
 export function buildConfirmationAgenceLink(slug: string, email: string): string {
@@ -178,19 +201,51 @@ export function buildCifLeadUrls(slug: string, email: string): CifLeadUrls {
   };
 }
 
-export function buildConfirmationJumLink(slug: string, email: string): string {
-  const url = new URL(`${getConfirmBaseUrl("jum")}/${slug}`);
+export function buildConfirmationComptableDeliveryLink(
+  slug: string,
+  email: string,
+): string {
+  const url = new URL(`${getConfirmBaseUrl("comptable_delivery")}/${slug}`);
   if (email.trim()) {
     url.searchParams.set("email", email.trim().toLowerCase());
   }
   return url.toString();
 }
 
-export function buildJumLeadUrls(slug: string, email: string): JumLeadUrls {
+/** @deprecated */
+export function buildConfirmationJumLink(slug: string, email: string): string {
+  return buildConfirmationComptableDeliveryLink(slug, email);
+}
+
+export function buildComptableDeliveryLeadUrls(
+  slug: string,
+  email: string,
+  routeSegment: ComptableDeliveryRouteSegment,
+): ComptableDeliveryLeadUrls {
   return {
-    reservation_jum_link: buildTrackingUrl(slug, "jum"),
-    confirmation_jum_link: buildConfirmationJumLink(slug, email),
+    reservation_comptable_delivery_link: buildComptableDeliveryTrackingUrl(
+      slug,
+      routeSegment,
+    ),
+    confirmation_comptable_delivery_link: buildConfirmationComptableDeliveryLink(
+      slug,
+      email,
+    ),
     dashboard_link: buildDashboardUrl(slug),
+  };
+}
+
+/** @deprecated Use buildComptableDeliveryLeadUrls with routeSegment */
+export function buildJumLeadUrls(
+  slug: string,
+  email: string,
+  routeSegment: ComptableDeliveryRouteSegment = "restaurant",
+): JumLeadUrls {
+  const urls = buildComptableDeliveryLeadUrls(slug, email, routeSegment);
+  return {
+    reservation_jum_link: urls.reservation_comptable_delivery_link,
+    confirmation_jum_link: urls.confirmation_comptable_delivery_link,
+    dashboard_link: urls.dashboard_link,
   };
 }
 
@@ -203,9 +258,9 @@ export function dashboardLinkFor(
     | "reservation_entreprise_link"
     | "reservation_comptable_link"
     | "reservation_cif_link"
-    | "reservation_jum_link"
+    | "reservation_comptable_delivery_link"
     | "confirmation_agence_link"
-    | "confirmation_jum_link"
+    | "confirmation_comptable_delivery_link"
     | "post_booking_link"
   >,
 ): string | null {
@@ -247,10 +302,10 @@ export function resolveLeadSlug(
     | "reservation_entreprise_link"
     | "reservation_comptable_link"
     | "reservation_cif_link"
-    | "reservation_jum_link"
+    | "reservation_comptable_delivery_link"
     | "confirmation_agence_link"
     | "confirmation_comptable_link"
-    | "confirmation_jum_link"
+    | "confirmation_comptable_delivery_link"
     | "post_booking_link"
   >,
 ): string | null {
@@ -265,10 +320,10 @@ export function resolveLeadSlug(
     lead.reservation_agence_link,
     lead.reservation_comptable_link,
     lead.reservation_cif_link,
-    lead.reservation_jum_link,
+    lead.reservation_comptable_delivery_link,
     lead.confirmation_agence_link,
     lead.confirmation_comptable_link,
-    lead.confirmation_jum_link,
+    lead.confirmation_comptable_delivery_link,
     lead.post_booking_link,
   ];
 
@@ -429,22 +484,48 @@ export function confirmationCifLinkFor(
   return "";
 }
 
-export function reservationJumLinkFor(
-  lead: Pick<LinkTrackingLead, "slug" | "email" | "reservation_jum_link">,
+export function reservationComptableDeliveryLinkFor(
+  lead: Pick<
+    LinkTrackingLead,
+    "slug" | "email" | "reservation_comptable_delivery_link"
+  >,
 ): string {
-  const stored = lead.reservation_jum_link?.trim();
+  const stored = lead.reservation_comptable_delivery_link?.trim();
   if (stored) return stored;
   const slug = lead.slug?.trim();
   if (!slug) return "";
-  return buildTrackingUrl(slug, "jum");
+  return buildComptableDeliveryTrackingUrl(slug, "restaurant");
 }
 
-export function confirmationJumLinkFor(
-  lead: Pick<LinkTrackingLead, "slug" | "email" | "confirmation_jum_link">,
+/** @deprecated */
+export function reservationJumLinkFor(
+  lead: Pick<
+    LinkTrackingLead,
+    "slug" | "email" | "reservation_comptable_delivery_link"
+  >,
 ): string {
-  const stored = lead.confirmation_jum_link?.trim();
+  return reservationComptableDeliveryLinkFor(lead);
+}
+
+export function confirmationComptableDeliveryLinkFor(
+  lead: Pick<
+    LinkTrackingLead,
+    "slug" | "email" | "confirmation_comptable_delivery_link"
+  >,
+): string {
+  const stored = lead.confirmation_comptable_delivery_link?.trim();
   if (stored) return stored;
-  return buildConfirmationJumLink(lead.slug, lead.email);
+  return buildConfirmationComptableDeliveryLink(lead.slug, lead.email);
+}
+
+/** @deprecated */
+export function confirmationJumLinkFor(
+  lead: Pick<
+    LinkTrackingLead,
+    "slug" | "email" | "confirmation_comptable_delivery_link"
+  >,
+): string {
+  return confirmationComptableDeliveryLinkFor(lead);
 }
 
 export function buildInstantlyCustomVariables(
@@ -452,8 +533,17 @@ export function buildInstantlyCustomVariables(
   email: string,
   statut: string,
   category: LeadCategory = "entreprise",
-  options?: { jumSegment?: string | null },
-): InstantlyCanonicalVariables & { jum_segment?: string; reservation_jum_link?: string } {
+  options?: {
+    comptableDeliverySegment?: string | null;
+    comptableDeliveryRouteSegment?: ComptableDeliveryRouteSegment | null;
+    /** @deprecated */
+    jumSegment?: string | null;
+  },
+): InstantlyCanonicalVariables & {
+  jum_segment?: string;
+  reservation_jum_link?: string;
+  comptable_delivery_segment?: string;
+} {
   if (category === "comptable") {
     const comptableUrls = buildComptableLeadUrls(slug, email);
     return {
@@ -479,19 +569,32 @@ export function buildInstantlyCustomVariables(
       reservation_cif_link: cifUrls.reservation_cif_link,
     };
   }
-  if (category === "jum") {
-    const jumUrls = buildJumLeadUrls(slug, email);
-    const segment = options?.jumSegment?.trim();
+  if (category === "comptable_delivery") {
+    const segment =
+      options?.comptableDeliverySegment?.trim() ??
+      options?.jumSegment?.trim() ??
+      "";
+    const routeSegment =
+      options?.comptableDeliveryRouteSegment ?? "restaurant";
+    const deliveryUrls = buildComptableDeliveryLeadUrls(
+      slug,
+      email,
+      routeSegment,
+    );
+    const reservationLink = deliveryUrls.reservation_comptable_delivery_link;
+    const confirmLink = deliveryUrls.confirmation_comptable_delivery_link;
     return {
       reservation_agence_link: "",
-      reservation_entreprise_link: jumUrls.reservation_jum_link,
-      confirmation_agence_link: jumUrls.confirmation_jum_link,
+      reservation_entreprise_link: reservationLink,
+      confirmation_agence_link: confirmLink,
       statut,
       link: "",
-      confirm_link: jumUrls.confirmation_jum_link,
+      confirm_link: confirmLink,
       tracking_url: "",
-      reservation_jum_link: jumUrls.reservation_jum_link,
-      ...(segment ? { jum_segment: segment } : {}),
+      reservation_jum_link: reservationLink,
+      ...(segment
+        ? { jum_segment: segment, comptable_delivery_segment: segment }
+        : {}),
     };
   }
   const urls =

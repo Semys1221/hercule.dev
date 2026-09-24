@@ -3,7 +3,7 @@ export const ALL_LEAD_CATEGORIES = [
   "comptable",
   "entreprise",
   "cif",
-  "jum",
+  "comptable_delivery",
   "client",
 ] as const;
 
@@ -21,8 +21,12 @@ export function isLeadCategory(value: string): value is LeadCategory {
 
 export function isCabinetBuyerCategory(
   value: LeadCategory | string,
-): value is "comptable" | "cif" | "jum" {
-  return value === "comptable" || value === "cif" || value === "jum";
+): value is "comptable" | "cif" | "comptable_delivery" {
+  return (
+    value === "comptable" ||
+    value === "cif" ||
+    value === "comptable_delivery"
+  );
 }
 
 export type LeadStatut =
@@ -45,8 +49,8 @@ export type LinkTrackingLead = {
   reservation_comptable_link?: string | null;
   confirmation_comptable_link?: string | null;
   reservation_cif_link?: string | null;
-  reservation_jum_link?: string | null;
-  confirmation_jum_link?: string | null;
+  reservation_comptable_delivery_link?: string | null;
+  confirmation_comptable_delivery_link?: string | null;
   post_booking_link?: string | null;
   dashboard_link: string | null;
   instantly_lead_id: string | null;

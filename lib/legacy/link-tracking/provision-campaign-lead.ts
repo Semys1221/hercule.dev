@@ -1,5 +1,8 @@
 import { campaignIdFromEnv } from "@/lib/legacy/admin/niches/outreach-config";
-import { resolveJumVerticalByCampaignId } from "@/lib/legacy/admin/niches/jum-verticals";
+import {
+  resolveComptableDeliveryVerticalByCampaignId,
+  routeSegmentForComptableDeliverySegment,
+} from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import { findLeadByEmailInCampaign, getInstantlyApiKey } from "@/lib/legacy/instantly-bypass/client";
 import { patchLeadsCustomVariablesParallel } from "@/lib/instantly";
 import {
@@ -16,7 +19,7 @@ import {
   buildDashboardUrl,
   buildEntrepriseLeadUrls,
   buildInstantlyCustomVariables,
-  buildJumLeadUrls,
+  buildComptableDeliveryLeadUrls,
   buildLeadUrls,
   leadSlug,
 } from "@/lib/legacy/link-tracking/urls";
@@ -28,14 +31,14 @@ export type EnsureCampaignLeadLinksResult =
 const KNOWN_CAMPAIGN_CATEGORY: Record<string, LeadCategory> = {
   "e4c58718-ca00-4e27-b714-68e522fe4db6": "comptable",
   "e3bdb573-fe9f-437d-bd96-4ceb52869dd4": "cif",
-  "e4f11e76-717e-4be9-a6ad-c7f0a331afb7": "jum",
-  "05bc06f8-4f60-4e6c-bae1-7afe30df38c7": "jum",
-  "0f0b450a-e550-461c-96f6-1a7681678d67": "jum",
-  "5c142a13-fcdf-4d6d-92e7-2afbc1865a5a": "jum",
-  "581b9357-753e-4c6e-aa99-d8b36fefca2d": "jum",
-  "273473f0-b2f1-4462-a668-f0277f90d807": "jum",
-  "7ec0e211-9832-4baf-8803-e12ab93ee517": "jum",
-  "7300a1ce-9e55-4bfa-92fd-d25361a22a59": "jum",
+  "e4f11e76-717e-4be9-a6ad-c7f0a331afb7": "comptable_delivery",
+  "05bc06f8-4f60-4e6c-bae1-7afe30df38c7": "comptable_delivery",
+  "0f0b450a-e550-461c-96f6-1a7681678d67": "comptable_delivery",
+  "5c142a13-fcdf-4d6d-92e7-2afbc1865a5a": "comptable_delivery",
+  "581b9357-753e-4c6e-aa99-d8b36fefca2d": "comptable_delivery",
+  "273473f0-b2f1-4462-a668-f0277f90d807": "comptable_delivery",
+  "7ec0e211-9832-4baf-8803-e12ab93ee517": "comptable_delivery",
+  "7300a1ce-9e55-4bfa-92fd-d25361a22a59": "comptable_delivery",
 };
 
 export async function resolveCategoryForCampaign(
@@ -46,9 +49,10 @@ export async function resolveCategoryForCampaign(
     return known;
   }
 
-  const jumVertical = resolveJumVerticalByCampaignId(campaignId);
-  if (jumVertical) {
-    return "jum";
+  const deliveryVertical =
+    resolveComptableDeliveryVerticalByCampaignId(campaignId);
+  if (deliveryVertical) {
+    return "comptable_delivery";
   }
 
   const client = createLinkTrackingClient();
@@ -80,6 +84,7 @@ function urlFieldsForCategory(
   category: LeadCategory,
   slug: string,
   email: string,
+  campaignId?: string,
 ): Record<string, string> {
   if (category === "comptable") {
     return buildComptableLeadUrls(slug, email);
@@ -87,8 +92,14 @@ function urlFieldsForCategory(
   if (category === "cif") {
     return buildCifLeadUrls(slug, email);
   }
-  if (category === "jum") {
-    return buildJumLeadUrls(slug, email);
+  if (category === "comptable_delivery") {
+    const vertical = campaignId
+      ? resolveComptableDeliveryVerticalByCampaignId(campaignId)
+      : null;
+    const routeSegment = vertical
+      ? vertical.routeSegment
+      : routeSegmentForComptableDeliverySegment(null);
+    return buildComptableDeliveryLeadUrls(slug, email, routeSegment);
   }
   if (category === "entreprise") {
     return buildEntrepriseLeadUrls(slug, email);
@@ -96,12 +107,16 @@ function urlFieldsForCategory(
   return buildLeadUrls(slug, email);
 }
 
-function jumProfileForCampaign(
+function comptableDeliveryProfileForCampaign(
   campaignId: string,
 ): Record<string, string> | undefined {
-  const vertical = resolveJumVerticalByCampaignId(campaignId);
+  const vertical = resolveComptableDeliveryVerticalByCampaignId(campaignId);
   if (!vertical) return undefined;
-  return { segment: vertical.segment, jum_segment: vertical.segment };
+  return {
+    segment: vertical.segment,
+    jum_segment: vertical.segment,
+    comptable_delivery_segment: vertical.segment,
+  };
 }
 
 /** Provision link-tracking row + Instantly custom vars for one campaign lead. */
@@ -137,8 +152,15 @@ export async function ensureCampaignLeadLinks(params: {
     };
   }
 
-  const jumProfile = category === "jum" ? jumProfileForCampaign(campaignId) : undefined;
-  const jumSegment = jumProfile?.jum_segment ?? null;
+  const deliveryProfile =
+    category === "comptable_delivery"
+      ? comptableDeliveryProfileForCampaign(campaignId)
+      : undefined;
+  const deliverySegment = deliveryProfile?.comptable_delivery_segment ?? null;
+  const deliveryVertical =
+    category === "comptable_delivery"
+      ? resolveComptableDeliveryVerticalByCampaignId(campaignId)
+      : null;
 
   let dbRow: LinkTrackingLead | null = existing?.lead ?? null;
   let created = false;
@@ -150,7 +172,7 @@ export async function ensureCampaignLeadLinks(params: {
       return { ok: false, reason: "slug_allocation_failed" };
     }
 
-    const urls = urlFieldsForCategory(category, slug, email);
+    const urls = urlFieldsForCategory(category, slug, email, campaignId);
     const { data, error } = await client
       .from(category)
       .insert({
@@ -164,7 +186,7 @@ export async function ensureCampaignLeadLinks(params: {
         first_name: String(instantlyLead.first_name ?? "").trim() || null,
         company: String(instantlyLead.company_name ?? "").trim() || null,
         calendly_questions: {},
-        ...(jumProfile ? { profile: jumProfile } : {}),
+        ...(deliveryProfile ? { profile: deliveryProfile } : {}),
       })
       .select("*")
       .maybeSingle();
@@ -183,7 +205,7 @@ export async function ensureCampaignLeadLinks(params: {
       return { ok: false, reason: "existing_row_missing_slug" };
     }
 
-    const urls = urlFieldsForCategory(category, slug, email);
+    const urls = urlFieldsForCategory(category, slug, email, campaignId);
     const { data, error } = await client
       .from(category)
       .update({
@@ -191,7 +213,9 @@ export async function ensureCampaignLeadLinks(params: {
         dashboard_link: dbRow.dashboard_link?.trim() || buildDashboardUrl(slug),
         instantly_lead_id: instantlyLead.id,
         instantly_campaign_id: campaignId,
-        ...(jumProfile ? { profile: { ...(dbRow.profile ?? {}), ...jumProfile } } : {}),
+        ...(deliveryProfile
+          ? { profile: { ...(dbRow.profile ?? {}), ...deliveryProfile } }
+          : {}),
       })
       .eq("id", dbRow.id)
       .select("*")
@@ -216,13 +240,15 @@ export async function ensureCampaignLeadLinks(params: {
     email,
     dbRow.statut ?? "NOTBOOKED",
     category,
-    category === "jum"
+    category === "comptable_delivery"
       ? {
-          jumSegment:
-            jumSegment ||
+          comptableDeliverySegment:
+            deliverySegment ||
             (typeof dbRow.profile?.segment === "string"
               ? dbRow.profile.segment
               : null),
+          comptableDeliveryRouteSegment: deliveryVertical?.routeSegment ?? null,
+          jumSegment: deliverySegment,
         }
       : undefined,
   );

@@ -14,7 +14,7 @@ const listOnly = process.argv.includes("--list-only");
 
 async function main(): Promise<void> {
   const vertical = getJumVertical("medecin");
-  const category = "jum" as const;
+  const category = "comptable_delivery" as const;
   const results: Record<string, unknown> = {
     vertical: vertical.key,
     segment: vertical.segment,

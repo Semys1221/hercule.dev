@@ -34,7 +34,7 @@ export function legalAudienceFromNichePreset(presetId: string): LegalAudience {
     id.includes("architecte") ||
     id.includes("veterinaire")
   ) {
-    return "jum";
+    return "comptable_delivery";
   }
   return "agence";
 }
@@ -52,5 +52,9 @@ export function isAssuranceNichePreset(presetId: string): boolean {
 }
 
 export function isJumNichePreset(presetId: string): boolean {
-  return legalAudienceFromNichePreset(presetId) === "jum";
+  return legalAudienceFromNichePreset(presetId) === "comptable_delivery";
+}
+
+export function isComptableDeliveryNichePreset(presetId: string): boolean {
+  return isJumNichePreset(presetId);
 }

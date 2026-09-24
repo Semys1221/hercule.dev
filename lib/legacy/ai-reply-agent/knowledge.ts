@@ -31,7 +31,7 @@ function formatJumFaq(): string {
 
 function speakingToLabel(
   targetType: AiReplyAgentConfig["target_type"],
-  audience: "agence" | "comptable" | "cif" | "assurance" | "jum",
+  audience: "agence" | "comptable" | "cif" | "assurance" | "comptable_delivery",
 ): string {
   if (audience === "comptable") {
     return targetType === "buyer"
@@ -48,8 +48,8 @@ function speakingToLabel(
       ? "cabinet IAS / courtier ORIAS (Buyer)"
       : "dirigeant PME (Seller)";
   }
-  if (audience === "jum") {
-    return "prospect DEC (ops alias jum — restaurant, dirigeant, dentiste)";
+  if (audience === "comptable_delivery") {
+    return "prospect livraison cabinet (restaurant, BTP, dentiste, etc.)";
   }
   return targetType === "buyer" ? "agence (Buyer)" : "entreprise (Seller)";
 }
@@ -68,13 +68,13 @@ function buildKnowledgePackUncached(config: AiReplyAgentConfig): string {
     audience === "cif" ||
     audience === "comptable" ||
     audience === "assurance" ||
-    audience === "jum"
+    audience === "comptable_delivery"
       ? audience
       : "agence";
   const aiReplyKnowledge = getAiReplyKnowledgeMarkdown(packAudience);
   const overview = readRepoFile("app/(legacy)/content/tech/00-overview.md");
   const faqSection =
-    packAudience === "jum"
+    packAudience === "comptable_delivery"
       ? formatJumFaq()
       : packAudience === "comptable"
         ? formatFaq("comptable")
@@ -84,8 +84,8 @@ function buildKnowledgePackUncached(config: AiReplyAgentConfig): string {
             ? formatFaq("assurance")
             : formatFaq("entreprise");
   const faqHeading =
-    packAudience === "jum"
-      ? "## FAQ DEC (ops alias jum)"
+    packAudience === "comptable_delivery"
+      ? "## FAQ livraison comptable"
       : packAudience === "comptable"
         ? "## FAQ comptable (Buyer/Seller)"
         : packAudience === "cif"

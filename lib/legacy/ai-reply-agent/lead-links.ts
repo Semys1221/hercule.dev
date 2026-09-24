@@ -99,7 +99,7 @@ export async function resolvePromptLinks(
     const cif = lookup.lead.reservation_cif_link?.trim();
     if (cif) cifLink = cif;
 
-    const jum = lookup.lead.reservation_jum_link?.trim();
+    const jum = lookup.lead.reservation_comptable_delivery_link?.trim();
     if (jum) jumLink = jum;
   }
 
@@ -108,7 +108,7 @@ export async function resolvePromptLinks(
       ? comptableLink
       : lookup?.category === "cif"
         ? cifLink
-        : lookup?.category === "jum"
+        : lookup?.category === "comptable_delivery"
           ? jumLink
         : targetType === "buyer"
           ? agenceLink

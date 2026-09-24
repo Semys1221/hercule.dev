@@ -190,8 +190,8 @@ async function moveSalesCalls(
       ? "cif_id"
       : category === "comptable"
         ? "comptable_id"
-        : category === "jum"
-          ? "jum_id"
+        : category === "comptable_delivery"
+          ? "comptable_delivery_id"
           : category === "agence"
             ? "agence_id"
             : null;

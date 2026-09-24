@@ -318,7 +318,8 @@ export function StepComponentsPanel({ scope, funnel, step, onSaved }: StepCompon
             <CardContent>
               <PricingWidget
                 audience={
-                  scope.audience === "entreprise" || scope.audience === "jum"
+                  scope.audience === "entreprise" ||
+                  scope.audience === "comptable_delivery"
                     ? "comptable"
                     : scope.audience
                 }

@@ -99,9 +99,10 @@ export function parseBookingEvent(
     normalized === "entreprise" ||
     normalized === "comptable" ||
     normalized === "cif" ||
-    normalized === "jum"
+    normalized === "jum" ||
+    normalized === "comptable_delivery"
   ) {
-    return normalized;
+    return normalized === "comptable_delivery" ? "jum" : normalized;
   }
   return null;
 }

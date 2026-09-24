@@ -55,7 +55,7 @@ async function main(): Promise<void> {
       const leadId = row.instantly_lead_id?.trim();
       if (!slug || !leadId) continue;
       const jumSegment =
-        category === "jum" && typeof row.profile?.segment === "string"
+        category === "comptable_delivery" && typeof row.profile?.segment === "string"
           ? row.profile.segment
           : null;
       items.push({
@@ -65,7 +65,7 @@ async function main(): Promise<void> {
           row.email,
           row.statut ?? "NOTBOOKED",
           category,
-          category === "jum" ? { jumSegment } : undefined,
+          category === "comptable_delivery" ? { jumSegment } : undefined,
         ),
       });
     }
