@@ -346,6 +346,20 @@ async function processJob(job: BookingEmailJob): Promise<boolean> {
     return true;
   }
 
+  if (
+    (job.email_type === "free_trial_2" || job.email_type === "free_trial_3") &&
+    job.lead_category === "comptable"
+  ) {
+    const { hasDecFreeTrialCheckoutForEmail } = await import(
+      "@/lib/legacy/free-trial-sequence/has-checkout"
+    );
+    const linkClient = createLinkTrackingClient();
+    if (await hasDecFreeTrialCheckoutForEmail(linkClient, lead.email)) {
+      await cancelJob(job.id);
+      return true;
+    }
+  }
+
   if (!bypassesSendWindow(job.email_type) && !isWithinSendWindow()) {
     await rescheduleJob(job.id, nextSendSlot());
     return true;

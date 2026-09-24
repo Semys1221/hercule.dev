@@ -258,20 +258,20 @@ export const RESEND_EMAIL_SEQUENCES: EmailSequenceEntry[] = [
 {
     id: "free-trial",
     slug: "free-trial",
-    name: "Free trial — pré-paiement (J+1 → J+3)",
+    name: "Free trial — pré-paiement (E1 immédiat + J+2)",
     phase: "close",
     category: "Close",
-    stepCount: 3,
+    stepCount: 2,
     status: "built",
     provider: "resend",
     audiences: ["comptable"],
     description:
-      "Nurture manuelle Clients → Séquences. E1–E3 à J+1/J+2/J+3. Stop si reply/opt-out ou checkout trial. Pitch : page /proposition, essai DEC 14j puis 1 499 €/mois.",
+      "Pitch manuel (`pnpm launch-free-trial-pitch`). E1 immédiat, relance E2 à J+2. Stop si checkout trial DEC. Page /proposition, essai 14j puis 1 499 €/mois.",
     steps: [
       {
         id: "free_trial_1",
         label: "Pitch essai + RDV offert",
-        delay: "J+1",
+        delay: "Immédiat",
         emailType: "free_trial_1",
       },
       {
@@ -279,12 +279,6 @@ export const RESEND_EMAIL_SEQUENCES: EmailSequenceEntry[] = [
         label: "Relance essai",
         delay: "J+2",
         emailType: "free_trial_2",
-      },
-      {
-        id: "free_trial_3",
-        label: "Dernière relance",
-        delay: "J+3",
-        emailType: "free_trial_3",
       },
     ],
     editorKind: "booking",

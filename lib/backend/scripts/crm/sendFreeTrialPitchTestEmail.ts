@@ -45,7 +45,7 @@ loadEnvFromRepoRoot();
 
 const recipient = ENGIN_TEST_RECIPIENT;
 const template = DEFAULT_BOOKING_EMAIL_TEMPLATES.free_trial_1;
-const propositionLink = `${getAppBaseUrl().replace(/\/$/, "")}/proposition#essai`;
+const propositionLink = `${getAppBaseUrl().replace(/\/$/, "")}/proposition`;
 
 const text = template.body
   .replace("{{firstNameLine}}", "Bonjour,")

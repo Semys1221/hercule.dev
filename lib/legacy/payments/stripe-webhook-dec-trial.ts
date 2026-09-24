@@ -4,6 +4,9 @@ import type Stripe from "stripe";
 import { OFFER_TYPES_COMPTABLE } from "@/lib/commercial/constants";
 import { isDecFreeTrialCheckoutMetadata } from "@/lib/clients/dec-free-trial";
 import { insertCalendlySeatOnboardingForClient } from "@/lib/(resend)/calendly-seat/client-store";
+import { cancelPendingJobsForLead } from "@/lib/legacy/booking-communication/jobs";
+import { syncStripePaymentStops } from "@/lib/legacy/admin/management/recipients/hooks";
+import { findLeadByEmail } from "@/lib/legacy/link-tracking/supabase";
 import { startFreeTrialStartedSequenceForClient } from "@/lib/legacy/free-trial-started-sequence/orchestrator";
 
 function subscriptionIdFromSession(session: Stripe.Checkout.Session): string | null {
@@ -96,6 +99,22 @@ export async function handleDecFreeTrialCheckoutCompleted(
 
   const email = String(clientRow.email ?? checkoutEmail ?? "");
   if (email) {
+    try {
+      const lookup = await findLeadByEmail(client, email);
+      if (lookup?.category === "comptable") {
+        await cancelPendingJobsForLead(lookup.lead.id, [
+          "free_trial_2",
+          "free_trial_3",
+        ]);
+      }
+      syncStripePaymentStops({ niche: "comptable", leadEmail: email });
+    } catch (pitchStopError) {
+      console.error(
+        "[stripe/webhook-dec-trial] free-trial pitch stop failed:",
+        pitchStopError instanceof Error ? pitchStopError.message : pitchStopError,
+      );
+    }
+
     try {
       await insertCalendlySeatOnboardingForClient({
         clientId: clientRow.id,
