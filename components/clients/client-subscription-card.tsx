@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ClientRenewalInfoDialog } from "@/components/clients/client-renewal-info-dialog";
 import type { ClientDashboardData } from "@/lib/clients/types";
 import { clientEngagementLabel } from "@/lib/commercial/conference-pricing";
 
@@ -63,12 +64,17 @@ export function ClientSubscriptionCard({ data }: ClientSubscriptionCardProps) {
     clientType: data.clientType,
     billing: data.billing,
   });
+  const showRenewalInfo =
+    data.billing === "monthly" && data.onboardingVariant !== "dec_free_trial";
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Votre formule</CardTitle>
-        <CardDescription>{engagementLabel}</CardDescription>
+        <CardDescription className="flex items-center gap-1">
+          <span>{engagementLabel}</span>
+          {showRenewalInfo ? <ClientRenewalInfoDialog /> : null}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">

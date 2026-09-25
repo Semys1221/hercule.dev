@@ -233,11 +233,8 @@ export function clientEngagementLabel(params: {
   clientType: ConferenceClientType;
   billing: ConferenceBilling;
 }): string {
-  if (params.clientType === CONFERENCE_CLIENT_TYPES.dec) {
-    return CLIENT_DEC_ENGAGEMENT_LABEL;
-  }
   if (params.billing === "monthly") {
-    return "Abonnement mensuel sans engagement de pack";
+    return CLIENT_DEC_ENGAGEMENT_LABEL;
   }
   return "Pack prépayé — pas d'abonnement récurrent";
 }

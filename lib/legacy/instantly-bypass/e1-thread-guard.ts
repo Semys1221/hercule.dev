@@ -27,6 +27,9 @@ export async function getInterestedE1DeliveryState(
 const PARTNER_CABINETS_MARKER = "cabinets partenaires";
 
 const E1_FINGERPRINTS = [
+  "voici les precisions",
+  "notre accompagnement ajuste",
+  "negocions vos prix fournisseurs",
   "voici plus de precisions",
   "pour faire simple",
   "cabinets partenaires",
@@ -52,7 +55,12 @@ export function normalizeEmailText(raw: string): string {
 
 export function isHerculeEmail(text: string): boolean {
   const normalized = normalizeEmailText(text);
-  return normalized.includes("beatrice meyer") || normalized.includes("hercule.dev");
+  return (
+    normalized.includes("beatrice meyer") ||
+    normalized.includes("hercule.dev") ||
+    normalized.includes("jum-advisory.com") ||
+    normalized.includes("rentabilite-restaurant")
+  );
 }
 
 function extractEmailText(item: InstantlyEmailRecord & Record<string, unknown>): string {

@@ -29,6 +29,9 @@ ALL_HERCULE_FLOWS: list[Flow] = [*INTERESTED_FLOWS, *NO_SHOW_FLOWS]
 
 FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
     "interested_email1": [
+        "voici les precisions",
+        "notre accompagnement ajuste",
+        "negocions vos prix fournisseurs",
         "voici plus de precisions",
         "pour faire simple",
         "cabinets partenaires",
@@ -42,6 +45,8 @@ FLOW_FINGERPRINTS: dict[Flow, list[str]] = {
         "echanges entre cabinets et entreprise",
     ],
     "interested_email2": [
+        "restaurant peut bien fonctionner",
+        "perdant une partie de sa marge",
         "contrat annuel en attente",
         "mensuellement",
         "echanges entre cabinets et entreprise",
@@ -99,7 +104,12 @@ def normalize_email_text(raw: str) -> str:
 
 def is_hercule_email(text: str) -> bool:
     normalized = normalize_email_text(text)
-    return "beatrice meyer" in normalized or "hercule.dev" in normalized
+    return (
+        "beatrice meyer" in normalized
+        or "hercule.dev" in normalized
+        or "jum-advisory.com" in normalized
+        or "rentabilite-restaurant" in normalized
+    )
 
 
 def match_flows(text: str, *, allowed_flows: list[Flow]) -> set[Flow]:

@@ -19,7 +19,7 @@ assert.equal(
     clientType: "dec",
     billing: "pack",
   }),
-  "Renouvellement optionnel",
+  "Pack prépayé — pas d'abonnement récurrent",
 );
 
 assert.equal(
@@ -27,7 +27,7 @@ assert.equal(
     clientType: "cif",
     billing: "monthly",
   }),
-  "Abonnement mensuel sans engagement de pack",
+  CLIENT_DEC_ENGAGEMENT_LABEL,
 );
 
 assert.equal(
@@ -43,7 +43,7 @@ assert.equal(
     clientType: "ias",
     billing: "monthly",
   }),
-  "Abonnement mensuel sans engagement de pack",
+  CLIENT_DEC_ENGAGEMENT_LABEL,
 );
 
 console.log("conference-pricing.test.ts OK");

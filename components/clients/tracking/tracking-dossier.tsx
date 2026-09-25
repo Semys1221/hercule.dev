@@ -5,11 +5,7 @@ import { ClientRenewalInfoDialog } from "@/components/clients/client-renewal-inf
 import { ClientRetractionWaiverCard } from "@/components/clients/client-retraction-waiver-card";
 import { ClientBillingPortalButton } from "@/components/clients/client-subscription-card";
 import type { ClientDashboardData } from "@/lib/clients/types";
-import {
-  clientEngagementLabel,
-  conferenceOfferLabel,
-  CONFERENCE_CLIENT_TYPES,
-} from "@/lib/commercial/conference-pricing";
+import { clientEngagementLabel, conferenceOfferLabel } from "@/lib/commercial/conference-pricing";
 import { videoConferenceLabel } from "@/lib/clients/video-conference";
 type TrackingDossierProps = {
   data: ClientDashboardData;
@@ -39,8 +35,7 @@ export function TrackingDossier({ data, onRefresh }: TrackingDossierProps) {
             <dt className="text-muted-foreground">Engagement</dt>
             <dd className="flex items-center justify-end gap-1 text-right">
               <span>{engagement}</span>
-              {data.clientType === CONFERENCE_CLIENT_TYPES.dec &&
-              data.onboardingVariant !== "dec_free_trial" ? (
+              {data.billing === "monthly" && data.onboardingVariant !== "dec_free_trial" ? (
                 <ClientRenewalInfoDialog />
               ) : null}
             </dd>

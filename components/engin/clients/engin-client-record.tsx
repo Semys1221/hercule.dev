@@ -213,14 +213,6 @@ export function EnginClientRecord({ clientId }: EnginClientRecordProps) {
           </TabsContent>
 
           <TabsContent value="ops" className="mt-4 flex flex-col gap-4">
-            <EnginConnectionsCard
-              client={client}
-              calendlySeat={seat}
-              onUpdated={(updated) => {
-                applyClient(updated);
-                void load();
-              }}
-            />
             <EnginClientDeleteCard client={client} />
           </TabsContent>
         </Tabs>
@@ -248,6 +240,15 @@ export function EnginClientRecord({ clientId }: EnginClientRecordProps) {
             ))}
           </CardContent>
         </Card>
+
+        <EnginConnectionsCard
+          client={client}
+          calendlySeat={seat}
+          onUpdated={(updated) => {
+            applyClient(updated);
+            void load();
+          }}
+        />
 
         <Card>
           <CardHeader>

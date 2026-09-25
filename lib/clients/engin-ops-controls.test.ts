@@ -6,7 +6,7 @@ const controls = clientOpsControls({
   client: {
     onboarding_completed_at: "2026-01-01T00:00:00.000Z",
     calendly_scheduling_url: "https://calendly.com/a/30",
-    profile: { calendar_connected: true },
+    profile: { calendar_connected: true, video_conference: "microsoft_teams_pro" },
   },
   eligibility: "eligible",
   hasSucceededPayment: true,
