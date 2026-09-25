@@ -147,6 +147,7 @@
     "provision-jum": "python3 ./lib/backend/scripts/crm/provision_jum.py",
     "smoke-jum-flow-e2e": "tsx --env-file=.env ./lib/backend/scripts/crm/smokeJumFlowE2e.ts",
     "smoke-comptable-delivery-flow": "tsx ./lib/backend/scripts/crm/smokeComptableDeliveryFlowE2e.ts",
+    "smoke-restaurant-e1-funnel": "tsx ./lib/backend/scripts/crm/smokeRestaurantE1Funnel.ts",
     "bootstrap-pierremeniaud-booking": "tsx --env-file=.env ./lib/backend/scripts/crm/bootstrapPierremeniaudBooking.ts",
     "apply-comptable-delivery-migration": "tsx --env-file=.env ./lib/backend/scripts/crm/applyComptableDeliveryMigration.ts",
     "verify-jum-setup": "tsx --env-file=.env ./lib/backend/scripts/crm/verifyJumSetup.ts",

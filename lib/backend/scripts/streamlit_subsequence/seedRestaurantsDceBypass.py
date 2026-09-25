@@ -16,11 +16,12 @@ _BACKEND_DIR = _REPO_ROOT / "lib" / "backend"
 CAMPAIGN_ID = "e4f11e76-717e-4be9-a6ad-c7f0a331afb7"
 CAMPAIGN_NAME = "Hercule — Restaurants indépendants (France) — Interested"
 CALENDLY = "https://calendly.com/jum-advisory/rentabilite-restaurant"
+ELIGIBILITY_URL = "https://www.hercule.dev/reservation/restaurant.html"
 CTA = f'<a href="{CALENDLY}">Réserver un créneau</a>'
 OPT_OUT = "<br/><br/><i>Répondez non si vous ne souhaitez plus de messages.</i>"
 SUBJECT = "Re: votre message"
 
-E1_BODY = f"""<p>Voici les précisions.<br/><br/>Notre accompagnement ajuste chaque semaine, pour votre restaurant, ces 3 points :<br/><br/><ul><li><strong>Vous achetez trop cher sans forcément le voir :</strong> nous négocions vos prix fournisseurs et le coût réel de vos plats.</li><li><strong>Vous vendez certains plats sans réellement gagner d'argent :</strong> nous recalculons leur coût réel afin d'identifier les prix à ajuster ou les plats à modifier.</li><li><strong>Votre personnel vous coûte peut-être plus qu'il ne devrait :</strong> nous analysons vos heures, vos plannings et vos coûts pour repérer ce qui pèse inutilement sur votre marge.</li></ul><br/>Les établissements éligibles peuvent généralement dégager jusqu'à 2 500 € de marge nette supplémentaire dès le premier mois.<br/><br/>Si vous souhaitez que nous analysions votre restaurant, vous pouvez choisir un créneau ici :<br/><a href="{CALENDLY}">{CALENDLY}</a></p>"""
+E1_BODY = f"""<p>Nous avons encore 3 ouvertures pour de nouveaux établissements.<br/><br/>Je vous laisse vérifier si votre restaurant peut entrer dans le dispositif :<br/><br/><a href="{ELIGIBILITY_URL}">Vérifier mon établissement</a></p>"""
 
 E2_BODY = f"""<p>Bonjour,<br/><br/>Un restaurant peut bien fonctionner tout en perdant une partie de sa marge.<br/><br/>C'est précisément ce que nous cherchons à identifier.<br/><br/>Si vous souhaitez que nous regardions votre restaurant :<br/><a href="{CALENDLY}">{CALENDLY}</a><br/><br/>Béatrice Meyer</p>"""
 

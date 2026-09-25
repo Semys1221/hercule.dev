@@ -1,18 +1,9 @@
 E1
-Voici les précisions.
+Nous avons encore 3 ouvertures pour de nouveaux établissements.
 
-Notre accompagnement ajuste chaque semaine, pour votre restaurant, ces 3 points :
+Je vous laisse vérifier si votre restaurant peut entrer dans le dispositif :
 
-Vous achetez trop cher sans forcément le voir : nous négocions vos prix fournisseurs et le coût réel de vos plats.
-
-Vous vendez certains plats sans réellement gagner d’argent : nous recalculons leur coût réel afin d’identifier les prix à ajuster ou les plats à modifier.
-
-Votre personnel vous coûte peut-être plus qu’il ne devrait : nous analysons vos heures, vos plannings et vos coûts pour repérer ce qui pèse inutilement sur votre marge.
-
-Les établissements éligibles peuvent généralement dégager jusqu’à 2 500 € de marge nette supplémentaire dès le premier mois.
-
-Si vous souhaitez que nous analysions votre restaurant, vous pouvez choisir un créneau ici :
-https://calendly.com/jum-advisory/rentabilite-restaurant
+https://www.hercule.dev/reservation/restaurant.html
 
 E2
 Bonjour,

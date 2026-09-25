@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant E1 — funnel</title>
+    <style>
+        :root {
+            --bg: #fafafa;
+            --fg: #18181b;
+            --muted: #71717a;
+            --border: #e4e4e7;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.5;
+        }
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 20px 64px;
+        }
+        h1 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin: 0 0 8px;
+        }
+        .meta {
+            font-size: 0.875rem;
+            color: var(--muted);
+            margin: 0 0 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            font-weight: 500;
+        }
+        tr:last-child td { border-bottom: none; }
+        .num { font-variant-numeric: tabular-nums; }
+        button {
+            margin-top: 16px;
+            padding: 8px 14px;
+            font-size: 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+        }
+        button:hover { background: #f4f4f5; }
+        .error { color: #b91c1c; font-size: 0.875rem; margin-top: 12px; }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <h1>Restaurant — E1 Interested</h1>
+        <p class="meta" id="fetched-at">Chargement…</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Indicateur</th>
+                    <th>Valeur</th>
+                </tr>
+            </thead>
+            <tbody id="metrics-body">
+                <tr><td colspan="2">…</td></tr>
+            </tbody>
+        </table>
+        <button type="button" id="refresh">Rafraîchir</button>
+        <p class="error" id="error" hidden></p>
+    </main>
+    <script>
+        function formatRate(rate) {
+            if (rate === null || rate === undefined || Number.isNaN(rate)) {
+                return '—';
+            }
+            return (rate * 100).toFixed(1) + ' %';
+        }
+
+        function render(data) {
+            var rows = [
+                ['Emails E1 envoyés', data.emailsE1Sent],
+                ['Clics éligibilité', data.clicks],
+                ['Bookings Calendly', data.bookings],
+                ['Taux clic / email', formatRate(data.clickRateFromEmails)],
+                ['Taux booking / clic', formatRate(data.bookingRateFromClicks)],
+                ['Taux booking / email', formatRate(data.bookingRateFromEmails)]
+            ];
+            var html = rows.map(function (row) {
+                var cls = typeof row[1] === 'number' ? ' class="num"' : '';
+                return '<tr><td>' + row[0] + '</td><td' + cls + '>' + row[1] + '</td></tr>';
+            }).join('');
+            document.getElementById('metrics-body').innerHTML = html;
+            var at = data.fetchedAt ? new Date(data.fetchedAt).toLocaleString('fr-FR') : '—';
+            document.getElementById('fetched-at').textContent = 'Dernière mise à jour : ' + at;
+        }
+
+        function load(refresh) {
+            var errEl = document.getElementById('error');
+            errEl.hidden = true;
+            var url = '/api/restaurant-e1/metrics' + (refresh ? '?refresh=1' : '');
+            fetch(url)
+                .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+                .then(function (res) {
+                    if (!res.ok || res.j.error) {
+                        throw new Error(res.j.error || 'Erreur serveur');
+                    }
+                    render(res.j);
+                })
+                .catch(function (e) {
+                    errEl.textContent = e.message || 'Impossible de charger les métriques.';
+                    errEl.hidden = false;
+                });
+        }
+
+        document.getElementById('refresh').addEventListener('click', function () { load(true); });
+        load(false);
+    </script>
+</body>
+</html>

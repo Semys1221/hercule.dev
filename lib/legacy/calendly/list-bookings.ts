@@ -587,3 +587,44 @@ export async function listUpcomingBookings(options: {
 
   return finalizedRows;
 }
+
+/** All-time count of non-canceled invitees for a Calendly event type (paginated). */
+export async function countActiveInviteesForEventType(
+  eventTypeUri: string,
+  options?: { now?: Date; minTime?: Date; maxTime?: Date },
+): Promise<number> {
+  const now = options?.now ?? new Date();
+  const userUri = await getCurrentUserUri();
+  const minTime = (options?.minTime ?? new Date("2024-01-01T00:00:00.000Z")).toISOString();
+  const maxTime = (
+    options?.maxTime ??
+    new Date(now.getTime() + 366 * 24 * 60 * 60 * 1000)
+  ).toISOString();
+
+  const events = await paginate(
+    "/scheduled_events",
+    buildScheduledEventsListParams({
+      userUri,
+      minTime,
+      maxTime,
+      eventTypeUri,
+      status: "active",
+    }),
+  );
+
+  const seenInviteeUris = new Set<string>();
+  for (const event of events) {
+    const parsed = await fetchEventInvitees(event, now, true);
+    for (const { invitee } of parsed) {
+      if (lifecycleStatusFromRecord(invitee.status) === "canceled") {
+        continue;
+      }
+      const inviteeUri = String(invitee.uri ?? "").trim();
+      if (inviteeUri) {
+        seenInviteeUris.add(inviteeUri);
+      }
+    }
+  }
+
+  return seenInviteeUris.size;
+}
