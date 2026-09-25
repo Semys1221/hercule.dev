@@ -232,6 +232,32 @@ async function executeBypassJob(job: BypassJob): Promise<BypassJobDispatchResult
   }
 
   await markBypassJobSent(job.id);
+
+  if (flow === "interested_email1") {
+    const { sweepMissedRepliesForLead } = await import(
+      "@/lib/legacy/ai-reply-agent/missed-reply-sweep"
+    );
+    await sweepMissedRepliesForLead({
+      campaignId: job.campaign_id,
+      leadEmail,
+    }).catch((err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[instantly-bypass] missed-reply sweep failed for ${leadEmail}:`,
+        message,
+      );
+    });
+
+    const { syncInterestedEnrolled } = await import(
+      "@/lib/legacy/admin/management/recipients/hooks"
+    );
+    syncInterestedEnrolled({
+      campaignId: job.campaign_id,
+      leadEmail,
+      currentStep: "interested_email1",
+    });
+  }
+
   return {
     outcome: "sent",
     latencyMs: result.latencyMs,

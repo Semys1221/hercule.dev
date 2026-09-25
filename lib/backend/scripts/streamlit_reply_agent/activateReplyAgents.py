@@ -62,6 +62,7 @@ def activate_preset(
     preset_id: str,
     meta: Any,
     *,
+    campaign_id_override: str = "",
     target_type: str = "buyer",
     status: Literal["waiting_for_replies", "paused"] = "waiting_for_replies",
     dry_run: bool = False,
@@ -72,7 +73,9 @@ def activate_preset(
     from shared.instantly_client import InstantlyClient, get_api_key
 
     config = load_config(preset_id, require_keys=False)
-    campaign_id = str(config.get("INSTANTLY_CAMPAIGN_ID") or "").strip()
+    campaign_id = campaign_id_override.strip() or str(
+        config.get("INSTANTLY_CAMPAIGN_ID") or ""
+    ).strip()
     if not campaign_id:
         raise ValueError(f"{preset_id}: INSTANTLY_CAMPAIGN_ID missing")
 
@@ -178,6 +181,11 @@ def activate_preset(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Activate AI Reply Agent for sub-niche campaigns")
     parser.add_argument("--preset", default="", help="Single preset id (default: all sub-niches)")
+    parser.add_argument(
+        "--campaign-id",
+        default="",
+        help="Instantly campaign UUID (default: preset INSTANTLY_CAMPAIGN_ID)",
+    )
     parser.add_argument("--target-type", default="buyer", choices=["buyer", "seller"])
     parser.add_argument(
         "--status",
@@ -203,6 +211,7 @@ def main() -> None:
             result = activate_preset(
                 pid,
                 presets[pid],
+                campaign_id_override=args.campaign_id,
                 target_type=args.target_type,
                 status=args.status,
                 dry_run=args.dry_run,

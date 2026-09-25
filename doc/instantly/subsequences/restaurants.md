@@ -1,23 +1,26 @@
-E1
-Nous avons encore 3 ouvertures pour de nouveaux établissements.
+**E1**
+Merci pour votre réponse.
 
-Je vous laisse vérifier si votre restaurant peut entrer dans le dispositif :
+Vous pouvez vérifier votre éligibilité au dispositif via le lien ci-dessous.
 
-https://www.hercule.dev/reservation/restaurant.html
+Vérifier mon éligibilité
 
-E2
+
+
+**E2**
 Bonjour,
 
-Un restaurant peut bien fonctionner tout en perdant une partie de sa marge.
+Un restaurant peut avoir une bonne activité tout en laissant trop peu de bénéfice à la fin du mois.
 
-C’est précisément ce que nous cherchons à identifier.
+C’est précisément ce que nous cherchons à identifier : achats trop élevés, plats peu rentables, coûts de personnel…
 
-Si vous souhaitez que nous regardions votre restaurant :
-https://calendly.com/jum-advisory/rentabilite-restaurant
+Si vous souhaitez que nous regardions votre situation, vous pouvez choisir un créneau ici : [Calendly]
 
 Béatrice Meyer
 
-E3 
+
+
+**E3** 
 Bonjour,
 
 Dernier message de mon côté.

@@ -86,6 +86,8 @@ export type BypassConfig = {
   webhook_auto_send_enabled?: boolean | null;
   pipeline_auto_advance_enabled?: boolean | null;
   initialized_at?: string | null;
+  /** Ms after lead_interested before E1 job may send (0 = immediate). */
+  e1_webhook_delay_ms?: number | null;
 };
 
 export type TemplateVariables = Record<string, string>;

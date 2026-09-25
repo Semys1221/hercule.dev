@@ -33,6 +33,20 @@ function main(): void {
   );
   assert.match(trackingHtml, /\/api\/restaurant-e1\/metrics/);
 
+  const statsHtml = readFileSync(
+    join(ROOT, "public/reservation/stats.html"),
+    "utf8",
+  );
+  assert.match(statsHtml, /stats\.js/);
+
+  const statsJs = readFileSync(join(ROOT, "public/reservation/stats.js"), "utf8");
+  assert.match(statsJs, /stats-niches\.json/);
+
+  const statsNiches = JSON.parse(
+    readFileSync(join(ROOT, "public/reservation/stats-niches.json"), "utf8"),
+  ) as Record<string, { projectionRows: unknown[] }>;
+  assert.ok(statsNiches.restaurant?.projectionRows?.length === 4);
+
   console.log("smokeRestaurantE1Funnel: ok");
 }
 

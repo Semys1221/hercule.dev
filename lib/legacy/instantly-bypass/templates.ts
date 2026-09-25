@@ -161,6 +161,9 @@ export async function saveBypassConfig(config: BypassConfig): Promise<void> {
     payload.pipeline_auto_advance_enabled = config.pipeline_auto_advance_enabled;
   }
   if (config.initialized_at !== undefined) payload.initialized_at = config.initialized_at;
+  if (config.e1_webhook_delay_ms !== undefined) {
+    payload.e1_webhook_delay_ms = config.e1_webhook_delay_ms;
+  }
 
   const { error } = await client.from("instantly_bypass_config").upsert(
     payload,

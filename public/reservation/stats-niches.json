@@ -1,0 +1,45 @@
+{
+  "restaurant": {
+    "label": "Campagne Restaurant (DCE)",
+    "emailsRef": 3000,
+    "positivesRef": 13,
+    "bookingRateDefault": 0.2,
+    "emailsPerDayDefault": 1800,
+    "targetRdv": 10,
+    "liveMetricsUrl": "/reservation/link-tracking.html",
+    "projectionRows": [
+      { "emails": 3000, "positives": 13 },
+      { "emails": 10000, "positives": 43 },
+      { "emails": 11500, "positives": 50 },
+      { "emails": 30000, "positives": 130 }
+    ],
+    "insights": [
+      "Si le booking rate = 20 % des réponses positives, 10 RDV impliquent 50 réponses positives (10 ÷ 20 %).",
+      "Avec 13 réponses positives pour 3 000 emails, le taux de réponse positive est 13 ÷ 3 000 ≈ 0,433 %.",
+      "Sur 3 000 emails, tu peux t’attendre à environ 2–3 rendez-vous si les 13 réponses positives correspondent bien au dénominateur du 20 %.",
+      "Le nouveau mail n’a pas besoin de doubler le taux de réponse : passer le booking rate de 20 % à 40 % ferait passer ~2,6 RDV à ~5 RDV pour les mêmes 13 réponses positives.",
+      "Avec 25 réponses positives sur 3 000 emails et 40 % de booking : 25 × 40 % = 10 RDV.",
+      "Deux leviers indépendants : volume emails → réponses positives → bookings ; le test E1 éligibilité aide à voir si le goulet est la réponse ou la conversion vers RDV."
+    ],
+    "scenarios": [
+      {
+        "title": "Baseline",
+        "bookingRate": 0.2,
+        "positivesPerEmailsRef": 13,
+        "emailsRef": 3000
+      },
+      {
+        "title": "Booking ×2",
+        "bookingRate": 0.4,
+        "positivesPerEmailsRef": 13,
+        "emailsRef": 3000
+      },
+      {
+        "title": "Réponses + booking",
+        "bookingRate": 0.4,
+        "positivesPerEmailsRef": 25,
+        "emailsRef": 3000
+      }
+    ]
+  }
+}

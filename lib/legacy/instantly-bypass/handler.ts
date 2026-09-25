@@ -1,5 +1,5 @@
 import { findLeadByEmailInCampaign, getInstantlyApiKey } from "./client";
-import { e1WebhookScheduledFor } from "./constants";
+import { e1WebhookScheduledFor, resolveE1WebhookDelayMs } from "./constants";
 import {
   getInterestedE1DeliveryState,
   threadAlreadyHasE1,
@@ -169,7 +169,8 @@ export async function handleLeadInterested(
       return { ok: true, skipped: "e1_already_in_thread" };
     }
 
-    const scheduledFor = e1WebhookScheduledFor(webhookReceivedAt);
+    const delayMs = resolveE1WebhookDelayMs(config);
+    const scheduledFor = e1WebhookScheduledFor(webhookReceivedAt, delayMs);
     await insertBypassJob({
       idempotencyKey,
       campaignId,
@@ -193,9 +194,14 @@ export async function handleLeadInterested(
       },
     });
 
+    const deferDispatch = scheduledFor.getTime() > Date.now();
+    if (deferDispatch) {
+      return { ok: true, skipped: "scheduled" };
+    }
+
     const dispatch = await dispatchBypassJobByIdempotencyKey(idempotencyKey);
 
-    if (!options?.skipReplyReprocess) {
+    if (dispatch.outcome === "sent" && !options?.skipReplyReprocess) {
       await triggerMissedReplySweepAfterE1(campaignId, leadEmail);
     }
 

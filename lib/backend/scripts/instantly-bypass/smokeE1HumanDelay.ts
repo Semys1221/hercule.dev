@@ -1,20 +1,27 @@
 import assert from "node:assert/strict";
 
 import {
-  E1_WEBHOOK_HUMAN_DELAY_MS,
+  E1_WEBHOOK_DEFAULT_DELAY_MS,
+  RESTAURANT_DCE_E1_WEBHOOK_DELAY_MS,
   e1WebhookScheduledFor,
+  resolveE1WebhookDelayMs,
   shouldBypassSendWindow,
 } from "@/lib/legacy/instantly-bypass/constants";
 
 function testE1WebhookScheduledFor() {
   const receivedAt = new Date("2026-03-15T14:03:00.000Z");
-  const scheduled = e1WebhookScheduledFor(receivedAt);
+  const immediate = e1WebhookScheduledFor(receivedAt, E1_WEBHOOK_DEFAULT_DELAY_MS);
+  assert.equal(immediate.getTime(), receivedAt.getTime());
+
+  const delayed = e1WebhookScheduledFor(receivedAt, RESTAURANT_DCE_E1_WEBHOOK_DELAY_MS);
   assert.equal(
-    scheduled.getTime() - receivedAt.getTime(),
-    E1_WEBHOOK_HUMAN_DELAY_MS,
+    delayed.getTime() - receivedAt.getTime(),
+    RESTAURANT_DCE_E1_WEBHOOK_DELAY_MS,
   );
-  assert.equal(E1_WEBHOOK_HUMAN_DELAY_MS, 0);
-  console.log("OK e1WebhookScheduledFor adds no delay");
+
+  assert.equal(resolveE1WebhookDelayMs({ campaign_id: "x", e1_webhook_delay_ms: 300_000 }), 300_000);
+  assert.equal(resolveE1WebhookDelayMs({ campaign_id: "x" }), E1_WEBHOOK_DEFAULT_DELAY_MS);
+  console.log("OK e1WebhookScheduledFor + resolveE1WebhookDelayMs");
 }
 
 function testShouldBypassSendWindow() {

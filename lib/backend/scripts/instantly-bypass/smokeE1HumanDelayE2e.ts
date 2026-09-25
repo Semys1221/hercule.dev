@@ -16,7 +16,11 @@
 
 import assert from "node:assert/strict";
 
-import { E1_WEBHOOK_HUMAN_DELAY_MS, e1WebhookScheduledFor } from "@/lib/legacy/instantly-bypass/constants";
+import {
+  e1WebhookScheduledFor,
+  resolveE1WebhookDelayMs,
+} from "@/lib/legacy/instantly-bypass/constants";
+import { loadBypassConfig } from "@/lib/legacy/instantly-bypass/templates";
 import { findLeadByEmailInCampaign, getInstantlyApiKey } from "@/lib/legacy/instantly-bypass/client";
 import { interestedIdempotencyKey } from "@/lib/legacy/instantly-bypass/jobs";
 import { insertBypassJob } from "@/lib/legacy/instantly-bypass/scheduled-jobs";
@@ -249,24 +253,26 @@ async function fetchJob(idempotencyKey: string): Promise<BypassJobRow | null> {
   return (data as BypassJobRow | null) ?? null;
 }
 
-function assertJobScheduled(
+async function assertJobScheduled(
   job: BypassJobRow,
   receivedAt: Date,
   campaignId: string,
   leadEmail: string,
-): void {
+): Promise<void> {
   assert.equal(job.status, "pending", "job should be pending");
   assert.equal(job.template_key, "interested_email1");
   assert.equal(job.campaign_id, campaignId);
   assert.equal(job.lead_email, leadEmail.trim().toLowerCase());
   assert.equal(job.payload?.bypass_send_window, true);
 
+  const config = await loadBypassConfig(campaignId);
+  const delayMs = resolveE1WebhookDelayMs(config);
   const scheduledAt = new Date(job.scheduled_for).getTime();
-  const expectedAt = receivedAt.getTime() + E1_WEBHOOK_HUMAN_DELAY_MS;
+  const expectedAt = receivedAt.getTime() + delayMs;
   const delta = Math.abs(scheduledAt - expectedAt);
   assert.ok(
     delta <= SCHEDULE_TOLERANCE_MS,
-    `scheduled_for off by ${delta}ms (expected ~${E1_WEBHOOK_HUMAN_DELAY_MS}ms after webhook)`,
+    `scheduled_for off by ${delta}ms (expected ~${delayMs}ms after webhook)`,
   );
 }
 
@@ -406,8 +412,8 @@ async function runDryRunPhase(
     if (!job) {
       throw new Error(`Expected bypass job for ${idempotencyKey}`);
     }
-    assertJobScheduled(job, receivedAt, campaignId, leadEmail);
-    console.log("OK webhook scheduled E1 (+2 min)");
+    await assertJobScheduled(job, receivedAt, campaignId, leadEmail);
+    console.log("OK webhook scheduled E1 (deferred)");
   } else if (first.skipped === "already_scheduled") {
     const job = await fetchJob(idempotencyKey);
     if (!job) {
@@ -429,8 +435,8 @@ async function runDryRunPhase(
     if (!job) {
       throw new Error(`Expected seeded bypass job for ${idempotencyKey}`);
     }
-    assertJobScheduled(job, receivedAt, campaignId, leadEmail);
-    console.log("OK seeded pending job (+2 min)");
+    await assertJobScheduled(job, receivedAt, campaignId, leadEmail);
+    console.log("OK seeded pending job (deferred)");
   } else {
     throw new Error(
       `Unexpected webhook response: ${JSON.stringify(first)} (is prod deployed with E1 delay?)`,

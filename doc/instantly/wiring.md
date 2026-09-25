@@ -12,7 +12,7 @@ Ce dossier est la **rédaction source** (plain text / markdown léger). Rien n�
 
 | Fichier doc | Preset scraper | Campagne Instantly |
 |-------------|----------------|---------------------|
-| `restaurants.md` | `restaurants_independants` | Restaurants (DCE) — `e4f11e76-717e-4be9-a6ad-c7f0a331afb7` |
+| `restaurants.md` | `restaurants_independants` | Restaurants (DCE) — `e4f11e76-717e-4be9-a6ad-c7f0a331afb7` · parallèle V2 — `2102110d-1491-4bd0-aa24-cfd29e9a0218` (E1 eligibility, délai 5 min) |
 | `btp.md` | `btp_pme` | BTP (DCE) — `25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a` |
 | `chirurgien-dentist.md` | `chirurgiens_dentistes` | Hercule — Chirurgiens-dentistes (France) — `0f0b450a-e550-461c-96f6-1a7681678d67` |
 

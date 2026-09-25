@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projections outreach</title>
+    <link rel="stylesheet" href="/reservation/stats-shared.css">
+</head>
+<body>
+    <main class="page">
+        <header class="stats-header">
+            <h1 id="page-title">Projections</h1>
+            <p class="meta" id="page-meta">Chargement…</p>
+            <p class="lede">
+                <a id="live-link" href="#" hidden>Métriques live (funnel E1)</a>
+            </p>
+        </header>
+
+        <section class="card" aria-labelledby="funnel-heading">
+            <h2 id="funnel-heading">Funnel (référence)</h2>
+            <div class="funnel" id="funnel">…</div>
+        </section>
+
+        <section class="card" aria-labelledby="assumptions-heading">
+            <h2 id="assumptions-heading">Hypothèses (modifiables)</h2>
+            <div class="grid-2">
+                <div>
+                    <label for="input-emails-ref">Emails de référence</label>
+                    <input type="number" id="input-emails-ref" min="1" step="1">
+                </div>
+                <div>
+                    <label for="input-positives-ref">Réponses positives (sur cette base)</label>
+                    <input type="number" id="input-positives-ref" min="0" step="1">
+                </div>
+                <div>
+                    <label for="input-booking-rate">Booking rate (% des réponses positives)</label>
+                    <input type="number" id="input-booking-rate" min="0" max="100" step="1">
+                </div>
+                <div>
+                    <label for="input-emails-per-day">Emails envoyés / jour</label>
+                    <input type="number" id="input-emails-per-day" min="1" step="1">
+                </div>
+                <div>
+                    <label for="input-target-rdv">Objectif RDV</label>
+                    <input type="number" id="input-target-rdv" min="1" step="1">
+                </div>
+            </div>
+        </section>
+
+        <section aria-labelledby="timeline-heading">
+            <h2 id="timeline-heading">Délai vers l’objectif RDV</h2>
+            <div class="card" id="timeline">…</div>
+        </section>
+
+        <section aria-labelledby="projection-heading">
+            <h2 id="projection-heading">Projection à taux constant</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Emails</th>
+                        <th>Réponses positives</th>
+                        <th>RDV (booking rate actuel)</th>
+                    </tr>
+                </thead>
+                <tbody id="projection-body">
+                    <tr><td colspan="3">…</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section aria-labelledby="scenarios-heading">
+            <h2 id="scenarios-heading">Scénarios (leviers)</h2>
+            <div class="grid-2" id="scenarios"></div>
+        </section>
+
+        <section aria-labelledby="insights-heading">
+            <h2 id="insights-heading">Notes</h2>
+            <ul class="insights" id="insights"></ul>
+        </section>
+
+        <p class="error" id="error" hidden></p>
+    </main>
+    <script src="/reservation/stats.js"></script>
+</body>
+</html>

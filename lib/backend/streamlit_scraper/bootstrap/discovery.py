@@ -167,10 +167,23 @@ def all_dedup_list_ids(preset_id: str, *, use_cache: bool = True) -> list[str]:
 
 
 def all_dedup_campaign_ids(preset_id: str, *, use_cache: bool = True) -> list[str]:
-    """Campaign IDs for dedup — own preset only."""
+    """Campaign IDs for dedup — primary + INSTANTLY_DEDUP_CAMPAIGN_IDS from preset config."""
     presets = discover_presets(use_cache=use_cache)
     meta = presets.get(preset_id)
     if meta is None:
         return []
-    campaign_id = _uuid(meta.loader().get("INSTANTLY_CAMPAIGN_ID"))
-    return [campaign_id] if campaign_id else []
+    config = meta.loader()
+    seen: set[str] = set()
+    ordered: list[str] = []
+    primary = _uuid(config.get("INSTANTLY_CAMPAIGN_ID"))
+    if primary:
+        seen.add(primary)
+        ordered.append(primary)
+    dedup_ids = config.get("INSTANTLY_DEDUP_CAMPAIGN_IDS") or []
+    if isinstance(dedup_ids, list):
+        for raw in dedup_ids:
+            cid = _uuid(raw)
+            if cid and cid not in seen:
+                seen.add(cid)
+                ordered.append(cid)
+    return ordered
