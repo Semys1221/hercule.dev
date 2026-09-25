@@ -100,6 +100,15 @@ describe("buildGlobalRules", () => {
     expect(r2).toContain("Interdit : reframe perception");
   });
 
+  it("uses JUM rules for comptable delivery presets (no Hercule)", () => {
+    const rules = buildGlobalRules(3, "restaurants_independants");
+    expect(rules).toContain("JUM Advisory");
+    expect(rules).toContain("Secrétaire Comptable JUM — jum-advisory.com");
+    expect(rules).toContain("Ne mentionne jamais Hercule");
+    expect(rules).not.toContain("groupement d'entrepreneurs dirigé par Evan Sinclair");
+    expect(rules).not.toContain("mercredi 23 septembre");
+  });
+
   it("uses IAS conference rules and thematic paragraphs for due diligence", () => {
     const ias = buildGlobalRules(3, "courtiers_prevoyance_b2b");
     expect(ias).toContain("Objection conférence EXPLICITE (IAS");

@@ -22,23 +22,18 @@ export type ClientRow = {
 };
 
 const CATEGORY_VALUES: LeadCategory[] = [
-  "agence",
   "comptable",
-  "entreprise",
   "cif",
   "comptable_delivery",
+  "client",
 ];
 
 const SELECT_FIELDS: Record<LeadCategory, string> = {
-  agence:
-    "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
   comptable:
     "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
   cif:
     "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
-  entreprise:
-    "id, email, first_name, company, slug, product_statut, onboarding_completed_at, profile",
-  jum:
+  comptable_delivery:
     "id, email, first_name, company, slug, product_statut, dashboard_link, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
   client:
     "id, email, first_name, slug, product_statut, onboarding_completed_at, retraction_status, retraction_ends_at, retraction_waived_at, profile",
@@ -46,7 +41,7 @@ const SELECT_FIELDS: Record<LeadCategory, string> = {
 
 function parseCategory(value: string | null): LeadCategory | null {
   if (!value) {
-    return "agence";
+    return "comptable";
   }
   return CATEGORY_VALUES.includes(value as LeadCategory)
     ? (value as LeadCategory)

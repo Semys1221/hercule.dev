@@ -7,7 +7,7 @@ import { Marquee } from "@/components/ui/marquee"
 import { cn } from "@/lib/utils"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
 import type { DemandeContrat, DemandeTeaser } from "@/lib/site/demandes-data"
-import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
+import { MarketingBookingCta } from "@/components/site/_archive/marketing-booking-cta"
 import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
 const CARD_WIDTH = "w-[300px] sm:w-[320px]"

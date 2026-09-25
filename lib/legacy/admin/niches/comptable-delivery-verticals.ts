@@ -54,17 +54,17 @@ export const COMPTABLE_DELIVERY_VERTICALS: readonly ComptableDeliveryVertical[] 
     listName: "TEMP - RESTAURANT",
     campaignName: "Hercule — Restaurants indépendants (France)",
     calendlySchedulingUrl:
-      "https://calendly.com/jum-advisory/rendez-vous-comptable-restaurant",
+      "https://calendly.com/jum-advisory/rentabilite-restaurant",
   },
   {
     key: "btp",
-    label: "Terrassement / BTP",
+    label: "BTP PME (DCE)",
     segment: "b2b",
     routeSegment: "btp",
-    listId: "ea5818ff-e086-4ed3-aee7-87b614fc7432",
-    campaignId: "05bc06f8-4f60-4e6c-bae1-7afe30df38c7",
-    listName: "TEMP - TERRASSEMENT",
-    campaignName: "Hercule — Terrassement / VRD (France)",
+    listId: "913e03b9-f854-4d99-96a1-5b4a257cb5d9",
+    campaignId: "25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a",
+    listName: "BTP PME (France)",
+    campaignName: "BTP (DCE)",
     calendlySchedulingUrl:
       "https://calendly.com/jum-advisory/rendez-vous-comptable-btp",
   },

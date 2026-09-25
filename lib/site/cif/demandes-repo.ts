@@ -1,4 +1,3 @@
-import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import type {
   DemandeContrat,
   DemandeNiche,
@@ -62,31 +61,8 @@ function mapTeaserRow(row: CifDemandeRow): DemandeTeaser {
   };
 }
 
-function todayIsoDate(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 async function loadCifDemandesForCarousel(): Promise<DemandeContrat[]> {
-  const client = createLinkTrackingClient();
-  const today = todayIsoDate();
-  const { data, error } = await client
-    .from("cif_demandes")
-    .select("*")
-    .eq("record_type", "demande")
-    .lte("sort_order", 16)
-    .lte("available_from", today)
-    .gte("available_until", today)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    throw new Error(`Failed to fetch cif demandes: ${error.message}`);
-  }
-
-  return (data as CifDemandeRow[]).map(mapCifDemandeRow);
+  return [];
 }
 
 export async function fetchCifDemandesForCarousel(): Promise<DemandeContrat[]> {
@@ -98,21 +74,7 @@ export async function fetchCifDemandesForCarousel(): Promise<DemandeContrat[]> {
 }
 
 async function loadCifDemandeTeaser(): Promise<DemandeTeaser | null> {
-  const client = createLinkTrackingClient();
-  const { data, error } = await client
-    .from("cif_demandes")
-    .select("*")
-    .eq("record_type", "teaser")
-    .order("sort_order", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Failed to fetch cif demande teaser: ${error.message}`);
-  }
-
-  if (!data) return null;
-  return mapTeaserRow(data as CifDemandeRow);
+  return null;
 }
 
 export async function fetchCifDemandeTeaser(): Promise<DemandeTeaser | null> {

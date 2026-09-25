@@ -7,13 +7,13 @@
       "routeSegment": "restaurant",
       "comptableDeliverySegment": "restaurant",
       "instantlyCampaignId": "e4f11e76-717e-4be9-a6ad-c7f0a331afb7",
-      "calendlySchedulingUrl": "https://calendly.com/jum-advisory/rendez-vous-comptable-restaurant",
+      "calendlySchedulingUrl": "https://calendly.com/jum-advisory/rentabilite-restaurant",
       "enabled": true
     },
     "btp": {
       "routeSegment": "btp",
       "comptableDeliverySegment": "b2b",
-      "instantlyCampaignId": "05bc06f8-4f60-4e6c-bae1-7afe30df38c7",
+      "instantlyCampaignId": "25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a",
       "calendlySchedulingUrl": "https://calendly.com/jum-advisory/rendez-vous-comptable-btp",
       "enabled": true
     },

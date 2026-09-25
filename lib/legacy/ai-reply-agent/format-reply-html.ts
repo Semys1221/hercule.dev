@@ -10,7 +10,9 @@ import {
   HERCULE_SIGNATURE_TAGLINE_HTML,
   HERCULE_SIGNATURE_TAGLINE_LEGACY,
   ensureCordialementClosing,
+  ensureJumOutreachSignature,
   ensureOutreachSignature,
+  JUM_SIGNATURE_TAGLINE,
   normalizeSignatureSpacing,
 } from "@/lib/legacy/outreach-email/signature";
 
@@ -199,9 +201,11 @@ function normalizeLegacyDisclaimer(text: string): string {
   );
 }
 
+export type ReplySignatureMode = "hercule" | "jum";
+
 export function formatReplyHtml(
   text: string,
-  options?: { ctaLink?: string | null },
+  options?: { ctaLink?: string | null; signatureMode?: ReplySignatureMode },
 ): string {
   let body = normalizePlainText(normalizeLegacyDisclaimer(text));
   if (!body) {
@@ -213,7 +217,11 @@ export function formatReplyHtml(
     body = ensureCtaPresent(body, ctaLink);
   }
 
-  body = ensureOutreachSignature(body);
+  const signatureMode = options?.signatureMode ?? "hercule";
+  body =
+    signatureMode === "jum"
+      ? ensureJumOutreachSignature(body)
+      : ensureOutreachSignature(body);
   if (!body.includes(OPT_OUT_DISCLAIMER_MARKER)) {
     const cordIdx = body.indexOf(CORDIALEMENT_CLOSING);
     const sigIdx = signatureIndex(body);
@@ -236,7 +244,13 @@ export function formatReplyHtml(
       linked = `${linked}${OPT_OUT_DISCLAIMER_HTML}`;
     }
   }
-  linked = emphasizeReplyLinkedText(linked);
+  if (signatureMode === "jum") {
+    linked = linked.replaceAll(HERCULE_SIGNATURE_TAGLINE, "");
+    linked = linked.replaceAll(HERCULE_SIGNATURE_TAGLINE_LEGACY, "");
+    linked = linked.replaceAll(HERCULE_SIGNATURE_TAGLINE_HTML, "");
+  } else {
+    linked = emphasizeReplyLinkedText(linked);
+  }
   const htmlOut = paragraphsFromLinkedText(linked);
   return htmlOut;
 }

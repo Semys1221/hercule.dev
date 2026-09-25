@@ -1,5 +1,5 @@
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
-import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
+import { MarketingBookingCta } from "@/components/site/_archive/marketing-booking-cta"
 import { getMarketingCopy } from "@/lib/site/marketing-copy"
 
 const copy = getMarketingCopy("agence")

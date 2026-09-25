@@ -47,6 +47,7 @@ def legal_audience_from_niche_preset(niche_preset_id: str) -> str:
     if (
         "jum" in ident
         or "restaurant" in ident
+        or "btp" in ident
         or "terrassement" in ident
         or "dentiste" in ident
         or "medecin" in ident

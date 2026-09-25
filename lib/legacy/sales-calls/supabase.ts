@@ -9,10 +9,12 @@ export function createSalesCallsClient(): SupabaseClient {
 }
 
 export type UpsertSalesCallParams = {
-  agenceId?: string | null;
-  entrepriseId?: string | null;
+  leadId?: string | null;
+  /** @deprecated use leadId */
   comptableId?: string | null;
+  /** @deprecated use leadId */
   cifId?: string | null;
+  /** @deprecated use leadId */
   comptableDeliveryId?: string | null;
   /** @deprecated */
   jumId?: string | null;
@@ -21,6 +23,17 @@ export type UpsertSalesCallParams = {
   scheduledAt?: string | null;
   status?: SalesCallStatus;
 };
+
+function resolveLeadId(params: UpsertSalesCallParams): string | null {
+  return (
+    params.leadId ??
+    params.comptableId ??
+    params.cifId ??
+    params.comptableDeliveryId ??
+    params.jumId ??
+    null
+  );
+}
 
 export async function upsertSalesCallFromBooking(
   client: SupabaseClient,
@@ -37,23 +50,12 @@ export async function upsertSalesCallFromBooking(
     throw new Error(`sales_calls lookup failed: ${lookupError.message}`);
   }
 
+  const leadId = resolveLeadId(params);
+
   if (existing) {
     const patch: Record<string, unknown> = {};
-    if (params.agenceId && !existing.agence_id) {
-      patch.agence_id = params.agenceId;
-    }
-    if (params.entrepriseId && !existing.entreprise_id) {
-      patch.entreprise_id = params.entrepriseId;
-    }
-    if (params.comptableId && !existing.comptable_id) {
-      patch.comptable_id = params.comptableId;
-    }
-    if (params.cifId && !existing.cif_id) {
-      patch.cif_id = params.cifId;
-    }
-    const deliveryId = params.comptableDeliveryId ?? params.jumId;
-    if (deliveryId && !existing.comptable_delivery_id) {
-      patch.comptable_delivery_id = deliveryId;
+    if (leadId && !existing.lead_id) {
+      patch.lead_id = leadId;
     }
     if (params.scheduledAt) {
       patch.scheduled_at = params.scheduledAt;
@@ -81,12 +83,7 @@ export async function upsertSalesCallFromBooking(
   const { data, error } = await client
     .from("sales_calls")
     .insert({
-      agence_id: params.agenceId ?? null,
-      entreprise_id: params.entrepriseId ?? null,
-      comptable_id: params.comptableId ?? null,
-      cif_id: params.cifId ?? null,
-      comptable_delivery_id:
-        params.comptableDeliveryId ?? params.jumId ?? null,
+      lead_id: leadId,
       email: normalizedEmail,
       calendly_invitee_uri: params.inviteeUri,
       scheduled_at: params.scheduledAt ?? null,
@@ -167,61 +164,47 @@ export async function findSalesCallById(
   return (data as SalesCall | null) ?? null;
 }
 
-export async function findLatestSalesCallByAgenceId(
+export async function findLatestSalesCallByLeadId(
   client: SupabaseClient,
-  agenceId: string,
+  leadId: string,
 ): Promise<SalesCall | null> {
   const { data, error } = await client
     .from("sales_calls")
     .select("*")
-    .eq("agence_id", agenceId)
+    .eq("lead_id", leadId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (error) {
-    throw new Error(`sales_calls agence lookup failed: ${error.message}`);
+    throw new Error(`sales_calls lead lookup failed: ${error.message}`);
   }
 
   return (data as SalesCall | null) ?? null;
 }
 
+/** @deprecated Agence product removed — use findLatestSalesCallByLeadId */
+export async function findLatestSalesCallByAgenceId(
+  _client: SupabaseClient,
+  _agenceId: string,
+): Promise<SalesCall | null> {
+  return null;
+}
+
+/** @deprecated use findLatestSalesCallByLeadId */
 export async function findLatestSalesCallByComptableId(
   client: SupabaseClient,
   comptableId: string,
 ): Promise<SalesCall | null> {
-  const { data, error } = await client
-    .from("sales_calls")
-    .select("*")
-    .eq("comptable_id", comptableId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`sales_calls comptable lookup failed: ${error.message}`);
-  }
-
-  return (data as SalesCall | null) ?? null;
+  return findLatestSalesCallByLeadId(client, comptableId);
 }
 
+/** @deprecated use findLatestSalesCallByLeadId */
 export async function findLatestSalesCallByCifId(
   client: SupabaseClient,
   cifId: string,
 ): Promise<SalesCall | null> {
-  const { data, error } = await client
-    .from("sales_calls")
-    .select("*")
-    .eq("cif_id", cifId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`sales_calls cif lookup failed: ${error.message}`);
-  }
-
-  return (data as SalesCall | null) ?? null;
+  return findLatestSalesCallByLeadId(client, cifId);
 }
 
 export async function updateSalesCallNotes(

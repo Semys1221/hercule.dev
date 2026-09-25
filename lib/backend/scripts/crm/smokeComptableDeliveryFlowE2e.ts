@@ -10,6 +10,8 @@ import {
 } from "@/lib/legacy/link-tracking/urls";
 import { isLeadCategory } from "@/lib/legacy/link-tracking/types";
 import { resolveInterestedEmail1TemplateKey } from "@/lib/legacy/instantly-bypass/jum-segment";
+import { getFunnelCopy } from "@/lib/booking/comptable-delivery-funnel/copy";
+import { isPreBookingComplete } from "@/lib/booking/comptable-delivery-funnel/navigation";
 
 function main(): void {
   assert.equal(isLeadCategory("comptable_delivery"), true);
@@ -51,6 +53,12 @@ function main(): void {
     ),
     "interested_email1_dentiste",
   );
+
+  const restaurantCopy = getFunnelCopy("restaurant");
+  assert.equal(restaurantCopy.steps.intro.kind, "intro");
+  const btpCopy = getFunnelCopy("btp");
+  assert.match(btpCopy.steps.visibility.options[0].label, /matériaux|achats/i);
+  assert.equal(isPreBookingComplete({}), false);
 
   console.log("smokeComptableDeliveryFlowE2e: ok");
 }

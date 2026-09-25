@@ -1,0 +1,116 @@
+{
+  "updated_at": "2026-09-25T06:27:58Z",
+  "runs": [
+    {
+      "file": "sante_medical_1161.csv",
+      "list_id": "7e3b619f-9823-4d64-bc50-31f01bb08e6d",
+      "csv_rows": 1161,
+      "unique_emails": 1161,
+      "duration_s": 1.69,
+      "attempted": 1161,
+      "pushed": 0,
+      "skipped_duplicate": 1161,
+      "failed": 0
+    },
+    {
+      "file": "paramedical_1317.csv",
+      "list_id": "2942eb9a-365f-4cc4-a63b-703908b8bbed",
+      "csv_rows": 1317,
+      "unique_emails": 1317,
+      "duration_s": 1.14,
+      "attempted": 1317,
+      "pushed": 0,
+      "skipped_duplicate": 1317,
+      "failed": 0
+    },
+    {
+      "file": "retail_autres_divers_1170.csv",
+      "list_id": "2ed57d46-51a4-4c93-a933-a4193c033fa5",
+      "csv_rows": 1170,
+      "unique_emails": 1170,
+      "duration_s": 2.27,
+      "attempted": 1170,
+      "pushed": 972,
+      "skipped_duplicate": 198,
+      "failed": 0
+    },
+    {
+      "file": "logiciel_marketing_agences_1242.csv",
+      "list_id": "64f1020d-822b-4bf9-baee-9d0e98b4dc1d",
+      "csv_rows": 1242,
+      "unique_emails": 1242,
+      "duration_s": 9.05,
+      "attempted": 1242,
+      "pushed": 107,
+      "skipped_duplicate": 1119,
+      "failed": 16
+    },
+    {
+      "file": "btp_industrie_negoce_2476.csv",
+      "list_id": "ec32d4a9-112b-4165-bda9-9cf89fc24cfd",
+      "csv_rows": 2476,
+      "unique_emails": 2476,
+      "duration_s": 8.06,
+      "attempted": 2476,
+      "pushed": 1906,
+      "skipped_duplicate": 569,
+      "failed": 1
+    },
+    {
+      "file": "recrutement_technique_backend_2247.csv",
+      "list_id": "a0215f5b-2047-46f6-897f-c16bd794fd88",
+      "csv_rows": 2247,
+      "unique_emails": 2247,
+      "duration_s": 10.44,
+      "attempted": 2247,
+      "pushed": 1355,
+      "skipped_duplicate": 885,
+      "failed": 7
+    },
+    {
+      "file": "recrutement_job_board_60j_2373.csv",
+      "list_id": "370ff5ed-90e4-4c2d-b82f-86d212e82494",
+      "csv_rows": 2373,
+      "unique_emails": 2373,
+      "duration_s": 10.38,
+      "attempted": 2373,
+      "pushed": 1369,
+      "skipped_duplicate": 997,
+      "failed": 7
+    },
+    {
+      "file": "comptable_3175.csv",
+      "list_id": "bfb0fc90-ec59-4d49-b266-3891f59d3ea8",
+      "csv_rows": 3175,
+      "unique_emails": 3175,
+      "duration_s": 10.0,
+      "attempted": 3175,
+      "pushed": 241,
+      "skipped_duplicate": 2933,
+      "failed": 1
+    },
+    {
+      "file": "restaurant_2000.csv",
+      "list_id": "d390231a-6cb8-4f03-83f8-55cf2cad0b08",
+      "csv_rows": 2000,
+      "unique_emails": 2000,
+      "duration_s": 26.01,
+      "attempted": 2000,
+      "pushed": 323,
+      "skipped_duplicate": 1677,
+      "failed": 0,
+      "note": "fallback_from=8ad641e7-3456-42df-9281-2c11f97df1c5;fallback_list=d390231a-6cb8-4f03-83f8-55cf2cad0b08"
+    },
+    {
+      "file": "architectes_deco_10157.csv",
+      "list_id": "429af75a-9b5f-4f8d-a82d-1b5f8d7ab089",
+      "csv_rows": 10157,
+      "unique_emails": 10157,
+      "duration_s": 19.84,
+      "attempted": 10157,
+      "pushed": 8335,
+      "skipped_duplicate": 1801,
+      "failed": 21
+    }
+  ]
+}

@@ -1,5 +1,14 @@
-import { createLinkTrackingClient, normalizeEmail } from "@/lib/legacy/link-tracking/supabase";
+import {
+  createLinkTrackingClient,
+  findLeadByEmail,
+  normalizeEmail,
+} from "@/lib/legacy/link-tracking/supabase";
 import { allocateSlugs, loadSlugSet } from "@/lib/legacy/link-tracking/slug";
+import {
+  mapLeadsRowToLinkTracking,
+  mapPatchToLeadsRow,
+  outreachInsertRow,
+} from "@/lib/legacy/link-tracking/leads-table";
 import type { LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
 import { buildComptableLeadUrls, buildDashboardUrl } from "@/lib/legacy/link-tracking/urls";
 
@@ -25,27 +34,24 @@ export async function ensureComptablePitchLead(
 ): Promise<EnsureComptablePitchLeadResult> {
   const client = createLinkTrackingClient();
   const email = normalizeEmail(params.email);
+  const existing = await findLeadByEmail(client, email);
 
-  const { data: comptableRow } = await client
-    .from("comptable")
-    .select("*")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (comptableRow) {
-    const existing = comptableRow as LinkTrackingLead;
+  if (existing?.category === "comptable") {
     const firstName =
       params.firstName?.trim() ||
-      existing.first_name?.trim() ||
+      existing.lead.first_name?.trim() ||
       firstNameFromEmail(email);
 
     const { data, error } = await client
-      .from("comptable")
-      .update({
-        first_name: firstName || existing.first_name,
-        company: params.company?.trim() || existing.company,
-      })
-      .eq("id", existing.id)
+      .from("leads")
+      .update(
+        mapPatchToLeadsRow("comptable", {
+          first_name: firstName || existing.lead.first_name,
+          company: params.company?.trim() || existing.lead.company,
+        }),
+      )
+      .eq("category", "comptable")
+      .eq("id", existing.lead.id)
       .select("*")
       .single();
 
@@ -53,7 +59,14 @@ export async function ensureComptablePitchLead(
       throw new Error(error?.message ?? "Failed to update comptable lead");
     }
 
-    return { lead: data as LinkTrackingLead, created: false };
+    return {
+      lead: mapLeadsRowToLinkTracking("comptable", data as Record<string, unknown>),
+      created: false,
+    };
+  }
+
+  if (existing) {
+    throw new Error(`email_exists_in_${existing.category}`);
   }
 
   const slugSet = await loadSlugSet(client);
@@ -66,19 +79,21 @@ export async function ensureComptablePitchLead(
   const firstName = params.firstName?.trim() || firstNameFromEmail(email);
 
   const { data, error } = await client
-    .from("comptable")
-    .insert({
-      email,
-      statut: "NOTBOOKED",
-      slug,
-      ...urls,
-      dashboard_link: buildDashboardUrl(slug),
-      instantly_lead_id: null,
-      instantly_campaign_id: null,
-      first_name: firstName,
-      company: params.company?.trim() || null,
-      calendly_questions: {},
-    })
+    .from("leads")
+    .insert(
+      outreachInsertRow("comptable", {
+        email,
+        statut: "NOTBOOKED",
+        slug,
+        ...urls,
+        dashboard_link: buildDashboardUrl(slug),
+        instantly_lead_id: null,
+        instantly_campaign_id: null,
+        first_name: firstName,
+        company: params.company?.trim() || null,
+        calendly_questions: {},
+      }),
+    )
     .select("*")
     .single();
 
@@ -86,5 +101,8 @@ export async function ensureComptablePitchLead(
     throw new Error(error?.message ?? "Failed to insert comptable lead");
   }
 
-  return { lead: data as LinkTrackingLead, created: true };
+  return {
+    lead: mapLeadsRowToLinkTracking("comptable", data as Record<string, unknown>),
+    created: true,
+  };
 }

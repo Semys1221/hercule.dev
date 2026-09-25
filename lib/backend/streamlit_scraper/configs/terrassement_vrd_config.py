@@ -5,7 +5,7 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 PRESET_ID = "terrassement_vrd"
 PRESET_LABEL = "Terrassement / VRD (France)"
 
-_LIST_ID = "ea5818ff-e086-4ed3-aee7-87b614fc7432"
+_LIST_ID = "d4bc89f7-b271-4ed7-9539-4ac968bfb7c9"
 _CAMPAIGN_ID = "05bc06f8-4f60-4e6c-bae1-7afe30df38c7"
 _SUBSEQUENCE_ID = ""
 

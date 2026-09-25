@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { HerculeMark } from "@/components/hercule-mark"
 import { CALENDLY_AGENCE_URL } from "@/lib/constants"
-import { MarketingBookingCta } from "@/components/site/marketing-booking-cta"
+import { MarketingBookingCta } from "@/components/site/_archive/marketing-booking-cta"
 
 export function Navbar() {
   return (

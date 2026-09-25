@@ -1,15 +1,14 @@
 import type { Metadata } from "next"
 
-import { AccueilScene } from "@/components/site/home/scene-accueil"
+import { HouseHome } from "@/components/site/house/house-home"
 import {
   fetchComptableDemandeTeaser,
   fetchComptableDemandesForCarousel,
 } from "@/lib/site/comptable/demandes-repo"
 
 export const metadata: Metadata = {
-  title: "Hercule — Courtage de projets B2B",
-  description:
-    "Attribution exclusive de projets qualifiés (BNC, BIC, TNS) pour comptables, courtiers financiers et courtiers en assurance.",
+  title: "Hercule — Infrastructure sobre",
+  description: "Infrastructure sobre pour ce qui doit tenir dans la durée.",
 }
 
 export const revalidate = 60
@@ -22,7 +21,7 @@ export default async function Home() {
 
   return (
     <main>
-      <AccueilScene demandes={demandes} teaser={teaser} />
+      <HouseHome demandes={demandes} teaser={teaser} />
     </main>
   )
 }

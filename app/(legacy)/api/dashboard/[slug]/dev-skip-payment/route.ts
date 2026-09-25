@@ -82,14 +82,11 @@ async function skipCabinetPayment(
     amountCents = COMMERCIAL_COMPTABLE.pack3TotalCents;
   }
 
-  const paymentRow =
-    owner === "cif"
-      ? { cif_id: leadId, offer_type: offerType, amount_cents: amountCents }
-      : { comptable_id: leadId, offer_type: offerType, amount_cents: amountCents };
-
   const { error: paymentError } = await client.from("payments").upsert(
     {
-      ...paymentRow,
+      lead_id: leadId,
+      offer_type: offerType,
+      amount_cents: amountCents,
       status: "succeeded",
       stripe_checkout_session_id: stripeCheckoutSessionId,
       succeeded_at: succeededAt,
@@ -101,11 +98,10 @@ async function skipCabinetPayment(
     throw new Error(paymentError.message);
   }
 
-  const salesCallOwnerColumn = owner === "cif" ? "cif_id" : "comptable_id";
   await client
     .from("sales_calls")
     .update({ status: "paid" })
-    .eq(salesCallOwnerColumn, leadId)
+    .eq("lead_id", leadId)
     .in("status", ["scheduled", "not_paid", "completed", "no_show"]);
 }
 

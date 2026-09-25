@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { routeSegmentForComptableDeliverySegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import {
+  isLeadCategory,
   isMeetingBookedStatus,
   tableForLeadCategory,
   type LeadCategory,
@@ -19,12 +20,15 @@ import {
 } from "./urls";
 import { restoreRoundRobinQuota } from "@/lib/clients/round-robin";
 import { buildClientDashboardUrl } from "@/lib/clients/supabase";
+import {
+  isUnifiedLeadsCategory,
+  mapLeadsRowToLinkTracking,
+  mapPatchToLeadsRow,
+} from "./leads-table";
 
-// Lookup order: agence → comptable → entreprise → cif → comptable_delivery → client
+// Lookup order: comptable → cif → comptable_delivery → client
 const TABLES: LeadCategory[] = [
-  "agence",
   "comptable",
-  "entreprise",
   "cif",
   "comptable_delivery",
   "client",
@@ -114,30 +118,80 @@ function leadFromRow(
   if (category === "client") {
     return mapClientRowToLead(data);
   }
-  return data as unknown as LinkTrackingLead;
+  return mapLeadsRowToLinkTracking(category, data);
+}
+
+function withOutreachCategory<T extends { eq: (column: string, value: string) => T }>(
+  query: T,
+  category: LeadCategory,
+): T {
+  if (category === "client") {
+    return query;
+  }
+  return query.eq("category", category);
+}
+
+async function updateLeadById(
+  client: SupabaseClient,
+  category: LeadCategory,
+  leadId: string,
+  patch: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const table = tableForLeadCategory(category);
+  const payload =
+    category === "client" ? patch : mapPatchToLeadsRow(category, patch);
+  const { data, error } = await withOutreachCategory(
+    client.from(table).update(payload).eq("id", leadId),
+    category,
+  )
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase update failed: ${error.message}`);
+  }
+  return (data as Record<string, unknown> | null) ?? null;
 }
 
 export async function findLeadByLink(
   client: SupabaseClient,
   slug: string,
 ): Promise<LeadLookup | null> {
-  for (const category of TABLES) {
-    const { data, error } = await client
-      .from(tableForLeadCategory(category))
-      .select("*")
-      .eq("slug", slug)
-      .maybeSingle();
+  const { data: unified, error: unifiedError } = await client
+    .from("leads")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
 
-    if (error) {
-      if (isMissingRelationError(error.message)) {
-        continue;
-      }
-      throw new Error(`Supabase lookup failed on ${category}: ${error.message}`);
-    }
-    if (data) {
-      return { category, lead: leadFromRow(category, data as Record<string, unknown>) };
+  if (unifiedError && !isMissingRelationError(unifiedError.message)) {
+    throw new Error(`Supabase lookup failed on leads: ${unifiedError.message}`);
+  }
+  if (unified) {
+    const category = String(unified.category ?? "");
+    if (isLeadCategory(category) && isUnifiedLeadsCategory(category)) {
+      return {
+        category,
+        lead: leadFromRow(category, unified as Record<string, unknown>),
+      };
     }
   }
+
+  const { data: clientRow, error: clientError } = await client
+    .from("clients")
+    .select("*")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (clientError) {
+    throw new Error(`Supabase lookup failed on client: ${clientError.message}`);
+  }
+  if (clientRow) {
+    return {
+      category: "client",
+      lead: leadFromRow("client", clientRow as Record<string, unknown>),
+    };
+  }
+
   return null;
 }
 
@@ -147,11 +201,10 @@ export async function findLeadByEmail(
 ): Promise<LeadLookup | null> {
   const normalized = normalizeEmail(email);
   for (const category of TABLES) {
-    const { data, error } = await client
-      .from(tableForLeadCategory(category))
-      .select("*")
-      .eq("email", normalized)
-      .maybeSingle();
+    const { data, error } = await withOutreachCategory(
+      client.from(tableForLeadCategory(category)).select("*").eq("email", normalized),
+      category,
+    ).maybeSingle();
 
     if (error) {
       if (isMissingRelationError(error.message)) {
@@ -179,11 +232,13 @@ export async function findLeadByCalendlyInviteeUri(
     if (category === "client") {
       continue;
     }
-    const { data, error } = await client
-      .from(tableForLeadCategory(category))
-      .select("*")
-      .eq("calendly_invitee_uri", normalized)
-      .maybeSingle();
+    const { data, error } = await withOutreachCategory(
+      client
+        .from(tableForLeadCategory(category))
+        .select("*")
+        .eq("calendly_invitee_uri", normalized),
+      category,
+    ).maybeSingle();
 
     if (error) {
       if (isMissingRelationError(error.message)) {
@@ -244,7 +299,10 @@ async function findLeadsInTableByColumn(
   }).catch(() => {});
   // #endregion
 
-  const { data, error } = await client.from(tableForLeadCategory(category)).select("*").in(column, values);
+  const { data, error } = await withOutreachCategory(
+    client.from(tableForLeadCategory(category)).select("*").in(column, values),
+    category,
+  );
 
   // #region agent log
   const errRecord = error as { message?: string; cause?: unknown; code?: string; details?: string } | null;
@@ -295,7 +353,9 @@ async function findLeadsInTableByColumn(
     );
   }
 
-  return (data ?? []) as LinkTrackingLead[];
+  return (data ?? []).map((row) =>
+    leadFromRow(category, row as Record<string, unknown>),
+  );
 }
 
 const BULK_EMAIL_LOOKUP_BATCH = 100;
@@ -431,11 +491,10 @@ export async function findLeadById(
   category: LeadCategory,
   leadId: string,
 ): Promise<LinkTrackingLead | null> {
-  const { data, error } = await client
-    .from(tableForLeadCategory(category))
-    .select("*")
-    .eq("id", leadId)
-    .maybeSingle();
+  const { data, error } = await withOutreachCategory(
+    client.from(tableForLeadCategory(category)).select("*").eq("id", leadId),
+    category,
+  ).maybeSingle();
 
   if (error) {
     throw new Error(`Supabase lookup failed: ${error.message}`);
@@ -443,10 +502,7 @@ export async function findLeadById(
   if (!data) {
     return null;
   }
-  if (category === "client") {
-    return mapClientRowToLead(data as Record<string, unknown>);
-  }
-  return data as LinkTrackingLead;
+  return leadFromRow(category, data as Record<string, unknown>);
 }
 
 export type MarkBookedParams = {
@@ -536,18 +592,11 @@ async function applyBookingIdentityPatch(
     return lookup.lead;
   }
 
-  const { data, error } = await client
-    .from(lookup.category)
-    .update(patch)
-    .eq("id", lookup.lead.id)
-    .select("*")
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Supabase booking identity sync failed: ${error.message}`);
+  const data = await updateLeadById(client, lookup.category, lookup.lead.id, patch);
+  if (!data) {
+    return lookup.lead;
   }
-
-  return (data as LinkTrackingLead | null) ?? lookup.lead;
+  return leadFromRow(lookup.category, data);
 }
 
 async function ensureDashboardLink(
@@ -567,18 +616,18 @@ async function ensureDashboardLink(
   }
 
   const dashboardLink = buildDashboardUrl(lookup.lead.slug);
-  const { data, error } = await client
-    .from(lookup.category)
-    .update({ dashboard_link: dashboardLink })
-    .eq("id", lookup.lead.id)
-    .select("*")
-    .maybeSingle();
+  const data = await updateLeadById(client, lookup.category, lookup.lead.id, {
+    dashboard_link: dashboardLink,
+  });
 
-  if (error || !data) {
+  if (!data) {
     return lookup;
   }
 
-  return { category: lookup.category, lead: data as LinkTrackingLead };
+  return {
+    category: lookup.category,
+    lead: leadFromRow(lookup.category, data),
+  };
 }
 
 export async function markLeadBooked(
@@ -591,6 +640,17 @@ export async function markLeadBooked(
   }
   if (!lookup) {
     return { updated: false, lookup: null, reason: "lead_not_found" };
+  }
+
+  const bookingEmail = normalizeEmail(params.email);
+  const outreachEmail = normalizeEmail(lookup.lead.email);
+  if (
+    lookup.category === "comptable_delivery" &&
+    bookingEmail &&
+    outreachEmail &&
+    bookingEmail !== outreachEmail
+  ) {
+    return { updated: false, lookup, reason: "booking_email_mismatch" };
   }
 
   if (lookup.lead.statut === "CONFIRMED" || lookup.lead.statut === "CANCELLED") {
@@ -644,7 +704,6 @@ export async function markLeadBooked(
     ...buildBookingIdentityPatch(lookup, params),
   };
   if (
-    lookup.category === "agence" ||
     lookup.category === "comptable" ||
     lookup.category === "cif" ||
     lookup.category === "comptable_delivery"
@@ -652,11 +711,15 @@ export async function markLeadBooked(
     patch.dashboard_link = buildDashboardUrl(lookup.lead.slug);
   }
 
-  const { data, error } = await client
-    .from(lookup.category)
-    .update(patch)
-    .eq("slug", lookup.lead.slug)
-    .in("statut", ["NOTBOOKED", "CLICKED"])
+  const mappedPatch = mapPatchToLeadsRow(lookup.category, patch);
+  const { data, error } = await withOutreachCategory(
+    client
+      .from(tableForLeadCategory(lookup.category))
+      .update(mappedPatch)
+      .eq("slug", lookup.lead.slug)
+      .in("statut", ["NOTBOOKED", "CLICKED"]),
+    lookup.category,
+  )
     .select("*")
     .maybeSingle();
 
@@ -691,7 +754,10 @@ export async function markLeadBooked(
 
   return {
     updated: true,
-    lookup: { category: lookup.category, lead: data as LinkTrackingLead },
+    lookup: {
+      category: lookup.category,
+      lead: leadFromRow(lookup.category, data as Record<string, unknown>),
+    },
   };
 }
 
@@ -703,11 +769,14 @@ export async function markLeadClicked(
     return null;
   }
 
-  const { data, error } = await client
-    .from(lookup.category)
-    .update({ statut: "CLICKED" })
-    .eq("id", lookup.lead.id)
-    .eq("statut", "NOTBOOKED")
+  const { data, error } = await withOutreachCategory(
+    client
+      .from(tableForLeadCategory(lookup.category))
+      .update({ statut: "CLICKED" })
+      .eq("id", lookup.lead.id)
+      .eq("statut", "NOTBOOKED"),
+    lookup.category,
+  )
     .select("*")
     .maybeSingle();
 
@@ -716,7 +785,10 @@ export async function markLeadClicked(
   }
   if (!data) return null;
 
-  return { category: lookup.category, lead: data as LinkTrackingLead };
+  return {
+    category: lookup.category,
+    lead: leadFromRow(lookup.category, data as Record<string, unknown>),
+  };
 }
 
 export async function markLeadConfirmed(
@@ -731,13 +803,16 @@ export async function markLeadConfirmed(
   }
 
   const now = new Date().toISOString();
-  const { data, error } = await client
-    .from(lookup.category)
-    .update({
-      statut: "CONFIRMED",
-      confirmed_at: now,
-    })
-    .eq("id", lookup.lead.id)
+  const { data, error } = await withOutreachCategory(
+    client
+      .from(tableForLeadCategory(lookup.category))
+      .update({
+        statut: "CONFIRMED",
+        confirmed_at: now,
+      })
+      .eq("id", lookup.lead.id),
+    lookup.category,
+  )
     .select("*")
     .maybeSingle();
 
@@ -747,7 +822,9 @@ export async function markLeadConfirmed(
 
   return {
     category: lookup.category,
-    lead: (data as LinkTrackingLead) ?? lookup.lead,
+    lead: data
+      ? leadFromRow(lookup.category, data as Record<string, unknown>)
+      : lookup.lead,
   };
 }
 
@@ -755,31 +832,22 @@ export async function markLeadNotBooked(
   client: SupabaseClient,
   lookup: LeadLookup,
 ): Promise<LeadLookup> {
-  const { data, error } = await client
-    .from(lookup.category)
-    .update({
-      statut: "NOTBOOKED",
-      scheduled_at: null,
-      booked_at: null,
-      calendly_invitee_uri: null,
-      calendly_join_url: null,
-      calendly_reschedule_url: null,
-      calendly_cancel_url: null,
-      calendly_links_synced_at: null,
-      calendly_links_sync_error: null,
-      calendly_payload: null,
-    })
-    .eq("id", lookup.lead.id)
-    .select("*")
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Supabase not-booked reset failed: ${error.message}`);
-  }
+  const data = await updateLeadById(client, lookup.category, lookup.lead.id, {
+    statut: "NOTBOOKED",
+    scheduled_at: null,
+    booked_at: null,
+    calendly_invitee_uri: null,
+    calendly_join_url: null,
+    calendly_reschedule_url: null,
+    calendly_cancel_url: null,
+    calendly_links_synced_at: null,
+    calendly_links_sync_error: null,
+    calendly_payload: null,
+  });
 
   return {
     category: lookup.category,
-    lead: (data as LinkTrackingLead) ?? lookup.lead,
+    lead: data ? leadFromRow(lookup.category, data) : lookup.lead,
   };
 }
 
@@ -809,28 +877,19 @@ export async function markLeadCancelled(
     console.error("[link-tracking] round-robin quota restore failed:", err);
   }
 
-  const { data, error } = await client
-    .from(lookup.category)
-    .update({
-      statut: "CANCELLED",
-      calendly_join_url: null,
-      calendly_reschedule_url: null,
-      calendly_cancel_url: null,
-      calendly_links_synced_at: null,
-      calendly_links_sync_error: null,
-      profile: lookup.lead.profile,
-    })
-    .eq("id", lookup.lead.id)
-    .select("*")
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Supabase cancel failed: ${error.message}`);
-  }
+  const data = await updateLeadById(client, lookup.category, lookup.lead.id, {
+    statut: "CANCELLED",
+    calendly_join_url: null,
+    calendly_reschedule_url: null,
+    calendly_cancel_url: null,
+    calendly_links_synced_at: null,
+    calendly_links_sync_error: null,
+    profile: lookup.lead.profile,
+  });
 
   return {
     category: lookup.category,
-    lead: (data as LinkTrackingLead) ?? lookup.lead,
+    lead: data ? leadFromRow(lookup.category, data) : lookup.lead,
   };
 }
 
@@ -850,18 +909,12 @@ export async function updateLeadStatut(
     patch.confirmed_at = extra?.confirmed_at ?? new Date().toISOString();
   }
 
-  const { data, error } = await client
-    .from(tableForLeadCategory(category))
-    .update(patch)
-    .eq("id", leadId)
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    throw new Error(`Failed to update statut: ${error?.message ?? "no row"}`);
+  const data = await updateLeadById(client, category, leadId, patch);
+  if (!data) {
+    throw new Error("Failed to update statut: no row");
   }
 
-  return data as LinkTrackingLead;
+  return leadFromRow(category, data);
 }
 
 export async function markInstantlySynced(
@@ -869,10 +922,13 @@ export async function markInstantlySynced(
   category: LeadCategory,
   leadId: string,
 ): Promise<void> {
-  const { error } = await client
-    .from(tableForLeadCategory(category))
-    .update({ instantly_synced_at: new Date().toISOString() })
-    .eq("id", leadId);
+  const { error } = await withOutreachCategory(
+    client
+      .from(tableForLeadCategory(category))
+      .update({ instantly_synced_at: new Date().toISOString() })
+      .eq("id", leadId),
+    category,
+  );
 
   if (error) {
     throw new Error(`Failed to mark instantly_synced_at: ${error.message}`);
@@ -884,10 +940,13 @@ export async function markInstantlyConfirmedSynced(
   category: LeadCategory,
   leadId: string,
 ): Promise<void> {
-  const { error } = await client
-    .from(tableForLeadCategory(category))
-    .update({ instantly_confirmed_synced_at: new Date().toISOString() })
-    .eq("id", leadId);
+  const { error } = await withOutreachCategory(
+    client
+      .from(tableForLeadCategory(category))
+      .update({ instantly_confirmed_synced_at: new Date().toISOString() })
+      .eq("id", leadId),
+    category,
+  );
 
   if (error) {
     throw new Error(
@@ -930,42 +989,28 @@ export async function persistCalendlyMeetingLinks(
     patch.calendly_payload = params.calendlyPayload;
   }
 
-  const { data, error } = await client
-    .from(lookup.category)
-    .update(patch)
-    .eq("id", lookup.lead.id)
-    .select("*")
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Failed to persist Calendly meeting links: ${error.message}`);
+  const data = await updateLeadById(client, lookup.category, lookup.lead.id, patch);
+  if (!data) {
+    return lookup.lead;
   }
-
-  return (data as LinkTrackingLead) ?? lookup.lead;
+  return leadFromRow(lookup.category, data);
 }
 
 export async function clearCalendlyMeetingLinks(
   client: SupabaseClient,
   lookup: LeadLookup,
 ): Promise<LinkTrackingLead> {
-  const { data, error } = await client
-    .from(lookup.category)
-    .update({
-      calendly_join_url: null,
-      calendly_reschedule_url: null,
-      calendly_cancel_url: null,
-      calendly_links_synced_at: null,
-      calendly_links_sync_error: null,
-    })
-    .eq("id", lookup.lead.id)
-    .select("*")
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Failed to clear Calendly meeting links: ${error.message}`);
+  const data = await updateLeadById(client, lookup.category, lookup.lead.id, {
+    calendly_join_url: null,
+    calendly_reschedule_url: null,
+    calendly_cancel_url: null,
+    calendly_links_synced_at: null,
+    calendly_links_sync_error: null,
+  });
+  if (!data) {
+    return lookup.lead;
   }
-
-  return (data as LinkTrackingLead) ?? lookup.lead;
+  return leadFromRow(lookup.category, data);
 }
 
 const BOOKED_STATUTS = ["MEETING_BOOKED", "CONFIRMED", "BOOKED"] as const;
@@ -977,14 +1022,17 @@ export async function listLeadsWithUnsyncedMeetingLinks(
   const results: LeadLookup[] = [];
 
   for (const category of TABLES) {
-    const { data, error } = await client
-      .from(tableForLeadCategory(category))
-      .select("*")
-      .in("statut", [...BOOKED_STATUTS])
-      .is("calendly_links_synced_at", null)
-      .not("calendly_invitee_uri", "is", null)
-      .order("scheduled_at", { ascending: true })
-      .limit(limit);
+    const { data, error } = await withOutreachCategory(
+      client
+        .from(tableForLeadCategory(category))
+        .select("*")
+        .in("statut", [...BOOKED_STATUTS])
+        .is("calendly_links_synced_at", null)
+        .not("calendly_invitee_uri", "is", null)
+        .order("scheduled_at", { ascending: true })
+        .limit(limit),
+      category,
+    );
 
     if (error) {
       if (isMissingRelationError(error.message)) {
@@ -996,7 +1044,10 @@ export async function listLeadsWithUnsyncedMeetingLinks(
     }
 
     for (const row of data ?? []) {
-      results.push({ category, lead: row as LinkTrackingLead });
+      results.push({
+        category,
+        lead: leadFromRow(category, row as Record<string, unknown>),
+      });
     }
   }
 

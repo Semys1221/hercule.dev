@@ -1,0 +1,4 @@
+# Large pre-drop CSV exports — keep manifest.json locally if needed
+*
+!.gitignore
+!README.md

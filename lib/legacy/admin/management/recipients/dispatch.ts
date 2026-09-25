@@ -42,19 +42,10 @@ async function findLatestSalesCall(
   niche: Niche,
 ): Promise<SalesCall | null> {
   const client = createSalesCallsClient();
-  const column =
-    niche === "agence"
-      ? "agence_id"
-      : niche === "comptable"
-        ? "comptable_id"
-        : niche === "cif"
-          ? "cif_id"
-          : "entreprise_id";
-
   const { data, error } = await client
     .from("sales_calls")
     .select("*")
-    .eq(column, lead.id)
+    .eq("lead_id", lead.id)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

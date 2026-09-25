@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 
-import { LegalPageShell } from "@/components/site/legal-page-shell"
+import { HouseLegalLayout } from "@/components/site/house/house-legal-layout"
+import { HouseScrollCvg } from "@/components/site/house/house-scroll-cvg"
 import { MarkdownDocument } from "@/components/site/markdown-document"
-import { ScrollToCvgSection } from "@/components/site/scroll-to-cvg-section"
 import { getCvgMarkdown } from "@/lib/site/cvg-content"
 
 export const metadata: Metadata = {
@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 export default function CvgConseilFinancierPage() {
   const content = getCvgMarkdown("cif")
   return (
-    <LegalPageShell>
-      <ScrollToCvgSection sectionId="hubris" />
+    <HouseLegalLayout>
+      <HouseScrollCvg sectionId="hubris" />
       <MarkdownDocument content={content} />
-    </LegalPageShell>
+    </HouseLegalLayout>
   )
 }

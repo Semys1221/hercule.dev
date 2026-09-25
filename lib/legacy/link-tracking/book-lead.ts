@@ -113,11 +113,7 @@ async function persistBookingSideEffects(
   const client = createLinkTrackingClient();
   try {
     await upsertSalesCallFromBooking(client, {
-      agenceId: lookup.category === "agence" ? lookup.lead.id : null,
-      comptableId: lookup.category === "comptable" ? lookup.lead.id : null,
-      cifId: lookup.category === "cif" ? lookup.lead.id : null,
-      comptableDeliveryId:
-        lookup.category === "comptable_delivery" ? lookup.lead.id : null,
+      leadId: lookup.lead.id,
       email: params.email.trim().toLowerCase() || lookup.lead.email,
       inviteeUri: params.invitee.inviteeUri,
       scheduledAt: params.scheduledAt ?? lookup.lead.scheduled_at,
@@ -218,11 +214,13 @@ export async function bookLeadFromCalendly(
 
   const extra = await syncInstantlyForBookedLead(lookup);
 
-  try {
-    const { promoteSiblingCampaignLeads } = await import("./split-booking");
-    await promoteSiblingCampaignLeads(lookup);
-  } catch (err) {
-    console.error("[link-tracking] sibling booking promotion failed:", err);
+  if (lookup.category !== "comptable_delivery") {
+    try {
+      const { promoteSiblingCampaignLeads } = await import("./split-booking");
+      await promoteSiblingCampaignLeads(lookup);
+    } catch (err) {
+      console.error("[link-tracking] sibling booking promotion failed:", err);
+    }
   }
 
   if (lookup.category === "cif") {

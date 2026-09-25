@@ -1,4 +1,3 @@
-import { createLinkTrackingClient } from "@/lib/legacy/link-tracking/supabase";
 import type {
   DemandeContrat,
   DemandeNiche,
@@ -62,31 +61,8 @@ function mapTeaserRow(row: ComptableDemandeRow): DemandeTeaser {
   };
 }
 
-function todayIsoDate(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 async function loadComptableDemandesForCarousel(): Promise<DemandeContrat[]> {
-  const client = createLinkTrackingClient();
-  const today = todayIsoDate();
-  const { data, error } = await client
-    .from("comptable_demandes")
-    .select("*")
-    .eq("record_type", "demande")
-    .lte("sort_order", 16)
-    .lte("available_from", today)
-    .gte("available_until", today)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    throw new Error(`Failed to fetch comptable demandes: ${error.message}`);
-  }
-
-  return (data as ComptableDemandeRow[]).map(mapComptableDemandeRow);
+  return [];
 }
 
 export async function fetchComptableDemandesForCarousel(): Promise<DemandeContrat[]> {
@@ -98,21 +74,7 @@ export async function fetchComptableDemandesForCarousel(): Promise<DemandeContra
 }
 
 async function loadComptableDemandeTeaser(): Promise<DemandeTeaser | null> {
-  const client = createLinkTrackingClient();
-  const { data, error } = await client
-    .from("comptable_demandes")
-    .select("*")
-    .eq("record_type", "teaser")
-    .order("sort_order", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`Failed to fetch comptable demande teaser: ${error.message}`);
-  }
-
-  if (!data) return null;
-  return mapTeaserRow(data as ComptableDemandeRow);
+  return null;
 }
 
 export async function fetchComptableDemandeTeaser(): Promise<DemandeTeaser | null> {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { AccueilScene } from "@/components/site/cif/scene-accueil"
+import { HouseHome } from "@/components/site/house/house-home"
 import {
   fetchCifDemandeTeaser,
   fetchCifDemandesForCarousel,
@@ -22,7 +22,7 @@ export default async function ConseilFinancierPage() {
 
   return (
     <main>
-      <AccueilScene demandes={demandes} teaser={teaser} />
+      <HouseHome audience="cif" defaultTab="cif" demandes={demandes} teaser={teaser} />
     </main>
   )
 }

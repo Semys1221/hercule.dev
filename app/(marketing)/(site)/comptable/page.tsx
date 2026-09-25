@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { AccueilScene } from "@/components/site/comptable/scene-accueil"
+import { HouseHome } from "@/components/site/house/house-home"
 import {
   fetchComptableDemandeTeaser,
   fetchComptableDemandesForCarousel,
@@ -22,7 +22,7 @@ export default async function ComptablePage() {
 
   return (
     <main>
-      <AccueilScene demandes={demandes} teaser={teaser} />
+      <HouseHome audience="comptable" defaultTab="comptable" demandes={demandes} teaser={teaser} />
     </main>
   )
 }

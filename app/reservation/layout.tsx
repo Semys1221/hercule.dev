@@ -18,7 +18,9 @@ export default function ReservationLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className={`${jumSans.variable} ${jumSerif.variable}`}>
+    <div
+      className={`house min-h-screen bg-background text-foreground ${jumSans.variable} ${jumSerif.variable}`}
+    >
       <link
         rel="stylesheet"
         href="https://assets.calendly.com/assets/external/widget.css"

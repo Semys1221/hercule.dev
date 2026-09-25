@@ -26,6 +26,7 @@ export function legalAudienceFromNichePreset(presetId: string): LegalAudience {
   if (
     id.includes("jum") ||
     id.includes("restaurant") ||
+    id.includes("btp") ||
     id.includes("terrassement") ||
     id.includes("dentiste") ||
     id.includes("medecin") ||

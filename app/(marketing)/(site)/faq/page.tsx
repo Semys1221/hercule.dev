@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { FaqHubPage } from "@/components/site/faq-hub-page"
+import { HouseFaqHub } from "@/components/site/house/house-faq-hub"
 
 export const metadata: Metadata = {
   title: "FAQ — Courtage de projets B2B — Hercule",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 }
 
 export default function FaqPage() {
-  return <FaqHubPage />
+  return <HouseFaqHub />
 }

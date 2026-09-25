@@ -43,6 +43,7 @@ export async function ComptableDeliveryVerticalReservationPage({
       calendlyUrl={surface.calendlyUrl}
       surface={surface.surface}
       conferenceNiche={surface.conferenceNiche}
+      comptableDeliveryRouteSegment={surface.comptableDeliveryRouteSegment ?? routeSegment}
     />
   )
 }

@@ -1,4 +1,6 @@
-import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { isLeadCategory, type LeadCategory } from "@/lib/legacy/link-tracking/types";
 
 import type { SalesCall } from "./types";
 
@@ -7,39 +9,36 @@ export type ResolvedSalesCallLead = {
   category: LeadCategory;
 };
 
-export function resolveSalesCallLead(salesCall: SalesCall): ResolvedSalesCallLead | null {
-  if (salesCall.comptable_id) {
-    return { leadId: salesCall.comptable_id, category: "comptable" };
+export async function resolveSalesCallLead(
+  client: SupabaseClient,
+  salesCall: SalesCall,
+): Promise<ResolvedSalesCallLead | null> {
+  if (!salesCall.lead_id) {
+    return null;
   }
-  if (salesCall.cif_id) {
-    return { leadId: salesCall.cif_id, category: "cif" };
+
+  const { data, error } = await client
+    .from("leads")
+    .select("category")
+    .eq("id", salesCall.lead_id)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`resolveSalesCallLead failed: ${error.message}`);
   }
-  if (salesCall.agence_id) {
-    return { leadId: salesCall.agence_id, category: "agence" };
+
+  const category = String(data?.category ?? "");
+  if (!isLeadCategory(category) || category === "client") {
+    return null;
   }
-  if (salesCall.entreprise_id) {
-    return { leadId: salesCall.entreprise_id, category: "entreprise" };
-  }
-  return null;
+
+  return { leadId: salesCall.lead_id, category };
 }
 
 export function upsertIdsForLeadCategory(
   category: LeadCategory,
   leadId: string,
-): {
-  agenceId?: string | null;
-  comptableId?: string | null;
-  cifId?: string | null;
-  entrepriseId?: string | null;
-} {
-  switch (category) {
-    case "comptable":
-      return { comptableId: leadId };
-    case "cif":
-      return { cifId: leadId };
-    case "entreprise":
-      return { entrepriseId: leadId };
-    default:
-      return { agenceId: leadId };
-  }
+): { leadId: string } {
+  void category;
+  return { leadId };
 }

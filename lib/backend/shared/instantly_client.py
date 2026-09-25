@@ -1167,22 +1167,75 @@ def push_leads_to_campaign(
             continue
 
         batch_size = len(batch_leads)
-        response = client._fetch(
-            "/leads/add",
-            method="POST",
-            body={
-                "campaign_id": campaign_id.strip(),
-                "leads": batch_leads,
-                "skip_if_in_workspace": False,
-                "skip_if_in_campaign": True,
-                "skip_if_in_list": False,
-            },
-        )
+        # #region agent log
+        try:
+            from streamlit_clean.agent_debug_log import agent_debug_log
+
+            agent_debug_log(
+                "shared/instantly_client.py:push_leads_to_campaign",
+                "push_batch_start",
+                {
+                    "batch_index": batches + 1,
+                    "batch_size": batch_size,
+                    "offset": start,
+                    "total_records": len(records),
+                },
+                "A",
+            )
+        except Exception:
+            pass
+        # #endregion
+        try:
+            response = client._fetch(
+                "/leads/add",
+                method="POST",
+                body={
+                    "campaign_id": campaign_id.strip(),
+                    "leads": batch_leads,
+                    "skip_if_in_workspace": False,
+                    "skip_if_in_campaign": True,
+                    "skip_if_in_list": False,
+                },
+            )
+        except RuntimeError as exc:
+            # #region agent log
+            try:
+                from streamlit_clean.agent_debug_log import agent_debug_log
+
+                agent_debug_log(
+                    "shared/instantly_client.py:push_leads_to_campaign",
+                    "push_batch_error",
+                    {"batch_index": batches + 1, "error": str(exc)[:500]},
+                    "A",
+                )
+            except Exception:
+                pass
+            # #endregion
+            raise
         stats = _parse_add_response(response, batch_size)
         batches += 1
         pushed += stats["pushed"]
         skipped_duplicate += stats["skipped_duplicate"]
         failed += stats["failed"]
+        # #region agent log
+        try:
+            from streamlit_clean.agent_debug_log import agent_debug_log
+
+            agent_debug_log(
+                "shared/instantly_client.py:push_leads_to_campaign",
+                "push_batch_ok",
+                {
+                    "batch_index": batches,
+                    "pushed": pushed,
+                    "skipped_duplicate": skipped_duplicate,
+                    "failed": failed,
+                    "batch_stats": stats,
+                },
+                "A",
+            )
+        except Exception:
+            pass
+        # #endregion
 
         if on_progress:
             on_progress(

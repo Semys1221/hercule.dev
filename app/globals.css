@@ -163,7 +163,53 @@ html {
   --tracking-border: oklch(0.78 0.045 240 / 28%);
 }
 
-/* Conference surface — scoped via app/conference/layout.tsx (.conference) */
+/* Public marketing — ElevenLabs-style white (.house via site layout) */
+.house {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #0a0a0a;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #a1a1aa;
+  scrollbar-color: #a1a1aa #f4f4f5;
+}
+
+.house ::-webkit-scrollbar-track {
+  background: #f4f4f5;
+}
+
+.house ::-webkit-scrollbar-thumb {
+  background: #a1a1aa;
+}
+
+/* Conference — ivory (presentation / inscription) */
 .conference {
   color-scheme: light;
   --background: #f4f1eb;
@@ -198,9 +244,26 @@ html {
   --sidebar-accent-foreground: #1a1a1a;
   --sidebar-border: rgba(26, 26, 26, 0.08);
   --sidebar-ring: #6b6560;
+  scrollbar-color: #6b6560 #e7e2da;
+}
+
+.conference ::-webkit-scrollbar-track {
+  background: #e7e2da;
+}
+
+.conference ::-webkit-scrollbar-thumb {
+  background: #6b6560;
+}
+
+/* Long archive sections — defer paint until near viewport */
+.house-archive-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
 }
 
 /* Stripe embedded checkout on proposition — flush with conference page background */
+.house .dec-trial-checkout [class*="EmbeddedCheckout"],
+.house .dec-trial-checkout iframe,
 .conference .dec-trial-checkout [class*="EmbeddedCheckout"],
 .conference .dec-trial-checkout iframe {
   background-color: var(--background) !important;

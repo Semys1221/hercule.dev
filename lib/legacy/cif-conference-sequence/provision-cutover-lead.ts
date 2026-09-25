@@ -29,8 +29,9 @@ export async function findCifLeadByEmail(
   const normalized = normalizeEmail(email);
 
   const { data, error } = await client
-    .from("cif")
+    .from("leads")
     .select("*")
+    .eq("category", "cif")
     .eq("email", normalized)
     .maybeSingle();
 
@@ -82,7 +83,7 @@ export async function ensureCifLeadForConferenceCutover(
 
     const client = createLinkTrackingClient();
     const { data, error } = await client
-      .from("cif")
+      .from("leads")
       .update(patch)
       .eq("id", existing.id)
       .select("*")
@@ -130,7 +131,7 @@ export async function ensureCifLeadForConferenceCutover(
   }
 
   const { data: created, error } = await client
-    .from("cif")
+    .from("leads")
     .insert(row)
     .select("*")
     .single();

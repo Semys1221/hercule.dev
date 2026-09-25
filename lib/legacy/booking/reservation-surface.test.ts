@@ -50,8 +50,6 @@ function lookup(
   };
 }
 
-assert.equal(surfaceForCategory("agence"), "agence");
-assert.equal(surfaceForCategory("entreprise"), "entreprise");
 assert.equal(surfaceForCategory("comptable"), "conference");
 assert.equal(surfaceForCategory("cif"), "conference");
 assert.equal(surfaceForCategory("comptable_delivery"), "comptable_delivery");
@@ -108,10 +106,5 @@ const delivery = buildReservationSurfaceFromLookup(
 assert.equal(delivery.surface, "comptable_delivery");
 assert.equal(delivery.theme, "jum-light");
 assert.ok(delivery.calendlyUrl.includes("restaurant"));
-
-assert.equal(
-  calendlyBaseUrlForLookup(lookup("agence")),
-  "https://calendly.com/hercule-connect/30min",
-);
 
 console.log("reservation-surface.test.ts: ok");

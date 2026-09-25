@@ -5,9 +5,12 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+_APP_DIR = Path(__file__).resolve().parent
+_BACKEND_DIR = _APP_DIR.parent
+_REPO_ROOT = _APP_DIR.parents[3]
+for path in (_BACKEND_DIR, _APP_DIR, _REPO_ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
 from shared.mev_export import extract_emails_from_dataframe, mev_csv_bytes
 

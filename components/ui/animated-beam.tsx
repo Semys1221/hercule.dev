@@ -25,6 +25,8 @@ export interface AnimatedBeamProps {
   startYOffset?: number
   endXOffset?: number
   endYOffset?: number
+  /** Stable SVG gradient id (avoids hydration mismatch when set). */
+  gradientId?: string
 }
 
 export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
@@ -47,8 +49,10 @@ export const AnimatedBeam: React.FC<AnimatedBeamProps> = ({
   startYOffset = 0,
   endXOffset = 0,
   endYOffset = 0,
+  gradientId,
 }) => {
-  const id = useId()
+  const reactId = useId()
+  const id = gradientId ?? reactId
   const [pathD, setPathD] = useState("")
   const [svgDimensions, setSvgDimensions] = useState({ width: 0, height: 0 })
 

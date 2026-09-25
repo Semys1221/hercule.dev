@@ -6,6 +6,11 @@ import {
   normalizeEmail,
 } from "@/lib/legacy/link-tracking/supabase";
 import { allocateSlugs, loadSlugSet } from "@/lib/legacy/link-tracking/slug";
+import {
+  mapLeadsRowToLinkTracking,
+  mapPatchToLeadsRow,
+  outreachInsertRow,
+} from "@/lib/legacy/link-tracking/leads-table";
 import type { LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
 import { buildComptableLeadUrls, buildDashboardUrl } from "@/lib/legacy/link-tracking/urls";
 
@@ -42,12 +47,16 @@ async function insertComptableLead(
     product_statut: "PAID_PENDING_ONBOARDING",
   };
 
-  const { data, error } = await client.from("comptable").insert(row).select("*").single();
+  const { data, error } = await client
+    .from("leads")
+    .insert(outreachInsertRow("comptable", row))
+    .select("*")
+    .single();
   if (error || !data) {
     throw new Error(error?.message ?? "Failed to insert comptable lead");
   }
 
-  return data as LinkTrackingLead;
+  return mapLeadsRowToLinkTracking("comptable", data as Record<string, unknown>);
 }
 
 export async function ensureComptableAcquisitionLead(
@@ -59,12 +68,15 @@ export async function ensureComptableAcquisitionLead(
 
   if (existing?.category === "comptable") {
     const { data, error } = await client
-      .from("comptable")
-      .update({
-        product_statut: "PAID_PENDING_ONBOARDING",
-        first_name: params.firstName?.trim() || existing.lead.first_name,
-        company: params.company?.trim() || existing.lead.company,
-      })
+      .from("leads")
+      .update(
+        mapPatchToLeadsRow("comptable", {
+          product_statut: "PAID_PENDING_ONBOARDING",
+          first_name: params.firstName?.trim() || existing.lead.first_name,
+          company: params.company?.trim() || existing.lead.company,
+        }),
+      )
+      .eq("category", "comptable")
       .eq("id", existing.lead.id)
       .select("*")
       .single();
@@ -73,7 +85,10 @@ export async function ensureComptableAcquisitionLead(
       throw new Error(error?.message ?? "Failed to update comptable lead");
     }
 
-    return { lead: data as LinkTrackingLead, created: false };
+    return {
+      lead: mapLeadsRowToLinkTracking("comptable", data as Record<string, unknown>),
+      created: false,
+    };
   }
 
   if (existing) {

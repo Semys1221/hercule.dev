@@ -15,6 +15,47 @@ export const OUTREACH_SIGNATURE_PLAIN = [
 export const OUTREACH_SIGNATURE_HTML =
   `${BEATRICE_SIGNATURE}<br/>${HERCULE_SIGNATURE_TAGLINE}<br/><a href="${HERCULE_WEBSITE_URL}">hercule.dev</a>`;
 
+export const JUM_SIGNATURE_TAGLINE = "Secrétaire Comptable JUM — jum-advisory.com";
+export const JUM_WEBSITE_URL = "https://jum-advisory.com";
+
+export const JUM_OUTREACH_SIGNATURE_HTML =
+  `${BEATRICE_SIGNATURE}<br/>${JUM_SIGNATURE_TAGLINE}`;
+
+function stripHerculeSignatureBlock(text: string): string {
+  let out = normalizeLegacySignatureTagline(text);
+  out = out.replace(
+    new RegExp(
+      `\\n?${HERCULE_SIGNATURE_TAGLINE.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*`,
+      "g",
+    ),
+    "\n",
+  );
+  return out.replace(
+    /\n?https?:\/\/(?:www\.)?hercule\.dev\/?\s*/gi,
+    "\n",
+  );
+}
+
+/** JUM / comptable delivery — Béatrice + JUM tagline, never Hercule. */
+export function ensureJumOutreachSignature(text: string): string {
+  let body = stripHerculeSignatureBlock(text);
+  body = stripTrailingSignatureSiteUrl(body);
+
+  if (signatureIndex(body) < 0) {
+    body = `${body.replace(/\s+$/, "")}\n\n${BEATRICE_SIGNATURE}`;
+  }
+
+  const idx = signatureIndex(body);
+  const beforeSignature = body.slice(0, idx).trimEnd();
+  const afterSignature = body.slice(idx);
+
+  if (!afterSignature.includes(JUM_SIGNATURE_TAGLINE)) {
+    body = `${beforeSignature}\n\n${BEATRICE_SIGNATURE}\n${JUM_SIGNATURE_TAGLINE}`;
+  }
+
+  return stripHerculeSignatureBlock(stripTrailingSignatureSiteUrl(body));
+}
+
 const SIGNATURE_MARKERS = [BEATRICE_SIGNATURE, "Beatrice Meyer"] as const;
 
 function signatureIndex(text: string): number {

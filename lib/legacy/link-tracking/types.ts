@@ -1,16 +1,18 @@
 export const ALL_LEAD_CATEGORIES = [
-  "agence",
   "comptable",
-  "entreprise",
   "cif",
   "comptable_delivery",
   "client",
 ] as const;
 
-/** Supabase table name for a lead category (`client` → `clients`). */
+/** @deprecated Product decommissioned — tables dropped. Kept for historical types only. */
+export const LEGACY_LEAD_CATEGORIES = ["agence", "entreprise"] as const;
+export type LegacyLeadCategory = (typeof LEGACY_LEAD_CATEGORIES)[number];
+
+/** Supabase table name for a lead category (`client` → `clients`, outreach → `leads`). */
 export function tableForLeadCategory(category: LeadCategory): string {
   if (category === "client") return "clients";
-  return category;
+  return "leads";
 }
 
 export type LeadCategory = (typeof ALL_LEAD_CATEGORIES)[number];

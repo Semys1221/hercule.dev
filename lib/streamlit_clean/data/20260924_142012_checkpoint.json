@@ -1,0 +1,11 @@
+{
+  "artifact_prefix": "20260924_142012",
+  "source_artifact": "/Users/evqn/dev/hercule.dev/lib/streamlit_clean/data/20260924_142012_quick_clean.csv",
+  "status_map": {
+    "billing@hercule.dev": "Invalid",
+    "contact@gmail.com": "Invalid"
+  },
+  "total_target": 2,
+  "updated_at": "2026-09-24T14:22:21.522927+00:00",
+  "verified_count": 2
+}

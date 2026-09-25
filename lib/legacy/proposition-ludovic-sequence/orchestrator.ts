@@ -51,8 +51,9 @@ async function persistLeadData(
   const estimatedIso = estimatedFirstRdvAt(paymentAt).toISOString();
 
   const { data: row } = await client
-    .from("comptable")
+    .from("leads")
     .select("profile")
+    .eq("category", "comptable")
     .eq("id", leadId)
     .maybeSingle();
 
@@ -75,7 +76,7 @@ async function persistLeadData(
     },
   };
 
-  await client.from("comptable").update({ profile: nextProfile }).eq("id", leadId);
+  await client.from("leads").update({ profile: nextProfile }).eq("category", "comptable").eq("id", leadId);
 }
 
 function emailExtras(
@@ -101,8 +102,9 @@ export async function startPropositionLudovicSequence(
 ): Promise<StartPropositionLudovicSequenceResult> {
   const client = createLinkTrackingClient();
   const { data: lead } = await client
-    .from("comptable")
+    .from("leads")
     .select("*")
+    .eq("category", "comptable")
     .eq("id", params.leadId)
     .maybeSingle();
 

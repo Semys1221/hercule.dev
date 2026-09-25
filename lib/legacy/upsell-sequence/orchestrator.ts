@@ -7,12 +7,25 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export async function startUpsellSequence(
   salesCall: SalesCall,
 ): Promise<{ started: boolean; reason?: string }> {
-  if (!salesCall.agence_id) {
-    return { started: false, reason: "missing_agence_id" };
+  if (!salesCall.lead_id) {
+    return { started: false, reason: "missing_lead_id" };
   }
 
   const client = createLinkTrackingClient();
-  const lead = await findLeadById(client, "agence", salesCall.agence_id);
+  const { data: leadRow, error: leadError } = await client
+    .from("leads")
+    .select("id, category")
+    .eq("id", salesCall.lead_id)
+    .maybeSingle();
+
+  if (leadError) {
+    throw new Error(`upsell lead lookup failed: ${leadError.message}`);
+  }
+  if (!leadRow || leadRow.category !== "agence") {
+    return { started: false, reason: "agence_product_removed" };
+  }
+
+  const lead = await findLeadById(client, "agence", salesCall.lead_id);
   if (!lead) {
     return { started: false, reason: "lead_not_found" };
   }

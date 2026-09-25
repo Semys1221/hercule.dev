@@ -57,6 +57,7 @@ export async function resolveComptableDeliveryReservation(
 
   return {
     ...surface,
+    comptableDeliveryRouteSegment: routeSegment,
     calendlyUrl: buildCalendlySchedulingUrl(calendlyBase, {
       email: surface.email,
       slug: surface.slug,

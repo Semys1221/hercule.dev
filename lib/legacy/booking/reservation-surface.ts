@@ -57,6 +57,11 @@ export type ReservationSurfaceResult = {
   calendlyUrl: string;
   conferenceNiche: ConferenceNiche | null;
   jumSegment: string | null;
+  comptableDeliveryRouteSegment?:
+    | "restaurant"
+    | "btp"
+    | "chirurgien-dentiste"
+    | null;
   copy: {
     pageTitle: string;
     confirmedTitle: string;
@@ -70,7 +75,7 @@ export function surfaceForCategory(category: LeadCategory): ReservationSurface {
   if (category === "comptable_delivery") {
     return "comptable_delivery";
   }
-  return category;
+  return "conference";
 }
 
 export function themeForSurface(surface: ReservationSurface): ReservationTheme {

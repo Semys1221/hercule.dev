@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { LegalPageShell } from "@/components/site/legal-page-shell"
+import { HouseLegalLayout } from "@/components/site/house/house-legal-layout"
 import { MarkdownDocument } from "@/components/site/markdown-document"
 import {
   CVG_DOC_METADATA,
@@ -39,8 +39,8 @@ export default async function CvgDocPage({ params }: CvgDocPageProps) {
   const content = getCvgDocMarkdown(doc)
 
   return (
-    <LegalPageShell>
+    <HouseLegalLayout>
       <MarkdownDocument content={content} />
-    </LegalPageShell>
+    </HouseLegalLayout>
   )
 }

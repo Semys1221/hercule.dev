@@ -9,7 +9,11 @@ import {
 import type { CalendlyBookingRow } from "@/lib/legacy/calendly/list-bookings";
 import type { SalesQualificationValues } from "@/lib/legacy/admin/funnels/sales-qualification-schema";
 import type { Audience } from "@/lib/legacy/admin/navigation";
-import { buildDashboardUrl, buildCifLeadUrls, buildComptableLeadUrls, buildEntrepriseLeadUrls, buildLeadUrls } from "@/lib/legacy/link-tracking/urls";
+import { buildDashboardUrl, buildCifLeadUrls, buildComptableLeadUrls } from "@/lib/legacy/link-tracking/urls";
+import {
+  isUnifiedLeadsCategory,
+  outreachInsertRow,
+} from "@/lib/legacy/link-tracking/leads-table";
 import type { LeadCategory } from "@/lib/legacy/link-tracking/types";
 import {
   createSalesCallsClient,
@@ -39,44 +43,32 @@ export async function provisionTestMeeting(
   audience: Audience = "agence",
 ): Promise<ProvisionTestMeetingResult> {
   const preset = getSalesTestSessionPreset(audience);
-  const table = preset.leadCategory;
+  const category = preset.leadCategory;
+  if (!isUnifiedLeadsCategory(category)) {
+    throw new Error(`provisionTestMeeting: ${category} product removed — use comptable or cif`);
+  }
   const urls =
-    table === "comptable"
+    category === "comptable"
       ? buildComptableLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
-      : table === "cif"
+      : category === "cif"
         ? buildCifLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
-      : table === "entreprise"
-        ? buildEntrepriseLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL)
-        : buildLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL);
+        : buildComptableLeadUrls(preset.slug, SALES_TEST_SESSION_EMAIL);
   const scheduledAt = scheduledAtOneHourFromNow();
 
   const { data: existingLead, error: existingError } = await client
-    .from(table)
+    .from("leads")
     .select("id")
     .eq("slug", preset.slug)
     .maybeSingle();
 
   if (existingError) {
-    throw new Error(`${table} lookup failed: ${existingError.message}`);
+    throw new Error(`leads lookup failed: ${existingError.message}`);
   }
 
   let leadId = existingLead?.id as string | undefined;
 
-  if (leadId && table === "agence") {
-    const { error: paymentsError } = await client
-      .from("payments")
-      .delete()
-      .eq("agence_id", leadId);
-    if (paymentsError) {
-      throw new Error(`payments reset failed: ${paymentsError.message}`);
-    }
-  }
-
-  if (leadId && table === "comptable") {
-    const { error: paymentsError } = await client
-      .from("payments")
-      .delete()
-      .eq("comptable_id", leadId);
+  if (leadId) {
+    const { error: paymentsError } = await client.from("payments").delete().eq("lead_id", leadId);
     if (paymentsError) {
       throw new Error(`payments reset failed: ${paymentsError.message}`);
     }
@@ -84,43 +76,7 @@ export async function provisionTestMeeting(
     const { error: salesCallsError } = await client
       .from("sales_calls")
       .delete()
-      .eq("comptable_id", leadId);
-    if (salesCallsError) {
-      throw new Error(`sales_calls reset failed: ${salesCallsError.message}`);
-    }
-  }
-
-  if (leadId && table === "cif") {
-    const { error: paymentsError } = await client
-      .from("payments")
-      .delete()
-      .eq("cif_id", leadId);
-    if (paymentsError) {
-      throw new Error(`payments reset failed: ${paymentsError.message}`);
-    }
-
-    const { error: salesCallsError } = await client
-      .from("sales_calls")
-      .delete()
-      .eq("cif_id", leadId);
-    if (salesCallsError) {
-      throw new Error(`sales_calls reset failed: ${salesCallsError.message}`);
-    }
-  }
-
-  if (leadId && table === "entreprise") {
-    const { error: paymentsError } = await client
-      .from("payments")
-      .delete()
-      .eq("entreprise_id", leadId);
-    if (paymentsError) {
-      throw new Error(`payments reset failed: ${paymentsError.message}`);
-    }
-
-    const { error: salesCallsError } = await client
-      .from("sales_calls")
-      .delete()
-      .eq("entreprise_id", leadId);
+      .eq("lead_id", leadId);
     if (salesCallsError) {
       throw new Error(`sales_calls reset failed: ${salesCallsError.message}`);
     }
@@ -149,23 +105,20 @@ export async function provisionTestMeeting(
   };
 
   const { data: upserted, error: upsertError } = await client
-    .from(table)
-    .upsert(row as Record<string, unknown>, { onConflict: "slug" })
+    .from("leads")
+    .upsert(outreachInsertRow(category, row as Record<string, unknown>), { onConflict: "slug" })
     .select("*")
     .single();
 
   if (upsertError || !upserted) {
-    throw new Error(`${table} upsert failed: ${upsertError?.message ?? "no row"}`);
+    throw new Error(`leads upsert failed: ${upsertError?.message ?? "no row"}`);
   }
 
   leadId = upserted.id as string;
 
   const salesClient = createSalesCallsClient();
   const salesCall = await upsertSalesCallFromBooking(salesClient, {
-    agenceId: table === "agence" ? leadId : null,
-    entrepriseId: table === "entreprise" ? leadId : null,
-    comptableId: table === "comptable" ? leadId : null,
-    cifId: table === "cif" ? leadId : null,
+    leadId,
     email: SALES_TEST_SESSION_EMAIL,
     inviteeUri: preset.inviteeUri,
     scheduledAt,

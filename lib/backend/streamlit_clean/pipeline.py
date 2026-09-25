@@ -206,6 +206,19 @@ def run_cleaning_pipeline(
             on_progress(message, 0.3 + fraction * 0.5)
 
     emails = limited_df[email_col].astype(str).str.strip().tolist()
+    # #region agent log
+    try:
+        from agent_debug_log import agent_debug_log
+
+        agent_debug_log(
+            "pipeline.py:run_cleaning_pipeline",
+            "mev_bulk_start",
+            {"email_count": len(emails), "run_mode": run_mode, "prefix": prefix},
+            "B",
+        )
+    except Exception:
+        pass
+    # #endregion
     status_map = verify_emails_bulk(
         emails,
         run_mode=run_mode,
@@ -241,12 +254,41 @@ def run_cleaning_pipeline(
         if on_progress:
             on_progress("Pushing cleaned leads to Instantly campaign...", 0.85)
 
+        # #region agent log
+        try:
+            from agent_debug_log import agent_debug_log
+
+            agent_debug_log(
+                "pipeline.py:run_cleaning_pipeline",
+                "push_start",
+                {
+                    "final_clean_count": len(final_clean_df),
+                    "campaign_id_len": len(destination_campaign_id.strip()),
+                },
+                "A",
+            )
+        except Exception:
+            pass
+        # #endregion
         push_stats = push_leads_to_campaign(
             destination_campaign_id,
             final_clean_df,
             dry_run=False,
             on_progress=on_progress,
         )
+        # #region agent log
+        try:
+            from agent_debug_log import agent_debug_log
+
+            agent_debug_log(
+                "pipeline.py:run_cleaning_pipeline",
+                "push_end",
+                dict(push_stats),
+                "A",
+            )
+        except Exception:
+            pass
+        # #endregion
 
     if on_progress:
         on_progress("Pipeline complete.", 1.0)

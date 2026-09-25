@@ -32,8 +32,9 @@ async function persistEstimatedFirstRdvAt(
   const estimatedIso = estimatedFirstRdvAtFromPayment(paymentAt).toISOString();
 
   const { data: row } = await client
-    .from("comptable")
+    .from("leads")
     .select("profile")
+    .eq("category", "comptable")
     .eq("id", leadId)
     .maybeSingle();
 
@@ -49,7 +50,11 @@ async function persistEstimatedFirstRdvAt(
     },
   };
 
-  await client.from("comptable").update({ profile: nextProfile }).eq("id", leadId);
+  await client
+    .from("leads")
+    .update({ profile: nextProfile })
+    .eq("category", "comptable")
+    .eq("id", leadId);
 }
 
 function emailExtras(lead: LinkTrackingLead, paymentAt: Date) {
@@ -69,8 +74,9 @@ export async function startComptableAcquisitionSequence(
 ): Promise<StartComptableAcquisitionSequenceResult> {
   const client = createLinkTrackingClient();
   const { data: lead } = await client
-    .from("comptable")
+    .from("leads")
     .select("*")
+    .eq("category", "comptable")
     .eq("id", params.leadId)
     .maybeSingle();
 

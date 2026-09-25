@@ -1,6 +1,6 @@
 "use client";
 
-import { ComptablePricingCheckout } from "@/components/site/comptable/comptable-pricing-checkout";
+import { ComptablePricingCheckout } from "@/components/site/_archive/comptable/comptable-pricing-checkout";
 import { InternalStatusAlert } from "@/components/legacy/internal/funnels/ui/internal-status-alert";
 import { Card, CardContent } from "@/components/ui/card";
 import {

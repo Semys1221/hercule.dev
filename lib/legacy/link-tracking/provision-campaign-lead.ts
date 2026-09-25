@@ -33,6 +33,7 @@ const KNOWN_CAMPAIGN_CATEGORY: Record<string, LeadCategory> = {
   "e3bdb573-fe9f-437d-bd96-4ceb52869dd4": "cif",
   "e4f11e76-717e-4be9-a6ad-c7f0a331afb7": "comptable_delivery",
   "05bc06f8-4f60-4e6c-bae1-7afe30df38c7": "comptable_delivery",
+  "25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a": "comptable_delivery",
   "0f0b450a-e550-461c-96f6-1a7681678d67": "comptable_delivery",
   "5c142a13-fcdf-4d6d-92e7-2afbc1865a5a": "comptable_delivery",
   "581b9357-753e-4c6e-aa99-d8b36fefca2d": "comptable_delivery",

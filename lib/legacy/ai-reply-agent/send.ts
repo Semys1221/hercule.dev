@@ -8,6 +8,7 @@ import { resolveThreadForReply } from "@/lib/legacy/instantly-bypass/thread-reso
 import type { InstantlyEmailRecord } from "@/lib/legacy/instantly-bypass/types";
 
 import { formatReplyHtml, plainTextToHtml } from "./format-reply-html";
+import { isComptableDeliveryNichePreset } from "@/lib/site/niche-preset";
 import { resolvePromptLinks } from "./lead-links";
 import { createAiReplyAgentClient } from "./supabase";
 
@@ -133,11 +134,17 @@ export async function sendAiReply(params: {
       ? thread.subject
       : `Re: ${thread.subject ?? "votre message"}`);
 
+  const signatureMode = isComptableDeliveryNichePreset(
+    params.config.niche_preset_id ?? "",
+  )
+    ? "jum"
+    : "hercule";
+
   const payload = {
     eaccount: thread.eaccount,
     replyToUuid: thread.replyToUuid,
     subject,
-    html: formatReplyHtml(params.replyText, { ctaLink }),
+    html: formatReplyHtml(params.replyText, { ctaLink, signatureMode }),
   };
 
   try {

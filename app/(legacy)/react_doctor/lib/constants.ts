@@ -32,7 +32,7 @@ export const EXEMPLARS: Record<string, string> = {
   "data-table": "components/legacy/internal/clients/clients-table.tsx",
   form: "components/legacy/internal/funnels/fiche-form.tsx",
   sidebar: "components/legacy/internal/funnels/sidebar-nav.tsx",
-  marketing: "components/site/home/scene-accueil.tsx",
+  marketing: "app/(marketing)/(site)/page.tsx",
   dashboard: "components/legacy/dashboard/dashboard-shell.tsx",
 };
 

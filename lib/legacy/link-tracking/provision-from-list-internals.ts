@@ -12,7 +12,16 @@ import {
 import type { ComptableDeliveryRouteSegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import { routeSegmentForComptableDeliverySegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import { allocateSlugs, loadSlugSet } from "@/lib/legacy/link-tracking/slug";
-import type { LeadCategory, LinkTrackingLead } from "@/lib/legacy/link-tracking/types";
+import {
+  mapLeadsRowToLinkTracking,
+  mapPatchToLeadsRow,
+  outreachInsertRow,
+} from "@/lib/legacy/link-tracking/leads-table";
+import {
+  tableForLeadCategory,
+  type LeadCategory,
+  type LinkTrackingLead,
+} from "@/lib/legacy/link-tracking/types";
 import {
   buildCifLeadUrls,
   buildComptableDeliveryLeadUrls,
@@ -27,9 +36,62 @@ import {
 
 const INSERT_BATCH_SIZE = 100;
 const PATCH_CONCURRENCY = Number.parseInt(
-  process.env.INSTANTLY_PATCH_CONCURRENCY?.trim() ?? "8",
+  process.env.INSTANTLY_PATCH_CONCURRENCY?.trim() ?? "32",
   10,
 );
+const UPDATE_CONCURRENCY = Number.parseInt(
+  process.env.PROVISION_UPDATE_CONCURRENCY?.trim() ?? "20",
+  10,
+);
+const LOG_CUSTOM_VARS =
+  process.env.PROVISION_LOG_CUSTOM_VARS?.trim() === "1";
+
+async function runWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<void>,
+): Promise<void> {
+  if (items.length === 0) return;
+  const workers = Math.max(
+    1,
+    Math.min(concurrency, items.length, 64),
+  );
+  let index = 0;
+  async function runWorker(): Promise<void> {
+    while (index < items.length) {
+      const current = items[index];
+      index += 1;
+      if (current === undefined) continue;
+      await worker(current);
+    }
+  }
+  await Promise.all(Array.from({ length: workers }, () => runWorker()));
+}
+
+// #region agent log
+function provisionDebugLog(
+  hypothesisId: string,
+  message: string,
+  data: Record<string, unknown>,
+): void {
+  fetch("http://127.0.0.1:7790/ingest/40fdf837-56a3-4df2-be34-389f58aba2b9", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "45a424",
+    },
+    body: JSON.stringify({
+      sessionId: "45a424",
+      hypothesisId,
+      location: "provision-from-list-internals.ts",
+      message,
+      data,
+      timestamp: Date.now(),
+      runId: process.env.PROVISION_DEBUG_RUN_ID?.trim() || "provision",
+    }),
+  }).catch(() => {});
+}
+// #endregion
 
 export type ParsedLead = {
   email: string;
@@ -163,6 +225,10 @@ async function attachCampaignLeadIds(
     const chunk = leads.slice(start, start + concurrency);
     const resolved = await Promise.all(
       chunk.map(async (lead, index) => {
+        const existingId = lead.instantlyLeadId?.trim();
+        if (existingId) {
+          return { index: start + index, lead };
+        }
         const campaignLead = await findLeadByEmailInCampaign(
           apiKey,
           campaignId,
@@ -236,8 +302,27 @@ export async function executeProvisionForSelectedLeads(params: {
     return result;
   }
 
+  const wallStart = Date.now();
+  // #region agent log
+  provisionDebugLog("H5", "executeProvision start", {
+    selectedCount: selected.length,
+    fromCampaign,
+    patchConcurrency: PATCH_CONCURRENCY,
+    updateConcurrency: UPDATE_CONCURRENCY,
+  });
+  // #endregion
+
+  let attachMs = 0;
   if (!fromCampaign) {
+    const attachStart = Date.now();
     selected = await attachCampaignLeadIds(apiKey, campaignId, selected);
+    attachMs = Date.now() - attachStart;
+    // #region agent log
+    provisionDebugLog("H3", "attachCampaignLeadIds done", {
+      attachMs,
+      leadCount: selected.length,
+    });
+    // #endregion
   }
 
   const slugSet = await loadSlugSet(client);
@@ -262,7 +347,7 @@ export async function executeProvisionForSelectedLeads(params: {
                 comptable_delivery_segment: comptableDeliverySegment,
               }
             : {};
-        return {
+        const legacyRow = {
           email: lead.email,
           statut: "NOTBOOKED",
           slug,
@@ -276,32 +361,49 @@ export async function executeProvisionForSelectedLeads(params: {
           profile,
           ...(fixedClientId?.trim() ? { client_id: fixedClientId.trim() } : {}),
         };
+        if (
+          category === "comptable" ||
+          category === "cif" ||
+          category === "comptable_delivery"
+        ) {
+          return outreachInsertRow(category, legacyRow);
+        }
+        return legacyRow;
       });
 
-      const { data, error } = await client.from(category).insert(rows).select("*");
+      const table = tableForLeadCategory(category);
+      const { data, error } = await client.from(table).insert(rows).select("*");
       if (error) {
         result.failed += chunk.length;
         result.errors.push(`Supabase insert failed: ${error.message}`);
       } else {
         result.created += data?.length ?? 0;
-        for (const row of (data ?? []) as LinkTrackingLead[]) {
-          dbRowsByEmail.set(normalizeEmail(row.email), row);
+        for (const row of data ?? []) {
+          const mapped = mapLeadsRowToLinkTracking(
+            category,
+            row as Record<string, unknown>,
+          );
+          dbRowsByEmail.set(normalizeEmail(mapped.email), mapped);
         }
       }
     }
   }
 
-  for (const lead of toUpdate) {
+  const updateStart = Date.now();
+  const updateConcurrency = Number.isFinite(UPDATE_CONCURRENCY)
+    ? UPDATE_CONCURRENCY
+    : 32;
+  await runWithConcurrency(toUpdate, updateConcurrency, async (lead) => {
     const existing = lookup.get(lead.email);
-    if (!existing) continue;
+    if (!existing) return;
     const slug = leadSlug(existing.lead);
     if (!slug) {
       result.failed += 1;
       result.errors.push(`${lead.email}: missing slug on existing row`);
-      continue;
+      return;
     }
 
-    const patch = {
+    const rawPatch = {
       ...buildRefreshPatch(
         existing.lead,
         slug,
@@ -312,24 +414,50 @@ export async function executeProvisionForSelectedLeads(params: {
       ),
       ...(fixedClientId?.trim() ? { client_id: fixedClientId.trim() } : {}),
     };
-    const { data, error } = await client
-      .from(category)
-      .update(patch)
-      .eq("id", existing.lead.id)
-      .select("*")
-      .maybeSingle();
+    const patch = mapPatchToLeadsRow(category, rawPatch);
+    const table = tableForLeadCategory(category);
+    let data: LinkTrackingLead | null = null;
+    let lastError: string | null = null;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      let query = client
+        .from(table)
+        .update(patch)
+        .eq("id", existing.lead.id);
+      if (category !== "client") {
+        query = query.eq("category", category);
+      }
+      const response = await query.select("*").maybeSingle();
+      if (!response.error && response.data) {
+        data = mapLeadsRowToLinkTracking(
+          category,
+          response.data as Record<string, unknown>,
+        );
+        break;
+      }
+      lastError = response.error?.message ?? "no row";
+      const retryable = lastError.toLowerCase().includes("schema cache");
+      if (!retryable || attempt === 3) break;
+      await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+    }
 
-    if (error || !data) {
+    if (!data) {
       result.failed += 1;
-      result.errors.push(
-        `${lead.email}: update failed (${error?.message ?? "no row"})`,
-      );
-      continue;
+      result.errors.push(`${lead.email}: update failed (${lastError})`);
+      return;
     }
 
     result.updated += 1;
-    dbRowsByEmail.set(lead.email, data as LinkTrackingLead);
-  }
+    dbRowsByEmail.set(lead.email, data);
+  });
+  const updateMs = Date.now() - updateStart;
+  // #region agent log
+  provisionDebugLog("H1", "supabase update loop done", {
+    updateMs,
+    toUpdateCount: toUpdate.length,
+    updated: result.updated,
+    msPerRow: toUpdate.length > 0 ? updateMs / toUpdate.length : 0,
+  });
+  // #endregion
 
   const needingAssign: string[] = [];
   for (const row of dbRowsByEmail.values()) {
@@ -338,10 +466,14 @@ export async function executeProvisionForSelectedLeads(params: {
     }
   }
   if (needingAssign.length > 0 && fixedClientId?.trim()) {
-    const { error } = await client
-      .from(category)
+    let assignQuery = client
+      .from(tableForLeadCategory(category))
       .update({ client_id: fixedClientId.trim() })
       .in("id", needingAssign);
+    if (category !== "client") {
+      assignQuery = assignQuery.eq("category", category);
+    }
+    const { error } = await assignQuery;
     if (error) {
       result.errors.push(`Fixed client assign failed: ${error.message}`);
     } else {
@@ -397,7 +529,9 @@ export async function executeProvisionForSelectedLeads(params: {
           }
         : undefined,
     );
-    result.customVariablesByEmail[lead.email] = customVariables;
+    if (LOG_CUSTOM_VARS) {
+      result.customVariablesByEmail[lead.email] = customVariables;
+    }
     if (!lead.instantlyLeadId) continue;
     patchItems.push({
       leadId: lead.instantlyLeadId,
@@ -406,15 +540,36 @@ export async function executeProvisionForSelectedLeads(params: {
   }
 
   if (patchItems.length > 0) {
+    const patchStart = Date.now();
     const patchStats = await patchLeadsCustomVariablesParallel(
       apiKey,
       patchItems,
       Number.isFinite(PATCH_CONCURRENCY) ? PATCH_CONCURRENCY : 8,
     );
+    const patchMs = Date.now() - patchStart;
+    // #region agent log
+    provisionDebugLog("H2", "instantly patch done", {
+      patchMs,
+      patchItems: patchItems.length,
+      patched: patchStats.patched,
+      failed: patchStats.failed,
+      msPerPatch: patchItems.length > 0 ? patchMs / patchItems.length : 0,
+    });
+    // #endregion
     result.patched = patchStats.patched;
     result.failed += patchStats.failed;
     result.errors.push(...patchStats.errors.slice(0, 10));
   }
+
+  // #region agent log
+  provisionDebugLog("H4", "executeProvision complete", {
+    totalMs: Date.now() - wallStart,
+    customVarsKeys: Object.keys(result.customVariablesByEmail).length,
+    created: result.created,
+    updated: result.updated,
+    patched: result.patched,
+  });
+  // #endregion
 
   return result;
 }

@@ -87,6 +87,7 @@ export async function provisionLinksFromList(
   const apiKey = getInstantlyApiKey();
   const client = createLinkTrackingClient();
 
+  const fetchStart = Date.now();
   const allLeads = fromCampaign
     ? await fetchLeadsFromCampaign(apiKey, campaignId, {
         maxLeads: overrides.maxLeads ?? null,
@@ -94,6 +95,30 @@ export async function provisionLinksFromList(
     : await fetchLeadsFromList(apiKey, listId, {
         maxLeads: overrides.maxLeads ?? null,
       });
+  // #region agent log
+  fetch("http://127.0.0.1:7790/ingest/40fdf837-56a3-4df2-be34-389f58aba2b9", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Debug-Session-Id": "45a424",
+    },
+    body: JSON.stringify({
+      sessionId: "45a424",
+      hypothesisId: "H5",
+      location: "provision-from-list.ts",
+      message: "instantly fetch leads done",
+      data: {
+        fetchMs: Date.now() - fetchStart,
+        fromCampaign,
+        leadCount: allLeads.length,
+        campaignId,
+        listId,
+      },
+      timestamp: Date.now(),
+      runId: process.env.PROVISION_DEBUG_RUN_ID?.trim() || "provision",
+    }),
+  }).catch(() => {});
+  // #endregion
 
   const parsed = allLeads
     .map(parseInstantlyLead)

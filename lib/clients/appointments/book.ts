@@ -72,5 +72,20 @@ export async function tryBookClientDeliveryAppointment(params: {
     overbooked: updatedClient.rdv_used > updatedClient.rdv_total,
   });
 
+  try {
+    const { trySyncOutreachMeetingBookedFromInvitee } = await import(
+      "./sync-outreach-meeting-booked"
+    );
+    await trySyncOutreachMeetingBookedFromInvitee({
+      invitee: params.invitee,
+      calendlyPayload: params.payload,
+    });
+  } catch (err) {
+    console.error(
+      "[client-appointments] outreach MEETING_BOOKED sync failed:",
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   return { handled: true, appointmentId: row.id };
 }

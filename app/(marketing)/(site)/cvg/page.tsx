@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 
-import { LegalPageShell } from "@/components/site/legal-page-shell"
+import { HouseLegalLayout } from "@/components/site/house/house-legal-layout"
 import { MarkdownDocument } from "@/components/site/markdown-document"
 import { getCvgMarkdown } from "@/lib/site/cvg-content"
 
@@ -14,19 +15,19 @@ export default function CvgPage() {
   const content = getCvgMarkdown("comptable")
 
   return (
-    <LegalPageShell>
+    <HouseLegalLayout>
       <nav className="mb-8 flex flex-wrap gap-3 text-sm">
-        <a href="#dec" className="text-zinc-300 underline underline-offset-2 hover:text-white">
+        <Link href="#dec" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
           DEC — Mercantile
-        </a>
-        <a
+        </Link>
+        <Link
           href="#hubris"
-          className="text-zinc-300 underline underline-offset-2 hover:text-white"
+          className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Hercule Hubris — IAS + CIF
-        </a>
+        </Link>
       </nav>
       <MarkdownDocument content={content} />
-    </LegalPageShell>
+    </HouseLegalLayout>
   )
 }

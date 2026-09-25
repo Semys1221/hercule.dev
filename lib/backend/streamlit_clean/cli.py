@@ -10,12 +10,11 @@ import pandas as pd
 import typer
 
 _LIB_DIR = os.path.dirname(os.path.abspath(__file__))
-if _LIB_DIR not in sys.path:
-    sys.path.insert(0, _LIB_DIR)
-
-_REPO_ROOT = os.path.dirname(os.path.dirname(_LIB_DIR))
-if _REPO_ROOT not in sys.path:
-    sys.path.insert(0, _REPO_ROOT)
+_BACKEND_DIR = os.path.dirname(_LIB_DIR)
+_REPO_ROOT = os.path.dirname(os.path.dirname(_BACKEND_DIR))
+for path in (_LIB_DIR, _BACKEND_DIR, _REPO_ROOT):
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
 from bulk_verifier import fetch_mev_credits  # noqa: E402
 from shared.mev_export import (  # noqa: E402

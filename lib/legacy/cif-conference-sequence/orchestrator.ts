@@ -58,8 +58,9 @@ export async function startConferenceInviteSequence(
 
   const client = createLinkTrackingClient();
   const { data: lead } = await client
-    .from("cif")
+    .from("leads")
     .select("*")
+    .eq("category", "cif")
     .eq("id", params.leadId)
     .maybeSingle();
 
@@ -143,8 +144,9 @@ export async function ensureConferenceTestLead(): Promise<LinkTrackingLead> {
   const email = CIF_CONFERENCE_TEST_EMAIL;
 
   const { data: existing } = await client
-    .from("cif")
+    .from("leads")
     .select("*")
+    .eq("category", "cif")
     .eq("email", email)
     .maybeSingle();
 
@@ -159,7 +161,7 @@ export async function ensureConferenceTestLead(): Promise<LinkTrackingLead> {
   };
 
   const { data: created, error } = await client
-    .from("cif")
+    .from("leads")
     .insert({
       email,
       slug,

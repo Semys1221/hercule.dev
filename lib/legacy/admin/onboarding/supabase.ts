@@ -72,8 +72,9 @@ export async function prefillComptableFormFromQualification(
   formPatch: Partial<DashboardFormData>,
 ): Promise<void> {
   const { data, error: fetchError } = await client
-    .from("comptable")
+    .from("leads")
     .select("profile")
+    .eq("category", "comptable")
     .eq("id", comptableId)
     .maybeSingle();
 
@@ -95,7 +96,7 @@ export async function prefillComptableFormFromQualification(
   };
 
   const { error: updateError } = await client
-    .from("comptable")
+    .from("leads")
     .update({ profile: updatedProfile })
     .eq("id", comptableId);
 

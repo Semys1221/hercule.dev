@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { FooterLegalBar } from "@/components/site/footer-legal-bar"
+import { FooterLegalBar } from "@/components/site/_archive/footer-legal-bar"
 import { MARKETING_FOOTER_TAGLINE } from "@/lib/site/marketing-copy"
 
 export function Footer() {

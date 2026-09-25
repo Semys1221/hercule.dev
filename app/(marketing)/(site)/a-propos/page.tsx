@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { CompanyAbout } from "@/components/site/company-about"
+import { HouseAbout } from "@/components/site/house/house-about"
 
 export const metadata: Metadata = {
   title: "La société Hercule",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 }
 
 export default function AboutPage() {
-  return <CompanyAbout />
+  return <HouseAbout />
 }

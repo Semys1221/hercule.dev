@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { ComptableFaqPage } from "@/components/site/comptable-faq-page"
+import { HouseFaqPage } from "@/components/site/house/house-faq-page"
 
 export const metadata: Metadata = {
   title: "FAQ — Comptable — Hercule",
@@ -9,5 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default function ComptableFaqRoute() {
-  return <ComptableFaqPage />
+  return (
+    <HouseFaqPage audience="comptable" backHref="/comptable" backLabel="Retour au courtage comptable" />
+  )
 }

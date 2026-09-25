@@ -15,6 +15,11 @@ export type ReservationPageClientProps = {
   calendlyUrl: string
   surface: ReservationSurface
   conferenceNiche: ConferenceNiche | null
+  comptableDeliveryRouteSegment?:
+    | "restaurant"
+    | "btp"
+    | "chirurgien-dentiste"
+    | null
 }
 
 export function ReservationPageClient(props: ReservationPageClientProps) {
@@ -29,11 +34,13 @@ export function ReservationPageClient(props: ReservationPageClientProps) {
     )
   }
   if (props.surface === "comptable_delivery") {
+    const routeSegment = props.comptableDeliveryRouteSegment ?? "restaurant"
     return (
       <ReservationComptableDelivery
         slug={props.slug}
         email={props.email}
         calendlyUrl={props.calendlyUrl}
+        routeSegment={routeSegment}
       />
     )
   }

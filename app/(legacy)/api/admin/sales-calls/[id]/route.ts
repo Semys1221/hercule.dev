@@ -5,7 +5,6 @@ import type { SalesCallSequenceResult } from "@/lib/legacy/admin/bookings/sales-
 import { mapQualificationToForm } from "@/lib/legacy/admin/onboarding/qualification-mapper";
 import {
   createOnboardingClient,
-  prefillAgenceFormFromQualification,
   prefillComptableFormFromQualification,
 } from "@/lib/legacy/admin/onboarding/supabase";
 import {
@@ -78,7 +77,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       // Fire-and-forget: pre-fill agence.profile.form from qualification answers.
       // Runs after the notes are saved; does not block the response.
       const onboardingClient = createOnboardingClient();
-      const resolvedLead = resolveSalesCallLead(salesCall);
+      const resolvedLead = await resolveSalesCallLead(client, salesCall);
       const audience =
         resolvedLead?.category === "cif"
           ? "cif"
@@ -90,21 +89,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         audience,
       );
 
-      if (salesCall.agence_id) {
-        prefillAgenceFormFromQualification(onboardingClient, salesCall.agence_id, formPatch).catch(
-          (err: unknown) => {
-            console.error(
-              "[sales-calls/id] prefillAgenceForm failed:",
-              err instanceof Error ? err.message : err,
-            );
-          },
-        );
-      }
-
-      if (salesCall.comptable_id) {
+      if (
+        resolvedLead &&
+        (resolvedLead.category === "comptable" || resolvedLead.category === "cif")
+      ) {
         prefillComptableFormFromQualification(
           onboardingClient,
-          salesCall.comptable_id,
+          resolvedLead.leadId,
           formPatch,
         ).catch((err: unknown) => {
           console.error(
@@ -140,7 +131,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         });
       }
       if (parsed.data.startSequence) {
-        const resolved = resolveSalesCallLead(salesCall);
+        const resolved = await resolveSalesCallLead(client, salesCall);
         if (!resolved) {
           return NextResponse.json(
             { error: "Lead introuvable pour la séquence" },

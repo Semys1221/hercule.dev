@@ -181,27 +181,14 @@ export async function isCampaignLeadAlreadyBooked(
 
 async function moveSalesCalls(
   client: SupabaseClient,
-  category: LeadCategory,
+  _category: LeadCategory,
   fromLeadId: string,
   toLeadId: string,
 ): Promise<number> {
-  const column =
-    category === "cif"
-      ? "cif_id"
-      : category === "comptable"
-        ? "comptable_id"
-        : category === "comptable_delivery"
-          ? "comptable_delivery_id"
-          : category === "agence"
-            ? "agence_id"
-            : null;
-
-  if (!column) return 0;
-
   const { data, error } = await client
     .from("sales_calls")
-    .update({ [column]: toLeadId })
-    .eq(column, fromLeadId)
+    .update({ lead_id: toLeadId })
+    .eq("lead_id", fromLeadId)
     .select("id");
 
   if (error) {

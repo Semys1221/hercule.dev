@@ -167,8 +167,11 @@ class BulkEmailVerifierClient:
         on_progress: Optional[BulkProgressCallback] = None,
     ) -> dict:
         url = f"{_BASE_URL}/verifier/file_info/{self.api_key}/{file_id}"
+        poll_count = 0
+        last_percent: int | None = None
 
         while True:
+            poll_count += 1
             response = self._request_with_retry("GET", url)
             try:
                 data = response.json()
@@ -185,6 +188,29 @@ class BulkEmailVerifierClient:
             if on_progress:
                 message, fraction = _format_bulk_progress(file_info)
                 on_progress(message, fraction)
+
+            progress_percent = int(file_info.get("progress_percent") or 0)
+            if poll_count == 1 or progress_percent != last_percent or poll_count % 4 == 0:
+                # #region agent log
+                try:
+                    from agent_debug_log import agent_debug_log
+
+                    agent_debug_log(
+                        "bulk_verifier.py:poll_until_complete",
+                        "mev_poll",
+                        {
+                            "file_id": file_id,
+                            "poll_count": poll_count,
+                            "status_label": status_label,
+                            "progress_percent": progress_percent,
+                            "percent_phase1": int(file_info.get("percent_phase1") or 0),
+                        },
+                        "B",
+                    )
+                except Exception:
+                    pass
+                # #endregion
+                last_percent = progress_percent
 
             if status_label == "completed":
                 if not file_info.get("downloadable"):

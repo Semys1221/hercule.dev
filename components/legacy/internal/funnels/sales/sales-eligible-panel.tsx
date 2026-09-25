@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { DemandeFlipCard } from "@/components/site/demandes/demande-flip-card";
+import { DemandeFlipCard } from "@/components/site/_archive/demandes/demande-flip-card";
 import { COMPTABLE_DEMANDE_VERSO_CRITERIA, CIF_DEMANDE_VERSO_CRITERIA } from "@/lib/commercial/qualification-criteria";
 import { HerculeMark } from "@/components/hercule-mark";
 import { InternalStatusAlert } from "@/components/legacy/internal/funnels/ui/internal-status-alert";
@@ -25,8 +25,8 @@ import {
 import type { Audience } from "@/lib/legacy/admin/navigation";
 import type { SalesQualificationValues } from "@/lib/legacy/admin/funnels/sales-qualification-schema";
 import { isCabinetBuyerSalesAudience } from "@/lib/legacy/admin/funnels/sales-audience";
-import { DemandeMetaRow } from "@/components/site/demandes/demande-meta-row";
-import { MaskedContactLine } from "@/components/site/demandes/masked-contact-line";
+import { DemandeMetaRow } from "@/components/site/_archive/demandes/demande-meta-row";
+import { MaskedContactLine } from "@/components/site/_archive/demandes/masked-contact-line";
 import { getSecteurConfig } from "@/lib/agence/secteur-config";
 import { cn } from "@/lib/utils";
 

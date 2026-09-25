@@ -66,8 +66,9 @@ export async function startFreeTrialStartedSequence(
 ): Promise<StartFreeTrialStartedSequenceResult> {
   const client = createLinkTrackingClient();
   const { data: lead } = await client
-    .from("comptable")
+    .from("leads")
     .select("*")
+    .eq("category", "comptable")
     .eq("id", params.leadId)
     .maybeSingle();
 
@@ -86,7 +87,7 @@ export async function startFreeTrialStartedSequence(
 
   const profile = ((typedLead.profile ?? {}) as Record<string, unknown>) || {};
   await client
-    .from("comptable")
+    .from("leads")
     .update({
       profile: {
         ...profile,

@@ -11,12 +11,74 @@ import {
   getEnabledVerticals,
   loadClientBookingConfig,
 } from "@/lib/clients/booking-config/load";
-import type { ComptableDeliveryRouteSegment } from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
+import {
+  getComptableDeliveryVertical,
+  type ComptableDeliveryRouteSegment,
+  type ComptableDeliveryVerticalKey,
+} from "@/lib/legacy/admin/niches/comptable-delivery-verticals";
 import { provisionLinksFromList } from "@/lib/legacy/link-tracking/provision-from-list";
 
 const dryRun = process.argv.includes("--dry-run");
 const confirm = process.argv.includes("--confirm");
 const resyncAll = process.argv.includes("--resync-all");
+const maxLeadsArg = process.argv.find((arg) => arg.startsWith("--max-leads="));
+const maxLeads = maxLeadsArg
+  ? Number.parseInt(maxLeadsArg.split("=")[1]?.trim() ?? "", 10)
+  : null;
+
+/** Supabase rows still tied to the pre-DCE BTP Instantly campaign. */
+const LEGACY_BTP_CAMPAIGN_ID = "05bc06f8-4f60-4e6c-bae1-7afe30df38c7";
+const LEGACY_BTP_LIST_ID = "d4bc89f7-b271-4ed7-9539-4ac968bfb7c9";
+
+function logProvisionSummary(
+  result: Awaited<ReturnType<typeof provisionLinksFromList>>,
+  source: string,
+): void {
+  const { customVariablesByEmail: _vars, ...summary } = result;
+  console.log(
+    JSON.stringify(
+      {
+        ...summary,
+        source,
+        customVariablesSampleCount: Object.keys(_vars ?? {}).length,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function provisionMeniaudVertical(
+  config: ReturnType<typeof loadClientBookingConfig>,
+  key: string,
+  vertical: (typeof config.verticals)[string],
+  campaignId: string,
+  listId: string,
+): Promise<void> {
+  const provisionArgs = {
+    campaignId,
+    category: "comptable_delivery" as const,
+    resyncAll,
+    maxLeads: Number.isFinite(maxLeads) && maxLeads! > 0 ? maxLeads : null,
+    comptableDeliverySegment: vertical.comptableDeliverySegment,
+    comptableDeliveryRouteSegment:
+      vertical.routeSegment as ComptableDeliveryRouteSegment,
+    fixedClientId: config.clientId,
+  };
+
+  const campaignResult = await provisionLinksFromList({
+    ...provisionArgs,
+    fromCampaign: true,
+  });
+  const listResult = await provisionLinksFromList({
+    ...provisionArgs,
+    listId,
+    fromCampaign: false,
+  });
+
+  logProvisionSummary(campaignResult, "campaign");
+  logProvisionSummary(listResult, "list");
+}
 
 async function main() {
   if (!dryRun && !confirm) {
@@ -52,18 +114,30 @@ async function main() {
       continue;
     }
 
-    const result = await provisionLinksFromList({
-      campaignId: vertical.instantlyCampaignId,
-      category: "comptable_delivery",
-      fromCampaign: true,
-      resyncAll,
-      comptableDeliverySegment: vertical.comptableDeliverySegment,
-      comptableDeliveryRouteSegment:
-        vertical.routeSegment as ComptableDeliveryRouteSegment,
-      fixedClientId: config.clientId,
-    });
+    const verticalMeta = getComptableDeliveryVertical(
+      key as ComptableDeliveryVerticalKey,
+    );
+    await provisionMeniaudVertical(
+      config,
+      key,
+      vertical,
+      vertical.instantlyCampaignId,
+      verticalMeta.listId,
+    );
+  }
 
-    console.log(JSON.stringify(result, null, 2));
+  const btpVertical = config.verticals.btp;
+  if (!dryRun && btpVertical?.enabled) {
+    console.log(
+      `\n— Legacy BTP backfill (campaign ${LEGACY_BTP_CAMPAIGN_ID})`,
+    );
+    await provisionMeniaudVertical(
+      config,
+      "btp-legacy",
+      btpVertical,
+      LEGACY_BTP_CAMPAIGN_ID,
+      LEGACY_BTP_LIST_ID,
+    );
   }
 
   console.log("\nDone.");

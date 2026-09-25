@@ -1,6 +1,12 @@
-import { redirect } from "next/navigation"
+import type { Metadata } from "next"
 
-/** Public agence landing retired — courtage B2B hub is now `/`. */
+import { HouseAgencePage } from "@/components/site/house/house-agence-page"
+
+export const metadata: Metadata = {
+  title: "Agence — Hercule",
+  description: "Partenaires agence : qualification et routage des projets Hercule.",
+}
+
 export default function AgencePage() {
-  redirect("/")
+  return <HouseAgencePage />
 }

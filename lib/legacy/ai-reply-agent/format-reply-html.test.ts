@@ -125,6 +125,16 @@ https://hercule.dev`,
     assert.doesNotMatch(html, /<p>Béatrice Meyer<br\/>Hercule, Courtage[^<]*<br\/><a href="https:\/\/hercule\.dev">/);
   }
 
+  {
+    const html = formatReplyHtml("Merci pour votre retour.", {
+      signatureMode: "jum",
+    });
+    assert.match(html, /Béatrice Meyer/);
+    assert.match(html, /Secrétaire Comptable JUM — jum-advisory\.com/);
+    assert.doesNotMatch(html, /Hercule, <i>Courtage contrat BNC\/BIC<\/i>/);
+    assert.doesNotMatch(html, /hercule\.dev/);
+  }
+
   console.log("format-reply-html.test.ts: OK");
 }
 

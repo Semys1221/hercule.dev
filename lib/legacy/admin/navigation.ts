@@ -24,8 +24,6 @@ export type NavNode = {
 };
 
 export const NICHE_LABELS: Record<Niche, string> = {
-  agence: "Agence",
-  entreprise: "Leads",
   comptable: "Comptable",
   cif: "Conseiller financier",
   comptable_delivery: "Livraison comptable",
@@ -35,8 +33,6 @@ export const NICHE_LABELS: Record<Niche, string> = {
 export const AUDIENCE_LABELS = NICHE_LABELS;
 
 export const NICHE_ICONS: Record<Niche, string> = {
-  agence: "🏢",
-  entreprise: "🏭",
   comptable: "📊",
   cif: "💼",
   comptable_delivery: "📋",
@@ -46,8 +42,6 @@ export const NICHE_ICONS: Record<Niche, string> = {
 export const AUDIENCE_ICONS = NICHE_ICONS;
 
 export const NICHE_CAPTIONS: Record<Niche, string> = {
-  agence: "Buyer — agences partenaires qui reçoivent des contrats.",
-  entreprise: "Seller — leads TPE qui recherchent une agence.",
   comptable: "Buyer — cabinets d'expertise comptable partenaires.",
   cif: "Buyer — cabinets CIF / CGP partenaires.",
   comptable_delivery:
@@ -58,15 +52,12 @@ export const NICHE_CAPTIONS: Record<Niche, string> = {
 export const AUDIENCE_CAPTIONS = NICHE_CAPTIONS;
 
 export const ALL_NICHES: Niche[] = [
-  "agence",
-  "entreprise",
   "comptable",
   "cif",
   "comptable_delivery",
 ];
 
-const NICHE_PATH_SEGMENT =
-  "agence|comptable|entreprise|cif|comptable_delivery";
+const NICHE_PATH_SEGMENT = "comptable|cif|comptable_delivery";
 
 /** @deprecated Use ALL_NICHES */
 const ALL_AUDIENCES = ALL_NICHES;

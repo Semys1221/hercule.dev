@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { LegalPageShell } from "@/components/site/legal-page-shell"
+import { HouseLegalLayout } from "@/components/site/house/house-legal-layout"
 import { MarkdownDocument } from "@/components/site/markdown-document"
 import { getConfidentialiteMarkdown } from "@/lib/site/legal-content"
 
@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 
 export default function ConfidentialitePage() {
   return (
-    <LegalPageShell>
+    <HouseLegalLayout>
       <MarkdownDocument content={getConfidentialiteMarkdown()} />
-    </LegalPageShell>
+    </HouseLegalLayout>
   )
 }

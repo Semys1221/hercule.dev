@@ -1,0 +1,76 @@
+{
+  "terrassement_vrd_france_4470.csv": {
+    "mode": "verify_only",
+    "list_id": "a423fed0-1896-4d51-8491-ffce592dba8d"
+  },
+  "sante_medical_1161.csv": {
+    "mode": "upload",
+    "list_id": "7e3b619f-9823-4d64-bc50-31f01bb08e6d",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "paramedical_1317.csv": {
+    "mode": "upload",
+    "list_id": "2942eb9a-365f-4cc4-a63b-703908b8bbed",
+    "create_list_name": "Hercule — Recovery paramedical",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "retail_autres_divers_1170.csv": {
+    "mode": "upload",
+    "list_id": "2ed57d46-51a4-4c93-a933-a4193c033fa5",
+    "create_list_name": "Hercule — Recovery retail_autres_divers",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "logiciel_marketing_agences_1242.csv": {
+    "mode": "upload",
+    "list_id": "64f1020d-822b-4bf9-baee-9d0e98b4dc1d",
+    "create_list_name": "Hercule — Recovery logiciel_marketing_agences",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "btp_industrie_negoce_2476.csv": {
+    "mode": "upload",
+    "list_id": "ec32d4a9-112b-4165-bda9-9cf89fc24cfd",
+    "create_list_name": "Hercule — Recovery btp_industrie_negoce",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "recrutement_technique_backend_2247.csv": {
+    "mode": "upload",
+    "list_id": "a0215f5b-2047-46f6-897f-c16bd794fd88",
+    "create_list_name": "Hercule — Recovery recrutement_technique_backend",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "recrutement_job_board_60j_2373.csv": {
+    "mode": "upload",
+    "list_id": "370ff5ed-90e4-4c2d-b82f-86d212e82494",
+    "create_list_name": "Hercule — Recovery recrutement_job_board_60j",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "comptable_3175.csv": {
+    "mode": "upload",
+    "list_id": "bfb0fc90-ec59-4d49-b266-3891f59d3ea8",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "restaurant_2000.csv": {
+    "mode": "upload",
+    "list_id": "d390231a-6cb8-4f03-83f8-55cf2cad0b08",
+    "create_list_name": "Hercule — Recovery restaurant",
+    "fallback_list_if_forbidden": true,
+    "primary_list_id": "8ad641e7-3456-42df-9281-2c11f97df1c5",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  },
+  "architectes_deco_10157.csv": {
+    "mode": "upload",
+    "list_id": "429af75a-9b5f-4f8d-a82d-1b5f8d7ab089",
+    "create_list_name": "Hercule — Recovery architectes_deco",
+    "skip_if_in_list": true,
+    "skip_if_in_campaign": true
+  }
+}
