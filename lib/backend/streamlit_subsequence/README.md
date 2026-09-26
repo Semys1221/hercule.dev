@@ -69,8 +69,29 @@ pnpm smoke-streamlit-subsequence
 
 ## Template variables
 
-`{{reservation_agence_link}}`, `{{reservation_entreprise_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`
+`{{reservation_agence_link}}`, `{{reservation_entreprise_link}}`, `{{reservation_jum_link}}`, `{{first_name}}`, `{{last_name}}`, `{{company_name}}`
 
 `{{slot_1}}`, `{{slot_2}}` — next two Calendly slots for the campaign niche (e.g. `mardi 10 septembre à 14h30`), resolved at send time via `GET /api/calendly/next-slots`.
 
-`{{reservation_agence_link}}` or `{{reservation_entreprise_link}}` is required on send **only if** the template HTML contains that placeholder.
+`{{reservation_agence_link}}` or `{{reservation_entreprise_link}}` or `{{reservation_jum_link}}` is required on send **only if** the template HTML contains that placeholder.
+
+## Restaurants DCE — seed E1–E3 (marge + Calendly)
+
+Copy source: [`doc/instantly/subsequences/restaurants.md`](../../../doc/instantly/subsequences/restaurants.md).
+
+```bash
+python lib/backend/scripts/streamlit_subsequence/seedRestaurantsDceBypass.py
+python lib/backend/scripts/streamlit_subsequence/seedRestaurantsDceBypass.py --campaign-id 2102110d-1491-4bd0-aa24-cfd29e9a0218
+```
+
+Seed **V1 first** (`e4f11e76-…`); V2 clones E2/E3 from V1 when blank. CTAs use `{{reservation_jum_link}}` — run `pnpm bootstrap-pierremeniaud-booking -- --confirm --resync-all` if leads lack that variable.
+
+## BTP (DCE) — seed E1–E3 (trésorerie chantiers + Calendly)
+
+Copy source: [`doc/instantly/subsequences/btp.md`](../../../doc/instantly/subsequences/btp.md).
+
+```bash
+python lib/backend/scripts/streamlit_subsequence/seedBtpDceBypass.py
+```
+
+Campaign `25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a`. E1 live segment uses `interested_email1_b2b`.
