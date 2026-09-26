@@ -15,7 +15,8 @@ _SCRAPER_DIR = _REPO_ROOT / "lib" / "backend" / "streamlit_scraper"
 _BACKEND_DIR = _REPO_ROOT / "lib" / "backend"
 CAMPAIGN_ID = "25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a"
 CAMPAIGN_NAME = "BTP (DCE)"
-CALENDLY_CTA = '<a href="{{reservation_jum_link}}">Choisir un créneau</a>'
+BTP_CALENDLY_URL = "https://calendly.com/jum-advisory/rendez-vous-comptable-btp"
+CALENDLY_CTA = f'<a href="{BTP_CALENDLY_URL}">Choisir un créneau</a>'
 OPT_OUT = "<br/><br/><i>Répondez non si vous ne souhaitez plus de messages.</i>"
 SUBJECT = "Re: votre message"
 E1_WEBHOOK_DELAY_MS = 5 * 60 * 1000

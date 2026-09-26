@@ -94,4 +94,4 @@ Copy source: [`doc/instantly/subsequences/btp.md`](../../../doc/instantly/subseq
 python lib/backend/scripts/streamlit_subsequence/seedBtpDceBypass.py
 ```
 
-Campaign `25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a`. E1 live segment uses `interested_email1_b2b`.
+Campaign `25dfdcd2-2d3c-45fb-a1ea-f262dbfaa24a`. E1 live segment uses `interested_email1_b2b`. CTAs use the fixed Calendly URL `https://calendly.com/jum-advisory/rendez-vous-comptable-btp` (not `{{reservation_jum_link}}`).

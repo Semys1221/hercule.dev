@@ -5,7 +5,7 @@ L'étude prendra environ 20 minutes.
 
 Si c'est accessible à votre situation, nous vous expliquerons ensuite les possibilités adaptées.
 
-Vous pouvez choisir directement un créneau ici : [Calendly]
+Vous pouvez choisir directement un créneau ici : https://calendly.com/jum-advisory/rendez-vous-comptable-btp
 
 Béatrice Meyer
 
@@ -18,7 +18,7 @@ Une entreprise du BTP peut être rentable sur le papier tout en étant tendue en
 
 C'est précisément ce que nous cherchons à clarifier : décalage clients, masse salariale, fournisseurs…
 
-Si vous souhaitez que nous regardions votre situation, vous pouvez choisir un créneau ici : [Calendly]
+Si vous souhaitez que nous regardions votre situation, vous pouvez choisir un créneau ici : https://calendly.com/jum-advisory/rendez-vous-comptable-btp
 
 Béatrice Meyer
 
@@ -31,6 +31,6 @@ Dernier message de mon côté.
 
 Si vous avancez encore plusieurs semaines de trésorerie avant d'être payé par vos clients, nous pouvons voir quels leviers sont réalistes pour votre entreprise.
 
-Vous pouvez directement choisir un créneau ici : [Calendly]
+Vous pouvez directement choisir un créneau ici : https://calendly.com/jum-advisory/rendez-vous-comptable-btp
 
 Béatrice Meyer
