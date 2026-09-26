@@ -131,13 +131,24 @@ async function main() {
     console.log(
       `\n— Legacy BTP backfill (campaign ${LEGACY_BTP_CAMPAIGN_ID})`,
     );
-    await provisionMeniaudVertical(
-      config,
-      "btp-legacy",
-      btpVertical,
-      LEGACY_BTP_CAMPAIGN_ID,
-      LEGACY_BTP_LIST_ID,
-    );
+    try {
+      await provisionMeniaudVertical(
+        config,
+        "btp-legacy",
+        btpVertical,
+        LEGACY_BTP_CAMPAIGN_ID,
+        LEGACY_BTP_LIST_ID,
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("404") && message.includes("Campaign not found")) {
+        console.warn(
+          "  Skipping legacy BTP backfill: Instantly campaign no longer exists.",
+        );
+      } else {
+        throw err;
+      }
+    }
   }
 
   console.log("\nDone.");

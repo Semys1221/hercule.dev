@@ -8,10 +8,21 @@ import { computeFunnelRates } from "@/lib/booking/restaurant-e1-funnel/compute-r
 import { countActiveInviteesForEventType } from "@/lib/legacy/calendly/list-bookings";
 import { resolveCalendlyEventTypeUri } from "@/lib/legacy/admin/niches/outreach-config";
 import { createBypassClient } from "@/lib/legacy/instantly-bypass/supabase";
-import { isMissingRelationError } from "@/lib/legacy/link-tracking/supabase";
+import {
+  createLinkTrackingClient,
+  isMissingRelationError,
+} from "@/lib/legacy/link-tracking/supabase";
 
 let cachedMetrics: RestaurantE1FunnelMetrics | null = null;
 let cachedAtMs = 0;
+
+const RESERVATION_CLICK_STATUTS = [
+  "CLICKED",
+  "BOOKED",
+  "MEETING_BOOKED",
+  "CONFIRMED",
+  "ONBOARDED",
+] as const;
 
 async function countEmailsE1Sent(): Promise<number> {
   const client = createBypassClient();
@@ -28,7 +39,7 @@ async function countEmailsE1Sent(): Promise<number> {
   return count ?? 0;
 }
 
-async function countEligibilityClicks(): Promise<number> {
+async function countLegacyEligibilityClicks(): Promise<number> {
   const client = createBypassClient();
   const { count, error } = await client
     .from("restaurant_e1_eligibility_clicks")
@@ -41,6 +52,33 @@ async function countEligibilityClicks(): Promise<number> {
     throw new Error(`Failed to count eligibility clicks: ${error.message}`);
   }
   return count ?? 0;
+}
+
+async function countReservationPageClicks(): Promise<number> {
+  const client = createLinkTrackingClient();
+  const { count, error } = await client
+    .from("leads")
+    .select("*", { count: "exact", head: true })
+    .eq("category", "comptable_delivery")
+    .eq("instantly_campaign_id", RESTAURANT_DCE_CAMPAIGN_ID)
+    .in("statut", [...RESERVATION_CLICK_STATUTS]);
+
+  if (error) {
+    if (isMissingRelationError(error)) {
+      return 0;
+    }
+    throw new Error(`Failed to count reservation page clicks: ${error.message}`);
+  }
+  return count ?? 0;
+}
+
+/** Legacy shared eligibility URL + per-lead reservation page visits (transition sum). */
+async function countClicks(): Promise<number> {
+  const [legacy, reservation] = await Promise.all([
+    countLegacyEligibilityClicks(),
+    countReservationPageClicks(),
+  ]);
+  return legacy + reservation;
 }
 
 async function countCalendlyBookings(): Promise<number> {
@@ -67,7 +105,7 @@ export async function fetchRestaurantE1FunnelMetrics(
 
   const [emailsE1Sent, clicks, bookings] = await Promise.all([
     countEmailsE1Sent(),
-    countEligibilityClicks(),
+    countClicks(),
     countCalendlyBookings(),
   ]);
 

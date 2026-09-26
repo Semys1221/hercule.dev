@@ -1,7 +1,7 @@
 # Implementation plan
 
 Plan de construction **backend** (moteur, puis gestion). Spec d’écrans produit : **après** la Phase 7 conceptuelle.  
-Respecte le pattern `webhook → job → cron`. Pas d'Inngest/n8n.
+Respecte le pattern `webhook → job → cron` pour le cœur Next. Pas d'Inngest. Nouveaux flux **glue** (Instantly ↔ Supabase, crons ops) peuvent vivre dans **n8n** self-hosted — voir `lib/backend/scripts/n8n/README.md` ; une migration = un seul runtime actif par événement.
 
 **Plan exécutable pour un agent :** [`build/KICKOFF.md`](./build/KICKOFF.md) + [`build/AGENT-PROMPT.md`](./build/AGENT-PROMPT.md)  
 (Phase **-1** archive+wipe local sans deploy, puis inventaire **archive** + Notion, puis `build/phases/00` … `15`, décisions [`build/decisions.md`](./build/decisions.md) D1–D22).
@@ -241,7 +241,7 @@ Chaque phase ci-dessous : objectif, composants, dépendances, fichiers, critère
 - `/onboarding/*` et `/suivi/*` pages (roadmap product)
 - Matching `matches` / deliverance buyer-seller
 - Réécriture Streamlit → Next
-- Nouveau job runtime (Inngest/n8n)
+- Nouveau job runtime Inngest (n8n glue autorisé — voir `lib/backend/scripts/n8n/`)
 - Modifier `build/decisions.md` ou phases 00–15 pour la gestion clientèle
 
 ---

@@ -146,8 +146,9 @@ Règle : Front = « je demande / je déclenche / j’affiche ». Backend gestion
 | Email verify | MyEmailVerifier | Cleaning |
 | AI reply | Groq / xAI (Grok) | Reply agent |
 | Crons externes | cron-job.org | Sub-daily (Hobby Vercel) |
+| Glue / workflows visuels | n8n Community (self-hosted, VPS + local Docker) | Intégrations SaaS, crons glue, webhooks migrés progressivement. Install : `lib/backend/scripts/n8n/` |
 
-**Pattern d'orchestration (canon) :**
+**Pattern d'orchestration (canon Next / pages produit) :**
 
 ```
 Webhook (Calendly / Instantly / Stripe / …)
@@ -156,7 +157,15 @@ Webhook (Calendly / Instantly / Stripe / …)
   → Action (send email, advance pipeline, …)
 ```
 
-Pas d'Inngest. Pas de n8n pour le runtime métier.
+**Pattern glue (n8n, optionnel par flux) :**
+
+```
+Trigger (webhook SaaS / Schedule n8n)
+  → Workflow n8n (visuel + code nœuds)
+  → Supabase / Instantly / HTTP vers Next ou Streamlit si besoin
+```
+
+Pas d'Inngest. **Un seul runtime par événement** : ne pas dupliquer webhook Vercel et workflow n8n sur le même trigger sans désactiver l'ancien chemin. Migrations documentées dans le README n8n. UI Next, auth et pages métier restent dans le monorepo ; apps Streamlit lourdes (scraper, reply agent) restent en Python — n8n appelle ou réagit via HTTP/DB.
 
 Code métier Next sous `lib/legacy/**` (anciennement `lib/admin`, `lib/booking-communication`, etc.). Ops sous `lib/backend/**`.
 

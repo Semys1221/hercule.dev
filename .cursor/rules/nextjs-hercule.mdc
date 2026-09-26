@@ -36,14 +36,15 @@ Si le chemin est sous `lib/backend/streamlit_*`, suivre [streamlit-tools.mdc](st
 ## Interdictions
 
 - Skills personnels `scrapping` / `smartlead` — autre stack.
-- Inngest / n8n — pas de nouveau runtime job.
+- Inngest — pas de nouveau runtime job.
+- n8n — glue self-hosted uniquement (`lib/backend/scripts/n8n/`). Pas de double traitement sur le même webhook/cron que Next sans migration explicite.
 - Second design system — shadcn uniquement dans Next.
 - Boutons/inputs HTML bruts dans Next — shadcn rule.
 - Login admin sur `/internal` — voir [app/(legacy)/internal/README.md](../../app/(legacy)/internal/README.md).
 
 ## Orchestrateurs
 
-Pattern actuel : **webhook → table job → cron** (`CRON_SECRET` sur `/api/cron/*`). Ne pas introduire un autre runtime.
+Pattern Next : **webhook → table job → cron** (`CRON_SECRET` sur `/api/cron/*`). n8n peut orchestrer la glue (VPS) ; ne pas faire coexister deux handlers pour le même événement.
 
 Secrets dans le `.env` à la racine — ne jamais committer de clés API.
 

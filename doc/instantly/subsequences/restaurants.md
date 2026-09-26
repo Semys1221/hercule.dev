@@ -1,20 +1,28 @@
 **E1**
-Merci pour votre réponse.
+Voici plus de précisions.
 
-Vous pouvez vérifier votre éligibilité au dispositif via le lien ci-dessous.
+L’étude prend environ 20 minutes.
 
-Vérifier mon éligibilité
+Vous saurez directement à l’issue s’il vous est possible de ne plus avoir à avancer les frais vous-même pour payer vos fournisseurs.
+
+Si cela est accessible à votre situation, je vous expliquerai ensuite les possibilités adaptées.
+
+Vous pouvez choisir directement un créneau ici : [Calendly]
+
+Béatrice Meyer
 
 
 
 **E2**
 Bonjour,
 
-Un restaurant peut avoir une bonne activité tout en laissant trop peu de bénéfice à la fin du mois.
+Je reviens vers vous sur mon message précédent.
 
-C’est précisément ce que nous cherchons à identifier : achats trop élevés, plats peu rentables, coûts de personnel…
+L’étude prend environ 20 minutes. Vous saurez directement à l’issue s’il vous est possible de ne plus avancer les frais vous-même pour payer vos fournisseurs.
 
-Si vous souhaitez que nous regardions votre situation, vous pouvez choisir un créneau ici : [Calendly]
+Si cela est accessible à votre situation, je vous expliquerai ensuite les possibilités adaptées.
+
+Vous pouvez choisir un créneau ici : [Calendly]
 
 Béatrice Meyer
 
@@ -25,7 +33,7 @@ Bonjour,
 
 Dernier message de mon côté.
 
-Si vous avez le sentiment de beaucoup travailler pour un bénéfice qui reste trop faible, nous pouvons regarder où votre marge disparaît et ce qui peut être amélioré.
+L’étude dure environ 20 minutes : vous saurez à l’issue s’il vous est possible de ne plus avancer vous-même les frais pour vos fournisseurs, et quelles options correspondent à votre situation.
 
 Vous pouvez directement choisir un créneau ici : [Calendly]
 

@@ -89,6 +89,7 @@ RESERVATION_AGENCE_PLACEHOLDER = "{{reservation_agence_link}}"
 RESERVATION_ENTREPRISE_PLACEHOLDER = "{{reservation_entreprise_link}}"
 RESERVATION_CIF_PLACEHOLDER = "{{reservation_cif_link}}"
 RESERVATION_COMPTABLE_PLACEHOLDER = "{{reservation_comptable_link}}"
+RESERVATION_JUM_PLACEHOLDER = "{{reservation_jum_link}}"
 SLOT_PLACEHOLDERS = ("{{slot_1}}", "{{slot_2}}")
 
 KNOWN_CAMPAIGN_CALENDLY_EVENT: dict[str, str] = {
@@ -104,6 +105,7 @@ def template_requires_reservation_link(body_html: str) -> bool:
         or RESERVATION_ENTREPRISE_PLACEHOLDER in text
         or RESERVATION_CIF_PLACEHOLDER in text
         or RESERVATION_COMPTABLE_PLACEHOLDER in text
+        or RESERVATION_JUM_PLACEHOLDER in text
     )
 
 
@@ -399,6 +401,9 @@ def _template_vars(
     reservation_entreprise_link = lead_custom_var(lead, "reservation_entreprise_link") or ""
     reservation_cif_link = lead_custom_var(lead, "reservation_cif_link") or ""
     reservation_comptable_link = lead_custom_var(lead, "reservation_comptable_link") or ""
+    reservation_jum_link = lead_custom_var(lead, "reservation_jum_link") or ""
+    if not reservation_jum_link:
+        reservation_jum_link = reservation_entreprise_link
     first = str(
         lead.get("first_name") or payload.get("firstName") or payload.get("first_name") or ""
     )
@@ -413,6 +418,7 @@ def _template_vars(
         "reservation_entreprise_link": reservation_entreprise_link,
         "reservation_cif_link": reservation_cif_link,
         "reservation_comptable_link": reservation_comptable_link,
+        "reservation_jum_link": reservation_jum_link,
     }
     if body_html and campaign_id:
         vars_map.update(_resolve_slot_vars(campaign_id, body_html))
@@ -457,9 +463,14 @@ def _missing_reservation_link(lead: dict[str, Any], body_html: str = "") -> bool
         (RESERVATION_ENTREPRISE_PLACEHOLDER, "reservation_entreprise_link"),
         (RESERVATION_CIF_PLACEHOLDER, "reservation_cif_link"),
         (RESERVATION_COMPTABLE_PLACEHOLDER, "reservation_comptable_link"),
+        (RESERVATION_JUM_PLACEHOLDER, "reservation_jum_link"),
     )
     for placeholder, key in checks:
         if placeholder in text and not lead_custom_var(lead, key):
+            if key == "reservation_jum_link":
+                entreprise = lead_custom_var(lead, "reservation_entreprise_link")
+                if entreprise:
+                    continue
             return True
     return False
 

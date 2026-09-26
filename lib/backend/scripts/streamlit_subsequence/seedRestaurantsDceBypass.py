@@ -17,17 +17,16 @@ CAMPAIGN_ID = "e4f11e76-717e-4be9-a6ad-c7f0a331afb7"
 CAMPAIGN_ID_V2 = "2102110d-1491-4bd0-aa24-cfd29e9a0218"
 CAMPAIGN_NAME = "Hercule — Restaurants indépendants (France) — Interested"
 CAMPAIGN_NAME_V2 = "Restaurants (DCE) (V2) — Interested"
-ELIGIBILITY_URL = "https://www.hercule.dev/reservation/restaurant.html"
-ELIGIBILITY_CTA = f'<a href="{ELIGIBILITY_URL}">Vérifier mon éligibilité</a>'
+CALENDLY_CTA = '<a href="{{reservation_jum_link}}">Choisir un créneau</a>'
 OPT_OUT = "<br/><br/><i>Répondez non si vous ne souhaitez plus de messages.</i>"
 SUBJECT = "Re: votre message"
 E1_WEBHOOK_DELAY_MS = 5 * 60 * 1000
 
-E1_BODY = f"""<p>Merci pour votre réponse.<br/><br/>Vous pouvez vérifier votre éligibilité au dispositif via le lien ci-dessous.<br/><br/>{ELIGIBILITY_CTA}</p>"""
+E1_BODY = f"""<p>Voici plus de précisions.<br/><br/>L'étude prend environ 20 minutes.<br/><br/>Vous saurez directement à l'issue s'il vous est possible de ne plus avoir à avancer les frais vous-même pour payer vos fournisseurs.<br/><br/>Si cela est accessible à votre situation, je vous expliquerai ensuite les possibilités adaptées.<br/><br/>Vous pouvez choisir directement un créneau ici : {CALENDLY_CTA}<br/><br/>Béatrice Meyer</p>"""
 
-E2_BODY = f"""<p>Bonjour,<br/><br/>Je reviens vers vous suite à mon message sur les places restantes pour de nouveaux établissements.<br/><br/>Il nous reste actuellement 3 créneaux pour de nouveaux établissements.<br/><br/>Vous pouvez simplement vérifier si votre restaurant est éligible ici :<br/>{ELIGIBILITY_CTA}<br/><br/>Bien à vous,<br/>Béatrice Meyer</p>"""
+E2_BODY = f"""<p>Bonjour,<br/><br/>Je reviens vers vous sur mon message précédent.<br/><br/>L'étude prend environ 20 minutes. Vous saurez directement à l'issue s'il vous est possible de ne plus avancer les frais vous-même pour payer vos fournisseurs.<br/><br/>Si cela est accessible à votre situation, je vous expliquerai ensuite les possibilités adaptées.<br/><br/>Vous pouvez choisir un créneau ici : {CALENDLY_CTA}<br/><br/>Béatrice Meyer</p>"""
 
-E3_BODY = f"""<p>Bonjour,<br/><br/>Dernier message de mon côté.<br/><br/>Il nous reste actuellement 3 créneaux pour de nouveaux établissements.<br/><br/>Vous pouvez simplement vérifier si votre restaurant est éligible ici :<br/>{ELIGIBILITY_CTA}{OPT_OUT}<br/><br/>Bien à vous,<br/>Béatrice Meyer</p>"""
+E3_BODY = f"""<p>Bonjour,<br/><br/>Dernier message de mon côté.<br/><br/>L'étude dure environ 20 minutes : vous saurez à l'issue s'il vous est possible de ne plus avancer vous-même les frais pour vos fournisseurs, et quelles options correspondent à votre situation.<br/><br/>Vous pouvez directement choisir un créneau ici : {CALENDLY_CTA}{OPT_OUT}<br/><br/>Béatrice Meyer</p>"""
 
 
 def main() -> None:
@@ -96,7 +95,7 @@ def main() -> None:
             sync_bootstrap_default=True,
         )
 
-    if campaign_id == CAMPAIGN_ID:
+    if campaign_id in (CAMPAIGN_ID, CAMPAIGN_ID_V2):
         for key, body in (
             ("interested_email2", E2_BODY),
             ("interested_email3", E3_BODY),
@@ -108,7 +107,7 @@ def main() -> None:
                 body,
                 sync_bootstrap_default=False,
             )
-    elif not args.e2_e3_only and campaign_id != CAMPAIGN_ID_V2:
+    elif not args.e2_e3_only:
         for key, body in (
             ("interested_email2", E2_BODY),
             ("interested_email3", E3_BODY),

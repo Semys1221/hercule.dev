@@ -5,7 +5,7 @@ from french_cities import FRENCH_EXPANSION_LOCATIONS, FRENCH_LOCATIONS
 PRESET_ID = "chirurgiens_dentistes"
 PRESET_LABEL = "Chirurgiens-dentistes (France)"
 
-_LIST_ID = "c4eb10d7-2285-4fc3-aa06-3230d2498d8e"
+_LIST_ID = "d97775c2-8708-40a6-9cb8-5844da8d2e0d"
 _CAMPAIGN_ID = "0f0b450a-e550-461c-96f6-1a7681678d67"
 _SUBSEQUENCE_ID = ""
 
@@ -96,7 +96,7 @@ CHIRURGIENS_DENTISTES_CONFIG = {
     "OUTSCRAPER_POLL_SLOW_S": 10,
     "OUTSCRAPER_POLL_TIMEOUT_S": 300,
     "OUTSCRAPER_TOTAL_LIMIT_BUFFER": 8,
-    "TARGET_LEADS": 100,
+    "TARGET_LEADS": 5000,
     "TARGET_MODE": "instantly_pushed_run",
     "INSTANTLY_PUSH_EVERY": 25,
     "SERVICE_DEFAULT": "Chirurgie dentaire",
