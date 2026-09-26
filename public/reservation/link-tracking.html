@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant E1 — funnel</title>
+    <title>Interested E1 — funnel</title>
     <style>
         :root {
             --bg: #fafafa;
@@ -30,6 +30,14 @@
             font-weight: 600;
             margin: 0 0 8px;
         }
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 48px 0 8px;
+        }
+        h2:first-of-type {
+            margin-top: 0;
+        }
         .meta {
             font-size: 0.875rem;
             color: var(--muted);
@@ -42,6 +50,7 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
+            margin-bottom: 8px;
         }
         th, td {
             padding: 12px 16px;
@@ -68,23 +77,63 @@
         }
         button:hover { background: #f4f4f5; }
         .error { color: #b91c1c; font-size: 0.875rem; margin-top: 12px; }
+        .section-meta { margin-bottom: 16px; }
+        .subheading {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 24px 0 8px;
+            color: var(--fg);
+        }
     </style>
 </head>
 <body>
     <main class="page">
-        <h1>Restaurant — E1 Interested</h1>
-        <p class="meta" id="fetched-at">Chargement…</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Indicateur</th>
-                    <th>Valeur</th>
-                </tr>
-            </thead>
-            <tbody id="metrics-body">
-                <tr><td colspan="2">…</td></tr>
-            </tbody>
-        </table>
+        <h1>Interested E1 — funnels</h1>
+        <p class="meta">Métriques agrégées publiques (cache ~5 min). Fuseau affiché : heure locale du navigateur.</p>
+
+        <section id="restaurant" aria-labelledby="restaurant-heading">
+            <h2 id="restaurant-heading">Restaurant — E1 Interested</h2>
+            <p class="meta section-meta" id="restaurant-fetched-at">Chargement…</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Indicateur</th>
+                        <th>Valeur</th>
+                    </tr>
+                </thead>
+                <tbody id="restaurant-metrics-body">
+                    <tr><td colspan="2">…</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="btp" aria-labelledby="btp-heading">
+            <h2 id="btp-heading">BTP — E1 Interested</h2>
+            <p class="meta section-meta" id="btp-fetched-at">Chargement…</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Indicateur</th>
+                        <th>Valeur</th>
+                    </tr>
+                </thead>
+                <tbody id="btp-metrics-body">
+                    <tr><td colspan="2">…</td></tr>
+                </tbody>
+            </table>
+            <p class="subheading">Derniers clics (btp.html)</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Horodatage</th>
+                    </tr>
+                </thead>
+                <tbody id="btp-recent-clicks">
+                    <tr><td>…</td></tr>
+                </tbody>
+            </table>
+        </section>
+
         <button type="button" id="refresh">Rafraîchir</button>
         <p class="error" id="error" hidden></p>
     </main>
@@ -96,10 +145,19 @@
             return (rate * 100).toFixed(1) + ' %';
         }
 
-        function render(data) {
+        function formatDateTime(iso) {
+            if (!iso) return '—';
+            try {
+                return new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' });
+            } catch (e) {
+                return iso;
+            }
+        }
+
+        function renderFunnelMetrics(data, bodyId, fetchedAtId) {
             var rows = [
                 ['Emails E1 envoyés', data.emailsE1Sent],
-                ['Clics éligibilité', data.clicks],
+                ['Clics page RDV', data.clicks],
                 ['Bookings Calendly', data.bookings],
                 ['Taux clic / email', formatRate(data.clickRateFromEmails)],
                 ['Taux booking / clic', formatRate(data.bookingRateFromClicks)],
@@ -109,22 +167,47 @@
                 var cls = typeof row[1] === 'number' ? ' class="num"' : '';
                 return '<tr><td>' + row[0] + '</td><td' + cls + '>' + row[1] + '</td></tr>';
             }).join('');
-            document.getElementById('metrics-body').innerHTML = html;
-            var at = data.fetchedAt ? new Date(data.fetchedAt).toLocaleString('fr-FR') : '—';
-            document.getElementById('fetched-at').textContent = 'Dernière mise à jour : ' + at;
+            document.getElementById(bodyId).innerHTML = html;
+            var at = data.fetchedAt ? formatDateTime(data.fetchedAt) : '—';
+            document.getElementById(fetchedAtId).textContent = 'Dernière mise à jour : ' + at;
         }
 
-        function load(refresh) {
-            var errEl = document.getElementById('error');
-            errEl.hidden = true;
-            var url = '/api/restaurant-e1/metrics' + (refresh ? '?refresh=1' : '');
-            fetch(url)
+        function renderBtpRecentClicks(recentClicks) {
+            var list = recentClicks || [];
+            if (!list.length) {
+                document.getElementById('btp-recent-clicks').innerHTML =
+                    '<tr><td>Aucun clic enregistré</td></tr>';
+                return;
+            }
+            var html = list.map(function (row) {
+                return '<tr><td class="num">' + formatDateTime(row.clickedAt) + '</td></tr>';
+            }).join('');
+            document.getElementById('btp-recent-clicks').innerHTML = html;
+        }
+
+        function fetchJson(url) {
+            return fetch(url)
                 .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
                 .then(function (res) {
                     if (!res.ok || res.j.error) {
                         throw new Error(res.j.error || 'Erreur serveur');
                     }
-                    render(res.j);
+                    return res.j;
+                });
+        }
+
+        function load(refresh) {
+            var errEl = document.getElementById('error');
+            errEl.hidden = true;
+            var q = refresh ? '?refresh=1' : '';
+            Promise.all([
+                fetchJson('/api/restaurant-e1/metrics' + q),
+                fetchJson('/api/btp-e1/metrics' + q)
+            ])
+                .then(function (results) {
+                    renderFunnelMetrics(results[0], 'restaurant-metrics-body', 'restaurant-fetched-at');
+                    renderFunnelMetrics(results[1], 'btp-metrics-body', 'btp-fetched-at');
+                    renderBtpRecentClicks(results[1].recentClicks);
                 })
                 .catch(function (e) {
                     errEl.textContent = e.message || 'Impossible de charger les métriques.';
@@ -134,6 +217,10 @@
 
         document.getElementById('refresh').addEventListener('click', function () { load(true); });
         load(false);
+
+        if (window.location.hash === '#btp') {
+            document.getElementById('btp').scrollIntoView();
+        }
     </script>
 </body>
 </html>

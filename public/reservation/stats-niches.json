@@ -41,5 +41,30 @@
         "emailsRef": 3000
       }
     ]
+  },
+  "btp": {
+    "label": "Campagne BTP (DCE)",
+    "emailsRef": 3000,
+    "positivesRef": 13,
+    "bookingRateDefault": 0.2,
+    "emailsPerDayDefault": 900,
+    "targetRdv": 10,
+    "liveMetricsUrl": "/reservation/link-tracking.html#btp",
+    "projectionRows": [
+      { "emails": 3000, "positives": 13 },
+      { "emails": 10000, "positives": 43 }
+    ],
+    "insights": [
+      "Les clics passent par btp.html (horodatage dans le dashboard live).",
+      "Bookings Calendly : event type comptable_delivery (même limite que restaurant si un seul URI env)."
+    ],
+    "scenarios": [
+      {
+        "title": "Baseline",
+        "bookingRate": 0.2,
+        "positivesPerEmailsRef": 13,
+        "emailsRef": 3000
+      }
+    ]
   }
 }
