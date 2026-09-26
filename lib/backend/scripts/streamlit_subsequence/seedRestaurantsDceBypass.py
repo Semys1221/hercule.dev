@@ -17,12 +17,14 @@ CAMPAIGN_ID = "e4f11e76-717e-4be9-a6ad-c7f0a331afb7"
 CAMPAIGN_ID_V2 = "2102110d-1491-4bd0-aa24-cfd29e9a0218"
 CAMPAIGN_NAME = "Hercule — Restaurants indépendants (France) — Interested"
 CAMPAIGN_NAME_V2 = "Restaurants (DCE) (V2) — Interested"
+RESTAURANT_CTA_URL = "https://www.hercule.dev/reservation/restaurant.html"
+E1_CTA = f'<a href="{RESTAURANT_CTA_URL}">Choisir un créneau</a>'
 CALENDLY_CTA = '<a href="{{reservation_jum_link}}">Choisir un créneau</a>'
 OPT_OUT = "<br/><br/><i>Répondez non si vous ne souhaitez plus de messages.</i>"
 SUBJECT = "Re: votre message"
 E1_WEBHOOK_DELAY_MS = 5 * 60 * 1000
 
-E1_BODY = f"""<p>Voici plus de précisions.<br/><br/>L'étude prend environ 20 minutes.<br/><br/>Vous saurez directement à l'issue s'il vous est possible de ne plus avoir à avancer les frais vous-même pour payer vos fournisseurs.<br/><br/>Si cela est accessible à votre situation, je vous expliquerai ensuite les possibilités adaptées.<br/><br/>Vous pouvez choisir directement un créneau ici : {CALENDLY_CTA}<br/><br/>Béatrice Meyer</p>"""
+E1_BODY = f"""<p>L'étude prend environ 20 minutes.<br/><br/>Vous saurez directement à l'issue s'il vous est possible de ne plus avoir à avancer les frais vous-même pour payer vos fournisseurs.<br/><br/>Si cela est accessible à votre situation, nous vous expliquerons ensuite les possibilités adaptées.<br/><br/>Vous pouvez choisir directement un créneau ici : {E1_CTA}<br/><br/>Béatrice Meyer</p>"""
 
 E2_BODY = f"""<p>Bonjour,<br/><br/>Je reviens vers vous sur mon message précédent.<br/><br/>L'étude prend environ 20 minutes. Vous saurez directement à l'issue s'il vous est possible de ne plus avancer les frais vous-même pour payer vos fournisseurs.<br/><br/>Si cela est accessible à votre situation, je vous expliquerai ensuite les possibilités adaptées.<br/><br/>Vous pouvez choisir un créneau ici : {CALENDLY_CTA}<br/><br/>Béatrice Meyer</p>"""
 
